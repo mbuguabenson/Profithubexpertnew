@@ -47,6 +47,7 @@ const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-c
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
 const SystemCenterPage = lazy(() => import('../system-center'));
+const AccountCenterPage = lazy(() => import('../account-center'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -70,6 +71,8 @@ const AppWrapper = observer(() => {
         setWebSocketState,
         setActiveTour,
         setTourDialogVisibility,
+        is_system_center_open,
+        setSystemCenterVisibility,
     } = dashboard;
     const { dashboard_strategies } = load_modal;
     const {
@@ -125,8 +128,18 @@ const AppWrapper = observer(() => {
         const handler = () => {
             setSiteConfig(getSiteConfig());
         };
+        const handleOpenSystemCenter = () => setSystemCenterVisibility(true);
+        const handleCloseSystemCenter = () => setSystemCenterVisibility(false);
+
         window.addEventListener('profithub_config_changed', handler);
-        return () => window.removeEventListener('profithub_config_changed', handler);
+        window.addEventListener('open_system_center', handleOpenSystemCenter);
+        window.addEventListener('close_system_center', handleCloseSystemCenter);
+        
+        return () => {
+            window.removeEventListener('profithub_config_changed', handler);
+            window.removeEventListener('open_system_center', handleOpenSystemCenter);
+            window.removeEventListener('close_system_center', handleCloseSystemCenter);
+        };
     }, []);
 
     const [tradeTypeModalState, setTradeTypeModalState] = useState(getModalState());
@@ -461,13 +474,13 @@ const AppWrapper = observer(() => {
             )
         },
         {
-            key: 'system_center',
-            id: 'id-system-center',
-            label: <TabIcon iconKey='dashboard' label='System Center' />,
+            key: 'account_center',
+            id: 'id-account-center',
+            label: <TabIcon iconKey='dashboard' label='Account Center' />,
             content: (
-                <TabErrorBoundary tabId='id-system-center' tabName='System Center'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading System Center...')} />}>
-                        <SystemCenterPage />
+                <TabErrorBoundary tabId='id-account-center' tabName='Account Center'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Account Center...')} />}>
+                        <AccountCenterPage />
                     </Suspense>
                 </TabErrorBoundary>
             )
@@ -540,11 +553,11 @@ const AppWrapper = observer(() => {
             <DesktopWrapper>
                 <div className='main__run-strategy-wrapper'>
                     {active_tab !== DBOT_TABS.TRADING_BOTS && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && <RunStrategy />}
-                    {active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.SYSTEM_CENTER && <RunPanel />}
+                    {active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunPanel />}
                 </div>
             </DesktopWrapper>
             <MobileWrapper>
-                {!is_open && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.SYSTEM_CENTER && <RunPanel />}
+                {!is_open && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunPanel />}
             </MobileWrapper>
 
             <ChartModal />

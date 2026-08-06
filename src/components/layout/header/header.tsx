@@ -298,6 +298,20 @@ const AppHeader = observer(() => {
                         {/* Currency dropdown — only when logged in */}
                         {activeLoginid && (
                             <>
+                                {isDesktop && (
+                                    <button 
+                                        className="app-header__admin-btn"
+                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        onClick={() => window.dispatchEvent(new Event('open_system_center'))}
+                                        title="System Center (Admin)"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-general)' }}>
+                                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                                        </svg>
+                                    </button>
+                                )}
                                 <CurrencyDropdown />
                                 <CustomNotifications />
                             </>

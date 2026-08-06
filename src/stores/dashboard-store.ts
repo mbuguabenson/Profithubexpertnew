@@ -62,6 +62,8 @@ export interface IDashboardStore {
     is_chart_modal_visible: boolean;
     is_trading_view_modal_visible: boolean;
     is_profihub_modal_visible: boolean;
+    is_system_center_open: boolean;
+    setSystemCenterVisibility: (visible: boolean) => void;
     setProfihubModalVisibility: () => void;
     is_protool_ai_modal_visible: boolean;
     setProToolAiModalVisibility: (visible: boolean) => void;
@@ -87,6 +89,7 @@ export default class DashboardStore implements IDashboardStore {
     trading_stop_handlers: { [key: string]: () => void } = {};
     active_trading_module: string | null = null;
     navigation_stop_in_progress = false;
+    is_system_center_open = false;
 
     constructor(root_store: RootStore, core: any) {
         makeObservable(this, {
@@ -144,6 +147,8 @@ export default class DashboardStore implements IDashboardStore {
             setProToolAiModalVisibility: action.bound,
             is_protool_assistant_visible: observable,
             setProToolAssistantVisibility: action.bound,
+            is_system_center_open: observable,
+            setSystemCenterVisibility: action.bound,
             bot_builder_symbol: observable,
             pending_free_bot: observable,
             setPendingFreeBot: action.bound,
@@ -241,6 +246,11 @@ export default class DashboardStore implements IDashboardStore {
     is_protool_assistant_visible = false;
     faq_title = '';
     pending_free_bot: { name: string; xml: string } | null = null;
+    is_system_center_open = false;
+
+    setSystemCenterVisibility = (visible: boolean) => {
+        this.is_system_center_open = visible;
+    };
 
     setPendingFreeBot = (bot: { name: string; xml: string } | null): void => {
         this.pending_free_bot = bot;

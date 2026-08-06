@@ -109,6 +109,15 @@ const useMobileMenuConfig = (
                         window.dispatchEvent(new Event('open_account_info'));
                     },
                 },
+                // System Center Option
+                {
+                    as: 'button',
+                    label: localize('Admin Center'),
+                    LeftComponent: InfoIcon, // Using InfoIcon as placeholder, can change later
+                    onClick: () => {
+                        window.dispatchEvent(new Event('open_system_center'));
+                    },
+                },
                 // Risk Disclaimer Option
                 onOpenDisclaimer && {
                     as: 'button',
