@@ -2,9 +2,9 @@
 @use 'components/shared/styles/mixins' as *;
 
 .app-header {
-    background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%) !important;
-    border-bottom: 1px solid rgba(33, 150, 243, 0.2);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    background: var(--general-main-1) !important;
+    border-bottom: 1px solid var(--border-normal);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
     &__account-settings {
         padding-inline-end: 1.2rem;
@@ -538,23 +538,22 @@
 
 /* 2. Login Button (Modern Glassmorphism) */
 .app-header__login-btn {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    backdrop-filter: blur(8px);
+    background: transparent !important;
+    border: 1px solid var(--border-normal) !important;
     border-radius: 8px !important;
-    color: #fff !important;
+    color: var(--text-prominent) !important;
     transition: all 0.3s ease !important;
 
     .dc-btn__text {
-        color: #fff !important;
+        color: var(--text-prominent) !important;
         font-weight: 500 !important;
     }
 
     &:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border-color: rgba(255, 255, 255, 0.2) !important;
+        background: var(--general-hover) !important;
+        border-color: var(--border-hover) !important;
         transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     }
 }
 

@@ -473,18 +473,6 @@ const AppWrapper = observer(() => {
                 </TabErrorBoundary>
             )
         },
-        {
-            key: 'account_center',
-            id: 'id-account-center',
-            label: <TabIcon iconKey='dashboard' label='Account Center' />,
-            content: (
-                <TabErrorBoundary tabId='id-account-center' tabName='Account Center'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Account Center...')} />}>
-                        <AccountCenterPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        }
     ], [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]);
 
     const activeTabsList = useMemo(() => {

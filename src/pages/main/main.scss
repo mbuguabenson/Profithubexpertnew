@@ -93,16 +93,16 @@
             }
 
             &__list {
-                background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+                background: #112340 !important;
                 
                 :global(.theme--light) & {
-                    background: linear-gradient(135deg, #f1f5f9 0%, #dbeafe 100%) !important;
+                    background: #f1f5f9 !important;
                     border-color: rgba(59, 130, 246, 0.3) !important;
                 }
 
-                backdrop-filter: blur(16px) saturate(180%) !important;
-                -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-                border: 1px solid rgba(59, 130, 246, 0.2) !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
                 border-radius: 0 !important;
                 padding: 6px 10px !important;
                 margin-top: 0 !important;
@@ -115,7 +115,7 @@
                 overflow-x: auto !important;
                 overflow-y: visible !important;
                 width: 100% !important;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: none !important;
                 scrollbar-width: thin !important;
                 scrollbar-color: rgba(255, 255, 255, 0.2) transparent !important;
 
@@ -164,18 +164,18 @@
             }
 
             &__item {
-                background: rgba(255, 255, 255, 0.05) !important;
+                background: transparent !important;
                 color: rgba(255, 255, 255, 0.85) !important;
 
                 :global(.theme--light) & {
-                    background: rgba(0, 0, 0, 0.05) !important;
+                    background: transparent !important;
                     color: rgba(0, 0, 0, 0.7) !important;
                 }
                 width: auto !important;
                 height: 40px !important;
                 min-width: 0 !important;
                 max-width: none !important;
-                border-radius: 12px !important;
+                border-radius: 4px !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -189,27 +189,39 @@
                 border: 1px solid transparent !important;
                 transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
 
+                svg {
+                    fill: none;
+                    stroke: #ff5a00 !important;
+                    color: #ff5a00 !important;
+                    
+                    path, circle, rect {
+                        fill: #ff5a00 !important;
+                        stroke: #ff5a00 !important;
+                    }
+                }
+
                 &:hover {
-                    background: rgba(255, 255, 255, 0.2) !important;
+                    background: rgba(255, 255, 255, 0.1) !important;
                     color: #ffffff !important;
-                    border-color: rgba(255, 255, 255, 0.25) !important;
-                    transform: translateY(-2px) scale(1.03) !important;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                    border-color: transparent !important;
+                    transform: none !important;
+                    box-shadow: none !important;
                     z-index: 10 !important;
                 }
 
                 &.dc-tabs__active {
-                    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important;
+                    background: #1e365b !important;
                     color: #ffffff !important;
                     
                     :global(.theme--light) & {
-                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+                        background: #dbeafe !important;
+                        box-shadow: none !important;
                     }
 
-                    border-radius: 0 !important;
+                    border-radius: 4px !important;
                     border-color: transparent !important;
-                    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
-                    transform: scale(1.03) !important;
+                    box-shadow: none !important;
+                    transform: none !important;
                     z-index: 5 !important;
                     font-weight: 700 !important;
                 }
