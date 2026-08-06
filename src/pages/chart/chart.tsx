@@ -66,6 +66,16 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!symbol) updateSymbol();
     }, [symbol, updateSymbol]);
 
+    // When the run drawer opens/closes, the chart wrapper width changes via CSS transition.
+    // SmartChart's internal canvas only redraws on window resize events, so we dispatch one
+    // after the CSS transition finishes (400ms matches transition: all 0.4s in SCSS).
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 450);
+        return () => clearTimeout(timer);
+    }, [is_drawer_open]);
+
     const is_connection_opened = !!chart_api?.api;
 
     const handleStateChange: TStateChangeListener = state => {
