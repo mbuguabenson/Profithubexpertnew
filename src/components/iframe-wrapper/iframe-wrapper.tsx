@@ -48,7 +48,8 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
             // Demo to Real logic: if token is legacy and demo-to-real is on, we MUST pass the demo login ID too, otherwise they mismatch
             const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
-            if (isDemoToReal && loginid && !loginid.startsWith('VR') && !OAuthTokenExchangeService.getAuthInfo()?.access_token) {
+            // Do not force demo override for DTrader Terminal - it needs to manage its own real/demo state
+            if (isDemoToReal && loginid && !loginid.startsWith('VR') && !OAuthTokenExchangeService.getAuthInfo()?.access_token && title !== 'DTrader Terminal') {
                  const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
                  const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
                  if (demoAccountId) loginid = demoAccountId;
@@ -56,8 +57,14 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
             const appId = getAppId() || '134249';
 
-            const effectiveLoginId = loginid || (client as any)?.active_account_loginid || 'VRTC100000';
-            const effectiveToken = token || 'demo';
+            const effectiveLoginId = loginid || (client as any)?.active_account_loginid || localStorage.getItem('active_loginid');
+            const effectiveToken = token || localStorage.getItem('token');
+
+            // If we don't have a real account, do not send fake auth payloads to iframes
+            if (!effectiveLoginId || !effectiveToken) {
+                console.log(`[${title}] Waiting for real login token before authenticating iframe...`);
+                return;
+            }
 
             if (iframe.contentWindow) {
                 try {
