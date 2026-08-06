@@ -48,8 +48,9 @@ export class BridgeStateMachine {
     public transitionTo(newState: BridgeState): boolean {
         const allowed = this.allowedTransitions[this.state];
         
-        // If no constraints or transition is allowed
-        if (!allowed || allowed.includes(newState)) {
+        // Always allow transition to IDLE (e.g. during component unmount/detach)
+        // Otherwise check if transition is allowed
+        if (newState === BridgeState.IDLE || !allowed || allowed.includes(newState)) {
             const previousState = this.state;
             this.state = newState;
             console.log(`[Bridge State] Transition: ${previousState} -> ${newState}`);
