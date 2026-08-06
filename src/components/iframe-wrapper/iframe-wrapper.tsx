@@ -145,10 +145,11 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
             // Debug: Log all messages from iframe
             if (event.data) {
-                // If it's not a trade event and not a new bridge event, send legacy payload
-                if (event.data.type !== 'TRADE_PLACED' && event.data.type !== 'CONTRACT_EVENT' && !event.data.type?.startsWith('BRIDGE_')) {
-                    sendLegacyAuthData();
-                }
+                // (Legacy support)
+                // We used to blindly call sendLegacyAuthData() here for unrecognized messages.
+                // DO NOT DO THAT! If the iframe emits periodic pings or state updates, 
+                // blindly replying with 'login' commands creates a ping-pong loop that 
+                // triggers Deriv API rate limits and causes 'Session expired' after a few minutes.
             }
 
             if (!event.data) return;
