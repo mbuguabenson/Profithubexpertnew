@@ -61,7 +61,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
             // IMPORTANT: If we use OAuth tokens (ory_at_...), we MUST pass the parent's App ID to the iframe.
             // Hardcoding legacy IDs will cause Deriv to reject the OAuth token.
-            const appId = getAppId() || '121856';
+            const appId = getAppId() || '114292';
 
             const effectiveLoginId = loginid || (client as any)?.active_account_loginid || localStorage.getItem('active_loginid');
             const effectiveToken = token || localStorage.getItem('token');

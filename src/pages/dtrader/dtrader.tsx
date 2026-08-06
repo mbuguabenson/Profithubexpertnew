@@ -59,7 +59,7 @@ const DTraderPage: React.FC = observer(() => {
             params.set('symbol', '1HZ100V');
             params.set('trade_type', 'accumulator');
 
-            const parentAppId = getAppId() || '121856';
+            const parentAppId = getAppId() || '114292';
             params.set('app_id', parentAppId);
             params.set('lang', 'EN');
 

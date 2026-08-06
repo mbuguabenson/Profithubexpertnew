@@ -1274,7 +1274,7 @@ export const generateOAuthURL = async (prompt?: string, domainConfig = getDomain
     return ``;
 };
 
-export const getAppId = () => {
+export const getAppId = (): string => {
     try {
         const domainConfig = getDomainConfig();
         if (domainConfig && domainConfig.appId) {
@@ -1283,8 +1283,7 @@ export const getAppId = () => {
     } catch (e) {
         // ignore and fallback
     }
-    // Fallback to env or localStorage or default
-    return process.env.CLIENT_ID ?? localStorage.getItem('CLIENT_ID') ?? '3Mmq9JHMrJaUKT2KIhKZ';
+    return process.env.APP_ID || '114292';
 };
 
 

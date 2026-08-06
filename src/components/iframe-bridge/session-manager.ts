@@ -48,7 +48,7 @@ export class SessionManager {
             }
         }
 
-        const appId = getAppId() || '121856';
+        const appId = getAppId() || '114292';
 
         if (!loginid || !token) {
             return null;

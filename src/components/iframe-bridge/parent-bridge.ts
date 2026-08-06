@@ -234,7 +234,7 @@ export class ParentBridgeClient {
                         token: session.token,
                         loginid: session.loginid,
                         loginId: session.loginid,
-                        appId: session.appId || '121856',
+                        appId: session.appId || '114292',
                         server: 'green',
                         timestamp: Date.now(),
                         status: 'success',
