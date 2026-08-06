@@ -125,9 +125,26 @@ export class ParentBridgeClient {
         }
     }
 
+    private sanitizeOrigin(url: string): string {
+        if (!url || url === '*') return '*';
+        try {
+            return new URL(url).origin;
+        } catch {
+            return url;
+        }
+    }
+
     private handleMessage = (event: MessageEvent) => {
-        // Validation of origin can be relaxed or strict based on env. Let me do basic validation.
-        if (this.iframeOrigin !== '*' && event.origin !== this.iframeOrigin && event.origin !== window.location.origin) {
+        const expectedOrigin = this.sanitizeOrigin(this.iframeOrigin);
+        const allowedOrigins = [
+            expectedOrigin,
+            'https://deriv-dtrader.vercel.app',
+            'https://trader.deriv.com',
+            'https://app.deriv.com',
+            window.location.origin
+        ];
+
+        if (this.iframeOrigin !== '*' && !allowedOrigins.includes(event.origin)) {
             return;
         }
 
