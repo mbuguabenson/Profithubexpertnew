@@ -6,6 +6,7 @@ import { getAppId } from '@/components/shared/utils/config/config';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
+import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
 
 interface IframeWrapperProps {
     src: string;
@@ -17,6 +18,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [bridgeClient, setBridgeClient] = useState<ParentBridgeClient | null>(null);
     const { transactions, run_panel, client } = useStore();
 
     useEffect(() => {
@@ -38,7 +40,12 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             });
         }
 
-        const sendAuthData = () => {
+        // Initialize the new bridge client
+        const bridge = new ParentBridgeClient();
+        setBridgeClient(bridge);
+        bridge.attach(iframe, '*');
+
+        const sendLegacyAuthData = () => {
             let token = OAuthTokenExchangeService.getAuthInfo()?.access_token;
             let loginid = V2GetActiveAccountId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
             
@@ -46,25 +53,29 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 token = V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || (client as any)?.active_account?.token || '';
             }
 
-            // Demo to Real logic: if token is legacy and demo-to-real is on, we MUST pass the demo login ID too, otherwise they mismatch
             const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
-            // Do not force demo override for DTrader Terminal - it needs to manage its own real/demo state
             if (isDemoToReal && loginid && !loginid.startsWith('VR') && !OAuthTokenExchangeService.getAuthInfo()?.access_token && title !== 'DTrader Terminal') {
                  const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
                  const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
-                 if (demoAccountId) loginid = demoAccountId;
+                 if (demoAccountId) {
+                     loginid = demoAccountId;
+                     token = accountsList[demoAccountId] || token;
+                 }
+            }
+            
+            if (!token && loginid) {
+                const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
+                token = accountsList[loginid] || token;
             }
 
-            const appId = getAppId() || '134249';
+            // IMPORTANT: If we use OAuth tokens (ory_at_...), we MUST pass the parent's App ID to the iframe.
+            // Hardcoding legacy IDs will cause Deriv to reject the OAuth token.
+            const appId = getAppId() || '121856';
 
             const effectiveLoginId = loginid || (client as any)?.active_account_loginid || localStorage.getItem('active_loginid');
             const effectiveToken = token || localStorage.getItem('token');
 
-            // If we don't have a real account, do not send fake auth payloads to iframes
-            if (!effectiveLoginId || !effectiveToken) {
-                console.log(`[${title}] Waiting for real login token before authenticating iframe...`);
-                return;
-            }
+            if (!effectiveLoginId || !effectiveToken) return;
 
             if (iframe.contentWindow) {
                 try {
@@ -73,7 +84,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                         token: effectiveToken,
                         loginid: effectiveLoginId,
                         loginId: effectiveLoginId,
-                        appId: appId || '134249',
+                        appId: appId,
                         server: 'green',
                         timestamp: Date.now(),
                         authMode: 'derivws_otp',
@@ -81,36 +92,25 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                         currency: 'USD',
                         defaultSymbol: '1HZ100V',
                         embedBase,
-                        iframeUrl: `${embedBase}/?acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appId || '134249'}&lang=EN`
+                        iframeUrl: `${embedBase}/?acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appId}&lang=EN`
                     };
 
-                    // Broadcast all common message formats used by external trading analysis tools
                     iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ action: 'init', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ action: 'login', ...authPayload }, '*');
                     
-                    // Specific to deriv V2 iframe bridge sync
                     iframe.contentWindow.postMessage({ 
                         action: 'sync_client_data', 
                         payload: { client_accounts: JSON.parse(localStorage.getItem('client.accounts') || '{}') } 
                     }, '*');
 
-                    console.log(
-                        `🔐 [${title}] Sent auth payload to iframe (loginid: ${effectiveLoginId}, appId: ${appId})`
-                    );
                 } catch (error) {
                     console.error('Error sending auth data to iframe:', error);
                 }
             }
         };
-
-        // Automatically trigger auth data broadcast on mount and short intervals
-        sendAuthData();
-        setTimeout(sendAuthData, 500);
-        setTimeout(sendAuthData, 1500);
-        setTimeout(sendAuthData, 3000);
 
         const expectedOrigin = process.env.DTRADER_PROXY_URL || process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
         
@@ -138,12 +138,9 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
             // Debug: Log all messages from iframe
             if (event.data) {
-                console.log(`📨 [${title}] Received message from iframe:`, event.data);
-                
-                // Deriv V2 bridge typically sends a message on load (e.g. 'init', 'handshake').
-                // If it's not a trade event, re-broadcast our auth data just in case.
-                if (event.data.type !== 'TRADE_PLACED' && event.data.type !== 'CONTRACT_EVENT') {
-                    sendAuthData();
+                // If it's not a trade event and not a new bridge event, send legacy payload
+                if (event.data.type !== 'TRADE_PLACED' && event.data.type !== 'CONTRACT_EVENT' && !event.data.type?.startsWith('BRIDGE_')) {
+                    sendLegacyAuthData();
                 }
             }
 
@@ -288,13 +285,10 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         // Send auth data when iframe loads
         const handleLoad = () => {
             console.log('✅ Iframe loaded successfully:', src);
-            // Immediately set loading to false so iframe becomes interactive
             setIsLoading(false);
             setHasError(false);
-            // Wait a bit for iframe to be ready
             setTimeout(() => {
-                sendAuthData();
-                // Ensure loading is false
+                sendLegacyAuthData();
                 setIsLoading(false);
                 // Check if iframe has content
                 try {
@@ -346,30 +340,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             }
         };
 
-        // Monitor localStorage for auth token changes (login/logout)
-        let lastToken = V2GetActiveToken();
-        let lastLoginId = V2GetActiveAccountId();
 
-        const checkAuthChanges = () => {
-            const currentToken = V2GetActiveToken();
-            const currentLoginId = V2GetActiveAccountId();
-
-            // If token changed (login or logout), send immediately
-            if (currentToken !== lastToken || currentLoginId !== lastLoginId) {
-                console.log(`🔄 [${title}] Auth state changed, sending updated token...`);
-                lastToken = currentToken;
-                lastLoginId = currentLoginId;
-                sendAuthData();
-            }
-        };
-
-        // Check for auth changes every 1 second
-        const authCheckInterval = setInterval(checkAuthChanges, 1000);
-
-        // Send auth data periodically (in case token changes)
-        const intervalId = setInterval(() => {
-            sendAuthData();
-        }, 5000); // Every 5 seconds
 
         // Timeout to detect if iframe never loads
         const loadTimeout = setTimeout(() => {
@@ -399,18 +370,16 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         // Check access after a short delay
         setTimeout(checkIframeAccess, 2000);
 
-        // Send initial auth data after a delay
         setTimeout(() => {
-            sendAuthData();
+            sendLegacyAuthData();
         }, 1000);
 
         // Cleanup
         return () => {
+            bridge.detach();
             iframe.removeEventListener('load', handleLoad);
             iframe.removeEventListener('error', handleError);
             window.removeEventListener('message', handleMessage);
-            clearInterval(intervalId);
-            clearInterval(authCheckInterval);
             clearTimeout(loadTimeout);
         };
     }, [src, isLoading, title]);
@@ -528,6 +497,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                     }, 100);
                 }}
             />
+            {title === 'DTrader Terminal' && <DiagnosticsPanel bridge={bridgeClient} />}
         </div>
     );
 });

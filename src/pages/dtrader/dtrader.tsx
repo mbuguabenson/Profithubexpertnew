@@ -5,9 +5,8 @@ import IframeWrapper from '@/components/iframe-wrapper/iframe-wrapper';
 import { useStore } from '@/hooks/useStore';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
 import { getAccountsList } from '@/utils/token-bridge';
+import { getAppId } from '@/components/shared/utils/config/config';
 import './dtrader.scss';
-
-const LEGACY_APP_ID = '134249';
 
 const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
@@ -60,7 +59,11 @@ const DTraderPage: React.FC = observer(() => {
     params.set('interval', '1t');
     params.set('symbol', '1HZ100V');
     params.set('trade_type', 'accumulator');
-    params.set('app_id', LEGACY_APP_ID);
+    
+    // IMPORTANT: We must use the parent's App ID here. If the parent is using OAuth (e.g. 114292),
+    // passing a hardcoded legacy ID like 121856 or 134249 will cause the token to be rejected by Deriv.
+    const parentAppId = getAppId() || '121856';
+    params.set('app_id', parentAppId);
     params.set('lang', 'EN');
 
     const dtraderUrl = `${baseUrl}/?${params.toString()}`;
