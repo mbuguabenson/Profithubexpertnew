@@ -8,10 +8,10 @@ import Button from '@/components/shared_ui/button';
 import './account-center.scss';
 
 // Import components (to be built)
-import Overview from './components/Overview';
-import StatementAnalytics from './components/StatementAnalytics';
-import PerformanceJourney from './components/PerformanceJourney';
-import MarkupStatistics from './components/MarkupStatistics';
+import Overview from './components/Overview.tsx';
+import StatementAnalytics from './components/StatementAnalytics.tsx';
+import PerformanceJourney from './components/PerformanceJourney.tsx';
+import MarkupStatistics from './components/MarkupStatistics.tsx';
 
 const AccountCenter = observer(() => {
     const { activeLoginid, setIsAuthorizing } = useApiBase();

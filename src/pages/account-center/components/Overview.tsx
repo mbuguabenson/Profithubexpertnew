@@ -28,8 +28,6 @@ const Overview = observer(() => {
         fetchPortfolio();
     }, [activeLoginid]);
 
-    const activeAccountInfo = client?.accounts?.[activeLoginid || ''];
-
     return (
         <div className='account-overview'>
             <div className='account-overview__kpi-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
