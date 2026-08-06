@@ -313,7 +313,7 @@ const AppHeader = observer(() => {
                                     </button>
                                 )}
                                 <CurrencyDropdown />
-                                <CustomNotifications />
+                                {isDesktop && <CustomNotifications />}
                             </>
                         )}
                         {renderAccountSection('right')}

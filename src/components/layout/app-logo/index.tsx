@@ -25,17 +25,15 @@ const MobileLogo = () => (
 export const AppLogo = () => {
     const { isDesktop } = useDevice();
 
+    if (!isDesktop) return null;
+
     // Get logo configuration from brand.config.json
     const logoConfig = brandConfig.platform.logo;
     const logoUrl = logoConfig.link_url || '/';
 
     return (
         <a href={logoUrl} className='app-header__logo' aria-label={localize('Home')}>
-            {isDesktop ? (
-                <BrandLogo width={120} height={32} fill='var(--text-general)' />
-            ) : (
-                <MobileLogo />
-            )}
+            <BrandLogo width={120} height={32} fill='var(--text-general)' />
         </a>
     );
 };
