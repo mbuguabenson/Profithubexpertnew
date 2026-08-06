@@ -73,7 +73,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                         token: effectiveToken,
                         loginid: effectiveLoginId,
                         loginId: effectiveLoginId,
-                        appId: '134249',
+                        appId: appId || '134249',
                         server: 'green',
                         timestamp: Date.now(),
                         authMode: 'derivws_otp',
@@ -81,7 +81,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                         currency: 'USD',
                         defaultSymbol: '1HZ100V',
                         embedBase,
-                        iframeUrl: `${embedBase}/?acct1=${effectiveLoginId}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=134249&lang=EN`
+                        iframeUrl: `${embedBase}/?acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appId || '134249'}&lang=EN`
                     };
 
                     // Broadcast all common message formats used by external trading analysis tools
@@ -90,6 +90,12 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                     iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ action: 'init', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ action: 'login', ...authPayload }, '*');
+                    
+                    // Specific to deriv V2 iframe bridge sync
+                    iframe.contentWindow.postMessage({ 
+                        action: 'sync_client_data', 
+                        payload: { client_accounts: JSON.parse(localStorage.getItem('client.accounts') || '{}') } 
+                    }, '*');
 
                     console.log(
                         `🔐 [${title}] Sent auth payload to iframe (loginid: ${effectiveLoginId}, appId: ${appId})`
@@ -131,18 +137,17 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             if (!isAllowed) return;
 
             // Debug: Log all messages from iframe
-            if (event.data && event.data.type) {
-                console.log(`📨 [${title}] Received message from iframe:`, event.data.type, event.data);
+            if (event.data) {
+                console.log(`📨 [${title}] Received message from iframe:`, event.data);
+                
+                // Deriv V2 bridge typically sends a message on load (e.g. 'init', 'handshake').
+                // If it's not a trade event, re-broadcast our auth data just in case.
+                if (event.data.type !== 'TRADE_PLACED' && event.data.type !== 'CONTRACT_EVENT') {
+                    sendAuthData();
+                }
             }
 
-            if (!event.data || !event.data.type) return;
-
-            // Handle auth requests
-            if (event.data.type === 'REQUEST_AUTH') {
-                console.log(`📨 [${title}] Received REQUEST_AUTH from iframe, sending auth token...`);
-                sendAuthData();
-                return;
-            }
+            if (!event.data) return;
 
             // Handle trade events from Hyperbot iframe
             if (event.data.type === 'TRADE_PLACED' || event.data.type === 'CONTRACT_EVENT') {
