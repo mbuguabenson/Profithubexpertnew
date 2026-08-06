@@ -112,12 +112,12 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             }
         };
 
-        // Aggressive polling fallback for legacy bots that don't emit BRIDGE_READY
+        // Initial broadcasts for legacy bots that listen to postMessage
         sendLegacyAuthData();
-        setTimeout(sendLegacyAuthData, 500);
-        setTimeout(sendLegacyAuthData, 1500);
+        setTimeout(sendLegacyAuthData, 1000);
         setTimeout(sendLegacyAuthData, 3000);
-        const legacyIntervalId = setInterval(sendLegacyAuthData, 5000);
+        setTimeout(sendLegacyAuthData, 5000);
+        setTimeout(sendLegacyAuthData, 8000);
 
         const expectedOrigin = process.env.DTRADER_PROXY_URL || process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
         
@@ -388,7 +388,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             iframe.removeEventListener('error', handleError);
             window.removeEventListener('message', handleMessage);
             clearTimeout(loadTimeout);
-            clearInterval(legacyIntervalId);
         };
     }, [src, isLoading, title]);
 
