@@ -32,7 +32,7 @@
     overflow: hidden;
     width: 100%;
     height: calc(100vh - 9rem);
-    padding: 1.6rem;
+    padding: 0 1.6rem 1.6rem 1.6rem; // Removed top padding to reduce space between header and tabs
 
     @include mobile-or-tablet-screen {
         height: calc(100vh - 6rem);
@@ -97,9 +97,10 @@
                 backdrop-filter: blur(16px) saturate(180%) !important;
                 -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
                 border: 1px solid rgba(33, 150, 243, 0.2) !important;
-                border-radius: 16px !important;
+                border-radius: 0 !important;
                 padding: 6px 10px !important;
-                margin-bottom: 10px !important;
+                margin-top: 0 !important;
+                margin-bottom: 4px !important;
                 justify-content: flex-start !important;
                 align-items: center !important;
                 display: flex !important;
@@ -171,10 +172,11 @@
                 }
 
                 &.dc-tabs__active {
-                    background: rgba(255, 255, 255, 0.15) !important;
+                    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important;
                     color: #ffffff !important;
-                    border-color: rgba(255, 255, 255, 0.3) !important;
-                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+                    border-radius: 0 !important;
+                    border-color: transparent !important;
+                    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
                     transform: scale(1.03) !important;
                     z-index: 5 !important;
                     font-weight: 700 !important;
