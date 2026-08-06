@@ -1,5 +1,4 @@
 import { SessionPayload } from './protocol';
-import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
 

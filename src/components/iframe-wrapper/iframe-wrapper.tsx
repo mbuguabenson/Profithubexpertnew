@@ -3,7 +3,6 @@ import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
-import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
 import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';

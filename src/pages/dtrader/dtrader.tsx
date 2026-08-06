@@ -1,6 +1,5 @@
 import React from 'react';
 import { observer } from 'mobx-react-lite';
-import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import IframeWrapper from '@/components/iframe-wrapper/iframe-wrapper';
 import { useStore } from '@/hooks/useStore';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
@@ -27,7 +26,6 @@ const DTraderPage: React.FC = observer(() => {
     const params = new URLSearchParams();
     
     // Smart integration: Pass all tokens and accounts to DTrader to fix session expiry
-    const accountsList = getAccountsList();
     let count = 1;
 
     // Prioritize active account
