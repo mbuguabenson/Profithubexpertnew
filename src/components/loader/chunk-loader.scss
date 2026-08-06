@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+// ─── Smooth Chunk Loader ─────────────────────────────────────────────
+.chunk-loader-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 280px;
+    padding: 2rem;
+    box-sizing: border-box;
+    background: radial-gradient(circle at 50% 40%, rgba(15, 23, 42, 0.95) 0%, rgba(5, 8, 17, 0.98) 100%);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+    &.clean {
+        background: transparent !important;
+        min-height: 180px;
+        padding: 1rem;
+    }
+}
+
+// ─── Bouncing Animation Loader ──────────────────────────────────────
+.bouncing-loader-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+}
+
+/* From Uiverse.io by AqFox */
+.spinner {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    border: 4px solid #0000;
+    border-radius: 50%;
+    border-right-color: #3b82f6;
+    animation: spinner-a4dj62 1s infinite linear;
+}
+
+.spinner::before,
+.spinner::after {
+    content: "";
+    grid-area: 1/1;
+    margin: 2px;
+    border: inherit;
+    border-radius: 50%;
+    animation: spinner-a4dj62 2s infinite;
+}
+
+.spinner::after {
+    margin: 8px;
+    animation-duration: 3s;
+}
+
+@keyframes spinner-a4dj62 {
+    100% {
+        transform: rotate(1turn);
+    }
+}
+
+.bouncing-loader-msg {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+    text-transform: uppercase;
+}

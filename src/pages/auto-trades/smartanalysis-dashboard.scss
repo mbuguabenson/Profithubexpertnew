@@ -1,0 +1,380 @@
+.smart-dashboard {
+    width: 100%;
+    padding: 1rem 0;
+    color: var(--auto-trades-text);
+
+    &__empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed var(--auto-trades-border);
+        color: var(--auto-trades-text-dim);
+        font-size: 1.4rem;
+        text-align: center;
+    }
+
+    &__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.6rem;
+
+        @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &--modal {
+        .smart-dashboard__grid {
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+        
+        .smart-dashboard__chart-bars {
+            gap: 0.6rem;
+        }
+
+        .smart-dashboard__bar-bg {
+            height: 80px;
+        }
+    }
+
+    &__card {
+        background: rgba(16, 30, 53, 0.6);
+        border: 1px solid var(--auto-trades-border-subtle);
+        border-radius: 12px;
+        padding: 1.6rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--auto-trades-text);
+            margin: 0 0 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.8rem;
+        }
+    }
+
+    // 1. Digit Distribution Bars
+    &__chart-bars {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: 140px;
+        padding: 0.8rem 0;
+        gap: 0.8rem;
+    }
+
+    &__bar-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+
+    &__bar-pct {
+        font-size: 0.9rem;
+        font-family: monospace;
+        color: var(--auto-trades-text-dim);
+        margin-bottom: 0.4rem;
+    }
+
+    &__bar-bg {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 3px;
+        height: 100px;
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+    }
+
+    &__bar-fill {
+        width: 100%;
+        background: var(--auto-trades-accent);
+        border-radius: 3px 3px 0 0;
+        transition: height 0.3s ease;
+
+        &--hot {
+            background: linear-gradient(180deg, #ff4a6b, var(--auto-trades-danger));
+            box-shadow: 0 0 6px rgba(255, 74, 107, 0.3);
+        }
+
+        &--cold {
+            background: linear-gradient(180deg, #60a5fa, #2563eb);
+        }
+    }
+
+    &__bar-num {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-top: 0.4rem;
+        color: var(--auto-trades-text-muted);
+
+        &--hot {
+            color: #ff4a6b;
+        }
+        &--cold {
+            color: #60a5fa;
+        }
+    }
+
+    // 2. Last digits sparkline & cards
+    &__graph-container {
+        width: 100%;
+        height: 80px;
+        background: rgba(8, 14, 29, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        border-radius: 6px;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__graph-loading {
+        font-size: 1.1rem;
+        color: var(--auto-trades-text-muted);
+    }
+
+    &__last7 {
+        h4 {
+            font-size: 1.2rem;
+            color: var(--auto-trades-text-dim);
+            margin: 0 0 0.8rem;
+        }
+    }
+
+    &__cards {
+        display: flex;
+        gap: 0.6rem;
+        overflow-x: auto;
+        padding-bottom: 0.4rem;
+
+        &::-webkit-scrollbar {
+            height: 3px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: var(--auto-trades-border);
+            border-radius: 1.5px;
+        }
+    }
+
+    &__digit-card {
+        flex: 1;
+        min-width: 44px;
+        padding: 0.6rem;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+
+        &--high {
+            background: rgba(196, 32, 56, 0.12);
+            border-color: rgba(196, 32, 56, 0.25);
+            .smart-dashboard__digit-val {
+                color: #ff4a6b;
+                text-shadow: 0 0 8px rgba(255, 74, 107, 0.3);
+            }
+            .smart-dashboard__digit-label {
+                color: rgba(255, 74, 107, 0.6);
+            }
+        }
+
+        &--low {
+            background: rgba(0, 204, 122, 0.1);
+            border-color: rgba(0, 204, 122, 0.2);
+            .smart-dashboard__digit-val {
+                color: #39d353;
+                text-shadow: 0 0 8px rgba(57, 211, 83, 0.3);
+            }
+            .smart-dashboard__digit-label {
+                color: rgba(57, 211, 83, 0.6);
+            }
+        }
+
+        &--new {
+            animation: digit-card-bounce 0.3s ease;
+            border-color: var(--auto-trades-accent-bright);
+        }
+    }
+
+    &__digit-val {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    &__digit-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    @keyframes digit-card-bounce {
+        0% { transform: scale(0.9); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+    }
+
+    // 3. Dominance Progress Bars
+    &__dominance-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        padding: 0.4rem 0;
+    }
+
+    &__dominance-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.2rem;
+        font-weight: 500;
+
+        .under-label {
+            color: #39d353;
+        }
+        .over-label {
+            color: #ff4a6b;
+        }
+    }
+
+    &__progress-bar {
+        display: flex;
+        width: 100%;
+        height: 12px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        transition: all 0.3s ease;
+
+        .progress-under {
+            background: linear-gradient(90deg, #22c55e, #39d353);
+            transition: width 0.3s ease;
+        }
+
+        .progress-over {
+            background: linear-gradient(90deg, #ff4a6b, #ef4444);
+            transition: width 0.3s ease;
+        }
+
+        &--glow-under {
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        &--glow-over {
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+    }
+
+    &__dominance-digits {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.1rem;
+        color: var(--auto-trades-text-dim);
+
+        strong {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .under-color {
+            color: #39d353;
+        }
+        .over-color {
+            color: #ff4a6b;
+        }
+    }
+
+    // 4. AI Signals & Warnings
+    &__signals-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    &__signal-alert {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        background: rgba(245, 197, 66, 0.1);
+        border: 1px solid rgba(245, 197, 66, 0.3);
+        border-radius: 8px;
+        padding: 0.8rem 1.2rem;
+        font-size: 1.15rem;
+        font-weight: 500;
+        color: #f5c542;
+
+        .signal-icon {
+            font-size: 1.4rem;
+        }
+    }
+
+    .pulse-glow {
+        animation: signal-pulse 2s infinite;
+    }
+
+    @keyframes signal-pulse {
+        0%, 100% {
+            box-shadow: 0 0 4px rgba(245, 197, 66, 0.1);
+            border-color: rgba(245, 197, 66, 0.3);
+        }
+        50% {
+            box-shadow: 0 0 12px rgba(245, 197, 66, 0.35);
+            border-color: rgba(245, 197, 66, 0.6);
+        }
+    }
+
+    &__warning-alert {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+        border-radius: 8px;
+        padding: 0.8rem 1.2rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #f87171;
+
+        .warning-icon {
+            font-size: 1.3rem;
+        }
+    }
+
+    &__advice-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+
+        .advice-title {
+            font-size: 1rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--auto-trades-text-muted);
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+        }
+
+        .advice-text {
+            font-size: 1.15rem;
+            color: var(--auto-trades-text-dim);
+            line-height: 1.4;
+        }
+    }
+}

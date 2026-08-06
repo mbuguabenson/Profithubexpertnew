@@ -1,0 +1,387 @@
+// ─── App Root ──────────────────────────────────────────────────────────────────
+.app-root {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+
+    .load-message {
+        margin-top: 6rem;
+    }
+}
+
+// ─── Welcome Screen Shell ──────────────────────────────────────────────────────
+.welcome-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    overflow: hidden;
+    background: #020617;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+
+.welcome-screen--visible {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.welcome-screen--exit {
+    opacity: 0;
+    transform: scale(1.04);
+    filter: blur(8px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), filter 0.8s ease, transform 0.8s ease;
+}
+
+// ─── Background Image ──────────────────────────────────────────────────────────
+.welcome-screen__background {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transform: scale(1.08);
+    filter: blur(0px) saturate(130%) brightness(0.7);
+    opacity: 0.92;
+    animation: ws-kenburns 40s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes ws-kenburns {
+    0% { transform: scale(1.08) translate(0, 0); }
+    50% { transform: scale(1.12) translate(-1%, 0.5%); }
+    100% { transform: scale(1.08) translate(1%, -0.5%); }
+}
+
+// ─── Overlays ──────────────────────────────────────────────────────────────────
+.welcome-screen__overlay {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 90% 80% at 50% 120%, rgba(8, 25, 70, 0.85) 0%, transparent 70%),
+        linear-gradient(180deg, rgba(2, 6, 23, 0.35) 0%, rgba(2, 6, 23, 0.92) 100%);
+}
+
+.welcome-screen__vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 120% 100% at 50% 50%, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+// ─── Grid Lines ───────────────────────────────────────────────────────────────
+.welcome-screen__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(59, 130, 246, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.06) 1px, transparent 1px);
+    background-size: 80px 80px;
+    animation: ws-grid-drift 60s linear infinite;
+    opacity: 0.5;
+}
+
+@keyframes ws-grid-drift {
+    from { background-position: 0 0; }
+    to { background-position: 80px 80px; }
+}
+
+// ─── Particles ────────────────────────────────────────────────────────────────
+.welcome-screen__particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.ws-particle {
+    position: absolute;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.9), rgba(16, 185, 129, 0.2));
+    box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+    animation: ws-particle-float linear infinite;
+    opacity: 0.25;
+}
+
+@keyframes ws-particle-float {
+    0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.18; }
+    33% { transform: translateY(-18px) translateX(10px) scale(1.1); opacity: 0.32; }
+    66% { transform: translateY(-8px) translateX(-8px) scale(0.9); opacity: 0.22; }
+}
+
+// ─── Content Container ────────────────────────────────────────────────────────
+.welcome-screen__content {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: min(100%, 600px);
+    padding: 32px 24px 52px;
+    gap: 26px;
+    text-align: center;
+    animation: ws-content-enter 0.9s cubic-bezier(0.2, 0, 0, 1) forwards;
+}
+
+@keyframes ws-content-enter {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Logo Orb Shell (REDUCED SIZE + FLOATING) ─────────────────────────────────
+.ws-orb-shell {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: grid;
+    place-items: center;
+    filter: drop-shadow(0 0 32px rgba(59, 130, 246, 0.45));
+    animation: ws-orb-shell-float 4s ease-in-out infinite;
+}
+
+@keyframes ws-orb-shell-float {
+    0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        filter: drop-shadow(0 0 32px rgba(59, 130, 246, 0.45));
+    }
+    25% {
+        transform: translateY(-12px) translateX(5px) rotate(2deg);
+        filter: drop-shadow(0 8px 40px rgba(59, 130, 246, 0.6));
+    }
+    50% {
+        transform: translateY(-6px) translateX(-4px) rotate(-1deg);
+        filter: drop-shadow(0 4px 36px rgba(16, 185, 129, 0.5));
+    }
+    75% {
+        transform: translateY(-14px) translateX(3px) rotate(1.5deg);
+        filter: drop-shadow(0 10px 44px rgba(139, 92, 246, 0.5));
+    }
+    100% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        filter: drop-shadow(0 0 32px rgba(59, 130, 246, 0.45));
+    }
+}
+
+.ws-ring {
+    position: absolute;
+    border-radius: 50%;
+    border-style: solid;
+    border-color: transparent;
+}
+
+.ws-ring--outer {
+    width: 116px;
+    height: 116px;
+    border-width: 1px;
+    border-color: rgba(59, 130, 246, 0.25);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.12), inset 0 0 20px rgba(59, 130, 246, 0.05);
+    animation: ws-ring-spin 18s linear infinite;
+}
+
+.ws-ring--mid {
+    width: 92px;
+    height: 92px;
+    border-width: 1.5px;
+    border-color: rgba(16, 185, 129, 0.3);
+    border-top-color: rgba(16, 185, 129, 0.8);
+    animation: ws-ring-spin 10s linear infinite reverse;
+}
+
+.ws-ring--inner {
+    width: 70px;
+    height: 70px;
+    border-width: 1px;
+    border-color: rgba(139, 92, 246, 0.2);
+    border-right-color: rgba(139, 92, 246, 0.7);
+    animation: ws-ring-spin 7s linear infinite;
+}
+
+@keyframes ws-ring-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+// ─── Logo Core Orb (REDUCED + FLOATING) ───────────────────────────────────────
+.ws-logo-core {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow:
+        0 0 28px rgba(59, 130, 246, 0.3),
+        0 0 56px rgba(59, 130, 246, 0.12),
+        inset 0 0 14px rgba(255, 255, 255, 0.06);
+    animation: ws-core-glow 3.2s ease-in-out infinite;
+}
+
+@keyframes ws-core-glow {
+    0%, 100% {
+        box-shadow:
+            0 0 28px rgba(59, 130, 246, 0.3),
+            0 0 56px rgba(59, 130, 246, 0.12),
+            inset 0 0 14px rgba(255, 255, 255, 0.06);
+    }
+    50% {
+        box-shadow:
+            0 0 36px rgba(59, 130, 246, 0.45),
+            0 0 72px rgba(59, 130, 246, 0.18),
+            inset 0 0 14px rgba(255, 255, 255, 0.08);
+    }
+}
+
+// ─── Hero Text ────────────────────────────────────────────────────────────────
+.ws-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    padding: 20px 28px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.ws-hero__label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(96, 165, 250, 0.9);
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 100px;
+    padding: 4px 14px;
+}
+
+.ws-hero__title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.ws-hero__brand {
+    background: linear-gradient(135deg, #60a5fa, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.ws-hero__subtitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.65);
+    margin: 0;
+}
+
+// ─── Feature Badges ───────────────────────────────────────────────────────────
+.ws-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.ws-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 100px;
+    padding: 6px 14px;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s;
+}
+
+// ─── Loading Copy ─────────────────────────────────────────────────────────────
+.ws-loading-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+
+.ws-loading-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.02em;
+}
+
+.ws-status {
+    font-size: 0.75rem;
+    color: rgba(96, 165, 250, 0.75);
+    letter-spacing: 0.06em;
+    min-height: 1.2em;
+}
+
+// ─── Progress Bar ─────────────────────────────────────────────────────────────
+.ws-progress {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.ws-progress__track {
+    width: 100%;
+    height: 6px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.ws-progress__fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #3b82f6, #10b981, #6366f1);
+    background-size: 200% 100%;
+    animation: ws-gradient-shift 2.5s ease-in-out infinite;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.ws-progress__shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    animation: ws-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes ws-gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes ws-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.ws-progress__label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.08em;
+}

@@ -1,0 +1,93 @@
+[
+  {
+    "name": "AUTOTRADER",
+    "file": "AUTOTRADER.xml",
+    "description": "Fully automated trading bot with intelligent market analysis and auto-execution for hands-free trading.",
+    "difficulty": "Beginner",
+    "strategy": "Auto Trading"
+  },
+  {
+    "name": "Compounding Bot",
+    "file": "Compounding_Bot.xml",
+    "description": "Compound your profits automatically with smart stake management and progressive growth strategy.",
+    "difficulty": "Intermediate",
+    "strategy": "Compounding"
+  },
+  {
+    "name": "HUNTER SPEED BOT",
+    "file": "HUNTER SPEED BOT.xml",
+    "description": "High-speed precision bot designed for rapid market entries and quick profit captures.",
+    "difficulty": "Advanced",
+    "strategy": "Speed Run"
+  },
+  {
+    "name": "LAS VEGAS 💵💵 PRO ENGLISH",
+    "file": "LAS VEGAS 💵💵 PRO ENGLISH..xml",
+    "description": "Premium high-stakes trading bot with aggressive profit-targeting strategies for experienced traders.",
+    "difficulty": "Advanced",
+    "strategy": "High Stakes"
+  },
+  {
+    "name": "OVER UNDER AUTO SWITCHER",
+    "file": "OVER UNDER AUTO SWITCHER.xml",
+    "description": "Intelligent Over/Under bot that auto-switches between strategies based on market conditions.",
+    "difficulty": "Intermediate",
+    "strategy": "Over/Under"
+  },
+  {
+    "name": "OVER UNDER AUTOMATIC X",
+    "file": "OVER UNDER AUTOMATIC X .xml",
+    "description": "Advanced automated Over/Under trading with optimized entry points and risk management.",
+    "difficulty": "Intermediate",
+    "strategy": "Over/Under"
+  },
+  {
+    "name": "Over Under Compounding",
+    "file": "Over_Under_Compounding.xml",
+    "description": "Over/Under strategy combined with compounding for accelerated growth and consistent returns.",
+    "difficulty": "Intermediate",
+    "strategy": "Over/Under"
+  },
+  {
+    "name": "PROFITHUB PREMIUM A.I",
+    "file": "PROFITHUB PREMIUM A.I.xml",
+    "description": "ProfitHub's flagship AI-powered bot with machine learning-enhanced market prediction and execution.",
+    "difficulty": "Advanced",
+    "strategy": "AI Premium"
+  },
+  {
+    "name": "PROFITHUB RISE FALL AUTO",
+    "file": "PROFITHUB RISE FALL AUTO.xml",
+    "description": "Automated Rise/Fall trading bot with smart trend detection and optimal entry timing.",
+    "difficulty": "Beginner",
+    "strategy": "Rise/Fall"
+  },
+  {
+    "name": "Profithub SV1",
+    "file": "Profithub SV1.xml",
+    "description": "ProfitHub Server V1 — optimized multi-strategy bot with balanced risk and consistent performance.",
+    "difficulty": "Beginner",
+    "strategy": "Multi-Strategy"
+  },
+  {
+    "name": "PROFITHUB UNDER 8 OVER 3 AUTO",
+    "file": "PROFITHUB UNDER 8 OVER 3 AUTO.xml",
+    "description": "Specialized digit bot targeting Under 8 and Over 3 with high win-rate auto-execution.",
+    "difficulty": "Intermediate",
+    "strategy": "Digits"
+  },
+  {
+    "name": "RISE AND FALL AUTOMATIC X",
+    "file": "RISE AND FALL AUTOMATIC X .xml",
+    "description": "Fully automated Rise and Fall bot with enhanced signal detection and dynamic stake adjustment.",
+    "difficulty": "Intermediate",
+    "strategy": "Rise/Fall"
+  },
+  {
+    "name": "🤑UNSTOPPABLE DIFFER BOT🤑",
+    "file": "🤑UNSTOPPABLE DIFFER BOT🤑.xml",
+    "description": "Unstoppable Differs trading bot with aggressive digit matching and high-frequency execution.",
+    "difficulty": "Advanced",
+    "strategy": "Differs"
+  }
+]

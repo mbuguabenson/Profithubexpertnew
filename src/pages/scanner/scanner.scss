@@ -1,0 +1,886 @@
+// ─── Scanner Page ─────────────────────────────────────────────────────────────
+
+// Font roles
+$font-display  : 'Orbitron', 'Courier New', monospace;       // headings, badges, chip labels
+$font-mono     : 'Share Tech Mono', 'Courier New', monospace; // prices, digits, terminal, codes
+$font-ui       : 'Inter', Arial, sans-serif;                  // labels, buttons, table text
+
+.scanner-page {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: var(--tab-content-height);
+    flex: 1 1 auto;
+    padding: 10px 0 60px;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Default: clean UI font for everything
+    * {
+        box-sizing: border-box;
+        font-family: $font-ui;
+        margin: 0;
+        padding: 0;
+    }
+
+    &--run-panel-open {
+        pointer-events: none;
+        visibility: hidden;
+    }
+}
+
+
+// ─── Matrix background ────────────────────────────────────────────────────────
+
+.background {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: rgba(0, 255, 0, 0.18);
+    font-size: 11px;
+    font-family: $font-mono; // matrix rain = monospace
+    line-height: 1.2;
+    white-space: pre;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.scrolling-text {
+    position: absolute;
+    width: 100%;
+    animation: scanner-scroll 4s linear infinite;
+    word-wrap: break-word;
+}
+
+// ─── Account banner ───────────────────────────────────────────────────────────
+
+.scanner-account-banner {
+    position: fixed;
+    top: 64px;
+    right: 16px;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.82);
+    border: 1px solid rgba(0, 255, 200, 0.3);
+    border-radius: 100px;
+    padding: 5px 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 0 16px rgba(0, 255, 200, 0.08);
+    animation: scanner-banner-in 0.4s ease;
+    font-family: $font-mono;
+
+    &__dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #22c87a;
+        box-shadow: 0 0 8px #22c87a;
+        animation: scanner-dot-pulse 2s ease-in-out infinite;
+        flex-shrink: 0;
+    }
+
+    &__text {
+        font-size: 0.68rem;
+        color: rgba(255, 255, 255, 0.75);
+        strong { color: #00ffc8; }
+    }
+
+    &__currency {
+        font-size: 0.6rem;
+        font-weight: 700;
+        background: rgba(0, 255, 200, 0.1);
+        color: #00ffc8;
+        padding: 2px 8px;
+        border-radius: 100px;
+        border: 1px solid rgba(0, 255, 200, 0.2);
+    }
+}
+
+// ─── Sub-tabs ─────────────────────────────────────────────────────────────────
+
+.scanner-tabs {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    margin: 16px 0 0;
+    padding: 0 10px;
+    width: 100%;
+    max-width: 640px;
+}
+
+.scanner-tab {
+    flex: 1;
+    padding: 10px 16px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(0, 255, 200, 0.2);
+    border-radius: 8px 8px 0 0;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-family: $font-display;
+    font-size: 0.62rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    &:hover {
+        color: #00ffc8;
+        border-color: rgba(0, 255, 200, 0.45);
+    }
+
+    &--active {
+        background: rgba(0, 30, 30, 0.95);
+        border-color: #00ffc8;
+        border-bottom-color: #000;
+        color: #00ffc8;
+        font-weight: 700;
+        box-shadow: 0 0 12px rgba(0, 255, 200, 0.15);
+    }
+
+    &__badge {
+        background: #00c8a0;
+        color: #000;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 1px 6px;
+        border-radius: 100px;
+        min-width: 18px;
+        text-align: center;
+    }
+}
+
+// ─── Main container ───────────────────────────────────────────────────────────
+
+.container {
+    position: relative;
+    width: calc(100% - 20px);
+    max-width: 640px;
+    padding: 24px 20px 28px;
+    text-align: center;
+    background: rgba(0, 8, 8, 0.92);
+    border-radius: 0 0 12px 12px;
+    border: 1px solid #00ffc8;
+    border-top: none;
+    box-shadow: 0 0 40px rgba(0, 255, 200, 0.12), 0 0 80px rgba(0, 255, 200, 0.04);
+    z-index: 10;
+    overflow: visible;
+
+    &--stats {
+        border-top: 1px solid #00ffc8;
+        border-radius: 12px;
+        max-width: 760px;
+        text-align: left;
+        padding: 20px 16px 28px;
+    }
+}
+
+h1 {
+    font-family: $font-display;
+    color: #00ffc8;
+    font-size: 1.0rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    text-shadow: 0 0 20px rgba(0, 255, 200, 0.6), 0 0 60px rgba(0, 255, 200, 0.2);
+}
+
+label {
+    font-family: $font-ui;
+    color: rgba(0, 255, 200, 0.7);
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 12px 0 5px;
+}
+
+.dropdown {
+    width: 100%;
+    padding: 9px 12px;
+    margin-bottom: 0;
+    border: 1px solid rgba(0, 255, 200, 0.25);
+    border-radius: 6px;
+    background: #060f0f;
+    color: #00ffc8;
+    font-family: $font-mono; // data values in mono
+    font-size: 0.82rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+
+    &:focus {
+        outline: none;
+        border-color: #00ffc8;
+        box-shadow: 0 0 8px rgba(0, 255, 200, 0.3);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    optgroup { color: rgba(0, 255, 200, 0.5); font-size: 0.75rem; }
+    option   { color: #00ffc8; background: #060f0f; }
+}
+
+// ─── Strategy chips (2-column) ────────────────────────────────────────────────
+
+.strategy-chips {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.strategy-chip {
+    padding: 9px 8px;
+    background: rgba(0, 20, 20, 0.8);
+    border: 1px solid rgba(0, 255, 200, 0.2);
+    border-radius: 8px;
+    color: rgba(0, 255, 200, 0.55);
+    font-family: $font-display;
+    font-size: 0.52rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover:not(:disabled) {
+        border-color: #00ffc8;
+        color: #00ffc8;
+        background: rgba(0, 255, 200, 0.06);
+    }
+
+    &--active {
+        background: rgba(0, 255, 200, 0.12);
+        border-color: #00ffc8;
+        color: #00ffc8;
+        box-shadow: 0 0 10px rgba(0, 255, 200, 0.2);
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+}
+
+// ─── Market info bar ──────────────────────────────────────────────────────────
+
+.market-info-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: rgba(0, 20, 20, 0.7);
+    border: 1px solid rgba(0, 255, 200, 0.15);
+    border-radius: 8px;
+    font-family: $font-mono; // all market data in mono
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.65);
+
+    &__name {
+        font-family: $font-display;
+        font-weight: 700;
+        font-size: 0.6rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #00ffc8;
+    }
+
+    &__sep {
+        color: rgba(0, 255, 200, 0.25);
+        user-select: none;
+    }
+
+    strong { color: #fff; }
+
+    .digit-highlight {
+        font-size: 1rem;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 8px #00ffc8;
+    }
+}
+
+// ─── Tick progress bar ────────────────────────────────────────────────────────
+
+.tick-progress {
+    position: relative;
+    height: 22px;
+    background: rgba(0, 255, 200, 0.06);
+    border: 1px solid rgba(0, 255, 200, 0.15);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 10px 0;
+
+    &__bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: linear-gradient(90deg, #003d30, #00ffc8);
+        border-radius: 6px;
+        transition: width 0.5s ease;
+    }
+
+    &__label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: $font-mono;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.85);
+        letter-spacing: 1px;
+        z-index: 1;
+    }
+}
+
+// ─── Confirmed signal badge ───────────────────────────────────────────────────
+
+.signal-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    background: rgba(0, 255, 200, 0.08);
+    border: 1px solid #00ffc8;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 255, 200, 0.15);
+    animation: signal-pulse 2s ease-in-out infinite;
+
+    &__icon { font-size: 1.1rem; }
+
+    &__label {
+        font-family: $font-display;
+        font-weight: 900;
+        font-size: 0.7rem;
+        color: #00ffc8;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    &__conf {
+        font-family: $font-mono;
+        font-size: 0.78rem;
+        color: rgba(0, 255, 200, 0.7);
+        margin-left: auto;
+    }
+
+    &__layers {
+        font-family: $font-ui;
+        font-size: 0.62rem;
+        font-weight: 600;
+        background: rgba(0, 255, 200, 0.12);
+        border: 1px solid rgba(0, 255, 200, 0.3);
+        padding: 2px 8px;
+        border-radius: 100px;
+        color: #00ffc8;
+        letter-spacing: 0.5px;
+    }
+}
+
+// ─── Trading controls ─────────────────────────────────────────────────────────
+
+.trading-controls {
+    margin: 10px 0 6px;
+
+    &__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    &__field {
+        text-align: left;
+
+        label {
+            font-size: 0.68rem;
+            margin: 0 0 4px;
+        }
+    }
+
+    &__alternate {
+        background: rgba(0, 20, 20, 0.6);
+        border: 1px solid rgba(0, 255, 200, 0.12);
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-top: 4px;
+    }
+
+    &__check-label {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        font-size: 0.78rem;
+        color: rgba(0, 255, 200, 0.7);
+        cursor: pointer;
+        text-transform: none;
+        letter-spacing: 0;
+        margin: 0 0 8px;
+
+        input[type='checkbox'] {
+            accent-color: #00ffc8;
+            width: 14px;
+            height: 14px;
+        }
+    }
+
+    &__loss-count {
+        width: 44px !important;
+        padding: 2px 6px !important;
+        background: #060f0f;
+        border: 1px solid rgba(0, 255, 200, 0.3);
+        border-radius: 4px;
+        color: #00ffc8;
+        font-size: 0.8rem;
+        text-align: center;
+
+        &:disabled { opacity: 0.4; }
+    }
+}
+
+// ─── Live stats strip ─────────────────────────────────────────────────────────
+
+.contain {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 10, 10, 0.6);
+    border: 1px solid rgba(0, 255, 200, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.latest-tick {
+    font-family: $font-mono;
+    font-size: 0.88rem;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+
+    span { color: #fff; font-weight: 400; }
+}
+
+// ─── Color helpers ────────────────────────────────────────────────────────────
+
+.col-green { color: #22c87a !important; }
+.col-yellow { color: #f0c040 !important; }
+.col-red { color: #ff4d4d !important; }
+.green { color: #22c87a; }
+.red { color: #ff4d4d; }
+
+// ─── Action buttons ───────────────────────────────────────────────────────────
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 14px 0 4px;
+}
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: $font-ui;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    min-width: 90px;
+    white-space: nowrap;
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+.btn-scan  { background: #0a5c3c; color: #00ffc8; border: 1px solid #00ffc8; &:hover:not(:disabled) { background: #0e8055; box-shadow: 0 0 12px rgba(0,255,200,0.3); } }
+.btn-build { background: #1a1a5c; color: #8888ff; border: 1px solid #5555ff; &:hover:not(:disabled) { background: #22228a; box-shadow: 0 0 12px rgba(85,85,255,0.3); } }
+.btn-trade { background: #004d00; color: #00ff44; border: 1px solid #00cc33; &:hover:not(:disabled) { background: #006600; box-shadow: 0 0 12px rgba(0,255,68,0.3); } }
+.btn-pause { background: #5c3a00; color: #f0c040; border: 1px solid #c89020; &:hover:not(:disabled) { background: #7a4e00; } }
+.btn-resume{ background: #004d00; color: #00ff44; border: 1px solid #00cc33; &:hover:not(:disabled) { background: #006600; } }
+.btn-stop  { background: #5c0000; color: #ff6666; border: 1px solid #cc0000; &:hover:not(:disabled) { background: #800000; box-shadow: 0 0 12px rgba(200,0,0,0.3); } }
+
+// ─── Signal Stats tab ─────────────────────────────────────────────────────────
+
+.stats-overview-label {
+    font-family: $font-display;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: rgba(0, 255, 200, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+}
+
+.stats-market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.stats-market-card {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 8px;
+    background: rgba(0, 20, 20, 0.7);
+    border: 1px solid rgba(0, 255, 200, 0.12);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        border-color: rgba(0, 255, 200, 0.4);
+        background: rgba(0, 255, 200, 0.05);
+    }
+
+    &--active {
+        border-color: #00ffc8;
+        background: rgba(0, 255, 200, 0.08);
+        box-shadow: 0 0 10px rgba(0, 255, 200, 0.12);
+    }
+
+    &__label {
+        font-family: $font-display;
+        font-size: 0.55rem;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        color: #00ffc8;
+    }
+
+    &__group {
+        font-family: $font-ui;
+        font-size: 0.58rem;
+        color: rgba(0, 255, 200, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+}
+
+.stats-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-family: $font-display;
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: rgba(0, 255, 200, 0.7);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.btn-clear {
+    padding: 4px 12px;
+    background: rgba(200, 0, 0, 0.15);
+    border: 1px solid rgba(200, 0, 0, 0.4);
+    border-radius: 6px;
+    color: #ff6666;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    &:hover { background: rgba(200, 0, 0, 0.3); }
+}
+
+.stats-table-wrap {
+    overflow-x: auto;
+    border: 1px solid rgba(0, 255, 200, 0.15);
+    border-radius: 8px;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+
+    th {
+        background: rgba(0, 30, 30, 0.9);
+        color: rgba(0, 255, 200, 0.7);
+        padding: 8px 10px;
+        text-align: left;
+        font-family: $font-display;
+        font-size: 0.55rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(0, 255, 200, 0.15);
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 7px 10px;
+        border-bottom: 1px solid rgba(0, 255, 200, 0.06);
+        font-family: $font-mono;
+        font-size: 0.76rem;
+        color: rgba(255, 255, 255, 0.75);
+        vertical-align: middle;
+    }
+}
+
+.stats-row {
+    transition: background 0.15s;
+
+    &:hover { background: rgba(0, 255, 200, 0.03); }
+
+    &--win   td { border-left: 2px solid #22c87a; }
+    &--loss  td { border-left: 2px solid #ff4d4d; }
+    &--pending td { border-left: 2px solid #f0c040; }
+
+    &--win   td:first-child { border-left: 2px solid #22c87a; }
+    &--loss  td:first-child { border-left: 2px solid #ff4d4d; }
+    &--pending td:first-child { border-left: 2px solid #f0c040; }
+}
+
+.stats-signal-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(0, 255, 200, 0.08);
+    border: 1px solid rgba(0, 255, 200, 0.2);
+    border-radius: 100px;
+    color: #00ffc8;
+    font-family: $font-mono;
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.stats-outcome {
+    display: inline-block;
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+
+    &--win     { color: #22c87a; }
+    &--loss    { color: #ff4d4d; }
+    &--pending { color: #f0c040; }
+}
+
+.stats-empty {
+    text-align: center;
+    color: rgba(0, 255, 200, 0.3);
+    padding: 24px !important;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+// ─── Terminal popup ───────────────────────────────────────────────────────────
+
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(90%, 820px);
+    height: 70vh;
+    max-height: 580px;
+    background: #000;
+    border: 1px solid #00ffc8;
+    box-shadow: 0 0 40px rgba(0, 255, 200, 0.2);
+    padding: 20px;
+    z-index: 2000;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.popup-content {
+    color: #00ffc8;
+    font-size: 0.85rem;
+    height: 100%;
+    overflow-y: auto;
+    position: relative;
+}
+
+.terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0, 255, 200, 0.2);
+    margin-bottom: 10px;
+    font-family: $font-mono;
+
+    .dot {
+        height: 10px;
+        width: 10px;
+        background: #ff4d4d;
+        border-radius: 50%;
+        display: inline-block;
+        &:nth-child(2) { background: #f0c040; }
+        &:nth-child(3) { background: #22c87a; }
+    }
+}
+
+.terminal-title {
+    font-family: $font-mono;
+    font-size: 0.7rem;
+    color: rgba(0, 255, 200, 0.5);
+    letter-spacing: 1.5px;
+    margin-left: 4px;
+}
+
+.close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: rgba(200, 0, 0, 0.7);
+    color: #fff;
+    border: none;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    border-radius: 0 10px 0 6px;
+    font-size: 0.75rem;
+    z-index: 2001;
+    transition: background 0.2s;
+    &:hover { background: #c00; }
+}
+
+.terminal-dashboard {
+    position: sticky;
+    top: 0;
+    background: rgba(0, 0, 0, 0.95);
+    padding: 8px;
+    border-bottom: 1px solid rgba(0, 255, 200, 0.15);
+    z-index: 1;
+    max-height: 40%;
+    overflow-y: auto;
+    font-family: $font-mono;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+}
+
+.terminal-scroll {
+    height: calc(60% - 20px);
+    overflow-y: auto;
+    margin-top: 10px;
+    font-family: $font-mono;
+    font-size: 0.74rem;
+    line-height: 1.6;
+    letter-spacing: 0.2px;
+}
+
+.terminal-scroll-content {
+    animation: scanner-scroll-up 12s linear infinite;
+}
+
+// ─── Animations ───────────────────────────────────────────────────────────────
+
+@keyframes scanner-scroll {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
+}
+
+@keyframes scanner-scroll-up {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-100%); }
+}
+
+@keyframes scanner-banner-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scanner-dot-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+}
+
+@keyframes signal-pulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 200, 0.15); }
+    50%       { box-shadow: 0 0 25px rgba(0, 255, 200, 0.4); }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+
+@media (min-width: 768px) {
+    .container { padding: 28px 32px 32px; }
+    .strategy-chips { gap: 10px; }
+    .stats-market-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+}
+
+@media (max-width: 767px) {
+    .scanner-page {
+        min-height: var(--tab-content-height-mobile);
+        padding-bottom: 120px;
+    }
+
+    .scanner-account-banner { top: auto; bottom: 80px; right: 8px; }
+
+    .container { max-width: 100%; border-radius: 0 0 10px 10px; }
+    .container--stats { border-radius: 10px; margin-top: 4px; }
+
+    .market-info-bar { font-size: 0.7rem; }
+
+    .trading-controls__row { grid-template-columns: 1fr 1fr; gap: 6px; }
+
+    .popup {
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 16px);
+        height: calc(100vh - 80px);
+        max-height: none;
+        border-radius: 8px;
+    }
+
+    .stats-market-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+
+    .buttons { gap: 6px; }
+    .btn { padding: 9px 12px; font-size: 0.78rem; min-width: 80px; }
+}
+
+.scanner-embed-wrap {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background: transparent;
+    padding: 0 16px 20px;
+    box-sizing: border-box;
+
+    .container {
+        width: 100%;
+        max-width: 100%;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding-top: 10px;
+    }
+}

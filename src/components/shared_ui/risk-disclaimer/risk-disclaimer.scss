@@ -1,0 +1,101 @@
+@keyframes slideUpDisclaimer {
+    from {
+        opacity: 0;
+        transform: translateY(100px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.risk-disclaimer-float {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    max-width: 360px;
+    width: calc(100% - 48px);
+    animation: slideUpDisclaimer 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    
+    @media (max-width: 768px) {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        max-width: none;
+        width: calc(100% - 32px);
+    }
+
+    &__card {
+        background: rgba(16, 16, 20, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(245, 197, 66, 0.25);
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        box-sizing: border-box;
+    }
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    &__title {
+        color: #f5c542;
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    &__close {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        transition: color 0.2s;
+
+        &:hover {
+            color: #fff;
+        }
+    }
+
+    &__text {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.8rem;
+        line-height: 1.5;
+        margin: 0 0 12px 0;
+    }
+
+    &__actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    &__btn {
+        background: #f5c542;
+        border: none;
+        color: #101014;
+        font-weight: 600;
+        font-size: 0.8rem;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+
+        &:hover {
+            background: #e0b334;
+        }
+
+        &:active {
+            transform: scale(0.98);
+        }
+    }
+}

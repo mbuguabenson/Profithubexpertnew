@@ -1,0 +1,15 @@
+.dtrader-page-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: var(--general-section-1, #0e0e0e);
+
+    .dtrader-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        flex: 1;
+    }
+}

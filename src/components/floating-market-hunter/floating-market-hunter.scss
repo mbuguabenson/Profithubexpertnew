@@ -1,0 +1,163 @@
+// ════════════════════════════════════════════════════════════════
+//  FLOATING MARKET HUNTER — FAB button + panel
+// ════════════════════════════════════════════════════════════════
+
+// ── FAB (Floating Action Button) ─────────────────────────────────
+.fmh-fab {
+    position: fixed;
+    z-index: 9999;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    // Glossy 3D red sphere gradient
+    background: radial-gradient(circle at 35% 35%, #ff6b6b 0%, #e60000 45%, #990000 85%, #660000 100%);
+    box-shadow:
+        0 8px 24px rgba(230, 0, 0, 0.45),
+        0 2px 8px rgba(0, 0, 0, 0.4),
+        inset 0 4px 8px rgba(255, 255, 255, 0.45),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: box-shadow 0.25s ease, transform 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+
+    &:active {
+        cursor: grabbing;
+    }
+
+    &:hover {
+        box-shadow:
+            0 12px 32px rgba(255, 0, 0, 0.6),
+            0 4px 12px rgba(0, 0, 0, 0.5),
+            inset 0 6px 10px rgba(255, 255, 255, 0.6),
+            inset 0 -6px 10px rgba(0, 0, 0, 0.6);
+        transform: scale(1.08);
+    }
+
+    &--active {
+        box-shadow:
+            0 0 0 4px rgba(230, 0, 0, 0.35),
+            0 12px 32px rgba(230, 0, 0, 0.5),
+            inset 0 4px 8px rgba(255, 255, 255, 0.45);
+    }
+
+    // Outer shiny gloss layer
+    &__ai-gloss {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        position: relative;
+
+        // Subtle specular highlight reflection
+        &::after {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 14px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            filter: blur(0.5px);
+        }
+    }
+
+    &__ai-text {
+        font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+        font-size: 16px;
+        font-weight: 900;
+        color: #ffffff;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        user-select: none;
+        pointer-events: none;
+    }
+
+    // Pulse ring animation
+    &__pulse {
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 2px solid rgba(230, 0, 0, 0.4);
+        animation: fmh-pulse 2.5s ease-out infinite;
+        pointer-events: none;
+    }
+}
+
+// ── Inside DraggableResizeWrapper Modal Body ──────────────────────
+.fmh-dialog-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: var(--general-main-1, #0e0e12);
+
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(230, 0, 0, 0.3);
+        border-radius: 2px;
+    }
+}
+
+// Loading state inside dialog
+.fmh-dialog-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    height: 250px;
+    color: var(--text-general, #ffffff);
+    font-size: 13px;
+    font-weight: 500;
+
+    &-icon {
+        color: #e60000;
+        animation: fmh-orbit-spin 2s linear infinite;
+    }
+}
+
+// ── Keyframe Animations ───────────────────────────────────────────
+@keyframes fmh-orbit-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes fmh-pulse {
+    0%   { transform: scale(1);   opacity: 0.7; }
+    70%  { transform: scale(1.4); opacity: 0;   }
+    100% { transform: scale(1.4); opacity: 0;   }
+}
+
+/* 📱 Mobile Scalability for AI Floating Market Hunter */
+@media (max-width: 768px) {
+    .fmh-fab {
+        width: 52px;
+        height: 52px;
+
+        &__ai-text {
+            font-size: 14px;
+        }
+    }
+
+    .fmh-dialog-body {
+        max-height: 80vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 8px;
+    }
+}
+
