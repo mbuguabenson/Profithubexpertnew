@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
-import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
+import { V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { useStore } from '@/hooks/useStore';
