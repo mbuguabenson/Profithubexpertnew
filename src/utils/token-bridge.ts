@@ -9,6 +9,9 @@
  * copy-trading tabs to auto-connect with the authenticated user's token.
  */
 
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
+import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
+
 /** Returns the raw accountsList map from localStorage */
 export const getAccountsList = (): Record<string, string> => {
     try {
@@ -27,6 +30,53 @@ export const getActiveToken = (): string | null => {
     const list = getAccountsList();
     const id = getActiveLoginId();
     return list[id] || null;
+};
+
+/**
+ * Robustly resolves a valid Deriv WebSocket authorization token for an account.
+ * Supports legacy OAuth tokens, API tokens, and PKCE OAuth2 OTP token resolution.
+ * Guarantees that the token returned is NOT an invalid bearer JWT (ory_at_...).
+ */
+export const resolveValidDerivWSToken = async (loginid?: string): Promise<string> => {
+    const activeId = loginid || getActiveLoginId();
+    const list = getAccountsList();
+
+    // 1. Direct match in accountsList for active account
+    if (activeId && list[activeId] && !list[activeId].startsWith('ory_at_')) {
+        return list[activeId];
+    }
+
+    // 2. Check any valid token in accountsList
+    for (const id in list) {
+        if (list[id] && !list[id].startsWith('ory_at_')) {
+            return list[id];
+        }
+    }
+
+    // 3. Check localStorage tokens
+    const storedToken = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (storedToken && storedToken !== 'null' && !storedToken.startsWith('ory_at_')) {
+        return storedToken;
+    }
+
+    // 4. PKCE OAuth2 Flow: Fetch OTP WebSocket URL and extract valid session token
+    try {
+        const authInfo = OAuthTokenExchangeService.getAuthInfo();
+        if (authInfo?.access_token && activeId) {
+            const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
+            if (wsUrl) {
+                const parsedUrl = new URL(wsUrl);
+                const otpToken = parsedUrl.searchParams.get('token');
+                if (otpToken) {
+                    return otpToken;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('[token-bridge] Error fetching PKCE OTP token:', e);
+    }
+
+    return '';
 };
 
 /** Returns true if the user is logged in (has any accounts) */

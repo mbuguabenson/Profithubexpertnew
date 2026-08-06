@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
+import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
@@ -44,14 +45,10 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         setBridgeClient(bridge);
         bridge.attach(iframe, '*');
 
-        const sendLegacyAuthData = () => {
+        const sendLegacyAuthData = async () => {
             let loginid = V2GetActiveAccountId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
             const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
-            let token = (loginid && accountsList[loginid]) ? accountsList[loginid] : V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || (client as any)?.active_account?.token || '';
-            
-            if (!token || token.startsWith('ory_at_')) {
-                token = (loginid && accountsList[loginid]) ? accountsList[loginid] : localStorage.getItem('token') || '';
-            }
+            let token = await resolveValidDerivWSToken(loginid);
 
             const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
             if (isDemoToReal && loginid && !loginid.startsWith('VR') && title !== 'DTrader Terminal') {
