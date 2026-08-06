@@ -9,7 +9,7 @@ type TBrandLogoProps = {
     className?: string;
 };
 
-export const BrandLogo = observer(({ width, height = 32, className = '' }: TBrandLogoProps) => {
+export const BrandLogo = observer(({ height = 32, className = '' }: TBrandLogoProps) => {
     const { is_dark_mode_on } = useThemeSwitcher();
     const cfg = getSiteConfig();
     const customLogo = cfg.logoBase64;
