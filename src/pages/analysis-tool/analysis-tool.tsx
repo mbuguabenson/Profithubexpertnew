@@ -3,9 +3,6 @@ import { observer } from 'mobx-react-lite';
 import IframeWrapper from '@/components/iframe-wrapper';
 import { useStore } from '@/hooks/useStore';
 import { getAppId } from '@/components/shared/utils/config/config';
-import Tabs from '@/components/shared_ui/tabs/tabs';
-import DCirclesPage from '../dcircles/dcircles';
-import DpTools from '../dp-tools/dp-tools';
 import './analysis-tool.scss';
 
 const ProfithubAnalysis: React.FC = observer(() => {
@@ -38,27 +35,9 @@ const ProfithubAnalysis: React.FC = observer(() => {
 });
 
 const AnalysisTool: React.FC = observer(() => {
-    const [activeTab, setActiveTab] = useState(0);
-
     return (
-        <div className="analysis-tools-wrapper">
-            <Tabs 
-                active_index={activeTab} 
-                onTabItemClick={setActiveTab} 
-                top
-                className="analysis-tools-tabs"
-                history={window.history as any}
-            >
-                <div label="Profithub Analysis">
-                    <ProfithubAnalysis />
-                </div>
-                <div label="Xenon Tool (DP Tools)">
-                    <DpTools />
-                </div>
-                <div label="DCircles">
-                    <DCirclesPage />
-                </div>
-            </Tabs>
+        <div className="analysis-tools-wrapper" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <ProfithubAnalysis />
         </div>
     );
 });

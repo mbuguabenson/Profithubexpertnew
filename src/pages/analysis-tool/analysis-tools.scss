@@ -22,82 +22,89 @@
 
     &__cards-container {
         display: flex;
-        gap: 0.75rem;
+        gap: 6px;
         overflow-x: auto;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-        padding: 0.25rem 0.5rem 0.25rem 0;
+        scrollbar-width: none; // Firefox
+        padding: 6px 10px;
         flex: 1;
         min-width: 0;
+        background: #112340 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 4px;
+        align-items: center;
+        flex-wrap: nowrap;
 
         &::-webkit-scrollbar {
-            height: 4px;
+            display: none; // Chrome/Safari/Edge - remove scrollbar to activate auto-scrolling
         }
 
-        &::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        &::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 2px;
+        // Add a pseudo-element to fix flexbox ignoring right padding on overflow
+        &::after {
+            content: '';
+            min-width: 4px;
         }
 
         @include mobile-or-tablet-screen {
-            gap: 0.75rem;
-            padding-bottom: 0.5rem;
+            padding: 4px 6px;
+            width: calc(100% + 1rem);
+            border-radius: 0;
+            margin: 0 -0.5rem; // Fit width fully on mobile
         }
     }
 
     &__card {
         cursor: pointer;
-        border-radius: 12px;
-        padding: 0.65rem 1.5rem;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        color: rgba(255, 255, 255, 0.85) !important;
+        border-radius: 4px !important;
+        padding: 0 16px !important;
+        height: 40px !important;
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 42px;
-        min-width: fit-content;
+        min-width: 0 !important;
+        max-width: none !important;
+        width: auto !important;
         flex-shrink: 0;
-        background: #1e293b !important;
-        border: 1px solid #334155 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        box-shadow: none !important;
         position: relative;
         white-space: nowrap;
         user-select: none;
-
-        @include desktop-screen {
-            padding: 0.7rem 1.85rem;
-        }
+        margin: 0 !important;
+        box-sizing: border-box !important;
 
         @include mobile-or-tablet-screen {
-            padding: 0.5rem 1.15rem;
+            height: 36px !important;
+            padding: 0 12px !important;
         }
 
         &:hover:not(.analysis-tools__card--active) {
-            background: #334155 !important;
-            border-color: #00d2ff !important;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(0, 210, 255, 0.2);
-
-            .analysis-tools__card-label {
-                color: #ffffff !important;
-            }
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+            transform: none !important;
+            box-shadow: none !important;
+            z-index: 10;
         }
 
         &.analysis-tools__card--active {
-            background: linear-gradient(135deg, #0052ff 0%, #00c6ff 100%) !important;
+            background: #1e365b !important;
+            color: #ffffff !important;
             border-color: transparent !important;
-            box-shadow: 0 6px 24px rgba(0, 198, 255, 0.45) !important;
-            transform: translateY(-2px);
+            box-shadow: none !important;
+            transform: none !important;
+            border-radius: 4px !important;
+            z-index: 5;
+            font-weight: 700 !important;
 
             .analysis-tools__card-label {
                 color: #ffffff !important;
-                font-weight: 800 !important;
-                letter-spacing: 0.6px;
+                font-weight: 700 !important;
+                letter-spacing: normal;
             }
         }
 
@@ -109,34 +116,38 @@
         }
 
         &-label {
-            font-size: 0.82rem;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: normal;
             text-align: center;
             white-space: nowrap;
-            letter-spacing: 0.4px;
-            color: #f1f5f9 !important;
-            text-transform: uppercase;
-        }
+            letter-spacing: normal;
+            color: inherit !important;
+            text-transform: none;
 
-        // Active state for light cards - icon color
-        &--light.analysis-tools__card--active {
-            svg,
-            svg > path,
-            svg > g > path {
-                fill: #3b82f6 !important;
+            @include mobile-or-tablet-screen {
+                font-size: 13px;
             }
         }
 
-        // Inactive state for light cards
-        &--light:not(.analysis-tools__card--active) {
+        // Icon styles to match main tabs
+        svg,
+        svg > path,
+        svg > g > path,
+        svg > circle,
+        svg > rect {
+            fill: none;
+            stroke: #ff5a00 !important;
+            color: #ff5a00 !important;
+        }
+
+        &--light {
             svg,
             svg > path,
-            svg > g > path {
-                fill: #1e3a8a !important;
-            }
-
-            .analysis-tools__card-label {
-                color: #1e3a8a !important;
+            svg > g > path,
+            svg > circle,
+            svg > rect {
+                fill: #ff5a00 !important;
+                stroke: #ff5a00 !important;
             }
         }
     }
@@ -341,15 +352,12 @@
         }
 
         &__cards-container {
-            width: 100%;
-            padding-bottom: 0.75rem;
+            padding-bottom: 0;
             -webkit-overflow-scrolling: touch;
         }
 
         &__card {
-            padding: 0.45rem 0.9rem;
-            font-size: 0.82rem;
-            min-height: 38px;
+            font-size: 13px;
         }
 
         &__content {
