@@ -16,32 +16,28 @@ export class SessionManager {
      * Retrieves the current effective session data.
      */
     public getSession(): SessionPayload | null {
-        let token = OAuthTokenExchangeService.getAuthInfo()?.access_token;
         let loginid = V2GetActiveAccountId() || 
                       localStorage.getItem('active_loginid') || 
                       localStorage.getItem('client.loginid') || '';
         
-        if (!token) {
-            token = V2GetActiveToken() || 
-                    localStorage.getItem('token') || '';
-            
-            // Fallback to accountsList if token still not found
-            if (!token && loginid) {
-                try {
-                    const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
-                    token = accountsList[loginid] || '';
-                } catch (e) {
-                    // ignore parse error
-                }
-            }
+        let accountsList: Record<string, string> = {};
+        try {
+            accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
+        } catch (e) {
+            // ignore parse error
+        }
+
+        let token = (loginid && accountsList[loginid]) ? accountsList[loginid] : V2GetActiveToken() || localStorage.getItem('token') || '';
+        
+        if (!token || token.startsWith('ory_at_')) {
+            token = (loginid && accountsList[loginid]) ? accountsList[loginid] : localStorage.getItem('token') || '';
         }
 
         const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
         
         // Handling real/demo token alignment
-        if (isDemoToReal && loginid && !loginid.startsWith('VR') && !OAuthTokenExchangeService.getAuthInfo()?.access_token) {
+        if (isDemoToReal && loginid && !loginid.startsWith('VR')) {
             try {
-                const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
                 const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
                 if (demoAccountId) {
                     loginid = demoAccountId;

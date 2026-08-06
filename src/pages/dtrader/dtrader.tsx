@@ -12,10 +12,11 @@ const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
     const loginid = V2GetActiveAccountId() || client?.loginid || localStorage.getItem('active_loginid') || '';
     
-    // Prefer OAuth token bypass to prevent Demo-to-Real intercepts from breaking OTP authentication
-    let token = OAuthTokenExchangeService.getAuthInfo()?.access_token;
-    if (!token) {
-        token = V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || '';
+    // Fetch valid Deriv WS session token for active account
+    const accountsList = getAccountsList();
+    let token = (loginid && accountsList[loginid]) ? accountsList[loginid] : V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || '';
+    if (!token || token.startsWith('ory_at_')) {
+        token = accountsList[loginid] || '';
     }
 
     let baseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';

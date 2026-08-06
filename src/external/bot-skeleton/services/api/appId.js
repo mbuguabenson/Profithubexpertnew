@@ -203,28 +203,34 @@ export const V2GetActiveToken = () => {
         }
     }
 
-    try {
-        const oauthToken = OAuthTokenExchangeService.getAccessToken();
-        if (oauthToken) {
-            return oauthToken;
-        }
-    } catch (e) {
-        // Ignore
+    // Direct active account token lookup from accountsList
+    const accountsList = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('accountsList') || '{}') : {};
+    if (active_loginid && accountsList[active_loginid]) {
+        return accountsList[active_loginid];
     }
 
     const oidcToken = typeof window !== 'undefined' ? localStorage.getItem('oidc_access_token') : null;
-    if (oidcToken && oidcToken !== 'null') {
+    if (oidcToken && oidcToken !== 'null' && !oidcToken.startsWith('ory_at_')) {
         return oidcToken;
     }
 
     const authToken = localStorage.getItem('authToken');
-    if (authToken && authToken !== 'null') {
+    if (authToken && authToken !== 'null' && !authToken.startsWith('ory_at_')) {
         return authToken;
     }
 
     const legacyToken = localStorage.getItem('deriv_api_token');
     if (legacyToken && legacyToken !== 'null') {
         return legacyToken;
+    }
+
+    try {
+        const oauthToken = OAuthTokenExchangeService.getAccessToken();
+        if (oauthToken && !oauthToken.startsWith('ory_at_')) {
+            return oauthToken;
+        }
+    } catch (e) {
+        // Ignore
     }
 
     return null;

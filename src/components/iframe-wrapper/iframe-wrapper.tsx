@@ -46,26 +46,21 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         bridge.attach(iframe, '*');
 
         const sendLegacyAuthData = () => {
-            let token = OAuthTokenExchangeService.getAuthInfo()?.access_token;
             let loginid = V2GetActiveAccountId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+            const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
+            let token = (loginid && accountsList[loginid]) ? accountsList[loginid] : V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || (client as any)?.active_account?.token || '';
             
-            if (!token) {
-                token = V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || (client as any)?.active_account?.token || '';
+            if (!token || token.startsWith('ory_at_')) {
+                token = (loginid && accountsList[loginid]) ? accountsList[loginid] : localStorage.getItem('token') || '';
             }
 
             const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
-            if (isDemoToReal && loginid && !loginid.startsWith('VR') && !OAuthTokenExchangeService.getAuthInfo()?.access_token && title !== 'DTrader Terminal') {
-                 const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
+            if (isDemoToReal && loginid && !loginid.startsWith('VR') && title !== 'DTrader Terminal') {
                  const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
                  if (demoAccountId) {
                      loginid = demoAccountId;
                      token = accountsList[demoAccountId] || token;
                  }
-            }
-            
-            if (!token && loginid) {
-                const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
-                token = accountsList[loginid] || token;
             }
 
             // IMPORTANT: If we use OAuth tokens (ory_at_...), we MUST pass the parent's App ID to the iframe.
