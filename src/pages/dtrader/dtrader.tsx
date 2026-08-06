@@ -40,7 +40,7 @@ const DTraderPage: React.FC = observer(() => {
     params.set('app_id', LEGACY_APP_ID);
     params.set('lang', 'EN');
 
-    const dtraderUrl = `${baseUrl}/dtrader?${params.toString()}`;
+    const dtraderUrl = `${baseUrl}/?${params.toString()}`;
 
     return (
         <div className='dtrader-page-container' style={{ width: '100%', height: '100%', minHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
