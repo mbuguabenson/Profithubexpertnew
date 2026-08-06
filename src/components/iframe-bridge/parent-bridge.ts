@@ -208,10 +208,39 @@ export class ParentBridgeClient {
     }
 
     private handleSessionRequest() {
-        const session = sessionManager.getSession();
+        let session = sessionManager.getSession();
+
+        if (!session) {
+            let loginid = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+            let token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+            let accountsList: Record<string, string> = {};
+            try {
+                accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
+            } catch {}
+            if (!loginid || !token || token.startsWith('ory_at_')) {
+                const keys = Object.keys(accountsList);
+                for (const k of keys) {
+                    if (accountsList[k] && !accountsList[k].startsWith('ory_at_')) {
+                        loginid = k;
+                        token = accountsList[k];
+                        break;
+                    }
+                }
+            }
+            if (loginid && token && !token.startsWith('ory_at_')) {
+                session = {
+                    token,
+                    loginid,
+                    currency: 'USD',
+                    isDemo: loginid.startsWith('VR'),
+                    appId: '134205'
+                };
+            }
+        }
         
         if (session) {
             this.diagnostics.sessionStatus = 'valid';
+            this.diagnostics.appId = session.appId || '134205';
             this.stateMachine.transitionTo(BridgeState.REQUESTING_SESSION);
             this.sendMessage(BridgeEvent.SESSION_DATA, session);
             
@@ -225,11 +254,14 @@ export class ParentBridgeClient {
                         token: session.token,
                         loginid: session.loginid,
                         loginId: session.loginid,
-                        appId: session.appId || '114292',
+                        appId: Number(session.appId || '134205') || 134205,
                         server: 'green',
                         timestamp: Date.now(),
                         status: 'success',
-                        authMode: 'derivws_otp'
+                        authMode: 'derivws_otp',
+                        accountType: 'ZOOM',
+                        bt_secret: 'binarytool',
+                        theme: 'dark'
                     };
                     const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
                     this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...legacyPayload }, target);
@@ -244,26 +276,23 @@ export class ParentBridgeClient {
             }
         } else {
             this.diagnostics.sessionStatus = 'none';
-            this.sendMessage(BridgeEvent.LOGOUT, {});
-            this.stateMachine.transitionTo(BridgeState.LOGGED_OUT);
+            // Do NOT send LOGOUT postMessage during startup to avoid unlogging iframe
         }
     }
 
     private handleSessionChange(session: SessionPayload | null) {
         if (!session) {
             this.diagnostics.sessionStatus = 'none';
-            this.sendMessage(BridgeEvent.LOGOUT, {});
-            this.stateMachine.transitionTo(BridgeState.LOGGED_OUT);
-        } else {
-            this.diagnostics.sessionStatus = 'valid';
-            if (this.stateMachine.getState() === BridgeState.CONNECTED) {
-                this.stateMachine.transitionTo(BridgeState.SYNCING);
-                this.sendMessage(BridgeEvent.ACCOUNT_CHANGED, session);
-                this.sendMessage(BridgeEvent.SESSION_DATA, session);
-                setTimeout(() => this.stateMachine.transitionTo(BridgeState.CONNECTED), 200);
-            } else if (this.stateMachine.getState() === BridgeState.READY || this.stateMachine.getState() === BridgeState.WAITING_READY) {
-                this.handleSessionRequest();
-            }
+            return;
+        }
+        this.diagnostics.sessionStatus = 'valid';
+        if (this.stateMachine.getState() === BridgeState.CONNECTED) {
+            this.stateMachine.transitionTo(BridgeState.SYNCING);
+            this.sendMessage(BridgeEvent.ACCOUNT_CHANGED, session);
+            this.sendMessage(BridgeEvent.SESSION_DATA, session);
+            setTimeout(() => this.stateMachine.transitionTo(BridgeState.CONNECTED), 200);
+        } else if (this.stateMachine.getState() === BridgeState.READY || this.stateMachine.getState() === BridgeState.WAITING_READY) {
+            this.handleSessionRequest();
         }
     }
 
