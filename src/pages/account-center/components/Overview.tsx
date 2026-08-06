@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { useApiBase } from '@/hooks/useApiBase';
@@ -43,7 +43,7 @@ const Overview = observer(() => {
                 <div className='kpi-card' style={{ background: 'var(--general-section-1)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-normal)' }}>
                     <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-less-prominent)', fontSize: '0.85rem' }}><Localize i18n_default_text='Account Nickname' /></h4>
                     <h2 style={{ margin: '0', fontSize: '1.5rem', color: 'var(--text-general)' }}>
-                        {activeAccountInfo?.account_category === 'trading' ? 'Deriv Apps' : 'SmartTrader'}
+                        {client?.is_virtual ? 'Demo Account' : 'Deriv Real Account'}
                     </h2>
                 </div>
 
