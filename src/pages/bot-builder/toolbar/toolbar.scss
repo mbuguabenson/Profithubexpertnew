@@ -95,13 +95,42 @@
     &__icon {
         cursor: pointer;
         border: none;
-        margin: auto 1.2rem;
-        height: 1.6rem;
-        width: 1.6rem;
-        fill: var(--text-prominent);
+        margin: auto 0.8rem;
+        height: 3.2rem;
+        width: 3.2rem;
+        border-radius: 4px;
+        fill: #ff5a00;
+        stroke: #ff5a00;
+        color: #ff5a00;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        background: transparent;
+
+        svg {
+            fill: inherit;
+            stroke: inherit;
+            width: 1.6rem;
+            height: 1.6rem;
+            
+            path, rect, circle, polygon {
+                fill: inherit;
+            }
+        }
+
+        &:hover {
+            background: rgba(255, 90, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        &--active {
+            background: rgba(255, 90, 0, 0.15);
+            fill: #ff5a00;
+        }
 
         @include mobile-or-tablet-screen {
-            margin: 1.2rem;
+            margin: 0.8rem;
         }
     }
 
