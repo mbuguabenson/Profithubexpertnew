@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 /* [AI] - Analytics removed - rudderstack event tracking removed */
@@ -17,6 +17,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { common, ui } = useStore();
     const { chart_store, run_panel, dashboard } = useStore();
     const [isSafari, setIsSafari] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     const {
         chart_type,
@@ -66,15 +67,42 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!symbol) updateSymbol();
     }, [symbol, updateSymbol]);
 
-    // When the run drawer opens/closes, the chart wrapper width changes via CSS transition.
-    // SmartChart's internal canvas only redraws on window resize events, so we dispatch one
-    // after the CSS transition finishes (400ms matches transition: all 0.4s in SCSS).
+    // Continuously trigger window resize events during the 350ms drawer transition
+    // so SmartCharts continuously redraws its canvas width in sync with drawer opening/closing
     useEffect(() => {
-        const timer = setTimeout(() => {
+        let frameId: number;
+        let startTime: number | null = null;
+        const duration = 400; // ms
+
+        const animateResize = (timestamp: number) => {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+
             window.dispatchEvent(new Event('resize'));
-        }, 450);
-        return () => clearTimeout(timer);
+
+            if (elapsed < duration) {
+                frameId = requestAnimationFrame(animateResize);
+            }
+        };
+
+        frameId = requestAnimationFrame(animateResize);
+
+        return () => {
+            if (frameId) cancelAnimationFrame(frameId);
+            window.dispatchEvent(new Event('resize'));
+        };
     }, [is_drawer_open]);
+
+    // Observe element dimensions for any layout shifts
+    useEffect(() => {
+        if (!wrapperRef.current) return;
+        const observer = new ResizeObserver(() => {
+            window.dispatchEvent(new Event('resize'));
+        });
+        observer.observe(wrapperRef.current);
+
+        return () => observer.disconnect();
+    }, []);
 
     const is_connection_opened = !!chart_api?.api;
 
@@ -93,6 +121,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
 
     return (
         <div
+            ref={wrapperRef}
             className={classNames('dashboard__chart-wrapper', {
                 'dashboard__chart-wrapper--expanded': is_drawer_open && isDesktop,
                 'dashboard__chart-wrapper--modal': is_chart_modal_visible && isDesktop,

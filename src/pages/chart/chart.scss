@@ -1,5 +1,49 @@
 @use 'components/shared/styles/mixins' as *;
 
+// ─── Main Chart Wrapper & Drawer Responsiveness ──────────────────────────────
+.dashboard__chart-wrapper {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &--expanded {
+        width: calc(100% - 36.6rem) !important;
+    }
+
+    &--modal {
+        width: 40rem;
+    }
+
+    // Force internal SmartCharts containers to stay strictly inside the wrapper width
+    .smartcharts,
+    .smartcharts-desktop,
+    .ciq-chart,
+    .ciq-chart-area,
+    .chartContainer,
+    .stx-holder,
+    canvas {
+        max-width: 100% !important;
+    }
+
+    @include mobile-or-tablet-screen {
+        width: 100% !important;
+        height: var(--tab-content-height-mobile);
+        background: var(--general-main-1);
+
+        .smartcharts {
+            height: calc(100% - 4rem);
+            z-index: 1;
+
+            &:has(.stxMenuActive) {
+                z-index: 99;
+                transition: all 1s ease-out;
+            }
+        }
+    }
+}
+
 .bot {
     &__chart-container {
         position: relative;
@@ -10,25 +54,7 @@
             top: 0;
             width: 100%;
             background-color: var(--general-main-1);
-            transition: width 0.3s ease;
-        }
-    }
-
-    .dashboard__chart-wrapper--expanded {
-        width: calc(100% - 36.6rem);
-    }
-
-    // Ensure SmartChart stays within its container and doesn't overflow behind the run panel
-    .dashboard__chart-wrapper {
-        overflow: hidden;
-
-        .smartcharts,
-        .smartcharts-desktop,
-        .ciq-chart,
-        .ciq-chart-area,
-        .chartContainer {
-            width: 100% !important;
-            max-width: 100% !important;
+            transition: width 0.35s ease;
         }
     }
 
@@ -168,5 +194,5 @@
 .sc-digit-stats,
 .sc-last-digit-stats,
 .cq-digits {
-    bottom: 85px !important; /* Adjust position up a bit to prevent overlapping bottom elements */
+    bottom: 85px !important;
 }
