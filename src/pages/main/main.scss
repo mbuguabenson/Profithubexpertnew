@@ -93,10 +93,10 @@
             }
 
             &__list {
-                background: rgba(16, 18, 20, 0.85) !important;
+                background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
                 backdrop-filter: blur(16px) saturate(180%) !important;
                 -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border: 1px solid rgba(33, 150, 243, 0.2) !important;
                 border-radius: 16px !important;
                 padding: 6px 10px !important;
                 margin-bottom: 10px !important;
