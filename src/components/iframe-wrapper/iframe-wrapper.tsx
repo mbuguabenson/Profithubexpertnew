@@ -106,8 +106,10 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             }
         };
 
-        // Initial broadcasts for legacy bots that listen to postMessage
+        // Initial broadcasts for iframe terminals and bots that listen to postMessage
+        iframe.addEventListener('load', sendLegacyAuthData);
         sendLegacyAuthData();
+        setTimeout(sendLegacyAuthData, 500);
         setTimeout(sendLegacyAuthData, 1000);
         setTimeout(sendLegacyAuthData, 3000);
         setTimeout(sendLegacyAuthData, 5000);
