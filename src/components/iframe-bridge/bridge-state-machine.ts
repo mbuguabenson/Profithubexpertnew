@@ -22,19 +22,19 @@ export class BridgeStateMachine {
     
     // Define allowed transitions for determinism
     private allowedTransitions: TransitionMap = {
-        [BridgeState.IDLE]: [BridgeState.LOADING_IFRAME],
-        [BridgeState.LOADING_IFRAME]: [BridgeState.WAITING_READY, BridgeState.FAILED],
-        [BridgeState.WAITING_READY]: [BridgeState.READY, BridgeState.FAILED, BridgeState.RECOVERING],
-        [BridgeState.READY]: [BridgeState.REQUESTING_SESSION, BridgeState.AUTHENTICATING],
-        [BridgeState.REQUESTING_SESSION]: [BridgeState.AUTHENTICATING, BridgeState.LOGGED_OUT],
-        [BridgeState.AUTHENTICATING]: [BridgeState.AUTHENTICATED, BridgeState.FAILED],
-        [BridgeState.AUTHENTICATED]: [BridgeState.CONNECTED, BridgeState.SYNCING],
+        [BridgeState.IDLE]: [BridgeState.LOADING_IFRAME, BridgeState.WAITING_READY, BridgeState.READY, BridgeState.LOGGED_OUT],
+        [BridgeState.LOADING_IFRAME]: [BridgeState.WAITING_READY, BridgeState.READY, BridgeState.REQUESTING_SESSION, BridgeState.AUTHENTICATING, BridgeState.LOGGED_OUT, BridgeState.FAILED],
+        [BridgeState.WAITING_READY]: [BridgeState.READY, BridgeState.REQUESTING_SESSION, BridgeState.AUTHENTICATING, BridgeState.LOGGED_OUT, BridgeState.FAILED, BridgeState.RECOVERING],
+        [BridgeState.READY]: [BridgeState.REQUESTING_SESSION, BridgeState.AUTHENTICATING, BridgeState.CONNECTED, BridgeState.LOGGED_OUT],
+        [BridgeState.REQUESTING_SESSION]: [BridgeState.AUTHENTICATING, BridgeState.CONNECTED, BridgeState.LOGGED_OUT],
+        [BridgeState.AUTHENTICATING]: [BridgeState.AUTHENTICATED, BridgeState.CONNECTED, BridgeState.FAILED, BridgeState.LOGGED_OUT],
+        [BridgeState.AUTHENTICATED]: [BridgeState.CONNECTED, BridgeState.SYNCING, BridgeState.LOGGED_OUT],
         [BridgeState.CONNECTED]: [BridgeState.SYNCING, BridgeState.RECONNECTING, BridgeState.LOGGED_OUT, BridgeState.FAILED],
-        [BridgeState.SYNCING]: [BridgeState.CONNECTED, BridgeState.FAILED],
-        [BridgeState.RECONNECTING]: [BridgeState.CONNECTED, BridgeState.FAILED],
-        [BridgeState.RECOVERING]: [BridgeState.WAITING_READY, BridgeState.FAILED],
-        [BridgeState.FAILED]: [BridgeState.IDLE, BridgeState.LOADING_IFRAME, BridgeState.RECOVERING],
-        [BridgeState.LOGGED_OUT]: [BridgeState.IDLE, BridgeState.WAITING_READY]
+        [BridgeState.SYNCING]: [BridgeState.CONNECTED, BridgeState.FAILED, BridgeState.LOGGED_OUT],
+        [BridgeState.RECONNECTING]: [BridgeState.CONNECTED, BridgeState.FAILED, BridgeState.LOGGED_OUT],
+        [BridgeState.RECOVERING]: [BridgeState.WAITING_READY, BridgeState.READY, BridgeState.FAILED, BridgeState.LOGGED_OUT],
+        [BridgeState.FAILED]: [BridgeState.IDLE, BridgeState.LOADING_IFRAME, BridgeState.WAITING_READY, BridgeState.RECOVERING, BridgeState.LOGGED_OUT],
+        [BridgeState.LOGGED_OUT]: [BridgeState.IDLE, BridgeState.LOADING_IFRAME, BridgeState.WAITING_READY, BridgeState.READY]
     };
 
     constructor(initialState: BridgeState = BridgeState.IDLE) {

@@ -28,8 +28,23 @@ export class SessionManager {
 
         let token = (loginid && accountsList[loginid]) ? accountsList[loginid] : V2GetActiveToken() || localStorage.getItem('token') || '';
         
+        // If token is missing or starts with ory_at_, search accountsList for ANY valid WS token
         if (!token || token.startsWith('ory_at_')) {
-            token = (loginid && accountsList[loginid]) ? accountsList[loginid] : localStorage.getItem('token') || '';
+            const accKeys = Object.keys(accountsList);
+            for (const key of accKeys) {
+                if (accountsList[key] && !accountsList[key].startsWith('ory_at_')) {
+                    loginid = key;
+                    token = accountsList[key];
+                    break;
+                }
+            }
+        }
+
+        if (!token || token.startsWith('ory_at_')) {
+            const altToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+            if (altToken && !altToken.startsWith('ory_at_')) {
+                token = altToken;
+            }
         }
 
         const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
@@ -40,7 +55,6 @@ export class SessionManager {
                 const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
                 if (demoAccountId) {
                     loginid = demoAccountId;
-                    // Also grab the demo token
                     token = accountsList[demoAccountId] || token;
                 }
             } catch (e) {

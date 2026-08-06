@@ -208,15 +208,6 @@ export class ParentBridgeClient {
     }
 
     private handleSessionRequest() {
-        if (
-            this.stateMachine.getState() !== BridgeState.READY &&
-            this.stateMachine.getState() !== BridgeState.CONNECTED &&
-            this.stateMachine.getState() !== BridgeState.AUTHENTICATED &&
-            this.stateMachine.getState() !== BridgeState.WAITING_READY
-        ) {
-            return;
-        }
-        
         const session = sessionManager.getSession();
         
         if (session) {
