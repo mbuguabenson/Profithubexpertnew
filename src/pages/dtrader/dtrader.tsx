@@ -8,9 +8,9 @@ import { getAppId } from '@/components/shared/utils/config/config';
 import './dtrader.scss';
 
 const buildDTraderUrl = (loginid: string, resolvedToken?: string): string => {
-    let baseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
-    if (typeof window !== 'undefined' && (baseUrl.includes(window.location.hostname) || baseUrl.includes('dtraderprofithubtool.vercel.app'))) {
-        baseUrl = 'https://deriv-dtrader.vercel.app';
+    let baseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app/dtrader';
+    if (!baseUrl.endsWith('/dtrader')) {
+        baseUrl = `${baseUrl.replace(/\/$/, '')}/dtrader`;
     }
 
     const params = new URLSearchParams();
@@ -83,11 +83,13 @@ const buildDTraderUrl = (loginid: string, resolvedToken?: string): string => {
     params.set('symbol', '1HZ100V');
     params.set('trade_type', 'accumulator');
 
-    const appId = getAppId() || '114292';
+    const appId = getAppId() || '134205';
     params.set('app_id', appId);
     params.set('lang', 'EN');
+    params.set('theme', 'dark');
+    params.set('bt_secret', 'binarytool');
 
-    return `${baseUrl}/?${params.toString()}`;
+    return `${baseUrl}?${params.toString()}`;
 };
 
 const DTraderPage: React.FC = observer(() => {

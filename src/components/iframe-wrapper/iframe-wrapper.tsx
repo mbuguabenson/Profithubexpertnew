@@ -70,12 +70,16 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
             if (iframe.contentWindow) {
                 try {
-                    const embedBase = process.env.DTRADER_URL ? `${process.env.DTRADER_URL}` : 'https://deriv-dtrader.vercel.app';
+                    let embedBase = process.env.DTRADER_URL ? `${process.env.DTRADER_URL}` : 'https://deriv-dtrader.vercel.app/dtrader';
+                    if (!embedBase.endsWith('/dtrader')) {
+                        embedBase = `${embedBase.replace(/\/$/, '')}/dtrader`;
+                    }
+                    const appIdNum = Number(getAppId() || '134205') || 134205;
                     const authPayload = {
                         token: effectiveToken,
                         loginid: effectiveLoginId,
                         loginId: effectiveLoginId,
-                        appId: appId,
+                        appId: appIdNum,
                         server: 'green',
                         timestamp: Date.now(),
                         authMode: 'derivws_otp',
@@ -83,7 +87,9 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                         currency: 'USD',
                         defaultSymbol: '1HZ100V',
                         embedBase,
-                        iframeUrl: `${embedBase}/?acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appId}&lang=EN`
+                        bt_secret: 'binarytool',
+                        theme: 'dark',
+                        iframeUrl: `${embedBase}?acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appIdNum}&lang=EN&theme=dark&bt_secret=binarytool`
                     };
 
                     iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
