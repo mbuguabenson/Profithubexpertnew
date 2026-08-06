@@ -126,25 +126,55 @@ export class ParentBridgeClient {
     }
 
     private handleMessage = (event: MessageEvent) => {
-        // Validation of origin can be relaxed or strict based on env. Let's do basic validation.
+        // Validation of origin can be relaxed or strict based on env. Let me do basic validation.
         if (this.iframeOrigin !== '*' && event.origin !== this.iframeOrigin && event.origin !== window.location.origin) {
-            // Ignore messages from unknown origins
             return;
         }
 
         const data = event.data;
-        if (!isValidBridgeMessage(data)) {
-            // Ignore legacy or unformatted messages here unless we want backward compatibility
+        if (!data || (typeof data !== 'object' && typeof data !== 'string')) {
             return;
         }
 
-        if (data.source !== 'iframe') {
+        // Parse JSON string data if needed
+        let parsedData = data;
+        if (typeof data === 'string') {
+            try {
+                parsedData = JSON.parse(data);
+            } catch {
+                return;
+            }
+        }
+
+        const msgType = parsedData.type || parsedData.action || parsedData.event || '';
+
+        // Handle NewdtraderBridge or legacy iframe initiation requests
+        if (
+            msgType === 'BRIDGE_READY' ||
+            msgType === 'INIT' ||
+            msgType === 'init' ||
+            msgType === 'REQUEST_SESSION' ||
+            msgType === 'requestAuth' ||
+            msgType === 'PING' ||
+            msgType === 'get_session' ||
+            msgType === 'CHECK_AUTH' ||
+            msgType === 'NEWDTRADER_BRIDGE_INIT'
+        ) {
+            this.handleBridgeReady();
+            this.handleSessionRequest();
+        }
+
+        if (!isValidBridgeMessage(parsedData)) {
+            return;
+        }
+
+        if (parsedData.source !== 'iframe') {
             return; // Ignore messages not from iframe
         }
 
-        this.logMessage('in', data);
+        this.logMessage('in', parsedData);
 
-        switch (data.type as BridgeEvent) {
+        switch (parsedData.type as BridgeEvent) {
             case BridgeEvent.BRIDGE_READY:
                 this.handleBridgeReady();
                 break;
@@ -157,7 +187,7 @@ export class ParentBridgeClient {
                 this.reconnectAttempts = 0;
                 break;
             case BridgeEvent.AUTH_FAILED:
-                this.diagnostics.lastError = data.payload?.message || 'Authentication Failed';
+                this.diagnostics.lastError = parsedData.payload?.message || 'Authentication Failed';
                 this.stateMachine.transitionTo(BridgeState.FAILED);
                 this.attemptRecovery();
                 break;
@@ -166,7 +196,7 @@ export class ParentBridgeClient {
                 this.stateMachine.transitionTo(BridgeState.LOGGED_OUT);
                 break;
             case BridgeEvent.ERROR:
-                this.diagnostics.lastError = data.payload?.message || 'Unknown Error';
+                this.diagnostics.lastError = parsedData.payload?.message || 'Unknown Error';
                 break;
         }
     };
@@ -196,6 +226,31 @@ export class ParentBridgeClient {
             
             this.stateMachine.transitionTo(BridgeState.AUTHENTICATING);
             this.sendMessage(BridgeEvent.AUTH_START, { timestamp: Date.now() });
+
+            // Broadcast legacy and NewdtraderBridge payloads so iframe auth resolves immediately
+            if (this.iframeWindow) {
+                try {
+                    const legacyPayload = {
+                        token: session.token,
+                        loginid: session.loginid,
+                        loginId: session.loginid,
+                        appId: session.appId || '121856',
+                        server: 'green',
+                        timestamp: Date.now(),
+                        status: 'success',
+                        authMode: 'derivws_otp'
+                    };
+                    const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
+                    this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...legacyPayload }, target);
+                    this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...legacyPayload }, target);
+                    this.iframeWindow.postMessage({ action: 'setToken', ...legacyPayload }, target);
+                    this.iframeWindow.postMessage({ type: 'BRIDGE_READY', ...legacyPayload }, target);
+                    this.iframeWindow.postMessage({ type: 'AUTH_SUCCESS', ...legacyPayload }, target);
+                    this.iframeWindow.postMessage({ type: 'SESSION_DATA', payload: session }, target);
+                } catch (e) {
+                    console.error('[ParentBridge] Error broadcasting legacy auth:', e);
+                }
+            }
         } else {
             this.diagnostics.sessionStatus = 'none';
             this.sendMessage(BridgeEvent.LOGOUT, {});

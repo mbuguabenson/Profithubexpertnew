@@ -91,6 +91,9 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                     iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ action: 'init', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ action: 'login', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'BRIDGE_READY', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'SESSION_DATA', payload: authPayload }, '*');
                     
                     iframe.contentWindow.postMessage({ 
                         action: 'sync_client_data', 
