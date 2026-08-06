@@ -116,11 +116,27 @@
                 overflow-y: visible !important;
                 width: 100% !important;
                 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-                -ms-overflow-style: none !important;
-                scrollbar-width: none !important;
+                scrollbar-width: thin !important;
+                scrollbar-color: rgba(255, 255, 255, 0.2) transparent !important;
 
                 &::-webkit-scrollbar {
-                    display: none !important;
+                    height: 6px !important;
+                }
+                &::-webkit-scrollbar-track {
+                    background: transparent !important;
+                }
+                &::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.2) !important;
+                    border-radius: 4px !important;
+                }
+                &:hover::-webkit-scrollbar-thumb {
+                    background: rgba(255, 255, 255, 0.4) !important;
+                }
+
+                // Add a pseudo-element to fix flexbox ignoring right padding on overflow
+                &::after {
+                    content: '';
+                    min-width: 4px;
                 }
 
                 @include mobile-or-tablet-screen {
