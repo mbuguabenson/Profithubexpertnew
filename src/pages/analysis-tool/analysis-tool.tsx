@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { useHistory } from 'react-router-dom';
 import IframeWrapper from '@/components/iframe-wrapper';
 import { useStore } from '@/hooks/useStore';
 import { getAppId } from '@/components/shared/utils/config/config';
@@ -40,7 +39,6 @@ const ProfithubAnalysis: React.FC = observer(() => {
 
 const AnalysisTool: React.FC = observer(() => {
     const [activeTab, setActiveTab] = useState(0);
-    const history = useHistory();
 
     return (
         <div className="analysis-tools-wrapper">
@@ -49,7 +47,7 @@ const AnalysisTool: React.FC = observer(() => {
                 onTabItemClick={setActiveTab} 
                 top
                 className="analysis-tools-tabs"
-                history={history}
+                history={window.history as any}
             >
                 <div label="Profithub Analysis">
                     <ProfithubAnalysis />
