@@ -33,7 +33,7 @@ export const BrandLogo = observer(({ height = 32, className = '' }: TBrandLogoPr
                     WebkitBackgroundClip: 'text', 
                     WebkitTextFillColor: 'transparent',
                     letterSpacing: '0.5px'
-                }}>Profit Hub</span>
+                }}>Pfhub</span>
             </div>
             <div style={{ 
                 fontSize: '0.65rem', 

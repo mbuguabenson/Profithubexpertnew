@@ -59,14 +59,14 @@
         "css_variable_prefix": "--brand"
     },
     "platform": {
-        "name": "Trading Bot",
+        "name": "Pfhub",
         "logo": {
             "type": "component",
             "component_name": "BrandLogo",
-            "alt_text": "Trading Bot",
+            "alt_text": "Pfhub",
             "link_url": "/",
             "show_text": false,
-            "text": "Trading Bot"
+            "text": "Pfhub"
         },
         "footer": {
             "enable_language_settings": false,
