@@ -8,14 +8,28 @@
         &-wrapper {
             position: absolute;
             top: 0;
-            width: 100vw;
+            width: 100%;
             background-color: var(--general-main-1);
             transition: width 0.3s ease;
         }
     }
 
     .dashboard__chart-wrapper--expanded {
-        width: calc(100vw - 36.6rem);
+        width: calc(100% - 36.6rem);
+    }
+
+    // Ensure SmartChart stays within its container and doesn't overflow behind the run panel
+    .dashboard__chart-wrapper {
+        overflow: hidden;
+
+        .smartcharts,
+        .smartcharts-desktop,
+        .ciq-chart,
+        .ciq-chart-area,
+        .chartContainer {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
     }
 
     .ciq-chart {
