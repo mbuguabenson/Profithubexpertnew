@@ -143,6 +143,11 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
                 console.log(`📊 [${title}] Received trade event from iframe:`, tradeData);
 
+                // Ignore trade events from DTrader to prevent Run Panel from popping up
+                if (title === 'DTrader Terminal') {
+                    return;
+                }
+
                 // Initialize run panel on first trade (like other bots do)
                 if (run_panel && !run_panel.run_id) {
                     // Generate run_id based on title (e.g., "Hyperbot" -> "hyperbot", "Diffbot" -> "diffbot")

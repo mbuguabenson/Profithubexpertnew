@@ -4,6 +4,7 @@ import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.servi
 import IframeWrapper from '@/components/iframe-wrapper/iframe-wrapper';
 import { useStore } from '@/hooks/useStore';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
+import { getAccountsList } from '@/utils/token-bridge';
 import './dtrader.scss';
 
 const LEGACY_APP_ID = '134249';
@@ -24,14 +25,36 @@ const DTraderPage: React.FC = observer(() => {
     }
 
     const params = new URLSearchParams();
-    if (loginid) {
-        params.set('acct1', loginid);
+    
+    // Smart integration: Pass all tokens and accounts to DTrader to fix session expiry
+    const accountsList = getAccountsList();
+    let count = 1;
+
+    // Prioritize active account
+    if (loginid && accountsList[loginid]) {
+        params.set(`acct${count}`, loginid);
+        params.set(`token${count}`, accountsList[loginid]);
+        params.set(`cur${count}`, 'USD');
+        // Also add legacy single params just in case
+        params.set('token', accountsList[loginid]);
+        count++;
+    } else if (loginid && token) {
+        params.set(`acct${count}`, loginid);
+        params.set(`token${count}`, token);
+        params.set(`cur${count}`, 'USD');
+        params.set('token', token);
+        count++;
     }
-    if (token) {
-        params.set('token1', token);
-        params.set('token', token); // Also add legacy token param just in case
-    }
-    params.set('cur1', 'USD');
+
+    // Append remaining accounts
+    Object.keys(accountsList).forEach(acc => {
+        if (acc !== loginid) {
+            params.set(`acct${count}`, acc);
+            params.set(`token${count}`, accountsList[acc]);
+            params.set(`cur${count}`, 'USD');
+            count++;
+        }
+    });
     params.set('api_version', 'v2');
     params.set('chart_type', 'area');
     params.set('interval', '1t');
