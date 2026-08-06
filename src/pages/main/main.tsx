@@ -46,6 +46,11 @@ const MultiTrader = lazy(() => import('../multi-trader'));
 const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-centre-tab'));
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
+const SystemCenterPage = lazy(() => import('../system-center'));
+
+import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
+import { initNetworkInterceptor } from '@/services/network-interceptor';
+import { initWebSocketMonitor } from '@/services/websocket-monitor';
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -113,6 +118,10 @@ const AppWrapper = observer(() => {
     const [siteConfig, setSiteConfig] = useState(() => getSiteConfig());
 
     useEffect(() => {
+        // Initialize NOC interceptors
+        initNetworkInterceptor();
+        initWebSocketMonitor();
+
         const handler = () => {
             setSiteConfig(getSiteConfig());
         };
@@ -304,7 +313,7 @@ const AppWrapper = observer(() => {
             key: 'dashboard',
             id: 'id-dbot-dashboard',
             label: <TabIcon iconKey='dashboard' label='Dashboard' />,
-            content: <Dashboard handleTabChange={handleTabChange} />
+            content: <TabErrorBoundary tabId='id-dbot-dashboard' tabName='Dashboard'><Dashboard handleTabChange={handleTabChange} /></TabErrorBoundary>
         },
         {
             key: 'bot_builder',
@@ -317,25 +326,29 @@ const AppWrapper = observer(() => {
             id: is_chart_modal_visible || is_trading_view_modal_visible ? 'id-charts--disabled' : 'id-charts',
             label: <TabIcon iconKey='chart' label='Charts' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}>
-                    <ChartWrapper show_digits_stats={true} />
-                </Suspense>
+                <TabErrorBoundary tabId='id-charts' tabName='Charts'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}>
+                        <ChartWrapper show_digits_stats={true} />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
             key: 'trading_bots',
             id: 'id-trading-bots',
             label: <TabIcon iconKey='trading_bots' label='Trading Bots' />,
-            content: <TradingBots />
+            content: <TabErrorBoundary tabId='id-trading-bots' tabName='Trading Bots'><TradingBots /></TabErrorBoundary>
         },
         {
             key: 'analysis_tool',
             id: 'id-analysis-tool',
             label: <TabIcon iconKey='analysis_tool' label='Analysis Tool' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Analysis Tool...')} />}>
-                    <AnalysisTools />
-                </Suspense>
+                <TabErrorBoundary tabId='id-analysis-tool' tabName='Analysis Tool'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Analysis Tool...')} />}>
+                        <AnalysisTools />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -343,9 +356,11 @@ const AppWrapper = observer(() => {
             id: 'id-tradingview',
             label: <TabIcon iconKey='tradingview' label='TradingView' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading TradingView...')} />}>
-                    <TradingView />
-                </Suspense>
+                <TabErrorBoundary tabId='id-tradingview' tabName='TradingView'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading TradingView...')} />}>
+                        <TradingView />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -353,9 +368,11 @@ const AppWrapper = observer(() => {
             id: 'id-signals',
             label: <TabIcon iconKey='signals' label='Signals' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signals...')} />}>
-                    <Signals />
-                </Suspense>
+                <TabErrorBoundary tabId='id-signals' tabName='Signals'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signals...')} />}>
+                        <Signals />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -363,9 +380,11 @@ const AppWrapper = observer(() => {
             id: 'id-scanner',
             label: <TabIcon iconKey='scanner' label='AI Strategy Scanner' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Scanner...')} />}>
-                    <ScannerPage />
-                </Suspense>
+                <TabErrorBoundary tabId='id-scanner' tabName='AI Strategy Scanner'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Scanner...')} />}>
+                        <ScannerPage />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
 
@@ -374,9 +393,11 @@ const AppWrapper = observer(() => {
             id: 'id-manual-trading',
             label: <TabIcon iconKey='manual_trading' label='Manual Trading' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Manual Trading...')} />}>
-                    <ManualTrading />
-                </Suspense>
+                <TabErrorBoundary tabId='id-manual-trading' tabName='Manual Trading'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Manual Trading...')} />}>
+                        <ManualTrading />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -384,9 +405,11 @@ const AppWrapper = observer(() => {
             id: 'id-easy-tool',
             label: <TabIcon iconKey='easy_tool' label='Easy Tool' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Easy Tool...')} />}>
-                    <EasyTool />
-                </Suspense>
+                <TabErrorBoundary tabId='id-easy-tool' tabName='Easy Tool'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Easy Tool...')} />}>
+                        <EasyTool />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -394,9 +417,11 @@ const AppWrapper = observer(() => {
             id: 'id-signal-centre',
             label: <TabIcon iconKey='signal_centre' label='Signal Centre' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signal Centre...')} />}>
-                    <SignalCentrePage />
-                </Suspense>
+                <TabErrorBoundary tabId='id-signal-centre' tabName='Signal Centre'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signal Centre...')} />}>
+                        <SignalCentrePage />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -404,9 +429,11 @@ const AppWrapper = observer(() => {
             id: 'id-multi-trader',
             label: <TabIcon iconKey='multi_trader' label='Multi Trader' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Multi Trader...')} />}>
-                    <MultiTrader />
-                </Suspense>
+                <TabErrorBoundary tabId='id-multi-trader' tabName='Multi Trader'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Multi Trader...')} />}>
+                        <MultiTrader />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -414,9 +441,11 @@ const AppWrapper = observer(() => {
             id: 'id-market-hunter-pro',
             label: <TabIcon iconKey='market_hunter_pro' label='Market Hunter Pro' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Market Hunter Pro...')} />}>
-                    <MarketHunterPro />
-                </Suspense>
+                <TabErrorBoundary tabId='id-market-hunter-pro' tabName='Market Hunter Pro'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Market Hunter Pro...')} />}>
+                        <MarketHunterPro />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         },
         {
@@ -424,9 +453,23 @@ const AppWrapper = observer(() => {
             id: 'id-dtrader',
             label: <TabIcon iconKey='dtrader' label='DTrader' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
-                    <DTraderPage />
-                </Suspense>
+                <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
+                        <DTraderPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'system_center',
+            id: 'id-system-center',
+            label: <TabIcon iconKey='dashboard' label='System Center' />,
+            content: (
+                <TabErrorBoundary tabId='id-system-center' tabName='System Center'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading System Center...')} />}>
+                        <SystemCenterPage />
+                    </Suspense>
+                </TabErrorBoundary>
             )
         }
     ], [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]);
