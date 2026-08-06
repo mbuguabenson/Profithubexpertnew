@@ -165,11 +165,12 @@ export const TabIcon: React.FC<TTabIconProps> = ({ iconKey, label }) => {
                         <line x1='8' y1='11' x2='14' y2='11' />
                     </svg>
                 );
-            case 'dollarmine':
+            case 'dcircles':
                 return (
-                    <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='#f59e0b' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
-                        <line x1='12' y1='1' x2='12' y2='23' />
-                        <path d='M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' />
+                    <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='#a78bfa' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+                        <circle cx='12' cy='12' r='10' />
+                        <circle cx='12' cy='12' r='6' />
+                        <circle cx='12' cy='12' r='2' />
                     </svg>
                 );
             default:

@@ -11,6 +11,7 @@ import SaveModal from '../dashboard/bot-list/save-modal';
 import VirtualHookModal from '@/components/virtual-hook-modal/virtual-hook-modal';
 import BotBuilderTourHandler from '../tutorials/dbot-tours/bot-builder-tour';
 import QuickStrategy1 from './quick-strategy';
+import EntryScanner from '../entry-scanner/entry-scanner';
 import WorkspaceWrapper from './workspace-wrapper';
 import DraggableResizeWrapper from '@/components/draggable/draggable-resize-wrapper';
 import { DBOT_TABS } from '@/constants/bot-contents';
@@ -19,7 +20,7 @@ import Signals from '@/pages/signals/signals';
 import MobileFullPageModal from '@/components/shared_ui/mobile-full-page-modal';
 
 const BotBuilder = observer(() => {
-    const { dashboard, app, run_panel, toolbar, quick_strategy, blockly_store, load_modal } = useStore();
+    const { dashboard, app, run_panel, toolbar, quick_strategy, blockly_store, load_modal, entry_scanner } = useStore();
     const { active_tab, active_tour, is_preview_on_popup } = dashboard;
     const { is_open } = quick_strategy;
     const { is_running } = run_panel;
@@ -160,6 +161,7 @@ const BotBuilder = observer(() => {
     }, [dashboard.is_protool_assistant_visible]);
 
     const showSidebar = dashboard.is_protool_assistant_visible;
+    const showEntryScanner = entry_scanner.is_scanner_open;
 
     return (
         <>
@@ -196,6 +198,24 @@ const BotBuilder = observer(() => {
                         <div style={{ flex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                             <React.Suspense fallback={<div>Loading Premium Signals...</div>}>
                                 <Signals />
+                            </React.Suspense>
+                        </div>
+                    </DraggableResizeWrapper>
+                )}
+                {showEntryScanner && isDesktop && (
+                    <DraggableResizeWrapper
+                        boundary='.main'
+                        header={localize('Entry Scanner')}
+                        onClose={() => entry_scanner.is_scanner_open = false}
+                        modalWidth={700}
+                        modalHeight={600}
+                        minWidth={500}
+                        minHeight={400}
+                        enableResizing
+                    >
+                        <div style={{ flex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            <React.Suspense fallback={<div>Loading Entry Scanner...</div>}>
+                                <EntryScanner />
                             </React.Suspense>
                         </div>
                     </DraggableResizeWrapper>

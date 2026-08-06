@@ -45,7 +45,7 @@ const EasyTool = lazy(() => import('../easy-tool'));
 const MultiTrader = lazy(() => import('../multi-trader'));
 const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-centre-tab'));
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
-const Dollarmine = lazy(() => import('../dollarmine/dollarmine'));
+const DTraderPage = lazy(() => import('../dtrader/dtrader'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -103,7 +103,8 @@ const AppWrapper = observer(() => {
         'ai_compounding_engine',
         'dtrader',
         'ai_trading_engine',
-        'dollarmine',
+        'dcircles',
+        'dp_tools',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -419,12 +420,12 @@ const AppWrapper = observer(() => {
             )
         },
         {
-            key: 'dollarmine',
-            id: 'id-dollarmine',
-            label: <TabIcon iconKey='dollarmine' label='Dollarmine' />,
+            key: 'dtrader',
+            id: 'id-dtrader',
+            label: <TabIcon iconKey='dtrader' label='DTrader' />,
             content: (
-                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Dollarmine...')} />}>
-                    <Dollarmine />
+                <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
+                    <DTraderPage />
                 </Suspense>
             )
         }

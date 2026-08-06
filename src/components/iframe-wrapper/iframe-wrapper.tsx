@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
-import { getToken, getLoginId } from '@/external/bot-skeleton/services/api/appId';
+import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
 
@@ -37,25 +38,43 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             });
         }
 
-        // Function to send auth data to iframe across all known postMessage formats
         const sendAuthData = () => {
-            const tokenData = getToken();
-            const rawToken = typeof tokenData === 'string' ? tokenData : (tokenData?.token?.token || tokenData?.token);
-            const token = rawToken || (client as any)?.token || localStorage.getItem('token') || (client as any)?.active_account?.token || '';
-            const loginid = getLoginId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-            const appId = getAppId() || '1089';
+            let token = OAuthTokenExchangeService.getAuthInfo()?.access_token;
+            let loginid = V2GetActiveAccountId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+            
+            if (!token) {
+                token = V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || (client as any)?.active_account?.token || '';
+            }
+
+            // Demo to Real logic: if token is legacy and demo-to-real is on, we MUST pass the demo login ID too, otherwise they mismatch
+            const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
+            if (isDemoToReal && loginid && !loginid.startsWith('VR') && !OAuthTokenExchangeService.getAuthInfo()?.access_token) {
+                 const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
+                 const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
+                 if (demoAccountId) loginid = demoAccountId;
+            }
+
+            const appId = getAppId() || '134249';
 
             const effectiveLoginId = loginid || (client as any)?.active_account_loginid || 'VRTC100000';
             const effectiveToken = token || 'demo';
 
             if (iframe.contentWindow) {
                 try {
+                    const embedBase = process.env.DTRADER_URL ? `${process.env.DTRADER_URL}/dtrader` : 'https://deriv-dtrader.vercel.app/dtrader';
                     const authPayload = {
                         token: effectiveToken,
                         loginid: effectiveLoginId,
-                        appId,
+                        loginId: effectiveLoginId,
+                        appId: '134249',
                         server: 'green',
                         timestamp: Date.now(),
+                        authMode: 'derivws_otp',
+                        accountType: 'ZOOM',
+                        currency: 'USD',
+                        defaultSymbol: '1HZ100V',
+                        embedBase,
+                        iframeUrl: `${embedBase}?acct1=${effectiveLoginId}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=134249&lang=EN`
                     };
 
                     // Broadcast all common message formats used by external trading analysis tools
@@ -91,6 +110,9 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             'https://bot-analysis-tool-belex.web.app',
             'https://analysisprofithub.vercel.app',
             'https://www.smartanalysistool.com',
+            'https://dcircles.netlify.app',
+            'https://dcircles-six.vercel.app',
+            'https://xenontool.netlify.app',
             window.location.origin
         ];
 
@@ -308,12 +330,12 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         };
 
         // Monitor localStorage for auth token changes (login/logout)
-        let lastToken = getToken()?.token?.token;
-        let lastLoginId = getLoginId();
+        let lastToken = V2GetActiveToken();
+        let lastLoginId = V2GetActiveAccountId();
 
         const checkAuthChanges = () => {
-            const currentToken = getToken()?.token?.token;
-            const currentLoginId = getLoginId();
+            const currentToken = V2GetActiveToken();
+            const currentLoginId = V2GetActiveAccountId();
 
             // If token changed (login or logout), send immediately
             if (currentToken !== lastToken || currentLoginId !== lastLoginId) {

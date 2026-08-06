@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
+import { useHistory } from 'react-router-dom';
 import IframeWrapper from '@/components/iframe-wrapper';
 import { useStore } from '@/hooks/useStore';
 import { getAppId } from '@/components/shared/utils/config/config';
+import Tabs from '@/components/shared_ui/tabs/tabs';
+import DCirclesPage from '../dcircles/dcircles';
+import DpTools from '../dp-tools/dp-tools';
+import './analysis-tool.scss';
 
-const AnalysisTool: React.FC = observer(() => {
+const ProfithubAnalysis: React.FC = observer(() => {
     const { client } = useStore() ?? {};
     
     const token = (client as any)?.token || localStorage.getItem('active_token') || localStorage.getItem('token') || localStorage.getItem('deriv_api_token') || '';
@@ -30,6 +35,33 @@ const AnalysisTool: React.FC = observer(() => {
             title='Analysis Tool'
             className='analysis-tool-container'
         />
+    );
+});
+
+const AnalysisTool: React.FC = observer(() => {
+    const [activeTab, setActiveTab] = useState(0);
+    const history = useHistory();
+
+    return (
+        <div className="analysis-tools-wrapper">
+            <Tabs 
+                active_index={activeTab} 
+                onTabItemClick={setActiveTab} 
+                top
+                className="analysis-tools-tabs"
+                history={history}
+            >
+                <div label="Profithub Analysis">
+                    <ProfithubAnalysis />
+                </div>
+                <div label="Xenon Tool (DP Tools)">
+                    <DpTools />
+                </div>
+                <div label="DCircles">
+                    <DCirclesPage />
+                </div>
+            </Tabs>
+        </div>
     );
 });
 

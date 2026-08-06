@@ -20,7 +20,7 @@ import { useDevice } from '@deriv-com/ui';
 import ToolbarIcon from './toolbar-icon';
 
 const WorkspaceGroup = observer(() => {
-    const { dashboard, toolbar, load_modal, save_modal, scanner } = useStore();
+    const { dashboard, toolbar, load_modal, save_modal, scanner, entry_scanner } = useStore();
     const { setPreviewOnPopup, setChartModalVisibility, setTradingViewModalVisibility, setProfihubModalVisibility } = dashboard;
     const { has_redo_stack, has_undo_stack, onResetClick, onSortClick, onUndoClick, onZoomInOutClick } = toolbar;
     const { toggleSaveModal } = save_modal;
@@ -219,6 +219,26 @@ const WorkspaceGroup = observer(() => {
                                     </defs>
                                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="url(#ph_signals_grad)" stroke="#f5c542" strokeWidth="1" strokeLinejoin="round" />
                                     <circle cx="18" cy="5" r="1.5" fill="#38bdf8" />
+                                </svg>
+                            </span>
+                        }
+                    />
+                    <ToolbarIcon
+                        popover_message={localize('Entry Scanner')}
+                        icon={
+                            <span
+                                className={classNames('toolbar__icon', {
+                                    'toolbar__icon--active': entry_scanner.is_scanner_open,
+                                })}
+                                id='db-toolbar__entry-scanner-button'
+                                onClick={() => {
+                                    entry_scanner.is_scanner_open = !entry_scanner.is_scanner_open;
+                                }}
+                            >
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ verticalAlign: 'middle', filter: entry_scanner.is_scanner_open ? 'drop-shadow(0 0 5px #0ea5e9)' : 'drop-shadow(0 0 4px rgba(14,165,233,0.3))' }}>
+                                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" />
+                                    <path d="M12 12v9" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" />
+                                    <path d="m8 17 4 4 4-4" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </span>
                         }
