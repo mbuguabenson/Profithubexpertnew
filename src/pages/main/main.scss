@@ -93,10 +93,16 @@
             }
 
             &__list {
-                background: var(--general-section-1) !important;
+                background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
+                
+                :global(.theme--light) & {
+                    background: linear-gradient(135deg, #f1f5f9 0%, #dbeafe 100%) !important;
+                    border-color: rgba(59, 130, 246, 0.3) !important;
+                }
+
                 backdrop-filter: blur(16px) saturate(180%) !important;
                 -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-                border: 1px solid var(--border-normal) !important;
+                border: 1px solid rgba(59, 130, 246, 0.2) !important;
                 border-radius: 0 !important;
                 padding: 6px 10px !important;
                 margin-top: 0 !important;
@@ -142,8 +148,13 @@
             }
 
             &__item {
-                background: rgba(255, 255, 255, 0.1) !important;
+                background: rgba(255, 255, 255, 0.05) !important;
                 color: rgba(255, 255, 255, 0.85) !important;
+
+                :global(.theme--light) & {
+                    background: rgba(0, 0, 0, 0.05) !important;
+                    color: rgba(0, 0, 0, 0.7) !important;
+                }
                 width: auto !important;
                 height: 40px !important;
                 min-width: 0 !important;
@@ -174,6 +185,11 @@
                 &.dc-tabs__active {
                     background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important;
                     color: #ffffff !important;
+                    
+                    :global(.theme--light) & {
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+                    }
+
                     border-radius: 0 !important;
                     border-color: transparent !important;
                     box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
