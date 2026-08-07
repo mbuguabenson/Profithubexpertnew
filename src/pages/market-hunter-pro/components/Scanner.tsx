@@ -1,3 +1,4 @@
+import '../index.css';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   ChevronDown,
