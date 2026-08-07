@@ -13,6 +13,8 @@ import {
   Target,
   Sparkles,
   BarChart2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import MarketMonitor from './MarketMonitor';
 import { AutoHunterBotModal } from './AutoHunterBotModal';
@@ -415,6 +417,7 @@ export default function Scanner() {
   const signalUpdatedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showTradeTypePicker, setShowTradeTypePicker] = useState(false);
   const [activeTab, setActiveTab] = useState<PanelTab>('scanner');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   // Bulk trade
   const [bulkCount, setBulkCount] = useState('3');
   const [showBulkPanel, setShowBulkPanel] = useState(false);
@@ -1112,6 +1115,7 @@ export default function Scanner() {
             <div className="p-3 flex-1 flex flex-col min-h-0">
               <MarketMonitor
                 embedded
+                theme={theme}
                 onSelectSymbol={(symId: string) => {
                   setSelectedSymbol(symId);
                   setActiveTab('scanner');
@@ -1145,6 +1149,7 @@ export default function Scanner() {
         strategyLabel={botStrategyLabel}
         marketTicks={subscriptionState?.ticks}
         marketQuotes={subscriptionState?.quotes}
+        theme={theme}
       />
     </>
   );

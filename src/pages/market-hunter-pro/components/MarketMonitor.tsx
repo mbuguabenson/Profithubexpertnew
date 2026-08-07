@@ -283,6 +283,7 @@ function MarketRow({
   strategyIds,
   onSelectSymbol,
   onLoadBot,
+  theme = 'dark',
 }: {
   state: MarketState | undefined;
   label: string;
@@ -290,8 +291,10 @@ function MarketRow({
   strategyIds: StrategyId[];
   onSelectSymbol: (id: string) => void;
   onLoadBot?: (symbol: string, symbolName: string, strategyId: string) => void;
+  theme?: 'dark' | 'light';
 }) {
   const [expanded, setExpanded] = useState(false);
+  const isDark = theme === 'dark';
 
   const allowedTypes = useMemo<SignalType[]>(() => {
     const types: SignalType[] = [];
@@ -313,36 +316,36 @@ function MarketRow({
 
   return (
     <div
-      className={`mhp-glass-card rounded-2xl p-3.5 border transition-all duration-300 ${
-        expanded ? 'border-sky-500/40 shadow-lg shadow-sky-500/10' : 'border-white/10 hover:border-white/20'
+      className={`p-4 rounded-2xl transition-all duration-300 ${
+        isDark ? 'mhp-neu-card-dark' : 'mhp-neu-card-light'
       }`}
     >
       {/* Top Header Row */}
       <div
-        className="flex items-center justify-between gap-2 cursor-pointer select-none"
+        className="flex items-center justify-between gap-3 cursor-pointer select-none"
         onClick={() => setExpanded(e => !e)}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          {/* Glowing symbol icon badge */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Neumorphic Symbol Badge */}
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-[11px] text-white shrink-0 shadow-md"
-            style={{
-              background: 'linear-gradient(135deg, #0ea5e9 0%, #10b981 100%)',
-              boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
-            }}
+            className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs shrink-0 ${
+              isDark ? 'mhp-neu-button-dark text-sky-400' : 'mhp-neu-button-light text-sky-600'
+            }`}
           >
             {short}
           </div>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-white leading-tight truncate">{label}</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-extrabold leading-tight truncate ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
+                {label}
+              </span>
               <span
-                className="w-2 h-2 rounded-full shrink-0 animate-pulse"
-                style={{ background: loading ? '#eab308' : '#10b981', boxShadow: `0 0 8px ${loading ? '#eab308' : '#10b981'}` }}
+                className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse"
+                style={{ background: loading ? '#f59e0b' : '#10b981', boxShadow: `0 0 8px ${loading ? '#f59e0b' : '#10b981'}` }}
               />
             </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+            <div className={`text-xs font-mono mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               {loading ? 'Connecting...' : `Last Price: ${state?.lastPrice?.toFixed(4) ?? '—'}`}
             </div>
           </div>
@@ -352,11 +355,9 @@ function MarketRow({
         {state?.lastDigit !== null && state?.lastDigit !== undefined && (
           <div className="flex flex-col items-end shrink-0">
             <span
-              className="px-2 py-0.5 rounded-lg text-xs font-black font-mono text-white shadow-sm"
-              style={{
-                background: (state.lastDigit ?? 0) >= 5 ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #10b981, #059669)',
-                boxShadow: (state.lastDigit ?? 0) >= 5 ? '0 2px 8px rgba(239, 68, 68, 0.3)' : '0 2px 8px rgba(16, 185, 129, 0.3)'
-              }}
+              className={`px-3 py-1 rounded-xl text-xs font-black font-mono text-white ${
+                (state.lastDigit ?? 0) >= 5 ? 'bg-gradient-to-r from-rose-500 to-red-600' : 'bg-gradient-to-r from-emerald-500 to-teal-600'
+              }`}
             >
               Digit: {state.lastDigit}
             </span>
@@ -365,26 +366,22 @@ function MarketRow({
       </div>
 
       {/* Signal Status & Action Buttons Row */}
-      <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
+      <div className={`mt-3.5 pt-3 border-t flex items-center justify-between gap-2 ${isDark ? 'border-slate-800' : 'border-slate-300/60'}`}>
+        <div className="flex items-center gap-2">
           {topSignal ? (
             <SignalBadge status={topSignal.status} probability={topSignal.probability} />
           ) : (
-            <span className="text-[9px] text-slate-500 font-medium">Scanning signals...</span>
+            <span className={`text-xs font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Scanning signals...</span>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={e => {
               e.stopPropagation();
               onLoadBot?.(state?.symbol ?? '', label ?? state?.symbol ?? '', strategyIds[0] || 'even_odd');
             }}
-            className="text-[10px] font-bold px-3 py-1.5 rounded-xl text-white transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1.5 shadow-md"
-            style={{
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-              boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
-            }}
+            className="mhp-neu-btn-green px-3.5 py-1.5 text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition"
           >
             🤖 Load Bot
           </button>
@@ -394,18 +391,16 @@ function MarketRow({
               e.stopPropagation();
               onSelectSymbol(state?.symbol ?? '');
             }}
-            className="text-[10px] font-bold px-3 py-1.5 rounded-xl text-slate-900 transition-all duration-200 hover:scale-105 active:scale-95 flex items-center gap-1 shadow-md"
-            style={{
-              background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
-              boxShadow: '0 4px 12px rgba(251, 191, 36, 0.3)'
-            }}
+            className="mhp-neu-btn-amber px-3.5 py-1.5 text-xs flex items-center gap-1 shadow-md active:scale-95 transition"
           >
             ⚡ Scan
           </button>
 
           <button
             onClick={() => setExpanded(e => !e)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+            className={`p-2 rounded-xl transition ${
+              isDark ? 'mhp-neu-button-dark hover:text-white' : 'mhp-neu-button-light hover:text-slate-900'
+            }`}
           >
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
@@ -414,22 +409,19 @@ function MarketRow({
 
       {/* Expanded Details */}
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-white/10 space-y-3">
+        <div className={`mt-3.5 pt-3.5 border-t space-y-3 ${isDark ? 'border-slate-800' : 'border-slate-300/60'}`}>
           {loading ? (
-            <div className="py-4 flex items-center justify-center gap-2 text-slate-400">
-              <div className="w-4 h-4 rounded-full border-2 border-slate-600 border-t-sky-400 animate-spin" />
+            <div className={`py-4 flex items-center justify-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              <div className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-sky-500 animate-spin" />
               <span className="text-xs">Streaming tick history...</span>
             </div>
           ) : a ? (
             <>
-              <div className="flex items-center justify-between text-[10px] text-slate-400">
-                <span>Total Ticks: <strong className="text-slate-200">{a.totalTicks}</strong></span>
-                <span>Entropy: <strong className="text-slate-200">{a.entropy.toFixed(2)}</strong></span>
-                <span>Even: <strong className="text-emerald-400">{a.evenCount}</strong> / Odd: <strong className="text-amber-400">{a.oddCount}</strong></span>
+              <div className={`flex items-center justify-between text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                <span>Ticks: <strong className={isDark ? 'text-slate-200' : 'text-slate-800'}>{a.totalTicks}</strong></span>
+                <span>Entropy: <strong className={isDark ? 'text-slate-200' : 'text-slate-800'}>{a.entropy.toFixed(2)}</strong></span>
+                <span>Even: <strong className="text-emerald-500">{a.evenCount}</strong> / Odd: <strong className="text-amber-500">{a.oddCount}</strong></span>
               </div>
-
-              {/* Digit frequency bar */}
-              <DigitFreqMiniBar frequencies={a.digitFrequencies} />
 
               {/* Strategy-specific stats */}
               {strategyIds.some(s => s === 'even_odd') && (
@@ -615,6 +607,7 @@ export default function MarketMonitor({
                 strategyIds={selectedStrategies}
                 onSelectSymbol={onSelectSymbol}
                 onLoadBot={onLoadBot}
+                theme={theme}
               />
             );
           })}

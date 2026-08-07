@@ -12,6 +12,7 @@ interface AutoHunterBotModalProps {
   signalConfidence?: number;
   marketTicks?: number[];
   marketQuotes?: number[];
+  theme?: 'dark' | 'light';
 }
 
 export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
@@ -23,8 +24,10 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
   strategyLabel,
   signalConfidence = 85,
   marketTicks = [],
-  marketQuotes = []
+  marketQuotes = [],
+  theme = 'dark',
 }) => {
+  const isDark = theme === 'dark';
   // Configuration State
   const [stake, setStake] = useState<number>(1);
   const [martingale, setMartingale] = useState<number>(2);
