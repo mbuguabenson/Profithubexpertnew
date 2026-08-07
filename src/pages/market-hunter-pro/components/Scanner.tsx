@@ -727,42 +727,74 @@ export default function Scanner() {
           {/* ── SCANNER TAB ── */}
           {activeTab === 'scanner' && (
             <div className="p-5 space-y-4" style={{ background: 'linear-gradient(180deg, transparent, rgba(255,255,255,0.02))' }}>
-              {/* Symbol selector */}
-              <div>
-                <label className="text-[10px] font-bold text-white/50 uppercase tracking-wider block mb-1">Market</label>
-                <div className="relative" ref={symbolPickerRef}>
-                  <button
-                    onClick={() => setShowSymbolPicker((v) => !v)}
-                    className="w-full flex items-center justify-between border rounded-xl px-4 py-2.5 transition"
-                    style={{ borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)' }}
-                  >
-                    <span className="font-bold text-white/80 text-sm">{selectedSymbolInfo?.label ?? selectedSymbol}</span>
-                    <ChevronDown size={14} className={`text-white/40 transition-transform ${showSymbolPicker ? 'rotate-180' : ''}`} />
-                  </button>
-                  {showSymbolPicker && (
-                    <div className="absolute z-[60] top-full left-0 right-0 mt-1 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto"
-                      style={{ background: 'rgba(15,10,30,0.98)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
-                      {['Volatility', 'Crash/Boom', 'Jump', 'Bear/Bull', 'Range', 'Step'].map((cat) => (
-                        <div key={cat}>
-                          <div className="px-4 py-1.5 text-[10px] font-bold text-white/40 uppercase tracking-wider sticky top-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                            {cat}
-                          </div>
-                          {SYMBOLS.filter((s) => s.category === cat).map((s) => (
-                            <button
-                              key={s.id}
-                              onClick={() => { setSelectedSymbol(s.id); setShowSymbolPicker(false); }}
-                              className={`w-full text-left px-4 py-2 text-sm font-medium transition ${selectedSymbol === s.id ? 'text-[#f5c542] font-bold' : 'text-white/70 hover:bg-white/5'}`}
-                              style={selectedSymbol === s.id ? { background: 'rgba(245,197,66,0.12)' } : {}}
-                            >
-                              {s.label}
-                            </button>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              {/* Scan Mode Toggle: Single Market vs Scan All Markets */}
+              <div className="flex rounded-xl p-1 gap-1 mb-2" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <button
+                  type="button"
+                  onClick={() => setMultiMarket(false)}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${!multiMarket ? 'text-[#f5c542] shadow-sm' : 'text-white/50 hover:text-white/80'}`}
+                  style={!multiMarket ? { background: 'rgba(245,197,66,0.15)', border: '1px solid rgba(245,197,66,0.3)' } : {}}
+                >
+                  <Target size={12} /> Single Market
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMultiMarket(true)}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${multiMarket ? 'text-[#f5c542] shadow-sm' : 'text-white/50 hover:text-white/80'}`}
+                  style={multiMarket ? { background: 'rgba(245,197,66,0.15)', border: '1px solid rgba(245,197,66,0.3)' } : {}}
+                >
+                  <Layers size={12} /> Scan All Markets ({SYMBOLS.length})
+                </button>
               </div>
+
+              {/* Symbol selector (Single Market mode) */}
+              {!multiMarket ? (
+                <div>
+                  <label className="text-[10px] font-bold text-white/50 uppercase tracking-wider block mb-1">Select Market</label>
+                  <div className="relative" ref={symbolPickerRef}>
+                    <button
+                      onClick={() => setShowSymbolPicker((v) => !v)}
+                      className="w-full flex items-center justify-between border rounded-xl px-4 py-2.5 transition"
+                      style={{ borderColor: 'rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)' }}
+                    >
+                      <span className="font-bold text-white/80 text-sm">{selectedSymbolInfo?.label ?? selectedSymbol}</span>
+                      <ChevronDown size={14} className={`text-white/40 transition-transform ${showSymbolPicker ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showSymbolPicker && (
+                      <div className="absolute z-[60] top-full left-0 right-0 mt-1 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto"
+                        style={{ background: 'rgba(15,10,30,0.98)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
+                        {['Volatility', 'Crash/Boom', 'Jump', 'Bear/Bull', 'Range'].map((cat) => (
+                          <div key={cat}>
+                            <div className="px-4 py-1.5 text-[10px] font-bold text-white/40 uppercase tracking-wider sticky top-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                              {cat}
+                            </div>
+                            {SYMBOLS.filter((s) => s.category === cat).map((s) => (
+                              <button
+                                key={s.id}
+                                onClick={() => { setSelectedSymbol(s.id); setShowSymbolPicker(false); }}
+                                className={`w-full text-left px-4 py-2 text-sm font-medium transition ${selectedSymbol === s.id ? 'text-[#f5c542] font-bold' : 'text-white/70 hover:bg-white/5'}`}
+                                style={selectedSymbol === s.id ? { background: 'rgba(245,197,66,0.12)' } : {}}
+                              >
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl p-3 flex items-center justify-between" style={{ background: 'rgba(245,197,66,0.08)', border: '1px solid rgba(245,197,66,0.2)' }}>
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-[#f5c542]" />
+                    <div>
+                      <div className="text-xs font-bold text-white">All Markets Mode Active ({SYMBOLS.length} Markets)</div>
+                      <div className="text-[10px] text-white/40">Scanning all indices simultaneously for highest probability signals</div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Trade type */}
               <div>
