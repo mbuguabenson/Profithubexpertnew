@@ -289,97 +289,69 @@ function MarketRow({
   const topSignal = signals[0];
 
   return (
-    <div
-      className={`p-4 rounded-2xl transition-all duration-300 ${
-        isDark ? 'mhp-neu-card-dark' : 'mhp-neu-card-light'
-      }`}
-    >
-      {/* Top Header Row */}
-      <div
-        className="flex items-center justify-between gap-3 cursor-pointer select-none"
-        onClick={() => setExpanded(e => !e)}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Neumorphic Symbol Badge */}
-          <div
-            className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-xs shrink-0 ${
-              isDark ? 'mhp-neu-button-dark text-sky-400' : 'mhp-neu-button-light text-sky-600'
-            }`}
-          >
-            {short}
-          </div>
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className={`text-sm font-extrabold leading-tight truncate ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
-                {label}
-              </span>
-              <span
-                className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse"
-                style={{ background: loading ? '#f59e0b' : '#10b981', boxShadow: `0 0 8px ${loading ? '#f59e0b' : '#10b981'}` }}
-              />
-            </div>
-            <div className={`text-xs font-mono mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              {loading ? 'Connecting...' : `Last Price: ${state?.lastPrice?.toFixed(4) ?? '—'}`}
-            </div>
-          </div>
-        </div>
-
-        {/* Last Digit Badge */}
-        {state?.lastDigit !== null && state?.lastDigit !== undefined && (
-          <div className="flex flex-col items-end shrink-0">
-            <span
-              className={`px-3 py-1 rounded-xl text-xs font-black font-mono text-white ${
-                (state.lastDigit ?? 0) >= 5 ? 'bg-gradient-to-r from-rose-500 to-red-600' : 'bg-gradient-to-r from-emerald-500 to-teal-600'
-              }`}
-            >
-              Digit: {state.lastDigit}
-            </span>
-          </div>
-        )}
+    <div className="card-container">
+      <div className="title-card">
+        <p>{label}</p>
+        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
+          {short}
+        </span>
       </div>
 
-      {/* Signal Status & Action Buttons Row */}
-      <div className={`mt-3.5 pt-3 border-t flex items-center justify-between gap-2 ${isDark ? 'border-slate-800' : 'border-slate-300/60'}`}>
-        <div className="flex items-center gap-2">
-          {topSignal ? (
+      <div className="card-content">
+        <div className="flex items-center justify-between">
+          <div className="title flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: loading ? '#f59e0b' : '#10b981' }} />
+            {loading ? 'Connecting...' : `Last Price: ${state?.lastPrice?.toFixed(4) ?? '—'}`}
+          </div>
+          {topSignal && (
             <SignalBadge status={topSignal.status} probability={topSignal.probability} />
-          ) : (
-            <span className={`text-xs font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Scanning signals...</span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="plain flex items-center justify-between my-1">
+          <div>
+            <span className="font-black font-mono text-3xl text-white">
+              {state?.lastDigit !== null && state?.lastDigit !== undefined ? state.lastDigit : '—'}
+            </span>
+            <div className="text-[10px] text-[#838383] mt-0.5">Last Digit</div>
+          </div>
+          {a && (
+            <div className="text-right">
+              <div className="text-base font-bold text-white">
+                {a.evenPercentage.toFixed(0)}% <span className="text-xs text-emerald-400 font-medium">E</span> / {a.oddPercentage.toFixed(0)}% <span className="text-xs text-amber-400 font-medium">O</span>
+              </div>
+              <div className="text-[10px] text-[#838383]">Even vs Odd Bias</div>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-2.5 mt-1">
           <button
             onClick={e => {
               e.stopPropagation();
               onLoadBot?.(state?.symbol ?? '', label ?? state?.symbol ?? '', strategyIds[0] || 'even_odd');
             }}
-            className="mhp-neu-btn-green px-3.5 py-1.5 text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition"
+            className="card-btn"
           >
             🤖 Load Bot
           </button>
-
           <button
             onClick={e => {
               e.stopPropagation();
               onSelectSymbol(state?.symbol ?? '');
             }}
-            className="mhp-neu-btn-amber px-3.5 py-1.5 text-xs flex items-center gap-1 shadow-md active:scale-95 transition"
+            className="card-btn"
           >
             ⚡ Scan
           </button>
-
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className={`p-2 rounded-xl transition ${
-              isDark ? 'mhp-neu-button-dark hover:text-white' : 'mhp-neu-button-light hover:text-slate-900'
-            }`}
-          >
-            {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
         </div>
-      </div>
+
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="text-[11px] font-semibold text-[#bab9b9] hover:text-white flex items-center justify-center gap-1 transition pt-1 cursor-pointer"
+        >
+          {expanded ? 'Hide Market Stats ▲' : 'View Deep Analysis ▼'}
+        </button>
 
       {/* Expanded Details */}
       {expanded && (
@@ -442,6 +414,7 @@ function MarketRow({
           ) : null}
         </div>
       )}
+      </div>
     </div>
   );
 }
