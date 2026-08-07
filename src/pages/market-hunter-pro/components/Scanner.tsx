@@ -1,4 +1,3 @@
-import '../index.css';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   ChevronDown,
@@ -14,8 +13,6 @@ import {
   Target,
   Sparkles,
   BarChart2,
-  Sun,
-  Moon,
 } from 'lucide-react';
 import MarketMonitor from './MarketMonitor';
 import { AutoHunterBotModal } from './AutoHunterBotModal';
@@ -418,7 +415,6 @@ export default function Scanner() {
   const signalUpdatedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showTradeTypePicker, setShowTradeTypePicker] = useState(false);
   const [activeTab, setActiveTab] = useState<PanelTab>('scanner');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   // Bulk trade
   const [bulkCount, setBulkCount] = useState('3');
   const [showBulkPanel, setShowBulkPanel] = useState(false);
@@ -722,14 +718,6 @@ export default function Scanner() {
               )}
             </button>
           ))}
-          <button
-            onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
-            className="px-3 py-1.5 text-xs flex items-center gap-1.5 text-white/70 hover:text-white transition cursor-pointer self-center"
-            title="Toggle Light / Dark Neumorphic Theme"
-          >
-            {theme === 'dark' ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} className="text-sky-400" />}
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">{theme}</span>
-          </button>
         </div>
       )}
 
@@ -754,7 +742,7 @@ export default function Scanner() {
                   {showSymbolPicker && (
                     <div className="absolute z-[60] top-full left-0 right-0 mt-1 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto"
                       style={{ background: 'rgba(15,10,30,0.98)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
-                      {['Volatility', 'DEX', 'Crash/Boom', 'Jump', 'Bear/Bull', 'Range', 'Step', 'Forex', 'Commodities', 'Crypto'].map((cat) => (
+                      {['Volatility', 'Crash/Boom', 'Jump', 'Bear/Bull', 'Range', 'Step'].map((cat) => (
                         <div key={cat}>
                           <div className="px-4 py-1.5 text-[10px] font-bold text-white/40 uppercase tracking-wider sticky top-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
                             {cat}
@@ -1124,12 +1112,11 @@ export default function Scanner() {
             <div className="p-3 flex-1 flex flex-col min-h-0">
               <MarketMonitor
                 embedded
-                theme={theme}
-                onSelectSymbol={(symId: string) => {
+                onSelectSymbol={(symId) => {
                   setSelectedSymbol(symId);
                   setActiveTab('scanner');
                 }}
-                onLoadBot={(symId: string, symName: string, stratId: string) => {
+                onLoadBot={(symId, symName, stratId) => {
                   setBotSymbol(symId);
                   setBotSymbolName(symName);
                   setBotStrategyId(stratId);
@@ -1158,7 +1145,6 @@ export default function Scanner() {
         strategyLabel={botStrategyLabel}
         marketTicks={subscriptionState?.ticks}
         marketQuotes={subscriptionState?.quotes}
-        theme={theme}
       />
     </>
   );

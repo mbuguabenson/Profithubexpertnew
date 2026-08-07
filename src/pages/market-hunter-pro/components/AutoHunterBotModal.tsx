@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Square, Loader2, Zap } from 'lucide-react';
-import { useStore } from '@/hooks/useStore';
-import { generateBotXML } from '@/utils/bot-xml-generator';
+import { X, Play, Square, Loader2, TrendingUp, TrendingDown, Zap, Shield, Target, AlertCircle, CheckCircle } from 'lucide-react';
+import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
 
 interface AutoHunterBotModalProps {
   isOpen: boolean;
@@ -13,7 +12,6 @@ interface AutoHunterBotModalProps {
   signalConfidence?: number;
   marketTicks?: number[];
   marketQuotes?: number[];
-  theme?: 'dark' | 'light';
 }
 
 export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
@@ -23,14 +21,10 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
   symbolName,
   strategyId,
   strategyLabel,
-  signalConfidence: _signalConfidence = 85,
-  marketTicks: _marketTicks = [],
-  marketQuotes: _marketQuotes = [],
-  theme = 'dark',
+  signalConfidence = 85,
+  marketTicks = [],
+  marketQuotes = []
 }) => {
-  const isDark = theme === 'dark';
-  const { dashboard, load_modal, run_panel } = useStore();
-
   // Configuration State
   const [stake, setStake] = useState<number>(1);
   const [martingale, setMartingale] = useState<number>(2);
@@ -68,45 +62,6 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
     setLogs(prev => [{ id: Math.random().toString(36).substring(2, 9), time, msg, type }, ...prev.slice(0, 49)]);
   };
 
-  const handleImportXmlAndRunToBotBuilder = async () => {
-    try {
-      const tradeLabel = strategyLabel || 'Even/Odd';
-      const xml = generateBotXML({
-        stake: stake.toString(),
-        takeProfit: takeProfit.toString(),
-        stopLoss: stopLoss.toString(),
-        martingale: martingale.toString(),
-        symbol: symbol || 'R_100',
-        tradeTypeLabel: tradeLabel,
-        bestSignal: null,
-      });
-
-      const name = `ProAI_${tradeLabel.replace(/[\s/]/g, '_')}_${symbol}`;
-
-      onClose();
-
-      if (load_modal && dashboard) {
-        await load_modal.loadStrategyToBuilder({
-          id: name,
-          name,
-          xml,
-          save_type: 'local',
-          timestamp: Date.now(),
-        });
-
-        dashboard.setActiveTab(1);
-
-        setTimeout(() => {
-          if (run_panel) {
-            run_panel.onRunButtonClick();
-          }
-        }, 1200);
-      }
-    } catch (err) {
-      console.error('Failed to import XML to Bot Builder:', err);
-    }
-  };
-
   const handleStart = () => {
     setIsRunning(true);
     setIsSearching(true);
@@ -135,20 +90,83 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
     const interval = setInterval(async () => {
       if (!isRunningRef.current || isExecuting) return;
 
+      // Simulated strategy trigger condition check (or high-confidence tick breach)
       const shouldTriggerTrade = Math.random() > 0.65;
 
       if (shouldTriggerTrade) {
         setIsExecuting(true);
         setIsSearching(false);
-        setStatusMessage(`Entry point detected! Importing XML strategy & auto-running in Bot Builder...`);
-        addLog(`⚡ Entry signal confirmed on ${symbol}! Importing XML to Bot Builder & auto-running...`);
-        
-        await handleImportXmlAndRunToBotBuilder();
+        setStatusMessage(`Entry point detected! Placing ${selectedTradeType} trade for $${currentStake.toFixed(2)}...`);
+        addLog(`⚡ Entry signal confirmed on ${symbol}! Purchasing ${selectedTradeType}...`);
+
+        try {
+          // Prepare parameters for trade
+          const parameters = {
+            amount: currentStake,
+            basis: 'stake',
+            contract_type: selectedTradeType,
+            currency: 'USD',
+            duration: 1,
+            duration_unit: 't',
+            symbol: symbol || 'R_100',
+          };
+
+          const buyResult = await buyContractForUi({
+            parameters,
+            price: currentStake,
+            source: 'MarketHunterProAutoBot'
+          });
+
+          if (buyResult?.contract_id) {
+            addLog(`Contract purchased (#${buyResult.contract_id}). Streaming tick settlement...`);
+            
+            const settlement = await streamContractUntilSettled(buyResult.contract_id);
+            const profit = settlement?.profit ?? 0;
+            const isWin = profit > 0;
+
+            setTotalTrades(t => t + 1);
+            if (isWin) {
+              setWins(w => w + 1);
+              setNetProfit(p => +(p + profit).toFixed(2));
+              addLog(`🎉 Trade WON! Profit: +$${profit.toFixed(2)}`, 'win');
+              setCurrentStake(stake); // Reset stake on win
+            } else {
+              setLosses(l => l + 1);
+              setNetProfit(p => +(p + profit).toFixed(2));
+              addLog(`❌ Trade LOST. Loss: -$${Math.abs(profit).toFixed(2)}`, 'loss');
+              // Apply Martingale
+              const nextStake = +(currentStake * martingale).toFixed(2);
+              setCurrentStake(nextStake);
+              addLog(`📈 Martingale applied. Next stake: $${nextStake.toFixed(2)}`, 'warn');
+            }
+
+            // Check Safety Limits
+            const updatedNetProfit = netProfit + profit;
+            if (updatedNetProfit >= takeProfit) {
+              addLog(`🏆 TAKE PROFIT TARGET REACHED (+${updatedNetProfit.toFixed(2)})! Stopping Bot.`, 'win');
+              handleStop();
+              return;
+            }
+            if (Math.abs(updatedNetProfit) >= stopLoss && updatedNetProfit < 0) {
+              addLog(`🚨 STOP LOSS TARGET REACHED (-${Math.abs(updatedNetProfit).toFixed(2)})! Stopping Bot.`, 'warn');
+              handleStop();
+              return;
+            }
+          }
+        } catch (e: any) {
+          addLog(`Error executing trade: ${e?.message || e}`, 'warn');
+        } finally {
+          setIsExecuting(false);
+          if (isRunningRef.current) {
+            setIsSearching(true);
+            setStatusMessage('Searching for next high-probability entry point...');
+          }
+        }
       }
-    }, 2000);
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [isRunning, isExecuting, symbol, strategyLabel, stake, martingale, takeProfit, stopLoss]);
+  }, [isRunning, isExecuting, currentStake, symbol, selectedTradeType, stake, martingale, takeProfit, stopLoss, netProfit]);
 
   if (!isOpen) return null;
 
@@ -168,16 +186,16 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
       padding: '1rem'
     }}>
       <div style={{
-        background: isDark ? '#131b2e' : '#e2e8f0',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
-        borderRadius: '20px',
+        background: 'var(--general-section-1, #151717)',
+        border: '1px solid var(--border-normal, rgba(255, 255, 255, 0.15))',
+        borderRadius: '16px',
         width: '100%',
         maxWidth: '680px',
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        boxShadow: isDark ? '0 20px 50px rgba(0,0,0,0.8)' : '0 20px 50px rgba(0,0,0,0.2)'
+        boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
       }}>
         {/* Header */}
         <div style={{
@@ -186,13 +204,13 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.5)'
+          background: 'rgba(255, 255, 255, 0.02)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             <div style={{
               width: '40px',
               height: '40px',
-              borderRadius: '12px',
+              borderRadius: '10px',
               background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
               display: 'flex',
               alignItems: 'center',
@@ -202,11 +220,11 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
               <Zap size={22} color='#ffffff' />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: isDark ? '#ffffff' : '#1e293b' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#ffffff' }}>
                 Auto-Hunter Bot: {symbolName}
               </h3>
-              <span style={{ fontSize: '0.85rem', color: isDark ? '#94a3b8' : '#64748b' }}>
-                Strategy: <strong style={{ color: '#0284c7' }}>{strategyLabel}</strong> ({selectedTradeType})
+              <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>
+                Strategy: <strong style={{ color: '#38bdf8' }}>{strategyLabel}</strong> ({selectedTradeType})
               </span>
             </div>
           </div>
@@ -215,7 +233,7 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
             style={{
               background: 'transparent',
               border: 'none',
-              color: isDark ? '#94a3b8' : '#64748b',
+              color: '#94a3b8',
               cursor: 'pointer',
               padding: '0.4rem',
               borderRadius: '6px'
@@ -234,80 +252,80 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
               gap: '1rem',
-              background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.6)',
+              background: 'rgba(255, 255, 255, 0.03)',
               padding: '1.2rem',
-              borderRadius: '16px',
+              borderRadius: '12px',
               border: '1px solid rgba(255, 255, 255, 0.08)'
             }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: isDark ? '#94a3b8' : '#64748b', marginBottom: '0.4rem', fontWeight: 600 }}>Stake ($)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Stake ($)</label>
                 <input
                   type='number'
                   value={stake}
                   onChange={e => setStake(Math.max(0.35, parseFloat(e.target.value) || 1))}
-                  className={isDark ? 'mhp-neu-inset-dark' : 'mhp-neu-inset-light'}
                   style={{
                     width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: isDark ? '#ffffff' : '#1e293b',
-                    fontWeight: 700
+                    padding: '0.6rem',
+                    background: '#090a0a',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontWeight: 600
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: isDark ? '#94a3b8' : '#64748b', marginBottom: '0.4rem', fontWeight: 600 }}>Martingale (x)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.4rem' }}>Martingale (x)</label>
                 <input
                   type='number'
                   step='0.1'
                   value={martingale}
                   onChange={e => setMartingale(Math.max(1, parseFloat(e.target.value) || 1))}
-                  className={isDark ? 'mhp-neu-inset-dark' : 'mhp-neu-inset-light'}
                   style={{
                     width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: isDark ? '#ffffff' : '#1e293b',
-                    fontWeight: 700
+                    padding: '0.6rem',
+                    background: '#090a0a',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontWeight: 600
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: '#10b981', marginBottom: '0.4rem', fontWeight: 600 }}>Take Profit ($)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#4ade80', marginBottom: '0.4rem' }}>Take Profit ($)</label>
                 <input
                   type='number'
                   value={takeProfit}
                   onChange={e => setTakeProfit(Math.max(1, parseFloat(e.target.value) || 10))}
-                  className={isDark ? 'mhp-neu-inset-dark' : 'mhp-neu-inset-light'}
                   style={{
                     width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: '#10b981',
-                    fontWeight: 700
+                    padding: '0.6rem',
+                    background: '#090a0a',
+                    border: '1px solid rgba(74, 222, 128, 0.3)',
+                    borderRadius: '8px',
+                    color: '#4ade80',
+                    fontWeight: 600
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: '#ef4444', marginBottom: '0.4rem', fontWeight: 600 }}>Stop Loss ($)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: '#f87171', marginBottom: '0.4rem' }}>Stop Loss ($)</label>
                 <input
                   type='number'
                   value={stopLoss}
                   onChange={e => setStopLoss(Math.max(1, parseFloat(e.target.value) || 5))}
-                  className={isDark ? 'mhp-neu-inset-dark' : 'mhp-neu-inset-light'}
                   style={{
                     width: '100%',
-                    padding: '0.6rem 0.8rem',
-                    border: 'none',
-                    borderRadius: '10px',
-                    color: '#ef4444',
-                    fontWeight: 700
+                    padding: '0.6rem',
+                    background: '#090a0a',
+                    border: '1px solid rgba(248, 113, 113, 0.3)',
+                    borderRadius: '8px',
+                    color: '#f87171',
+                    fontWeight: 600
                   }}
                 />
               </div>
@@ -329,73 +347,85 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
             }}>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Loader2 size={36} color={isSearching ? '#38bdf8' : '#eab308'} style={{ animation: 'spin 1.5s linear infinite' }} />
+                <div style={{
+                  position: 'absolute',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  border: `2px solid ${isSearching ? '#38bdf8' : '#eab308'}`,
+                  animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+                  opacity: 0.5
+                }} />
               </div>
-              <div>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: isDark ? '#ffffff' : '#1e293b' }}>
-                  {isSearching ? '🔍 Live Scanning Market Signals' : '⚡ Executing Trade'}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem' }}>
+                  <span style={{
+                    display: 'inline-block',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: isSearching ? '#38bdf8' : '#eab308',
+                    boxShadow: `0 0 10px ${isSearching ? '#38bdf8' : '#eab308'}`
+                  }} />
+                  <strong style={{ fontSize: '1.05rem', color: '#ffffff' }}>
+                    {isSearching ? 'Hunting High-Probability Entry Conditions...' : 'Purchasing & Settlement In Progress...'}
+                  </strong>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '0.2rem' }}>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
                   {statusMessage}
-                </div>
+                </p>
               </div>
             </div>
           )}
 
-          {/* Live Performance Meter */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '0.8rem',
-            background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.4)',
-            padding: '1rem',
-            borderRadius: '14px'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: isDark ? '#94a3b8' : '#64748b' }}>Stake</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: isDark ? '#ffffff' : '#1e293b' }}>${currentStake.toFixed(2)}</div>
+          {/* Performance Stats Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.8rem' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '0.8rem', borderRadius: '10px', textAlign: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Total Trades</span>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff' }}>{totalTrades}</div>
             </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: isDark ? '#94a3b8' : '#64748b' }}>Trades</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: isDark ? '#ffffff' : '#1e293b' }}>{totalTrades}</div>
+            <div style={{ background: 'rgba(74, 222, 128, 0.05)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.8rem', borderRadius: '10px', textAlign: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: '#4ade80' }}>Wins</span>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#4ade80' }}>{wins}</div>
             </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: isDark ? '#94a3b8' : '#64748b' }}>W / L</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>
-                <span style={{ color: '#10b981' }}>{wins}</span> / <span style={{ color: '#ef4444' }}>{losses}</span>
-              </div>
+            <div style={{ background: 'rgba(248, 113, 113, 0.05)', border: '1px solid rgba(248, 113, 113, 0.2)', padding: '0.8rem', borderRadius: '10px', textAlign: 'center' }}>
+              <span style={{ fontSize: '0.75rem', color: '#f87171' }}>Losses</span>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f87171' }}>{losses}</div>
             </div>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: isDark ? '#94a3b8' : '#64748b' }}>Net PnL</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: netProfit >= 0 ? '#10b981' : '#ef4444' }}>
+            <div style={{
+              background: netProfit >= 0 ? 'rgba(74, 222, 128, 0.1)' : 'rgba(248, 113, 113, 0.1)',
+              border: `1px solid ${netProfit >= 0 ? '#4ade80' : '#f87171'}`,
+              padding: '0.8rem',
+              borderRadius: '10px',
+              textAlign: 'center'
+            }}>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Net PnL</span>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: netProfit >= 0 ? '#4ade80' : '#f87171' }}>
                 {netProfit >= 0 ? `+$${netProfit.toFixed(2)}` : `-$${Math.abs(netProfit).toFixed(2)}`}
               </div>
             </div>
           </div>
 
-          {/* Real-time Activity Terminal Log */}
+          {/* Activity Logs */}
           <div style={{
-            background: isDark ? '#090d16' : '#f8fafc',
-            borderRadius: '12px',
-            padding: '1rem',
+            background: '#090a0a',
+            borderRadius: '10px',
+            padding: '0.8rem 1rem',
+            height: '140px',
+            overflowY: 'auto',
             fontFamily: 'monospace',
             fontSize: '0.8rem',
-            maxHeight: '140px',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.4rem',
-            border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.1)'
+            border: '1px solid rgba(255, 255, 255, 0.08)'
           }}>
             {logs.length === 0 ? (
-              <div style={{ color: isDark ? '#475569' : '#94a3b8', textAlign: 'center', padding: '1rem 0' }}>
-                Logs will stream here when bot starts...
-              </div>
+              <span style={{ color: '#64748b' }}>Activity logs will appear here when the bot starts...</span>
             ) : (
               logs.map(log => (
                 <div key={log.id} style={{
-                  color: log.type === 'win' ? '#10b981' : log.type === 'loss' ? '#ef4444' : log.type === 'warn' ? '#f59e0b' : (isDark ? '#cbd5e1' : '#334155')
+                  marginBottom: '0.3rem',
+                  color: log.type === 'win' ? '#4ade80' : log.type === 'loss' ? '#f87171' : log.type === 'warn' ? '#eab308' : '#94a3b8'
                 }}>
-                  <span style={{ color: isDark ? '#475569' : '#94a3b8', marginRight: '0.5rem' }}>[{log.time}]</span>
+                  <span style={{ color: '#475569', marginRight: '0.5rem' }}>[{log.time}]</span>
                   {log.msg}
                 </div>
               ))
@@ -408,27 +438,32 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
         <div style={{
           padding: '1rem 1.5rem',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.5)',
+          background: 'rgba(255, 255, 255, 0.02)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
           gap: '1rem'
         }}>
           {!isRunning ? (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleImportXmlAndRunToBotBuilder}
-                className="mhp-neu-btn-amber px-5 py-3 text-sm flex items-center gap-2 shadow-lg transition active:scale-95 cursor-pointer font-bold"
-              >
-                ⚡ Import XML & Auto-Run
-              </button>
-              <button
-                onClick={handleStart}
-                className="mhp-neu-btn-green px-5 py-3 text-sm flex items-center gap-2 shadow-lg transition active:scale-95 cursor-pointer font-bold"
-              >
-                <Play size={18} /> Launch Auto Hunter Bot
-              </button>
-            </div>
+            <button
+              onClick={handleStart}
+              style={{
+                padding: '0.75rem 2rem',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #00a86b 0%, #059669 100%)',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                boxShadow: '0 4px 15px rgba(0, 168, 107, 0.4)'
+              }}
+            >
+              <Play size={18} /> Launch Auto Hunter Bot
+            </button>
           ) : (
             <button
               onClick={handleStop}
@@ -447,7 +482,7 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
                 boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
               }}
             >
-              <Square size={18} /> Stop Bot
+              <Square size={18} /> Stop Auto Hunter Bot
             </button>
           )}
         </div>

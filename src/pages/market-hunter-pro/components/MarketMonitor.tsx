@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { X, Wifi, WifiOff, Activity, LayoutGrid, Upload } from 'lucide-react';
+import { X, Wifi, WifiOff, ChevronDown, ChevronUp, Activity, LayoutGrid, Upload } from 'lucide-react';
 import { SYMBOLS } from '../lib/symbols';
 import { analyzeMultiWindow, MultiWindowAnalysis } from '../lib/analysis';
 import { generateCombinedRankedSignals, SignalType } from '../lib/signals';
@@ -26,8 +26,10 @@ const STRATEGIES = [
 
 type StrategyId = typeof STRATEGIES[number]['id'];
 
-// All available Deriv markets
-const DIGIT_SYMBOLS = SYMBOLS;
+// Only symbols that support last-digit analysis
+const DIGIT_SYMBOLS = SYMBOLS.filter(s =>
+  s.category === 'Volatility' || s.category === 'Jump' || s.category === 'Step'
+);
 
 // ─── Shared multi-market WebSocket hook ──────────────────────────────────────
 function useSharedMarketWS(symbols: string[]) {
@@ -207,7 +209,31 @@ function OverUnderBar({ highPct, lowPct }: { highPct: number; lowPct: number }) 
   );
 }
 
-
+function DigitFreqMiniBar({ frequencies }: { frequencies: { digit: number; percentage: number }[] }) {
+  const max = Math.max(...frequencies.map(f => f.percentage), 1);
+  return (
+    <div className="flex items-end gap-px h-10">
+      {frequencies.map(f => {
+        const heightPct = (f.percentage / max) * 100;
+        const isHigh    = f.digit >= 5;
+        const isEven    = f.digit % 2 === 0;
+        const base      = isHigh ? '#ef4444' : '#10b981';
+        const border    = isEven ? '1px solid rgba(59,130,246,0.4)' : 'none';
+        return (
+          <div key={f.digit} className="flex-1 flex flex-col items-center gap-0.5 relative group">
+            <div className="w-full rounded-sm transition-all duration-500"
+              style={{ height: `${Math.max(heightPct, 4)}%`, background: base, opacity: 0.7, border }} />
+            <span className="text-[7px] text-white/35 leading-none">{f.digit}</span>
+            {/* Tooltip */}
+            <div className="absolute bottom-full mb-1 hidden group-hover:flex text-[7px] bg-black/80 px-1 py-0.5 rounded text-white whitespace-nowrap z-10">
+              {f.digit}: {f.percentage.toFixed(1)}%
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 function DigitDetailGrid({ frequencies, trends }: {
   frequencies: { digit: number; percentage: number }[];
@@ -237,19 +263,6 @@ function DigitDetailGrid({ frequencies, trends }: {
       })}
     </div>
   );
-}
-
-function SignalBadge({ status, probability }: { status: string; probability: number }) {
-  const color = status === 'TRADE NOW' ? '#10b981' : status === 'WAIT' ? '#f59e0b' : '#6b7280';
-  const bg    = status === 'TRADE NOW' ? 'rgba(16,185,129,0.15)' : status === 'WAIT' ? 'rgba(245,158,11,0.12)' : 'rgba(107,114,128,0.08)';
-  return (
-    <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0"
-      style={{ color, background: bg, border: `1px solid ${color}35` }}>
-      {status === 'TRADE NOW' ? `TRADE ${probability.toFixed(0)}%` : status === 'WAIT' ? `WAIT` : 'NEUTRAL'}
-    </span>
-  );
-}
-
 function MarketRow({
   state,
   label,
@@ -257,7 +270,6 @@ function MarketRow({
   strategyIds,
   onSelectSymbol,
   onLoadBot,
-  theme = 'dark',
 }: {
   state: MarketState | undefined;
   label: string;
@@ -265,10 +277,8 @@ function MarketRow({
   strategyIds: StrategyId[];
   onSelectSymbol: (id: string) => void;
   onLoadBot?: (symbol: string, symbolName: string, strategyId: string) => void;
-  theme?: 'dark' | 'light';
 }) {
   const [expanded, setExpanded] = useState(false);
-  const isDark = theme === 'dark';
 
   const allowedTypes = useMemo<SignalType[]>(() => {
     const types: SignalType[] = [];
@@ -286,88 +296,85 @@ function MarketRow({
 
   const a = state?.mwa?.w1000;
   const loading = !state || state.ticks.length === 0;
+
   const topSignal = signals[0];
 
   return (
-    <div className="card-container">
-      <div className="title-card">
-        <p>{label}</p>
-        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
-          {short}
-        </span>
-      </div>
+    <div className="rounded-xl border overflow-hidden transition-all"
+      style={{ borderColor: expanded ? 'rgba(214,26,140,0.25)' : 'rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.025)' }}>
 
-      <div className="card-content">
-        <div className="flex items-center justify-between">
-          <div className="title flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: loading ? '#f59e0b' : '#10b981' }} />
-            {loading ? 'Connecting...' : `Last Price: ${state?.lastPrice?.toFixed(4) ?? '—'}`}
+      {/* ── Collapsed row ── */}
+      <div className="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none"
+        onClick={() => setExpanded(e => !e)}>
+
+        {/* Status indicator dot */}
+        <span className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+          style={{ background: loading ? '#eab308' : '#10b981' }} />
+
+        {/* Symbol name */}
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] font-black text-white leading-tight truncate">{label}</div>
+          <div className="text-[8px] text-white/30 truncate">{short}</div>
+        </div>
+
+        {/* Last price */}
+        <div className="text-right shrink-0">
+          <div className="text-[10px] font-mono font-bold text-white/80">
+            {loading ? 'Loading…' : state?.lastPrice?.toFixed(4) ?? '—'}
           </div>
-          {topSignal && (
-            <SignalBadge status={topSignal.status} probability={topSignal.probability} />
+        </div>
+
+        {/* Top signal badge */}
+        <div className="flex items-center gap-1 shrink-0">
+          {topSignal && <SignalBadge status={topSignal.status} probability={topSignal.probability} />}
+          {!loading && !topSignal && (
+            <span className="text-[8px] text-white/25">No signal</span>
           )}
         </div>
 
-        <div className="plain flex items-center justify-between my-1">
-          <div>
-            <span className="font-black font-mono text-3xl text-white">
-              {state?.lastDigit !== null && state?.lastDigit !== undefined ? state.lastDigit : '—'}
-            </span>
-            <div className="text-[10px] text-[#838383] mt-0.5">Last Digit</div>
-          </div>
-          {a && (
-            <div className="text-right">
-              <div className="text-base font-bold text-white">
-                {a.evenPercentage.toFixed(0)}% <span className="text-xs text-emerald-400 font-medium">E</span> / {a.oddPercentage.toFixed(0)}% <span className="text-xs text-amber-400 font-medium">O</span>
-              </div>
-              <div className="text-[10px] text-[#838383]">Even vs Odd Bias</div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5 mt-1">
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              onLoadBot?.(state?.symbol ?? '', label ?? state?.symbol ?? '', strategyIds[0] || 'even_odd');
-            }}
-            className="card-btn"
-          >
-            🤖 Load Bot
-          </button>
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              onSelectSymbol(state?.symbol ?? '');
-            }}
-            className="card-btn"
-          >
-            ⚡ Scan
-          </button>
-        </div>
-
+        {/* Load Bot button */}
         <button
-          onClick={() => setExpanded(e => !e)}
-          className="text-[11px] font-semibold text-[#bab9b9] hover:text-white flex items-center justify-center gap-1 transition pt-1 cursor-pointer"
-        >
-          {expanded ? 'Hide Market Stats ▲' : 'View Deep Analysis ▼'}
+          onClick={e => {
+            e.stopPropagation();
+            onLoadBot?.(state?.symbol ?? '', label ?? state?.symbol ?? '', strategyIds[0] || 'even_odd');
+          }}
+          className="text-[9px] font-black px-2.5 py-1.5 rounded-lg text-white shrink-0 transition active:scale-95 hover:opacity-90 flex items-center gap-1"
+          style={{ background: 'linear-gradient(135deg,#00a86b,#059669)', boxShadow: '0 2px 8px rgba(0,168,107,0.3)' }}>
+          🤖 Load Bot
         </button>
 
-      {/* Expanded Details */}
+        {/* Scan button */}
+        <button
+          onClick={e => { e.stopPropagation(); onSelectSymbol(state?.symbol ?? ''); }}
+          className="text-[9px] font-black px-2.5 py-1.5 rounded-lg text-black shrink-0 transition active:scale-95 hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg,#f5c542,#e67e22)' }}>
+          Scan
+        </button>
+
+        {expanded
+          ? <ChevronUp size={11} className="text-white/30 shrink-0" />
+          : <ChevronDown size={11} className="text-white/30 shrink-0" />}
+      </div>
+
+      {/* ── Expanded analysis ── */}
       {expanded && (
-        <div className={`mt-3.5 pt-3.5 border-t space-y-3 ${isDark ? 'border-slate-800' : 'border-slate-300/60'}`}>
+        <div className="px-3 pb-4 space-y-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
           {loading ? (
-            <div className={`py-4 flex items-center justify-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              <div className="w-4 h-4 rounded-full border-2 border-slate-400 border-t-sky-500 animate-spin" />
-              <span className="text-xs">Streaming tick history...</span>
+            <div className="py-4 flex items-center justify-center gap-2 text-white/30">
+              <div className="w-3 h-3 rounded-full border-2 border-white/20 border-t-white/60 animate-spin" />
+              <span className="text-[10px]">Fetching market data…</span>
             </div>
           ) : a ? (
             <>
-              <div className={`flex items-center justify-between text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                <span>Ticks: <strong className={isDark ? 'text-slate-200' : 'text-slate-800'}>{a.totalTicks}</strong></span>
-                <span>Entropy: <strong className={isDark ? 'text-slate-200' : 'text-slate-800'}>{a.entropy.toFixed(2)}</strong></span>
-                <span>Even: <strong className="text-emerald-500">{a.evenCount}</strong> / Odd: <strong className="text-amber-500">{a.oddCount}</strong></span>
+              {/* Market info row */}
+              <div className="pt-2 flex items-center gap-3 text-[9px] text-white/40">
+                <span>{a.totalTicks} ticks</span>
+                <span>Last digit: <b className="text-white/70">{state?.lastDigit}</b></span>
+                <span>Entropy: {a.entropy.toFixed(2)}</span>
               </div>
+
+              {/* Digit frequency bar */}
+              <DigitFreqMiniBar frequencies={a.digitFrequencies} />
 
               {/* Strategy-specific stats */}
               {strategyIds.some(s => s === 'even_odd') && (
@@ -414,7 +421,6 @@ function MarketRow({
           ) : null}
         </div>
       )}
-      </div>
     </div>
   );
 }
@@ -425,13 +431,11 @@ export default function MarketMonitor({
   onSelectSymbol,
   onLoadBot,
   embedded = false,
-  theme = 'dark',
 }: {
   onClose?: () => void;
   onSelectSymbol: (symbolId: string) => void;
   onLoadBot?: (symbol: string, symbolName: string, strategyId: string) => void;
   embedded?: boolean;
-  theme?: 'dark' | 'light';
 }) {
   const [selectedStrategies, setSelectedStrategies] = useState<StrategyId[]>(['even_odd', 'over_under']);
   const [selectedSymbols, setSelectedSymbols]       = useState<string[]>(DIGIT_SYMBOLS.slice(0, 8).map(s => s.id));
@@ -543,7 +547,7 @@ export default function MarketMonitor({
         )}
 
         {/* Market list */}
-        <div className="flex-1 overflow-y-auto px-2 py-3 mhp-scroll grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 content-start">
+        <div className="flex-1 overflow-y-auto px-1 py-2 space-y-2">
           {selectedSymbols.map(symId => {
             const sym = SYMBOLS.find(s => s.id === symId);
             if (!sym) return null;
@@ -556,7 +560,6 @@ export default function MarketMonitor({
                 strategyIds={selectedStrategies}
                 onSelectSymbol={onSelectSymbol}
                 onLoadBot={onLoadBot}
-                theme={theme}
               />
             );
           })}
@@ -675,7 +678,7 @@ export default function MarketMonitor({
       )}
 
       {/* ── Market list ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 mhp-scroll grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 content-start">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
         {selectedSymbols.map(symId => {
           const sym = SYMBOLS.find(s => s.id === symId);
           if (!sym) return null;
@@ -687,8 +690,6 @@ export default function MarketMonitor({
               short={sym.short}
               strategyIds={selectedStrategies}
               onSelectSymbol={onSelectSymbol}
-              onLoadBot={onLoadBot}
-              theme={theme}
             />
           );
         })}
