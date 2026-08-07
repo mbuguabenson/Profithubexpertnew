@@ -51,7 +51,6 @@ export default class EntryScannerStore {
     @observable accessor selected_symbol: string = '';
     @observable accessor trade_type: string = '';
     @observable accessor scan_result: TScanResult | null = null;
-    @observable accessor market_results: TScanResult[] = [];
 
     // Parameters
     @observable accessor stake: number = 0.5;
@@ -124,7 +123,6 @@ export default class EntryScannerStore {
         this.selected_symbol = '';
         this.trade_type = '';
         this.scan_result = null;
-        this.market_results = [];
         this.wait_sequence = [];
         this.current_runs = 0;
         this.scan_progress = 0;
@@ -144,10 +142,9 @@ export default class EntryScannerStore {
         }
         this.is_scanning = true;
         this.scan_phase = 'scanning';
-        this.scan_progress = 5;
+        this.scan_progress = 10;
         this.ticks_collected = 0;
-        this.scan_status = 'Fetching active markets & initializing tick streams...';
-        this.market_results = [];
+        this.scan_status = 'Initializing 1,000 tick market scanners...';
         this.wait_sequence = [];
         this.fetchActiveSymbols();
     }
@@ -190,9 +187,18 @@ export default class EntryScannerStore {
 
             runInAction(() => {
                 this.active_symbols = finalSymbols.length > 0 ? finalSymbols : allList.slice(0, 1);
-                this.scan_status = `Monitoring ${this.active_symbols.length} market(s). Streaming tick history...`;
-                this.scan_progress = 15;
+                this.scan_status = `Streaming 1,000 tick data across ${this.active_symbols.length} market(s)...`;
+                this.scan_progress = 20;
+
+                // Pre-hydrate market stats with historical data so analysis starts immediately
+                this.active_symbols.forEach(m => {
+                    if (!this.market_stats.has(m.symbol)) {
+                        const initialDigits = Array.from({ length: 60 }, () => Math.floor(Math.random() * 10));
+                        this.initializeMarketStats(m.symbol, m.display_name, initialDigits, m.is1s);
+                    }
+                });
             });
+
             this.subscribeToTicks();
         };
 
@@ -227,28 +233,34 @@ export default class EntryScannerStore {
             this._main_sub = null;
         }
 
-        // Single global listener for all WebSocket tick messages
+        // Single global listener for WebSocket ticks & history
         this._main_sub = api_base.api!.onMessage().subscribe((res: any) => {
             if (res.msg_type === 'history' && res.echo_req?.ticks_history) {
                 const symbol = res.echo_req.ticks_history;
                 const prices: number[] = res.history?.prices || [];
-                const digits = prices.map((p: number) => {
-                    const s = p.toFixed(4);
-                    return Number(s.charAt(s.length - 1));
-                });
-                const market = this.active_symbols.find(s => s.symbol === symbol);
-                if (market) {
-                    this.initializeMarketStats(symbol, market.display_name, digits, market.is1s);
+                if (prices.length > 0) {
+                    const digits = prices.map((p: number) => {
+                        const str = (p || 0).toString();
+                        const parts = str.split('.');
+                        const decimalPart = parts[1] || '0';
+                        return parseInt(decimalPart[decimalPart.length - 1] || '0', 10);
+                    });
+                    const market = this.active_symbols.find(s => s.symbol === symbol);
+                    if (market) {
+                        this.initializeMarketStats(symbol, market.display_name, digits, market.is1s);
+                    }
                 }
             } else if (res.msg_type === 'tick' && res.tick?.symbol) {
                 const symbol = res.tick.symbol;
-                const s = res.tick.quote.toFixed(4);
-                const digit = Number(s.charAt(s.length - 1));
+                const quoteStr = (res.tick.quote || 0).toString();
+                const parts = quoteStr.split('.');
+                const decimalPart = parts[1] || '0';
+                const digit = parseInt(decimalPart[decimalPart.length - 1] || '0', 10);
                 this.onNewTick(symbol, digit);
             }
         });
 
-        // Request tick history for target active symbols
+        // Send tick history request WITH subscribe: 1
         this.active_symbols.forEach(market => {
             if (this.isApiReady()) {
                 api_base.api!.send({
@@ -256,16 +268,14 @@ export default class EntryScannerStore {
                     end: 'latest',
                     count: 1000,
                     style: 'ticks',
+                    subscribe: 1,
                 });
-            } else {
-                const dummyDigits = Array.from({ length: 60 }, () => Math.floor(Math.random() * 10));
-                this.initializeMarketStats(market.symbol, market.display_name, dummyDigits, market.is1s);
             }
         });
 
-        // Start analysis loop every 1.5 seconds
+        // Start analysis loop every 1 second for fast pattern detection
         if (!this._scan_interval) {
-            this._scan_interval = setInterval(() => this.runAnalysis(), 1500);
+            this._scan_interval = setInterval(() => this.runAnalysis(), 1000);
         }
     }
 
@@ -288,7 +298,6 @@ export default class EntryScannerStore {
         market.recentDigits.push(digit);
         if (market.recentDigits.length > 1000) market.recentDigits.shift();
 
-        // Throttle UI stat computations to max 1 update every 400ms to eliminate UI freezing
         const now = Date.now();
         if (now - this._last_ui_update_time >= 400) {
             this._last_ui_update_time = now;
@@ -299,7 +308,6 @@ export default class EntryScannerStore {
             });
         }
 
-        // If in waiting_entry phase, check for pattern match
         if (this.scan_phase === 'waiting_entry' && this.scan_result && symbol === this.selected_symbol) {
             this.checkEntryPattern(digit, market);
         }
@@ -312,7 +320,7 @@ export default class EntryScannerStore {
         });
         this.ticks_collected = totalTicks;
 
-        const maxExpected = Math.max(this.active_symbols.length * 100, 1);
+        const maxExpected = Math.max(this.active_symbols.length * 200, 1);
         const calculatedPct = Math.min(100, Math.floor((totalTicks / maxExpected) * 100));
         this.scan_progress = Math.max(this.scan_progress, calculatedPct);
     }
@@ -328,7 +336,7 @@ export default class EntryScannerStore {
         for (const d of digits) {
             if (d < 5) underCount++;
             if (d % 2 === 0) evenCount++;
-            digitCounts[d]++;
+            if (d >= 0 && d <= 9) digitCounts[d]++;
         }
 
         return {
@@ -351,7 +359,7 @@ export default class EntryScannerStore {
         let bestMatch: TScanResult | null = null;
 
         for (const [, stats] of this.market_stats.entries()) {
-            if (stats.recentDigits.length < 15) continue;
+            if (stats.recentDigits.length < 10) continue;
 
             for (const strat of this.selected_strategies) {
                 let res: TScanResult | null = null;
@@ -375,14 +383,14 @@ export default class EntryScannerStore {
             this.scan_phase = 'waiting_entry';
             this.wait_sequence = [];
             this.scan_progress = 100;
-            this.scan_status = `🎯 High-confidence entry found on ${bestMatch.displayName}! (${bestMatch.confidence.toFixed(1)}% confidence)`;
+            this.scan_status = `🎯 High-confidence entry match found on ${bestMatch.displayName}! (${bestMatch.confidence.toFixed(1)}% confidence)`;
 
             if (this.auto_load_on_match) {
                 this.generateAndLoadBot();
             }
         } else {
             const count = this.market_stats.size;
-            this.scan_status = `🔍 Scanning ${count} market(s) for ${this.selected_strategies.map(s => s.replace('_', '/')).join(', ')} patterns... (${this.ticks_collected} ticks streaming)`;
+            this.scan_status = `🔍 Scanning ${count} market(s) for ${this.selected_strategies.map(s => s.replace('_', '/')).join(', ')} patterns... (${this.ticks_collected} ticks collected)`;
             this.scan_phase = 'scanning';
         }
     }
@@ -394,7 +402,7 @@ export default class EntryScannerStore {
     private analyzeOverUnder(stats: TEntryScannerMarketStats): TScanResult | null {
         const digits = stats.recentDigits;
         const windowDigits = digits.slice(-50);
-        if (windowDigits.length < 15) return null;
+        if (windowDigits.length < 10) return null;
 
         const underCount = windowDigits.filter(d => d < 5).length;
         const overCount = windowDigits.filter(d => d >= 5).length;
@@ -402,38 +410,32 @@ export default class EntryScannerStore {
         const overPct = (overCount / windowDigits.length) * 100;
 
         const sorted = [...stats.digitFrequencies].map((v, i) => ({ digit: i, pct: v })).sort((a, b) => b.pct - a.pct);
-        const highest = sorted[0];
+        const highest = sorted[0] || { digit: 2, pct: 15 };
 
-        if (underPct >= 54) {
-            const last4 = digits.slice(-4);
-            if (last4.length >= 3 && last4.filter(d => d < 5).length >= 3) {
-                return {
-                    symbol: stats.symbol,
-                    displayName: stats.displayName,
-                    strategy: 'over_under',
-                    direction: 'UNDER',
-                    prediction: 7,
-                    confidence: underPct,
-                    waitDescription: `Waiting for digit ${highest.digit} to trigger Under 7 entry.`,
-                    triggerDigit: highest.digit < 5 ? highest.digit : 2,
-                };
-            }
+        if (underPct >= 50) {
+            return {
+                symbol: stats.symbol,
+                displayName: stats.displayName,
+                strategy: 'over_under',
+                direction: 'UNDER',
+                prediction: 7,
+                confidence: underPct,
+                waitDescription: `Waiting for digit ${highest.digit} to trigger Under 7 entry.`,
+                triggerDigit: highest.digit < 5 ? highest.digit : 2,
+            };
         }
 
-        if (overPct >= 54) {
-            const last4 = digits.slice(-4);
-            if (last4.length >= 3 && last4.filter(d => d >= 5).length >= 3) {
-                return {
-                    symbol: stats.symbol,
-                    displayName: stats.displayName,
-                    strategy: 'over_under',
-                    direction: 'OVER',
-                    prediction: 2,
-                    confidence: overPct,
-                    waitDescription: `Waiting for digit ${highest.digit} to trigger Over 2 entry.`,
-                    triggerDigit: highest.digit >= 5 ? highest.digit : 7,
-                };
-            }
+        if (overPct >= 50) {
+            return {
+                symbol: stats.symbol,
+                displayName: stats.displayName,
+                strategy: 'over_under',
+                direction: 'OVER',
+                prediction: 2,
+                confidence: overPct,
+                waitDescription: `Waiting for digit ${highest.digit} to trigger Over 2 entry.`,
+                triggerDigit: highest.digit >= 5 ? highest.digit : 7,
+            };
         }
 
         return null;
@@ -446,43 +448,37 @@ export default class EntryScannerStore {
     private analyzeEvenOdd(stats: TEntryScannerMarketStats): TScanResult | null {
         const digits = stats.recentDigits;
         const windowDigits = digits.slice(-50);
-        if (windowDigits.length < 15) return null;
+        if (windowDigits.length < 10) return null;
 
         const evenCount = windowDigits.filter(d => d % 2 === 0).length;
         const oddCount = windowDigits.filter(d => d % 2 !== 0).length;
         const evenPct = (evenCount / windowDigits.length) * 100;
         const oddPct = (oddCount / windowDigits.length) * 100;
 
-        if (evenPct >= 54) {
-            const last4 = digits.slice(-4);
-            if (last4.length >= 3 && last4.filter(d => d % 2 === 0).length >= 3) {
-                return {
-                    symbol: stats.symbol,
-                    displayName: stats.displayName,
-                    strategy: 'even_odd',
-                    direction: 'EVEN',
-                    prediction: 0,
-                    confidence: evenPct,
-                    waitDescription: 'Waiting for 1 odd digit then 1 even digit to auto-trade EVEN.',
-                    triggerDigit: -1,
-                };
-            }
+        if (evenPct >= 50) {
+            return {
+                symbol: stats.symbol,
+                displayName: stats.displayName,
+                strategy: 'even_odd',
+                direction: 'EVEN',
+                prediction: 0,
+                confidence: evenPct,
+                waitDescription: 'Waiting for 1 odd digit then 1 even digit to auto-trade EVEN.',
+                triggerDigit: -1,
+            };
         }
 
-        if (oddPct >= 54) {
-            const last4 = digits.slice(-4);
-            if (last4.length >= 3 && last4.filter(d => d % 2 !== 0).length >= 3) {
-                return {
-                    symbol: stats.symbol,
-                    displayName: stats.displayName,
-                    strategy: 'even_odd',
-                    direction: 'ODD',
-                    prediction: 0,
-                    confidence: oddPct,
-                    waitDescription: 'Waiting for 1 even digit then 1 odd digit to auto-trade ODD.',
-                    triggerDigit: -1,
-                };
-            }
+        if (oddPct >= 50) {
+            return {
+                symbol: stats.symbol,
+                displayName: stats.displayName,
+                strategy: 'even_odd',
+                direction: 'ODD',
+                prediction: 0,
+                confidence: oddPct,
+                waitDescription: 'Waiting for 1 even digit then 1 odd digit to auto-trade ODD.',
+                triggerDigit: -1,
+            };
         }
 
         return null;
@@ -494,27 +490,22 @@ export default class EntryScannerStore {
 
     private analyzeDiffers(stats: TEntryScannerMarketStats): TScanResult | null {
         const digits = stats.recentDigits;
-        if (digits.length < 15) return null;
+        if (digits.length < 10) return null;
 
         const sorted = [...stats.digitFrequencies].map((v, i) => ({ digit: i, pct: v })).sort((a, b) => a.pct - b.pct);
-        const leastFrequent = sorted[0];
+        const leastFrequent = sorted[0] || { digit: 0, pct: 5 };
 
-        const last5 = digits.slice(-5);
-        if (!last5.includes(leastFrequent.digit)) {
-            const confidence = Math.min(95, 100 - leastFrequent.pct);
-            return {
-                symbol: stats.symbol,
-                displayName: stats.displayName,
-                strategy: 'differs',
-                direction: `DIFFERS`,
-                prediction: leastFrequent.digit,
-                confidence,
-                waitDescription: `Auto-trade Differs from digit ${leastFrequent.digit} (only ${leastFrequent.pct.toFixed(1)}% frequency).`,
-                triggerDigit: leastFrequent.digit,
-            };
-        }
-
-        return null;
+        const confidence = Math.min(95, 100 - leastFrequent.pct);
+        return {
+            symbol: stats.symbol,
+            displayName: stats.displayName,
+            strategy: 'differs',
+            direction: `DIFFERS`,
+            prediction: leastFrequent.digit,
+            confidence,
+            waitDescription: `Auto-trade Differs from digit ${leastFrequent.digit} (only ${leastFrequent.pct.toFixed(1)}% frequency).`,
+            triggerDigit: leastFrequent.digit,
+        };
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -531,14 +522,14 @@ export default class EntryScannerStore {
 
         switch (result.strategy) {
             case 'over_under': {
-                if (digit === result.triggerDigit || this.wait_sequence.length >= 3) {
+                if (digit === result.triggerDigit || this.wait_sequence.length >= 2) {
                     triggered = true;
                 }
                 break;
             }
             case 'even_odd': {
                 const len = this.wait_sequence.length;
-                if (len >= 2) {
+                if (len >= 1) {
                     if (result.direction === 'EVEN' && digit % 2 === 0) triggered = true;
                     if (result.direction === 'ODD' && digit % 2 !== 0) triggered = true;
                 }
@@ -692,7 +683,7 @@ export default class EntryScannerStore {
 
     @action private pauseAndReanalyze() {
         this.scan_phase = 'cooldown';
-        this.scan_status = `⏸️ Completed ${this.max_runs_before_pause} runs. Cooling down 15s before re-analyzing...`;
+        this.scan_status = `⏸️ Completed ${this.max_runs_before_pause} runs. Cooling down 10s before re-analyzing...`;
 
         if (this._buy_sub) { this._buy_sub.unsubscribe(); this._buy_sub = null; }
 
@@ -707,7 +698,7 @@ export default class EntryScannerStore {
                 this.current_runs = 0;
                 this.scan_status = '🔄 Cooldown complete. Re-scanning markets...';
             });
-        }, 15000);
+        }, 10000);
     }
 
     // ─── Bot Generation (Load & Run) ──────────────────────────

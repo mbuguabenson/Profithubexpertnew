@@ -67,41 +67,34 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!symbol) updateSymbol();
     }, [symbol, updateSymbol]);
 
-    // Continuously trigger window resize events during the 350ms drawer transition
-    // so SmartCharts continuously redraws its canvas width in sync with drawer opening/closing
+    // Trigger window resize events during drawer transition so SmartCharts redraws smoothly
     useEffect(() => {
-        let frameId: number;
-        let startTime: number | null = null;
-        const duration = 400; // ms
-
-        const animateResize = (timestamp: number) => {
-            if (!startTime) startTime = timestamp;
-            const elapsed = timestamp - startTime;
-
-            window.dispatchEvent(new Event('resize'));
-
-            if (elapsed < duration) {
-                frameId = requestAnimationFrame(animateResize);
-            }
-        };
-
-        frameId = requestAnimationFrame(animateResize);
+        const timer1 = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+        const timer2 = setTimeout(() => window.dispatchEvent(new Event('resize')), 350);
 
         return () => {
-            if (frameId) cancelAnimationFrame(frameId);
+            clearTimeout(timer1);
+            clearTimeout(timer2);
             window.dispatchEvent(new Event('resize'));
         };
     }, [is_drawer_open]);
 
-    // Observe element dimensions for any layout shifts
+    // Safely observe element dimensions without causing infinite ResizeObserver loops
     useEffect(() => {
         if (!wrapperRef.current) return;
+        let resizeTimer: any = null;
         const observer = new ResizeObserver(() => {
-            window.dispatchEvent(new Event('resize'));
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 60);
         });
         observer.observe(wrapperRef.current);
 
-        return () => observer.disconnect();
+        return () => {
+            if (resizeTimer) clearTimeout(resizeTimer);
+            observer.disconnect();
+        };
     }, []);
 
     const is_connection_opened = !!chart_api?.api;

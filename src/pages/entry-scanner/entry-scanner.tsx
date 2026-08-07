@@ -13,6 +13,8 @@ export const EntryScanner = observer(() => {
         { key: 'differs', label: 'Differs', icon: '🎯' },
     ];
 
+    const monitoredMarketsList = Array.from(entry_scanner.market_stats.values());
+
     return (
         <div className="entry-scanner-container">
             <div className="entry-scanner-content">
@@ -144,7 +146,7 @@ export const EntryScanner = observer(() => {
                     <div className="result-card" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(30,58,95,0.8))', border: '1px solid rgba(16,185,129,0.4)', borderRadius: '10px', padding: '12px' }}>
                         <div className="result-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <span className="result-market" style={{ fontWeight: 'bold', fontSize: '14px', color: '#fff' }}>
-                                🎯 {entry_scanner.scan_result.displayName}
+                                🎯 Match Found: {entry_scanner.scan_result.displayName}
                             </span>
                             <span className="result-confidence" style={{ background: '#10b981', color: '#fff', fontSize: '11px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px' }}>
                                 {entry_scanner.scan_result.confidence.toFixed(1)}% Match
@@ -185,6 +187,35 @@ export const EntryScanner = observer(() => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* ── Monitored Markets Live Stats Grid ── */}
+                {entry_scanner.is_scanning && monitoredMarketsList.length > 0 && (
+                    <div className="monitored-markets-card" style={{ background: '#161f2e', border: '1px solid #263548', borderRadius: '10px', padding: '10px' }}>
+                        <div style={{ fontSize: '10px', fontWeight: 'bold', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', marginBottom: '8px' }}>
+                            ⚡ Live Monitored Markets ({monitoredMarketsList.length})
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
+                            {monitoredMarketsList.map(m => (
+                                <div key={m.symbol} style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px', fontSize: '11px' }}>
+                                    <div style={{ fontWeight: 'bold', color: '#f1f5f9', marginBottom: '4px', fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {m.displayName}
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '10px' }}>
+                                        <span>Under: <strong style={{ color: '#10b981' }}>{m.underPercent.toFixed(0)}%</strong></span>
+                                        <span>Over: <strong style={{ color: '#3b82f6' }}>{m.overPercent.toFixed(0)}%</strong></span>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: '10px', marginTop: '2px' }}>
+                                        <span>Even: <strong style={{ color: '#f5c542' }}>{m.evenPercent.toFixed(0)}%</strong></span>
+                                        <span>Odd: <strong style={{ color: '#8b5cf6' }}>{m.oddPercent.toFixed(0)}%</strong></span>
+                                    </div>
+                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', textAlign: 'right' }}>
+                                        {m.recentDigits.length} Ticks
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
