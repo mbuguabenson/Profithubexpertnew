@@ -149,7 +149,6 @@ export const StrategyAnalyticsTab: React.FC<StrategyAnalyticsTabProps> = ({
                         />
                     </div>
                 </div>
-                </div>
             </div>
 
             {/* Even / Odd Deviation Panel */}
