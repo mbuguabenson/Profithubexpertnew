@@ -26,9 +26,8 @@ const STRATEGIES = [
 
 type StrategyId = typeof STRATEGIES[number]['id'];
 
-// Only symbols that support last-digit analysis
 const DIGIT_SYMBOLS = SYMBOLS.filter(s =>
-  s.category === 'Volatility' || s.category === 'Jump' || s.category === 'Step'
+  s.category === 'Volatility' || s.category === 'Jump'
 );
 
 // ─── Shared multi-market WebSocket hook ──────────────────────────────────────

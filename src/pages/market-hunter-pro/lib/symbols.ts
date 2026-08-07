@@ -40,8 +40,6 @@ export const SYMBOLS = [
   { id: 'STKR', label: 'Range 100', short: 'R100', category: 'Range' },
   { id: 'STKR200', label: 'Range 200', short: 'R200', category: 'Range' },
 
-  // Step Indices
-  { id: 'WLDSTP', label: 'Step', short: 'STEP', category: 'Step' },
 ] as const;
 
 export type SymbolId = (typeof SYMBOLS)[number]['id'];
