@@ -47,7 +47,7 @@ const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-c
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
 const SystemCenterPage = lazy(() => import('../system-center'));
-const AccountCenterPage = lazy(() => import('../account-center'));
+const AccountCenterPage = lazy(() => import('../account-center/account-center'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
