@@ -137,9 +137,6 @@ export const StrategyAnalyticsTab: React.FC<StrategyAnalyticsTabProps> = ({
                             style={{ width: `${underPct}%` }}
                         />
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-                        Suggested Entry: <strong>UNDER 7</strong> | Skip Count: <strong>1 Tick</strong>
-                    </div>
                 </div>
 
                 <div className="ace-card">
@@ -151,9 +148,7 @@ export const StrategyAnalyticsTab: React.FC<StrategyAnalyticsTabProps> = ({
                             style={{ width: `${overPct}%` }}
                         />
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-                        Suggested Entry: <strong>OVER 2</strong> | Skip Count: <strong>0 Ticks</strong>
-                    </div>
+                </div>
                 </div>
             </div>
 

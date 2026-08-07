@@ -13,10 +13,13 @@ export const MarketScannerTab: React.FC<MarketScannerTabProps> = ({
     onSelectSymbol,
 }) => {
     const [analyzeAll, setAnalyzeAll] = useState(true);
+    const [selectedStrategy, setSelectedStrategy] = useState<string>('Over 1 / Under 8');
 
     const sortedMarkets = Object.values(marketsData).sort(
         (a, b) => b.probabilityScore - a.probabilityScore
     );
+
+    const topMarket = sortedMarkets[0];
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -39,6 +42,60 @@ export const MarketScannerTab: React.FC<MarketScannerTabProps> = ({
                     </button>
                 </div>
             </div>
+
+            {/* ── Top Market & Strategy Found Banner ── */}
+            {topMarket && (
+                <div className="ace-card" style={{
+                    background: 'linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(30,58,95,0.9) 100%)',
+                    border: '1px solid #10b981',
+                    boxShadow: '0 0 25px rgba(16,185,129,0.25)',
+                    padding: '1.25rem'
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                ⭐ TOP HIGHEST PROBABILITY MARKET FOUND
+                            </div>
+                            <h2 style={{ margin: '0.3rem 0', fontSize: '1.4rem', color: '#fff' }}>
+                                {topMarket.displayName} ({topMarket.symbol})
+                            </h2>
+                            <div style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
+                                Health Score: <strong style={{ color: '#10b981' }}>{topMarket.healthScore}%</strong> |
+                                Probability Score: <strong style={{ color: '#3b82f6' }}>{topMarket.probabilityScore}%</strong> |
+                                Risk: <strong style={{ color: '#10b981' }}>{topMarket.riskScore}</strong>
+                            </div>
+                        </div>
+
+                        {/* User Strategy Picker for Found Market */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '240px' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase' }}>
+                                Pick Strategy for {topMarket.displayName}:
+                            </label>
+                            <select
+                                value={selectedStrategy}
+                                onChange={(e) => setSelectedStrategy(e.target.value)}
+                                style={{
+                                    padding: '0.6rem 0.8rem', borderRadius: '8px',
+                                    background: '#0f172a', color: '#fff', border: '1px solid #3b82f6',
+                                    fontSize: '0.85rem', fontWeight: 'bold', outline: 'none'
+                                }}
+                            >
+                                <option value="Over 1 / Under 8">Over 1 / Under 8 (High Win Rate)</option>
+                                <option value="Even / Odd Parity">Even / Odd Parity (Pattern Match)</option>
+                                <option value="Auto-Differs">Auto-Differs (Low Frequency Digit)</option>
+                                <option value="Over 2 Pro">Over 2 Pro (Max Multiplier)</option>
+                            </select>
+                            <button
+                                className="ace-btn btn-primary"
+                                style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 800 }}
+                                onClick={() => onSelectSymbol(topMarket.symbol)}
+                            >
+                                ⚡ Confirm & Activate Strategy ({selectedStrategy})
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Markets Ranking Cards Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>

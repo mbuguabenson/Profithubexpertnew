@@ -159,6 +159,13 @@ export function useCompoundingWS() {
                     const str = quote.toString();
                     const digit = parseInt(str[str.length - 1], 10);
 
+                    const now = Date.now();
+                    // Throttle React state renders to maximum 1 update every 400ms to eliminate UI freezing
+                    if (!wsRef.current || (wsRef.current as any)._lastTickTime && now - (wsRef.current as any)._lastTickTime < 400) {
+                        return;
+                    }
+                    (wsRef.current as any)._lastTickTime = now;
+
                     setMarketsData(prev => {
                         const existing = prev[symbol] || {
                             symbol, displayName: symbol, ticks: [], quotes: [], lastQuote: 0, lastDigit: 0,
