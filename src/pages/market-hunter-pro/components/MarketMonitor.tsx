@@ -478,11 +478,13 @@ export default function MarketMonitor({
   onSelectSymbol,
   onLoadBot,
   embedded = false,
+  theme = 'dark',
 }: {
   onClose?: () => void;
   onSelectSymbol: (symbolId: string) => void;
   onLoadBot?: (symbol: string, symbolName: string, strategyId: string) => void;
   embedded?: boolean;
+  theme?: 'dark' | 'light';
 }) {
   const [selectedStrategies, setSelectedStrategies] = useState<StrategyId[]>(['even_odd', 'over_under']);
   const [selectedSymbols, setSelectedSymbols]       = useState<string[]>(DIGIT_SYMBOLS.slice(0, 8).map(s => s.id));
@@ -739,6 +741,7 @@ export default function MarketMonitor({
               strategyIds={selectedStrategies}
               onSelectSymbol={onSelectSymbol}
               onLoadBot={onLoadBot}
+              theme={theme}
             />
           );
         })}
