@@ -580,9 +580,6 @@ const AppWrapper = observer(() => {
                 onCancel={getTradeTypeModalProps().onCancel}
             />
             <Scanner />
-            <Suspense fallback={null}>
-                <MarketHunterPro />
-            </Suspense>
         </React.Fragment>
     );
 });
