@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Square, Loader2, TrendingUp, TrendingDown, Zap, Shield, Target, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Play, Square, Loader2, Zap } from 'lucide-react';
 import { useStore } from '@/hooks/useStore';
 import { generateBotXML } from '@/utils/bot-xml-generator';
 

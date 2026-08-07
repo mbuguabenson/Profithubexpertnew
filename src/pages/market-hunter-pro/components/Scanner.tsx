@@ -745,7 +745,7 @@ export default function Scanner() {
                   {showSymbolPicker && (
                     <div className="absolute z-[60] top-full left-0 right-0 mt-1 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto"
                       style={{ background: 'rgba(15,10,30,0.98)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
-                      {['Volatility', 'Crash/Boom', 'Jump', 'Bear/Bull', 'Range', 'Step'].map((cat) => (
+                      {['Volatility', 'DEX', 'Crash/Boom', 'Jump', 'Bear/Bull', 'Range', 'Step', 'Forex', 'Commodities', 'Crypto'].map((cat) => (
                         <div key={cat}>
                           <div className="px-4 py-1.5 text-[10px] font-bold text-white/40 uppercase tracking-wider sticky top-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
                             {cat}
