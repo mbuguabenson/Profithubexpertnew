@@ -107,11 +107,14 @@ const AppWrapper = observer(() => {
         'signal_centre',
         'marketkiller',
         'multi_trader',
+        'market_hunter_pro',
         'ai_compounding_engine',
         'dtrader',
         'ai_trading_engine',
         'dcircles',
         'dp_tools',
+        'account_center',
+        'system_center',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
