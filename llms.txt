@@ -1,0 +1,146 @@
+# ProfitHub Platform (Pfhub) — LLM Documentation & Architecture Map
+
+> **File:** `llms.txt`
+> **Description:** Concise, structured, LLM-optimized technical map of the ProfitHub automated trading & financial analysis application. Designed for AI coding assistants, automated agents, and human core maintainers.
+
+---
+
+## 1. Executive Summary & Application Overview
+
+**ProfitHub (Pfhub)** is an enterprise-grade, high-performance web trading terminal and financial analysis application built on top of Deriv's API ecosystem. It unifies:
+- Visual algorithmic bot building (**Google Blockly** engine)
+- High-frequency manual and automated trading terminals
+- Multi-indicator digit analysis, statistical circles, and strategy scanners
+- Cross-origin iframe terminals (**DTrader**, **Deriv Circles**, **Analysis Tool**)
+- Copy-trading and multi-account state synchronization across Real and Demo accounts
+
+---
+
+## 2. Core Tech Stack & Framework Architecture
+
+| Layer | Framework / Library | Primary Purpose |
+| :--- | :--- | :--- |
+| **UI Framework** | React 18+, TypeScript 5+, Vite / Rsbuild | Fast SPA rendering & modern ES module bundling |
+| **State Engine** | MobX 6+, MobX React Lite | Reactive observer-based state management |
+| **Styling** | Vanilla SCSS, BEM methodology, Glassmorphism | Responsive layout, dark/light themes, high FPS animations |
+| **Bot Engine** | Google Blockly | Visual drag-and-drop trading bot skeleton |
+| **Charts** | `@deriv-com/smartcharts-champion`, TradingView | Real-time tick charts, digit statistics, dynamic container resizing |
+| **Auth Protocol** | Legacy Deriv WS API tokens (`a1-xxx`) + Ory Hydra PKCE OAuth2 (`ory_at_xxx`) | Multi-account token bridge with automatic OTP session token resolution |
+| **Inter-Iframe Bridge** | Custom `ParentBridgeClient` & `SessionManager` | Cross-origin `postMessage` synchronization (`https://deriv-dtrader.vercel.app/dtrader`) |
+
+---
+
+## 3. Directory Layout & Module Organization
+
+```
+Profithubexpertnew-main/
+├── brand.config.json                  # White-label brand settings (Pfhub, App ID, Redirect URIs)
+├── llms.txt                           # LLM documentation (this file)
+├── CLAUDE.md                          # Quick guidance for AI pair programmers
+├── public/                            # Static assets, fonts, icons, manifest
+├── src/
+│   ├── app/                           # App root provider & CoreStore initialization
+│   ├── adapters/                      # SmartCharts Champion transport layer (`transport.ts`)
+│   ├── components/
+│   │   ├── iframe-bridge/             # ParentBridgeClient, SessionManager, BridgeStateMachine, Protocol
+│   │   ├── iframe-wrapper/            # IframeWrapper React component with postMessage retry loops
+│   │   ├── layout/                    # Header, AppLogo, CustomNotifications, Navigation
+│   │   ├── run-panel/                 # Live trading execution panel & drawer
+│   │   └── shared/                    # Utility components, dialogs, config (`config.ts`)
+│   ├── external/
+│   │   └── bot-skeleton/              # Blockly engine, tradeEngine, active-symbols, chart-api
+│   ├── hooks/                         # React hooks (`useStore`, `useDevice`, `useSmartChartAdaptor`)
+│   ├── pages/                         # 34 Functional Modules (Tabs)
+│   ├── services/                      # OAuth, DerivWS Accounts, Symbol Processors, Network Interceptors
+│   ├── stores/                        # 37 MobX State Management Stores
+│   ├── types/                         # TypeScript interfaces & API payload schemas
+│   └── utils/                         # Token bridge (`token-bridge.ts`), market data, trade purchase
+```
+
+---
+
+## 4. Authentication Architecture & Token Resolution
+
+The platform supports two distinct token workflows:
+1. **Legacy API Token Flow**: Directly stores `a1-xxxx...` tokens in `localStorage.accountsList`.
+2. **PKCE OAuth2 Flow**: Ory Hydra issues Bearer JWTs (`ory_at_...`).
+
+### Crucial Security & API Rules for LLMs:
+- **WebSocket Rejection**: Deriv's WebSocket API (`wss://ws.derivws.com/websockets/v3`) **REJECTS** `ory_at_...` JWT tokens in `{ authorize: token }`.
+- **Token Resolution Function**: Always use `resolveValidDerivWSToken(loginid)` in `@/utils/token-bridge`.
+  - It filters out `ory_at_...` tokens.
+  - Checks `accountsList[loginid]`.
+  - Fallbacks to fetching an OTP session token via `DerivWSAccountsService.fetchOTPWebSocketURL(accessToken)`.
+
+---
+
+## 5. Subsystems & Key Components Guide
+
+### 5.1 Trading Engines
+- **Bot Builder (`src/pages/bot-builder`)**: Google Blockly canvas connected to `tradeEngine` (`src/external/bot-skeleton/services/tradeEngine`). Executes XML bot strategies with automated Martingale, compounding, and stop-loss rules.
+- **Manual Trading (`src/pages/manual-trading`)**: High-speed native execution terminal bypassing all iframes. Executes trades in `<50ms` directly via `api_base`.
+- **Smart Trading (`src/pages/smart-trading`)**: Multi-contract automated trading engine backed by `smart-trading-store.ts`.
+- **Copy Trading (`src/pages/copy-trading`)**: Replicates primary account transactions to slave demo/real accounts.
+
+### 5.2 Embedded Iframe Bridge Architecture
+- **Files**: `src/components/iframe-wrapper/iframe-wrapper.tsx` & `src/components/iframe-bridge/`
+- **Embedded Target**: `https://deriv-dtrader.vercel.app/dtrader`
+- **Required Query Parameters**:
+  - `acct1`: Active login ID (e.g. `CR123456`)
+  - `token1`: Valid Deriv WS token (`a1-xxxx...`)
+  - `cur1`: `USD`
+  - `app_id`: `134205`
+  - `theme`: `dark`
+  - `bt_secret`: `binarytool` *(Mandatory for Vercel hosted DTrader authorization)*
+- **Handshake Protocol**:
+  - `ParentBridgeClient` sanitizes origins using `new URL(url).origin` to prevent dropping `postMessage` events from `https://deriv-dtrader.vercel.app`.
+  - Broadcasts `AUTH_TOKEN`, `DERIV_AUTH`, `SESSION_DATA`, `setToken`, `BRIDGE_READY`, and `AUTH_SUCCESS` postMessages at tight intervals (`[100, 300, 500, 1000, 2000, 3000, 5000, 8000, 10000]`ms).
+
+### 5.3 SmartCharts Champion & Responsiveness
+- **Location**: `src/pages/chart/chart.tsx` & `src/adapters/smartcharts-champion/transport.ts`
+- **Drawer Responsiveness**: Uses `ResizeObserver` and continuous `requestAnimationFrame` canvas redrawing during the 400ms CSS drawer expansion/collapse animation (`.dashboard__chart-wrapper--expanded`).
+- **Error Protection**: `transport.ts` gracefully catches `ticks_history` subscription failures without throwing unhandled promise rejections.
+
+---
+
+## 6. MobX Store Hierarchy
+
+| Store Name | File Path | Responsibilities |
+| :--- | :--- | :--- |
+| `RootStore` | `src/stores/root-store.ts` | Central store container holding references to all sub-stores |
+| `ClientStore` | `src/stores/client-store.ts` | Manages active account ID, balance, currencies, account switching |
+| `RunPanelStore` | `src/stores/run-panel-store.ts` | Bot execution lifecycle, trade statistics, drawer toggle state |
+| `TransactionsStore` | `src/stores/transactions-store.ts` | Transaction history, PnL tracking, win/loss stats |
+| `SmartTradingStore` | `src/stores/smart-trading-store.ts` | Smart trading strategy state machine |
+| `ScannerStore` | `src/stores/scanner-store.ts` | Real-time market volatility scanning |
+| `AnalysisStore` | `src/stores/analysis-store.ts` | Statistical digit distribution & circle analysis |
+| `CopyTraderStore` | `src/stores/copy-trader-store.ts` | Master-slave token replication |
+
+---
+
+## 7. Developer & AI Assistant Guidelines
+
+When modifying this repository:
+1. **Never pass `ory_at_...` to WebSocket `authorize` calls**. Always use `resolveValidDerivWSToken()`.
+2. **Never change `bt_secret=binarytool` or `/dtrader` path in DTrader URLs**.
+3. **Preserve `app_id` consistency**: Ensure `114292` or `134205` is correctly passed depending on the target system.
+4. **CSS Scoping**: Top-level CSS classes like `.dashboard__chart-wrapper--expanded` must remain unscoped from nested `.bot { ... }` blocks in `chart.scss`.
+5. **Always run TypeScript validation**: `npx tsc --noEmit` before committing code.
+
+---
+
+## 8. Common Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Run local development server
+npm run dev
+
+# TypeScript type checking
+npx tsc --noEmit
+
+# Production build
+npm run build
+```
