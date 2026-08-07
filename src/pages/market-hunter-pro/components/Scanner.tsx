@@ -721,6 +721,14 @@ export default function Scanner() {
               )}
             </button>
           ))}
+          <button
+            onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+            className="px-3 py-1.5 text-xs flex items-center gap-1.5 text-white/70 hover:text-white transition cursor-pointer self-center"
+            title="Toggle Light / Dark Neumorphic Theme"
+          >
+            {theme === 'dark' ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} className="text-sky-400" />}
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">{theme}</span>
+          </button>
         </div>
       )}
 

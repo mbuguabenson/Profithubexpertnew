@@ -23,9 +23,9 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
   symbolName,
   strategyId,
   strategyLabel,
-  signalConfidence = 85,
-  marketTicks = [],
-  marketQuotes = [],
+  signalConfidence: _signalConfidence = 85,
+  marketTicks: _marketTicks = [],
+  marketQuotes: _marketQuotes = [],
   theme = 'dark',
 }) => {
   const isDark = theme === 'dark';
