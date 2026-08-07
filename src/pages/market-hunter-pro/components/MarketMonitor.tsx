@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { X, Wifi, WifiOff, ChevronDown, ChevronUp, Activity, LayoutGrid, Upload } from 'lucide-react';
+import { X, Wifi, WifiOff, Activity, LayoutGrid, Upload } from 'lucide-react';
 import { SYMBOLS } from '../lib/symbols';
 import { analyzeMultiWindow, MultiWindowAnalysis } from '../lib/analysis';
 import { generateCombinedRankedSignals, SignalType } from '../lib/signals';
