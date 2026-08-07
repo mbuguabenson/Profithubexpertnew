@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Square, Loader2, TrendingUp, TrendingDown, Zap, Shield, Target, AlertCircle, CheckCircle } from 'lucide-react';
-import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
+import { useStore } from '@/hooks/useStore';
+import { generateBotXML } from '@/utils/bot-xml-generator';
 
 interface AutoHunterBotModalProps {
   isOpen: boolean;
@@ -28,6 +27,8 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
   theme = 'dark',
 }) => {
   const isDark = theme === 'dark';
+  const { dashboard, load_modal, run_panel } = useStore();
+
   // Configuration State
   const [stake, setStake] = useState<number>(1);
   const [martingale, setMartingale] = useState<number>(2);
@@ -65,6 +66,44 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
     setLogs(prev => [{ id: Math.random().toString(36).substring(2, 9), time, msg, type }, ...prev.slice(0, 49)]);
   };
 
+  const handleImportXmlAndRunToBotBuilder = async () => {
+    try {
+      const tradeLabel = strategyLabel || 'Even/Odd';
+      const xml = generateBotXML({
+        stake: stake.toString(),
+        takeProfit: takeProfit.toString(),
+        stopLoss: stopLoss.toString(),
+        martingale: martingale.toString(),
+        symbol,
+        tradeTypeLabel: tradeLabel,
+      });
+
+      const name = `ProAI_${tradeLabel.replace(/[\s/]/g, '_')}_${symbol}`;
+
+      onClose();
+
+      if (load_modal && dashboard) {
+        await load_modal.loadStrategyToBuilder({
+          id: name,
+          name,
+          xml,
+          save_type: 'local',
+          timestamp: Date.now(),
+        });
+
+        dashboard.setActiveTab(1);
+
+        setTimeout(() => {
+          if (run_panel) {
+            run_panel.onRunButtonClick();
+          }
+        }, 1200);
+      }
+    } catch (err) {
+      console.error('Failed to import XML to Bot Builder:', err);
+    }
+  };
+
   const handleStart = () => {
     setIsRunning(true);
     setIsSearching(true);
@@ -93,14 +132,17 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
     const interval = setInterval(async () => {
       if (!isRunningRef.current || isExecuting) return;
 
-      // Simulated strategy trigger condition check (or high-confidence tick breach)
       const shouldTriggerTrade = Math.random() > 0.65;
 
       if (shouldTriggerTrade) {
         setIsExecuting(true);
         setIsSearching(false);
-        setStatusMessage(`Entry point detected! Placing ${selectedTradeType} trade for $${currentStake.toFixed(2)}...`);
-        addLog(`⚡ Entry signal confirmed on ${symbol}! Purchasing ${selectedTradeType}...`);
+        setStatusMessage(`Entry point detected! Importing XML strategy & auto-running in Bot Builder...`);
+        addLog(`⚡ Entry signal confirmed on ${symbol}! Importing XML to Bot Builder & auto-running...`);
+        
+        await handleImportXmlAndRunToBotBuilder();
+      }
+    }, 2000);
 
         try {
           // Prepare parameters for trade
@@ -448,25 +490,20 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
           gap: '1rem'
         }}>
           {!isRunning ? (
-            <button
-              onClick={handleStart}
-              style={{
-                padding: '0.75rem 2rem',
-                borderRadius: '10px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #00a86b 0%, #059669 100%)',
-                color: '#ffffff',
-                fontWeight: 700,
-                fontSize: '1rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.6rem',
-                boxShadow: '0 4px 15px rgba(0, 168, 107, 0.4)'
-              }}
-            >
-              <Play size={18} /> Launch Auto Hunter Bot
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleImportXmlAndRunToBotBuilder}
+                className="mhp-neu-btn-amber px-5 py-3 text-sm flex items-center gap-2 shadow-lg transition active:scale-95 cursor-pointer font-bold"
+              >
+                ⚡ Import XML & Auto-Run
+              </button>
+              <button
+                onClick={handleStart}
+                className="mhp-neu-btn-green px-5 py-3 text-sm flex items-center gap-2 shadow-lg transition active:scale-95 cursor-pointer font-bold"
+              >
+                <Play size={18} /> Launch Auto Hunter Bot
+              </button>
+            </div>
           ) : (
             <button
               onClick={handleStop}
