@@ -21,7 +21,7 @@ export interface TScanResult {
     symbol: string;
     displayName: string;
     strategy: TStrategyType;
-    direction: string;       // 'UNDER' | 'OVER' | 'EVEN' | 'ODD' | 'DIFFERS_3' etc.
+    direction: string;       // 'UNDER' | 'OVER' | 'EVEN' | 'ODD' | 'DIFFERS' etc.
     prediction: number;      // The barrier/prediction number (8,7,6 for under or 1,2,3 for over)
     confidence: number;      // percentage
     waitDescription: string; // Human-readable description of what we're waiting for
@@ -71,10 +71,11 @@ export default class EntryScannerStore {
     @observable accessor market_stats: Map<string, TEntryScannerMarketStats> = new Map();
     @observable accessor wait_sequence: number[] = [];
 
-    private _tick_subs: Map<string, any> = new Map();
+    private _main_sub: any = null;
     private _scan_interval: any = null;
     private _cooldown_timer: any = null;
     private _buy_sub: any = null;
+    private _last_ui_update_time: number = 0;
 
     constructor(root_store: any) {
         makeObservable(this);
@@ -145,7 +146,7 @@ export default class EntryScannerStore {
         this.scan_phase = 'scanning';
         this.scan_progress = 5;
         this.ticks_collected = 0;
-        this.scan_status = 'Fetching active markets & initializing 1,000 tick streams...';
+        this.scan_status = 'Fetching active markets & initializing tick streams...';
         this.market_results = [];
         this.wait_sequence = [];
         this.fetchActiveSymbols();
@@ -160,9 +161,7 @@ export default class EntryScannerStore {
         if (this._scan_interval) { clearInterval(this._scan_interval); this._scan_interval = null; }
         if (this._cooldown_timer) { clearTimeout(this._cooldown_timer); this._cooldown_timer = null; }
         if (this._buy_sub) { this._buy_sub.unsubscribe(); this._buy_sub = null; }
-
-        this._tick_subs.forEach(sub => sub.unsubscribe());
-        this._tick_subs.clear();
+        if (this._main_sub) { this._main_sub.unsubscribe(); this._main_sub = null; }
     }
 
     // ─── Fetch Symbols ────────────────────────────────────────
@@ -191,7 +190,7 @@ export default class EntryScannerStore {
 
             runInAction(() => {
                 this.active_symbols = finalSymbols.length > 0 ? finalSymbols : allList.slice(0, 1);
-                this.scan_status = `Monitoring ${this.active_symbols.length} ${this.scan_mode === 'single' ? 'selected' : 'active'} market(s). Streaming 1,000 tick history...`;
+                this.scan_status = `Monitoring ${this.active_symbols.length} market(s). Streaming tick history...`;
                 this.scan_progress = 15;
             });
             this.subscribeToTicks();
@@ -220,32 +219,37 @@ export default class EntryScannerStore {
         }
     }
 
-    // ─── Tick Streaming & Progress Calculation ────────────────
+    // ─── Tick Streaming & Throttled Progress Calculation ──────
 
     private subscribeToTicks() {
-        this.active_symbols.forEach(market => {
-            if (this._tick_subs.has(market.symbol)) {
-                this._tick_subs.get(market.symbol).unsubscribe();
-            }
+        if (this._main_sub) {
+            this._main_sub.unsubscribe();
+            this._main_sub = null;
+        }
 
-            const sub = api_base.api!.onMessage().subscribe((res: any) => {
-                if (res.msg_type === 'history' && res.echo_req?.ticks_history === market.symbol) {
-                    const prices: number[] = res.history?.prices || [];
-                    const digits = prices.map((p: number) => {
-                        const s = p.toFixed(4);
-                        return Number(s.charAt(s.length - 1));
-                    });
-                    this.initializeMarketStats(market.symbol, market.display_name, digits, market.is1s);
-                } else if (res.msg_type === 'tick' && res.tick?.symbol === market.symbol) {
-                    const s = res.tick.quote.toFixed(4);
-                    const digit = Number(s.charAt(s.length - 1));
-                    this.onNewTick(market.symbol, digit);
+        // Single global listener for all WebSocket tick messages
+        this._main_sub = api_base.api!.onMessage().subscribe((res: any) => {
+            if (res.msg_type === 'history' && res.echo_req?.ticks_history) {
+                const symbol = res.echo_req.ticks_history;
+                const prices: number[] = res.history?.prices || [];
+                const digits = prices.map((p: number) => {
+                    const s = p.toFixed(4);
+                    return Number(s.charAt(s.length - 1));
+                });
+                const market = this.active_symbols.find(s => s.symbol === symbol);
+                if (market) {
+                    this.initializeMarketStats(symbol, market.display_name, digits, market.is1s);
                 }
-            });
+            } else if (res.msg_type === 'tick' && res.tick?.symbol) {
+                const symbol = res.tick.symbol;
+                const s = res.tick.quote.toFixed(4);
+                const digit = Number(s.charAt(s.length - 1));
+                this.onNewTick(symbol, digit);
+            }
+        });
 
-            this._tick_subs.set(market.symbol, sub);
-
-            // If API ready send ticks_history request, else populate default simulated history so scanner never stalls
+        // Request tick history for target active symbols
+        this.active_symbols.forEach(market => {
             if (this.isApiReady()) {
                 api_base.api!.send({
                     ticks_history: market.symbol,
@@ -274,20 +278,26 @@ export default class EntryScannerStore {
             is1s,
             ...stats,
         });
-        this.updateOverallProgress();
+        this.updateOverallProgressThrottled();
     }
 
-    @action private onNewTick(symbol: string, digit: number) {
+    private onNewTick(symbol: string, digit: number) {
         const market = this.market_stats.get(symbol);
         if (!market) return;
 
         market.recentDigits.push(digit);
         if (market.recentDigits.length > 1000) market.recentDigits.shift();
 
-        const stats = this.computeStats(market.recentDigits);
-        Object.assign(market, stats);
-
-        this.updateOverallProgress();
+        // Throttle UI stat computations to max 1 update every 400ms to eliminate UI freezing
+        const now = Date.now();
+        if (now - this._last_ui_update_time >= 400) {
+            this._last_ui_update_time = now;
+            runInAction(() => {
+                const stats = this.computeStats(market.recentDigits);
+                Object.assign(market, stats);
+                this.updateOverallProgressThrottled();
+            });
+        }
 
         // If in waiting_entry phase, check for pattern match
         if (this.scan_phase === 'waiting_entry' && this.scan_result && symbol === this.selected_symbol) {
@@ -295,7 +305,7 @@ export default class EntryScannerStore {
         }
     }
 
-    @action private updateOverallProgress() {
+    @action private updateOverallProgressThrottled() {
         let totalTicks = 0;
         this.market_stats.forEach(m => {
             totalTicks += m.recentDigits.length;
@@ -564,7 +574,6 @@ export default class EntryScannerStore {
         const barrier = this.getBarrier(result);
 
         if (!this.isApiReady()) {
-            // Simulated trade execution if offline so user test runs work smoothly
             setTimeout(() => {
                 runInAction(() => {
                     const isWin = Math.random() > 0.35;
