@@ -36,6 +36,8 @@ export default defineConfig({
                 DTRADER_URL: JSON.stringify(process.env.DTRADER_URL),
             },
         },
+    },
+    resolve: {
         alias: {
             react: path.resolve('./node_modules/react'),
             'react-dom': path.resolve('./node_modules/react-dom'),
@@ -48,6 +50,7 @@ export default defineConfig({
         },
     },
     output: {
+        assetPrefix: '/',
         copy: [
             {
                 from: 'node_modules/@deriv-com/smartcharts-champion/dist/*',
@@ -74,9 +77,11 @@ export default defineConfig({
     server: {
         port: 8443,
         compress: true,
+        historyApiFallback: true,
     },
     dev: {
         hmr: true,
+        lazyCompilation: false,
     },
     performance: {
         // Configure Rsbuild's native bundle analyzer

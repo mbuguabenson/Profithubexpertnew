@@ -59,34 +59,42 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                  }
             }
 
-            const effectiveLoginId = loginid || (client as any)?.active_account_loginid || localStorage.getItem('active_loginid');
-            const effectiveToken = token || localStorage.getItem('token');
-
-            if (!effectiveLoginId || !effectiveToken) return;
+            const effectiveLoginId = loginid || (client as any)?.active_account_loginid || localStorage.getItem('active_loginid') || undefined;
+            const effectiveToken = token || localStorage.getItem('token') || undefined;
 
             if (iframe.contentWindow) {
                 try {
                     let embedBase = process.env.DTRADER_URL ? `${process.env.DTRADER_URL}` : 'https://deriv-dtrader.vercel.app/dtrader';
-                    if (!embedBase.endsWith('/dtrader')) {
+                    if (!embedBase.endsWith('/dtrader') && !embedBase.includes('localhost')) {
                         embedBase = `${embedBase.replace(/\/$/, '')}/dtrader`;
                     }
-                    const appIdNum = Number(getAppId() || '134205') || 134205;
+                    const appIdStr = getAppId() || '134249';
+                    const appIdNum = Number(appIdStr) || 134249;
+
+                    let iframeUrl = `${embedBase}?chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appIdStr}&lang=EN`;
+                    if (effectiveLoginId && effectiveToken) {
+                        iframeUrl += `&acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD`;
+                    }
+
                     const authPayload = {
-                        token: effectiveToken,
-                        loginid: effectiveLoginId,
+                        iframeUrl,
+                        embedBase,
+                        accountType: 'ZOOM',
                         loginId: effectiveLoginId,
-                        appId: appIdNum,
+                        loginid: effectiveLoginId,
+                        token: effectiveToken,
+                        currency: client?.currency || 'USD',
+                        appId: String(appIdStr),
+                        app_id: appIdStr,
+                        defaultSymbol: '1HZ100V',
+                        authMode: effectiveToken ? 'derivws_otp' : 'none',
                         server: 'green',
                         timestamp: Date.now(),
-                        authMode: 'derivws_otp',
-                        accountType: 'ZOOM',
-                        currency: 'USD',
-                        defaultSymbol: '1HZ100V',
-                        embedBase,
                         bt_secret: 'binarytool',
                         theme: 'dark',
-                        iframeUrl: `${embedBase}?acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD&api_version=v2&chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appIdNum}&lang=EN&theme=dark&bt_secret=binarytool`
                     };
+
+                    console.log('[DTrader iframe] params passed to iframe', authPayload);
 
                     iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
                     iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, '*');
@@ -470,6 +478,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 allowFullScreen
                 loading='eager'
                 allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; display-capture'
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
                 referrerPolicy='no-referrer-when-downgrade'
                 style={{
                     display: 'block',

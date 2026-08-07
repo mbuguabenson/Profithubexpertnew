@@ -220,7 +220,6 @@ $colour_toolboxSelected: $black;
     }
 
     .blocklyDropDownButton {
-        display: inline-block;
         float: left;
         padding: 0;
         margin: 4px;
@@ -246,14 +245,12 @@ $colour_toolboxSelected: $black;
     }
 
     .blocklyDropDownPlaceholder {
-        display: inline-block;
         float: left;
         padding: 0;
         margin: 4px;
     }
 
     .blocklyNumPadButton {
-        display: inline-block;
         float: left;
         padding: 0;
         width: 48px;
@@ -363,16 +360,8 @@ $colour_toolboxSelected: $black;
         cursor: grabbing;
     }
 
-    .blocklyDragging.blocklyDraggingDelete {
-        // cursor: url('<<<PATH>>>/handdelete.cur'), auto;
-    }
-
     .blocklyDragging.blocklyDraggingMouseThrough {
         pointer-events: none;
-    }
-
-    .blocklyToolboxDelete {
-        // cursor: url('<<<PATH>>>/handdelete.cur'), auto;
     }
 
     .blocklyToolboxGrab {
@@ -776,12 +765,6 @@ drag a block and selected text moves instead.
         background-color: $colour_numPadBackground;
     }
 
-    /* Override the default Closure URL. */
-    .blocklyWidgetDiv .goog-option-selected .goog-menuitem-checkbox,
-    .blocklyWidgetDiv .goog-option-selected .goog-menuitem-icon {
-        // background: url('<<<PATH>>>/sprites.png') no-repeat -48px -16px !important;
-    }
-
     /* Category tree in Toolbox. */
     .blocklyToolboxDiv {
         background-color: $colour_toolbox;
@@ -884,10 +867,6 @@ drag a block and selected text moves instead.
         font-size: 16px;
         padding: 0 3px;
         vertical-align: middle;
-    }
-
-    .blocklyToolboxDelete .blocklyTreeLabel {
-        // cursor: url('<<<PATH>>>/handdelete.cur'), auto;
     }
 
     .blocklyTreeSelected .blocklyTreeLabel {

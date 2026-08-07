@@ -32,6 +32,7 @@ import DollarflipperStore from './dollarflipper-store';
 import DollarmineStore from './dollarmine-store';
 import AnalysisStore from './analysis-store';
 import EntryScannerStore from './entry-scanner-store';
+import TraderStore from './trader-store';
 
 // TODO: need to write types for the individual classes and convert them to ts
 export default class RootStore {
@@ -52,6 +53,7 @@ export default class RootStore {
     public scanner: ScannerStore;
     public analysis: AnalysisStore;
     public entry_scanner: EntryScannerStore;
+    public trader: TraderStore;
 
     public dashboard: DashboardStore;
 
@@ -94,6 +96,7 @@ export default class RootStore {
 
         this.analysis = new AnalysisStore(this);
         this.entry_scanner = new EntryScannerStore(this);
+        this.trader = new TraderStore(this);
 
         this.app = new AppStore(this, this.core);
         this.summary_card = new SummaryCardStore(this, this.core);

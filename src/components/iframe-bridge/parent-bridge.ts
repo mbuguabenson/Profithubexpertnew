@@ -138,6 +138,7 @@ export class ParentBridgeClient {
         const expectedOrigin = this.sanitizeOrigin(this.iframeOrigin);
         const allowedOrigins = [
             expectedOrigin,
+            'https://dtraderphub.vercel.app',
             'https://deriv-dtrader.vercel.app',
             'https://trader.deriv.com',
             'https://app.deriv.com',
