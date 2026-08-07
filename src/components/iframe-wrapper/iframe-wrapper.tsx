@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
-import { V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
+import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { useStore } from '@/hooks/useStore';
@@ -46,7 +46,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         bridge.attach(iframe, '*');
 
         const sendLegacyAuthData = async () => {
-            let loginid = V2GetActiveAccountId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+            let loginid = V2GetActiveClientId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
             const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
             let token = await resolveValidDerivWSToken(loginid);
 
