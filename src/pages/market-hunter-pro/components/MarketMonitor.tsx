@@ -454,7 +454,7 @@ export default function MarketMonitor({
   embedded?: boolean;
 }) {
   const [selectedStrategies, setSelectedStrategies] = useState<StrategyId[]>(['even_odd', 'over_under']);
-  const [selectedSymbols, setSelectedSymbols]       = useState<string[]>(DIGIT_SYMBOLS.slice(0, 8).map(s => s.id));
+  const [selectedSymbols, setSelectedSymbols]       = useState<string[]>(DIGIT_SYMBOLS.map(s => s.id));
   const [showSymbolPicker, setShowSymbolPicker]     = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
