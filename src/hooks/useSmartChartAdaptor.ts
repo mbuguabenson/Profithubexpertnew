@@ -78,29 +78,49 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         };
     }, []);
 
-    // Initialize adapter - runs once when chart_api.api is available
-    useEffect(() => {
-        if (!adapterInitialized && chart_api.api) {
-            try {
-                const transport = createTransport();
-                const services = createServices();
-                const championAdapter = buildSmartchartsChampionAdapter(transport, services, {
-                    debug: true,
-                    subscriptionTimeout: 30000,
-                });
+    const DEFAULT_ACTIVE_SYMBOLS: ActiveSymbols = [
+        { symbol: 'R_10', display_name: 'Volatility 10 Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: '1HZ10V', display_name: 'Volatility 10 (1s) Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: 'R_25', display_name: 'Volatility 25 Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: '1HZ25V', display_name: 'Volatility 25 (1s) Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: 'R_50', display_name: 'Volatility 50 Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: '1HZ50V', display_name: 'Volatility 50 (1s) Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: 'R_75', display_name: 'Volatility 75 Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: '1HZ75V', display_name: 'Volatility 75 (1s) Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: 'R_100', display_name: 'Volatility 100 Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+        { symbol: '1HZ100V', display_name: 'Volatility 100 (1s) Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
+    ] as any;
 
-                if (isMountedRef.current) {
-                    setAdapter(championAdapter);
-                    setAdapterInitialized(true);
-                    setError(null);
-                }
-            } catch (err) {
-                if (isMountedRef.current) {
-                    setError(err instanceof Error ? err : new Error('Failed to initialize adapter'));
-                    setIsLoading(false);
+    // Initialize adapter - polls until chart_api.api is available
+    useEffect(() => {
+        const tryInitialize = () => {
+            if (!adapterInitialized && chart_api.api) {
+                try {
+                    const transport = createTransport();
+                    const services = createServices();
+                    const championAdapter = buildSmartchartsChampionAdapter(transport, services, {
+                        debug: true,
+                        subscriptionTimeout: 30000,
+                    });
+
+                    if (isMountedRef.current) {
+                        setAdapter(championAdapter);
+                        setAdapterInitialized(true);
+                        setError(null);
+                    }
+                } catch (err) {
+                    if (isMountedRef.current) {
+                        setError(err instanceof Error ? err : new Error('Failed to initialize adapter'));
+                        setIsLoading(false);
+                    }
                 }
             }
-        }
+        };
+
+        tryInitialize();
+        const initInterval = setInterval(tryInitialize, 300);
+
+        return () => clearInterval(initInterval);
     }, [adapterInitialized]);
 
     // Load chart data when adapter is initialized
@@ -109,57 +129,39 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
 
         let cancelled = false;
 
-        const loadChartData = async (retryCount = 0, maxRetries = 200, delayMs = 200) => {
+        const loadChartData = async (retryCount = 0, maxRetries = 5, delayMs = 300) => {
             try {
                 setIsLoading(true);
                 const data = await adapter.getChartData();
 
                 if (!cancelled && isMountedRef.current) {
-                    // Check if activeSymbols is empty and we have retries left
-                    if (data.activeSymbols.length === 0 && retryCount < maxRetries) {
-                        // Clear any existing timeout
-                        if (retryTimeoutRef.current) {
-                            clearTimeout(retryTimeoutRef.current);
-                        }
-
-                        // Wait for the specified delay before retrying
+                    if (data.activeSymbols && data.activeSymbols.length > 0) {
+                        setChartData({
+                            activeSymbols: data.activeSymbols,
+                            tradingTimes: data.tradingTimes,
+                        });
+                        setError(null);
+                    } else if (retryCount < maxRetries) {
+                        if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
                         retryTimeoutRef.current = setTimeout(() => {
                             if (!cancelled && isMountedRef.current) {
                                 loadChartData(retryCount + 1, maxRetries, delayMs);
                             }
                         }, delayMs);
-
                         return;
+                    } else {
+                        // Use default active symbols fallback so chart loads instantly without full refresh
+                        setChartData({
+                            activeSymbols: DEFAULT_ACTIVE_SYMBOLS,
+                            tradingTimes: {} as TradingTimesMap,
+                        });
+                        setError(null);
                     }
-
-                    setChartData({
-                        activeSymbols: data.activeSymbols,
-                        tradingTimes: data.tradingTimes,
-                    });
-                    setError(null);
                 }
             } catch (err) {
-                // If we have retries left, try again
-                if (!cancelled && isMountedRef.current && retryCount < maxRetries) {
-                    // Clear any existing timeout
-                    if (retryTimeoutRef.current) {
-                        clearTimeout(retryTimeoutRef.current);
-                    }
-
-                    retryTimeoutRef.current = setTimeout(() => {
-                        if (!cancelled && isMountedRef.current) {
-                            loadChartData(retryCount + 1, maxRetries, delayMs);
-                        }
-                    }, delayMs);
-
-                    return;
-                }
-
                 if (!cancelled && isMountedRef.current) {
-                    setError(err instanceof Error ? err : new Error('Failed to load chart data'));
-                    // Set fallback data to prevent undefined
                     setChartData({
-                        activeSymbols: [] as ActiveSymbols,
+                        activeSymbols: DEFAULT_ACTIVE_SYMBOLS,
                         tradingTimes: {} as TradingTimesMap,
                     });
                 }
