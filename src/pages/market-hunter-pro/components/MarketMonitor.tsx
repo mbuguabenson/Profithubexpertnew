@@ -263,32 +263,20 @@ function DigitDetailGrid({ frequencies, trends }: {
       })}
     </div>
   );
-}
-
-function SignalBadge({ status, probability }: { status: string; probability: number }) {
-  const color = status === 'TRADE NOW' ? '#10b981' : status === 'WAIT' ? '#f59e0b' : '#6b7280';
-  const bg    = status === 'TRADE NOW' ? 'rgba(16,185,129,0.15)' : status === 'WAIT' ? 'rgba(245,158,11,0.12)' : 'rgba(107,114,128,0.08)';
-  return (
-    <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0"
-      style={{ color, background: bg, border: `1px solid ${color}35` }}>
-      {status === 'TRADE NOW' ? `TRADE ${probability.toFixed(0)}%` : status === 'WAIT' ? `WAIT` : 'NEUTRAL'}
-    </span>
-  );
-}
-
-// ─── Market row ───────────────────────────────────────────────────────────────
 function MarketRow({
   state,
   label,
   short,
   strategyIds,
   onSelectSymbol,
+  onLoadBot,
 }: {
   state: MarketState | undefined;
   label: string;
   short: string;
   strategyIds: StrategyId[];
   onSelectSymbol: (id: string) => void;
+  onLoadBot?: (symbol: string, symbolName: string, strategyId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -319,24 +307,19 @@ function MarketRow({
       <div className="flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none"
         onClick={() => setExpanded(e => !e)}>
 
-        {/* Symbol badge */}
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[8px] font-black text-white leading-tight text-center"
-          style={{ background: 'linear-gradient(135deg,rgba(214,26,140,0.4),rgba(230,126,34,0.4))', border: '1px solid rgba(214,26,140,0.3)' }}>
-          {short}
+        {/* Status indicator dot */}
+        <span className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+          style={{ background: loading ? '#eab308' : '#10b981' }} />
+
+        {/* Symbol name */}
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] font-black text-white leading-tight truncate">{label}</div>
+          <div className="text-[8px] text-white/30 truncate">{short}</div>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold text-white leading-tight">{label}</span>
-            {state?.lastDigit !== null && state?.lastDigit !== undefined && (
-              <span className="text-[9px] font-black w-5 h-5 flex items-center justify-center rounded text-white"
-                style={{ background: (state.lastDigit ?? 0) >= 5 ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)',
-                         border: (state.lastDigit ?? 0) % 2 === 0 ? '1px solid rgba(59,130,246,0.5)' : '1px solid rgba(245,158,11,0.4)' }}>
-                {state.lastDigit}
-              </span>
-            )}
-          </div>
-          <div className="text-[9px] font-mono text-white/35 mt-0.5">
+        {/* Last price */}
+        <div className="text-right shrink-0">
+          <div className="text-[10px] font-mono font-bold text-white/80">
             {loading ? 'Loading…' : state?.lastPrice?.toFixed(4) ?? '—'}
           </div>
         </div>
@@ -348,6 +331,17 @@ function MarketRow({
             <span className="text-[8px] text-white/25">No signal</span>
           )}
         </div>
+
+        {/* Load Bot button */}
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            onLoadBot?.(state?.symbol ?? '', label ?? state?.symbol ?? '', strategyIds[0] || 'even_odd');
+          }}
+          className="text-[9px] font-black px-2.5 py-1.5 rounded-lg text-white shrink-0 transition active:scale-95 hover:opacity-90 flex items-center gap-1"
+          style={{ background: 'linear-gradient(135deg,#00a86b,#059669)', boxShadow: '0 2px 8px rgba(0,168,107,0.3)' }}>
+          🤖 Load Bot
+        </button>
 
         {/* Scan button */}
         <button
@@ -435,10 +429,12 @@ function MarketRow({
 export default function MarketMonitor({
   onClose,
   onSelectSymbol,
+  onLoadBot,
   embedded = false,
 }: {
   onClose?: () => void;
   onSelectSymbol: (symbolId: string) => void;
+  onLoadBot?: (symbol: string, symbolName: string, strategyId: string) => void;
   embedded?: boolean;
 }) {
   const [selectedStrategies, setSelectedStrategies] = useState<StrategyId[]>(['even_odd', 'over_under']);
@@ -563,6 +559,7 @@ export default function MarketMonitor({
                 short={sym.short}
                 strategyIds={selectedStrategies}
                 onSelectSymbol={onSelectSymbol}
+                onLoadBot={onLoadBot}
               />
             );
           })}

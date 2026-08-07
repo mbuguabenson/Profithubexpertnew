@@ -44,18 +44,20 @@ export function useDerivWS(options: DerivWSOptions = {}) {
     ws.onopen = () => {
       if (!mountedRef.current) return;
       setIsConnected(true);
-      // Auto-resubscribe if we had an active symbol
-      if (activeSymbolRef.current) {
-        ws.send(
-          JSON.stringify({
-            ticks_history: activeSymbolRef.current,
-            count: 1000,
-            end: 'latest',
-            style: 'ticks',
-            req_id: reqId.current++,
-          })
-        );
+      const targetSymbol = activeSymbolRef.current || 'R_100';
+      if (!activeSymbolRef.current) {
+        setActiveSymbol('R_100');
+        activeSymbolRef.current = 'R_100';
       }
+      ws.send(
+        JSON.stringify({
+          ticks_history: targetSymbol,
+          count: 1000,
+          end: 'latest',
+          style: 'ticks',
+          req_id: reqId.current++,
+        })
+      );
     };
 
     ws.onclose = () => {

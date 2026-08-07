@@ -15,6 +15,7 @@ import {
   BarChart2,
 } from 'lucide-react';
 import MarketMonitor from './MarketMonitor';
+import { AutoHunterBotModal } from './AutoHunterBotModal';
 import { useDerivWS } from '../hooks/useDerivWS';
 import { analyzeMultiWindow, MultiWindowAnalysis } from '../lib/analysis';
 import { generateCombinedRankedSignals, Signal, SignalType } from '../lib/signals';
@@ -429,6 +430,12 @@ export default function Scanner() {
   const shiftTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoScanRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [isBotModalOpen, setIsBotModalOpen] = useState(false);
+  const [botSymbol, setBotSymbol] = useState('R_100');
+  const [botSymbolName, setBotSymbolName] = useState('Volatility 100 Index');
+  const [botStrategyId, setBotStrategyId] = useState('even_odd');
+  const [botStrategyLabel, setBotStrategyLabel] = useState('Even / Odd');
 
   const { isConnected, subscriptionState, subscribeSymbol } = useDerivWS();
   const orb = useDraggableOrb();
@@ -1109,6 +1116,13 @@ export default function Scanner() {
                   setSelectedSymbol(symId);
                   setActiveTab('scanner');
                 }}
+                onLoadBot={(symId, symName, stratId) => {
+                  setBotSymbol(symId);
+                  setBotSymbolName(symName);
+                  setBotStrategyId(stratId);
+                  setBotStrategyLabel(stratId === 'even_odd' ? 'Even / Odd' : stratId === 'over_under' ? 'Over / Under' : stratId === 'matches' ? 'Matches' : 'Differs');
+                  setIsBotModalOpen(true);
+                }}
               />
             </div>
           )}
@@ -1122,6 +1136,16 @@ export default function Scanner() {
     <>
       {step === 'orb' && orbEl}
       {panel}
+      <AutoHunterBotModal
+        isOpen={isBotModalOpen}
+        onClose={() => setIsBotModalOpen(false)}
+        symbol={botSymbol}
+        symbolName={botSymbolName}
+        strategyId={botStrategyId}
+        strategyLabel={botStrategyLabel}
+        marketTicks={subscriptionState?.ticks}
+        marketQuotes={subscriptionState?.quotes}
+      />
     </>
   );
 }
