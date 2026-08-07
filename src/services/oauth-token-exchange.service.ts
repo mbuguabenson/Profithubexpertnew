@@ -222,23 +222,31 @@ export class OAuthTokenExchangeService {
                     const accounts = await DerivWSAccountsService.fetchAccountsList(data.access_token);
 
                     if (accounts && accounts.length > 0) {
-                        // Store accounts
+                        // Store accounts in DerivWS service
                         DerivWSAccountsService.storeAccounts(accounts);
 
-                        // Set the first account as active in localStorage
+                        // Set active account and account type in localStorage
                         const firstAccount = accounts[0];
                         localStorage.setItem('active_loginid', firstAccount.account_id);
+                        localStorage.setItem('client.loginid', firstAccount.account_id);
 
-                        // Set account type
                         const isDemo = isDemoAccount(firstAccount.account_id);
                         localStorage.setItem('account_type', isDemo ? 'demo' : 'real');
+
+                        // Populate compatibility storage (accountsList, token, active_token)
+                        const accountsListMap: Record<string, string> = {};
+                        accounts.forEach((acc) => {
+                            accountsListMap[acc.account_id] = data.access_token!;
+                        });
+                        localStorage.setItem('accountsList', JSON.stringify(accountsListMap));
+                        localStorage.setItem('token', data.access_token!);
+                        localStorage.setItem('active_token', data.access_token!);
 
                         ErrorLogger.info('OAuth', 'Accounts fetched and stored', {
                             loginid: firstAccount.account_id,
                         });
 
-                        // Trigger WebSocket initialization by reloading or reinitializing api_base
-                        // The api_base will pick up the active_loginid and authorize
+                        // Trigger WebSocket initialization
                         const { api_base } = await import('@/external/bot-skeleton');
                         await api_base.init(true); // Force new connection with the account
                     } else {

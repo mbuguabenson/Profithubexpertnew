@@ -42,31 +42,37 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
     const list = getAccountsList();
 
     // 1. Direct match in accountsList for active account
-    if (activeId && list[activeId] && !list[activeId].startsWith('ory_at_')) {
+    if (activeId && list[activeId]) {
         return list[activeId];
     }
 
-    // 2. Check any valid token in accountsList
+    // 2. Check any token in accountsList
     for (const id in list) {
-        if (list[id] && !list[id].startsWith('ory_at_')) {
+        if (list[id]) {
             return list[id];
         }
     }
 
-    // 3. Check localStorage tokens
-    const storedToken = localStorage.getItem('token') || localStorage.getItem('authToken');
-    if (storedToken && storedToken !== 'null' && !storedToken.startsWith('ory_at_')) {
+    // 3. Check localStorage stored tokens
+    const storedToken = localStorage.getItem('token') || localStorage.getItem('active_token') || localStorage.getItem('authToken');
+    if (storedToken && storedToken !== 'null') {
         return storedToken;
     }
 
-    // 4. PKCE OAuth2 Flow: Fetch OTP WebSocket URL and extract valid session token
+    // 4. PKCE OAuth2 Access Token fallback
+    const oauthToken = OAuthTokenExchangeService.getAccessToken();
+    if (oauthToken) {
+        return oauthToken;
+    }
+
+    // 5. Fetch OTP WebSocket URL if available
     try {
         const authInfo = OAuthTokenExchangeService.getAuthInfo();
         if (authInfo?.access_token && activeId) {
             const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
             if (wsUrl) {
                 const parsedUrl = new URL(wsUrl);
-                const otpToken = parsedUrl.searchParams.get('token');
+                const otpToken = parsedUrl.searchParams.get('token') || parsedUrl.searchParams.get('otp');
                 if (otpToken) {
                     return otpToken;
                 }

@@ -166,20 +166,38 @@ export class ParentBridgeClient {
 
         const msgType = parsedData.type || parsedData.action || parsedData.event || '';
 
-        // Handle NewdtraderBridge or legacy iframe initiation requests
-        if (
-            msgType === 'BRIDGE_READY' ||
-            msgType === 'INIT' ||
-            msgType === 'init' ||
-            msgType === 'REQUEST_SESSION' ||
-            msgType === 'requestAuth' ||
-            msgType === 'PING' ||
-            msgType === 'get_session' ||
-            msgType === 'CHECK_AUTH' ||
-            msgType === 'NEWDTRADER_BRIDGE_INIT'
-        ) {
-            this.handleBridgeReady();
-            this.handleSessionRequest();
+        // Immediately reply to ANY message or handshake ping from the iframe to prevent bridge auth timeout
+        this.handleBridgeReady();
+        this.handleSessionRequest();
+
+        if (event.source && typeof (event.source as Window).postMessage === 'function') {
+            try {
+                const session = sessionManager.getSession();
+                let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+                let token = session?.token || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+                if (token && loginid && !token.startsWith('ory_at_')) {
+                    const handshakePayload = {
+                        type: 'NEWDTRADER_BRIDGE_AUTH',
+                        status: 'success',
+                        token,
+                        loginid,
+                        loginId: loginid,
+                        appId: Number(session?.appId || '134249') || 134249,
+                        server: 'green',
+                        timestamp: Date.now(),
+                        authMode: 'derivws_otp',
+                        accountType: 'ZOOM',
+                        bt_secret: 'binarytool',
+                        theme: 'dark',
+                        payload: { token, loginid, currency: 'USD' }
+                    };
+                    (event.source as Window).postMessage(handshakePayload, '*');
+                    (event.source as Window).postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayload }, '*');
+                    (event.source as Window).postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayload }, '*');
+                }
+            } catch (e) {
+                // Ignore cross-origin error on event.source
+            }
         }
 
         if (!isValidBridgeMessage(parsedData)) {
