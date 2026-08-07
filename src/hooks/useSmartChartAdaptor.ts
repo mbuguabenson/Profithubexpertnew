@@ -91,15 +91,27 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         { symbol: '1HZ100V', display_name: 'Volatility 100 (1s) Index', symbol_type: 'stockindex', market: 'synthetic_index', is_trading_suspended: 0 },
     ] as any;
 
-    // Initialize adapter - polls until chart_api.api is available
+    const isInitializingRef = useRef(false);
+
+    // Initialize adapter - polls safely until chart_api.api is available (runs ONCE)
     useEffect(() => {
+        if (adapterInitialized || isInitializingRef.current) return;
+
+        let initInterval: any = null;
+
         const tryInitialize = () => {
-            if (!adapterInitialized && chart_api.api) {
+            if (isInitializingRef.current || adapterInitialized) {
+                if (initInterval) clearInterval(initInterval);
+                return;
+            }
+            if (chart_api.api) {
+                isInitializingRef.current = true;
+                if (initInterval) clearInterval(initInterval);
                 try {
                     const transport = createTransport();
                     const services = createServices();
                     const championAdapter = buildSmartchartsChampionAdapter(transport, services, {
-                        debug: true,
+                        debug: false,
                         subscriptionTimeout: 30000,
                     });
 
@@ -109,6 +121,7 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                         setError(null);
                     }
                 } catch (err) {
+                    isInitializingRef.current = false;
                     if (isMountedRef.current) {
                         setError(err instanceof Error ? err : new Error('Failed to initialize adapter'));
                         setIsLoading(false);
@@ -118,9 +131,13 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         };
 
         tryInitialize();
-        const initInterval = setInterval(tryInitialize, 300);
+        if (!adapterInitialized && !isInitializingRef.current) {
+            initInterval = setInterval(tryInitialize, 300);
+        }
 
-        return () => clearInterval(initInterval);
+        return () => {
+            if (initInterval) clearInterval(initInterval);
+        };
     }, [adapterInitialized]);
 
     // Load chart data when adapter is initialized
