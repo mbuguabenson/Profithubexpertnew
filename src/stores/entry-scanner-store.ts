@@ -34,6 +34,8 @@ export default class EntryScannerStore {
     // UI State
     @observable accessor is_scanner_open: boolean = false;
     @observable accessor strategy_type: TStrategyType = 'over_under';
+    @observable accessor scan_mode: 'all' | 'single' = 'all';
+    @observable accessor target_single_symbol: string = 'R_100';
     @observable accessor scan_phase: TScanPhase = 'idle';
     @observable accessor scan_status: string = 'Select a strategy and click Scan Markets to begin.';
     @observable accessor is_scanning: boolean = false;
@@ -75,6 +77,22 @@ export default class EntryScannerStore {
 
     // ─── Actions ──────────────────────────────────────────────
 
+    @action setScanMode(mode: 'all' | 'single') {
+        this.scan_mode = mode;
+        if (this.is_scanning) {
+            this.stopScanning();
+            this.startScanning();
+        }
+    }
+
+    @action setTargetSingleSymbol(symbol: string) {
+        this.target_single_symbol = symbol;
+        if (this.is_scanning && this.scan_mode === 'single') {
+            this.stopScanning();
+            this.startScanning();
+        }
+    }
+
     @action setStrategyType(type: TStrategyType) {
         this.strategy_type = type;
         this.resetScan();
@@ -103,11 +121,6 @@ export default class EntryScannerStore {
             this.stopScanning();
             return;
         }
-        if (!this.isApiReady()) {
-            this.scan_status = 'Waiting for API connection...';
-            setTimeout(() => this.startScanning(), 1000);
-            return;
-        }
         this.is_scanning = true;
         this.scan_phase = 'scanning';
         this.scan_status = 'Fetching active markets...';
@@ -131,28 +144,56 @@ export default class EntryScannerStore {
 
     // ─── Fetch Symbols ────────────────────────────────────────
 
+    private DEFAULT_FALLBACK_SYMBOLS = [
+        { symbol: 'R_10', display_name: 'Volatility 10 Index', is1s: false },
+        { symbol: '1HZ10V', display_name: 'Volatility 10 (1s) Index', is1s: true },
+        { symbol: 'R_25', display_name: 'Volatility 25 Index', is1s: false },
+        { symbol: '1HZ25V', display_name: 'Volatility 25 (1s) Index', is1s: true },
+        { symbol: 'R_50', display_name: 'Volatility 50 Index', is1s: false },
+        { symbol: '1HZ50V', display_name: 'Volatility 50 (1s) Index', is1s: true },
+        { symbol: 'R_75', display_name: 'Volatility 75 Index', is1s: false },
+        { symbol: '1HZ75V', display_name: 'Volatility 75 (1s) Index', is1s: true },
+        { symbol: 'R_100', display_name: 'Volatility 100 Index', is1s: false },
+        { symbol: '1HZ100V', display_name: 'Volatility 100 (1s) Index', is1s: true },
+        { symbol: '1HZ15V', display_name: 'Volatility 15 (1s) Index', is1s: true },
+        { symbol: '1HZ30V', display_name: 'Volatility 30 (1s) Index', is1s: true },
+        { symbol: '1HZ90V', display_name: 'Volatility 90 (1s) Index', is1s: true },
+    ];
+
     @action private fetchActiveSymbols() {
-        api_base.api!.send({ active_symbols: 'brief' }).then((res: any) => {
-            if (!res?.active_symbols) return;
-            const filtered = res.active_symbols
-                .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
-                .map((s: any) => ({
-                    symbol: s.symbol,
-                    display_name: s.display_name,
-                    is1s: s.symbol.includes('1HZ') || s.symbol.includes('1S'),
-                }));
+        const applySymbols = (allList: { symbol: string; display_name: string; is1s: boolean }[]) => {
+            const finalSymbols = this.scan_mode === 'single'
+                ? allList.filter(s => s.symbol === this.target_single_symbol)
+                : allList;
 
             runInAction(() => {
-                this.active_symbols = filtered;
-                this.scan_status = `Found ${filtered.length} volatility markets. Fetching last 60 ticks...`;
+                this.active_symbols = finalSymbols.length > 0 ? finalSymbols : allList.slice(0, 1);
+                this.scan_status = `Monitoring ${this.active_symbols.length} ${this.scan_mode === 'single' ? 'selected' : 'active'} market(s). Collecting tick history...`;
             });
             this.subscribeToTicks();
-        }).catch(() => {
-            runInAction(() => {
-                this.scan_status = 'Failed to fetch markets. Retrying...';
+        };
+
+        if (this.isApiReady()) {
+            api_base.api!.send({ active_symbols: 'brief' }).then((res: any) => {
+                if (!res?.active_symbols || !Array.isArray(res.active_symbols)) {
+                    applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
+                    return;
+                }
+                const filtered = res.active_symbols
+                    .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
+                    .map((s: any) => ({
+                        symbol: s.symbol,
+                        display_name: s.display_name,
+                        is1s: s.symbol.includes('1HZ') || s.symbol.includes('1S'),
+                    }));
+
+                applySymbols(filtered.length > 0 ? filtered : this.DEFAULT_FALLBACK_SYMBOLS);
+            }).catch(() => {
+                applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
             });
-            setTimeout(() => this.fetchActiveSymbols(), 2000);
-        });
+        } else {
+            applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
+        }
     }
 
     // ─── Tick Streaming ───────────────────────────────────────

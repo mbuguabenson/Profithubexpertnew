@@ -34,6 +34,68 @@ export const EntryScanner = observer(() => {
                     ))}
                 </div>
 
+                {/* ── Scan Scope Mode: Scan All vs Single Market ── */}
+                <div className="scan-scope-selector" style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <button
+                        type="button"
+                        className={classNames('btn-scope', { active: entry_scanner.scan_mode === 'all' })}
+                        onClick={() => entry_scanner.setScanMode('all')}
+                        style={{
+                            flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)',
+                            background: entry_scanner.scan_mode === 'all' ? 'rgba(245,197,66,0.2)' : 'rgba(0,0,0,0.2)',
+                            color: entry_scanner.scan_mode === 'all' ? '#f5c542' : 'rgba(255,255,255,0.7)',
+                            fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                        }}
+                    >
+                        ⚡ Scan All Markets
+                    </button>
+                    <button
+                        type="button"
+                        className={classNames('btn-scope', { active: entry_scanner.scan_mode === 'single' })}
+                        onClick={() => entry_scanner.setScanMode('single')}
+                        style={{
+                            flex: 1, padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)',
+                            background: entry_scanner.scan_mode === 'single' ? 'rgba(245,197,66,0.2)' : 'rgba(0,0,0,0.2)',
+                            color: entry_scanner.scan_mode === 'single' ? '#f5c542' : 'rgba(255,255,255,0.7)',
+                            fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                        }}
+                    >
+                        🎯 Single Market
+                    </button>
+                </div>
+
+                {/* Single Market Dropdown Selector */}
+                {entry_scanner.scan_mode === 'single' && (
+                    <div className="single-market-select-wrap" style={{ marginBottom: '12px' }}>
+                        <label style={{ fontSize: '10px', fontWeight: 'bold', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                            Select Single Market
+                        </label>
+                        <select
+                            value={entry_scanner.target_single_symbol}
+                            onChange={(e) => entry_scanner.setTargetSingleSymbol(e.target.value)}
+                            style={{
+                                width: '100%', padding: '8px 12px', borderRadius: '8px',
+                                background: 'rgba(20,20,35,0.9)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)',
+                                fontSize: '13px', fontWeight: 'bold', outline: 'none'
+                            }}
+                        >
+                            <option value="R_10">Volatility 10 Index</option>
+                            <option value="1HZ10V">Volatility 10 (1s) Index</option>
+                            <option value="1HZ15V">Volatility 15 (1s) Index</option>
+                            <option value="R_25">Volatility 25 Index</option>
+                            <option value="1HZ25V">Volatility 25 (1s) Index</option>
+                            <option value="1HZ30V">Volatility 30 (1s) Index</option>
+                            <option value="R_50">Volatility 50 Index</option>
+                            <option value="1HZ50V">Volatility 50 (1s) Index</option>
+                            <option value="R_75">Volatility 75 Index</option>
+                            <option value="1HZ75V">Volatility 75 (1s) Index</option>
+                            <option value="1HZ90V">Volatility 90 (1s) Index</option>
+                            <option value="R_100">Volatility 100 Index</option>
+                            <option value="1HZ100V">Volatility 100 (1s) Index</option>
+                        </select>
+                    </div>
+                )}
+
                 {/* ── Status Banner ── */}
                 <div
                     className="phase-banner"
