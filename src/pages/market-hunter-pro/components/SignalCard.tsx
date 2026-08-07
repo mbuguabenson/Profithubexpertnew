@@ -1,8 +1,8 @@
-import React from 'react';
+import { ReactNode } from 'react';
 import { Signal, SignalStatus } from '../lib/signals';
 import { Zap, Clock, MinusCircle, CheckCircle2 } from 'lucide-react';
 
-const statusConfig: Record<SignalStatus, { bg: string; text: string; border: string; glow: string; icon: React.ReactNode }> = {
+const statusConfig: Record<SignalStatus, { bg: string; text: string; border: string; glow: string; icon: ReactNode }> = {
   'TRADE NOW': {
     bg: 'bg-emerald-500/10',
     text: 'text-emerald-400',
