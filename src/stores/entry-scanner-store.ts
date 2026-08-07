@@ -224,7 +224,7 @@ export default class EntryScannerStore {
             api_base.api!.send({
                 ticks_history: market.symbol,
                 end: 'latest',
-                count: 60,
+                count: 1000,
                 style: 'ticks',
             });
         });
@@ -251,7 +251,7 @@ export default class EntryScannerStore {
         if (!market) return;
 
         market.recentDigits.push(digit);
-        if (market.recentDigits.length > 120) market.recentDigits.shift(); // Keep up to 120 ticks
+        if (market.recentDigits.length > 1000) market.recentDigits.shift(); // Keep up to 1000 ticks for deep analysis
 
         const stats = this.computeStats(market.recentDigits);
         Object.assign(market, stats);
