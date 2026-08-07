@@ -1,7 +1,7 @@
 # ProfitHub Platform (Pfhub) — LLM Documentation & Architecture Map
 
 > **File:** `public/llms.txt`
-> **Description:** Concise, structured, LLM-optimized technical map of the ProfitHub automated trading & financial analysis application. Accessible via HTTP at `/llms.txt`.
+> **Description:** Concise, structured, LLM-optimized technical map of the ProfitHub automated trading & financial analysis application. Accessible via HTTP at `/llms.txt`. Includes alignment with official Deriv API specifications (`https://developers.deriv.com/llms.txt`).
 
 ---
 
@@ -30,7 +30,18 @@
 
 ---
 
-## 3. Directory Layout & Module Organization
+## 3. Official Deriv API Integration Rules (from `https://developers.deriv.com/llms.txt`)
+
+1. **Public Market Data**: Connect directly to `wss://api.derivws.com/trading/v1/options/ws/public` or `wss://ws.derivws.com/websockets/v3?app_id=114292` (no OTP/auth required for public ticks).
+2. **WebSocket Authenticated Trading**:
+   - For Bearer tokens (`ory_at_...`), execute `POST /trading/v1/options/accounts/{accountId}/otp` with `Deriv-App-ID: 114292` and `Authorization: Bearer <token>`.
+   - The endpoint returns a single-use authenticated WebSocket URL (`wss://ws.derivws.com/websockets/v3?app_id=114292&token=...`).
+   - Connect to that WebSocket URL and send WS API messages directly.
+3. **Token Resolution in ProfitHub**: Always use `resolveValidDerivWSToken(loginid)` in `@/utils/token-bridge` which implements this exact flow.
+
+---
+
+## 4. Directory Layout & Module Organization
 
 ```
 Profithubexpertnew-main/
@@ -56,21 +67,6 @@ Profithubexpertnew-main/
 │   ├── types/                         # TypeScript interfaces & API payload schemas
 │   └── utils/                         # Token bridge (`token-bridge.ts`), market data, trade purchase
 ```
-
----
-
-## 4. Authentication Architecture & Token Resolution
-
-The platform supports two distinct token workflows:
-1. **Legacy API Token Flow**: Directly stores `a1-xxxx...` tokens in `localStorage.accountsList`.
-2. **PKCE OAuth2 Flow**: Ory Hydra issues Bearer JWTs (`ory_at_...`).
-
-### Crucial Security & API Rules for LLMs:
-- **WebSocket Rejection**: Deriv's WebSocket API (`wss://ws.derivws.com/websockets/v3`) **REJECTS** `ory_at_...` JWT tokens in `{ authorize: token }`.
-- **Token Resolution Function**: Always use `resolveValidDerivWSToken(loginid)` in `@/utils/token-bridge`.
-  - It filters out `ory_at_...` tokens.
-  - Checks `accountsList[loginid]`.
-  - Fallbacks to fetching an OTP session token via `DerivWSAccountsService.fetchOTPWebSocketURL(accessToken)`.
 
 ---
 
