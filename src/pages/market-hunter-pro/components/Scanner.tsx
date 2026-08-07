@@ -1112,11 +1112,11 @@ export default function Scanner() {
             <div className="p-3 flex-1 flex flex-col min-h-0">
               <MarketMonitor
                 embedded
-                onSelectSymbol={(symId) => {
+                onSelectSymbol={(symId: string) => {
                   setSelectedSymbol(symId);
                   setActiveTab('scanner');
                 }}
-                onLoadBot={(symId, symName, stratId) => {
+                onLoadBot={(symId: string, symName: string, stratId: string) => {
                   setBotSymbol(symId);
                   setBotSymbolName(symName);
                   setBotStrategyId(stratId);

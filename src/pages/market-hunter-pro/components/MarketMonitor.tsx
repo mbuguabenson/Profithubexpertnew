@@ -263,6 +263,19 @@ function DigitDetailGrid({ frequencies, trends }: {
       })}
     </div>
   );
+}
+
+function SignalBadge({ status, probability }: { status: string; probability: number }) {
+  const color = status === 'TRADE NOW' ? '#10b981' : status === 'WAIT' ? '#f59e0b' : '#6b7280';
+  const bg    = status === 'TRADE NOW' ? 'rgba(16,185,129,0.15)' : status === 'WAIT' ? 'rgba(245,158,11,0.12)' : 'rgba(107,114,128,0.08)';
+  return (
+    <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0"
+      style={{ color, background: bg, border: `1px solid ${color}35` }}>
+      {status === 'TRADE NOW' ? `TRADE ${probability.toFixed(0)}%` : status === 'WAIT' ? `WAIT` : 'NEUTRAL'}
+    </span>
+  );
+}
+
 function MarketRow({
   state,
   label,
@@ -690,6 +703,7 @@ export default function MarketMonitor({
               short={sym.short}
               strategyIds={selectedStrategies}
               onSelectSymbol={onSelectSymbol}
+              onLoadBot={onLoadBot}
             />
           );
         })}
