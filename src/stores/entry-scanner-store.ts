@@ -489,7 +489,7 @@ export default class EntryScannerStore {
     // ENTRY PATTERN MATCHING (Wait State)
     // ═══════════════════════════════════════════════════════════
 
-    @action private checkEntryPattern(digit: number, market: TEntryScannerMarketStats) {
+    @action private checkEntryPattern(digit: number, _market: TEntryScannerMarketStats) {
         if (!this.scan_result) return;
 
         this.wait_sequence.push(digit);
