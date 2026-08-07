@@ -209,31 +209,7 @@ function OverUnderBar({ highPct, lowPct }: { highPct: number; lowPct: number }) 
   );
 }
 
-function DigitFreqMiniBar({ frequencies }: { frequencies: { digit: number; percentage: number }[] }) {
-  const max = Math.max(...frequencies.map(f => f.percentage), 1);
-  return (
-    <div className="flex items-end gap-px h-10">
-      {frequencies.map(f => {
-        const heightPct = (f.percentage / max) * 100;
-        const isHigh    = f.digit >= 5;
-        const isEven    = f.digit % 2 === 0;
-        const base      = isHigh ? '#ef4444' : '#10b981';
-        const border    = isEven ? '1px solid rgba(59,130,246,0.4)' : 'none';
-        return (
-          <div key={f.digit} className="flex-1 flex flex-col items-center gap-0.5 relative group">
-            <div className="w-full rounded-sm transition-all duration-500"
-              style={{ height: `${Math.max(heightPct, 4)}%`, background: base, opacity: 0.7, border }} />
-            <span className="text-[7px] text-white/35 leading-none">{f.digit}</span>
-            {/* Tooltip */}
-            <div className="absolute bottom-full mb-1 hidden group-hover:flex text-[7px] bg-black/80 px-1 py-0.5 rounded text-white whitespace-nowrap z-10">
-              {f.digit}: {f.percentage.toFixed(1)}%
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+
 
 function DigitDetailGrid({ frequencies, trends }: {
   frequencies: { digit: number; percentage: number }[];
