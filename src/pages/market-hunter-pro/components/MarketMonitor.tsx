@@ -263,6 +263,8 @@ function DigitDetailGrid({ frequencies, trends }: {
       })}
     </div>
   );
+}
+
 function MarketRow({
   state,
   label,
