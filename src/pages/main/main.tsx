@@ -71,7 +71,6 @@ const AppWrapper = observer(() => {
         setWebSocketState,
         setActiveTour,
         setTourDialogVisibility,
-        is_system_center_open,
         setSystemCenterVisibility,
     } = dashboard;
     const { dashboard_strategies } = load_modal;
@@ -469,6 +468,30 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
                         <DTraderPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'account_center',
+            id: 'id-account-center',
+            label: <TabIcon iconKey='account_center' label='Account Center' />,
+            content: (
+                <TabErrorBoundary tabId='id-account-center' tabName='Account Center'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Account Center...')} />}>
+                        <AccountCenterPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'system_center',
+            id: 'id-system-center',
+            label: <TabIcon iconKey='system_center' label='System Center' />,
+            content: (
+                <TabErrorBoundary tabId='id-system-center' tabName='System Center'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading System Center...')} />}>
+                        <SystemCenterPage />
                     </Suspense>
                 </TabErrorBoundary>
             )
