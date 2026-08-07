@@ -265,6 +265,20 @@ function DigitDetailGrid({ frequencies, trends }: {
   );
 }
 
+function SignalBadge({ status, probability }: { status: string; probability: number }) {
+  const color = status === 'TRADE NOW' ? '#10b981' : status === 'WAIT' ? '#f59e0b' : '#6b7280';
+  const bg    = status === 'TRADE NOW' ? 'rgba(16,185,129,0.15)' : status === 'WAIT' ? 'rgba(245,158,11,0.12)' : 'rgba(107,114,128,0.08)';
+  return (
+    <span
+      className="text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 border shrink-0"
+      style={{ background: bg, color, borderColor: `${color}40` }}
+    >
+      {status === 'TRADE NOW' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />}
+      {status} ({probability.toFixed(0)}%)
+    </span>
+  );
+}
+
 function MarketRow({
   state,
   label,
