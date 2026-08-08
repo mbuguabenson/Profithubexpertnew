@@ -276,7 +276,6 @@ const RunPanel = observer(() => {
     const { statistics } = transactions;
     const { active_tour, active_tab } = dashboard;
     const { total_payout, total_profit, total_stake, won_contracts, lost_contracts, number_of_runs } = statistics;
-    const { BOT_BUILDER, CHART } = DBOT_TABS;
 
     const [displayCurrency, setDisplayCurrency] = React.useState<'USD' | 'KES'>(() => {
         return (localStorage.getItem('converter_display_currency') as 'USD' | 'KES') || 'USD';
