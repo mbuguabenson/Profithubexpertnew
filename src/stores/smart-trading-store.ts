@@ -898,7 +898,7 @@ export default class SmartTradingStore {
                 groups[market_name].items.push({ value: s.symbol, label: s.display_name });
                 symbolData[s.symbol] = { pip: s.pip || 0.01, symbol: s.symbol, display_name: s.display_name };
             });
-            this.markets = Object.values(groups).sort((a, b) => a.group.localeCompare(b.group));
+            this.markets = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
             this.active_symbols_data = symbolData;
         });
     };

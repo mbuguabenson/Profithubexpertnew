@@ -489,20 +489,6 @@ export default class AutoTraderStore {
         // relying on the loop speed. In production, need a 'is_trading' flag lock.
         // For now, let's assume one trade per tick is throttled by API response anyway.
 
-        // Construct Bot Object on the fly for the `executeTrade` function
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const tempBot: TAutoBot = {
-            id: 'strategy-bot',
-            name: `Strategy ${type}`,
-            type: type === 'OVER' ? 'Over' : type === 'UNDER' ? 'Under' : 'Over', // Hack for type match, logic handled below
-            prediction: prediction,
-            status: 'Running',
-            trades: 0,
-            wins: 0,
-            losses: 0,
-        };
-
-        // We need to slightly modify executeTrade to accept these types or just call API directly here
         // Re-using executeTrade logic but customizing for new types
         this.executeCustomTrade(type, prediction);
     };
@@ -630,7 +616,7 @@ export default class AutoTraderStore {
                         });
                     });
 
-                    this.markets = Object.values(groups).sort((a, b) => a.group.localeCompare(b.group));
+                    this.markets = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
                 } else {
                     // Fallback to basic Volatility Indices if API fails or returns empty
                     this.markets = [

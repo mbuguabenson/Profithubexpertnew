@@ -160,7 +160,7 @@ export default class FreeBotsStore {
                     this.pip_map.set(s.symbol, Math.abs(Math.log10(s.pip)));
                     if (s.symbol === this.symbol) this.pip = Math.abs(Math.log10(s.pip));
                 });
-                const sorted = Object.values(groups).sort((a, b) => a.group.localeCompare(b.group));
+                const sorted = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
                 runInAction(() => {
                     this.markets = sorted.length ? sorted : DEFAULT_MARKETS;
                 });

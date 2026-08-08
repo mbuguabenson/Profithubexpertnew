@@ -23,7 +23,7 @@ const ChartModalDesktop = observer(() => {
                     enableResizing
                 >
                     <div className='chart-modal-dialog' data-testid='chart-modal-dialog'>
-                        <ChartWrapper show_digits_stats={true} />
+                        <ChartWrapper show_digits_stats={false} />
                     </div>
                 </DraggableResizeWrapper>
             )}

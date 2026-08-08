@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 /* [AI] - Analytics removed - rudderstack event tracking removed */
@@ -17,7 +17,6 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { common, ui } = useStore();
     const { chart_store, run_panel, dashboard } = useStore();
     const [isSafari, setIsSafari] = useState(false);
-    const wrapperRef = useRef<HTMLDivElement>(null);
 
     const {
         chart_type,
@@ -61,45 +60,33 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         };
 
         setIsSafari(isSafariBrowser());
+
+        return () => {
+            chart_api.api.forgetAll('ticks');
+        };
     }, []);
 
     useEffect(() => {
         if (!symbol) updateSymbol();
     }, [symbol, updateSymbol]);
 
-    // Trigger window resize events during drawer transition so SmartCharts redraws smoothly
+    // Handle chart canvas recalculation when run panel drawer opens/closes or when navigating to chart tab
     useEffect(() => {
-        const timer1 = setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
-        const timer2 = setTimeout(() => window.dispatchEvent(new Event('resize')), 350);
-
+        const timer1 = setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 50);
+        const timer2 = setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 280);
         return () => {
             clearTimeout(timer1);
             clearTimeout(timer2);
-            window.dispatchEvent(new Event('resize'));
         };
     }, [is_drawer_open]);
 
-    // Safely observe element dimensions without causing infinite ResizeObserver loops
-    useEffect(() => {
-        if (!wrapperRef.current) return;
-        let resizeTimer: any = null;
-        const observer = new ResizeObserver(() => {
-            if (resizeTimer) clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                window.dispatchEvent(new Event('resize'));
-            }, 60);
-        });
-        observer.observe(wrapperRef.current);
-
-        return () => {
-            if (resizeTimer) clearTimeout(resizeTimer);
-            observer.disconnect();
-        };
-    }, []);
-
     const is_connection_opened = !!chart_api?.api;
 
-    const handleStateChange: TStateChangeListener = state => {
+    const handleStateChange: TStateChangeListener = (state, _options) => {
         /* [AI] - Analytics removed - rudderstack event call removed */
         // Handle state changes: INITIAL, READY, SCROLL_TO_LEFT
         /* [/AI] */
@@ -114,7 +101,6 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
 
     return (
         <div
-            ref={wrapperRef}
             className={classNames('dashboard__chart-wrapper', {
                 'dashboard__chart-wrapper--expanded': is_drawer_open && isDesktop,
                 'dashboard__chart-wrapper--modal': is_chart_modal_visible && isDesktop,
@@ -152,7 +138,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 isConnectionOpened={is_connection_opened}
                 getMarketsOrder={getMarketsOrder}
                 isLive
-                leftMargin={80}
+                leftMargin={isDesktop ? 80 : 20}
+                yAxisMargin={is_drawer_open && isDesktop ? { top: 50, bottom: 0 } : { top: 0, bottom: 0 }}
                 drawingToolFloatingMenuPosition={isMobile ? { x: 100, y: 100 } : { x: 200, y: 200 }}
             />
         </div>

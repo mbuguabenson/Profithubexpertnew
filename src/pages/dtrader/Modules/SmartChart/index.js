@@ -5,11 +5,13 @@ let module;
 
 const init = () => {
     module = moduleLoader(() => {
-        return import(/* webpackChunkName: "smart_chart" */ '@deriv/deriv-charts');
+        return import(/* webpackChunkName: "smart_chart" */ '@deriv-com/smartcharts-champion');
     });
 
     module.then(({ setSmartChartsPublicPath }) => {
-        setSmartChartsPublicPath(getUrlBase('/js/smartcharts/'));
+        if (typeof setSmartChartsPublicPath === 'function') {
+            setSmartChartsPublicPath(getUrlBase('/js/smartcharts/'));
+        }
     });
 };
 

@@ -239,6 +239,7 @@ export function buildSmartchartsChampionAdapter(
                     ticks_history: request.symbol,
                     end: request.end || 'latest',
                     count: request.count || 1000,
+                    adjust_start_time: 1,
                 };
 
                 // Set style and granularity
@@ -297,6 +298,9 @@ export function buildSmartchartsChampionAdapter(
                     // The transport layer already filters by subscription ID
                     try {
                         const quote = response;
+                        if (response?.tick && typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('live_tick_update', { detail: response.tick }));
+                        }
                         callback(quote);
                     } catch (error) {
                         logger.error('Error transforming stream message:', error);

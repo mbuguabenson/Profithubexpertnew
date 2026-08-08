@@ -4,7 +4,6 @@
  */
 
 import ApiHelpers from '@/external/bot-skeleton/services/api/api-helpers';
-import chart_api from '@/external/bot-skeleton/services/api/chart-api';
 import type { TServices } from './types';
 
 // Logger utility for services layer
@@ -169,19 +168,7 @@ export function createServices(): TServices {
             } catch (error) {
                 logger.error('Error getting active symbols:', error);
 
-                // Fallback 1: try direct WebSocket request using chart_api
-                try {
-                    if (chart_api?.api) {
-                        const response = await chart_api.api.send({ active_symbols: 'brief' });
-                        if (response && response.active_symbols) {
-                            return response.active_symbols;
-                        }
-                    }
-                } catch (wsError) {
-                    logger.error('Direct WS active symbols retrieval failed:', wsError);
-                }
-
-                // Fallback 2: try to get from the raw active_symbols array if available
+                // Fallback: try to get from the raw active_symbols array if available
                 try {
                     const apiHelpers = ApiHelpers.instance as any;
                     if (isApiHelpersInitialized(apiHelpers) && apiHelpers.active_symbols.active_symbols) {

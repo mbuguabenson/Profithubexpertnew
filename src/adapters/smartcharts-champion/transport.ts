@@ -79,14 +79,6 @@ export function createTransport(): TTransport {
             chart_api.api
                 .send(subscribeRequest)
                 .then((response: any) => {
-                    // Check for API-level errors first
-                    if (response?.error) {
-                        logger.warn('Subscription API error:', response.error?.message || response.error?.code || 'Unknown error');
-                        // Still call callback so the chart can handle the error
-                        callback(response);
-                        return;
-                    }
-
                     const subscriptionId = response?.subscription?.id;
 
                     if (subscriptionId) {
@@ -96,15 +88,15 @@ export function createTransport(): TTransport {
                             storedSub.realSubscriptionId = subscriptionId;
                             subscriptions.set(tempId, storedSub);
                         }
-                    }
 
-                    // Call callback with initial response (even without subscription ID for history-only responses)
-                    callback(response);
+                        // Call callback with initial response
+                        callback(response);
+                    } else {
+                        logger.error('No subscription ID in response:', response);
+                    }
                 })
                 .catch((error: any) => {
-                    // API errors come as rejected promises — log but don't crash
-                    const errorMsg = error?.error?.message || error?.message || 'Unknown error';
-                    logger.warn('Subscription request failed:', errorMsg);
+                    logger.error('Subscription failed:', error);
                     // Clean up failed subscription
                     const storedSub = subscriptions.get(tempId);
                     if (storedSub?.messageSubscription) {

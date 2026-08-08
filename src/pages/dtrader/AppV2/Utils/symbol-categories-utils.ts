@@ -1,5 +1,5 @@
 import { ActiveSymbols } from '@deriv/api-types';
-import { localize } from '@deriv/translations';
+import { localize } from '@deriv-com/translations';
 import sortSymbols from './sort-symbols-utils';
 
 type SubmarketGroup = {
@@ -49,7 +49,7 @@ export const categorizeSymbols = (symbols: ActiveSymbols): Record<string, Market
         Object.keys(categorizedSymbols[market].subgroups).forEach(subgroup => {
             const submarkets = categorizedSymbols[market].subgroups[subgroup].submarkets;
             const sortedSubmarkets = Object.entries(submarkets)
-                .sort(([, a], [, b]) => a.submarket_display_name.localeCompare(b.submarket_display_name))
+                .sort(([, a], [, b]) => (a?.submarket_display_name || '').localeCompare(b?.submarket_display_name || ''))
                 .reduce(
                     (sortedAcc, [key, value]) => {
                         sortedAcc[key] = value;

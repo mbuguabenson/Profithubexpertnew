@@ -24,10 +24,13 @@ type MarketOrderMap = {
 
 // Use centralized service for submarket display names to eliminate duplication
 const getSubmarketDisplayName = (submarket: string) => {
-    return activeSymbolCategorizationService.getSubmarketDisplayName(submarket);
+    if (!submarket) return '';
+    return activeSymbolCategorizationService.getSubmarketDisplayName(submarket) || submarket || '';
 };
 
 const sortSymbols = (symbolsList: ActiveSymbols) => {
+    if (!Array.isArray(symbolsList)) return [];
+
     const marketSortingOrder = ['synthetic_index', 'forex', 'indices', 'cryptocurrency', 'commodities'];
     const marketOrderMap: MarketOrderMap = marketSortingOrder.reduce(
         (acc: MarketOrderMap, market: string, index: number) => {
@@ -40,12 +43,15 @@ const sortSymbols = (symbolsList: ActiveSymbols) => {
     // Create defensive copy to avoid mutating the original array
     // This ensures immutability and prevents side effects in calling code
     return symbolsList.slice().sort((a, b) => {
-        const marketOrderA = marketOrderMap[a.market] !== undefined ? marketOrderMap[a.market] : symbolsList.length;
-        const marketOrderB = marketOrderMap[b.market] !== undefined ? marketOrderMap[b.market] : symbolsList.length;
+        if (!a || !b) return 0;
+        const marketOrderA = a.market && marketOrderMap[a.market] !== undefined ? marketOrderMap[a.market] : symbolsList.length;
+        const marketOrderB = b.market && marketOrderMap[b.market] !== undefined ? marketOrderMap[b.market] : symbolsList.length;
         if (marketOrderA !== marketOrderB) {
             return marketOrderA - marketOrderB;
         }
-        return getSubmarketDisplayName(a.submarket).localeCompare(getSubmarketDisplayName(b.submarket));
+        const nameA = getSubmarketDisplayName(a.submarket) || a.display_name || a.symbol || '';
+        const nameB = getSubmarketDisplayName(b.submarket) || b.display_name || b.symbol || '';
+        return nameA.localeCompare(nameB);
     });
 };
 

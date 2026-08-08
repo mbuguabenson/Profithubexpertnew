@@ -66,17 +66,19 @@ export default class ChartStore {
     };
 
     updateSymbol = () => {
-        const workspace = window.Blockly.derivWorkspace;
+        const workspace = window.Blockly?.derivWorkspace;
         const market_block = workspace?.getAllBlocks().find((block: window.Blockly.Block) => {
             return block.type === 'trade_definition_market';
         });
 
         const symbol =
             market_block?.getFieldValue('SYMBOL_LIST') ??
-            (api_base?.active_symbols[0]
+            (api_base?.active_symbols?.[0]
                 ? (api_base.active_symbols[0] as any).underlying_symbol || (api_base.active_symbols[0] as any).symbol
-                : undefined);
+                : this.symbol || '1HZ10V');
         this.symbol = symbol;
+        if (!this.granularity && this.granularity !== 0) this.granularity = 0;
+        if (!this.chart_type) this.chart_type = 'line';
     };
 
     onSymbolChange = (symbol: string) => {
@@ -115,15 +117,19 @@ export default class ChartStore {
 
             if (props) {
                 const { symbol, granularity, chart_type } = JSON.parse(props);
-                this.symbol = symbol;
-                this.granularity = granularity;
-                this.chart_type = chart_type;
+                this.symbol = symbol || '1HZ10V';
+                this.granularity = granularity ?? 0;
+                this.chart_type = chart_type || 'line';
             } else {
+                this.symbol = '1HZ10V';
                 this.granularity = 0;
                 this.chart_type = 'line';
             }
         } catch {
             LocalStore.remove('bot.chart_props');
+            this.symbol = '1HZ10V';
+            this.granularity = 0;
+            this.chart_type = 'line';
         }
     };
 

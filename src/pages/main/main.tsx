@@ -55,37 +55,34 @@ const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
     const store = useStore();
 
-    // Guard: store is null during async initialization — prevents MobX crash on active_tab
-    if (!store) return null;
-
-    const { dashboard, load_modal, run_panel, quick_strategy, summary_card, blockly_store } = store;
-    const { is_loading } = blockly_store;
+    const { dashboard, load_modal, run_panel, quick_strategy, summary_card, blockly_store } = store || {};
+    const { is_loading = false } = blockly_store || {};
     const {
-        active_tab,
-        active_tour,
-        is_chart_modal_visible,
-        is_trading_view_modal_visible,
-        setActiveTab,
-        setWebSocketState,
-        setActiveTour,
-        setTourDialogVisibility,
-        setSystemCenterVisibility,
-    } = dashboard;
-    const { dashboard_strategies } = load_modal;
+        active_tab = 0,
+        active_tour = '',
+        is_chart_modal_visible = false,
+        is_trading_view_modal_visible = false,
+        setActiveTab = () => {},
+        setWebSocketState = () => {},
+        setActiveTour = () => {},
+        setTourDialogVisibility = () => {},
+        setSystemCenterVisibility = () => {},
+    } = dashboard || {};
+    const { dashboard_strategies = [] } = load_modal || {};
     const {
-        is_dialog_open,
-        is_drawer_open,
-        dialog_options,
+        is_dialog_open = false,
+        is_drawer_open = false,
+        dialog_options = {},
         onCancelButtonClick,
         onCloseDialog,
         onOkButtonClick,
-        stopBot,
-    } = run_panel;
-    const { is_open } = quick_strategy;
-    const { cancel_button_text, ok_button_text, title, message, dismissable, is_closed_on_cancel } = dialog_options as {
+        stopBot = () => {},
+    } = run_panel || {};
+    const { is_open = false } = quick_strategy || {};
+    const { cancel_button_text = '', ok_button_text = '', title = '', message = '', dismissable = false, is_closed_on_cancel = false } = (dialog_options as {
         [key: string]: string;
-    };
-    const { clear } = summary_card;
+    }) || {};
+    const { clear = () => {} } = summary_card || {};
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
     const pollTimeoutId = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -516,6 +513,8 @@ const AppWrapper = observer(() => {
         },
         [activeTabsList, setActiveTab]
     );
+
+    if (!store) return null;
 
     return (
         <React.Fragment>

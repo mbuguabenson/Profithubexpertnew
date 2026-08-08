@@ -297,7 +297,8 @@ export class ActiveSymbolCategorizationService {
      * Gets submarket display name with translation
      */
     public getSubmarketDisplayName(submarket: string): string {
-        const result = this.submarketTranslations[submarket] || submarket;
+        if (!submarket) return '';
+        const result = this.submarketTranslations[submarket] || submarket || '';
         return result;
     }
 
@@ -350,8 +351,8 @@ export class ActiveSymbolCategorizationService {
                 const submarkets = categorizedSymbols[market].subgroups[subgroup].submarkets;
                 const sortedSubmarkets = Object.entries(submarkets)
                     .sort(([, a], [, b]) =>
-                        (a as SubmarketGroup).submarket_display_name.localeCompare(
-                            (b as SubmarketGroup).submarket_display_name
+                        ((a as SubmarketGroup)?.submarket_display_name || '').localeCompare(
+                            (b as SubmarketGroup)?.submarket_display_name || ''
                         )
                     )
                     .reduce(

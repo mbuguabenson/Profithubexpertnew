@@ -602,7 +602,7 @@ export default class AnalysisStore {
                     this.updateEngineConfig();
                 }
             });
-            this.markets = Object.values(groups).sort((a, b) => a.group.localeCompare(b.group));
+            this.markets = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
         });
     };
 

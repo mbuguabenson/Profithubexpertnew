@@ -163,7 +163,7 @@ export default class DigitCrackerStore {
                 }
             });
 
-            const sorted = Object.values(groups).sort((a, b) => a.group.localeCompare(b.group));
+            const sorted = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
             this.markets = sorted.length > 0 ? sorted : this.DEFAULT_MARKETS;
         });
     };

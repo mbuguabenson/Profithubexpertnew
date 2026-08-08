@@ -20,7 +20,7 @@ const sortSymbols = (symbolsList: ActiveSymbols) => {
         if (marketOrderA !== marketOrderB) {
             return marketOrderA - marketOrderB;
         }
-        return a.submarket_display_name.localeCompare(b.submarket_display_name);
+        return (a.submarket_display_name || a.display_name || a.symbol || '').localeCompare(b.submarket_display_name || b.display_name || b.symbol || '');
     });
 };
 
