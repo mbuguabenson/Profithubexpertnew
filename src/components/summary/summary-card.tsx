@@ -15,8 +15,37 @@ import { TSummaryCardProps } from './summary-card.types';
 
 const LiveSpotWidget = observer(({ contract_info }: { contract_info?: any }) => {
     const { smart_trading, chart_store } = useStore();
-    const symbol = contract_info?.underlying_symbol || chart_store?.symbol || '1HZ100V';
-    const displayName = getSymbolDisplayNameSync(symbol) || symbol;
+
+    const [currentSymbol, setCurrentSymbol] = React.useState<string>(() => {
+        if (contract_info?.underlying_symbol) return contract_info.underlying_symbol;
+        if (typeof window !== 'undefined' && (window as any).Blockly?.derivWorkspace) {
+            const workspace = (window as any).Blockly.derivWorkspace;
+            const marketBlock = workspace.getAllBlocks(false).find((b: any) => b.type === 'trade_definition_market');
+            const blockSymbol = marketBlock?.getFieldValue('SYMBOL_LIST');
+            if (blockSymbol) return blockSymbol;
+        }
+        return chart_store?.symbol || '1HZ100V';
+    });
+
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            let symbol = contract_info?.underlying_symbol;
+            if (!symbol && typeof window !== 'undefined' && (window as any).Blockly?.derivWorkspace) {
+                const workspace = (window as any).Blockly.derivWorkspace;
+                const marketBlock = workspace.getAllBlocks(false).find((b: any) => b.type === 'trade_definition_market');
+                symbol = marketBlock?.getFieldValue('SYMBOL_LIST');
+            }
+            if (!symbol) symbol = chart_store?.symbol || '1HZ100V';
+
+            if (symbol && symbol !== currentSymbol) {
+                setCurrentSymbol(symbol);
+            }
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, [contract_info, chart_store?.symbol, currentSymbol]);
+
+    const displayName = getSymbolDisplayNameSync(currentSymbol) || currentSymbol;
 
     const [spotData, setSpotData] = React.useState<{ price: string | number; digit: number | null; direction: 'up' | 'down' | 'equal' }>({
         price: '',
@@ -27,38 +56,78 @@ const LiveSpotWidget = observer(({ contract_info }: { contract_info?: any }) => 
     const prevPriceRef = React.useRef<number | null>(null);
 
     React.useEffect(() => {
-        if (symbol && (ApiHelpers as any)?.instance?.ticks_service?.requestStream) {
-            (ApiHelpers as any).instance.ticks_service.requestStream({ symbol, style: 'ticks' }).catch(() => {});
-        }
-    }, [symbol]);
+        let key: string | null = null;
+        let isMounted = true;
 
-    React.useEffect(() => {
+        const ticksService = (ApiHelpers as any)?.instance?.ticks_service;
+
+        if (ticksService && currentSymbol) {
+            ticksService.monitor({
+                symbol: currentSymbol,
+                callback: (ticks: any[]) => {
+                    if (!isMounted || !ticks || ticks.length === 0) return;
+                    const latest = ticks[ticks.length - 1];
+                    if (latest && latest.quote !== undefined) {
+                        const currentQuote = Number(latest.quote);
+                        const prevQuote = prevPriceRef.current;
+                        const direction = prevQuote === null ? 'equal' : currentQuote > prevQuote ? 'up' : currentQuote < prevQuote ? 'down' : 'equal';
+                        prevPriceRef.current = currentQuote;
+
+                        const priceStr = String(latest.quote);
+                        const digitChar = priceStr.slice(-1);
+                        const digitNum = parseInt(digitChar);
+
+                        setSpotData({
+                            price: latest.quote,
+                            digit: !isNaN(digitNum) ? digitNum : null,
+                            direction,
+                        });
+                    }
+                },
+            }).then((listenerKey: string) => {
+                if (isMounted) key = listenerKey;
+                else if (listenerKey) ticksService.stopMonitor({ symbol: currentSymbol, key: listenerKey });
+            }).catch(() => {});
+        }
+
         const handleTickUpdate = (e: Event) => {
             const customEvent = e as CustomEvent;
             const tick = customEvent.detail;
             if (tick && tick.quote !== undefined) {
-                const currentQuote = Number(tick.quote);
-                const prevQuote = prevPriceRef.current;
-                const direction = prevQuote === null ? 'equal' : currentQuote > prevQuote ? 'up' : currentQuote < prevQuote ? 'down' : 'equal';
-                prevPriceRef.current = currentQuote;
+                const tickSymbol = tick.symbol;
+                if (!tickSymbol || tickSymbol === currentSymbol) {
+                    const currentQuote = Number(tick.quote);
+                    const prevQuote = prevPriceRef.current;
+                    const direction = prevQuote === null ? 'equal' : currentQuote > prevQuote ? 'up' : currentQuote < prevQuote ? 'down' : 'equal';
+                    prevPriceRef.current = currentQuote;
 
-                const priceStr = String(tick.quote);
-                const digitChar = priceStr.slice(-1);
-                const digitNum = parseInt(digitChar);
+                    const priceStr = String(tick.quote);
+                    const digitChar = priceStr.slice(-1);
+                    const digitNum = parseInt(digitChar);
 
-                setSpotData({
-                    price: tick.quote,
-                    digit: !isNaN(digitNum) ? digitNum : null,
-                    direction,
-                });
+                    setSpotData({
+                        price: tick.quote,
+                        digit: !isNaN(digitNum) ? digitNum : null,
+                        direction,
+                    });
+                }
             }
         };
 
         window.addEventListener('live_tick_update', handleTickUpdate);
+
         return () => {
+            isMounted = false;
             window.removeEventListener('live_tick_update', handleTickUpdate);
+            if (key && ticksService) {
+                try {
+                    ticksService.stopMonitor({ symbol: currentSymbol, key });
+                } catch {
+                    // ignore
+                }
+            }
         };
-    }, []);
+    }, [currentSymbol]);
 
     // Active contract spot fallback
     const activeSpot = contract_info?.current_spot_display_value || contract_info?.current_spot || spotData.price || smart_trading?.current_price;
