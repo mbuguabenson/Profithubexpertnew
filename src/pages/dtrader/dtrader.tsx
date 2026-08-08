@@ -6,7 +6,7 @@ import './dtrader.scss';
 
 const DTraderPage: React.FC = observer(() => {
     const appId = getAppId() || '134249';
-    const baseUrl = process.env.DTRADER_URL || 'https://dtraderphub.vercel.app';
+    const baseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
     const embedBase = baseUrl.includes('/dtrader') ? baseUrl : `${baseUrl.replace(/\/$/, '')}/dtrader`;
     const embedUrl = `${embedBase}?chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appId}&lang=EN&embed=true`;
 
