@@ -16,100 +16,52 @@ import { TSummaryCardProps } from './summary-card.types';
 const LiveSpotWidget = observer(({ contract_info }: { contract_info?: any }) => {
     const { smart_trading, chart_store } = useStore();
 
-    const [currentSymbol, setCurrentSymbol] = React.useState<string>(() => {
-        if (contract_info?.underlying_symbol) return contract_info.underlying_symbol;
-        if (typeof window !== 'undefined' && (window as any).Blockly?.derivWorkspace) {
-            const workspace = (window as any).Blockly.derivWorkspace;
-            const marketBlock = workspace.getAllBlocks(false).find((b: any) => b.type === 'trade_definition_market');
-            const blockSymbol = marketBlock?.getFieldValue('SYMBOL_LIST');
-            if (blockSymbol) return blockSymbol;
-        }
-        return chart_store?.symbol || '1HZ100V';
-    });
+    // Dynamically resolve symbol
+    let symbol = contract_info?.underlying_symbol;
+    if (!symbol && typeof window !== 'undefined' && (window as any).Blockly?.derivWorkspace) {
+        const workspace = (window as any).Blockly.derivWorkspace;
+        const marketBlock = workspace.getAllBlocks(false).find((b: any) => b.type === 'trade_definition_market');
+        symbol = marketBlock?.getFieldValue('SYMBOL_LIST');
+    }
+    if (!symbol) symbol = chart_store?.symbol || '1HZ100V';
 
-    React.useEffect(() => {
-        const interval = setInterval(() => {
-            let symbol = contract_info?.underlying_symbol;
-            if (!symbol && typeof window !== 'undefined' && (window as any).Blockly?.derivWorkspace) {
-                const workspace = (window as any).Blockly.derivWorkspace;
-                const marketBlock = workspace.getAllBlocks(false).find((b: any) => b.type === 'trade_definition_market');
-                symbol = marketBlock?.getFieldValue('SYMBOL_LIST');
-            }
-            if (!symbol) symbol = chart_store?.symbol || '1HZ100V';
+    const displayName = getSymbolDisplayNameSync(symbol) || symbol;
 
-            if (symbol && symbol !== currentSymbol) {
-                setCurrentSymbol(symbol);
-            }
-        }, 500);
-
-        return () => clearInterval(interval);
-    }, [contract_info, chart_store?.symbol, currentSymbol]);
-
-    const displayName = getSymbolDisplayNameSync(currentSymbol) || currentSymbol;
-
-    const [spotData, setSpotData] = React.useState<{ price: string | number; digit: number | null; direction: 'up' | 'down' | 'equal' }>({
-        price: '',
-        digit: null,
-        direction: 'equal',
-    });
-
-    const prevPriceRef = React.useRef<number | null>(null);
-
+    // Ensure tick stream is monitored for symbol in ticks_service background
     React.useEffect(() => {
         let key: string | null = null;
         let isMounted = true;
-
         const ticksService = (ApiHelpers as any)?.instance?.ticks_service;
 
-        if (ticksService && currentSymbol) {
+        if (ticksService && symbol) {
             ticksService.monitor({
-                symbol: currentSymbol,
+                symbol,
                 callback: (ticks: any[]) => {
                     if (!isMounted || !ticks || ticks.length === 0) return;
                     const latest = ticks[ticks.length - 1];
-                    if (latest && latest.quote !== undefined) {
-                        const currentQuote = Number(latest.quote);
-                        const prevQuote = prevPriceRef.current;
-                        const direction = prevQuote === null ? 'equal' : currentQuote > prevQuote ? 'up' : currentQuote < prevQuote ? 'down' : 'equal';
-                        prevPriceRef.current = currentQuote;
-
+                    if (latest && latest.quote !== undefined && smart_trading?.updateDigitStats) {
                         const priceStr = String(latest.quote);
-                        const digitChar = priceStr.slice(-1);
-                        const digitNum = parseInt(digitChar);
-
-                        setSpotData({
-                            price: latest.quote,
-                            digit: !isNaN(digitNum) ? digitNum : null,
-                            direction,
-                        });
+                        const digitNum = parseInt(priceStr.slice(-1));
+                        const currentTicks = smart_trading.ticks ? [...smart_trading.ticks, digitNum].slice(-50) : [digitNum];
+                        smart_trading.updateDigitStats(currentTicks, latest.quote);
                     }
                 },
             }).then((listenerKey: string) => {
                 if (isMounted) key = listenerKey;
-                else if (listenerKey) ticksService.stopMonitor({ symbol: currentSymbol, key: listenerKey });
+                else if (listenerKey) ticksService.stopMonitor({ symbol, key: listenerKey });
             }).catch(() => {});
         }
 
         const handleTickUpdate = (e: Event) => {
             const customEvent = e as CustomEvent;
             const tick = customEvent.detail;
-            if (tick && tick.quote !== undefined) {
+            if (tick && tick.quote !== undefined && smart_trading?.updateDigitStats) {
                 const tickSymbol = tick.symbol;
-                if (!tickSymbol || tickSymbol === currentSymbol) {
-                    const currentQuote = Number(tick.quote);
-                    const prevQuote = prevPriceRef.current;
-                    const direction = prevQuote === null ? 'equal' : currentQuote > prevQuote ? 'up' : currentQuote < prevQuote ? 'down' : 'equal';
-                    prevPriceRef.current = currentQuote;
-
+                if (!tickSymbol || tickSymbol === symbol) {
                     const priceStr = String(tick.quote);
-                    const digitChar = priceStr.slice(-1);
-                    const digitNum = parseInt(digitChar);
-
-                    setSpotData({
-                        price: tick.quote,
-                        digit: !isNaN(digitNum) ? digitNum : null,
-                        direction,
-                    });
+                    const digitNum = parseInt(priceStr.slice(-1));
+                    const currentTicks = smart_trading.ticks ? [...smart_trading.ticks, digitNum].slice(-50) : [digitNum];
+                    smart_trading.updateDigitStats(currentTicks, tick.quote);
                 }
             }
         };
@@ -121,19 +73,24 @@ const LiveSpotWidget = observer(({ contract_info }: { contract_info?: any }) => 
             window.removeEventListener('live_tick_update', handleTickUpdate);
             if (key && ticksService) {
                 try {
-                    ticksService.stopMonitor({ symbol: currentSymbol, key });
+                    ticksService.stopMonitor({ symbol, key });
                 } catch {
                     // ignore
                 }
             }
         };
-    }, [currentSymbol]);
+    }, [symbol, smart_trading]);
 
-    // Active contract spot fallback
-    const activeSpot = contract_info?.current_spot_display_value || contract_info?.current_spot || spotData.price || smart_trading?.current_price;
-    const activeDigit = contract_info?.current_spot_display_value 
-        ? parseInt(String(contract_info.current_spot_display_value).slice(-1)) 
-        : (spotData.digit !== null ? spotData.digit : smart_trading?.last_digit);
+    // Read spot & digit directly from MobX store / contract_info
+    const activeSpot =
+        contract_info?.current_spot_display_value ||
+        contract_info?.current_spot ||
+        smart_trading?.current_price;
+
+    const activeDigit =
+        contract_info?.current_spot_display_value !== undefined
+            ? parseInt(String(contract_info.current_spot_display_value).slice(-1))
+            : smart_trading?.last_digit;
 
     return (
         <div className='summary-live-spot-widget'>
@@ -142,18 +99,17 @@ const LiveSpotWidget = observer(({ contract_info }: { contract_info?: any }) => 
                 <span className='summary-live-spot-widget__badge'>LIVE</span>
             </div>
             <div className='summary-live-spot-widget__body'>
-                <div className={classNames('summary-live-spot-widget__price', {
-                    'summary-live-spot-widget__price--up': spotData.direction === 'up',
-                    'summary-live-spot-widget__price--down': spotData.direction === 'down',
-                })}>
-                    {activeSpot ? activeSpot : '—'}
+                <div className='summary-live-spot-widget__price'>
+                    {activeSpot !== undefined && activeSpot !== null && activeSpot !== '' ? activeSpot : '—'}
                 </div>
                 <div className='summary-live-spot-widget__digit-container'>
                     <span className='summary-live-spot-widget__digit-label'>Last Digit</span>
-                    <div className={classNames('summary-live-spot-widget__digit-badge', {
-                        'digit-badge--even': activeDigit !== null && activeDigit !== undefined && activeDigit % 2 === 0,
-                        'digit-badge--odd': activeDigit !== null && activeDigit !== undefined && activeDigit % 2 !== 0,
-                    })}>
+                    <div
+                        className={classNames('summary-live-spot-widget__digit-badge', {
+                            'digit-badge--even': activeDigit !== null && activeDigit !== undefined && !isNaN(activeDigit) && activeDigit % 2 === 0,
+                            'digit-badge--odd': activeDigit !== null && activeDigit !== undefined && !isNaN(activeDigit) && activeDigit % 2 !== 0,
+                        })}
+                    >
                         {activeDigit !== null && activeDigit !== undefined && !isNaN(activeDigit) ? activeDigit : '—'}
                     </div>
                 </div>
