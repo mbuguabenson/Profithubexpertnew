@@ -550,6 +550,32 @@ export default class ScannerStore implements IScannerStore {
     this.current_signal = null;
     this.ticks_counter = 0;
     this.symbol_analysis = {};
+    return () => {
+      this.stopScanning();
+    };
+  };
+
+  private setupLiveListeners = () => {
+    if (this.is_subscribed_to_messages || !api_base.api) return;
+
+    api_base.api.onMessage().subscribe((data: any) => {
+      if (data.msg_type === 'tick' && data.tick) {
+        const tick = data.tick;
+        const symbol = tick.symbol;
+        if (symbol === this.single_market_symbol) {
+          this.single_market_price = Number(tick.quote);
+          this.single_market_last_digit = getLastDigitFromQuote(tick.quote, symbol);
+        }
+        if (this.ticks_cache.has(symbol)) {
+          const ticks = this.ticks_cache.get(symbol)!;
+          ticks.push({ epoch: tick?.epoch || Math.floor(Date.now() / 1000), quote: tick.quote });
+          if (ticks.length > 120) {
+            ticks.shift();
+          }
+        }
+      }
+    });
+    this.is_subscribed_to_messages = true;
   };
 
   private setupMessageListener = () => {
