@@ -531,7 +531,7 @@ const AppWrapper = observer(() => {
             </div>
             <DesktopWrapper>
                 <div className='main__run-strategy-wrapper'>
-                    {active_tab !== DBOT_TABS.TRADING_BOTS && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && <RunStrategy />}
+                    {active_tab !== DBOT_TABS.TRADING_BOTS && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunStrategy />}
                     {active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunPanel />}
                 </div>
             </DesktopWrapper>
