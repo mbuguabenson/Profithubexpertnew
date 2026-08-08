@@ -201,6 +201,9 @@ export default class TicksService {
                 if (data.msg_type === 'tick') {
                     const { tick } = data;
                     const { symbol, id } = tick;
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('live_tick_update', { detail: tick }));
+                    }
                     if (this.ticks.has(symbol)) {
                         this.subscriptions = this.subscriptions.setIn(['tick', symbol], id);
                         this.updateTicksAndCallListeners(symbol, updateTicks(this.ticks.get(symbol), parseTick(tick)));

@@ -38,25 +38,68 @@
         width: 100%;
         margin-bottom: 4rem;
 
-        @media (width <= 768px) {
+    @media (width <= 768px) {
+        padding: 0.8rem 0.6rem !important;
+        border-radius: 1.4rem !important;
+        margin-top: 0.4rem !important;
+        margin-bottom: 1rem !important;
+
+        .distribution-title-group {
+            margin-bottom: 1.2rem !important;
+
+            .distribution-title {
+                font-size: 1.2rem !important;
+                margin-bottom: 0.4rem !important;
+            }
+
+            .distribution-title-underline {
+                width: 40px !important;
+                height: 2px !important;
+            }
+        }
+
+        .circles-row {
             display: grid !important;
             grid-template-columns: repeat(5, 1fr) !important;
-            gap: 12px !important;
+            gap: 6px !important;
             padding: 0 !important;
+            margin-bottom: 1.2rem !important;
 
             .digit-item-container {
                 width: 100% !important;
-                
+                gap: 0.4rem !important;
+
                 .digit-ring {
-                    width: 6rem !important;
-                    height: 6rem !important;
+                    width: 3.6rem !important;
+                    height: 3.6rem !important;
                     margin: 0 auto;
-                    
-                    .digit-val { font-size: 1.8rem !important; }
-                    .digit-pct-inner { font-size: 0.9rem !important; }
+
+                    .digit-val {
+                        font-size: 1.2rem !important;
+                    }
+
+                    .digit-pct-inner {
+                        font-size: 0.75rem !important;
+                    }
                 }
             }
         }
+
+        .distribution-legend-v2 {
+            gap: 1.2rem !important;
+            padding: 0.6rem 1.4rem !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+
+            .legend-label {
+                font-size: 0.95rem !important;
+            }
+
+            .legend-digit {
+                font-size: 1.1rem !important;
+            }
+        }
+    }
     }
 
     .digit-item-container {

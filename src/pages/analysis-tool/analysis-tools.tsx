@@ -7,6 +7,7 @@ import CirclesAnalysis from '../circles-analysis';
 import DigitCracker from '../digit-cracker';
 import DCirclesPage from '../dcircles/dcircles';
 import DpTools from '../dp-tools/dp-tools';
+import MatchesTab from '../smart-trading/components/matches-tab';
 import { useStore } from '@/hooks/useStore';
 import { ApiHelpers } from '@/external/bot-skeleton';
 import './analysis-tools.scss';
@@ -19,7 +20,8 @@ type AnalysisToolSubTab =
     | 'circles-analysis'
     | 'digit-cracker'
     | 'dcircles'
-    | 'xenon-tool';
+    | 'xenon-tool'
+    | 'matches-killer';
 
 const AnalysisTools: React.FC = () => {
     const { run_panel } = useStore();
@@ -670,6 +672,8 @@ const AnalysisTools: React.FC = () => {
                 return <DCirclesPage />;
             case 'xenon-tool':
                 return <DpTools />;
+            case 'matches-killer':
+                return <MatchesTab />;
             default:
                 return null;
         }
@@ -693,6 +697,14 @@ const AnalysisTools: React.FC = () => {
                     >
                         <div className='analysis-tools__card-content'>
                             <span className='analysis-tools__card-label'>All Markets</span>
+                        </div>
+                    </div>
+                    <div
+                        className={`analysis-tools__card analysis-tools__card--light ${active_tool === 'matches-killer' ? 'analysis-tools__card--active' : ''}`}
+                        onClick={() => handleCardClick('matches-killer')}
+                    >
+                        <div className='analysis-tools__card-content'>
+                            <span className='analysis-tools__card-label'>Matches Killer</span>
                         </div>
                     </div>
                     <div
