@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Play, Square, Loader2, Zap } from 'lucide-react';
-import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
 import { generateBotXML } from '@/utils/bot-xml-generator';
 
 interface AutoHunterBotModalProps {
@@ -65,14 +64,8 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
 
   const handleStart = async () => {
     setIsRunning(true);
-    setIsSearching(true);
-    setCurrentStake(stake);
-    setTotalTrades(0);
-    setWins(0);
-    setLosses(0);
-    setNetProfit(0);
-    setStatusMessage('Importing strategy XML bot & launching autotrading...');
-    addLog(`🚀 Auto-Hunter Bot started on ${symbolName} (${selectedTradeType})`);
+    setStatusMessage('Generating & importing advanced XML bot to Bot Builder...');
+    addLog(`🚀 Auto-Hunter Bot launching on ${symbolName} (${selectedTradeType})`);
     addLog(`Target TP: +$${takeProfit} | Target SL: -$${stopLoss} | Initial Stake: $${stake}`);
 
     try {
@@ -81,7 +74,7 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
         takeProfit,
         stopLoss,
         martingale,
-        symbol,
+        symbol: symbol || '1HZ100V',
         tradeTypeLabel: strategyLabel || 'Even / Odd',
         bestSignal: strategyId.toUpperCase(),
       });
@@ -98,13 +91,20 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
           save_type: 'local',
           timestamp: Date.now(),
         });
+        
+        // Close modal and switch to Bot Builder
+        onClose();
         dashboard.setActiveTab(1);
+
+        // Start autotrading on the real TradeEngine
         setTimeout(() => {
           run_panel?.onRunButtonClick();
-        }, 300);
+        }, 400);
       }
     } catch (e) {
       console.error('Failed to import strategy XML from AutoHunterBotModal:', e);
+      setStatusMessage('Failed to launch bot on Bot Builder');
+      setIsRunning(false);
     }
   };
 
@@ -115,91 +115,6 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
     setStatusMessage('Bot stopped by user');
     addLog('🛑 Auto-Hunter Bot stopped by user', 'warn');
   };
-
-  // Automated Entry Condition Monitoring Loop
-  useEffect(() => {
-    if (!isRunning || isExecuting) return;
-
-    const interval = setInterval(async () => {
-      if (!isRunningRef.current || isExecuting) return;
-
-      // Simulated strategy trigger condition check (or high-confidence tick breach)
-      const shouldTriggerTrade = Math.random() > 0.65;
-
-      if (shouldTriggerTrade) {
-        setIsExecuting(true);
-        setIsSearching(false);
-        setStatusMessage(`Entry point detected! Placing ${selectedTradeType} trade for $${currentStake.toFixed(2)}...`);
-        addLog(`⚡ Entry signal confirmed on ${symbol}! Purchasing ${selectedTradeType}...`);
-
-        try {
-          // Prepare parameters for trade
-          const parameters = {
-            amount: currentStake,
-            basis: 'stake',
-            contract_type: selectedTradeType,
-            currency: 'USD',
-            duration: 1,
-            duration_unit: 't',
-            symbol: symbol || 'R_100',
-          };
-
-          const buyResult = await buyContractForUi({
-            parameters,
-            price: currentStake,
-            source: 'MarketHunterProAutoBot'
-          });
-
-          if (buyResult?.contract_id) {
-            addLog(`Contract purchased (#${buyResult.contract_id}). Streaming tick settlement...`);
-            
-            const settlement = await streamContractUntilSettled({ contractId: Number(buyResult.contract_id), source: 'MarketHunterProAutoBot' });
-            const profit = settlement?.profit ?? 0;
-            const isWin = profit > 0;
-
-            setTotalTrades(t => t + 1);
-            if (isWin) {
-              setWins(w => w + 1);
-              setNetProfit(p => +(p + profit).toFixed(2));
-              addLog(`🎉 Trade WON! Profit: +$${profit.toFixed(2)}`, 'win');
-              setCurrentStake(stake); // Reset stake on win
-            } else {
-              setLosses(l => l + 1);
-              setNetProfit(p => +(p + profit).toFixed(2));
-              addLog(`❌ Trade LOST. Loss: -$${Math.abs(profit).toFixed(2)}`, 'loss');
-              // Apply Martingale
-              const nextStake = +(currentStake * martingale).toFixed(2);
-              setCurrentStake(nextStake);
-              addLog(`📈 Martingale applied. Next stake: $${nextStake.toFixed(2)}`, 'warn');
-            }
-
-            // Check Safety Limits
-            const updatedNetProfit = netProfit + profit;
-            if (updatedNetProfit >= takeProfit) {
-              addLog(`🏆 TAKE PROFIT TARGET REACHED (+${updatedNetProfit.toFixed(2)})! Stopping Bot.`, 'win');
-              handleStop();
-              return;
-            }
-            if (Math.abs(updatedNetProfit) >= stopLoss && updatedNetProfit < 0) {
-              addLog(`🚨 STOP LOSS TARGET REACHED (-${Math.abs(updatedNetProfit).toFixed(2)})! Stopping Bot.`, 'warn');
-              handleStop();
-              return;
-            }
-          }
-        } catch (e: any) {
-          addLog(`Error executing trade: ${e?.message || e}`, 'warn');
-        } finally {
-          setIsExecuting(false);
-          if (isRunningRef.current) {
-            setIsSearching(true);
-            setStatusMessage('Searching for next high-probability entry point...');
-          }
-        }
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [isRunning, isExecuting, currentStake, symbol, selectedTradeType, stake, martingale, takeProfit, stopLoss, netProfit]);
 
   if (!isOpen) return null;
 
