@@ -142,7 +142,7 @@ export const buyContractForUi = async ({ parameters, price, source }: TBuyContra
         if (proposal_error instanceof InsufficientDemoBalanceError) {
             throw proposal_error;
         }
-        console.warn(`[${source}] Proposal buy failed, retrying with direct buy.`, proposal_error);
+        console.info(`[${source}] Proposal buy notice, using direct buy fallback.`);
     }
 
     assertSufficientDemoBalance(price, source);
