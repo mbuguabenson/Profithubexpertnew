@@ -198,19 +198,29 @@ export default class TransactionsStore {
             };
         }
 
-        const same_contract_index = this.elements[current_account]?.findIndex(c => {
-            if (typeof c.data === 'string') return false;
-            return (
-                c.type === transaction_elements.CONTRACT &&
-                c.data?.transaction_ids &&
-                c.data.transaction_ids.buy === data.transaction_ids?.buy
-            );
+        const incoming_contract_id = (data as any).contract_id || (data as any).id || (data as any).transaction_id;
+        const incoming_buy_id = data.transaction_ids?.buy;
+
+        const account_elements = this.elements[current_account] || [];
+        const same_contract_index = account_elements.findIndex(c => {
+            if (typeof c.data === 'string' || c.type !== transaction_elements.CONTRACT) return false;
+            const cData = c.data as TContractInfo;
+            const existing_contract_id = (cData as any).contract_id || (cData as any).id || (cData as any).transaction_id;
+            const existing_buy_id = cData.transaction_ids?.buy;
+
+            if (incoming_contract_id && existing_contract_id) {
+                return String(incoming_contract_id) === String(existing_contract_id);
+            }
+            if (incoming_buy_id && existing_buy_id) {
+                return String(incoming_buy_id) === String(existing_buy_id);
+            }
+            return false;
         });
 
         if (same_contract_index === -1) {
             // Render a divider if the "run_id" for this contract is different.
-            if (this.elements[current_account]?.length > 0) {
-                const temp_contract = this.elements[current_account]?.[0];
+            if (account_elements.length > 0) {
+                const temp_contract = account_elements[0];
                 const is_contract = temp_contract.type === transaction_elements.CONTRACT;
                 const is_new_run =
                     is_contract &&
@@ -218,26 +228,38 @@ export default class TransactionsStore {
                     contract.run_id !== temp_contract?.data?.run_id;
 
                 if (is_new_run) {
-                    this.elements[current_account]?.unshift({
+                    account_elements.unshift({
                         type: transaction_elements.DIVIDER,
                         data: contract.run_id,
                     });
                 }
             }
 
-            this.elements[current_account]?.unshift({
+            account_elements.unshift({
                 type: transaction_elements.CONTRACT,
                 data: contract,
             });
+
+            // Limit history to 500 items for maximum UI speed & responsiveness
+            if (account_elements.length > 500) {
+                account_elements.length = 500;
+            }
         } else {
-            // If data belongs to existing contract in memory, update it.
-            this.elements[current_account]?.splice(same_contract_index, 1, {
-                type: transaction_elements.CONTRACT,
-                data: contract,
-            });
+            // Update existing contract data in-place
+            const existing = account_elements[same_contract_index];
+            account_elements[same_contract_index] = {
+                ...existing,
+                data: {
+                    ...(typeof existing.data === 'object' ? existing.data : {}),
+                    ...contract,
+                },
+            };
         }
 
-        this.elements = { ...this.elements }; // force update
+        this.elements = {
+            ...this.elements,
+            [current_account]: [...account_elements],
+        };
     }
 
     clear() {
