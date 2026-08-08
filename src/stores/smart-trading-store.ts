@@ -953,7 +953,6 @@ export default class SmartTradingStore {
                 });
             } catch (err: any) {
                 if (err.error?.code === 'AlreadySubscribed') {
-                    // Fallback: fetch history without subscribing
                     response = await api_base.api.send({
                         ticks_history: this.symbol,
                         count: 1000,
@@ -965,12 +964,18 @@ export default class SmartTradingStore {
                 }
             }
 
-            if (response.subscription?.id) {
-                this.active_stream_id = response.subscription.id;
+            if (response?.error?.code === 'AlreadySubscribed') {
+                response = await api_base.api.send({
+                    ticks_history: this.symbol,
+                    count: 1000,
+                    end: 'latest',
+                    style: 'ticks',
+                });
             }
 
-            if (response.error) {
-                throw new Error(response.error.message);
+            if (response?.error) {
+                console.warn(`[SmartTrading] Subscription warning for ${this.symbol}:`, response.error.message);
+                return;
             }
 
             // Handle initial history

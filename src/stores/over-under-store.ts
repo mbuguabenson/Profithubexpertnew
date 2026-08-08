@@ -156,9 +156,11 @@ export default class OverUnderStore {
             });
 
             // Start real-time stream
-            api_base.api.send({ ticks: this.symbol, subscribe: 1 }).catch((e: any) =>
-                console.warn('[OverUnderStore] ticks subscribe error:', e)
-            );
+            api_base.api.send({ ticks: this.symbol, subscribe: 1 }).catch((e: any) => {
+                if (e?.error?.code !== 'AlreadySubscribed') {
+                    console.warn('[OverUnderStore] ticks subscribe error:', e);
+                }
+            });
 
             // Initial historical data
             api_base.api.send({
@@ -166,9 +168,11 @@ export default class OverUnderStore {
                 count: 100,
                 end: 'latest',
                 style: 'ticks',
-            }).catch((e: any) =>
-                console.warn('[OverUnderStore] ticks_history error:', e)
-            );
+            }).catch((e: any) => {
+                if (e?.error?.code !== 'AlreadySubscribed') {
+                    console.warn('[OverUnderStore] ticks_history error:', e);
+                }
+            });
 
             // Auto-retry: if no data arrives within 8 seconds, re-subscribe
             setTimeout(() => {
