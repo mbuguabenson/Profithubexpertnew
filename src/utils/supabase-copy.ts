@@ -314,10 +314,11 @@ export const getDefaultTabConfig = (): TabConfigItem[] => [
     { key: 'multi_trader', label: 'Multi Trader', enabled: true, order: 14 },
     { key: 'ai_trading_engine', label: 'AI Trading Engine 🤖', enabled: true, order: 15 },
     { key: 'market_hunter_pro', label: 'Market Hunter Pro', enabled: true, order: 16 },
+    { key: 'dtrader', label: 'DTrader', enabled: true, order: 17 },
 ];
 
 // Bump this when new tabs are added to force clients to pick up new defaults
-const TAB_CONFIG_VERSION = 11;
+const TAB_CONFIG_VERSION = 12;
 
 export const getSiteConfig = (): SiteConfig => {
     try {
