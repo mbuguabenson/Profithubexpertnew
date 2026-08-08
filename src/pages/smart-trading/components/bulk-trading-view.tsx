@@ -81,8 +81,12 @@ const BulkTradingView = observer(() => {
                             <label>Stake:</label>
                             <input
                                 type='number'
-                                value={speedbot_stake}
-                                onChange={e => (smart_trading.speedbot_stake = parseFloat(e.target.value))}
+                                value={isNaN(speedbot_stake) || speedbot_stake === 0 ? '' : speedbot_stake}
+                                placeholder='1'
+                                onChange={e => {
+                                    const val = parseFloat(e.target.value);
+                                    smart_trading.speedbot_stake = isNaN(val) ? 0 : val;
+                                }}
                             />
                         </div>
 
@@ -99,8 +103,12 @@ const BulkTradingView = observer(() => {
                             <label>Take Profit ($):</label>
                             <input
                                 type='number'
-                                value={take_profit}
-                                onChange={e => (smart_trading.take_profit = parseFloat(e.target.value))}
+                                value={isNaN(take_profit) || take_profit === 0 ? '' : take_profit}
+                                placeholder='10'
+                                onChange={e => {
+                                    const val = parseFloat(e.target.value);
+                                    smart_trading.take_profit = isNaN(val) ? 0 : val;
+                                }}
                             />
                         </div>
 
@@ -108,15 +116,19 @@ const BulkTradingView = observer(() => {
                             <label>Stop Loss ($):</label>
                             <input
                                 type='number'
-                                value={stop_loss}
-                                onChange={e => (smart_trading.stop_loss = parseFloat(e.target.value))}
+                                value={isNaN(stop_loss) || stop_loss === 0 ? '' : stop_loss}
+                                placeholder='10'
+                                onChange={e => {
+                                    const val = parseFloat(e.target.value);
+                                    smart_trading.stop_loss = isNaN(val) ? 0 : val;
+                                }}
                             />
                         </div>
 
                         <div className='bot-stat'>
                             <span className='label'>$ P/L:</span>
                             <span className={`value ${session_pl >= 0 ? 'profit' : 'loss'}`}>
-                                ${session_pl.toFixed(2)}
+                                ${isNaN(session_pl) ? '0.00' : session_pl.toFixed(2)}
                             </span>
                         </div>
 
@@ -160,9 +172,13 @@ const BulkTradingView = observer(() => {
                             <label>Multiplier:</label>
                             <input
                                 type='number'
-                                value={martingale_multiplier}
+                                value={isNaN(martingale_multiplier) ? '' : martingale_multiplier}
                                 step='0.05'
-                                onChange={e => (smart_trading.martingale_multiplier = parseFloat(e.target.value))}
+                                placeholder='2'
+                                onChange={e => {
+                                    const val = parseFloat(e.target.value);
+                                    smart_trading.martingale_multiplier = isNaN(val) ? 1 : val;
+                                }}
                             />
                         </div>
                     </div>

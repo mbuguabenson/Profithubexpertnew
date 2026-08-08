@@ -1376,16 +1376,24 @@ export default class SmartTradingStore {
         }
 
         // Check TP/SL
-        if (this.enable_tp_sl) {
-            if (this.session_pl >= this.take_profit || this.session_pl <= -this.stop_loss) {
-                this.toggleSpeedbot();
+        if (this.enable_tp_sl || (this.take_profit > 0 && this.session_pl >= this.take_profit) || (this.stop_loss > 0 && this.session_pl <= -this.stop_loss)) {
+            if ((this.take_profit > 0 && this.session_pl >= this.take_profit) || (this.stop_loss > 0 && this.session_pl <= -this.stop_loss)) {
+                runInAction(() => {
+                    this.is_speedbot_running = false;
+                    this.is_bulk_trading = false;
+                    this.is_executing = false;
+                });
                 return;
             }
         }
 
         // Check Max Consecutive Losses
         if (this.is_max_loss_enabled && this.consecutive_losses >= this.max_consecutive_losses) {
-            this.toggleSpeedbot();
+            runInAction(() => {
+                this.is_speedbot_running = false;
+                this.is_bulk_trading = false;
+                this.is_executing = false;
+            });
             return;
         }
 
@@ -1594,7 +1602,16 @@ export default class SmartTradingStore {
 
     @action
     executeBulkTrade = async () => {
-        if (!this.root_store.common.is_socket_opened || this.is_bulk_trading) return;
+        if (!this.root_store.common.is_socket_opened) return;
+
+        if (this.is_bulk_trading || this.is_speedbot_running) {
+            runInAction(() => {
+                this.is_bulk_trading = false;
+                this.is_speedbot_running = false;
+                this.is_executing = false;
+            });
+            return;
+        }
 
         if (!this.root_store.client.is_logged_in) {
             this.root_store.run_panel.showLoginDialog();
@@ -1603,25 +1620,13 @@ export default class SmartTradingStore {
 
         runInAction(() => {
             this.is_bulk_trading = true;
-            this.is_speedbot_running = true; // Visual feedback
+            this.is_speedbot_running = true;
+            this.current_stake = Number(this.speedbot_stake) || 1;
+            this.consecutive_losses = 0;
+            this.session_pl = 0;
         });
 
-        const count = this.number_of_contracts;
-        const promises = [];
-
-        for (let i = 0; i < count; i++) {
-            // Wait slightly between trades to avoid rate limiting or overlap issues if needed
-            // But usually, user wants "speed", so we can fire them off almost simultaneously
-            promises.push(this.executeSpeedTrade());
-            // Small delay to ensure order in some contexts
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-
-        await Promise.all(promises);
-
-        runInAction(() => {
-            this.is_bulk_trading = false;
-        });
+        void this.executeSpeedTrade();
     };
 
     @action
