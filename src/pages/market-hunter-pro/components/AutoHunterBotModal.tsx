@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Play, Square, Loader2, TrendingUp, TrendingDown, Zap, Shield, Target, AlertCircle, CheckCircle } from 'lucide-react';
 import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
+import { generateBotXML } from '@/utils/bot-xml-generator';
 
 interface AutoHunterBotModalProps {
   isOpen: boolean;
@@ -62,7 +63,7 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
     setLogs(prev => [{ id: Math.random().toString(36).substring(2, 9), time, msg, type }, ...prev.slice(0, 49)]);
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     setIsRunning(true);
     setIsSearching(true);
     setCurrentStake(stake);
@@ -70,9 +71,41 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
     setWins(0);
     setLosses(0);
     setNetProfit(0);
-    setStatusMessage('Scanning market ticks for high-probability entry point...');
+    setStatusMessage('Importing strategy XML bot & launching autotrading...');
     addLog(`🚀 Auto-Hunter Bot started on ${symbolName} (${selectedTradeType})`);
     addLog(`Target TP: +$${takeProfit} | Target SL: -$${stopLoss} | Initial Stake: $${stake}`);
+
+    try {
+      const xml = generateBotXML({
+        stake,
+        takeProfit,
+        stopLoss,
+        martingale,
+        symbol,
+        tradeTypeLabel: strategyLabel || 'Even / Odd',
+        bestSignal: strategyId.toUpperCase(),
+      });
+
+      const store = (window as any).dbot_store || (window as any).store;
+      const { load_modal, dashboard, run_panel } = store ?? {};
+      const name = `AutoHunter_${strategyId}_${symbol}`;
+
+      if (load_modal && dashboard) {
+        await load_modal.loadStrategyToBuilder({
+          id: name,
+          name,
+          xml,
+          save_type: 'local',
+          timestamp: Date.now(),
+        });
+        dashboard.setActiveTab(1);
+        setTimeout(() => {
+          run_panel?.onRunButtonClick();
+        }, 300);
+      }
+    } catch (e) {
+      console.error('Failed to import strategy XML from AutoHunterBotModal:', e);
+    }
   };
 
   const handleStop = () => {

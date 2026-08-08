@@ -13,111 +13,6 @@ import { getCardLabels } from '../shared';
 import ContractCard from '../shared_ui/contract-card';
 import { TSummaryCardProps } from './summary-card.types';
 
-const LiveSpotWidget = observer(({ contract_info }: { contract_info?: any }) => {
-    const { smart_trading, chart_store } = useStore();
-
-    // Dynamically resolve symbol
-    let symbol = contract_info?.underlying_symbol;
-    if (!symbol && typeof window !== 'undefined' && (window as any).Blockly?.derivWorkspace) {
-        const workspace = (window as any).Blockly.derivWorkspace;
-        const marketBlock = workspace.getAllBlocks(false).find((b: any) => b.type === 'trade_definition_market');
-        symbol = marketBlock?.getFieldValue('SYMBOL_LIST');
-    }
-    if (!symbol) symbol = chart_store?.symbol || '1HZ100V';
-
-    const displayName = getSymbolDisplayNameSync(symbol) || symbol;
-
-    // Ensure tick stream is monitored for symbol in ticks_service background
-    React.useEffect(() => {
-        let key: string | null = null;
-        let isMounted = true;
-        const ticksService = (ApiHelpers as any)?.instance?.ticks_service;
-
-        if (ticksService && symbol) {
-            ticksService.monitor({
-                symbol,
-                callback: (ticks: any[]) => {
-                    if (!isMounted || !ticks || ticks.length === 0) return;
-                    const latest = ticks[ticks.length - 1];
-                    if (latest && latest.quote !== undefined && smart_trading?.updateDigitStats) {
-                        const priceStr = String(latest.quote);
-                        const digitNum = parseInt(priceStr.slice(-1));
-                        const currentTicks = smart_trading.ticks ? [...smart_trading.ticks, digitNum].slice(-50) : [digitNum];
-                        smart_trading.updateDigitStats(currentTicks, latest.quote);
-                    }
-                },
-            }).then((listenerKey: string) => {
-                if (isMounted) key = listenerKey;
-                else if (listenerKey) ticksService.stopMonitor({ symbol, key: listenerKey });
-            }).catch(() => {});
-        }
-
-        const handleTickUpdate = (e: Event) => {
-            const customEvent = e as CustomEvent;
-            const tick = customEvent.detail;
-            if (tick && tick.quote !== undefined && smart_trading?.updateDigitStats) {
-                const tickSymbol = tick.symbol;
-                if (!tickSymbol || tickSymbol === symbol) {
-                    const priceStr = String(tick.quote);
-                    const digitNum = parseInt(priceStr.slice(-1));
-                    const currentTicks = smart_trading.ticks ? [...smart_trading.ticks, digitNum].slice(-50) : [digitNum];
-                    smart_trading.updateDigitStats(currentTicks, tick.quote);
-                }
-            }
-        };
-
-        window.addEventListener('live_tick_update', handleTickUpdate);
-
-        return () => {
-            isMounted = false;
-            window.removeEventListener('live_tick_update', handleTickUpdate);
-            if (key && ticksService) {
-                try {
-                    ticksService.stopMonitor({ symbol, key });
-                } catch {
-                    // ignore
-                }
-            }
-        };
-    }, [symbol, smart_trading]);
-
-    // Read spot & digit directly from MobX store / contract_info
-    const activeSpot =
-        contract_info?.current_spot_display_value ||
-        contract_info?.current_spot ||
-        smart_trading?.current_price;
-
-    const activeDigit =
-        contract_info?.current_spot_display_value !== undefined
-            ? parseInt(String(contract_info.current_spot_display_value).slice(-1))
-            : smart_trading?.last_digit;
-
-    return (
-        <div className='summary-live-spot-widget'>
-            <div className='summary-live-spot-widget__header'>
-                <span className='summary-live-spot-widget__symbol'>{displayName}</span>
-                <span className='summary-live-spot-widget__badge'>LIVE</span>
-            </div>
-            <div className='summary-live-spot-widget__body'>
-                <div className='summary-live-spot-widget__price'>
-                    {activeSpot !== undefined && activeSpot !== null && activeSpot !== '' ? activeSpot : '—'}
-                </div>
-                <div className='summary-live-spot-widget__digit-container'>
-                    <span className='summary-live-spot-widget__digit-label'>Last Digit</span>
-                    <div
-                        className={classNames('summary-live-spot-widget__digit-badge', {
-                            'digit-badge--even': activeDigit !== null && activeDigit !== undefined && !isNaN(activeDigit) && activeDigit % 2 === 0,
-                            'digit-badge--odd': activeDigit !== null && activeDigit !== undefined && !isNaN(activeDigit) && activeDigit % 2 !== 0,
-                        })}
-                    >
-                        {activeDigit !== null && activeDigit !== undefined && !isNaN(activeDigit) ? activeDigit : '—'}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-});
-
 const SummaryCard = observer(({ contract_info, is_contract_loading, is_bot_running }: TSummaryCardProps) => {
     const { summary_card, run_panel, ui, common } = useStore();
     const { is_contract_completed, is_contract_inactive, is_multiplier, is_accumulator, setIsBotRunning } =
@@ -208,7 +103,6 @@ const SummaryCard = observer(({ contract_info, is_contract_loading, is_bot_runni
             })}
             data-testid='dt_mock_summary_card'
         >
-            <LiveSpotWidget contract_info={contract_info} />
             {is_contract_loading && !is_bot_running && <ContractCardLoader speed={2} />}
             {is_bot_running && <ContractCardLoader speed={2} contract_stage={contract_stage} />}
             {!is_contract_loading && contract_info && !is_bot_running && (

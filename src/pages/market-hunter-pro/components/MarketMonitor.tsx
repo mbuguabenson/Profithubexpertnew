@@ -492,13 +492,27 @@ export default function MarketMonitor({
               const file = e.target.files?.[0];
               if (!file) return;
               const reader = new FileReader();
-              reader.onload = (ev) => {
+              reader.onload = async (ev) => {
                 const text = String(ev.target?.result ?? '');
                 try {
-                  new DOMParser().parseFromString(text, 'application/xml');
-                  alert(`XML loaded: ${file.name}`);
-                } catch {
-                  alert('Invalid XML file');
+                  const store = (window as any).dbot_store || (window as any).store;
+                  const { load_modal, dashboard, run_panel } = store ?? {};
+                  const name = file.name.replace('.xml', '');
+                  if (load_modal && dashboard) {
+                    await load_modal.loadStrategyToBuilder({
+                      id: name,
+                      name,
+                      xml: text,
+                      save_type: 'local',
+                      timestamp: Date.now(),
+                    });
+                    dashboard.setActiveTab(1);
+                    setTimeout(() => {
+                      run_panel?.onRunButtonClick();
+                    }, 300);
+                  }
+                } catch (err) {
+                  console.error('Failed to import XML bot:', err);
                 }
               };
               reader.readAsText(file);
@@ -617,13 +631,27 @@ export default function MarketMonitor({
             const file = e.target.files?.[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = async (ev) => {
               const text = String(ev.target?.result ?? '');
               try {
-                new DOMParser().parseFromString(text, 'application/xml');
-                alert(`XML loaded: ${file.name}`);
-              } catch {
-                alert('Invalid XML file');
+                const store = (window as any).dbot_store || (window as any).store;
+                const { load_modal, dashboard, run_panel } = store ?? {};
+                const name = file.name.replace('.xml', '');
+                if (load_modal && dashboard) {
+                  await load_modal.loadStrategyToBuilder({
+                    id: name,
+                    name,
+                    xml: text,
+                    save_type: 'local',
+                    timestamp: Date.now(),
+                  });
+                  dashboard.setActiveTab(1);
+                  setTimeout(() => {
+                    run_panel?.onRunButtonClick();
+                  }, 300);
+                }
+              } catch (err) {
+                console.error('Failed to import XML bot:', err);
               }
             };
             reader.readAsText(file);

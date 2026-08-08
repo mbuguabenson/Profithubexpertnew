@@ -1148,7 +1148,41 @@ export default function Scanner() {
                   setSelectedSymbol(symId);
                   setActiveTab('scanner');
                 }}
-                onLoadBot={(symId, symName, stratId) => {
+                onLoadBot={async (symId, symName, stratId) => {
+                  try {
+                    const tradeTypeLabel = stratId === 'even_odd' ? 'Even / Odd' : stratId === 'over_under' ? 'Over / Under' : stratId === 'matches' ? 'Matches' : 'Differs';
+                    const xml = generateBotXML({
+                      stake: 1,
+                      takeProfit: 10,
+                      stopLoss: 5,
+                      martingale: 2,
+                      symbol: symId,
+                      tradeTypeLabel,
+                      bestSignal: stratId.toUpperCase(),
+                    });
+
+                    const dbStore = (window as any).dbot_store || (window as any).store;
+                    const { load_modal, dashboard, run_panel } = dbStore ?? {};
+                    const name = `MarketHunter_${stratId}_${symId}`;
+
+                    if (load_modal && dashboard) {
+                      await load_modal.loadStrategyToBuilder({
+                        id: name,
+                        name,
+                        xml,
+                        save_type: 'local',
+                        timestamp: Date.now(),
+                      });
+                      dashboard.setActiveTab(1);
+                      setTimeout(() => {
+                        run_panel?.onRunButtonClick();
+                      }, 300);
+                      return;
+                    }
+                  } catch (e) {
+                    console.error('Failed to auto-import strategy XML from MarketMonitor:', e);
+                  }
+
                   setBotSymbol(symId);
                   setBotSymbolName(symName);
                   setBotStrategyId(stratId);
