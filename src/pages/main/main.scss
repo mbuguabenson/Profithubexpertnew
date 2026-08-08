@@ -81,6 +81,13 @@
             }
         }
 
+        &--drawer-open {
+            @include desktop-screen {
+                padding-inline-end: 38rem;
+                transition: padding 0.3s ease;
+            }
+        }
+
         .dc-tabs {
             height: 100% !important;
             flex: 1 !important;

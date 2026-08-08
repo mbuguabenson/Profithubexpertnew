@@ -16,7 +16,8 @@ import './scanner.scss';
 type TTickPoint = { epoch: number; quote: number };
 
 type TScannerStrategy =
-    | 'Matches & Differs'
+    | 'Matches'
+    | 'Differs'
     | 'Even & Odd'
     | 'Over & Under'
     | 'Rise & Fall'
@@ -74,7 +75,8 @@ const MARKETS = [
 ] as const;
 
 const STRATEGIES: TScannerStrategy[] = [
-    'Matches & Differs',
+    'Matches',
+    'Differs',
     'Even & Odd',
     'Over & Under',
     'Rise & Fall',
@@ -153,19 +155,30 @@ const computeAccuracy = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol
     const digits = window.map(t => getLastDigitFromQuote(t.quote, symbol));
     const total = digits.length;
 
-    if (strategy === 'Matches & Differs') {
+    if (strategy === 'Matches') {
         const counts: Record<number, number> = {};
         for (const d of digits) counts[d] = (counts[d] || 0) + 1;
         const maxCount = Math.max(...Object.values(counts));
         return Number(((maxCount / total) * 100).toFixed(1));
+    }
+    if (strategy === 'Differs') {
+        const counts: Record<number, number> = {};
+        for (const d of digits) counts[d] = (counts[d] || 0) + 1;
+        const minCount = Math.min(...Object.values(counts));
+        return Number((((total - minCount) / total) * 100).toFixed(1));
     }
     if (strategy === 'Even & Odd') {
         const evenCount = digits.filter(d => d % 2 === 0).length;
         return Number((Math.max(evenCount, total - evenCount) / total * 100).toFixed(1));
     }
     if (strategy === 'Over & Under') {
-        const overCount = digits.filter(d => d <= 4).length;
-        return Number((Math.max(overCount, total - overCount) / total * 100).toFixed(1));
+        const last7 = digits.slice(-7);
+        if (last7.length < 7) return 0;
+        const allUnder = last7.every(d => d <= 4);
+        const allOver = last7.every(d => d >= 5);
+        if (allUnder) return Number((digits.filter(d => d <= 4).length / total * 100).toFixed(1));
+        if (allOver) return Number((digits.filter(d => d >= 5).length / total * 100).toFixed(1));
+        return 0;
     }
     // Directional
     let ups = 0;
@@ -182,20 +195,53 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
     const sampleSize = Math.max(digits.length, 1);
     const lines: string[] = [`Analysis over last ${window.length} ticks`];
     let signal: TScannerSignal = { contractType: 'DIGITDIFF', label: 'Differs 0', barrier: '0', confidence: 0 };
+    let excludedDigits: number[] = [];
+    let differsTargetPrevCount = 0;
 
-    if (strategy === 'Matches & Differs') {
+    if (strategy === 'Matches') {
         const digitCounts: Record<number, number> = {};
         for (const d of digits) digitCounts[d] = (digitCounts[d] || 0) + 1;
-        let mostCommon = 0, leastCommon = 0, maxCount = 0, minCount = Infinity;
+        let mostCommon = 0, maxCount = 0;
         for (const d in digitCounts) {
             if (digitCounts[d] > maxCount) { maxCount = digitCounts[d]; mostCommon = Number(d); }
-            if (digitCounts[d] < minCount) { minCount = digitCounts[d]; leastCommon = Number(d); }
         }
         const matchPct = ((maxCount / sampleSize) * 100).toFixed(1);
-        const differPct = ((minCount / sampleSize) * 100).toFixed(1);
         lines.push(`MATCH with ${mostCommon} → ${matchPct}%`);
-        lines.push(`DIFFERS with ${leastCommon} → ${differPct}%`);
-        signal = { barrier: String(leastCommon), contractType: 'DIGITDIFF', label: `Differs ${leastCommon}`, confidence: Number(matchPct) };
+        signal = { barrier: String(mostCommon), contractType: 'DIGITMATCH', label: `Matches ${mostCommon}`, confidence: Number(matchPct) };
+    } else if (strategy === 'Differs') {
+        const digitCounts: Record<number, number> = {};
+        for (const d of digits) digitCounts[d] = (digitCounts[d] || 0) + 1;
+        
+        const entries = Object.entries(digitCounts).map(([d, c]) => ({ digit: Number(d), count: c }));
+        entries.sort((a, b) => b.count - a.count);
+        
+        const mostAppearing = entries[0]?.digit ?? 0;
+        const secondMostAppearing = entries[1]?.digit ?? 1;
+        const leastAppearing = entries[entries.length - 1]?.digit ?? 9;
+        excludedDigits = [mostAppearing, secondMostAppearing, leastAppearing];
+
+        let targetDigit = -1;
+        let targetConfidence = 0;
+        for (let i = 0; i < 10; i++) {
+            if (i === mostAppearing || i === secondMostAppearing || i === leastAppearing) continue;
+            const count = digitCounts[i] || 0;
+            const pct = (count / sampleSize) * 100;
+            if (pct < 10) {
+                targetDigit = i;
+                targetConfidence = 100 - pct;
+                differsTargetPrevCount = count;
+                break;
+            }
+        }
+        
+        if (targetDigit !== -1) {
+            lines.push(`DIFFERS with ${targetDigit} → ${targetConfidence.toFixed(1)}%`);
+            lines.push(`Excluded digits: [${excludedDigits.join(', ')}]`);
+            signal = { barrier: String(targetDigit), contractType: 'DIGITDIFF', label: `Differs ${targetDigit}`, confidence: targetConfidence };
+        } else {
+            lines.push(`Waiting for Differs conditions...`);
+            signal = { barrier: '0', contractType: 'DIGITDIFF', label: `Differs (Waiting)`, confidence: 0 };
+        }
     } else if (strategy === 'Even & Odd') {
         const evenCount = digits.filter(d => d % 2 === 0).length;
         const oddCount = sampleSize - evenCount;
@@ -209,16 +255,34 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
             signal = { contractType: 'DIGITODD', label: 'Odd', confidence: Number(oddPct) };
         }
     } else if (strategy === 'Over & Under') {
+        const last7 = digits.slice(-7);
+        const allUnder = last7.length === 7 && last7.every(d => d <= 4);
+        const allOver = last7.length === 7 && last7.every(d => d >= 5);
+        
         const underCount = digits.filter(d => d <= 4).length;
         const overCount = sampleSize - underCount;
         const underPct = ((underCount / sampleSize) * 100).toFixed(1);
         const overPct = ((overCount / sampleSize) * 100).toFixed(1);
-        if (underCount >= overCount) {
-            lines.push(`UNDER (0-4) dominates → ${underPct}%`);
-            signal = { barrier: '5', contractType: 'DIGITUNDER', label: 'Under 5', confidence: Number(underPct) };
+        
+        if (allUnder) {
+            // Highest digit in the under sequence determines barrier
+            // 4 → Under 6, 3 → Under 7, ≤2 → Under 8
+            const maxUnder = Math.max(...last7);
+            const barrierMap: Record<number, number> = { 4: 6, 3: 7, 2: 8, 1: 8, 0: 8 };
+            const barrier = barrierMap[maxUnder] ?? 6;
+            lines.push(`UNDER sequence detected → ${underPct}% | Entry: Under ${barrier}`);
+            signal = { barrier: String(barrier), contractType: 'DIGITUNDER', label: `Under ${barrier}`, confidence: Number(underPct) };
+        } else if (allOver) {
+            // Lowest digit in the over sequence determines barrier
+            // 5 → Over 3, 6 → Over 2, ≥7 → Over 1
+            const minOver = Math.min(...last7);
+            const barrierMap: Record<number, number> = { 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 };
+            const barrier = barrierMap[minOver] ?? 3;
+            lines.push(`OVER sequence detected → ${overPct}% | Entry: Over ${barrier}`);
+            signal = { barrier: String(barrier), contractType: 'DIGITOVER', label: `Over ${barrier}`, confidence: Number(overPct) };
         } else {
-            lines.push(`OVER (5-9) dominates → ${overPct}%`);
-            signal = { barrier: '5', contractType: 'DIGITOVER', label: 'Over 5', confidence: Number(overPct) };
+            lines.push(`UNDER/OVER sequence waiting...`);
+            signal = { barrier: '5', contractType: 'DIGITOVER', label: 'Over/Under (Waiting)', confidence: 0 };
         }
     } else if (strategy === 'Only Ups') {
         let ups = 0;
@@ -251,7 +315,7 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
         }
     }
 
-    return { lines, signal };
+    return { lines, signal, excludedDigits, differsTargetPrevCount };
 };
 
 /**
@@ -293,7 +357,7 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     // ── UI state ────────────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState<TScannerTab>('scanner');
     const [selectedSymbol, setSelectedSymbol] = useState('R_10');
-    const [strategy, setStrategy] = useState<TScannerStrategy>('Matches & Differs');
+    const [strategy, setStrategy] = useState<TScannerStrategy>('Matches');
 
     // Trading config
     const [stakeInput, setStakeInput] = useState(DEFAULT_STAKE);
@@ -344,8 +408,8 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     const alternateEnabledRef = useRef(false);
     const alternateStrategyRef = useRef<TScannerStrategy>('Even & Odd');
     const alternateAfterLossesRef = useRef(3);
-    const strategyRef = useRef<TScannerStrategy>('Matches & Differs');
-    const activeStrategyRef = useRef<TScannerStrategy>('Matches & Differs');
+    const strategyRef = useRef<TScannerStrategy>('Matches');
+    const activeStrategyRef = useRef<TScannerStrategy>('Matches');
     const selectedSymbolRef = useRef('R_10');
     const selectedMarketRef = useRef<(typeof MARKETS)[number]>(MARKETS[0]);
     const candleDirectionRef = useRef<1 | -1 | 0>(0);
@@ -354,6 +418,13 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     const handleTradeTickRef = useRef<(ticks: TTickPoint[]) => void>(() => undefined);
     const timerSoundRef = useRef<HTMLAudioElement | null>(null);
     const scanTickCountRef = useRef(0);
+
+    // Differs auto-trade waiting state
+    const differsExcludedDigitsRef = useRef<number[]>([]);
+    const differsTargetDigitRef = useRef<number>(-1);
+    const differsTargetPrevCountRef = useRef<number>(0);
+    const differsWaitingForDecreaseRef = useRef(false);
+    const differsPostDecreaseTicksRef = useRef<number[]>([]);
 
     // ── Sync refs ───────────────────────────────────────────────────────────
     useEffect(() => { strategyRef.current = strategy; }, [strategy]);
@@ -669,6 +740,79 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         const aligned = isSignalAligned(analysis.signal, effectiveStrategy, currentTicks, candleDirectionRef.current);
         if (!aligned) return;
 
+        // ── Differs waiting logic ──────────────────────────────────────────
+        if (effectiveStrategy === 'Differs' && analysis.signal.confidence > 0) {
+            const lastDigit = getLastDigitFromQuote(currentTicks[currentTicks.length - 1].quote, selectedSymbolRef.current);
+
+            // First time entering Differs mode: initialize tracking
+            if (!differsWaitingForDecreaseRef.current && differsTargetDigitRef.current === -1) {
+                differsTargetDigitRef.current = Number(analysis.signal.barrier);
+                differsExcludedDigitsRef.current = analysis.excludedDigits;
+                differsTargetPrevCountRef.current = analysis.differsTargetPrevCount;
+                differsWaitingForDecreaseRef.current = true;
+                differsPostDecreaseTicksRef.current = [];
+                setTerminalDashboard(prev => [
+                    ...prev,
+                    `⏳ Differs ${differsTargetDigitRef.current}: Waiting for frequency to decrease...`,
+                    `   Excluded digits: [${differsExcludedDigitsRef.current.join(', ')}]`,
+                ]);
+                return;
+            }
+
+            // Check if target digit frequency has decreased
+            if (differsWaitingForDecreaseRef.current) {
+                const digits = currentTicks.slice(-SCAN_WINDOW).map(t => getLastDigitFromQuote(t.quote, selectedSymbolRef.current));
+                const currentCount = digits.filter(d => d === differsTargetDigitRef.current).length;
+                if (currentCount < differsTargetPrevCountRef.current) {
+                    // Frequency decreased — now watch the next 3 ticks for excluded digits
+                    differsWaitingForDecreaseRef.current = false;
+                    differsPostDecreaseTicksRef.current = [];
+                    setTerminalDashboard(prev => [
+                        ...prev,
+                        `📉 Digit ${differsTargetDigitRef.current} frequency decreased (${differsTargetPrevCountRef.current} → ${currentCount}). Watching next 3 ticks...`,
+                    ]);
+                } else {
+                    differsTargetPrevCountRef.current = currentCount;
+                }
+                return;
+            }
+
+            // Post-decrease: watch 3 ticks for excluded digit appearance
+            differsPostDecreaseTicksRef.current.push(lastDigit);
+            const excluded = differsExcludedDigitsRef.current;
+            const foundExcluded = excluded.includes(lastDigit);
+
+            if (foundExcluded) {
+                setTerminalDashboard(prev => [
+                    ...prev,
+                    `✅ Excluded digit ${lastDigit} appeared! Executing Differs ${differsTargetDigitRef.current} trade...`,
+                ]);
+                // Reset Differs tracking state
+                differsTargetDigitRef.current = -1;
+                differsExcludedDigitsRef.current = [];
+                differsWaitingForDecreaseRef.current = false;
+                differsPostDecreaseTicksRef.current = [];
+                // Fall through to execute the trade below
+            } else if (differsPostDecreaseTicksRef.current.length >= 3) {
+                // 3 ticks passed without excluded digit — reset and re-scan
+                setTerminalDashboard(prev => [
+                    ...prev,
+                    `⏳ 3 ticks passed without excluded digit. Re-scanning...`,
+                ]);
+                differsTargetDigitRef.current = -1;
+                differsExcludedDigitsRef.current = [];
+                differsWaitingForDecreaseRef.current = false;
+                differsPostDecreaseTicksRef.current = [];
+                return;
+            } else {
+                setTerminalDashboard(prev => [
+                    ...prev,
+                    `👁 Tick ${differsPostDecreaseTicksRef.current.length}/3: digit ${lastDigit} (waiting for [${excluded.join(', ')}])`,
+                ]);
+                return;
+            }
+        }
+
         tradeInFlightRef.current = true;
         if (useAlternate) setTerminalDashboard(prev => [...prev, `⚡ Alternate strategy: ${effectiveStrategy}`]);
         setTerminalDashboard(prev => [...prev, `Signal: ${analysis.signal.label} (${analysis.signal.confidence}%)`]);
@@ -735,6 +879,12 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         setIsWorking(true);
         setIsPaused(false);
         isPausedRef.current = false;
+        // Reset Differs waiting state
+        differsTargetDigitRef.current = -1;
+        differsExcludedDigitsRef.current = [];
+        differsWaitingForDecreaseRef.current = false;
+        differsPostDecreaseTicksRef.current = [];
+        differsTargetPrevCountRef.current = 0;
 
         try {
             run_panel.setRunId(`scanner-${Date.now()}`);
@@ -874,7 +1024,10 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         let tradetype = 'risefall';
                         let type = 'CALL'; // default
 
-                        if (strategy === 'Matches & Differs') {
+                        if (strategy === 'Matches') {
+                            tradetype = 'matchesdiffers';
+                            type = confirmedSignal ? confirmedSignal.contractType : 'DIGITMATCH';
+                        } else if (strategy === 'Differs') {
                             tradetype = 'matchesdiffers';
                             type = confirmedSignal ? confirmedSignal.contractType : 'DIGITDIFF';
                         } else if (strategy === 'Even & Odd') {
@@ -910,10 +1063,12 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         // Set prediction digit if applicable
                         if (confirmedSignal && confirmedSignal.barrier) {
                             quick_strategy.setValue('last_digit_prediction', Number(confirmedSignal.barrier));
-                        } else if (strategy === 'Matches & Differs') {
-                            quick_strategy.setValue('last_digit_prediction', 5);
+                        } else if (strategy === 'Matches') {
+                            quick_strategy.setValue('last_digit_prediction', Number(confirmedSignal?.barrier ?? 5));
+                        } else if (strategy === 'Differs') {
+                            quick_strategy.setValue('last_digit_prediction', Number(confirmedSignal?.barrier ?? 5));
                         } else if (strategy === 'Over & Under') {
-                            quick_strategy.setValue('last_digit_prediction', 5);
+                            quick_strategy.setValue('last_digit_prediction', Number(confirmedSignal?.barrier ?? 5));
                         }
 
                         // Build and import the bot XML DOM blocks directly to the Blockly canvas
