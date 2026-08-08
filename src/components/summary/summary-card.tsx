@@ -7,6 +7,7 @@ import { useStore } from '@/hooks/useStore';
 import { getSymbolDisplayNameSync } from '@/utils/symbol-display-name';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
+import { ApiHelpers } from '@/external/bot-skeleton';
 import ContractCardLoader from '../contract-card-loading';
 import { getCardLabels } from '../shared';
 import ContractCard from '../shared_ui/contract-card';
@@ -24,6 +25,12 @@ const LiveSpotWidget = observer(({ contract_info }: { contract_info?: any }) => 
     });
 
     const prevPriceRef = React.useRef<number | null>(null);
+
+    React.useEffect(() => {
+        if (symbol && (ApiHelpers as any)?.instance?.ticks_service?.requestStream) {
+            (ApiHelpers as any).instance.ticks_service.requestStream({ symbol, style: 'ticks' }).catch(() => {});
+        }
+    }, [symbol]);
 
     React.useEffect(() => {
         const handleTickUpdate = (e: Event) => {

@@ -276,6 +276,10 @@ export default class TicksService {
                         const ticks = historyToTicks(r.history);
 
                         this.updateTicksAndCallListeners(symbol, ticks);
+                        const lastTick = ticks[ticks.length - 1];
+                        if (lastTick && typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('live_tick_update', { detail: { quote: lastTick.quote, symbol, epoch: lastTick.epoch } }));
+                        }
                         resolve(ticks);
                     } else {
                         const candles = parseCandles(r.candles);
