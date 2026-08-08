@@ -37,7 +37,6 @@ const TradingView = lazy(() => import('../tradingview'));
 const AnalysisTools = lazy(() => import('../analysis-tool'));
 const Signals = lazy(() => import('../signals'));
 const ScannerPage = lazy(() => import('../scanner/scanner'));
-import TradingBots from '../free-bots/trading-bots';
 
 
 const ManualTrading = lazy(() => import('../manual-trading'));
