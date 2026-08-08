@@ -521,7 +521,7 @@ export default class BlockConversion {
 
         this.workspace.cleanUp();
 
-        const converted_xml = window.Blockly.Xml.workspaceToDom(this.workspace);
+        const converted_xml = window.Blockly?.Xml ? window.Blockly.Xml.workspaceToDom(this.workspace) : null;
 
         convertStrategyToIsDbot(converted_xml);
 

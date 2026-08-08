@@ -56,20 +56,23 @@ export default class DataCollectionStore {
     transaction_ids: Record<string, unknown> = {};
 
     async trackRun() {
-        const converted_workspace_to_dom = this.cleanXmlDom(
-            window.Blockly.Xml.workspaceToDom(DBot.workspace, /* opt_noId */ true)
-        );
-        const xml_dom = convertStrategyToIsDbot(converted_workspace_to_dom);
-        const xml_string = window.Blockly.Xml.domToText(xml_dom);
-        const xml_hash = this.getHash(xml_string);
+        if (!window.Blockly?.Xml || !DBot?.workspace) return;
+        try {
+            const converted_workspace_to_dom = this.cleanXmlDom(
+                window.Blockly.Xml.workspaceToDom(DBot.workspace, /* opt_noId */ true)
+            );
+            const xml_dom = convertStrategyToIsDbot(converted_workspace_to_dom);
+            const xml_string = window.Blockly.Xml.domToText(xml_dom);
+            const xml_hash = this.getHash(xml_string);
 
-        if (this.getHash(this.strategy_content) !== xml_hash) {
-            this.should_post_xml = true;
-            this.setStrategyContent(xml_string);
-        }
+            if (this.getHash(this.strategy_content) !== xml_hash) {
+                this.should_post_xml = true;
+                this.setStrategyContent(xml_string);
+            }
 
-        this.setRunId(this.getHash(xml_hash + this.core.client.loginid + Math.random()));
-        this.setRunStart(this.core.common.server_time.unix());
+            this.setRunId(this.getHash(xml_hash + this.core.client.loginid + Math.random()));
+            this.setRunStart(this.core.common.server_time.unix());
+        } catch { /* Blockly workspace optional */ }
     }
 
     async trackTransaction(
