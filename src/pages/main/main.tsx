@@ -342,12 +342,6 @@ const AppWrapper = observer(() => {
             )
         },
         {
-            key: 'trading_bots',
-            id: 'id-trading-bots',
-            label: <TabIcon iconKey='trading_bots' label='Trading Bots' />,
-            content: <TabErrorBoundary tabId='id-trading-bots' tabName='Trading Bots'><TradingBots /></TabErrorBoundary>
-        },
-        {
             key: 'analysis_tool',
             id: 'id-analysis-tool',
             label: <TabIcon iconKey='analysis_tool' label='Analysis Tool' />,

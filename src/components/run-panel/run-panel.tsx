@@ -341,7 +341,7 @@ const RunPanel = observer(() => {
         />
     );
 
-    const hidden_tabs = [DBOT_TABS.ACCOUNT_CENTER, DBOT_TABS.SYSTEM_CENTER];
+    const hidden_tabs = [DBOT_TABS.TRADING_BOTS, DBOT_TABS.ACCOUNT_CENTER, DBOT_TABS.SYSTEM_CENTER];
     const show_run_panel = !hidden_tabs.includes(active_tab) || active_tour;
     if ((!show_run_panel && isDesktop) || active_tour === 'bot_builder') return null;
 
