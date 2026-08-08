@@ -150,6 +150,7 @@ export default Engine =>
                 });
 
                 return Promise.all(reqs).then(responses => {
+                    this.purchase_block_allow_bulk = 'no';
                     const validResponses = responses.filter(r => r && r.buy && !r.error);
 
                     validResponses.forEach((res) => {
@@ -188,6 +189,7 @@ export default Engine =>
                     }
                     return null;
                 }).catch(err => {
+                    this.purchase_block_allow_bulk = 'no';
                     log(LogTypes.ERROR, { message: `❌ [BULK TRADES ERROR] ${err?.message || err}` });
                     this.store.dispatch(purchaseSuccessful());
                     if (this.afterPromise) {
