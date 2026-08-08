@@ -266,10 +266,20 @@ class APIBase {
                     if (res?.authorize) {
                         authResult = { balance: res.authorize };
                     } else if (res?.error) {
-                        console.warn('[APIBase] Token authorize returned error, falling back to balance:', res.error);
+                        console.warn('[APIBase] Token authorize returned error:', res.error.message || res.error);
+                        if (res.error.code === 'InvalidToken') {
+                            localStorage.removeItem('active_token');
+                            localStorage.removeItem('deriv_api_token');
+                            localStorage.removeItem('token');
+                        }
                     }
-                } catch (tokErr) {
-                    console.warn('[APIBase] Token authorize failed:', tokErr);
+                } catch (tokErr: any) {
+                    console.warn('[APIBase] Token authorize failed:', tokErr?.message || tokErr);
+                    if (tokErr?.error?.code === 'InvalidToken') {
+                        localStorage.removeItem('active_token');
+                        localStorage.removeItem('deriv_api_token');
+                        localStorage.removeItem('token');
+                    }
                 }
             }
 
