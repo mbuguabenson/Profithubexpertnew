@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Square, Loader2, TrendingUp, TrendingDown, Zap, Shield, Target, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, Play, Square, Loader2, Zap } from 'lucide-react';
 import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
 import { generateBotXML } from '@/utils/bot-xml-generator';
 
@@ -22,9 +22,9 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
   symbolName,
   strategyId,
   strategyLabel,
-  signalConfidence = 85,
-  marketTicks = [],
-  marketQuotes = []
+  signalConfidence: _signalConfidence = 85,
+  marketTicks: _marketTicks = [],
+  marketQuotes: _marketQuotes = []
 }) => {
   // Configuration State
   const [stake, setStake] = useState<number>(1);
@@ -153,7 +153,7 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
           if (buyResult?.contract_id) {
             addLog(`Contract purchased (#${buyResult.contract_id}). Streaming tick settlement...`);
             
-            const settlement = await streamContractUntilSettled(buyResult.contract_id);
+            const settlement = await streamContractUntilSettled({ contractId: Number(buyResult.contract_id), source: 'MarketHunterProAutoBot' });
             const profit = settlement?.profit ?? 0;
             const isWin = profit > 0;
 

@@ -66,17 +66,21 @@ export const mapSignalToBestSignal = (sig: any) => {
 };
 
 export function generateBotXML(opts: {
-  stake: string;
-  takeProfit: string;
-  stopLoss: string;
-  martingale: string;
+  stake: string | number;
+  takeProfit: string | number;
+  stopLoss: string | number;
+  martingale: string | number;
   symbol: string;
   tradeTypeLabel: string;
   bestSignal: any;
   entryDigit?: number;
   recovery?: { lossThreshold: number; altTradeTypeId: string };
 }): string {
-  const { stake, takeProfit, stopLoss, martingale, symbol, tradeTypeLabel, bestSignal, entryDigit, recovery } = opts;
+  const { stake: rawStake, takeProfit: rawTakeProfit, stopLoss: rawStopLoss, martingale: rawMartingale, symbol, tradeTypeLabel, bestSignal, entryDigit, recovery } = opts;
+  const stake = String(rawStake);
+  const takeProfit = String(rawTakeProfit);
+  const stopLoss = String(rawStopLoss);
+  const martingale = String(rawMartingale);
 
   let tradeTypeCat = 'digits';
   let tradeType = 'overunder';

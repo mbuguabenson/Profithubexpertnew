@@ -7,7 +7,6 @@ import { useStore } from '@/hooks/useStore';
 import { getSymbolDisplayNameSync } from '@/utils/symbol-display-name';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
-import { ApiHelpers } from '@/external/bot-skeleton';
 import ContractCardLoader from '../contract-card-loading';
 import { getCardLabels } from '../shared';
 import ContractCard from '../shared_ui/contract-card';
