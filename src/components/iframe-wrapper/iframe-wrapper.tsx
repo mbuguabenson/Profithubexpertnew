@@ -116,11 +116,15 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             }
         };
 
-        // Initial & continuous broadcasts for iframe terminals (resolves async mount race conditions)
+        // Initial broadcast for iframe terminals and a small retry window for mount races
         iframe.addEventListener('load', sendLegacyAuthData);
         sendLegacyAuthData();
-        const authRetryIntervals = [100, 300, 500, 1000, 2000, 3000, 5000, 8000, 10000];
-        authRetryIntervals.forEach(ms => setTimeout(sendLegacyAuthData, ms));
+        const authRetryIntervals = [500, 1500, 3000];
+        authRetryIntervals.forEach(ms => setTimeout(() => {
+            if (iframe.contentWindow) {
+                sendLegacyAuthData();
+            }
+        }, ms));
 
         const expectedOrigin = process.env.DTRADER_PROXY_URL || process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
         

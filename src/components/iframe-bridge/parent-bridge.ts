@@ -166,45 +166,48 @@ export class ParentBridgeClient {
         }
 
         const msgType = parsedData.type || parsedData.action || parsedData.event || '';
+        const handshakeEvents = [BridgeEvent.BRIDGE_READY, BridgeEvent.REQUEST_SESSION, 'PING', 'HANDSHAKE_REQUEST'];
+        const isHandshake = handshakeEvents.includes(msgType as BridgeEvent | string);
 
-        // Immediately reply to ANY message or handshake ping from the iframe to prevent bridge auth timeout
-        this.handleBridgeReady();
-        this.handleSessionRequest();
+        if (isHandshake) {
+            this.handleBridgeReady();
+            this.handleSessionRequest();
 
-        if (event.source && typeof (event.source as Window).postMessage === 'function') {
-            try {
-                const session = sessionManager.getSession();
-                let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-                let token = session?.token || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-                if (token && loginid && !token.startsWith('ory_at_')) {
-                    const handshakePayload = {
-                        type: 'NEWDTRADER_BRIDGE_AUTH',
-                        status: 'success',
-                        token,
-                        loginid,
-                        loginId: loginid,
-                        appId: Number(session?.appId || '121856') || 121856,
-                        server: 'green',
-                        timestamp: Date.now(),
-                        authMode: 'derivws_otp',
-                        accountType: 'ZOOM',
-                        bt_secret: 'binarytool',
-                        theme: 'dark',
-                        payload: { token, loginid, currency: 'USD' }
-                    };
-                    // Log a masked token and loginid for safe diagnostics
-                    try {
-                        console.info(`[ParentBridge] HANDSHAKE -> origin=${event.origin} loginid=${loginid || 'none'} token=${truncateToken(token || '')} appId=${session?.appId || 'unknown'}`);
-                    } catch (e) {
-                        // ignore logging errors
+            if (event.source && typeof (event.source as Window).postMessage === 'function') {
+                try {
+                    const session = sessionManager.getSession();
+                    let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+                    let token = session?.token || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+                    if (token && loginid && !token.startsWith('ory_at_')) {
+                        const handshakePayload = {
+                            type: 'NEWDTRADER_BRIDGE_AUTH',
+                            status: 'success',
+                            token,
+                            loginid,
+                            loginId: loginid,
+                            appId: Number(session?.appId || '121856') || 121856,
+                            server: 'green',
+                            timestamp: Date.now(),
+                            authMode: 'derivws_otp',
+                            accountType: 'ZOOM',
+                            bt_secret: 'binarytool',
+                            theme: 'dark',
+                            payload: { token, loginid, currency: 'USD' }
+                        };
+                        // Log a masked token and loginid for safe diagnostics
+                        try {
+                            console.info(`[ParentBridge] HANDSHAKE -> origin=${event.origin} loginid=${loginid || 'none'} token=${truncateToken(token || '')} appId=${session?.appId || 'unknown'}`);
+                        } catch (e) {
+                            // ignore logging errors
+                        }
+
+                        (event.source as Window).postMessage(handshakePayload, '*');
+                        (event.source as Window).postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayload }, '*');
+                        (event.source as Window).postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayload }, '*');
                     }
-
-                    (event.source as Window).postMessage(handshakePayload, '*');
-                    (event.source as Window).postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayload }, '*');
-                    (event.source as Window).postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayload }, '*');
+                } catch (e) {
+                    // Ignore cross-origin error on event.source
                 }
-            } catch (e) {
-                // Ignore cross-origin error on event.source
             }
         }
 
