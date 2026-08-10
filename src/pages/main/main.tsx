@@ -44,7 +44,9 @@ const EasyTool = lazy(() => import('../easy-tool'));
 const MultiTrader = lazy(() => import('../multi-trader'));
 const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-centre-tab'));
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
+const TradingBots = lazy(() => import('../free-bots/trading-bots'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
+const ProJournal = lazy(() => import('../pro-journal'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -106,7 +108,9 @@ const AppWrapper = observer(() => {
         'dtrader',
         'ai_trading_engine',
         'dcircles',
-        'dp_tools',
+        'account_center',
+        'system_center',
+        'pro_journal',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -341,6 +345,18 @@ const AppWrapper = observer(() => {
             )
         },
         {
+            key: 'trading_bots',
+            id: 'id-trading-bots',
+            label: <TabIcon iconKey='trading_bots' label='Trading Bots' />,
+            content: (
+                <TabErrorBoundary tabId='id-trading-bots' tabName='Trading Bots'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Trading Bots...')} />}>
+                        <TradingBots />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
             key: 'analysis_tool',
             id: 'id-analysis-tool',
             label: <TabIcon iconKey='analysis_tool' label='Analysis Tool' />,
@@ -457,6 +473,18 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
                         <DTraderPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'pro_journal',
+            id: 'id-pro-journal',
+            label: <TabIcon iconKey='pro_journal' label='Pro Journal' />,
+            content: (
+                <TabErrorBoundary tabId='id-pro-journal' tabName='Pro Journal'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Pro Journal...')} />}>
+                        <ProJournal />
                     </Suspense>
                 </TabErrorBoundary>
             )
