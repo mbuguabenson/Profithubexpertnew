@@ -1,6 +1,10 @@
 import { SessionPayload } from './protocol';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
+import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
+
+const isInvalidToken = (token: string | null | undefined): boolean =>
+    !token || token === 'null' || token.startsWith('ory_at_');
 
 export class SessionManager {
     private listeners: Set<(session: SessionPayload | null) => void> = new Set();
@@ -19,31 +23,34 @@ export class SessionManager {
                       localStorage.getItem('active_loginid') || 
                       localStorage.getItem('client.loginid') || '';
         
-        let accountsList: Record<string, string> = {};
-        try {
-            accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
-        } catch (e) {
-            // ignore parse error
+        const accountsList = getAccountsList();
+
+        let token = (loginid && accountsList[loginid] && !isInvalidToken(accountsList[loginid]))
+            ? accountsList[loginid]
+            : null;
+
+        if (!token) {
+            const activeToken = getActiveToken() || V2GetActiveToken();
+            if (!isInvalidToken(activeToken)) {
+                token = activeToken || undefined;
+            }
         }
 
-        let token = (loginid && accountsList[loginid]) ? accountsList[loginid] : V2GetActiveToken() || localStorage.getItem('token') || '';
-        
-        // If token is missing or starts with ory_at_, search accountsList for ANY valid WS token
-        if (!token || token.startsWith('ory_at_')) {
-            const accKeys = Object.keys(accountsList);
-            for (const key of accKeys) {
-                if (accountsList[key] && !accountsList[key].startsWith('ory_at_')) {
+        if (!token) {
+            const storedToken = localStorage.getItem('token') || localStorage.getItem('active_token') || localStorage.getItem('authToken');
+            if (!isInvalidToken(storedToken)) {
+                token = storedToken || undefined;
+            }
+        }
+
+        if (!token) {
+            const keys = Object.keys(accountsList);
+            for (const key of keys) {
+                if (!isInvalidToken(accountsList[key])) {
                     loginid = key;
                     token = accountsList[key];
                     break;
                 }
-            }
-        }
-
-        if (!token || token.startsWith('ory_at_')) {
-            const altToken = localStorage.getItem('authToken') || localStorage.getItem('token');
-            if (altToken && !altToken.startsWith('ory_at_')) {
-                token = altToken;
             }
         }
 
@@ -62,9 +69,9 @@ export class SessionManager {
             }
         }
 
-        const appId = getAppId() || '114292';
+        const appId = getAppId() || '121856';
 
-        if (!loginid || !token) {
+        if (!loginid || !token || isInvalidToken(token)) {
             return null;
         }
 

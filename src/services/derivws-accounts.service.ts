@@ -132,7 +132,7 @@ export class DerivWSAccountsService {
                 const OptionsDir = brandConfig.platform.derivws.directories.options;
                 const endpoint = `${baseURL}${OptionsDir}accounts`;
 
-                const appId = getAppId() || '134249';
+                const appId = getAppId() || '121856';
                 const response = await fetch(endpoint, {
                     method: 'GET',
                     headers: {
@@ -201,7 +201,7 @@ export class DerivWSAccountsService {
                 const optionsDir = brandConfig.platform.derivws.directories.options;
                 const endpoint = `${baseURL}${optionsDir}accounts/${accountId}/otp`;
 
-                const appId = getAppId() || '134249';
+                const appId = getAppId() || '121856';
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {

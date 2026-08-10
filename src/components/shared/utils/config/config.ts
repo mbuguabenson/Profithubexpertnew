@@ -1000,33 +1000,16 @@ const getLegacyServerURL = () => {
  */
 export const getSocketURL = async (): Promise<string> => {
     try {
-        // ── FAST PATH ──────────────────────────────────────────────────────────
-        // Check legacy tokens FIRST (stored by storeLegacyAccounts from OAuth params).
-        // This lets the WS connect in <1ms for users who already logged in,
-        // without hitting the slow PKCE OTP endpoint at all.
-        const accountsList_raw = localStorage.getItem('accountsList');
+        // ── AUTH PATH SELECTION ─────────────────────────────────────────────────
+        // 1. API token pending login always uses the classic legacy WS URL.
+        // 2. PKCE OAuth2 users with auth_info should use the authenticated OTP flow.
+        // 3. Legacy accountsList-only users fall back to the classic WS URL.
         const pendingApiToken = getPendingApiToken();
-
         if (pendingApiToken) {
             console.log('[getSocketURL] API token login detected - using classic WebSocket URL');
             return getLegacyServerURL();
         }
 
-        if (accountsList_raw) {
-            try {
-                const accountsList = JSON.parse(accountsList_raw);
-                const active_loginid = localStorage.getItem('active_loginid');
-                if (active_loginid && accountsList[active_loginid]) {
-                    console.log('[getSocketURL] Legacy token found - fast-pathing to classic WebSocket URL');
-                    return getLegacyServerURL();
-                }
-            } catch (e) {
-                console.error('[getSocketURL] Error parsing legacy accountsList:', e);
-            }
-        }
-
-        // ── PKCE PATH ─────────────────────────────────────────────────────────
-        // Only reached for PKCE-only users (no legacy token in localStorage).
         let authInfo = OAuthTokenExchangeService.getAuthInfo();
         if (!authInfo) {
             const expiredAuthInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
@@ -1047,6 +1030,20 @@ export const getSocketURL = async (): Promise<string> => {
                 // OTP endpoint unreachable — fall through to legacy URL fallback
                 console.warn('[getSocketURL] PKCE OTP fetch failed, falling back to legacy WS URL:', pkceError);
                 return getLegacyServerURL();
+            }
+        }
+
+        const accountsList_raw = localStorage.getItem('accountsList');
+        if (accountsList_raw) {
+            try {
+                const accountsList = JSON.parse(accountsList_raw);
+                const active_loginid = localStorage.getItem('active_loginid');
+                if (active_loginid && accountsList[active_loginid]) {
+                    console.log('[getSocketURL] Legacy accountsList login detected - using classic WebSocket URL');
+                    return getLegacyServerURL();
+                }
+            } catch (e) {
+                console.error('[getSocketURL] Error parsing legacy accountsList:', e);
             }
         }
 
@@ -1283,7 +1280,7 @@ export const getAppId = (): string => {
     } catch (e) {
         // ignore and fallback
     }
-    return process.env.APP_ID || '114292';
+    return process.env.APP_ID || '121856';
 };
 
 

@@ -29,8 +29,12 @@ export const getActiveLoginId = (): string =>
 export const getActiveToken = (): string | null => {
     const list = getAccountsList();
     const id = getActiveLoginId();
-    return list[id] || null;
+    const token = list[id] || null;
+    return token && token.startsWith('ory_at_') ? null : token;
 };
+
+const isInvalidBearerToken = (token: string | null | undefined): boolean =>
+    !token || token === 'null' || token.startsWith('ory_at_');
 
 /**
  * Robustly resolves a valid Deriv WebSocket authorization token for an account.
@@ -42,27 +46,30 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
     const list = getAccountsList();
 
     // 1. Direct match in accountsList for active account
-    if (activeId && list[activeId]) {
+    if (activeId && list[activeId] && !isInvalidBearerToken(list[activeId])) {
         return list[activeId];
     }
 
     // 2. Check any token in accountsList
     for (const id in list) {
-        if (list[id]) {
+        if (!isInvalidBearerToken(list[id])) {
             return list[id];
         }
     }
 
     // 3. Check localStorage stored tokens
-    const storedToken = localStorage.getItem('token') || localStorage.getItem('active_token') || localStorage.getItem('authToken');
-    if (storedToken && storedToken !== 'null') {
-        return storedToken;
+    const storedToken =
+        localStorage.getItem('token') ||
+        localStorage.getItem('active_token') ||
+        localStorage.getItem('authToken');
+    if (!isInvalidBearerToken(storedToken)) {
+        return storedToken!;
     }
 
     // 4. PKCE OAuth2 Access Token fallback
     const oauthToken = OAuthTokenExchangeService.getAccessToken();
-    if (oauthToken) {
-        return oauthToken;
+    if (!isInvalidBearerToken(oauthToken)) {
+        return oauthToken!;
     }
 
     // 5. Fetch OTP WebSocket URL if available

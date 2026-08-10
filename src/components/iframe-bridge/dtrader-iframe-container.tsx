@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { ParentBridgeClient } from './parent-bridge';
 import { BridgeEvent, createMessage } from './protocol';
-import { resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { resolveValidDerivWSToken, truncateToken } from '@/utils/token-bridge';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { Loader2 } from 'lucide-react';
@@ -49,7 +49,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 
         const activeLoginId = tokenData.loginid || V2GetActiveClientId() || client?.loginid || localStorage.getItem('active_loginid') || '';
         const token = tokenData.token || await resolveValidDerivWSToken(activeLoginId);
-        const appId = getAppId() || '134205';
+        const appId = getAppId() || '121856';
         const currency = client?.currency || 'USD';
 
         if (!token || !activeLoginId) return;
@@ -80,16 +80,26 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         );
 
         try {
-            iframe.contentWindow.postMessage(sessionMsg, '*');
-            iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...sessionPayload }, '*');
-            iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...sessionPayload }, '*');
-            iframe.contentWindow.postMessage({ action: 'setToken', ...sessionPayload }, '*');
-            iframe.contentWindow.postMessage({ action: 'init', ...sessionPayload }, '*');
-            iframe.contentWindow.postMessage({ action: 'login', ...sessionPayload }, '*');
-            iframe.contentWindow.postMessage({ action: 'SYNC_SESSION', ...sessionPayload }, '*');
-            iframe.contentWindow.postMessage(JSON.stringify({ type: 'SESSION_DATA', ...sessionPayload }), '*');
+                // Debug: log masked token/loginid when posting session to iframe
+                try {
+                    console.info(`[DTraderIframe] syncSession -> posting to iframe loginid=${activeLoginId} token=${truncateToken(token)}`);
+                } catch (e) {
+                    // ignore logging errors
+                }
+
+                iframe.contentWindow.postMessage(sessionMsg, '*');
+                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...sessionPayload }, '*');
+                iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...sessionPayload }, '*');
+                iframe.contentWindow.postMessage({ action: 'setToken', ...sessionPayload }, '*');
+                iframe.contentWindow.postMessage({ action: 'init', ...sessionPayload }, '*');
+                iframe.contentWindow.postMessage({ action: 'login', ...sessionPayload }, '*');
+                iframe.contentWindow.postMessage({ action: 'SYNC_SESSION', ...sessionPayload }, '*');
+                iframe.contentWindow.postMessage(JSON.stringify({ type: 'SESSION_DATA', ...sessionPayload }), '*');
         } catch (e) {
-            console.warn('[DTraderIframe] Error sending auth postMessage:', e);
+                console.warn('[DTraderIframe] Error sending auth postMessage:', e);
+                try {
+                    console.error('[DTraderIframe] syncSession failed to post to iframe', e);
+                } catch (err) {}
         }
     }, [tokenData, client?.currency, hideHeader]);
 
@@ -132,7 +142,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     }, [syncSession, onLoad]);
 
     // Construct full DTrader route URL with all accounts & tokens as query parameters
-    const appId = getAppId() || '134205';
+    const appId = getAppId() || '121856';
     const currency = client?.currency || 'USD';
 
     let targetBase = rawUrl.trim();

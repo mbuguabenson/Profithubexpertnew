@@ -1,6 +1,7 @@
 import { BridgeStateMachine, BridgeState } from './bridge-state-machine';
 import { SessionManager as _SessionManager, sessionManager } from './session-manager';
 import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage, SessionPayload } from './protocol';
+import { getActiveToken, getAccountsList, truncateToken } from '@/utils/token-bridge';
 
 export interface BridgeDiagnosticInfo {
     state: BridgeState;
@@ -182,7 +183,7 @@ export class ParentBridgeClient {
                         token,
                         loginid,
                         loginId: loginid,
-                        appId: Number(session?.appId || '134249') || 134249,
+                        appId: Number(session?.appId || '121856') || 121856,
                         server: 'green',
                         timestamp: Date.now(),
                         authMode: 'derivws_otp',
@@ -191,6 +192,13 @@ export class ParentBridgeClient {
                         theme: 'dark',
                         payload: { token, loginid, currency: 'USD' }
                     };
+                    // Log a masked token and loginid for safe diagnostics
+                    try {
+                        console.info(`[ParentBridge] HANDSHAKE -> origin=${event.origin} loginid=${loginid || 'none'} token=${truncateToken(token || '')} appId=${session?.appId || 'unknown'}`);
+                    } catch (e) {
+                        // ignore logging errors
+                    }
+
                     (event.source as Window).postMessage(handshakePayload, '*');
                     (event.source as Window).postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayload }, '*');
                     (event.source as Window).postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayload }, '*');
@@ -248,11 +256,9 @@ export class ParentBridgeClient {
 
         if (!session) {
             let loginid = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-            let token = localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-            let accountsList: Record<string, string> = {};
-            try {
-                accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
-            } catch {}
+            let token = getActiveToken() || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
+            const accountsList = getAccountsList();
+
             if (!loginid || !token || token.startsWith('ory_at_')) {
                 const keys = Object.keys(accountsList);
                 for (const k of keys) {
@@ -263,20 +269,21 @@ export class ParentBridgeClient {
                     }
                 }
             }
+
             if (loginid && token && !token.startsWith('ory_at_')) {
                 session = {
                     token,
                     loginid,
                     currency: 'USD',
                     isDemo: loginid.startsWith('VR'),
-                    appId: '134205'
+                    appId: '121856'
                 };
             }
         }
         
         if (session) {
             this.diagnostics.sessionStatus = 'valid';
-            this.diagnostics.appId = session.appId || '134205';
+            this.diagnostics.appId = session.appId || '121856';
             this.stateMachine.transitionTo(BridgeState.REQUESTING_SESSION);
             this.sendMessage(BridgeEvent.SESSION_DATA, session);
             
@@ -290,7 +297,7 @@ export class ParentBridgeClient {
                         token: session.token,
                         loginid: session.loginid,
                         loginId: session.loginid,
-                        appId: Number(session.appId || '134205') || 134205,
+                        appId: Number(session.appId || '121856') || 121856,
                         server: 'green',
                         timestamp: Date.now(),
                         status: 'success',
@@ -299,6 +306,13 @@ export class ParentBridgeClient {
                         bt_secret: 'binarytool',
                         theme: 'dark'
                     };
+                    // Surface masked session info in logs for diagnostics
+                    try {
+                        console.info(`[ParentBridge] Broadcasting session to iframe origin=${this.iframeOrigin} loginid=${session.loginid} token=${truncateToken(session.token)}`);
+                    } catch (e) {
+                        // ignore logging errors
+                    }
+
                     const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
                     this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...legacyPayload }, target);
                     this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...legacyPayload }, target);

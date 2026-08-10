@@ -68,8 +68,8 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                     if (!embedBase.endsWith('/dtrader') && !embedBase.includes('localhost')) {
                         embedBase = `${embedBase.replace(/\/$/, '')}/dtrader`;
                     }
-                    const appIdStr = getAppId() || '134249';
-                    const appIdNum = Number(appIdStr) || 134249;
+                    const appIdStr = getAppId() || '121856';
+                    const appIdNum = Number(appIdStr) || 121856;
 
                     let iframeUrl = `${embedBase}?chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appIdStr}&lang=EN`;
                     if (effectiveLoginId && effectiveToken) {
