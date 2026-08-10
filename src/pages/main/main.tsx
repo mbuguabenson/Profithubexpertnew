@@ -43,6 +43,7 @@ const ManualTrading = lazy(() => import('../manual-trading'));
 const EasyTool = lazy(() => import('../easy-tool'));
 const MultiTrader = lazy(() => import('../multi-trader'));
 const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-centre-tab'));
+const Marketkiller = lazy(() => import('../marketkiller'));
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
 const TradingBots = lazy(() => import('../free-bots/trading-bots'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
@@ -437,6 +438,18 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-signal-centre' tabName='Signal Centre'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signal Centre...')} />}>
                         <SignalCentrePage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'marketkiller',
+            id: 'id-marketkiller',
+            label: <TabIcon iconKey='marketkiller' label='Marketkiller' />,
+            content: (
+                <TabErrorBoundary tabId='id-marketkiller' tabName='Marketkiller'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Marketkiller...')} />}>
+                        <Marketkiller />
                     </Suspense>
                 </TabErrorBoundary>
             )

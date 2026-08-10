@@ -100,6 +100,22 @@ export const isLoggedIn = (): boolean =>
 export const getAllSessionTokens = (): string[] =>
     Object.values(getAccountsList()).filter(Boolean);
 
+/** Remove invalid bearer tokens (ory_at_...) from localStorage accountsList in-place */
+export const sanitizeAccountsList = (): void => {
+    try {
+        const raw = getAccountsList();
+        const filtered = Object.fromEntries(
+            Object.entries(raw).filter(([, v]) => v && !String(v).startsWith('ory_at_'))
+        );
+        // Only write back if there are changes
+        if (JSON.stringify(filtered) !== JSON.stringify(raw)) {
+            localStorage.setItem('accountsList', JSON.stringify(filtered));
+        }
+    } catch (e) {
+        // noop
+    }
+};
+
 /**
  * Returns the first real (non-virtual) account token.
  * Real accounts have loginIds that do NOT start with 'VR'.

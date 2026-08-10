@@ -7,7 +7,7 @@ interface DiagnosticsPanelProps {
 }
 
 export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ bridge }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(true);
     const [diagnostics, setDiagnostics] = useState<BridgeDiagnosticInfo | null>(null);
 
     useEffect(() => {

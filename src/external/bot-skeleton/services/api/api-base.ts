@@ -5,6 +5,7 @@ import CommonStore from '@/stores/common-store';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { isProduction } from '@/components/shared/utils/config/config';
 import { clearAuthData } from '@/utils/auth-utils';
+import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { handleBackendError, isBackendError } from '@/utils/error-handler';
 import { activeSymbolsProcessorService } from '../../../../services/active-symbols-processor.service';
 import { observer as globalObserver } from '../../utils/observer';
@@ -243,20 +244,9 @@ class APIBase {
         setIsAuthorizing(true);
 
         try {
-            const activeAccountId = getAccountId();
-            const accountsList_raw = localStorage.getItem('accountsList');
-            let token = '';
-
-            if (accountsList_raw && activeAccountId) {
-                try {
-                    const accountsList = JSON.parse(accountsList_raw);
-                    token = accountsList[activeAccountId] || '';
-                } catch {}
-            }
-
-            if (!token) {
-                token = localStorage.getItem('active_token') || localStorage.getItem('token') || localStorage.getItem('deriv_api_token') || '';
-            }
+            // Resolve a valid Deriv WebSocket token using centralized token bridge.
+            // This avoids sending invalid bearer tokens (e.g. 'ory_at_...') to api.authorize
+            const token = await resolveValidDerivWSToken();
 
             let authResult: any = null;
 

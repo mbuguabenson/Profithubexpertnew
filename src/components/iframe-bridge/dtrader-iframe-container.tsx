@@ -43,7 +43,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         return () => { isMounted = false; };
     }, [client?.loginid]);
 
-    const syncSession = useCallback(async () => {
+    const syncSession = useCallback(async (includeToken = false) => {
         const iframe = iframeRef.current;
         if (!iframe || !iframe.contentWindow) return;
 
@@ -52,11 +52,10 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         const appId = getAppId() || '121856';
         const currency = client?.currency || 'USD';
 
-        if (!token || !activeLoginId) return;
+        if (!activeLoginId) return;
 
-        const sessionPayload = {
-            token,
-            token1: token,
+        // Minimal session payload to allow iframe to signal readiness.
+        const sessionPayload: any = {
             loginid: activeLoginId,
             loginId: activeLoginId,
             acct1: activeLoginId,
@@ -71,6 +70,12 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             authMode: 'derivws_otp',
             bt_secret: 'binarytool',
         };
+
+        // Only include token fields when explicitly requested by the iframe
+        if (includeToken && token) {
+            sessionPayload.token = token;
+            sessionPayload.token1 = token;
+        }
 
         const sessionMsg = createMessage(
             BridgeEvent.SESSION_DATA,
@@ -88,13 +93,16 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                 }
 
                 iframe.contentWindow.postMessage(sessionMsg, '*');
-                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...sessionPayload }, '*');
+                // Send minimal session notices; token-bearing messages only if requested
+                iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...sessionPayload }, '*');
                 iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...sessionPayload }, '*');
-                iframe.contentWindow.postMessage({ action: 'setToken', ...sessionPayload }, '*');
-                iframe.contentWindow.postMessage({ action: 'init', ...sessionPayload }, '*');
-                iframe.contentWindow.postMessage({ action: 'login', ...sessionPayload }, '*');
-                iframe.contentWindow.postMessage({ action: 'SYNC_SESSION', ...sessionPayload }, '*');
-                iframe.contentWindow.postMessage(JSON.stringify({ type: 'SESSION_DATA', ...sessionPayload }), '*');
+                if (includeToken && sessionPayload.token) {
+                    iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...sessionPayload }, '*');
+                    iframe.contentWindow.postMessage({ action: 'setToken', ...sessionPayload }, '*');
+                    iframe.contentWindow.postMessage({ action: 'login', ...sessionPayload }, '*');
+                    iframe.contentWindow.postMessage({ action: 'SYNC_SESSION', ...sessionPayload }, '*');
+                    iframe.contentWindow.postMessage(JSON.stringify({ type: 'SESSION_DATA', ...sessionPayload }), '*');
+                }
         } catch (e) {
                 console.warn('[DTraderIframe] Error sending auth postMessage:', e);
                 try {
@@ -114,17 +122,22 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 
         const handleLoad = () => {
             setIsLoading(false);
-            syncSession();
+            // Send a minimal handshake first; iframe should request token if needed
+            syncSession(false);
             const retryDelays = [100, 300, 600, 1200, 2500, 5000];
-            retryDelays.forEach(ms => setTimeout(syncSession, ms));
+            retryDelays.forEach(ms => setTimeout(() => syncSession(false), ms));
             if (onLoad) onLoad();
         };
 
         const handleMessage = (event: MessageEvent) => {
             if (event.data && typeof event.data === 'object') {
                 const type = event.data.type || event.data.action;
-                if (type === 'REQUEST_AUTH' || type === 'PING' || type === 'GET_SESSION' || type === 'CHECK_AUTH') {
-                    syncSession();
+                // If iframe explicitly requests auth/session, include token
+                if (type === 'REQUEST_AUTH' || type === 'GET_SESSION' || type === 'CHECK_AUTH' || type === 'REQUEST_SESSION') {
+                    syncSession(true);
+                } else if (type === 'PING') {
+                    // keep-alive / readiness check - respond minimally
+                    syncSession(false);
                 }
             }
         };
@@ -151,39 +164,14 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     }
 
     const queryParams = new URLSearchParams();
-    queryParams.set('app_id', appId);
     queryParams.set('embed', 'true');
     queryParams.set('theme', 'dark');
     queryParams.set('hideHeader', String(hideHeader));
     queryParams.set('lang', 'EN');
     queryParams.set('bt_secret', 'binarytool');
 
-    const accountsMap: Record<string, string> = (() => {
-        try {
-            return JSON.parse(localStorage.getItem('accountsList') || '{}');
-        } catch {
-            return {};
-        }
-    })();
-
-    let idx = 1;
-    // Set active account first
-    if (tokenData.loginid && tokenData.token) {
-        queryParams.set(`acct${idx}`, tokenData.loginid);
-        queryParams.set(`token${idx}`, tokenData.token);
-        queryParams.set(`cur${idx}`, currency);
-        idx++;
-    }
-
-    // Set remaining accounts
-    Object.entries(accountsMap).forEach(([accId, accToken]) => {
-        if (accId !== tokenData.loginid && accToken && !accToken.startsWith('ory_at_')) {
-            queryParams.set(`acct${idx}`, accId);
-            queryParams.set(`token${idx}`, accToken);
-            queryParams.set(`cur${idx}`, 'USD');
-            idx++;
-        }
-    });
+    // Do NOT include legacy account tokens in iframe URL query parameters.
+    // Authentication will be performed via postMessage using the "derivws_otp" authMode.
 
     const iframeSrc = `${targetBase}?${queryParams.toString()}`;
 

@@ -233,14 +233,11 @@ export class OAuthTokenExchangeService {
                         const isDemo = isDemoAccount(firstAccount.account_id);
                         localStorage.setItem('account_type', isDemo ? 'demo' : 'real');
 
-                        // Populate compatibility storage (accountsList, token, active_token)
-                        const accountsListMap: Record<string, string> = {};
-                        accounts.forEach((acc) => {
-                            accountsListMap[acc.account_id] = data.access_token!;
-                        });
-                        localStorage.setItem('accountsList', JSON.stringify(accountsListMap));
-                        localStorage.setItem('token', data.access_token!);
-                        localStorage.setItem('active_token', data.access_token!);
+                        // NOTE: Do NOT populate `accountsList`, `token` or `active_token` in localStorage
+                        // with the raw PKCE `access_token` (Bearer token). These tokens are not valid
+                        // for legacy `api.authorize(token)` and cause `InputValidationFailed` errors
+                        // when used directly. We keep PKCE auth in `auth_info` (session/local storage)
+                        // and use the DerivWSAccountsService to fetch OTP/WS URLs when needed.
 
                         ErrorLogger.info('OAuth', 'Accounts fetched and stored', {
                             loginid: firstAccount.account_id,

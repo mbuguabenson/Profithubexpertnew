@@ -204,29 +204,55 @@ export default class TicksService {
         if (api_base.api) {
             const subscription = api_base.api.onMessage().subscribe(({ data }) => {
                 if (data.msg_type === 'tick') {
-                    const { tick } = data;
-                    const { symbol, id } = tick;
-                    if (typeof window !== 'undefined') {
-                        window.dispatchEvent(new CustomEvent('live_tick_update', { detail: tick }));
-                    }
-                    if (this.ticks.has(symbol)) {
-                        this.subscriptions = this.subscriptions.setIn(['tick', symbol], id);
-                        this.updateTicksAndCallListeners(symbol, updateTicks(this.ticks.get(symbol), parseTick(tick)));
-                    }
-                }
+                        const { tick } = data;
+                        if (!tick || typeof tick !== 'object') {
+                            // Defensive: ignore malformed tick messages coming from the socket
+                            // Log minimal info to aid debugging without exposing sensitive data
+                            try {
+                                console.warn('[TicksService] Ignoring malformed tick message', {
+                                    msg_type: data.msg_type,
+                                    raw: data?.tick ?? null,
+                                });
+                            } catch (e) {
+                                /* noop */
+                            }
+                            return;
+                        }
 
-                if (data.msg_type === 'ohlc') {
-                    const { ohlc } = data;
-                    const { symbol, granularity, id } = ohlc;
-                    if (this.candles.hasIn([symbol, Number(granularity)])) {
-                        this.subscriptions = this.subscriptions.setIn(['ohlc', symbol, Number(granularity)], id);
-                        const address = [symbol, Number(granularity)];
-                        this.updateCandlesAndCallListeners(
-                            address,
-                            updateCandles(this.candles.getIn(address), parseOhlc(ohlc))
-                        );
+                        const { symbol, id } = tick;
+                        if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('live_tick_update', { detail: tick }));
+                        }
+                        if (this.ticks.has(symbol)) {
+                            this.subscriptions = this.subscriptions.setIn(['tick', symbol], id);
+                            this.updateTicksAndCallListeners(symbol, updateTicks(this.ticks.get(symbol), parseTick(tick)));
+                        }
                     }
-                }
+
+                    if (data.msg_type === 'ohlc') {
+                        const { ohlc } = data;
+                        if (!ohlc || typeof ohlc !== 'object') {
+                            try {
+                                console.warn('[TicksService] Ignoring malformed ohlc message', {
+                                    msg_type: data.msg_type,
+                                    raw: data?.ohlc ?? null,
+                                });
+                            } catch (e) {
+                                /* noop */
+                            }
+                            return;
+                        }
+
+                        const { symbol, granularity, id } = ohlc;
+                        if (this.candles.hasIn([symbol, Number(granularity)])) {
+                            this.subscriptions = this.subscriptions.setIn(['ohlc', symbol, Number(granularity)], id);
+                            const address = [symbol, Number(granularity)];
+                            this.updateCandlesAndCallListeners(
+                                address,
+                                updateCandles(this.candles.getIn(address), parseOhlc(ohlc))
+                            );
+                        }
+                    }
             });
             api_base.pushSubscription(subscription);
         }

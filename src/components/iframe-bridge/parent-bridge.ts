@@ -1,7 +1,7 @@
 import { BridgeStateMachine, BridgeState } from './bridge-state-machine';
 import { SessionManager as _SessionManager, sessionManager } from './session-manager';
 import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage, SessionPayload } from './protocol';
-import { getActiveToken, getAccountsList, truncateToken } from '@/utils/token-bridge';
+import { getActiveToken, getAccountsList, truncateToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
 
 export interface BridgeDiagnosticInfo {
     state: BridgeState;
@@ -177,34 +177,51 @@ export class ParentBridgeClient {
                 try {
                     const session = sessionManager.getSession();
                     let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-                    let token = session?.token || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-                    if (token && loginid && !token.startsWith('ory_at_')) {
-                        const handshakePayload = {
-                            type: 'NEWDTRADER_BRIDGE_AUTH',
-                            status: 'success',
-                            token,
-                            loginid,
-                            loginId: loginid,
-                            appId: Number(session?.appId || '121856') || 121856,
-                            server: 'green',
-                            timestamp: Date.now(),
-                            authMode: 'derivws_otp',
-                            accountType: 'ZOOM',
-                            bt_secret: 'binarytool',
-                            theme: 'dark',
-                            payload: { token, loginid, currency: 'USD' }
-                        };
-                        // Log a masked token and loginid for safe diagnostics
-                        try {
-                            console.info(`[ParentBridge] HANDSHAKE -> origin=${event.origin} loginid=${loginid || 'none'} token=${truncateToken(token || '')} appId=${session?.appId || 'unknown'}`);
-                        } catch (e) {
-                            // ignore logging errors
-                        }
 
-                        (event.source as Window).postMessage(handshakePayload, '*');
-                        (event.source as Window).postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayload }, '*');
-                        (event.source as Window).postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayload }, '*');
-                    }
+                    // Resolve a safe token asynchronously (will ignore ORY bearer tokens)
+                    (async () => {
+                        try {
+                            const token = await resolveValidDerivWSToken(loginid);
+                            if (loginid && token && !token.startsWith('ory_at_')) {
+                                const handshakePayload = {
+                                    type: 'NEWDTRADER_BRIDGE_AUTH',
+                                    status: 'success',
+                                    token,
+                                    loginid,
+                                    loginId: loginid,
+                                    appId: Number(session?.appId || '121856') || 121856,
+                                    server: 'green',
+                                    timestamp: Date.now(),
+                                    authMode: 'derivws_otp',
+                                    accountType: 'ZOOM',
+                                    bt_secret: 'binarytool',
+                                    theme: 'dark',
+                                    payload: { token, loginid, currency: 'USD' }
+                                };
+                                try {
+                                    console.info(`[ParentBridge] HANDSHAKE -> origin=${event.origin} loginid=${loginid || 'none'} token=${truncateToken(token || '')} appId=${session?.appId || 'unknown'}`);
+                                } catch (e) {}
+
+                                (event.source as Window).postMessage(handshakePayload, '*');
+                                (event.source as Window).postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayload }, '*');
+                                (event.source as Window).postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayload }, '*');
+                            } else {
+                                // If no safe token, send a minimal handshake without token and rely on iframe to request session
+                                const minimalPayload = {
+                                    type: 'NEWDTRADER_BRIDGE_AUTH',
+                                    status: 'pending',
+                                    loginid: loginid || null,
+                                    appId: Number(session?.appId || '121856') || 121856,
+                                    timestamp: Date.now(),
+                                    authMode: 'derivws_otp',
+                                };
+                                (event.source as Window).postMessage(minimalPayload, '*');
+                                (event.source as Window).postMessage({ type: 'HANDSHAKE_RESPONSE', ...minimalPayload }, '*');
+                            }
+                        } catch (e) {
+                            // ignore token resolution errors
+                        }
+                    })();
                 } catch (e) {
                     // Ignore cross-origin error on event.source
                 }

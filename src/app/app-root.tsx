@@ -261,6 +261,8 @@ const AppRoot = () => {
             if (api_base_initialization_started.current) return;
             api_base_initialization_started.current = true;
             try {
+                // Clean up any invalid bearer tokens left in localStorage from older flows
+                sanitizeAccountsList();
                 await api_base.init();
                 api_base_initialized.current = true;
             } catch (error) {
