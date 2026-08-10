@@ -36,13 +36,9 @@
         background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
         padding: 1.5rem 2.5rem;
         border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+        -webkit-backdrop-filter: blur(20px);
         backdrop-filter: blur(20px);
         box-shadow: 0 4px 50px rgba(0, 0, 0, 0.6);
-
-        @media (width <= 480px) {
-            padding: 1rem 1.4rem;
-            gap: 1.2rem;
-        }
 
         .mk-market-selector {
             display: flex;
@@ -238,6 +234,7 @@
 
     .mk-glass-card {
         background: var(--glass-bg);
+        -webkit-backdrop-filter: blur(24px);
         backdrop-filter: blur(24px);
         border: 1px solid var(--glass-border);
         border-radius: 2rem;
