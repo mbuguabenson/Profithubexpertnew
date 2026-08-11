@@ -3,6 +3,7 @@ import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import RootStore from './root-store';
 import { localize } from '@deriv-com/translations';
 import { serialize } from 'v8';
+import { normalizeTradeParameters } from '@/utils/trade-purchase';
 
 export type TStrategy = 'OVER_UNDER' | 'EVEN_ODD' | 'DIFFERS';
 export type TPrediction = 'UNDER' | 'OVER' | 'EVEN' | 'ODD' | 'DIFFERS' | 'WAIT';
@@ -375,19 +376,17 @@ export default class DollarmineStore {
         
         try {
             // 1. Get Proposal
-            const proposalReq: any = {
-                proposal: 1,
-                amount: this.stake,
-                basis: 'stake',
-                contract_type,
-                currency: 'USD',
-                duration: 1,
-                duration_unit: 't',
-                symbol,
-            };
-            if (barrier !== undefined) {
-                proposalReq.barrier = barrier.toString();
-            }
+const proposalReq = normalizeTradeParameters({
+            proposal: 1,
+            amount: this.stake,
+            basis: 'stake',
+            contract_type,
+            currency: 'USD',
+            duration: 1,
+            duration_unit: 't',
+            symbol,
+            ...(barrier !== undefined ? { barrier: barrier.toString() } : {}),
+        });
 
             const proposalRes = await (api_base.api as any).send(proposalReq);
             if (proposalRes.error || !proposalRes.proposal?.id) {

@@ -45,7 +45,7 @@ const removeUndefinedFields = <T extends Record<string, any>>(fields: T): T =>
 
 export const normalizeTradeParameters = (parameters: TTradeParameters) => {
     const { symbol, underlying_symbol, ...rest } = parameters;
-    const normalized_symbol = symbol || underlying_symbol;
+    const normalized_symbol = (symbol || underlying_symbol)?.toString().trim();
     const symbol_field = normalized_symbol
         ? isLegacyOAuthSession()
             ? { symbol: normalized_symbol }

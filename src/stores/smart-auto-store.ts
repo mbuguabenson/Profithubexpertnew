@@ -1,5 +1,6 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
 import { api_base, ApiHelpers } from '@/external/bot-skeleton';
+import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import { TDigitStat } from './analysis-store';
 import RootStore from './root-store';
 
@@ -557,7 +558,7 @@ export default class SmartAutoStore {
 
             this.addLog(`Buying ${contract_type} for $${final_stake.toFixed(2)}`, 'trade');
 
-            const proposal = (await api_base.api.send({
+            const proposal_request = normalizeTradeParameters({
                 proposal: 1,
                 amount: final_stake,
                 basis: 'stake',
@@ -571,7 +572,9 @@ export default class SmartAutoStore {
                         ? {}
                         : { barrier: prediction.toString() }
                     : {}),
-            })) as { error?: { message: string }; proposal?: { id: string } };
+            });
+
+            const proposal = (await api_base.api.send(proposal_request)) as { error?: { message: string }; proposal?: { id: string } };
 
             if (proposal.error) throw new Error(proposal.error.message);
             if (!proposal.proposal) throw new Error('Proposal failed');

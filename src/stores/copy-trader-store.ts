@@ -2,6 +2,7 @@ import { action, makeObservable, observable, reaction, runInAction } from 'mobx'
 import { ProposalOpenContract } from '@deriv/api-types';
 import RootStore from './root-store';
 import { getAppId } from '@/components/shared';
+import { normalizeTradeParameters } from '@/utils/trade-purchase';
 
 export type TCopyAccount = {
     token: string;
@@ -219,7 +220,7 @@ export default class CopyTraderStore {
 
                 try {
                     // Step 1: Get proposal on target account
-                    const proposal_request = {
+                    const proposal_request = normalizeTradeParameters({
                         proposal: 1,
                         amount: stake,
                         basis: 'stake',
@@ -229,7 +230,7 @@ export default class CopyTraderStore {
                         duration_unit: 't',
                         symbol: contract.underlying,
                         barrier: contract.barrier,
-                    };
+                    });
 
                     target.ws!.send(JSON.stringify(proposal_request));
 
@@ -448,7 +449,7 @@ export default class CopyTraderStore {
             const currency = real_account?.currency || 'USD';
 
             // Step 1: Get proposal on real account
-            const proposal_request = {
+            const proposal_request = normalizeTradeParameters({
                 proposal: 1,
                 amount: stake,
                 basis: 'stake',
@@ -458,7 +459,7 @@ export default class CopyTraderStore {
                 duration_unit: 't',
                 symbol: contract.underlying,
                 barrier: contract.barrier,
-            };
+            });
 
             this.real_account_ws.send(JSON.stringify(proposal_request));
 

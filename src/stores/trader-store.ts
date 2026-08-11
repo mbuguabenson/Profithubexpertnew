@@ -1,5 +1,6 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+import { normalizeTradeParameters } from '@/utils/trade-purchase';
 
 export type TTradeCategory = 
     | 'rise_fall' 
@@ -260,31 +261,23 @@ export default class TraderStore {
 
     private buildProposalRequest(contractType: string): any {
         const currency = this.root_store?.client?.currency || 'USD';
-        const req: any = {
+        return normalizeTradeParameters({
             proposal: 1,
             amount: this.amount,
             basis: this.basis,
             contract_type: contractType,
             currency: currency,
             symbol: this.symbol,
-        };
-
-        if (this.category === 'accumulator') {
-            req.growth_rate = this.growth_rate;
-        } else if (this.category === 'multiplier') {
-            req.multiplier = this.multiplier;
-        } else {
-            req.duration = this.duration;
-            req.duration_unit = this.duration_unit;
-        }
-
-        if (this.category === 'digits_match_diff' || this.category === 'digits_over_under') {
-            req.barrier = String(this.prediction);
-        } else if (this.category === 'high_low' || this.category === 'touch_no_touch') {
-            req.barrier = this.barrier;
-        }
-
-        return req;
+            ...(this.category === 'accumulator' ? { growth_rate: this.growth_rate } : {}),
+            ...(this.category === 'multiplier' ? { multiplier: this.multiplier } : {}),
+            ...(this.category !== 'accumulator' && this.category !== 'multiplier'
+                ? { duration: this.duration, duration_unit: this.duration_unit }
+                : {}),
+            ...(this.category === 'digits_match_diff' || this.category === 'digits_over_under'
+                ? { barrier: String(this.prediction) }
+                : {}),
+            ...((this.category === 'high_low' || this.category === 'touch_no_touch') ? { barrier: this.barrier } : {}),
+        });
     }
 
     @action

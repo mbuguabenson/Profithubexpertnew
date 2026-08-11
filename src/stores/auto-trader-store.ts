@@ -1,5 +1,6 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
 import { api_base, ApiHelpers } from '@/external/bot-skeleton';
+import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import RootStore from './root-store';
 
 export type TDigitStat = {
@@ -511,17 +512,19 @@ export default class AutoTraderStore {
         try {
             if (!api_base.api) return;
 
-            const proposal_response = await api_base.api.send({
-                proposal: 1,
-                amount: current_stake,
-                basis: 'stake',
-                contract_type,
-                currency: this.root_store.client?.currency || 'USD',
-                duration: 1,
-                duration_unit: 't',
-                symbol: this.symbol,
-                ...(barrier ? { barrier } : {}),
-            });
+            const proposal_response = await api_base.api.send(
+                normalizeTradeParameters({
+                    proposal: 1,
+                    amount: current_stake,
+                    basis: 'stake',
+                    contract_type,
+                    currency: this.root_store.client?.currency || 'USD',
+                    duration: 1,
+                    duration_unit: 't',
+                    symbol: this.symbol,
+                    ...(barrier ? { barrier } : {}),
+                })
+            );
 
             if (proposal_response.error) {
                 console.error('Strategy Proposal Error:', proposal_response.error);
@@ -700,17 +703,19 @@ export default class AutoTraderStore {
             }
 
             // Step 1: Get proposal
-            const proposal_response = await api_base.api.send({
-                proposal: 1,
-                amount: current_stake,
-                basis: 'stake',
-                contract_type,
-                currency: this.root_store.client?.currency || 'USD',
-                duration: 1,
-                duration_unit: 't',
-                symbol: this.symbol,
-                barrier,
-            });
+            const proposal_response = await api_base.api.send(
+                normalizeTradeParameters({
+                    proposal: 1,
+                    amount: current_stake,
+                    basis: 'stake',
+                    contract_type,
+                    currency: this.root_store.client?.currency || 'USD',
+                    duration: 1,
+                    duration_unit: 't',
+                    symbol: this.symbol,
+                    barrier,
+                })
+            );
 
             if (proposal_response.error) {
                 console.error('AutoTrader Proposal Error:', proposal_response.error);

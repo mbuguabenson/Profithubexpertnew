@@ -2,6 +2,7 @@ import { action, makeObservable, observable, reaction, runInAction } from 'mobx'
 import { DBOT_TABS } from '@/constants/bot-contents';
 import { contract_stages } from '@/constants/contract-stage';
 import { api_base, ApiHelpers, observer as globalObserver } from '@/external/bot-skeleton';
+import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import {
     HotColdData,
     PredictionResult,
@@ -1193,7 +1194,7 @@ export default class SmartTradingStore {
             if (!api_base.api) return;
 
             const executeSingle = async (trade: { type: string; barrier?: number }) => {
-                const proposal_request = {
+                const proposal_request = normalizeTradeParameters({
                     proposal: 1,
                     amount: this.current_stake,
                     basis: 'stake',
@@ -1202,8 +1203,8 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol: this.symbol,
-                    ...(trade.barrier !== undefined && { barrier: trade.barrier }),
-                };
+                    ...(trade.barrier !== undefined ? { barrier: trade.barrier } : {}),
+                });
 
                 const proposal_response = await api_base.api.send(proposal_request);
                 if (proposal_response.error || !proposal_response.proposal?.id) return;
@@ -1431,7 +1432,7 @@ export default class SmartTradingStore {
                 barrier?: number;
             };
 
-            const proposal_request: TProposalRequest = {
+            const proposal_request = normalizeTradeParameters({
                 proposal: 1,
                 amount: stake,
                 basis: 'stake',
@@ -1440,11 +1441,8 @@ export default class SmartTradingStore {
                 duration: 1,
                 duration_unit: 't',
                 symbol,
-            };
-
-            if (barrier !== undefined) {
-                proposal_request.barrier = barrier;
-            }
+                ...(barrier !== undefined ? { barrier } : {}),
+            });
 
             const proposal_response = await api_base.api.send(proposal_request);
 
@@ -2046,20 +2044,22 @@ export default class SmartTradingStore {
         try {
             // PROPOSAL Step with Timeout
             const proposal = await Promise.race([
-                api_base.api.send({
-                    proposal: 1,
-                    amount: strategy.current_stake,
-                    basis: 'stake',
-                    contract_type: trade_type,
-                    currency: this.root_store.client.currency || 'USD',
-                    duration: strategy.ticks,
-                    duration_unit: 't',
-                    symbol: this.symbol,
-                    ...( ['DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'].includes(trade_type || '') &&
-                    prediction !== undefined
-                        ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) }
-                        : {}),
-                }),
+                api_base.api.send(
+                    normalizeTradeParameters({
+                        proposal: 1,
+                        amount: strategy.current_stake,
+                        basis: 'stake',
+                        contract_type: trade_type,
+                        currency: this.root_store.client.currency || 'USD',
+                        duration: strategy.ticks,
+                        duration_unit: 't',
+                        symbol: this.symbol,
+                        ...( ['DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'].includes(trade_type || '') &&
+                        prediction !== undefined
+                            ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) }
+                            : {}),
+                    })
+                ),
                 timeoutPromise(10000, 'Proposal timed out'),
             ]);
 
@@ -2186,7 +2186,7 @@ export default class SmartTradingStore {
                 return;
             }
 
-            const proposal_request: any = {
+            const proposal_request = normalizeTradeParameters({
                 proposal: 1,
                 amount: stake,
                 basis: 'stake',
@@ -2195,11 +2195,8 @@ export default class SmartTradingStore {
                 duration: 1,
                 duration_unit: 't',
                 symbol,
-            };
-
-            if (prediction !== undefined) {
-                proposal_request.barrier = String(prediction);
-            }
+                ...(prediction !== undefined ? { barrier: String(prediction) } : {}),
+            });
 
             const proposal_response = await api_base.api.send(proposal_request);
 
@@ -2499,17 +2496,19 @@ export default class SmartTradingStore {
         if (!api_base.api) return;
 
         try {
-            const proposal = await api_base.api.send({
-                proposal: 1,
-                amount: stake,
-                basis: 'stake',
-                contract_type: type,
-                currency: this.root_store.client.currency || 'USD',
-                duration,
-                duration_unit: 't',
-                symbol: this.symbol,
-                ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
-            });
+            const proposal = await api_base.api.send(
+                normalizeTradeParameters({
+                    proposal: 1,
+                    amount: stake,
+                    basis: 'stake',
+                    contract_type: type,
+                    currency: this.root_store.client.currency || 'USD',
+                    duration,
+                    duration_unit: 't',
+                    symbol: this.symbol,
+                    ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
+                })
+            );
 
             if (proposal.error) return;
 
@@ -2764,17 +2763,19 @@ export default class SmartTradingStore {
         this.addUltraLog(`Executing ${trade.type} signal...`, 'success');
 
         try {
-            const proposal = await api_base.api.send({
-                proposal: 1,
-                amount: stake,
-                basis: 'stake',
-                contract_type: trade.type,
-                currency: this.root_store.client.currency || 'USD',
-                duration: 1,
-                duration_unit: 't',
-                symbol: this.symbol,
-                ...(trade.prediction !== undefined ? { barrier: typeof trade.prediction === 'number' ? trade.prediction : Number(trade.prediction) } : {}),
-            });
+            const proposal = await api_base.api.send(
+                normalizeTradeParameters({
+                    proposal: 1,
+                    amount: stake,
+                    basis: 'stake',
+                    contract_type: trade.type,
+                    currency: this.root_store.client.currency || 'USD',
+                    duration: 1,
+                    duration_unit: 't',
+                    symbol: this.symbol,
+                    ...(trade.prediction !== undefined ? { barrier: typeof trade.prediction === 'number' ? trade.prediction : Number(trade.prediction) } : {}),
+                })
+            );
 
             if (proposal.error) {
                 this.addUltraLog(`Proposal error: ${proposal.error.message}`, 'error');
@@ -3035,17 +3036,19 @@ export default class SmartTradingStore {
         try {
             this.addScpLog(`Sent: ${contract_type} | Stake: ${config.stake}`, 'info');
 
-            const proposal = await api_base.api.send({
-                proposal: 1,
-                amount: config.stake,
-                basis: 'stake',
-                contract_type: contract_type,
-                currency: this.root_store.client.currency || 'USD',
-                duration: 1,
-                duration_unit: 't',
-                symbol: config.market,
-                ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
-            });
+            const proposal = await api_base.api.send(
+                normalizeTradeParameters({
+                    proposal: 1,
+                    amount: config.stake,
+                    basis: 'stake',
+                    contract_type: contract_type,
+                    currency: this.root_store.client.currency || 'USD',
+                    duration: 1,
+                    duration_unit: 't',
+                    symbol: config.market,
+                    ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
+                })
+            );
 
             if (proposal.error) {
                 this.addScpLog(`Proposal error: ${proposal.error.message}`, 'error');
@@ -3189,17 +3192,19 @@ export default class SmartTradingStore {
                 ? this.bulk_prediction
                 : undefined;
 
-            const proposal = await api_base.api.send({
-                proposal: 1,
-                amount: this.bulk_stake,
-                basis: 'stake',
-                contract_type: this.bulk_contract_type,
-                currency: this.root_store.client.currency || 'USD',
-                duration: 1,
-                duration_unit: 't',
-                symbol: this.bulk_market,
-                ...(barrier !== undefined ? { barrier } : {}),
-            });
+            const proposal = await api_base.api.send(
+                normalizeTradeParameters({
+                    proposal: 1,
+                    amount: this.bulk_stake,
+                    basis: 'stake',
+                    contract_type: this.bulk_contract_type,
+                    currency: this.root_store.client.currency || 'USD',
+                    duration: 1,
+                    duration_unit: 't',
+                    symbol: this.bulk_market,
+                    ...(barrier !== undefined ? { barrier } : {}),
+                })
+            );
 
             if (proposal.error) {
                 console.error('Bulk Trade Error:', proposal.error);
@@ -3277,7 +3282,7 @@ export default class SmartTradingStore {
             try {
                 if (!api_base.api) return;
 
-                const proposal_request = {
+                const proposal_request = normalizeTradeParameters({
                     proposal: 1,
                     amount: current_stake,
                     basis: 'stake',
@@ -3287,7 +3292,7 @@ export default class SmartTradingStore {
                     duration_unit: 't',
                     symbol,
                     ...(barrier !== undefined ? { barrier: typeof barrier === 'number' ? barrier : Number(barrier) } : {}),
-                };
+                });
 
                 const response = await api_base.api.send(proposal_request);
                 if (response.error) {

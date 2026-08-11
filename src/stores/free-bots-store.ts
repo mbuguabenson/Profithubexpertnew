@@ -1,5 +1,6 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import { api_base } from '@/external/bot-skeleton';
+import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import { DigitStatsEngine } from '@/lib/digit-stats-engine';
 import RootStore from './root-store';
 
@@ -532,7 +533,7 @@ export default class FreeBotsStore {
             const stake = this.calcStake(cfg);
             addLog(`📤 ${contract_type} | $${stake} | ${this.symbol}`, 'trade');
 
-            const proposal_data: Record<string, unknown> = {
+            const proposal_data = normalizeTradeParameters({
                 proposal: 1,
                 amount: stake,
                 basis: 'stake',
@@ -541,10 +542,8 @@ export default class FreeBotsStore {
                 duration: cfg.ticks,
                 duration_unit: 't',
                 symbol: this.symbol,
-            };
-            if (!['DIGITEVEN', 'DIGITODD'].includes(contract_type)) {
-                proposal_data.barrier = String(prediction);
-            }
+                ...( !['DIGITEVEN', 'DIGITODD'].includes(contract_type) ? { barrier: String(prediction) } : {}),
+            });
 
             const proposal = (await api.send(proposal_data)) as any;
             if (proposal.error) throw new Error(proposal.error.message);
