@@ -131,8 +131,8 @@ export class DerivWSAccountsService {
                 const baseURL = this.getDerivWSBaseURL();
                 const OptionsDir = brandConfig.platform.derivws.directories.options;
                 const endpoint = `${baseURL}${OptionsDir}accounts`;
-
                 const appId = getAppId() || '121856';
+                try { console.debug('[DerivWS] fetchAccountsList called', { endpoint, appId, token_prefix: String(accessToken).slice(0, 8) }); } catch (e) {}
                 const response = await fetch(endpoint, {
                     method: 'GET',
                     headers: {
@@ -156,7 +156,7 @@ export class DerivWSAccountsService {
 
                 // Store accounts in sessionStorage for future use
                 this.storeAccounts(accounts);
-
+                try { console.debug('[DerivWS] fetched accounts count', { count: accounts.length }); } catch (e) {}
                 return accounts;
             } catch (error) {
                 console.error('[DerivWS] Error fetching accounts:', error);
@@ -200,8 +200,9 @@ export class DerivWSAccountsService {
                 const baseURL = this.getDerivWSBaseURL();
                 const optionsDir = brandConfig.platform.derivws.directories.options;
                 const endpoint = `${baseURL}${optionsDir}accounts/${accountId}/otp`;
-
                 const appId = getAppId() || '121856';
+                try { console.debug('[DerivWS] fetchOTPWebSocketURL', { endpoint, accountId, appId, token_prefix: String(accessToken).slice(0, 8) }); } catch (e) {}
+
                 const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
@@ -218,7 +219,7 @@ export class DerivWSAccountsService {
                 const otpResponse: OTPResponse = await response.json();
                 // Parse the nested JSON string
                 const websocketURL = otpResponse.data.url;
-
+                try { console.debug('[DerivWS] otp response received', { websocketURLExists: !!websocketURL }); } catch (e) {}
                 if (!websocketURL) {
                     throw new Error('WebSocket URL not found in OTP response');
                 }

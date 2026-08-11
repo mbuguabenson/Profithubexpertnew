@@ -45,14 +45,23 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
     const activeId = loginid || getActiveLoginId();
     const list = getAccountsList();
 
+    // Debug: surface resolution inputs
+    try {
+        console.debug('[token-bridge] resolveValidDerivWSToken called', { activeId, accountsKeys: Object.keys(list) });
+    } catch (e) {
+        // noop
+    }
+
     // 1. Direct match in accountsList for active account
     if (activeId && list[activeId] && !isInvalidBearerToken(list[activeId])) {
+        try { console.debug('[token-bridge] using accountsList token for activeId', activeId, { prefix: String(list[activeId]).slice(0, 8) }); } catch (e) {}
         return list[activeId];
     }
 
     // 2. Check any token in accountsList
     for (const id in list) {
         if (!isInvalidBearerToken(list[id])) {
+            try { console.debug('[token-bridge] using accountsList token for other id', id, { prefix: String(list[id]).slice(0, 8) }); } catch (e) {}
             return list[id];
         }
     }
@@ -63,31 +72,36 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
         localStorage.getItem('active_token') ||
         localStorage.getItem('authToken');
     if (!isInvalidBearerToken(storedToken)) {
+        try { console.debug('[token-bridge] using stored token key', { prefix: String(storedToken).slice(0, 8) }); } catch (e) {}
         return storedToken!;
     }
 
     // 4. PKCE OAuth2 Access Token fallback
     const oauthToken = OAuthTokenExchangeService.getAccessToken();
     if (!isInvalidBearerToken(oauthToken)) {
+        try { console.debug('[token-bridge] using OAuth auth_info access_token prefix', { prefix: String(oauthToken).slice(0, 8) }); } catch (e) {}
         return oauthToken!;
     }
 
     // 5. Fetch OTP WebSocket URL if available
-    try {
-        const authInfo = OAuthTokenExchangeService.getAuthInfo();
-        if (authInfo?.access_token && activeId) {
-            const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
-            if (wsUrl) {
-                const parsedUrl = new URL(wsUrl);
-                const otpToken = parsedUrl.searchParams.get('token') || parsedUrl.searchParams.get('otp');
-                if (otpToken) {
-                    return otpToken;
+        try {
+            const authInfo = OAuthTokenExchangeService.getAuthInfo();
+            console.debug('[token-bridge] attempting PKCE OTP flow', { hasAuthInfo: !!authInfo, activeId });
+            if (authInfo?.access_token && activeId) {
+                const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
+                console.debug('[token-bridge] DerivWSAccountsService returned wsUrl', { len: wsUrl ? wsUrl.length : 0 });
+                if (wsUrl) {
+                    const parsedUrl = new URL(wsUrl);
+                    const otpToken = parsedUrl.searchParams.get('token') || parsedUrl.searchParams.get('otp');
+                    if (otpToken) {
+                        try { console.debug('[token-bridge] extracted OTP token prefix', { prefix: String(otpToken).slice(0, 8) }); } catch (e) {}
+                        return otpToken;
+                    }
                 }
             }
+        } catch (e) {
+            console.warn('[token-bridge] Error fetching PKCE OTP token:', e);
         }
-    } catch (e) {
-        console.warn('[token-bridge] Error fetching PKCE OTP token:', e);
-    }
 
     return '';
 };
