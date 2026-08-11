@@ -232,7 +232,7 @@ const getDigitSettings = (
         const before = seed % 9;
         const after = Math.min(8, before + 2);
         return {
-            barrier: String(before),
+            barrier: typeof before === 'number' ? before : Number(before),
             predictionBeforeLoss: String(before),
             predictionAfterLoss: String(after),
         };
@@ -242,14 +242,14 @@ const getDigitSettings = (
         const before = 9 - (seed % 9);
         const after = Math.max(1, before - 2);
         return {
-            barrier: String(before),
+            barrier: typeof before === 'number' ? before : Number(before),
             predictionBeforeLoss: String(before),
             predictionAfterLoss: String(after),
         };
     }
 
     if (tradeType === 'DIGITMATCH' || tradeType === 'DIGITDIFF') {
-        return { barrier: String(seed % 10) };
+        return { barrier: Number(seed % 10) };
     }
 
     return { barrier: baseBarrier };

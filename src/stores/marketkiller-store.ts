@@ -139,7 +139,7 @@ export default class MarketkillerStore {
             buyRes = await api_base.api.send({
                 buy: '1',
                 price: safeStake,
-                parameters: {
+                    parameters: {
                     amount: safeStake,
                     basis: 'stake',
                     contract_type: config.type,
@@ -147,7 +147,7 @@ export default class MarketkillerStore {
                     duration: this.matches_settings.duration || 1,
                     duration_unit: 't',
                     symbol: config.symbol,
-                    barrier: String(config.barrier),
+                    barrier: typeof config.barrier === 'number' ? config.barrier : Number(config.barrier),
                 },
             });
         } catch (e: any) {
@@ -589,7 +589,7 @@ export default class MarketkillerStore {
                     duration: this.matches_settings.duration || 1,
                     duration_unit: 't',
                     symbol: config.symbol,
-                    barrier: String(config.barrier),
+                    barrier: typeof config.barrier === 'number' ? config.barrier : Number(config.barrier),
                 },
             });
         });

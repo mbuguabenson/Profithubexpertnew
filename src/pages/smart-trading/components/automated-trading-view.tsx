@@ -220,7 +220,7 @@ const AutomatedTradingView = observer(() => {
                 duration: config.ticks || 1,
                 duration_unit: 't',
                 symbol: symbol,
-                ...(prediction !== undefined ? { barrier: String(prediction) } : {}),
+                ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
             });
 
             if (proposal.error) {

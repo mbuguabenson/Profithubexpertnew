@@ -4,6 +4,8 @@ import './iframe-wrapper.scss';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
+import { makeBridgeLogger, generateInstanceId } from '../iframe-bridge/bridge-diagnostics';
+import { BridgeEvent, createMessage } from '../iframe-bridge/protocol';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
 import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
@@ -20,6 +22,10 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
     const [isLoading, setIsLoading] = useState(true);
     const [bridgeClient, setBridgeClient] = useState<ParentBridgeClient | null>(null);
     const { transactions, run_panel, client } = useStore();
+
+    const instanceIdRef = useRef<string | null>(null);
+    if (!instanceIdRef.current) instanceIdRef.current = generateInstanceId();
+    const logger = makeBridgeLogger(instanceIdRef.current);
 
     useEffect(() => {
         const iframe = iframeRef.current;
@@ -41,88 +47,87 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         }
 
         // Initialize the new bridge client
+        const iframeOrigin = (() => {
+            try { return new URL(src).origin; } catch { return '*'; }
+        })();
+        logger.debug('IFRAME_CREATE', { iframeUrl: src, iframeOrigin });
         const bridge = new ParentBridgeClient();
         setBridgeClient(bridge);
-        bridge.attach(iframe, '*');
+        bridge.attach(iframe, iframeOrigin);
 
-        const sendLegacyAuthData = async () => {
+        const sendBridgeAuthData = async () => {
             let loginid = V2GetActiveClientId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
             const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
             let token = await resolveValidDerivWSToken(loginid);
 
             const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
             if (isDemoToReal && loginid && !loginid.startsWith('VR') && title !== 'DTrader Terminal') {
-                 const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
-                 if (demoAccountId) {
-                     loginid = demoAccountId;
-                     token = accountsList[demoAccountId] || token;
-                 }
+                const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
+                if (demoAccountId) {
+                    loginid = demoAccountId;
+                    token = accountsList[demoAccountId] || token;
+                }
             }
 
             const effectiveLoginId = loginid || (client as any)?.active_account_loginid || localStorage.getItem('active_loginid') || undefined;
             const effectiveToken = token || localStorage.getItem('token') || undefined;
+            const appIdStr = getAppId() || '121856';
+            const targetOrigin = iframeOrigin === '*' ? '*' : iframeOrigin;
 
-            if (iframe.contentWindow) {
-                try {
-                    let embedBase = process.env.DTRADER_URL ? `${process.env.DTRADER_URL}` : 'https://deriv-dtrader.vercel.app/dtrader';
-                    if (!embedBase.endsWith('/dtrader') && !embedBase.includes('localhost')) {
-                        embedBase = `${embedBase.replace(/\/$/, '')}/dtrader`;
-                    }
-                    const appIdStr = getAppId() || '121856';
-                    const appIdNum = Number(appIdStr) || 121856;
+            if (!iframe.contentWindow) {
+                logger.debug('SYNC_FAILED', { reason: 'missing_content_window' });
+                return;
+            }
 
-                    let iframeUrl = `${embedBase}?chart_type=area&interval=1t&symbol=1HZ100V&trade_type=accumulator&app_id=${appIdStr}&lang=EN`;
-                    if (effectiveLoginId && effectiveToken) {
-                        iframeUrl += `&acct1=${effectiveLoginId}&token1=${effectiveToken}&cur1=USD`;
-                    }
+            const authPayload: any = {
+                loginId: effectiveLoginId,
+                loginid: effectiveLoginId,
+                accountType: 'ZOOM',
+                currency: client?.currency || 'USD',
+                appId: String(appIdStr),
+                app_id: appIdStr,
+                authMode: effectiveToken ? 'derivws_otp' : 'none',
+                server: 'green',
+                bt_secret: 'binarytool',
+                theme: 'dark',
+                timestamp: Date.now(),
+            };
 
-                    const authPayload = {
-                        iframeUrl,
-                        embedBase,
-                        accountType: 'ZOOM',
-                        loginId: effectiveLoginId,
-                        loginid: effectiveLoginId,
-                        token: effectiveToken,
-                        currency: client?.currency || 'USD',
-                        appId: String(appIdStr),
-                        app_id: appIdStr,
-                        defaultSymbol: '1HZ100V',
-                        authMode: effectiveToken ? 'derivws_otp' : 'none',
-                        server: 'green',
-                        timestamp: Date.now(),
-                        bt_secret: 'binarytool',
-                        theme: 'dark',
-                    };
+            if (effectiveToken) {
+                authPayload.token = effectiveToken;
+            }
 
-                    console.log('[DTrader iframe] params passed to iframe', authPayload);
+            if (effectiveLoginId) {
+                authPayload.acct1 = effectiveLoginId;
+                authPayload.cur1 = authPayload.currency;
+            }
 
-                    iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ action: 'init', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ action: 'login', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'BRIDGE_READY', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'SESSION_DATA', payload: authPayload }, '*');
-                    
-                    iframe.contentWindow.postMessage({ 
-                        action: 'sync_client_data', 
-                        payload: { client_accounts: JSON.parse(localStorage.getItem('client.accounts') || '{}') } 
-                    }, '*');
+            const sessionMessage = createMessage(BridgeEvent.SESSION_DATA, appIdStr, 'parent', authPayload);
+            const authTokenMessage = createMessage('AUTH_TOKEN', appIdStr, 'parent', authPayload);
+            const derivAuthMessage = createMessage('DERIV_AUTH', appIdStr, 'parent', authPayload);
+            const authStartMessage = createMessage(BridgeEvent.AUTH_START, appIdStr, 'parent', { timestamp: Date.now() });
 
-                } catch (error) {
-                    console.error('Error sending auth data to iframe:', error);
-                }
+            logger.debug('IFRAME_AUTH_SEND', { targetOrigin, appId: appIdStr, tokenPresent: !!effectiveToken, loginid: effectiveLoginId });
+            try {
+                console.debug('[NewdtraderBridge] message sent', { targetOrigin, type: sessionMessage.type, action: undefined });
+                iframe.contentWindow.postMessage(sessionMessage, targetOrigin);
+                iframe.contentWindow.postMessage(authTokenMessage, targetOrigin);
+                iframe.contentWindow.postMessage(derivAuthMessage, targetOrigin);
+                iframe.contentWindow.postMessage(authStartMessage, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, targetOrigin);
+            } catch (error) {
+                console.error('Error sending auth data to iframe:', error);
             }
         };
 
         // Initial broadcast for iframe terminals and a small retry window for mount races
-        iframe.addEventListener('load', sendLegacyAuthData);
-        sendLegacyAuthData();
+        iframe.addEventListener('load', sendBridgeAuthData);
+        sendBridgeAuthData();
         const authRetryIntervals = [500, 1500, 3000];
         authRetryIntervals.forEach(ms => setTimeout(() => {
             if (iframe.contentWindow) {
-                sendLegacyAuthData();
+                sendBridgeAuthData();
             }
         }, ms));
 
@@ -153,13 +158,18 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             // Debug: Log all messages from iframe
             if (event.data) {
                 // (Legacy support)
-                // We used to blindly call sendLegacyAuthData() here for unrecognized messages.
+                // We used to blindly call sendBridgeAuthData() here for unrecognized messages.
                 // DO NOT DO THAT! If the iframe emits periodic pings or state updates, 
                 // blindly replying with 'login' commands creates a ping-pong loop that 
                 // triggers Deriv API rate limits and causes 'Session expired' after a few minutes.
             }
 
             if (!event.data) return;
+
+            // Safe logging of messages
+            try {
+                logger.messageReceived(event.origin, event.data.type, event.data.action);
+            } catch (e) {}
 
             // Handle trade events from Hyperbot iframe
             if (event.data.type === 'TRADE_PLACED' || event.data.type === 'CONTRACT_EVENT') {
@@ -303,7 +313,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             setIsLoading(false);
             setHasError(false);
             setTimeout(() => {
-                sendLegacyAuthData();
+                sendBridgeAuthData();
                 setIsLoading(false);
                 // Check if iframe has content
                 try {
@@ -386,7 +396,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         setTimeout(checkIframeAccess, 2000);
 
         setTimeout(() => {
-            sendLegacyAuthData();
+            sendBridgeAuthData();
         }, 1000);
 
         // Cleanup

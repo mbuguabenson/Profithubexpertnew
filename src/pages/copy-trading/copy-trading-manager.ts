@@ -180,7 +180,7 @@ class DerivClient {
                 duration: params.duration || 1,
                 duration_unit: params.duration_unit || 't',
                 symbol: params.underlying_symbol || params.symbol,
-                ...(params.barrier !== undefined && { barrier: String(params.barrier) }),
+                ...(params.barrier !== undefined && { barrier: typeof params.barrier === 'number' ? params.barrier : Number(params.barrier) }),
                 ...(params.barrier2 !== undefined && { barrier2: String(params.barrier2) }),
                 ...(params.prediction !== undefined && { prediction: Number(params.prediction) }),
                 req_id: reqId,

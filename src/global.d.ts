@@ -150,4 +150,7 @@ declare global {
     const google: Window['google'];
 }
 
+declare module '*.scss';
+declare module '*.css';
+
 export {};

@@ -15,11 +15,8 @@ const DpTools: React.FC = observer(() => {
     const baseUrl = 'https://xenontool.netlify.app/';
     const params = new URLSearchParams();
     
-    if (token) params.set('token', token);
-    if (loginid) {
-        params.set('acct', loginid);
-        params.set('loginid', loginid);
-    }
+    // Do NOT include legacy tokens or login ids in the iframe URL querystring.
+    // Auth and session data are sent securely via the iframe bridge (postMessage).
     params.set('app_id', LEGACY_APP_ID);
     params.set('appId', LEGACY_APP_ID);
     params.set('server', 'green');

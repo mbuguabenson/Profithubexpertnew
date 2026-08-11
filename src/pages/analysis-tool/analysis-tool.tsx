@@ -15,11 +15,8 @@ const ProfithubAnalysis: React.FC = observer(() => {
     const baseUrl = 'https://analysisprofithub.vercel.app/';
     const params = new URLSearchParams();
     
-    if (token) params.set('token', token);
-    if (loginid) {
-        params.set('acct', loginid);
-        params.set('loginid', loginid);
-    }
+    // Do NOT include legacy tokens or login ids in the iframe URL querystring.
+    // Auth and session data are sent securely via the iframe bridge (postMessage).
     params.set('app_id', appId);
     params.set('appId', appId);
 

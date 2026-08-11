@@ -551,7 +551,7 @@ const Hyperbot = observer(() => {
                             duration: 1,
                             duration_unit: 't',
                             symbol: market,
-                            barrier: String(barrierDigit),
+                            barrier: typeof barrierDigit === 'number' ? barrierDigit : Number(barrierDigit),
                         },
                     };
 
@@ -816,7 +816,7 @@ const Hyperbot = observer(() => {
                                 duration: 1,
                                 duration_unit: 't',
                                 symbol: market,
-                                barrier: String(barrierDigit),
+                                barrier: typeof barrierDigit === 'number' ? barrierDigit : Number(barrierDigit),
                             },
                         };
 
