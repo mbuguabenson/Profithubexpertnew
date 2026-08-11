@@ -73,6 +73,44 @@ export class DerivWSAccountsService {
         return '/api/deriv-accounts';
     }
 
+    private static async fetchWithTimeout<T>(url: string, options: RequestInit, timeoutMs = 10000): Promise<T> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+            }
+
+            return (await response.json()) as T;
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
+    private static async fetchTextWithTimeout(url: string, options: RequestInit, timeoutMs = 10000): Promise<string> {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                throw new Error(`Request failed: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.text();
+        } finally {
+            clearTimeout(timeoutId);
+        }
+    }
+
     /**
      * Clears all cached promises (useful for testing or forced refresh)
      */
@@ -140,50 +178,38 @@ export class DerivWSAccountsService {
         // Create new fetch promise and cache it
         this.accountsFetchPromise = (async () => {
             try {
-                const baseURL = this.getDerivWSBaseURL();
-                const OptionsDir = brandConfig.platform.derivws.directories.options;
-                const endpoint = `${baseURL}${OptionsDir}accounts`;
                 const appId = getAppId() || '121856';
-                try { console.debug('[DerivWS] fetchAccountsList called', { endpoint, appId, token_prefix: String(accessToken).slice(0, 8) }); } catch (e) {}
+                try { console.debug('[DerivWS] fetchAccountsList called', { appId, token_prefix: String(accessToken).slice(0, 8) }); } catch (e) {}
+
                 const fetchAccounts = async (url: string): Promise<AccountsResponse> => {
-                    const controller = new AbortController();
-                    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
-                    try {
-                        const response = await fetch(url, {
-                            method: 'GET',
-                            headers: {
-                                Authorization: `Bearer ${accessToken}`,
-                                'Deriv-App-ID': appId,
-                            },
-                            signal: controller.signal,
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`Failed to fetch accounts: ${response.status} ${response.statusText}`);
-                        }
-
-                        return response.json();
-                    } finally {
-                        window.clearTimeout(timeoutId);
-                    }
+                    return this.fetchWithTimeout<AccountsResponse>(url, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            'Deriv-App-ID': appId,
+                        },
+                    });
                 };
 
                 let data: AccountsResponse;
+                const proxyEndpoint = this.getAccountsProxyEndpoint();
                 try {
-                    data = await fetchAccounts(endpoint);
-                } catch (error) {
+                    data = await fetchAccounts(proxyEndpoint);
+                } catch (proxyError) {
                     const isNetworkFailure =
-                        error instanceof TypeError ||
-                        error?.name === 'TypeError' ||
-                        /NetworkError|Failed to fetch/i.test(String(error)) ||
-                        error?.name === 'AbortError';
+                        proxyError instanceof TypeError ||
+                        proxyError?.name === 'TypeError' ||
+                        /NetworkError|Failed to fetch/i.test(String(proxyError)) ||
+                        proxyError?.name === 'AbortError';
 
                     if (this.isBrowser() && isNetworkFailure) {
-                        const proxyEndpoint = this.getAccountsProxyEndpoint();
-                        console.warn('[DerivWS] Direct accounts fetch blocked; retrying through same-origin proxy', error);
-                        data = await fetchAccounts(proxyEndpoint);
+                        const baseURL = this.getDerivWSBaseURL();
+                        const optionsDir = brandConfig.platform.derivws.directories.options;
+                        const endpoint = `${baseURL}${optionsDir}accounts`;
+                        console.warn('[DerivWS] Proxy accounts fetch failed; retrying direct Deriv endpoint', proxyError);
+                        data = await fetchAccounts(endpoint);
                     } else {
-                        throw error;
+                        throw proxyError;
                     }
                 }
 
@@ -244,55 +270,41 @@ export class DerivWSAccountsService {
                 try { console.debug('[DerivWS] fetchOTPWebSocketURL', { endpoint, accountId, appId, token_prefix: String(accessToken).slice(0, 8) }); } catch (e) {}
 
                 const fetchOTP = async (url: string): Promise<string> => {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                Authorization: `Bearer ${accessToken}`,
-                                'Deriv-App-ID': appId,
-                            },
-                            signal: controller.signal,
-                        });
+                    const otpResponse = await this.fetchWithTimeout<OTPResponse>(url, {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            'Deriv-App-ID': appId,
+                        },
+                    });
 
-                        if (!response.ok) {
-                            throw new Error(`Failed to fetch OTP: ${response.status} ${response.statusText}`);
-                        }
-
-                        const otpResponse: OTPResponse = await response.json();
-                        const websocketURL = otpResponse.data.url;
-                        try { console.debug('[DerivWS] otp response received', { websocketURLExists: !!websocketURL }); } catch (e) {}
-                        if (!websocketURL) {
-                            throw new Error('WebSocket URL not found in OTP response');
-                        }
-                        return websocketURL;
-                    } finally {
-                        clearTimeout(timeoutId);
+                    const websocketURL = otpResponse.data.url;
+                    try { console.debug('[DerivWS] otp response received', { websocketURLExists: !!websocketURL }); } catch (e) {}
+                    if (!websocketURL) {
+                        throw new Error('WebSocket URL not found in OTP response');
                     }
+                    return websocketURL;
                 };
 
+                const proxyEndpoint = this.getOTPProxyEndpoint(accountId);
                 try {
-                    return await fetchOTP(endpoint);
-                } catch (error) {
+                    return await fetchOTP(proxyEndpoint);
+                } catch (proxyError) {
                     const isNetworkFailure =
-                        error instanceof TypeError ||
-                        error?.name === 'TypeError' ||
-                        /NetworkError|Failed to fetch/i.test(String(error)) ||
-                        error?.name === 'AbortError';
+                        proxyError instanceof TypeError ||
+                        proxyError?.name === 'TypeError' ||
+                        /NetworkError|Failed to fetch/i.test(String(proxyError)) ||
+                        proxyError?.name === 'AbortError';
 
                     if (this.isBrowser() && isNetworkFailure) {
-                        try {
-                            const proxyEndpoint = this.getOTPProxyEndpoint(accountId);
-                            console.warn('[DerivWS] Direct OTP fetch blocked; retrying through same-origin proxy', error);
-                            return await fetchOTP(proxyEndpoint);
-                        } catch (proxyError) {
-                            console.error('[DerivWS] OTP proxy fetch also failed:', proxyError);
-                            throw proxyError;
-                        }
+                        const baseURL = this.getDerivWSBaseURL();
+                        const optionsDir = brandConfig.platform.derivws.directories.options;
+                        const endpoint = `${baseURL}${optionsDir}accounts/${encodeURIComponent(accountId)}/otp`;
+                        console.warn('[DerivWS] Proxy OTP fetch failed; retrying direct Deriv endpoint', proxyError);
+                        return await fetchOTP(endpoint);
                     }
 
-                    throw error;
+                    throw proxyError;
                 }
             } catch (error) {
                 console.error('[DerivWS] Error fetching OTP:', error);
