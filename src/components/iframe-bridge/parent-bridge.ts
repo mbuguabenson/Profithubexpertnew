@@ -83,7 +83,7 @@ export class ParentBridgeClient {
                 const token = await resolveValidDerivWSToken(loginid);
                 const tokenPresent = !!token && !String(token).startsWith('ory_at_');
 
-                const payload = {
+                const makePayload = () => ({
                     type: 'NEWDTRADER_BRIDGE_AUTH',
                     status: tokenPresent ? 'success' : 'pending',
                     tokenPresent,
@@ -92,17 +92,41 @@ export class ParentBridgeClient {
                     appId: Number(session?.appId || '121856') || 121856,
                     server: 'green',
                     timestamp: Date.now(),
-                    authMode: tokenPresent ? 'derivws_otp' : 'derivws_otp',
-                };
+                    authMode: 'derivws_otp',
+                });
 
-                if (this.iframeWindow) {
+                const postOnce = () => {
+                    if (!this.iframeWindow) return;
                     try {
+                        const payload = makePayload();
                         this.logger.debug('PROACTIVE_HANDSHAKE', { loginid, tokenPresent });
                         this.iframeWindow.postMessage(payload, this.iframeOrigin === '*' ? '*' : this.iframeOrigin);
+                        // Also send legacy session messages to maximize compatibility
+                        const legacy = {
+                            type: 'SESSION_DATA',
+                            token: tokenPresent ? token : '',
+                            loginid: loginid || null,
+                            loginId: loginid || null,
+                            appId: Number(session?.appId || '121856') || 121856,
+                        };
+                        this.iframeWindow.postMessage(legacy, this.iframeOrigin === '*' ? '*' : this.iframeOrigin);
                     } catch (e) {
                         this.logger.debug('PROACTIVE_HANDSHAKE_ERROR', { error: String(e) });
                     }
-                }
+                };
+
+                // Fire a few quick retries to cover listener race conditions in iframe
+                postOnce();
+                let attempts = 0;
+                const maxAttempts = 8;
+                const retryId = setInterval(() => {
+                    attempts += 1;
+                    if (!this.iframeWindow || attempts > maxAttempts) {
+                        clearInterval(retryId);
+                        return;
+                    }
+                    postOnce();
+                }, 300);
             } catch (e) {
                 // ignore
             }
