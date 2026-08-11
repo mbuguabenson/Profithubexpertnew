@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 
 /**
  * IframeAuthService
@@ -79,6 +80,20 @@ export class IframeAuthService {
             // Immediately send full session including token
             try { this.logger?.debug?.('IframeAuthService immediate syncSession(true)'); } catch (e) {}
             this.syncSession(true).catch(() => {});
+
+            // Also attempt a direct legacy DERIV_AUTH post using OTP if available
+            try {
+                const token = await resolveValidDerivWSToken();
+                const iframeWindow = this.iframeRef.current?.contentWindow;
+                if (iframeWindow && token) {
+                    const payload = { type: 'DERIV_AUTH', token, authMode: 'derivws_otp' };
+                    try { this.logger?.debug?.('IframeAuthService posting direct DERIV_AUTH fallback', { tokenPrefix: String(token).slice(0, 8) }); } catch (e) {}
+                    iframeWindow.postMessage(payload, '*');
+                }
+            } catch (e) {
+                try { this.logger?.debug?.('IframeAuthService failed to post direct DERIV_AUTH', e); } catch (err) {}
+            }
+
             return;
         }
 
