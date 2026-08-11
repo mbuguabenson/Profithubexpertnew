@@ -74,6 +74,40 @@ export class ParentBridgeClient {
             this.handleSessionChange(session);
         });
 
+        // Proactively attempt to send a minimal NEWDTRADER_BRIDGE_AUTH handshake
+        // to help cross-origin iframes that initialize listeners after load.
+        (async () => {
+            try {
+                const session = sessionManager.getSession();
+                let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+                const token = await resolveValidDerivWSToken(loginid);
+                const tokenPresent = !!token && !String(token).startsWith('ory_at_');
+
+                const payload = {
+                    type: 'NEWDTRADER_BRIDGE_AUTH',
+                    status: tokenPresent ? 'success' : 'pending',
+                    tokenPresent,
+                    loginid: loginid || null,
+                    loginId: loginid || null,
+                    appId: Number(session?.appId || '121856') || 121856,
+                    server: 'green',
+                    timestamp: Date.now(),
+                    authMode: tokenPresent ? 'derivws_otp' : 'derivws_otp',
+                };
+
+                if (this.iframeWindow) {
+                    try {
+                        this.logger.debug('PROACTIVE_HANDSHAKE', { loginid, tokenPresent });
+                        this.iframeWindow.postMessage(payload, this.iframeOrigin === '*' ? '*' : this.iframeOrigin);
+                    } catch (e) {
+                        this.logger.debug('PROACTIVE_HANDSHAKE_ERROR', { error: String(e) });
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+        })();
+
         // The state will stay in LOADING_IFRAME or WAITING_READY until the iframe replies with BRIDGE_READY
         setTimeout(() => {
             if (this.stateMachine.getState() === BridgeState.LOADING_IFRAME) {
