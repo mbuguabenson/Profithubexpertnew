@@ -9,6 +9,7 @@ import { BridgeEvent, createMessage } from '../iframe-bridge/protocol';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
 import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
+import TokenDebugPanel from '@/components/Debug/TokenDebugPanel';
 
 interface IframeWrapperProps {
     src: string;
@@ -524,6 +525,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 }}
             />
             {title === 'DTrader Terminal' && <DiagnosticsPanel bridge={bridgeClient} />}
+            {title === 'DTrader Terminal' && <TokenDebugPanel />}
         </div>
     );
 });
