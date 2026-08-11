@@ -87,7 +87,7 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
         try {
             const authInfo = OAuthTokenExchangeService.getAuthInfo();
             console.debug('[token-bridge] attempting PKCE OTP flow', { hasAuthInfo: !!authInfo, activeId });
-            if (authInfo?.access_token && activeId) {
+            if (authInfo?.access_token) {
                 const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
                 console.debug('[token-bridge] DerivWSAccountsService returned wsUrl', { len: wsUrl ? wsUrl.length : 0 });
                 if (wsUrl) {
