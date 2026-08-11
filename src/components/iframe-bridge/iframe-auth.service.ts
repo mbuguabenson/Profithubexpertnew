@@ -68,7 +68,7 @@ export class IframeAuthService {
         this.retryTimers.push(timer as unknown as number);
     }
 
-    private onMessage(event: MessageEvent) {
+    private async onMessage(event: MessageEvent) {
         if (!this.running) return;
         if (!event.data || typeof event.data !== 'object') return;
         const type = event.data.type || event.data.action;
