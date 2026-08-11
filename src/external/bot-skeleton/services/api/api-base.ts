@@ -3,6 +3,7 @@ import { getAccountId, getAccountType, isDemoAccount, removeUrlParameter } from 
 /* [/AI] */
 import CommonStore from '@/stores/common-store';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { isProduction } from '@/components/shared/utils/config/config';
 import { clearAuthData } from '@/utils/auth-utils';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
@@ -128,13 +129,38 @@ class APIBase {
         if (activeAccountId) {
             setIsAuthorizing(true);
             await this.authorizeAndSubscribe();
+            return;
         }
+
+        // If a PKCE auth session exists, attempt authorization from access_token even
+        // when active_loginid is not yet present in localStorage.
+        const authInfo = OAuthTokenExchangeService.getAuthInfo();
+        if (authInfo?.access_token) {
+            setIsAuthorizing(true);
+            await this.authorizeAndSubscribe();
+            return;
+        }
+
+        // No active account or auth info found -- end authorizing state cleanly.
+        setIsAuthorizing(false);
     }
 
     onsocketclose() {
         setConnectionStatus(CONNECTION_STATUS.CLOSED);
+
+        if (!this.is_authorized) {
+            setIsAuthorizing(false);
+        }
+
         this.reconnectIfNotConnected();
     }
+
+    onSocketError = (event: Event) => {
+        console.error('[APIBase] WebSocket error event:', event);
+        if (!this.is_authorized) {
+            setIsAuthorizing(false);
+        }
+    };
 
     async init(force_create_connection = false) {
         this.toggleRunButton(true);

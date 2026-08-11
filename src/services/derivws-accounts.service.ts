@@ -146,19 +146,26 @@ export class DerivWSAccountsService {
                 const appId = getAppId() || '121856';
                 try { console.debug('[DerivWS] fetchAccountsList called', { endpoint, appId, token_prefix: String(accessToken).slice(0, 8) }); } catch (e) {}
                 const fetchAccounts = async (url: string): Promise<AccountsResponse> => {
-                    const response = await fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            'Deriv-App-ID': appId,
-                        },
-                    });
+                    const controller = new AbortController();
+                    const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+                    try {
+                        const response = await fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`,
+                                'Deriv-App-ID': appId,
+                            },
+                            signal: controller.signal,
+                        });
 
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch accounts: ${response.status} ${response.statusText}`);
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch accounts: ${response.status} ${response.statusText}`);
+                        }
+
+                        return response.json();
+                    } finally {
+                        window.clearTimeout(timeoutId);
                     }
-
-                    return response.json();
                 };
 
                 let data: AccountsResponse;
@@ -168,7 +175,8 @@ export class DerivWSAccountsService {
                     const isNetworkFailure =
                         error instanceof TypeError ||
                         error?.name === 'TypeError' ||
-                        /NetworkError|Failed to fetch/i.test(String(error));
+                        /NetworkError|Failed to fetch/i.test(String(error)) ||
+                        error?.name === 'AbortError';
 
                     if (this.isBrowser() && isNetworkFailure) {
                         const proxyEndpoint = this.getAccountsProxyEndpoint();
@@ -236,26 +244,32 @@ export class DerivWSAccountsService {
                 try { console.debug('[DerivWS] fetchOTPWebSocketURL', { endpoint, accountId, appId, token_prefix: String(accessToken).slice(0, 8) }); } catch (e) {}
 
                 const fetchOTP = async (url: string): Promise<string> => {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            'Deriv-App-ID': appId,
-                        },
-                        signal: controller.signal,
-                    });
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`,
+                                'Deriv-App-ID': appId,
+                            },
+                            signal: controller.signal,
+                        });
 
-                    if (!response.ok) {
-                        throw new Error(`Failed to fetch OTP: ${response.status} ${response.statusText}`);
-                    }
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch OTP: ${response.status} ${response.statusText}`);
+                        }
 
-                    const otpResponse: OTPResponse = await response.json();
-                    const websocketURL = otpResponse.data.url;
-                    try { console.debug('[DerivWS] otp response received', { websocketURLExists: !!websocketURL }); } catch (e) {}
-                    if (!websocketURL) {
-                        throw new Error('WebSocket URL not found in OTP response');
+                        const otpResponse: OTPResponse = await response.json();
+                        const websocketURL = otpResponse.data.url;
+                        try { console.debug('[DerivWS] otp response received', { websocketURLExists: !!websocketURL }); } catch (e) {}
+                        if (!websocketURL) {
+                            throw new Error('WebSocket URL not found in OTP response');
+                        }
+                        return websocketURL;
+                    } finally {
+                        clearTimeout(timeoutId);
                     }
-                    return websocketURL;
                 };
 
                 try {
@@ -264,7 +278,8 @@ export class DerivWSAccountsService {
                     const isNetworkFailure =
                         error instanceof TypeError ||
                         error?.name === 'TypeError' ||
-                        /NetworkError|Failed to fetch/i.test(String(error));
+                        /NetworkError|Failed to fetch/i.test(String(error)) ||
+                        error?.name === 'AbortError';
 
                     if (this.isBrowser() && isNetworkFailure) {
                         try {
@@ -330,9 +345,15 @@ export class DerivWSAccountsService {
             // On an account switch the caller has already written the new loginid to
             // localStorage before triggering a WebSocket regeneration, so we honour
             // that selection here instead of always falling back to accounts[0].
-            const activeLoginId = localStorage.getItem('active_loginid');
+            let activeLoginId = localStorage.getItem('active_loginid');
             const targetAccount =
                 (activeLoginId && accounts.find(a => a.account_id === activeLoginId)) || accounts[0];
+
+            if (!activeLoginId && targetAccount?.account_id) {
+                localStorage.setItem('active_loginid', targetAccount.account_id);
+                localStorage.setItem('account_type', targetAccount.account_type === 'demo' ? 'demo' : 'real');
+                activeLoginId = targetAccount.account_id;
+            }
 
             // Step 4: Fetch OTP and WebSocket URL for the resolved account (always fresh OTP)
             const websocketURL = await this.fetchOTPWebSocketURL(accessToken, targetAccount.account_id);
