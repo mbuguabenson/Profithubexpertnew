@@ -170,6 +170,11 @@ export class DigitTradeEngine {
         symbol: string,
         currency: string
     ) => {
+        if (!symbol || String(symbol).trim() === '') {
+            this.addLog('⛔ Manual trade aborted: invalid symbol.', 'error');
+            return;
+        }
+
         const config = (this as Record<string, unknown>)[`${strategy}_config`] as TTradeConfig;
         if (!config) return;
 
@@ -451,6 +456,11 @@ export class DigitTradeEngine {
                 throw new Error(`Minimum stake required: 0.35`);
             }
 
+            if (!symbol || String(symbol).trim() === '') {
+                this.addLog('⛔ Invalid or missing symbol supplied for trade proposal.', 'error');
+                throw new Error('Invalid trading symbol. Please select a valid market before trading.');
+            }
+
             const proposal_data: any = {
                 proposal: 1,
                 amount: String(final_stake),
@@ -459,8 +469,11 @@ export class DigitTradeEngine {
                 currency,
                 duration: 1,
                 duration_unit: 't',
-                symbol,
             };
+
+            if (String(symbol).trim()) {
+                proposal_data.symbol = symbol;
+            }
 
             // Add barrier for digit contracts that require it
             if (!['DIGITEVEN', 'DIGITODD'].includes(contract_type)) {

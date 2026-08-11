@@ -222,15 +222,20 @@ export default class DigitCrackerStore {
 
     @action
     setSymbol = (symbol: string) => {
-        if (this.symbol === symbol) return;
+        const normalizedSymbol = String(symbol || '').trim();
+        if (!normalizedSymbol) {
+            console.warn('[DigitCrackerStore] Ignoring invalid symbol selection:', symbol);
+            return;
+        }
+        if (this.symbol === normalizedSymbol) return;
 
         if (this.unsubscribe_ticks) {
             this.unsubscribe_ticks();
             this.unsubscribe_ticks = null;
         }
 
-        this.symbol = symbol;
-        this.pip = this.symbol_pips.get(symbol) || 2;
+        this.symbol = normalizedSymbol;
+        this.pip = this.symbol_pips.get(normalizedSymbol) || 2;
         this.ticks = [];
         this.last_digit = null;
         this.current_price = '0.00';
