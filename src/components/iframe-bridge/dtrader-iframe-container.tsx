@@ -5,6 +5,7 @@ import { ParentBridgeClient } from './parent-bridge';
 import { BridgeEvent, createMessage } from './protocol';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
+import IframeAuthService from './iframe-auth.service';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { Loader2 } from 'lucide-react';
@@ -143,54 +144,26 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         logger.debug('IFRAME_CREATE', { iframeSrc, iframeOrigin: computedIframeOrigin });
         bridge.attach(iframe, computedIframeOrigin);
 
+        // Install auth service which centralizes handshake retries and message handling
+        const authService = new IframeAuthService(iframeRef, syncSession, logger);
+        authService.start();
+
         const handleLoad = () => {
             setIsLoading(false);
             logger.debug('IFRAME_LOAD', { iframeSrc });
             logger.debug('IFRAME_CONTENT_WINDOW', { contentWindowExists: !!iframe.contentWindow });
-            // Send a minimal handshake first; iframe should request token if needed
+            // Initial minimal sync; authService will continue retries and respond to iframe requests
             syncSession(false);
-            const retryDelays = [100, 300, 600, 1200, 2500, 5000];
-            retryDelays.forEach(ms => setTimeout(() => syncSession(false), ms));
             if (onLoad) onLoad();
         };
 
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data && typeof event.data === 'object') {
-                const type = event.data.type || event.data.action;
-                const action = event.data.action;
-                try { logger.messageReceived(event.origin, type, action); } catch (e) {}
-
-                // Additional explicit diagnostic line matching requested format (no credentials)
-                try {
-                    console.debug('[NewdtraderBridge] message received', {
-                        origin: event.origin,
-                        type,
-                        action,
-                        sourceIsIframe: event.source === iframe.contentWindow,
-                    });
-                } catch (e) {}
-
-                // If iframe explicitly requests auth/session, include token
-                if (type === 'REQUEST_AUTH' || type === 'GET_SESSION' || type === 'CHECK_AUTH' || type === 'REQUEST_SESSION') {
-                    syncSession(true);
-                } else if (type === 'PING') {
-                    // keep-alive / readiness check - respond minimally
-                    syncSession(false);
-                }
-            }
-        };
-
-            // Register window message listener before sending any messages
-            window.addEventListener('message', handleMessage);
-            iframe.addEventListener('load', handleLoad);
-            // Initial sync without token; syncSession will compute target origin from iframe.src
-            syncSession();
+        iframe.addEventListener('load', handleLoad);
 
         return () => {
             clearTimeout(timer);
             iframe.removeEventListener('load', handleLoad);
-            window.removeEventListener('message', handleMessage);
             bridge.detach();
+            authService.stop();
         };
     }, [syncSession, onLoad]);
 
