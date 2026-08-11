@@ -197,6 +197,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     // Construct full DTrader route URL with all accounts & tokens as query parameters
     const appId = getAppId() || '121856';
     const currency = client?.currency || 'USD';
+    const loginId = tokenData.loginid || client?.loginid || localStorage.getItem('active_loginid') || '';
 
     let targetBase = rawUrl.trim();
     if (!targetBase.includes('/dtrader') && !targetBase.includes('localhost')) {
@@ -210,6 +211,9 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     queryParams.set('lang', 'EN');
     queryParams.set('bt_secret', 'binarytool');
     queryParams.set('app_id', appId);
+    // Include api_version and account id in URL so the iframe can initialize faster
+    queryParams.set('api_version', 'v2');
+    if (loginId) queryParams.set('acct1', loginId);
     queryParams.set('cur1', currency);
 
     // Do NOT include legacy account tokens in iframe URL query parameters.
