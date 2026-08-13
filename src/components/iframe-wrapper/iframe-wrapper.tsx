@@ -3,6 +3,8 @@ import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
+import { resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { getAppId } from '@/components/shared/utils/config/config';
 
 interface IframeWrapperProps {
     src: string;
@@ -11,17 +13,15 @@ interface IframeWrapperProps {
 }
 
 /**
- * IframeWrapper — generic iframe container for third-party bot tools.
+ * IframeWrapper — generic iframe container for embedded tools.
  *
- * IMPORTANT: This component intentionally does NOT attempt any Deriv cookie-bridge
- * auth (postMessage / ParentBridgeClient). That approach is blocked by SameSite cookie
- * restrictions when Deriv's domain is embedded in a third-party iframe.
- * For DTrader, use the OAuth launcher panel in dtrader.tsx instead.
+ * Auth: On load (and on iframe request), sends a NEWDTRADER_BRIDGE_AUTH
+ * postMessage containing the OTP WebSocket token resolved by
+ * resolveValidDerivWSToken(). This satisfies the iframe's bridge-client
+ * handshake without relying on SameSite cookies.
  *
- * What this component DOES:
- * - Renders a third-party bot iframe (Hyperbot, Diffbot, Profihub Analysis, etc.)
- * - Listens for TRADE_PLACED / CONTRACT_EVENT / CONTRACT_UPDATE messages from those
- *   bot iframes and forwards them into the MobX run-panel / transactions store.
+ * Trade forwarding: Listens for TRADE_PLACED / CONTRACT_EVENT /
+ * CONTRACT_UPDATE and forwards them to the MobX run-panel / transactions store.
  */
 const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, className = '' }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -33,12 +33,13 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         const iframe = iframeRef.current;
         if (!iframe) return;
 
-        // Allowed origins for third-party bot iframes (Hyperbot, Diffbot, etc.)
-        // NOTE: deriv.com / trader.deriv.com are intentionally NOT listed here.
-        // Auth via postMessage bridge is not supported for Deriv's cross-origin
-        // iframes due to SameSite cookie restrictions. Use the OAuth launcher for DTrader.
+        const iframeOrigin = (() => {
+            try { return new URL(src).origin; } catch { return '*'; }
+        })();
+
         const allowedOrigins = [
-            'https://deriv-dtrader.vercel.app',   // Vercel DTrader (iframe embed)
+            iframeOrigin,
+            'https://deriv-dtrader.vercel.app',
             'https://www.derivcircles.com',
             'https://bot-analysis-tool-belex.web.app',
             'https://analysisprofithub.vercel.app',
@@ -49,6 +50,64 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             window.location.origin,
         ];
 
+        // ── Auth handshake ──────────────────────────────────────────────
+        // The Vercel DTrader build (bridge-client.ts) expects a
+        // NEWDTRADER_BRIDGE_AUTH postMessage from the parent containing a
+        // valid OTP token. If it doesn't receive one within its timeout,
+        // it fires "Bridge auth timeout". This function resolves the OTP
+        // token and posts the full auth payload.
+
+        const sendAuthToIframe = async () => {
+            if (!iframe.contentWindow) return;
+
+            const loginid =
+                client?.loginid ||
+                localStorage.getItem('active_loginid') ||
+                localStorage.getItem('client.loginid') || '';
+
+            const token = await resolveValidDerivWSToken(loginid);
+            const appId = getAppId() || '121856';
+            const targetOrigin = iframeOrigin === '*' ? '*' : iframeOrigin;
+            const tokenPresent = !!token && !token.startsWith('ory_at_');
+
+            const authPayload = {
+                status: tokenPresent ? 'success' : 'pending',
+                tokenPresent,
+                token: tokenPresent ? token : '',
+                loginid: loginid || null,
+                loginId: loginid || null,
+                acct1: loginid || null,
+                appId: Number(appId) || 121856,
+                app_id: appId,
+                server: 'green',
+                timestamp: Date.now(),
+                authMode: 'derivws_otp',
+                accountType: 'ZOOM',
+                bt_secret: 'binarytool',
+                theme: 'dark',
+                currency: client?.currency || 'USD',
+                cur1: client?.currency || 'USD',
+            };
+
+            try {
+                // Primary: NEWDTRADER_BRIDGE_AUTH (what bridge-client.ts listens for)
+                iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, targetOrigin);
+
+                // Additional message types the iframe may listen for
+                iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, targetOrigin);
+            } catch (e) {
+                console.warn('[IframeWrapper] Error sending auth postMessage:', e);
+            }
+        };
+
+        // ── Incoming message handler ────────────────────────────────────
+
         const handleMessage = (event: MessageEvent) => {
             const isAllowed =
                 allowedOrigins.includes(event.origin) ||
@@ -56,11 +115,25 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             if (!isAllowed) return;
             if (!event.data) return;
 
-            // Forward trade events from bot iframes into the run panel / transactions store
+            const msgType = event.data.type || event.data.action || '';
+
+            // ── Auth requests from iframe ──
+            // bridge-client.ts may send BRIDGE_READY, REQUEST_SESSION, etc.
+            // Respond immediately with full auth payload.
+            const authRequestTypes = [
+                'BRIDGE_READY', 'REQUEST_SESSION', 'REQUEST_AUTH',
+                'GET_SESSION', 'CHECK_AUTH', 'PING', 'HANDSHAKE_REQUEST',
+            ];
+            if (authRequestTypes.includes(msgType)) {
+                sendAuthToIframe();
+                return;
+            }
+
+            // ── Trade events (Hyperbot, Diffbot, etc.) ──
             if (event.data.type === 'TRADE_PLACED' || event.data.type === 'CONTRACT_EVENT') {
                 const tradeData = event.data;
 
-                // DTrader no longer uses IframeWrapper — guard kept for safety
+                // DTrader trades are handled by DTrader itself, not run panel
                 if (title === 'DTrader Terminal') return;
 
                 if (run_panel && !run_panel.run_id) {
@@ -125,11 +198,10 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 return;
             }
 
-            // Forward contract updates
+            // ── Contract updates ──
             if (event.data.type === 'CONTRACT_UPDATE') {
-                const updateData = event.data;
-                if (updateData.contract_id && transactions?.onBotContractEvent) {
-                    transactions.onBotContractEvent(updateData);
+                if (event.data.contract_id && transactions?.onBotContractEvent) {
+                    transactions.onBotContractEvent(event.data);
                 }
                 return;
             }
@@ -137,9 +209,16 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
         window.addEventListener('message', handleMessage);
 
+        // ── Iframe load / error handling ─────────────────────────────────
+
         const handleLoad = () => {
             setIsLoading(false);
             setHasError(false);
+            // Send auth immediately on load, then retry a few times for race conditions
+            sendAuthToIframe();
+            setTimeout(sendAuthToIframe, 500);
+            setTimeout(sendAuthToIframe, 1500);
+            setTimeout(sendAuthToIframe, 3000);
         };
         const handleError = () => {
             setIsLoading(false);
@@ -150,13 +229,16 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         iframe.addEventListener('load', handleLoad);
         iframe.addEventListener('error', handleError);
 
+        // Also attempt auth before load event (iframe may initialise listeners early)
+        sendAuthToIframe();
+
         return () => {
             iframe.removeEventListener('load', handleLoad);
             iframe.removeEventListener('error', handleError);
             window.removeEventListener('message', handleMessage);
             clearTimeout(loadTimeout);
         };
-    }, [src, title]);
+    }, [src, title, client?.loginid, client?.currency]);
 
     return (
         <div className={`iframe-wrapper ${className}`} style={{ pointerEvents: 'auto', position: 'relative' }}>
@@ -196,12 +278,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 >
                     <p style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Failed to load {title}</p>
                     <p style={{ fontSize: '1rem', marginTop: '1rem', color: 'var(--text-less-prominent)', marginBottom: '1.5rem' }}>
-                        The external site may be blocking iframe embedding or serving downloads instead of HTML.
-                        <br /><br />
-                        <strong>Possible causes:</strong><br />
-                        • X-Frame-Options header blocking embedding<br />
-                        • Content-Type header causing downloads<br />
-                        • CORS policy restrictions
+                        The external site may be blocking iframe embedding.
                     </p>
                     <a
                         href={src}
