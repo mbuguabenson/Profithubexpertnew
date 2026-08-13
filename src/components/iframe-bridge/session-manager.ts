@@ -6,6 +6,8 @@ import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 const isInvalidToken = (token: string | null | undefined): boolean =>
     !token || token === 'null' || token.startsWith('ory_at_');
 
+import { isDemoAccount } from '@/utils/account-helpers';
+
 export class SessionManager {
     private listeners: Set<(session: SessionPayload | null) => void> = new Set();
     private checkInterval: NodeJS.Timeout | null = null;
@@ -66,7 +68,7 @@ export class SessionManager {
             token: token || '',
             loginid: loginid || '',
             currency: localStorage.getItem('client.currency') || 'USD',
-            isDemo: Boolean(loginid && loginid.startsWith('VR')),
+            isDemo: isDemoAccount(loginid),
             appId
         };
     }
