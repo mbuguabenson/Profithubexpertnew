@@ -90,7 +90,7 @@ export class ParentBridgeClient {
         try {
             const hasToken = !!tok && !String(tok).startsWith('ory_at_');
             const authMode = hasToken ? 'derivws_otp' : 'none';
-            const effectiveToken = hasToken ? tok : 'dummy_token';
+            const effectiveToken = hasToken ? tok : 'a1-guest';
 
             const accountsList = getAccountsList();
             const isDemo = loginid.startsWith('VR') || loginid.startsWith('VRT') || loginid.startsWith('DOT') || loginid.startsWith('DEM');
@@ -132,9 +132,10 @@ export class ParentBridgeClient {
                     fullname: 'Profithub Trader',
                 },
                 clientId: appIdStr || '121856',
-                apiBase: 'https://api.derivws.com/trading/v1/',
+                apiBase: 'https://ws.derivws.com/websockets/v3',
                 authBase: 'https://oauth.deriv.com',
             };
+
 
             const legacyV2AuthMsg = {
                 ...v2AuthMsg,
