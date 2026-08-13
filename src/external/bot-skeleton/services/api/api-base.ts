@@ -55,7 +55,7 @@ class APIBase {
     // Constants for timeouts - extracted magic numbers for better maintainability
     private readonly ACTIVE_SYMBOLS_TIMEOUT_MS = 25000; // 25 seconds
     private readonly ENRICHMENT_TIMEOUT_MS = 25000; // 25 seconds
-    private readonly MAX_RECONNECTION_ATTEMPTS = 5; // Maximum number of reconnection attempts before session reset
+    private readonly MAX_RECONNECTION_ATTEMPTS = 15; // Maximum number of reconnection attempts before giving up
 
     unsubscribeAllSubscriptions = () => {
         this.current_auth_subscriptions?.forEach(subscription_promise => {
@@ -244,22 +244,15 @@ class APIBase {
             this.reconnection_attempts += 1;
 
             if (this.reconnection_attempts >= this.MAX_RECONNECTION_ATTEMPTS) {
-                // Reset reconnection counter
+                // Reset reconnection counter but do NOT clear auth data.
+                // Network issues should never destroy the user's login session.
                 this.reconnection_attempts = 0;
-
-                // Properly handle logout through the API
-                setIsAuthorized(false);
-                setAccountList([]);
-                setAuthData(null);
-
-                // Clear necessary storage items
-                localStorage.removeItem('active_loginid');
-                localStorage.removeItem('account_type');
-                localStorage.removeItem('accountsList');
-                localStorage.removeItem('clientAccounts');
+                console.warn('[APIBase] Max reconnection attempts reached, will continue retrying with backoff');
             }
 
-            this.init(true);
+            // Add exponential backoff delay to avoid hammering the server
+            const delay = Math.min(1000 * Math.pow(1.5, Math.min(this.reconnection_attempts, 10)), 30000);
+            setTimeout(() => this.init(true), delay);
         }
     };
 
@@ -405,7 +398,19 @@ class APIBase {
             this.subscribe();
         } catch (e) {
             this.is_authorized = false;
-            clearAuthData();
+
+            // Only clear auth data for permanent authentication failures.
+            // Transient errors (timeout, network flicker, race conditions) should
+            // NOT destroy the user's session — they can recover on reconnect.
+            const errorCode = (e as any)?.error?.code || (e as any)?.code || '';
+            const permanentAuthErrors = ['InvalidToken', 'ExpiredToken', 'InvalidAppID'];
+            if (permanentAuthErrors.includes(errorCode)) {
+                clearAuthData();
+                globalObserver.emit('InvalidToken');
+            } else {
+                console.warn('[APIBase] Authorization failed with transient error, preserving session:', errorCode || e);
+            }
+
             setIsAuthorized(false);
             globalObserver.emit('Error', e);
         } finally {

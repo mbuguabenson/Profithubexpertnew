@@ -9,6 +9,24 @@ const clearLocalStorage = (): void => {
         // Get the current bot_version before clearing
         const currentBotVersion = localStorage.getItem(BOT_VERSION_CONFIG.STORAGE_KEY);
 
+        // Preserve auth data across version bumps to prevent unwanted logouts.
+        // Only non-auth cache data (UI preferences, stale config, etc.) should be reset.
+        const authKeysToPreserve = [
+            'active_loginid',
+            'accountsList',
+            'clientAccounts',
+            'auth_info',
+            'authToken',
+            'active_token',
+            'deriv_api_token',
+            'client_account_details',
+            'account_type',
+        ];
+        const preserved: Record<string, string | null> = {};
+        authKeysToPreserve.forEach(key => {
+            preserved[key] = localStorage.getItem(key);
+        });
+
         // Clear all localStorage
         localStorage.clear();
 
@@ -16,6 +34,13 @@ const clearLocalStorage = (): void => {
         if (currentBotVersion) {
             localStorage.setItem(BOT_VERSION_CONFIG.STORAGE_KEY, currentBotVersion);
         }
+
+        // Restore preserved auth data
+        Object.entries(preserved).forEach(([key, value]) => {
+            if (value !== null) {
+                localStorage.setItem(key, value);
+            }
+        });
     } catch (error) {
         console.error('Error clearing localStorage:', error);
     }

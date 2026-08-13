@@ -446,10 +446,10 @@ export default class ClientStore {
 
                 this.all_accounts_balance = null;
 
-                localStorage.removeItem('accountsList');
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('clientAccounts');
-                localStorage.removeItem('account_type'); // Clear account type on logout
+                // NOTE: Do NOT remove accountsList, authToken, clientAccounts, or account_type
+                // from localStorage here. Clearing them would permanently log the user out
+                // if the subsequent api_base.init() call fails. The in-memory state above is
+                // enough to reset the UI while preserving the ability to re-authorize.
                 removeCookies('client_information');
 
                 setIsAuthorized(false);

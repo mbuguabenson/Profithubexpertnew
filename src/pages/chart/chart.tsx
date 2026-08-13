@@ -10,6 +10,7 @@ import { useStore } from '@/hooks/useStore';
 import { ChartTitle, SmartChart, TGranularity, TStateChangeListener } from '@deriv-com/smartcharts-champion';
 import { useDevice } from '@deriv-com/ui';
 import ToolbarWidgets from './toolbar-widgets';
+import DigitDistributionCircles from './digit-distribution-circles';
 import '@deriv-com/smartcharts-champion/dist/smartcharts.css';
 
 const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
@@ -112,6 +113,15 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 id={`dbot-${symbol}`}
                 key={`chart-${symbol}`}
                 barriers={barriers}
+                bottomWidgets={
+                    show_digits_stats
+                        ? ((props: any) => (
+                              <div className='bottom-widgets' style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                  <DigitDistributionCircles digits={props?.digits} tick={props?.tick} />
+                              </div>
+                          )) as any
+                        : undefined
+                }
                 showLastDigitStats={show_digits_stats}
                 chartControlsWidgets={null}
                 enabledChartFooter={false}

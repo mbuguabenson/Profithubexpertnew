@@ -5,6 +5,8 @@ import ErrorComponent from '@/components/error-component/error-component';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
+import { useTokenRefresh } from '@/hooks/useTokenRefresh';
+import { sanitizeAccountsList } from '@/utils/token-bridge';
 import { getBrandLabel, getBrandWebsiteName } from '@/components/shared/utils/brand/brand';
 import './app-root.scss';
 
@@ -166,6 +168,9 @@ const AppRoot = () => {
     const api_base_initialized = useRef(false);
     const api_base_initialization_started = useRef(false);
     const [is_api_initialized, setIsApiInitialized] = useState(false);
+
+    // Proactively refresh OAuth token before expiry to prevent silent logouts
+    useTokenRefresh();
     const [showWelcome, setShowWelcome] = useState(true);
     const [backgroundLoaded, setBackgroundLoaded] = useState(false);
     const [progress, setProgress] = useState(0);
