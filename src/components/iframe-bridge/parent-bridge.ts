@@ -90,18 +90,68 @@ export class ParentBridgeClient {
         try {
             const hasToken = !!tok && !String(tok).startsWith('ory_at_');
             const authMode = hasToken ? 'derivws_otp' : 'none';
+            const effectiveToken = hasToken ? tok : 'dummy_token';
+
+            const accountsList = getAccountsList();
+            const isDemo = loginid.startsWith('VR') || loginid.startsWith('VRT') || loginid.startsWith('DOT') || loginid.startsWith('DEM');
+
+            const accounts = Object.keys(accountsList).length > 0
+                ? Object.entries(accountsList).map(([id]) => ({
+                    account_id: id,
+                    account_type: (id.startsWith('VR') || id.startsWith('VRT') || id.startsWith('DOT') || id.startsWith('DEM') ? 'demo' : 'real') as 'demo' | 'real',
+                    currency: currency || 'USD',
+                    balance: '10000.00',
+                    status: 'active',
+                }))
+                : [{
+                    account_id: loginid || 'DOT100000',
+                    account_type: isDemo ? ('demo' as const) : ('real' as const),
+                    currency: currency || 'USD',
+                    balance: '10000.00',
+                    status: 'active',
+                }];
+
+            const activeAccId = loginid || accounts[0].account_id;
+
+            // Exact NewdtraderAuthMsg schema required by isAuthMsg in @deriv/api-v2 bridge-types.ts
+            const v2AuthMsg = {
+                type: 'deriv:dtrader:auth',
+                version: 'v2',
+                auth: {
+                    access_token: effectiveToken,
+                    token_type: 'Bearer',
+                    expires_at: Date.now() + 86400000,
+                },
+                activeAccountId: activeAccId,
+                accounts: accounts,
+                otpUrl: 'https://api.derivws.com/trading/v1/options/ws/demo',
+                userProfile: {
+                    country: 'ke',
+                    currency: currency || 'USD',
+                    email: 'user@profithub.co.ke',
+                    fullname: 'Profithub Trader',
+                },
+                clientId: appIdStr || '121856',
+                apiBase: 'https://api.derivws.com/trading/v1/',
+                authBase: 'https://oauth.deriv.com',
+            };
+
+            const legacyV2AuthMsg = {
+                ...v2AuthMsg,
+                type: 'newdtrader:auth',
+            };
 
             const payloadInner = {
                 status: 'success',
                 tokenPresent: hasToken,
-                token: hasToken ? tok : '',
-                token1: hasToken ? tok : '',
-                loginid: loginid || null,
-                loginId: loginid || null,
-                acct1: loginid || null,
-                account_id: loginid || null,
-                currency: currency,
-                cur1: currency,
+                token: effectiveToken,
+                token1: effectiveToken,
+                loginid: activeAccId,
+                loginId: activeAccId,
+                acct1: activeAccId,
+                account_id: activeAccId,
+                currency: currency || 'USD',
+                cur1: currency || 'USD',
                 accountType: 'ZOOM',
                 account_type: 'ZOOM',
                 appId: Number(appIdStr) || 121856,
@@ -131,6 +181,11 @@ export class ParentBridgeClient {
                 }
             };
 
+            // Post exact @deriv/api-v2 bridge payloads FIRST
+            postBoth(v2AuthMsg);
+            postBoth(legacyV2AuthMsg);
+
+            // Post fallback & legacy variations
             postBoth(structuredMsg);
             postBoth({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
             postBoth({ action: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
@@ -148,6 +203,7 @@ export class ParentBridgeClient {
             // ignore
         }
     }
+
 
     private startProactiveAuthLoop() {
         if (this.retryIntervalId) {
