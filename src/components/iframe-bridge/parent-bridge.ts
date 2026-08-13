@@ -255,6 +255,7 @@ export class ParentBridgeClient {
                                 type: 'NEWDTRADER_BRIDGE_AUTH',
                                 status: 'success',
                                 tokenPresent: true,
+                                token: token,
                                 loginid,
                                 loginId: loginid,
                                 appId: Number(session?.appId || '121856') || 121856,
@@ -306,6 +307,8 @@ export class ParentBridgeClient {
                             const minimalPayload = {
                                 type: 'NEWDTRADER_BRIDGE_AUTH',
                                 status: 'pending',
+                                tokenPresent: false,
+                                token: '',
                                 loginid: loginid || null,
                                 appId: Number(session?.appId || '121856') || 121856,
                                 timestamp: Date.now(),
@@ -441,6 +444,7 @@ export class ParentBridgeClient {
                     this.iframeWindow.postMessage({ type: 'BRIDGE_READY', ...legacyPayload }, target);
                     this.iframeWindow.postMessage({ type: 'AUTH_SUCCESS', ...legacyPayload }, target);
                     this.iframeWindow.postMessage({ type: 'SESSION_DATA', payload: session }, target);
+                    this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...legacyPayload, tokenPresent: !!legacyPayload.token }, target);
                 } catch (e) {
                     console.error('[ParentBridge] Error broadcasting legacy auth:', e);
                 }
