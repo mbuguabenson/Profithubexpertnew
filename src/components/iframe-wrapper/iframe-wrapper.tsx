@@ -3,8 +3,6 @@ import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
-import { resolveValidDerivWSToken, getActiveToken } from '@/utils/token-bridge';
-import { getAppId } from '@/components/shared/utils/config/config';
 import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
 import TokenDebugPanel from '@/components/Debug/TokenDebugPanel';
 
@@ -51,75 +49,34 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             window.location.origin,
         ];
 
-        // Attach ParentBridgeClient for DTrader Terminal
+        // For DTrader Terminal, attach ParentBridgeClient which handles all auth handshakes
         if (title === 'DTrader Terminal') {
             const bridge = new ParentBridgeClient();
             setBridgeClient(bridge);
             bridge.attach(iframe, iframeOrigin);
+
+            const handleLoad = () => {
+                setIsLoading(false);
+                setHasError(false);
+            };
+            const handleError = () => {
+                setIsLoading(false);
+                setHasError(true);
+            };
+            const loadTimeout = setTimeout(() => setIsLoading(false), 10000);
+
+            iframe.addEventListener('load', handleLoad);
+            iframe.addEventListener('error', handleError);
+
+            return () => {
+                iframe.removeEventListener('load', handleLoad);
+                iframe.removeEventListener('error', handleError);
+                bridge.detach();
+                clearTimeout(loadTimeout);
+            };
         }
 
-        const sendAuthToIframe = async () => {
-            if (!iframe.contentWindow) return;
-
-            const loginid =
-                client?.loginid ||
-                localStorage.getItem('active_loginid') ||
-                localStorage.getItem('client.loginid') || '';
-
-            const syncToken = getActiveToken() || '';
-            const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
-            const appId = getAppId() || '121856';
-
-            const sendPayload = (tok: string) => {
-                if (!iframe.contentWindow) return;
-                const hasToken = !!tok && !tok.startsWith('ory_at_');
-                const authMode = hasToken ? 'derivws_otp' : 'none';
-
-                const authPayload = {
-                    status: 'success',
-                    tokenPresent: hasToken,
-                    token: hasToken ? tok : '',
-                    loginid: loginid || null,
-                    loginId: loginid || null,
-                    acct1: loginid || null,
-                    currency: currency,
-                    cur1: currency,
-                    accountType: 'ZOOM',
-                    appId: Number(appId) || 121856,
-                    app_id: appId,
-                    server: 'green',
-                    timestamp: Date.now(),
-                    authMode: authMode,
-                    defaultSymbol: '1HZ100V',
-                    embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
-                    payload: { loginid, currency },
-                };
-
-                try {
-                    iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...authPayload }, '*');
-                    iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
-                } catch (e) {
-                    console.warn('[IframeWrapper] Error sending auth postMessage:', e);
-                }
-            };
-
-            // Send synchronous payload immediately (<1ms)
-            sendPayload(syncToken);
-
-            if (!syncToken) {
-                const resolvedToken = await resolveValidDerivWSToken(loginid);
-                if (resolvedToken && resolvedToken !== syncToken) {
-                    sendPayload(resolvedToken);
-                }
-            }
-        };
-
+        // Third-party bot event handling (Hyperbot, Diffbot, etc.)
         const handleMessage = (event: MessageEvent) => {
             const isAllowed =
                 allowedOrigins.includes(event.origin) ||
@@ -127,19 +84,8 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             if (!isAllowed) return;
             if (!event.data) return;
 
-            // Immediately reply to any message from the iframe
-            sendAuthToIframe();
-
-            const msgType = event.data.type || event.data.action || '';
-            if (['BRIDGE_READY', 'REQUEST_SESSION', 'REQUEST_AUTH', 'GET_SESSION', 'CHECK_AUTH', 'PING', 'HANDSHAKE_REQUEST'].includes(msgType)) {
-                return;
-            }
-
-            // Trade events from third-party bot iframes
             if (event.data.type === 'TRADE_PLACED' || event.data.type === 'CONTRACT_EVENT') {
                 const tradeData = event.data;
-
-                if (title === 'DTrader Terminal') return;
 
                 if (run_panel && !run_panel.run_id) {
                     const botName = title.toLowerCase().replace(/\s+/g, '');
@@ -216,10 +162,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         const handleLoad = () => {
             setIsLoading(false);
             setHasError(false);
-            sendAuthToIframe();
-            setTimeout(sendAuthToIframe, 500);
-            setTimeout(sendAuthToIframe, 1500);
-            setTimeout(sendAuthToIframe, 3000);
         };
         const handleError = () => {
             setIsLoading(false);
@@ -229,8 +171,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
         iframe.addEventListener('load', handleLoad);
         iframe.addEventListener('error', handleError);
-
-        sendAuthToIframe();
 
         return () => {
             iframe.removeEventListener('load', handleLoad);
