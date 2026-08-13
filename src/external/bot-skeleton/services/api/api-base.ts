@@ -263,35 +263,53 @@ class APIBase {
         setIsAuthorizing(true);
 
         try {
-            // Resolve a valid Deriv WebSocket token using centralized token bridge.
-            // This avoids sending invalid bearer tokens (e.g. 'ory_at_...') to api.authorize
-            const token = await resolveValidDerivWSToken();
-
             let authResult: any = null;
 
-            if (token) {
-                try {
-                    const res = await this.api.authorize(token);
-                    if (res?.authorize) {
-                        authResult = { balance: res.authorize };
-                    } else if (res?.error) {
-                        console.warn('[APIBase] Token authorize returned error:', res.error.message || res.error);
-                        if (res.error.code === 'InvalidToken') {
+            // 1. Check if the WebSocket is already authenticated via an OTP in the connection URL.
+            // Sending a simple balance request will succeed if authorized, and fail if not.
+            try {
+                const balanceRes = await (this.api as any).balance();
+                if (balanceRes?.balance) {
+                    authResult = balanceRes;
+                    console.log('[APIBase] WebSocket already authorized via connection URL');
+                }
+            } catch (authCheckErr: any) {
+                // If it fails with AuthorizationRequired, we proceed to manual authorization.
+                // Otherwise, it might be a different issue, but we still try to authorize just in case.
+            }
+
+            // 2. If not already authenticated, proceed with manual token authorization
+            if (!authResult) {
+                // Resolve a valid Deriv WebSocket token using centralized token bridge.
+                // This avoids sending invalid bearer tokens (e.g. 'ory_at_...') to api.authorize
+                const token = await resolveValidDerivWSToken();
+                
+                if (token) {
+                    try {
+                        const res = await this.api.authorize(token);
+                        if (res?.authorize) {
+                            authResult = { balance: res.authorize };
+                        } else if (res?.error) {
+                            console.warn('[APIBase] Token authorize returned error:', res.error.message || res.error);
+                            if (res.error.code === 'InvalidToken') {
+                                localStorage.removeItem('active_token');
+                                localStorage.removeItem('deriv_api_token');
+                                localStorage.removeItem('token');
+                            }
+                        }
+                    } catch (tokErr: any) {
+                        console.warn('[APIBase] Token authorize failed:', tokErr?.message || tokErr);
+                        if (tokErr?.error?.code === 'InvalidToken') {
                             localStorage.removeItem('active_token');
                             localStorage.removeItem('deriv_api_token');
                             localStorage.removeItem('token');
                         }
                     }
-                } catch (tokErr: any) {
-                    console.warn('[APIBase] Token authorize failed:', tokErr?.message || tokErr);
-                    if (tokErr?.error?.code === 'InvalidToken') {
-                        localStorage.removeItem('active_token');
-                        localStorage.removeItem('deriv_api_token');
-                        localStorage.removeItem('token');
-                    }
                 }
             }
 
+            // 3. Ensure we have authResult populated. If authorize was successful, authResult is populated.
+            // If it failed and we still don't have authResult, this will throw or return an error.
             if (!authResult) {
                 const res = await (this.api as any).balance();
                 authResult = res;
