@@ -95,12 +95,15 @@ export class ParentBridgeClient {
                 status: 'success',
                 tokenPresent: hasToken,
                 token: hasToken ? tok : '',
+                token1: hasToken ? tok : '',
                 loginid: loginid || null,
                 loginId: loginid || null,
                 acct1: loginid || null,
+                account_id: loginid || null,
                 currency: currency,
                 cur1: currency,
                 accountType: 'ZOOM',
+                account_type: 'ZOOM',
                 appId: Number(appIdStr) || 121856,
                 app_id: appIdStr,
                 server: 'green',
@@ -117,16 +120,30 @@ export class ParentBridgeClient {
 
             const structuredMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', payloadInner);
 
-            targetWindow.postMessage(structuredMsg, '*');
-            targetWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData }, '*');
-            targetWindow.postMessage({ action: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData }, '*');
-            targetWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH_RESPONSE', ...payloadData }, '*');
-            targetWindow.postMessage({ type: 'SESSION_DATA', ...payloadData }, '*');
-            targetWindow.postMessage({ type: 'DERIV_AUTH', ...payloadData }, '*');
-            targetWindow.postMessage({ type: 'AUTH_TOKEN', ...payloadData }, '*');
-            targetWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...payloadData }, '*');
-            targetWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...payloadData }, '*');
-            targetWindow.postMessage({ action: 'setToken', ...payloadData }, '*');
+            const postBoth = (msg: any) => {
+                try {
+                    targetWindow.postMessage(msg, '*');
+                    if (typeof msg === 'object') {
+                        targetWindow.postMessage(JSON.stringify(msg), '*');
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            };
+
+            postBoth(structuredMsg);
+            postBoth({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
+            postBoth({ action: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
+            postBoth({ type: 'NEWDTRADER_BRIDGE_AUTH_RESPONSE', ...payloadData });
+            postBoth({ type: 'NEW_DTRADER_BRIDGE_AUTH', ...payloadData });
+            postBoth({ type: 'SESSION_DATA', ...payloadData });
+            postBoth({ type: 'DERIV_AUTH', ...payloadData });
+            postBoth({ type: 'AUTH_TOKEN', ...payloadData });
+            postBoth({ type: 'HANDSHAKE_RESPONSE', ...payloadData });
+            postBoth({ type: 'BRIDGE_AUTH_SUCCESS', ...payloadData });
+            postBoth({ type: 'AUTH_SUCCESS', ...payloadData });
+            postBoth({ action: 'setToken', ...payloadData });
+            postBoth({ action: 'AUTHORIZE', ...payloadData });
         } catch (e) {
             // ignore
         }
@@ -138,7 +155,7 @@ export class ParentBridgeClient {
         }
 
         let attempts = 0;
-        const maxAttempts = 60; // 30 seconds @ 500ms interval
+        const maxAttempts = 100; // 25 seconds @ 250ms interval
 
         const postAuth = async () => {
             if (!this.iframeWindow) return;
@@ -172,8 +189,9 @@ export class ParentBridgeClient {
                 return;
             }
             postAuth();
-        }, 500);
+        }, 250);
     }
+
 
     public detach() {
         if (this.retryIntervalId) {
