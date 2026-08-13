@@ -373,7 +373,15 @@ export class ParentBridgeClient {
                 console.error('[ParentBridge] Error broadcasting legacy auth:', e);
             }
         }
+
+        setTimeout(() => {
+            this.stateMachine.transitionTo(BridgeState.AUTHENTICATED);
+            setTimeout(() => {
+                this.stateMachine.transitionTo(BridgeState.CONNECTED);
+            }, 100);
+        }, 300);
     };
+
 
     private handleSessionChange = (session: any) => {
         if (!session) {
