@@ -1,6 +1,6 @@
 import { BridgeStateMachine, BridgeState } from './bridge-state-machine';
 import { SessionManager as _SessionManager, sessionManager } from './session-manager';
-import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage, SessionPayload } from './protocol';
+import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage } from './protocol';
 import { getActiveToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
 
@@ -373,6 +373,15 @@ export class ParentBridgeClient {
                 console.error('[ParentBridge] Error broadcasting legacy auth:', e);
             }
         }
+    }
+
+    private handleSessionChange(session: any) {
+        if (!session) {
+            this.diagnostics.sessionStatus = 'none';
+            return;
+        }
+        this.diagnostics.sessionStatus = 'valid';
+        this.handleSessionRequest();
     }
 
     private attemptRecovery() {
