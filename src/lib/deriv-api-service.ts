@@ -150,7 +150,7 @@ class DerivApiService {
             const timeout = setTimeout(() => {
                 const pending = this.pendingRequests.get(req_id);
                 if (pending) {
-                    pending.reject(new Error(`Request timed out after ${timeoutMs}ms`));
+                    pending.reject({ code: 'TimeoutError', message: `Request timed out after ${timeoutMs}ms` });
                     this.subscriptions.delete(req_id.toString());
                     this.pendingRequests.delete(req_id);
                 }
