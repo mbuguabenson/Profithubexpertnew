@@ -88,9 +88,9 @@ export class ParentBridgeClient {
     private sendAuthPayloadToWindow(targetWindow: Window, tok: string, loginid: string, currency: string, appIdStr: string) {
         if (!targetWindow || targetWindow === window) return;
         try {
-            const hasToken = !!tok && !String(tok).startsWith('ory_at_');
+            const hasToken = !!tok && !String(tok).startsWith('ory_at_') && tok !== 'a1-guest' && tok !== 'dummy_token';
             const authMode = hasToken ? 'derivws_otp' : 'none';
-            const effectiveToken = hasToken ? tok : 'a1-guest';
+            const effectiveToken = hasToken ? tok : '';
 
             const accountsList = getAccountsList();
             const isDemo = loginid.startsWith('VR') || loginid.startsWith('VRT') || loginid.startsWith('DOT') || loginid.startsWith('DEM');

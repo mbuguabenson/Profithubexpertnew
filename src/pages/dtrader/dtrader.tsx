@@ -97,11 +97,9 @@ const DTraderPage: React.FC = observer(() => {
 
     const loginId = activeLoginId || (client as any)?.loginid || localStorage.getItem('active_loginid') || 'DOT100000';
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
-    const effectiveAuthToken = authToken || 'a1-guest';
 
     const queryParams = new URLSearchParams({
         acct1: loginId,
-        token1: effectiveAuthToken,
         cur1: currency,
         api_version: 'v2',
         chart_type: 'area',
@@ -111,6 +109,10 @@ const DTraderPage: React.FC = observer(() => {
         app_id: appId,
         lang: 'EN',
     });
+
+    if (authToken && authToken !== 'a1-guest' && authToken !== 'dummy_token') {
+        queryParams.set('token1', authToken);
+    }
 
     // Populate all accounts from accountsList so iframe has full multi-account token map
     try {
