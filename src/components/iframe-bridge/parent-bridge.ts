@@ -218,7 +218,7 @@ export class ParentBridgeClient {
             if (!this.iframeWindow) return;
             try {
                 const session = sessionManager.getSession();
-                let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+                let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || 'DOT100000';
                 const syncToken = getActiveToken() || '';
                 const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
                 const appIdStr = String(session?.appId || '121856');
