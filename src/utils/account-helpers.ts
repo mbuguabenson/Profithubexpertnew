@@ -24,6 +24,13 @@ export const isDemoAccount = (loginid: string): boolean => {
 };
 
 /**
+ * Alias for isDemoAccount for backward compatibility
+ */
+export const isVirtualAccount = (loginid: string): boolean => {
+    return isDemoAccount(loginid);
+};
+
+/**
  * Check if a loginid represents a real money account.
  * Real accounts include prefixes: CR, ROT, MF.
  *
@@ -79,4 +86,25 @@ export const getAccountId = (): string | null => {
     }
 
     return null;
+};
+
+/**
+ * Removes a specific parameter key from the browser URL search query without reloading
+ */
+export const removeUrlParameter = (paramKey: string): void => {
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete(paramKey);
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    } catch (e) {
+        // noop
+    }
+};
+
+/**
+ * Get device type based on window innerWidth
+ */
+export const getDeviceType = (): 'mobile' | 'desktop' => {
+    if (typeof window === 'undefined') return 'desktop';
+    return window.innerWidth <= MAX_MOBILE_WIDTH ? 'mobile' : 'desktop';
 };
