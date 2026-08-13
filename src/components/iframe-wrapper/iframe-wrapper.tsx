@@ -38,6 +38,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         // Auth via postMessage bridge is not supported for Deriv's cross-origin
         // iframes due to SameSite cookie restrictions. Use the OAuth launcher for DTrader.
         const allowedOrigins = [
+            'https://deriv-dtrader.vercel.app',   // Vercel DTrader (iframe embed)
             'https://www.derivcircles.com',
             'https://bot-analysis-tool-belex.web.app',
             'https://analysisprofithub.vercel.app',
