@@ -7,6 +7,10 @@ import { resolveValidDerivWSToken } from '@/utils/token-bridge';
  * - Calls the provided `syncSession(includeToken: boolean)` to send session/auth payloads
  * - Listens for iframe requests and auth-success signals to cancel retries
  */
+/**
+ * @deprecated Used only by the removed iframe bridge. The cross-origin cookie approach is
+ * not supported by Deriv. This class will be removed once all call sites are migrated.
+ */
 export class IframeAuthService {
     private iframeRef: RefObject<HTMLIFrameElement>;
     private syncSession: (includeToken?: boolean) => Promise<void>;

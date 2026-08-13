@@ -17,6 +17,10 @@ export interface BridgeDiagnosticInfo {
     messageHistory: Array<{ direction: 'in' | 'out'; msg: BridgeMessage; time: Date }>;
 }
 
+/**
+ * @deprecated The iframe cookie-bridge approach is not supported by Deriv for cross-origin
+ * embeds. Use the OAuth 2.0 launcher panel (DTraderIframeContainer) instead.
+ */
 export class ParentBridgeClient {
     public stateMachine: BridgeStateMachine;
     private iframeWindow: Window | null = null;
@@ -83,8 +87,7 @@ export class ParentBridgeClient {
                 const token = await resolveValidDerivWSToken(loginid);
                 const tokenPresent = !!token && !String(token).startsWith('ory_at_');
 
-                const makePayload = () => ({
-                    type: 'NEWDTRADER_BRIDGE_AUTH',
+                const makePayload = () => createMessage('NEWDTRADER_BRIDGE_AUTH', String(session?.appId || '121856'), 'parent', {
                     status: tokenPresent ? 'success' : 'pending',
                     tokenPresent,
                     token: tokenPresent ? token : '',
@@ -101,16 +104,20 @@ export class ParentBridgeClient {
                     try {
                         const payload = makePayload();
                         this.logger.debug('PROACTIVE_HANDSHAKE', { loginid, tokenPresent });
-                        this.iframeWindow.postMessage(payload, this.iframeOrigin === '*' ? '*' : this.iframeOrigin);
+                        const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
+                        this.iframeWindow.postMessage(payload, target);
+                        this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payload.payload }, target);
+                        
                         // Also send legacy session messages to maximize compatibility
-                        const legacy = {
-                            type: 'SESSION_DATA',
+                        const legacyPayloadObj = {
                             token: tokenPresent ? token : '',
                             loginid: loginid || null,
                             loginId: loginid || null,
                             appId: Number(session?.appId || '121856') || 121856,
                         };
-                        this.iframeWindow.postMessage(legacy, this.iframeOrigin === '*' ? '*' : this.iframeOrigin);
+                        const legacyMsg = createMessage('SESSION_DATA', String(session?.appId || '121856'), 'parent', legacyPayloadObj);
+                        this.iframeWindow.postMessage(legacyMsg, target);
+                        this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...legacyPayloadObj }, target);
                     } catch (e) {
                         this.logger.debug('PROACTIVE_HANDSHAKE_ERROR', { error: String(e) });
                     }
@@ -251,8 +258,7 @@ export class ParentBridgeClient {
                         const tokenPresent = !!token && !token.startsWith('ory_at_');
 
                         if (loginid && tokenPresent) {
-                            const handshakePayload = {
-                                type: 'NEWDTRADER_BRIDGE_AUTH',
+                            const handshakePayloadObj = {
                                 status: 'success',
                                 tokenPresent: true,
                                 token: token,
@@ -267,45 +273,46 @@ export class ParentBridgeClient {
                                 theme: 'dark',
                                 payload: { loginid, currency: 'USD' },
                             };
+                            const handshakePayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', String(session?.appId || '121856'), 'parent', handshakePayloadObj);
 
                             this.logger.debug('HANDSHAKE_SEND', { loginid, tokenPresent: true });
-                            (event.source as Window).postMessage(handshakePayload, '*');
+                            (event.source as Window).postMessage(handshakePayloadMsg, '*');
+                            (event.source as Window).postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...handshakePayloadObj }, '*');
                             const handshakeResponse = {
                                 type: 'HANDSHAKE_RESPONSE',
-                                status: handshakePayload.status,
-                                tokenPresent: handshakePayload.tokenPresent,
-                                loginid: handshakePayload.loginid,
-                                loginId: handshakePayload.loginId,
-                                appId: handshakePayload.appId,
-                                server: handshakePayload.server,
-                                timestamp: handshakePayload.timestamp,
-                                authMode: handshakePayload.authMode,
-                                accountType: handshakePayload.accountType,
-                                bt_secret: handshakePayload.bt_secret,
-                                theme: handshakePayload.theme,
-                                payload: handshakePayload.payload,
+                                status: handshakePayloadObj.status,
+                                tokenPresent: handshakePayloadObj.tokenPresent,
+                                loginid: handshakePayloadObj.loginid,
+                                loginId: handshakePayloadObj.loginId,
+                                appId: handshakePayloadObj.appId,
+                                server: handshakePayloadObj.server,
+                                timestamp: handshakePayloadObj.timestamp,
+                                authMode: handshakePayloadObj.authMode,
+                                accountType: handshakePayloadObj.accountType,
+                                bt_secret: handshakePayloadObj.bt_secret,
+                                theme: handshakePayloadObj.theme,
+                                payload: handshakePayloadObj.payload,
                             };
                             const bridgeAuthSuccess = {
                                 type: 'BRIDGE_AUTH_SUCCESS',
-                                status: handshakePayload.status,
-                                tokenPresent: handshakePayload.tokenPresent,
-                                loginid: handshakePayload.loginid,
-                                loginId: handshakePayload.loginId,
-                                appId: handshakePayload.appId,
-                                server: handshakePayload.server,
-                                timestamp: handshakePayload.timestamp,
-                                authMode: handshakePayload.authMode,
-                                accountType: handshakePayload.accountType,
-                                bt_secret: handshakePayload.bt_secret,
-                                theme: handshakePayload.theme,
-                                payload: handshakePayload.payload,
+                                status: handshakePayloadObj.status,
+                                tokenPresent: handshakePayloadObj.tokenPresent,
+                                loginid: handshakePayloadObj.loginid,
+                                loginId: handshakePayloadObj.loginId,
+                                appId: handshakePayloadObj.appId,
+                                server: handshakePayloadObj.server,
+                                timestamp: handshakePayloadObj.timestamp,
+                                authMode: handshakePayloadObj.authMode,
+                                accountType: handshakePayloadObj.accountType,
+                                bt_secret: handshakePayloadObj.bt_secret,
+                                theme: handshakePayloadObj.theme,
+                                payload: handshakePayloadObj.payload,
                             };
                             (event.source as Window).postMessage(handshakeResponse, '*');
                             (event.source as Window).postMessage(bridgeAuthSuccess, '*');
                         } else {
                             this.logger.debug('HANDSHAKE_SEND_MINIMAL', { loginid, tokenPresent: !!token });
-                            const minimalPayload = {
-                                type: 'NEWDTRADER_BRIDGE_AUTH',
+                            const minimalPayloadObj = {
                                 status: 'pending',
                                 tokenPresent: false,
                                 token: '',
@@ -314,14 +321,17 @@ export class ParentBridgeClient {
                                 timestamp: Date.now(),
                                 authMode: 'derivws_otp',
                             };
-                            (event.source as Window).postMessage(minimalPayload, '*');
+                            const minimalPayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', String(session?.appId || '121856'), 'parent', minimalPayloadObj);
+                            
+                            (event.source as Window).postMessage(minimalPayloadMsg, '*');
+                            (event.source as Window).postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...minimalPayloadObj }, '*');
                             const handshakeResponse = {
                                 type: 'HANDSHAKE_RESPONSE',
-                                status: minimalPayload.status,
-                                loginid: minimalPayload.loginid,
-                                appId: minimalPayload.appId,
-                                timestamp: minimalPayload.timestamp,
-                                authMode: minimalPayload.authMode,
+                                status: minimalPayloadObj.status,
+                                loginid: minimalPayloadObj.loginid,
+                                appId: minimalPayloadObj.appId,
+                                timestamp: minimalPayloadObj.timestamp,
+                                authMode: minimalPayloadObj.authMode,
                             };
                             (event.source as Window).postMessage(handshakeResponse, '*');
                         }
