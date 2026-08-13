@@ -35,14 +35,14 @@ export class SessionManager {
         if (!token) {
             const activeToken = getActiveToken() || V2GetActiveToken();
             if (!isInvalidToken(activeToken)) {
-                token = activeToken || undefined;
+                token = activeToken || null;
             }
         }
 
         if (!token) {
             const storedToken = localStorage.getItem('token') || localStorage.getItem('active_token') || localStorage.getItem('authToken');
             if (!isInvalidToken(storedToken)) {
-                token = storedToken || undefined;
+                token = storedToken || null;
             }
         }
 

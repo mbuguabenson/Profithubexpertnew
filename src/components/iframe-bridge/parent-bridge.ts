@@ -1,7 +1,7 @@
 import { BridgeStateMachine, BridgeState } from './bridge-state-machine';
 import { SessionManager as _SessionManager, sessionManager } from './session-manager';
 import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage, SessionPayload } from './protocol';
-import { getActiveToken, getAccountsList, truncateToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { getActiveToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
 
 export interface BridgeDiagnosticInfo {
