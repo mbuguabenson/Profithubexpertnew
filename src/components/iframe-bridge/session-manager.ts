@@ -17,6 +17,7 @@ export class SessionManager {
 
     /**
      * Retrieves the current effective session data.
+     * Does NOT override active loginid with demo account during login / session check.
      */
     public getSession(): SessionPayload | null {
         let loginid = V2GetActiveAccountId() || 
@@ -54,32 +55,18 @@ export class SessionManager {
             }
         }
 
-        const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
-        
-        // Handling real/demo token alignment
-        if (isDemoToReal && loginid && !loginid.startsWith('VR')) {
-            try {
-                const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
-                if (demoAccountId) {
-                    loginid = demoAccountId;
-                    token = accountsList[demoAccountId] || token;
-                }
-            } catch (e) {
-                console.warn('Error reading accountsList from localStorage', e);
-            }
-        }
-
         const appId = getAppId() || '121856';
 
-        if (!loginid || !token || isInvalidToken(token)) {
-            return null;
+        // Fallback loginid if empty
+        if (!loginid && Object.keys(accountsList).length > 0) {
+            loginid = Object.keys(accountsList)[0];
         }
 
         return {
-            token,
-            loginid,
-            currency: localStorage.getItem('client.currency') || 'USD', // simplistic fallback
-            isDemo: loginid.startsWith('VR'),
+            token: token || '',
+            loginid: loginid || '',
+            currency: localStorage.getItem('client.currency') || 'USD',
+            isDemo: Boolean(loginid && loginid.startsWith('VR')),
             appId
         };
     }
@@ -89,7 +76,6 @@ export class SessionManager {
      */
     public subscribe(listener: (session: SessionPayload | null) => void) {
         this.listeners.add(listener);
-        // Send initial state
         listener(this.getSession());
         return () => this.listeners.delete(listener);
     }
@@ -98,55 +84,27 @@ export class SessionManager {
      * Manually refresh the session state and broadcast if changed.
      */
     public refreshSession() {
-        const currentSession = this.getSession();
-        const currentStr = currentSession ? JSON.stringify(currentSession) : null;
-
-        if (currentStr !== this.lastSessionStr) {
-            this.lastSessionStr = currentStr;
-            this.notifyListeners(currentSession);
+        const session = this.getSession();
+        const str = JSON.stringify(session);
+        if (str !== this.lastSessionStr) {
+            this.lastSessionStr = str;
+            this.listeners.forEach(l => l(session));
         }
-    }
-
-    public dispose() {
-        this.stopMonitoring();
-        this.listeners.clear();
     }
 
     private startMonitoring() {
         if (this.checkInterval) return;
-        // Check for session changes every 1s
         this.checkInterval = setInterval(() => {
             this.refreshSession();
-        }, 1000);
-
-        // Also listen to storage events across tabs
-        window.addEventListener('storage', this.handleStorageEvent);
+        }, 3000);
     }
 
-    private stopMonitoring() {
+    public stopMonitoring() {
         if (this.checkInterval) {
             clearInterval(this.checkInterval);
             this.checkInterval = null;
         }
-        window.removeEventListener('storage', this.handleStorageEvent);
-    }
-
-    private handleStorageEvent = (e: StorageEvent) => {
-        if (['active_loginid', 'token', 'accountsList', 'client.accounts'].includes(e.key || '')) {
-            this.refreshSession();
-        }
-    };
-
-    private notifyListeners(session: SessionPayload | null) {
-        this.listeners.forEach(listener => {
-            try {
-                listener(session);
-            } catch (err) {
-                console.error('Error notifying session listener', err);
-            }
-        });
     }
 }
 
-// Singleton instance
 export const sessionManager = new SessionManager();

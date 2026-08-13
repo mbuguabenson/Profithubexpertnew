@@ -9,12 +9,9 @@ import './dtrader.scss';
 /**
  * DTraderPage — embeds the Vercel-hosted DTrader build.
  *
- * Host: https://deriv-dtrader.vercel.app  (Vercel, allows iframe embedding)
- * Auth: URL query params (acct1, token1) using the OTP WebSocket token
- *       resolved by resolveValidDerivWSToken().
- *
- * NOTE: This is NOT trader.deriv.com. The Vercel build accepts auth via
- * query params and does not rely on SameSite cookies, so embedding works.
+ * Host: https://deriv-dtrader.vercel.app
+ * Passes exact login parameters: acct1, cur1, api_version=v2, chart_type=area,
+ * interval=1t, symbol=1HZ100V, trade_type=accumulator, app_id=121856, lang=EN, token1.
  */
 const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
@@ -25,7 +22,6 @@ const DTraderPage: React.FC = observer(() => {
         let mounted = true;
 
         const loadAuthParams = async () => {
-            // Prefer the active loginid from localStorage / store
             const storedLoginId =
                 localStorage.getItem('active_loginid') ||
                 (client as any)?.loginid ||
@@ -33,11 +29,8 @@ const DTraderPage: React.FC = observer(() => {
 
             const accountsList = getAccountsList();
             let loginId = storedLoginId;
-
-            // Resolve a valid OTP / WS token (strips ory_at_ bearer tokens automatically)
             let token = storedLoginId ? await resolveValidDerivWSToken(storedLoginId) : '';
 
-            // Fallback: pick first available account if no token yet
             if ((!loginId || !token) && Object.keys(accountsList).length > 0) {
                 const primaryKey =
                     Object.keys(accountsList).find(id => !id.startsWith('VR')) ||
@@ -48,7 +41,6 @@ const DTraderPage: React.FC = observer(() => {
                 }
             }
 
-            // Do not pass raw Bearer (PKCE) tokens — they are not valid as DTrader URL params
             if (token && token.startsWith('ory_at_')) {
                 token = '';
             }
@@ -64,29 +56,27 @@ const DTraderPage: React.FC = observer(() => {
     }, [client?.loginid]);
 
     const appId = getAppId() || '121856';
-
-    // Base URL: Vercel-hosted DTrader (allows iframe embedding via URL params)
     const baseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
     const embedBase = baseUrl.includes('/dtrader')
         ? baseUrl
         : `${baseUrl.replace(/\/$/, '')}/dtrader`;
 
+    const loginId = activeLoginId || (client as any)?.loginid || localStorage.getItem('active_loginid') || '';
+    const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
+
     const queryParams = new URLSearchParams({
+        acct1: loginId,
+        cur1: currency,
+        api_version: 'v2',
         chart_type: 'area',
         interval: '1t',
         symbol: '1HZ100V',
         trade_type: 'accumulator',
         app_id: appId,
         lang: 'EN',
-        embed: 'true',
-        cur1: client?.currency || 'USD',
     });
 
-    if (activeLoginId) {
-        queryParams.set('acct1', activeLoginId);
-    }
     if (authToken) {
-        // token1 is the standard URL param for DTrader auth on the Vercel build
         queryParams.set('token1', authToken);
     }
 

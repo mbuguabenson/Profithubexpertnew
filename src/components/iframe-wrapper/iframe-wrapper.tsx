@@ -5,6 +5,8 @@ import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
+import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
+import TokenDebugPanel from '@/components/Debug/TokenDebugPanel';
 
 interface IframeWrapperProps {
     src: string;
@@ -15,18 +17,17 @@ interface IframeWrapperProps {
 /**
  * IframeWrapper — generic iframe container for embedded tools.
  *
- * Auth: On load (and on iframe request), sends a NEWDTRADER_BRIDGE_AUTH
- * postMessage containing the OTP WebSocket token resolved by
- * resolveValidDerivWSToken(). This satisfies the iframe's bridge-client
- * handshake without relying on SameSite cookies.
+ * For DTrader Terminal: Attaches ParentBridgeClient to manage postMessage bridge
+ * handshakes, passing accountType: "ZOOM", loginId, currency, appId, symbol, etc.
  *
- * Trade forwarding: Listens for TRADE_PLACED / CONTRACT_EVENT /
- * CONTRACT_UPDATE and forwards them to the MobX run-panel / transactions store.
+ * For third-party bots: Listens for TRADE_PLACED / CONTRACT_EVENT / CONTRACT_UPDATE
+ * and forwards them to the MobX run-panel / transactions store.
  */
 const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, className = '' }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [bridgeClient, setBridgeClient] = useState<ParentBridgeClient | null>(null);
     const { transactions, run_panel, client } = useStore();
 
     useEffect(() => {
@@ -50,12 +51,12 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             window.location.origin,
         ];
 
-        // ── Auth handshake ──────────────────────────────────────────────
-        // The Vercel DTrader build (bridge-client.ts) expects a
-        // NEWDTRADER_BRIDGE_AUTH postMessage from the parent containing a
-        // valid OTP token. If it doesn't receive one within its timeout,
-        // it fires "Bridge auth timeout". This function resolves the OTP
-        // token and posts the full auth payload.
+        // Attach ParentBridgeClient for DTrader Terminal
+        if (title === 'DTrader Terminal') {
+            const bridge = new ParentBridgeClient();
+            setBridgeClient(bridge);
+            bridge.attach(iframe, iframeOrigin);
+        }
 
         const sendAuthToIframe = async () => {
             if (!iframe.contentWindow) return;
@@ -66,34 +67,33 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 localStorage.getItem('client.loginid') || '';
 
             const token = await resolveValidDerivWSToken(loginid);
+            const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
             const appId = getAppId() || '121856';
             const targetOrigin = iframeOrigin === '*' ? '*' : iframeOrigin;
             const tokenPresent = !!token && !token.startsWith('ory_at_');
 
             const authPayload = {
-                status: tokenPresent ? 'success' : 'pending',
+                status: 'success',
                 tokenPresent,
                 token: tokenPresent ? token : '',
                 loginid: loginid || null,
                 loginId: loginid || null,
                 acct1: loginid || null,
+                currency: currency,
+                cur1: currency,
+                accountType: 'ZOOM',
                 appId: Number(appId) || 121856,
                 app_id: appId,
                 server: 'green',
                 timestamp: Date.now(),
                 authMode: 'derivws_otp',
-                accountType: 'ZOOM',
-                bt_secret: 'binarytool',
-                theme: 'dark',
-                currency: client?.currency || 'USD',
-                cur1: client?.currency || 'USD',
+                defaultSymbol: '1HZ100V',
+                embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
+                payload: { loginid, currency },
             };
 
             try {
-                // Primary: NEWDTRADER_BRIDGE_AUTH (what bridge-client.ts listens for)
                 iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, targetOrigin);
-
-                // Additional message types the iframe may listen for
                 iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...authPayload }, targetOrigin);
                 iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, targetOrigin);
                 iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, targetOrigin);
@@ -106,8 +106,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             }
         };
 
-        // ── Incoming message handler ────────────────────────────────────
-
         const handleMessage = (event: MessageEvent) => {
             const isAllowed =
                 allowedOrigins.includes(event.origin) ||
@@ -117,9 +115,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
             const msgType = event.data.type || event.data.action || '';
 
-            // ── Auth requests from iframe ──
-            // bridge-client.ts may send BRIDGE_READY, REQUEST_SESSION, etc.
-            // Respond immediately with full auth payload.
             const authRequestTypes = [
                 'BRIDGE_READY', 'REQUEST_SESSION', 'REQUEST_AUTH',
                 'GET_SESSION', 'CHECK_AUTH', 'PING', 'HANDSHAKE_REQUEST',
@@ -129,11 +124,10 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 return;
             }
 
-            // ── Trade events (Hyperbot, Diffbot, etc.) ──
+            // Trade events from third-party bot iframes
             if (event.data.type === 'TRADE_PLACED' || event.data.type === 'CONTRACT_EVENT') {
                 const tradeData = event.data;
 
-                // DTrader trades are handled by DTrader itself, not run panel
                 if (title === 'DTrader Terminal') return;
 
                 if (run_panel && !run_panel.run_id) {
@@ -198,7 +192,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 return;
             }
 
-            // ── Contract updates ──
             if (event.data.type === 'CONTRACT_UPDATE') {
                 if (event.data.contract_id && transactions?.onBotContractEvent) {
                     transactions.onBotContractEvent(event.data);
@@ -209,12 +202,9 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
         window.addEventListener('message', handleMessage);
 
-        // ── Iframe load / error handling ─────────────────────────────────
-
         const handleLoad = () => {
             setIsLoading(false);
             setHasError(false);
-            // Send auth immediately on load, then retry a few times for race conditions
             sendAuthToIframe();
             setTimeout(sendAuthToIframe, 500);
             setTimeout(sendAuthToIframe, 1500);
@@ -229,7 +219,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         iframe.addEventListener('load', handleLoad);
         iframe.addEventListener('error', handleError);
 
-        // Also attempt auth before load event (iframe may initialise listeners early)
         sendAuthToIframe();
 
         return () => {
@@ -330,6 +319,8 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 }}
                 onLoad={() => setIsLoading(false)}
             />
+            {title === 'DTrader Terminal' && <DiagnosticsPanel bridge={bridgeClient} />}
+            {title === 'DTrader Terminal' && <TokenDebugPanel />}
         </div>
     );
 });

@@ -17,10 +17,6 @@ export interface BridgeDiagnosticInfo {
     messageHistory: Array<{ direction: 'in' | 'out'; msg: BridgeMessage; time: Date }>;
 }
 
-/**
- * @deprecated The iframe cookie-bridge approach is not supported by Deriv for cross-origin
- * embeds. Use the OAuth 2.0 launcher panel (DTraderIframeContainer) instead.
- */
 export class ParentBridgeClient {
     public stateMachine: BridgeStateMachine;
     private iframeWindow: Window | null = null;
@@ -33,7 +29,7 @@ export class ParentBridgeClient {
     // Diagnostics
     private diagnostics: BridgeDiagnosticInfo = {
         state: BridgeState.IDLE,
-        appId: 'unknown',
+        appId: '121856',
         parentOrigin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
         iframeOrigin: 'unknown',
         sessionStatus: 'none',
@@ -78,69 +74,70 @@ export class ParentBridgeClient {
             this.handleSessionChange(session);
         });
 
-        // Proactively attempt to send a minimal NEWDTRADER_BRIDGE_AUTH handshake
-        // to help cross-origin iframes that initialize listeners after load.
+        // Proactively send NEWDTRADER_BRIDGE_AUTH & companion messages to iframe
         (async () => {
             try {
                 const session = sessionManager.getSession();
                 let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
                 const token = await resolveValidDerivWSToken(loginid);
-                const tokenPresent = !!token && !String(token).startsWith('ory_at_');
+                const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
+                const appIdStr = String(session?.appId || '121856');
 
-                const makePayload = () => createMessage('NEWDTRADER_BRIDGE_AUTH', String(session?.appId || '121856'), 'parent', {
-                    status: tokenPresent ? 'success' : 'pending',
-                    tokenPresent,
-                    token: tokenPresent ? token : '',
+                const makeAuthPayload = () => ({
+                    status: 'success',
+                    tokenPresent: !!token && !String(token).startsWith('ory_at_'),
+                    token: token || '',
                     loginid: loginid || null,
                     loginId: loginid || null,
-                    appId: Number(session?.appId || '121856') || 121856,
+                    acct1: loginid || null,
+                    currency: currency,
+                    cur1: currency,
+                    accountType: 'ZOOM',
+                    appId: Number(appIdStr) || 121856,
+                    app_id: appIdStr,
                     server: 'green',
                     timestamp: Date.now(),
                     authMode: 'derivws_otp',
+                    defaultSymbol: '1HZ100V',
+                    embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
+                    payload: { loginid, currency },
                 });
 
                 const postOnce = () => {
                     if (!this.iframeWindow) return;
                     try {
-                        const payload = makePayload();
-                        this.logger.debug('PROACTIVE_HANDSHAKE', { loginid, tokenPresent });
+                        const payloadData = makeAuthPayload();
+                        const payloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', payloadData);
                         const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
-                        this.iframeWindow.postMessage(payload, target);
-                        this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payload.payload }, target);
                         
-                        // Also send legacy session messages to maximize compatibility
-                        const legacyPayloadObj = {
-                            token: tokenPresent ? token : '',
-                            loginid: loginid || null,
-                            loginId: loginid || null,
-                            appId: Number(session?.appId || '121856') || 121856,
-                        };
-                        const legacyMsg = createMessage('SESSION_DATA', String(session?.appId || '121856'), 'parent', legacyPayloadObj);
-                        this.iframeWindow.postMessage(legacyMsg, target);
-                        this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...legacyPayloadObj }, target);
+                        this.iframeWindow.postMessage(payloadMsg, target);
+                        this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData }, target);
+                        this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...payloadData }, target);
+                        this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...payloadData }, target);
+                        this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...payloadData }, target);
+                        this.iframeWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...payloadData }, target);
+                        this.iframeWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...payloadData }, target);
+                        this.iframeWindow.postMessage({ action: 'setToken', ...payloadData }, target);
                     } catch (e) {
                         this.logger.debug('PROACTIVE_HANDSHAKE_ERROR', { error: String(e) });
                     }
                 };
 
-                // Fire a few quick retries to cover listener race conditions in iframe
                 postOnce();
                 let attempts = 0;
-                const maxAttempts = 8;
                 const retryId = setInterval(() => {
                     attempts += 1;
-                    if (!this.iframeWindow || attempts > maxAttempts) {
+                    if (!this.iframeWindow || attempts > 8) {
                         clearInterval(retryId);
                         return;
                     }
                     postOnce();
-                }, 300);
+                }, 400);
             } catch (e) {
                 // ignore
             }
         })();
 
-        // The state will stay in LOADING_IFRAME or WAITING_READY until the iframe replies with BRIDGE_READY
         setTimeout(() => {
             if (this.stateMachine.getState() === BridgeState.LOADING_IFRAME) {
                 this.stateMachine.transitionTo(BridgeState.WAITING_READY);
@@ -189,7 +186,7 @@ export class ParentBridgeClient {
         if (!this.iframeWindow) return;
         
         const session = sessionManager.getSession();
-        const appId = session?.appId || 'unknown';
+        const appId = session?.appId || '121856';
         this.diagnostics.appId = appId;
 
         const msg = createMessage(type, appId, 'parent', payload);
@@ -215,7 +212,6 @@ export class ParentBridgeClient {
         const expectedOrigin = this.sanitizeOrigin(this.iframeOrigin);
         const allowedOrigins = [
             expectedOrigin,
-            'https://dtraderphub.vercel.app',
             'https://deriv-dtrader.vercel.app',
             'https://trader.deriv.com',
             'https://app.deriv.com',
@@ -241,7 +237,10 @@ export class ParentBridgeClient {
         }
 
         const msgType = parsedData.type || parsedData.action || parsedData.event || '';
-        const handshakeEvents = [BridgeEvent.BRIDGE_READY, BridgeEvent.REQUEST_SESSION, 'PING', 'HANDSHAKE_REQUEST'];
+        const handshakeEvents = [
+            BridgeEvent.BRIDGE_READY, BridgeEvent.REQUEST_SESSION, 'PING',
+            'HANDSHAKE_REQUEST', 'REQUEST_AUTH', 'GET_SESSION', 'CHECK_AUTH'
+        ];
         const isHandshake = handshakeEvents.includes(msgType as BridgeEvent | string);
 
         if (isHandshake) {
@@ -255,86 +254,41 @@ export class ParentBridgeClient {
                         const session = sessionManager.getSession();
                         let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
                         const token = await resolveValidDerivWSToken(loginid);
-                        const tokenPresent = !!token && !token.startsWith('ory_at_');
+                        const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
+                        const appIdStr = String(session?.appId || '121856');
 
-                        if (loginid && tokenPresent) {
-                            const handshakePayloadObj = {
-                                status: 'success',
-                                tokenPresent: true,
-                                token: token,
-                                loginid,
-                                loginId: loginid,
-                                appId: Number(session?.appId || '121856') || 121856,
-                                server: 'green',
-                                timestamp: Date.now(),
-                                authMode: 'derivws_otp',
-                                accountType: 'ZOOM',
-                                bt_secret: 'binarytool',
-                                theme: 'dark',
-                                payload: { loginid, currency: 'USD' },
-                            };
-                            const handshakePayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', String(session?.appId || '121856'), 'parent', handshakePayloadObj);
+                        const handshakePayloadObj = {
+                            status: 'success',
+                            tokenPresent: !!token && !String(token).startsWith('ory_at_'),
+                            token: token || '',
+                            loginid: loginid || null,
+                            loginId: loginid || null,
+                            acct1: loginid || null,
+                            currency: currency,
+                            cur1: currency,
+                            accountType: 'ZOOM',
+                            appId: Number(appIdStr) || 121856,
+                            app_id: appIdStr,
+                            server: 'green',
+                            timestamp: Date.now(),
+                            authMode: 'derivws_otp',
+                            defaultSymbol: '1HZ100V',
+                            embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
+                            payload: { loginid, currency },
+                        };
 
-                            this.logger.debug('HANDSHAKE_SEND', { loginid, tokenPresent: true });
-                            (event.source as Window).postMessage(handshakePayloadMsg, '*');
-                            (event.source as Window).postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...handshakePayloadObj }, '*');
-                            const handshakeResponse = {
-                                type: 'HANDSHAKE_RESPONSE',
-                                status: handshakePayloadObj.status,
-                                tokenPresent: handshakePayloadObj.tokenPresent,
-                                loginid: handshakePayloadObj.loginid,
-                                loginId: handshakePayloadObj.loginId,
-                                appId: handshakePayloadObj.appId,
-                                server: handshakePayloadObj.server,
-                                timestamp: handshakePayloadObj.timestamp,
-                                authMode: handshakePayloadObj.authMode,
-                                accountType: handshakePayloadObj.accountType,
-                                bt_secret: handshakePayloadObj.bt_secret,
-                                theme: handshakePayloadObj.theme,
-                                payload: handshakePayloadObj.payload,
-                            };
-                            const bridgeAuthSuccess = {
-                                type: 'BRIDGE_AUTH_SUCCESS',
-                                status: handshakePayloadObj.status,
-                                tokenPresent: handshakePayloadObj.tokenPresent,
-                                loginid: handshakePayloadObj.loginid,
-                                loginId: handshakePayloadObj.loginId,
-                                appId: handshakePayloadObj.appId,
-                                server: handshakePayloadObj.server,
-                                timestamp: handshakePayloadObj.timestamp,
-                                authMode: handshakePayloadObj.authMode,
-                                accountType: handshakePayloadObj.accountType,
-                                bt_secret: handshakePayloadObj.bt_secret,
-                                theme: handshakePayloadObj.theme,
-                                payload: handshakePayloadObj.payload,
-                            };
-                            (event.source as Window).postMessage(handshakeResponse, '*');
-                            (event.source as Window).postMessage(bridgeAuthSuccess, '*');
-                        } else {
-                            this.logger.debug('HANDSHAKE_SEND_MINIMAL', { loginid, tokenPresent: !!token });
-                            const minimalPayloadObj = {
-                                status: 'pending',
-                                tokenPresent: false,
-                                token: '',
-                                loginid: loginid || null,
-                                appId: Number(session?.appId || '121856') || 121856,
-                                timestamp: Date.now(),
-                                authMode: 'derivws_otp',
-                            };
-                            const minimalPayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', String(session?.appId || '121856'), 'parent', minimalPayloadObj);
-                            
-                            (event.source as Window).postMessage(minimalPayloadMsg, '*');
-                            (event.source as Window).postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...minimalPayloadObj }, '*');
-                            const handshakeResponse = {
-                                type: 'HANDSHAKE_RESPONSE',
-                                status: minimalPayloadObj.status,
-                                loginid: minimalPayloadObj.loginid,
-                                appId: minimalPayloadObj.appId,
-                                timestamp: minimalPayloadObj.timestamp,
-                                authMode: minimalPayloadObj.authMode,
-                            };
-                            (event.source as Window).postMessage(handshakeResponse, '*');
-                        }
+                        const handshakePayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', handshakePayloadObj);
+
+                        this.logger.debug('HANDSHAKE_SEND', { loginid, tokenPresent: handshakePayloadObj.tokenPresent });
+                        const win = event.source as Window;
+                        win.postMessage(handshakePayloadMsg, '*');
+                        win.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...handshakePayloadObj }, '*');
+                        win.postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayloadObj }, '*');
+                        win.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayloadObj }, '*');
+                        win.postMessage({ type: 'SESSION_DATA', ...handshakePayloadObj }, '*');
+                        win.postMessage({ type: 'DERIV_AUTH', ...handshakePayloadObj }, '*');
+                        win.postMessage({ type: 'AUTH_TOKEN', ...handshakePayloadObj }, '*');
+                        win.postMessage({ action: 'setToken', ...handshakePayloadObj }, '*');
                     } catch (e) {
                         this.logger.debug('HANDSHAKE_ERROR', { error: String(e) });
                     }
@@ -347,7 +301,7 @@ export class ParentBridgeClient {
         }
 
         if (parsedData.source !== 'iframe') {
-            return; // Ignore messages not from iframe
+            return;
         }
 
         this.logMessage('in', parsedData);
@@ -370,7 +324,6 @@ export class ParentBridgeClient {
                 this.attemptRecovery();
                 break;
             case BridgeEvent.LOGOUT:
-                // Iframe logged out, sync parent
                 this.stateMachine.transitionTo(BridgeState.LOGGED_OUT);
                 break;
             case BridgeEvent.ERROR:
@@ -381,87 +334,58 @@ export class ParentBridgeClient {
 
     private handleBridgeReady() {
         if (this.stateMachine.transitionTo(BridgeState.READY)) {
-            this.handleSessionRequest(); // Preemptively send session
+            this.handleSessionRequest();
         }
     }
 
     private handleSessionRequest() {
-        let session = sessionManager.getSession();
+        const session = sessionManager.getSession();
+        let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+        let token = session?.token || getActiveToken() || localStorage.getItem('token') || '';
+        const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
+        const appIdStr = String(session?.appId || '121856');
 
-        if (!session) {
-            let loginid = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-            let token = getActiveToken() || localStorage.getItem('token') || localStorage.getItem('authToken') || '';
-            const accountsList = getAccountsList();
+        this.diagnostics.sessionStatus = 'valid';
+        this.diagnostics.appId = appIdStr;
+        this.stateMachine.transitionTo(BridgeState.REQUESTING_SESSION);
 
-            if (!loginid || !token || token.startsWith('ory_at_')) {
-                const keys = Object.keys(accountsList);
-                for (const k of keys) {
-                    if (accountsList[k] && !accountsList[k].startsWith('ory_at_')) {
-                        loginid = k;
-                        token = accountsList[k];
-                        break;
-                    }
-                }
+        const payloadObj = {
+            status: 'success',
+            tokenPresent: !!token && !token.startsWith('ory_at_'),
+            token: token || '',
+            loginid: loginid || null,
+            loginId: loginid || null,
+            acct1: loginid || null,
+            currency: currency,
+            cur1: currency,
+            accountType: 'ZOOM',
+            appId: Number(appIdStr) || 121856,
+            app_id: appIdStr,
+            server: 'green',
+            timestamp: Date.now(),
+            authMode: 'derivws_otp',
+            defaultSymbol: '1HZ100V',
+            embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
+            payload: { loginid, currency },
+        };
+
+        this.sendMessage(BridgeEvent.SESSION_DATA, payloadObj);
+        this.stateMachine.transitionTo(BridgeState.AUTHENTICATING);
+        this.sendMessage(BridgeEvent.AUTH_START, { timestamp: Date.now() });
+
+        if (this.iframeWindow) {
+            try {
+                const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
+                this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...payloadObj }, target);
+                this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...payloadObj }, target);
+                this.iframeWindow.postMessage({ action: 'setToken', ...payloadObj }, target);
+                this.iframeWindow.postMessage({ type: 'BRIDGE_READY', ...payloadObj }, target);
+                this.iframeWindow.postMessage({ type: 'AUTH_SUCCESS', ...payloadObj }, target);
+                this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...payloadObj }, target);
+                this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadObj }, target);
+            } catch (e) {
+                console.error('[ParentBridge] Error broadcasting legacy auth:', e);
             }
-
-            if (loginid && token && !token.startsWith('ory_at_')) {
-                session = {
-                    token,
-                    loginid,
-                    currency: 'USD',
-                    isDemo: loginid.startsWith('VR'),
-                    appId: '121856'
-                };
-            }
-        }
-        
-        if (session) {
-            this.diagnostics.sessionStatus = 'valid';
-            this.diagnostics.appId = session.appId || '121856';
-            this.stateMachine.transitionTo(BridgeState.REQUESTING_SESSION);
-            this.sendMessage(BridgeEvent.SESSION_DATA, session);
-            
-            this.stateMachine.transitionTo(BridgeState.AUTHENTICATING);
-            this.sendMessage(BridgeEvent.AUTH_START, { timestamp: Date.now() });
-
-            // Broadcast legacy and NewdtraderBridge payloads so iframe auth resolves immediately
-            if (this.iframeWindow) {
-                try {
-                    const legacyPayload = {
-                        token: session.token,
-                        loginid: session.loginid,
-                        loginId: session.loginid,
-                        appId: Number(session.appId || '121856') || 121856,
-                        server: 'green',
-                        timestamp: Date.now(),
-                        status: 'success',
-                        authMode: 'derivws_otp',
-                        accountType: 'ZOOM',
-                        bt_secret: 'binarytool',
-                        theme: 'dark'
-                    };
-                    // Surface masked session info in logs for diagnostics
-                    try {
-                        console.info(`[ParentBridge] Broadcasting session to iframe origin=${this.iframeOrigin} loginid=${session.loginid} token=${truncateToken(session.token)}`);
-                    } catch (e) {
-                        // ignore logging errors
-                    }
-
-                    const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
-                    this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...legacyPayload }, target);
-                    this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...legacyPayload }, target);
-                    this.iframeWindow.postMessage({ action: 'setToken', ...legacyPayload }, target);
-                    this.iframeWindow.postMessage({ type: 'BRIDGE_READY', ...legacyPayload }, target);
-                    this.iframeWindow.postMessage({ type: 'AUTH_SUCCESS', ...legacyPayload }, target);
-                    this.iframeWindow.postMessage({ type: 'SESSION_DATA', payload: session }, target);
-                    this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...legacyPayload, tokenPresent: !!legacyPayload.token }, target);
-                } catch (e) {
-                    console.error('[ParentBridge] Error broadcasting legacy auth:', e);
-                }
-            }
-        } else {
-            this.diagnostics.sessionStatus = 'none';
-            // Do NOT send LOGOUT postMessage during startup to avoid unlogging iframe
         }
     }
 
@@ -487,18 +411,11 @@ export class ParentBridgeClient {
             this.stateMachine.transitionTo(BridgeState.RECOVERING);
             
             const backoff = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
-            console.log(`[ParentBridge] Attempting recovery in ${backoff}ms (Attempt ${this.reconnectAttempts})`);
-            
             setTimeout(() => {
                 this.stateMachine.transitionTo(BridgeState.WAITING_READY);
-                // Ping iframe to see if it's there
                 this.sendMessage(BridgeEvent.PING, { timestamp: Date.now() });
-                
-                // Retry auth after a short delay assuming iframe might have reloaded
                 setTimeout(() => this.handleSessionRequest(), 500);
             }, backoff);
-        } else {
-            console.error('[ParentBridge] Max recovery attempts reached.');
         }
     }
 }
