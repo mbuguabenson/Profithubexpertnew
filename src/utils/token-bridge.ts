@@ -71,7 +71,7 @@ export const getActiveToken = (): string | null => {
  * Robustly resolves a valid Deriv WebSocket authorization token for an account.
  * Fast-paths synchronous storage checks so postMessage handshakes are never delayed.
  */
-export const resolveValidDerivWSToken = async (loginid?: string): Promise<string> => {
+export const resolveValidDerivWSToken = async (_loginid?: string): Promise<string> => {
     // 1. Fast synchronous check from storage / URL
     const syncToken = getActiveToken();
     if (syncToken) {
