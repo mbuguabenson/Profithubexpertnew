@@ -1,15 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
-import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
-import { resolveValidDerivWSToken } from '@/utils/token-bridge';
-import { getAppId } from '@/components/shared/utils/config/config';
-import { makeBridgeLogger, generateInstanceId } from '../iframe-bridge/bridge-diagnostics';
-import { BridgeEvent, createMessage } from '../iframe-bridge/protocol';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
-import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
-import TokenDebugPanel from '@/components/Debug/TokenDebugPanel';
 
 interface IframeWrapperProps {
     src: string;
@@ -17,140 +10,34 @@ interface IframeWrapperProps {
     className?: string;
 }
 
+/**
+ * IframeWrapper — generic iframe container for third-party bot tools.
+ *
+ * IMPORTANT: This component intentionally does NOT attempt any Deriv cookie-bridge
+ * auth (postMessage / ParentBridgeClient). That approach is blocked by SameSite cookie
+ * restrictions when Deriv's domain is embedded in a third-party iframe.
+ * For DTrader, use the OAuth launcher panel in dtrader.tsx instead.
+ *
+ * What this component DOES:
+ * - Renders a third-party bot iframe (Hyperbot, Diffbot, Profihub Analysis, etc.)
+ * - Listens for TRADE_PLACED / CONTRACT_EVENT / CONTRACT_UPDATE messages from those
+ *   bot iframes and forwards them into the MobX run-panel / transactions store.
+ */
 const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, className = '' }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [bridgeClient, setBridgeClient] = useState<ParentBridgeClient | null>(null);
     const { transactions, run_panel, client } = useStore();
-
-    const instanceIdRef = useRef<string | null>(null);
-    if (!instanceIdRef.current) instanceIdRef.current = generateInstanceId();
-    const logger = makeBridgeLogger(instanceIdRef.current);
 
     useEffect(() => {
         const iframe = iframeRef.current;
         if (!iframe) return;
 
-        // Verify stores are available
-        if (!transactions || !run_panel) {
-            console.warn(`⚠️ [${title}] Stores not available:`, {
-                transactions: !!transactions,
-                run_panel: !!run_panel,
-                client: !!client,
-            });
-        } else {
-            console.log(`✅ [${title}] Stores available:`, {
-                transactions: !!transactions,
-                run_panel: !!run_panel,
-                client: !!client,
-            });
-        }
-
-        // Initialize the new bridge client
-        const iframeOrigin = (() => {
-            try { return new URL(src).origin; } catch { return '*'; }
-        })();
-        logger.debug('IFRAME_CREATE', { iframeUrl: src, iframeOrigin });
-        const bridge = new ParentBridgeClient();
-        setBridgeClient(bridge);
-        bridge.attach(iframe, iframeOrigin);
-
-        const sendBridgeAuthData = async () => {
-            let loginid = V2GetActiveClientId() || client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-            const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
-            let token = await resolveValidDerivWSToken(loginid);
-
-            const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
-            if (isDemoToReal && loginid && !loginid.startsWith('VR') && title !== 'DTrader Terminal') {
-                const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
-                if (demoAccountId) {
-                    loginid = demoAccountId;
-                    token = accountsList[demoAccountId] || token;
-                }
-            }
-
-            const effectiveLoginId = loginid || (client as any)?.active_account_loginid || localStorage.getItem('active_loginid') || undefined;
-            const effectiveToken = token || localStorage.getItem('token') || undefined;
-            const appIdStr = getAppId() || '121856';
-            const targetOrigin = iframeOrigin === '*' ? '*' : iframeOrigin;
-
-            if (!iframe.contentWindow) {
-                logger.debug('SYNC_FAILED', { reason: 'missing_content_window' });
-                return;
-            }
-
-            const authPayload: any = {
-                loginId: effectiveLoginId,
-                loginid: effectiveLoginId,
-                accountType: 'ZOOM',
-                currency: client?.currency || 'USD',
-                appId: String(appIdStr),
-                app_id: appIdStr,
-                authMode: effectiveToken ? 'derivws_otp' : 'none',
-                server: 'green',
-                bt_secret: 'binarytool',
-                theme: 'dark',
-                timestamp: Date.now(),
-            };
-
-            if (effectiveToken) {
-                authPayload.token = effectiveToken;
-            }
-
-            if (effectiveLoginId) {
-                authPayload.acct1 = effectiveLoginId;
-                authPayload.cur1 = authPayload.currency;
-            }
-
-            const sessionMessage = createMessage(BridgeEvent.SESSION_DATA, appIdStr, 'parent', authPayload);
-            const authTokenMessage = createMessage('AUTH_TOKEN', appIdStr, 'parent', authPayload);
-            const derivAuthMessage = createMessage('DERIV_AUTH', appIdStr, 'parent', authPayload);
-            const authStartMessage = createMessage(BridgeEvent.AUTH_START, appIdStr, 'parent', { timestamp: Date.now() });
-
-            logger.debug('IFRAME_AUTH_SEND', { targetOrigin, appId: appIdStr, tokenPresent: !!effectiveToken, loginid: effectiveLoginId });
-            try {
-                console.debug('[NewdtraderBridge] message sent', { targetOrigin, type: sessionMessage.type, action: undefined });
-                iframe.contentWindow.postMessage(sessionMessage, targetOrigin);
-                iframe.contentWindow.postMessage(authTokenMessage, targetOrigin);
-                iframe.contentWindow.postMessage(derivAuthMessage, targetOrigin);
-                iframe.contentWindow.postMessage(authStartMessage, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({
-                    type: 'NEWDTRADER_BRIDGE_AUTH',
-                    status: effectiveToken ? 'success' : 'pending',
-                    tokenPresent: !!effectiveToken,
-                    token: effectiveToken || '',
-                    loginid: effectiveLoginId || null,
-                    loginId: effectiveLoginId || null,
-                    appId: Number(appIdStr) || 121856,
-                    server: 'green',
-                    timestamp: Date.now(),
-                    authMode: effectiveToken ? 'derivws_otp' : 'none',
-                }, targetOrigin);
-            } catch (error) {
-                console.error('Error sending auth data to iframe:', error);
-            }
-        };
-
-        // Initial broadcast for iframe terminals and a small retry window for mount races
-        iframe.addEventListener('load', sendBridgeAuthData);
-        sendBridgeAuthData();
-        const authRetryIntervals = [500, 1500, 3000];
-        authRetryIntervals.forEach(ms => setTimeout(() => {
-            if (iframe.contentWindow) {
-                sendBridgeAuthData();
-            }
-        }, ms));
-
-        const expectedOrigin = process.env.DTRADER_PROXY_URL || process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
-        
+        // Allowed origins for third-party bot iframes (Hyperbot, Diffbot, etc.)
+        // NOTE: deriv.com / trader.deriv.com are intentionally NOT listed here.
+        // Auth via postMessage bridge is not supported for Deriv's cross-origin
+        // iframes due to SameSite cookie restrictions. Use the OAuth launcher for DTrader.
         const allowedOrigins = [
-            expectedOrigin,
-            'https://trader.deriv.com',
-            'https://app.deriv.com',
-            'https://deriv-dtrader.vercel.app',
             'https://www.derivcircles.com',
             'https://bot-analysis-tool-belex.web.app',
             'https://analysisprofithub.vercel.app',
@@ -158,67 +45,39 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             'https://dcircles.netlify.app',
             'https://dcircles-six.vercel.app',
             'https://xenontool.netlify.app',
-            window.location.origin
+            window.location.origin,
         ];
 
-        // Listen for messages from iframe (auth requests and trade events)
         const handleMessage = (event: MessageEvent) => {
-            const isAllowed = allowedOrigins.includes(event.origin) || 
-                              /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
-
+            const isAllowed =
+                allowedOrigins.includes(event.origin) ||
+                /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
             if (!isAllowed) return;
-
-            // Debug: Log all messages from iframe
-            if (event.data) {
-                // (Legacy support)
-                // We used to blindly call sendBridgeAuthData() here for unrecognized messages.
-                // DO NOT DO THAT! If the iframe emits periodic pings or state updates, 
-                // blindly replying with 'login' commands creates a ping-pong loop that 
-                // triggers Deriv API rate limits and causes 'Session expired' after a few minutes.
-            }
-
             if (!event.data) return;
 
-            // Safe logging of messages
-            try {
-                logger.messageReceived(event.origin, event.data.type, event.data.action);
-            } catch (e) {}
-
-            // Handle trade events from Hyperbot iframe
+            // Forward trade events from bot iframes into the run panel / transactions store
             if (event.data.type === 'TRADE_PLACED' || event.data.type === 'CONTRACT_EVENT') {
                 const tradeData = event.data;
 
-                console.log(`📊 [${title}] Received trade event from iframe:`, tradeData);
+                // DTrader no longer uses IframeWrapper — guard kept for safety
+                if (title === 'DTrader Terminal') return;
 
-                // Ignore trade events from DTrader to prevent Run Panel from popping up
-                if (title === 'DTrader Terminal') {
-                    return;
-                }
-
-                // Initialize run panel on first trade (like other bots do)
                 if (run_panel && !run_panel.run_id) {
-                    // Generate run_id based on title (e.g., "Hyperbot" -> "hyperbot", "Diffbot" -> "diffbot")
                     const botName = title.toLowerCase().replace(/\s+/g, '');
                     run_panel.run_id = `${botName}-${Date.now()}`;
                     run_panel.setIsRunning(true);
                     run_panel.setContractStage(contract_stages.STARTING);
-                    console.log(`🚀 [${title}] Initialized run panel with run_id:`, run_panel.run_id);
                 }
 
-                // Add to transactions panel
                 if (transactions?.onBotContractEvent && tradeData.contract_id) {
                     try {
                         const contractData = {
                             contract_id: tradeData.contract_id,
                             transaction_ids: tradeData.transaction_ids || {
-                                buy:
-                                    tradeData.transaction_id ||
-                                    tradeData.buy_transaction_id ||
-                                    tradeData.buy_transaction_id,
+                                buy: tradeData.transaction_id || tradeData.buy_transaction_id,
                                 sell: tradeData.sell_transaction_id || tradeData.transaction_ids?.sell,
                             },
-                            buy_price:
-                                tradeData.buy_price || tradeData.price || tradeData.stake || tradeData.amount || 0,
+                            buy_price: tradeData.buy_price || tradeData.price || tradeData.stake || tradeData.amount || 0,
                             currency: tradeData.currency || client?.currency || 'USD',
                             contract_type:
                                 tradeData.contract_type ||
@@ -226,9 +85,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                                     ? 'DIGITMATCH'
                                     : title.toLowerCase().includes('diffbot')
                                       ? 'DIGITDIFF'
-                                      : title.toLowerCase().includes('speedbot')
-                                        ? 'DIGITUNDER'
-                                        : 'DIGITUNDER'),
+                                      : 'DIGITUNDER'),
                             underlying: tradeData.underlying || tradeData.symbol || '',
                             display_name: tradeData.display_name || tradeData.underlying || tradeData.symbol || '',
                             date_start: tradeData.date_start || Math.floor(Date.now() / 1000),
@@ -253,65 +110,24 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                             is_valid_to_sell: tradeData.is_valid_to_sell,
                             is_sold: tradeData.is_sold,
                         };
-
-                        console.log(`📝 [${title}] Calling onBotContractEvent with:`, contractData);
                         transactions.onBotContractEvent(contractData);
-                        console.log(`✅ [${title}] Added trade to Run Panel:`, contractData.contract_id);
-
-                        // Update run panel state
                         if (run_panel) {
                             run_panel.setHasOpenContract(true);
                             run_panel.setContractStage(contract_stages.PURCHASE_SENT);
-                            // Open run panel drawer if not already open
-                            if (!run_panel.is_drawer_open) {
-                                run_panel.toggleDrawer(true);
-                            }
-                            // Switch to transactions tab
+                            if (!run_panel.is_drawer_open) run_panel.toggleDrawer(true);
                             run_panel.setActiveTabIndex(1);
                         }
-
-                        // Verify transaction was added
-                        setTimeout(() => {
-                            const transactionList = transactions?.transactions || [];
-                            console.log(`🔍 [${title}] Current transactions count:`, transactionList.length);
-                            const found = transactionList.find(
-                                (t: any) => t.data?.contract_id === contractData.contract_id
-                            );
-                            if (found) {
-                                console.log(`✅ [${title}] Transaction confirmed in store:`, found);
-                            } else {
-                                console.warn(`⚠️ [${title}] Transaction not found in store!`);
-                            }
-                        }, 100);
                     } catch (error) {
-                        console.error(`❌ [${title}] Error adding trade to Run Panel:`, error);
-                        console.error(`❌ [${title}] Error details:`, error instanceof Error ? error.stack : error);
+                        console.error(`[IframeWrapper] Error forwarding trade to Run Panel:`, error);
                     }
-                } else {
-                    console.warn(`⚠️ [${title}] Cannot add trade - missing transactions store or contract_id`);
-                    console.warn(
-                        `⚠️ [${title}] transactions:`,
-                        !!transactions,
-                        'onBotContractEvent:',
-                        !!transactions?.onBotContractEvent,
-                        'contract_id:',
-                        tradeData.contract_id
-                    );
                 }
                 return;
             }
 
-            // Handle contract updates (when trades complete)
+            // Forward contract updates
             if (event.data.type === 'CONTRACT_UPDATE') {
                 const updateData = event.data;
-
-                console.log(`🔄 [${title}] Received contract update from iframe:`, updateData);
-
                 if (updateData.contract_id && transactions?.onBotContractEvent) {
-                    console.log(
-                        `📝 [${title}] Forwarding contract update to transactions store for contract_id:`,
-                        updateData.contract_id
-                    );
                     transactions.onBotContractEvent(updateData);
                 }
                 return;
@@ -320,107 +136,26 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
         window.addEventListener('message', handleMessage);
 
-        // Send auth data when iframe loads
         const handleLoad = () => {
-            console.log('✅ Iframe loaded successfully:', src);
             setIsLoading(false);
             setHasError(false);
-            setTimeout(() => {
-                sendBridgeAuthData();
-                setIsLoading(false);
-                // Check if iframe has content
-                try {
-                    if (iframe.contentWindow) {
-                        console.log('✅ Iframe contentWindow accessible');
-                        // Check if iframe actually has content (not just blank)
-                        try {
-                            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                            if (iframeDoc) {
-                                const body = iframeDoc.body;
-                                if (body && body.innerHTML.trim() === '') {
-                                    console.warn(
-                                        '⚠️ Iframe loaded but body is empty - might be blocked or downloading'
-                                    );
-                                }
-                            }
-                        } catch (e) {
-                            // Cross-origin, can't access - this is normal
-                            console.log('ℹ️ Cross-origin iframe (cannot check content directly)');
-                        }
-                    }
-                } catch (e) {
-                    console.warn('⚠️ Cannot access iframe contentWindow (cross-origin):', e);
-                }
-            }, 500);
         };
-
-        // Handle iframe errors
         const handleError = () => {
-            console.error('❌ Iframe failed to load:', src);
-            console.error('💡 This might indicate the site is blocking iframe embedding or serving downloads');
             setIsLoading(false);
             setHasError(true);
         };
+        const loadTimeout = setTimeout(() => setIsLoading(false), 10000);
 
-        // Check if iframe content is accessible (for X-Frame-Options detection)
-        const checkIframeAccess = () => {
-            try {
-                // Try to access iframe content - if blocked, this will throw
-                if (iframe.contentWindow) {
-                    // Iframe is accessible (cross-origin is normal)
-                    console.log('✅ Iframe contentWindow exists');
-                    // Don't set loading to false here, wait for load event
-                }
-            } catch (e) {
-                // Cross-origin or blocked - this is normal for cross-origin iframes
-                console.log('ℹ️ Cross-origin iframe (normal):', e instanceof Error ? e.message : String(e));
-                // Still wait for load event
-            }
-        };
-
-
-
-        // Timeout to detect if iframe never loads
-        const loadTimeout = setTimeout(() => {
-            if (isLoading) {
-                console.warn('⏱️ Iframe load timeout after 10s:', src);
-                console.warn('💡 Check if the external site allows iframe embedding');
-                setIsLoading(false);
-                // Don't set error yet, might still be loading
-            }
-        }, 10000); // 10 second timeout
-
-        // Listen for iframe load
         iframe.addEventListener('load', handleLoad);
         iframe.addEventListener('error', handleError);
 
-        console.log('🚀 Initializing iframe:', src);
-
-        // Test the URL to check if it's serving HTML or downloads
-        fetch(src, { method: 'HEAD', mode: 'no-cors' })
-            .then(() => {
-                console.log('✅ URL is accessible');
-            })
-            .catch(err => {
-                console.warn('⚠️ Could not test URL (CORS):', err);
-            });
-
-        // Check access after a short delay
-        setTimeout(checkIframeAccess, 2000);
-
-        setTimeout(() => {
-            sendBridgeAuthData();
-        }, 1000);
-
-        // Cleanup
         return () => {
-            bridge.detach();
             iframe.removeEventListener('load', handleLoad);
             iframe.removeEventListener('error', handleError);
             window.removeEventListener('message', handleMessage);
             clearTimeout(loadTimeout);
         };
-    }, [src, isLoading, title]);
+    }, [src, title]);
 
     return (
         <div className={`iframe-wrapper ${className}`} style={{ pointerEvents: 'auto', position: 'relative' }}>
@@ -459,23 +194,13 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                     }}
                 >
                     <p style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Failed to load {title}</p>
-                    <p
-                        style={{
-                            fontSize: '1rem',
-                            marginTop: '1rem',
-                            color: 'var(--text-less-prominent)',
-                            marginBottom: '1.5rem',
-                        }}
-                    >
+                    <p style={{ fontSize: '1rem', marginTop: '1rem', color: 'var(--text-less-prominent)', marginBottom: '1.5rem' }}>
                         The external site may be blocking iframe embedding or serving downloads instead of HTML.
-                        <br />
-                        <br />
-                        <strong>Possible causes:</strong>
-                        <br />
-                        • X-Frame-Options header blocking embedding
-                        <br />
-                        • Content-Type header causing downloads
-                        <br />• CORS policy restrictions
+                        <br /><br />
+                        <strong>Possible causes:</strong><br />
+                        • X-Frame-Options header blocking embedding<br />
+                        • Content-Type header causing downloads<br />
+                        • CORS policy restrictions
                     </p>
                     <a
                         href={src}
@@ -505,7 +230,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 allowFullScreen
                 loading='eager'
                 allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; display-capture'
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+                sandbox='allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads'
                 referrerPolicy='no-referrer-when-downgrade'
                 style={{
                     display: 'block',
@@ -525,19 +250,8 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                     right: 0,
                     bottom: 0,
                 }}
-                onLoad={() => {
-                    // Additional load handler to catch any issues
-                    console.log('📦 Iframe onLoad event fired');
-                    setIsLoading(false);
-                    // Force set loading to false after a short delay to ensure it's clickable
-                    setTimeout(() => {
-                        setIsLoading(false);
-                        console.log('✅ Iframe should now be fully interactive');
-                    }, 100);
-                }}
+                onLoad={() => setIsLoading(false)}
             />
-            {title === 'DTrader Terminal' && <DiagnosticsPanel bridge={bridgeClient} />}
-            {title === 'DTrader Terminal' && <TokenDebugPanel />}
         </div>
     );
 });
