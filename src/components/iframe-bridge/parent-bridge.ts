@@ -103,10 +103,13 @@ export class ParentBridgeClient {
                 const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
                 const appIdStr = String(session?.appId || '121856');
 
+                const hasToken = !!token && !String(token).startsWith('ory_at_');
+                const authMode = hasToken ? 'derivws_otp' : 'none';
+
                 const payloadData = {
                     status: 'success',
-                    tokenPresent: !!token && !String(token).startsWith('ory_at_'),
-                    token: token || '',
+                    tokenPresent: hasToken,
+                    token: hasToken ? token : '',
                     loginid: loginid || null,
                     loginId: loginid || null,
                     acct1: loginid || null,
@@ -117,11 +120,12 @@ export class ParentBridgeClient {
                     app_id: appIdStr,
                     server: 'green',
                     timestamp: Date.now(),
-                    authMode: 'derivws_otp',
+                    authMode: authMode,
                     defaultSymbol: '1HZ100V',
                     embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
                     payload: { loginid, currency },
                 };
+
 
                 const payloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', payloadData);
 
@@ -247,10 +251,13 @@ export class ParentBridgeClient {
                     const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
                     const appIdStr = String(session?.appId || '121856');
 
+                    const hasToken = !!token && !String(token).startsWith('ory_at_');
+                    const authMode = hasToken ? 'derivws_otp' : 'none';
+
                     const handshakePayloadObj = {
                         status: 'success',
-                        tokenPresent: !!token && !String(token).startsWith('ory_at_'),
-                        token: token || '',
+                        tokenPresent: hasToken,
+                        token: hasToken ? token : '',
                         loginid: loginid || null,
                         loginId: loginid || null,
                         acct1: loginid || null,
@@ -261,11 +268,12 @@ export class ParentBridgeClient {
                         app_id: appIdStr,
                         server: 'green',
                         timestamp: Date.now(),
-                        authMode: 'derivws_otp',
+                        authMode: authMode,
                         defaultSymbol: '1HZ100V',
                         embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
                         payload: { loginid, currency },
                     };
+
 
                     const handshakePayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', handshakePayloadObj);
                     const win = event.source as Window;

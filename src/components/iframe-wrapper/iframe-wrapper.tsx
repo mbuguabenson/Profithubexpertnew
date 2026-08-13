@@ -69,12 +69,13 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             const token = await resolveValidDerivWSToken(loginid);
             const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
             const appId = getAppId() || '121856';
-            const tokenPresent = !!token && !token.startsWith('ory_at_');
+            const hasToken = !!token && !token.startsWith('ory_at_');
+            const authMode = hasToken ? 'derivws_otp' : 'none';
 
             const authPayload = {
                 status: 'success',
-                tokenPresent,
-                token: tokenPresent ? token : '',
+                tokenPresent: hasToken,
+                token: hasToken ? token : '',
                 loginid: loginid || null,
                 loginId: loginid || null,
                 acct1: loginid || null,
@@ -85,11 +86,12 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 app_id: appId,
                 server: 'green',
                 timestamp: Date.now(),
-                authMode: 'derivws_otp',
+                authMode: authMode,
                 defaultSymbol: '1HZ100V',
                 embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
                 payload: { loginid, currency },
             };
+
 
             try {
                 iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, '*');
