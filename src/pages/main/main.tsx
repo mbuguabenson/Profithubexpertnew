@@ -53,7 +53,10 @@ import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
 import { initWebSocketMonitor } from '@/services/websocket-monitor';
 
+import { useInvalidTokenHandler } from '@/hooks/useInvalidTokenHandler';
+
 const AppWrapper = observer(() => {
+    useInvalidTokenHandler(); // Initialize global token handler
     const { connectionStatus } = useApiBase();
     const store = useStore();
 
