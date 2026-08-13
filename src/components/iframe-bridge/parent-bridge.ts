@@ -325,7 +325,7 @@ export class ParentBridgeClient {
         }
     }
 
-    private handleSessionRequest() {
+    private handleSessionRequest = () => {
         const session = sessionManager.getSession();
         let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
         let token = session?.token || getActiveToken() || localStorage.getItem('token') || '';
@@ -373,16 +373,17 @@ export class ParentBridgeClient {
                 console.error('[ParentBridge] Error broadcasting legacy auth:', e);
             }
         }
-    }
+    };
 
-    private handleSessionChange(session: any) {
+    private handleSessionChange = (session: any) => {
         if (!session) {
             this.diagnostics.sessionStatus = 'none';
             return;
         }
         this.diagnostics.sessionStatus = 'valid';
         this.handleSessionRequest();
-    }
+    };
+
 
     private attemptRecovery() {
         if (this.reconnectAttempts < this.maxReconnects) {
