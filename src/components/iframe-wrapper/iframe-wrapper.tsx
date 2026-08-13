@@ -56,9 +56,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             const bridge = new ParentBridgeClient();
             setBridgeClient(bridge);
             bridge.attach(iframe, iframeOrigin);
-        }
-
-        const sendAuthToIframe = async () => {
+        }        const sendAuthToIframe = async () => {
             if (!iframe.contentWindow) return;
 
             const loginid =
@@ -66,46 +64,60 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 localStorage.getItem('active_loginid') ||
                 localStorage.getItem('client.loginid') || '';
 
-            const token = await resolveValidDerivWSToken(loginid);
+            const syncToken = getActiveToken() || '';
             const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
             const appId = getAppId() || '121856';
-            const hasToken = !!token && !token.startsWith('ory_at_');
-            const authMode = hasToken ? 'derivws_otp' : 'none';
 
-            const authPayload = {
-                status: 'success',
-                tokenPresent: hasToken,
-                token: hasToken ? token : '',
-                loginid: loginid || null,
-                loginId: loginid || null,
-                acct1: loginid || null,
-                currency: currency,
-                cur1: currency,
-                accountType: 'ZOOM',
-                appId: Number(appId) || 121856,
-                app_id: appId,
-                server: 'green',
-                timestamp: Date.now(),
-                authMode: authMode,
-                defaultSymbol: '1HZ100V',
-                embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
-                payload: { loginid, currency },
+            const sendPayload = (tok: string) => {
+                if (!iframe.contentWindow) return;
+                const hasToken = !!tok && !tok.startsWith('ory_at_');
+                const authMode = hasToken ? 'derivws_otp' : 'none';
+
+                const authPayload = {
+                    status: 'success',
+                    tokenPresent: hasToken,
+                    token: hasToken ? tok : '',
+                    loginid: loginid || null,
+                    loginId: loginid || null,
+                    acct1: loginid || null,
+                    currency: currency,
+                    cur1: currency,
+                    accountType: 'ZOOM',
+                    appId: Number(appId) || 121856,
+                    app_id: appId,
+                    server: 'green',
+                    timestamp: Date.now(),
+                    authMode: authMode,
+                    defaultSymbol: '1HZ100V',
+                    embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
+                    payload: { loginid, currency },
+                };
+
+                try {
+                    iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...authPayload }, '*');
+                    iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
+                } catch (e) {
+                    console.warn('[IframeWrapper] Error sending auth postMessage:', e);
+                }
             };
 
+            // Send synchronous payload immediately (<1ms)
+            sendPayload(syncToken);
 
-            try {
-                iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, '*');
-                iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...authPayload }, '*');
-                iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, '*');
-                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
-                iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, '*');
-                iframe.contentWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...authPayload }, '*');
-                iframe.contentWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...authPayload }, '*');
-                iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
-            } catch (e) {
-                console.warn('[IframeWrapper] Error sending auth postMessage:', e);
+            if (!syncToken) {
+                const resolvedToken = await resolveValidDerivWSToken(loginid);
+                if (resolvedToken && resolvedToken !== syncToken) {
+                    sendPayload(resolvedToken);
+                }
             }
         };
+};
 
         const handleMessage = (event: MessageEvent) => {
             const isAllowed =

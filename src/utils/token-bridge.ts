@@ -24,66 +24,33 @@ export const getActiveLoginId = (): string =>
     localStorage.getItem('client.loginid') ||
     '';
 
-/** Returns the token for the currently active account */
-export const getActiveToken = (): string | null => {
-    const list = getAccountsList();
-    const id = getActiveLoginId();
-    const token = list[id] || null;
-    return token && token.startsWith('ory_at_') ? null : token;
-};
-
 const isInvalidBearerToken = (token: string | null | undefined): boolean =>
     !token || token === 'null' || token === 'undefined' || token.startsWith('ory_at_');
 
-/**
- * Robustly resolves a valid Deriv WebSocket authorization token for an account.
- * Checks accountsList, clientAccounts, URL query params, localStorage keys, and PKCE OTP resolution.
- */
-export const resolveValidDerivWSToken = async (loginid?: string): Promise<string> => {
-    const activeId = loginid || getActiveLoginId();
+/** Synchronously checks if a valid non-bearer token is available in storage or URL */
+export const getActiveToken = (): string | null => {
     const list = getAccountsList();
-
-    // 1. Direct match in accountsList for active account
-    if (activeId && list[activeId] && !isInvalidBearerToken(list[activeId])) {
-        return list[activeId];
+    const id = getActiveLoginId();
+    if (id && list[id] && !isInvalidBearerToken(list[id])) {
+        return list[id];
     }
-
-    // 2. Check any token in accountsList
-    for (const id in list) {
-        if (!isInvalidBearerToken(list[id])) {
-            return list[id];
+    for (const key in list) {
+        if (!isInvalidBearerToken(list[key])) {
+            return list[key];
         }
     }
-
-    // 3. Check clientAccounts map in localStorage
     try {
         const clientAccounts = JSON.parse(localStorage.getItem('clientAccounts') || '{}');
-        if (activeId && clientAccounts[activeId]?.token && !isInvalidBearerToken(clientAccounts[activeId].token)) {
-            return clientAccounts[activeId].token;
+        if (id && clientAccounts[id]?.token && !isInvalidBearerToken(clientAccounts[id].token)) {
+            return clientAccounts[id].token;
         }
         for (const k in clientAccounts) {
             if (clientAccounts[k]?.token && !isInvalidBearerToken(clientAccounts[k].token)) {
                 return clientAccounts[k].token;
             }
         }
-    } catch (e) {
-        // noop
-    }
+    } catch (e) {}
 
-    // 4. Check URL query parameters (e.g., ?token1=a1-xxx or ?token=a1-xxx)
-    try {
-        if (typeof window !== 'undefined') {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tokenFromUrl = urlParams.get('token1') || urlParams.get('token');
-            if (tokenFromUrl && !isInvalidBearerToken(tokenFromUrl)) {
-                return tokenFromUrl;
-            }
-        }
-    } catch (e) {
-        // noop
-    }
-
-    // 5. Check localStorage & sessionStorage stored token keys
     const storedToken =
         localStorage.getItem('token') ||
         localStorage.getItem('active_token') ||
@@ -97,18 +64,48 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
     if (!isInvalidBearerToken(storedToken)) {
         return storedToken!;
     }
+    return null;
+};
 
-    // 6. PKCE OAuth2 Access Token fallback
+/**
+ * Robustly resolves a valid Deriv WebSocket authorization token for an account.
+ * Fast-paths synchronous storage checks so postMessage handshakes are never delayed.
+ */
+export const resolveValidDerivWSToken = async (loginid?: string): Promise<string> => {
+    // 1. Fast synchronous check from storage / URL
+    const syncToken = getActiveToken();
+    if (syncToken) {
+        return syncToken;
+    }
+
+    // 2. Check URL query parameters (e.g., ?token1=a1-xxx or ?token=a1-xxx)
+    try {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('token1') || urlParams.get('token');
+            if (tokenFromUrl && !isInvalidBearerToken(tokenFromUrl)) {
+                return tokenFromUrl;
+            }
+        }
+    } catch (e) {
+        // noop
+    }
+
+    // 3. PKCE OAuth2 Access Token fallback
     const oauthToken = OAuthTokenExchangeService.getAccessToken();
     if (!isInvalidBearerToken(oauthToken)) {
         return oauthToken!;
     }
 
-    // 7. Fetch OTP WebSocket URL if available
+    // 4. Fetch OTP WebSocket URL with strict 800ms timeout to avoid blocking handshakes
     try {
         const authInfo = OAuthTokenExchangeService.getAuthInfo();
         if (authInfo?.access_token) {
-            const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
+            const fetchPromise = DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
+            const timeoutPromise = new Promise<string>((_, reject) =>
+                setTimeout(() => reject(new Error('OTP fetch timeout')), 800)
+            );
+            const wsUrl = await Promise.race([fetchPromise, timeoutPromise]);
             if (wsUrl) {
                 const parsedUrl = new URL(wsUrl);
                 const otpToken = parsedUrl.searchParams.get('token') || parsedUrl.searchParams.get('otp');
@@ -118,7 +115,7 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
             }
         }
     } catch (e) {
-        console.warn('[token-bridge] Error fetching PKCE OTP token:', e);
+        // Fail fast if OTP backend is unreachable
     }
 
     return '';
