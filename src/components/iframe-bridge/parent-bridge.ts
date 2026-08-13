@@ -124,7 +124,7 @@ export class ParentBridgeClient {
                 },
                 activeAccountId: activeAccId,
                 accounts: accounts,
-                otpUrl: 'https://api.derivws.com/trading/v1/options/ws/demo',
+                otpUrl: '',
                 userProfile: {
                     country: 'ke',
                     currency: currency || 'USD',
