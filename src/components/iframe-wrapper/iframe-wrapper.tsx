@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
-import { resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { resolveValidDerivWSToken, getActiveToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
 import TokenDebugPanel from '@/components/Debug/TokenDebugPanel';
@@ -56,7 +56,9 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             const bridge = new ParentBridgeClient();
             setBridgeClient(bridge);
             bridge.attach(iframe, iframeOrigin);
-        }        const sendAuthToIframe = async () => {
+        }
+
+        const sendAuthToIframe = async () => {
             if (!iframe.contentWindow) return;
 
             const loginid =
@@ -117,7 +119,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 }
             }
         };
-};
 
         const handleMessage = (event: MessageEvent) => {
             const isAllowed =
