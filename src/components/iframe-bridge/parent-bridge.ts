@@ -126,7 +126,7 @@ export class ParentBridgeClient {
                 accounts: accounts,
                 otpUrl: '',
                 userProfile: {
-                    country: 'ke',
+                    country: 'za',
                     currency: currency || 'USD',
                     email: 'user@profithub.co.ke',
                     fullname: 'Profithub Trader',
