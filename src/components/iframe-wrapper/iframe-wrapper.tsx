@@ -117,6 +117,18 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 iframe.contentWindow.postMessage(authStartMessage, targetOrigin);
                 iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, targetOrigin);
                 iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({
+                    type: 'NEWDTRADER_BRIDGE_AUTH',
+                    status: effectiveToken ? 'success' : 'pending',
+                    tokenPresent: !!effectiveToken,
+                    token: effectiveToken || '',
+                    loginid: effectiveLoginId || null,
+                    loginId: effectiveLoginId || null,
+                    appId: Number(appIdStr) || 121856,
+                    server: 'green',
+                    timestamp: Date.now(),
+                    authMode: effectiveToken ? 'derivws_otp' : 'none',
+                }, targetOrigin);
             } catch (error) {
                 console.error('Error sending auth data to iframe:', error);
             }

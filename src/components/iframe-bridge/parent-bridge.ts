@@ -87,6 +87,7 @@ export class ParentBridgeClient {
                     type: 'NEWDTRADER_BRIDGE_AUTH',
                     status: tokenPresent ? 'success' : 'pending',
                     tokenPresent,
+                    token: tokenPresent ? token : '',
                     loginid: loginid || null,
                     loginId: loginid || null,
                     appId: Number(session?.appId || '121856') || 121856,
