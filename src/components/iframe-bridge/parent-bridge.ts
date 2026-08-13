@@ -25,6 +25,7 @@ export class ParentBridgeClient {
     private maxReconnects: number = 5;
     private instanceId: string;
     private logger: ReturnType<typeof makeBridgeLogger>;
+    private retryIntervalId: any = null;
     
     // Diagnostics
     private diagnostics: BridgeDiagnosticInfo = {
@@ -74,8 +75,27 @@ export class ParentBridgeClient {
             this.handleSessionChange(session);
         });
 
-        // Proactively send NEWDTRADER_BRIDGE_AUTH & companion messages to iframe
-        (async () => {
+        // Proactively send NEWDTRADER_BRIDGE_AUTH & companion messages to iframe.
+        // Retries for up to 30 seconds to handle slow Vercel bundle loading.
+        this.startProactiveAuthLoop();
+
+        setTimeout(() => {
+            if (this.stateMachine.getState() === BridgeState.LOADING_IFRAME) {
+                this.stateMachine.transitionTo(BridgeState.WAITING_READY);
+            }
+        }, 500);
+    }
+
+    private startProactiveAuthLoop() {
+        if (this.retryIntervalId) {
+            clearInterval(this.retryIntervalId);
+        }
+
+        let attempts = 0;
+        const maxAttempts = 60; // 30 seconds @ 500ms interval
+
+        const postAuth = async () => {
+            if (!this.iframeWindow) return;
             try {
                 const session = sessionManager.getSession();
                 let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
@@ -83,7 +103,7 @@ export class ParentBridgeClient {
                 const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
                 const appIdStr = String(session?.appId || '121856');
 
-                const makeAuthPayload = () => ({
+                const payloadData = {
                     status: 'success',
                     tokenPresent: !!token && !String(token).startsWith('ory_at_'),
                     token: token || '',
@@ -101,51 +121,40 @@ export class ParentBridgeClient {
                     defaultSymbol: '1HZ100V',
                     embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
                     payload: { loginid, currency },
-                });
-
-                const postOnce = () => {
-                    if (!this.iframeWindow) return;
-                    try {
-                        const payloadData = makeAuthPayload();
-                        const payloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', payloadData);
-                        const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
-                        
-                        this.iframeWindow.postMessage(payloadMsg, target);
-                        this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData }, target);
-                        this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...payloadData }, target);
-                        this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...payloadData }, target);
-                        this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...payloadData }, target);
-                        this.iframeWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...payloadData }, target);
-                        this.iframeWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...payloadData }, target);
-                        this.iframeWindow.postMessage({ action: 'setToken', ...payloadData }, target);
-                    } catch (e) {
-                        this.logger.debug('PROACTIVE_HANDSHAKE_ERROR', { error: String(e) });
-                    }
                 };
 
-                postOnce();
-                let attempts = 0;
-                const retryId = setInterval(() => {
-                    attempts += 1;
-                    if (!this.iframeWindow || attempts > 8) {
-                        clearInterval(retryId);
-                        return;
-                    }
-                    postOnce();
-                }, 400);
+                const payloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', payloadData);
+
+                // Use '*' so cross-origin delivery to iframe is guaranteed
+                this.iframeWindow.postMessage(payloadMsg, '*');
+                this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData }, '*');
+                this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...payloadData }, '*');
+                this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...payloadData }, '*');
+                this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...payloadData }, '*');
+                this.iframeWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...payloadData }, '*');
+                this.iframeWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...payloadData }, '*');
+                this.iframeWindow.postMessage({ action: 'setToken', ...payloadData }, '*');
             } catch (e) {
                 // ignore
             }
-        })();
+        };
 
-        setTimeout(() => {
-            if (this.stateMachine.getState() === BridgeState.LOADING_IFRAME) {
-                this.stateMachine.transitionTo(BridgeState.WAITING_READY);
+        postAuth();
+        this.retryIntervalId = setInterval(() => {
+            attempts++;
+            if (!this.iframeWindow || attempts >= maxAttempts) {
+                if (this.retryIntervalId) clearInterval(this.retryIntervalId);
+                return;
             }
+            postAuth();
         }, 500);
     }
 
     public detach() {
+        if (this.retryIntervalId) {
+            clearInterval(this.retryIntervalId);
+            this.retryIntervalId = null;
+        }
         if (typeof window !== 'undefined') {
             window.removeEventListener('message', this.handleMessage);
         }
@@ -193,32 +202,24 @@ export class ParentBridgeClient {
         this.logMessage('out', msg);
         this.logger.messageSent(this.iframeOrigin, msg.type as string);
         try {
-            this.iframeWindow.postMessage(msg, this.iframeOrigin === '*' ? '*' : this.iframeOrigin);
+            this.iframeWindow.postMessage(msg, '*');
         } catch (error) {
             console.error('[ParentBridge] Failed to send message', error);
         }
     }
 
-    private sanitizeOrigin(url: string): string {
-        if (!url || url === '*') return '*';
-        try {
-            return new URL(url).origin;
-        } catch {
-            return url;
-        }
-    }
-
     private handleMessage = (event: MessageEvent) => {
-        const expectedOrigin = this.sanitizeOrigin(this.iframeOrigin);
         const allowedOrigins = [
-            expectedOrigin,
             'https://deriv-dtrader.vercel.app',
             'https://trader.deriv.com',
             'https://app.deriv.com',
             window.location.origin,
         ];
 
-        if (this.iframeOrigin !== '*' && !allowedOrigins.includes(event.origin)) {
+        const isAllowed = allowedOrigins.some(o => event.origin.startsWith(o)) ||
+            /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
+
+        if (!isAllowed) {
             return;
         }
 
@@ -236,64 +237,50 @@ export class ParentBridgeClient {
             }
         }
 
-        const msgType = parsedData.type || parsedData.action || parsedData.event || '';
-        const handshakeEvents = [
-            BridgeEvent.BRIDGE_READY, BridgeEvent.REQUEST_SESSION, 'PING',
-            'HANDSHAKE_REQUEST', 'REQUEST_AUTH', 'GET_SESSION', 'CHECK_AUTH'
-        ];
-        const isHandshake = handshakeEvents.includes(msgType as BridgeEvent | string);
+        // On ANY message from iframe window, immediately reply with auth handshake
+        if (event.source && typeof (event.source as Window).postMessage === 'function') {
+            (async () => {
+                try {
+                    const session = sessionManager.getSession();
+                    let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+                    const token = await resolveValidDerivWSToken(loginid);
+                    const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
+                    const appIdStr = String(session?.appId || '121856');
 
-        if (isHandshake) {
-            this.logger.debug('HANDSHAKE_EVENT', { origin: event.origin, type: msgType });
-            this.handleBridgeReady();
-            this.handleSessionRequest();
+                    const handshakePayloadObj = {
+                        status: 'success',
+                        tokenPresent: !!token && !String(token).startsWith('ory_at_'),
+                        token: token || '',
+                        loginid: loginid || null,
+                        loginId: loginid || null,
+                        acct1: loginid || null,
+                        currency: currency,
+                        cur1: currency,
+                        accountType: 'ZOOM',
+                        appId: Number(appIdStr) || 121856,
+                        app_id: appIdStr,
+                        server: 'green',
+                        timestamp: Date.now(),
+                        authMode: 'derivws_otp',
+                        defaultSymbol: '1HZ100V',
+                        embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
+                        payload: { loginid, currency },
+                    };
 
-            if (event.source && typeof (event.source as Window).postMessage === 'function') {
-                (async () => {
-                    try {
-                        const session = sessionManager.getSession();
-                        let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-                        const token = await resolveValidDerivWSToken(loginid);
-                        const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
-                        const appIdStr = String(session?.appId || '121856');
-
-                        const handshakePayloadObj = {
-                            status: 'success',
-                            tokenPresent: !!token && !String(token).startsWith('ory_at_'),
-                            token: token || '',
-                            loginid: loginid || null,
-                            loginId: loginid || null,
-                            acct1: loginid || null,
-                            currency: currency,
-                            cur1: currency,
-                            accountType: 'ZOOM',
-                            appId: Number(appIdStr) || 121856,
-                            app_id: appIdStr,
-                            server: 'green',
-                            timestamp: Date.now(),
-                            authMode: 'derivws_otp',
-                            defaultSymbol: '1HZ100V',
-                            embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
-                            payload: { loginid, currency },
-                        };
-
-                        const handshakePayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', handshakePayloadObj);
-
-                        this.logger.debug('HANDSHAKE_SEND', { loginid, tokenPresent: handshakePayloadObj.tokenPresent });
-                        const win = event.source as Window;
-                        win.postMessage(handshakePayloadMsg, '*');
-                        win.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...handshakePayloadObj }, '*');
-                        win.postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayloadObj }, '*');
-                        win.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayloadObj }, '*');
-                        win.postMessage({ type: 'SESSION_DATA', ...handshakePayloadObj }, '*');
-                        win.postMessage({ type: 'DERIV_AUTH', ...handshakePayloadObj }, '*');
-                        win.postMessage({ type: 'AUTH_TOKEN', ...handshakePayloadObj }, '*');
-                        win.postMessage({ action: 'setToken', ...handshakePayloadObj }, '*');
-                    } catch (e) {
-                        this.logger.debug('HANDSHAKE_ERROR', { error: String(e) });
-                    }
-                })();
-            }
+                    const handshakePayloadMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', handshakePayloadObj);
+                    const win = event.source as Window;
+                    win.postMessage(handshakePayloadMsg, '*');
+                    win.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...handshakePayloadObj }, '*');
+                    win.postMessage({ type: 'HANDSHAKE_RESPONSE', ...handshakePayloadObj }, '*');
+                    win.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...handshakePayloadObj }, '*');
+                    win.postMessage({ type: 'SESSION_DATA', ...handshakePayloadObj }, '*');
+                    win.postMessage({ type: 'DERIV_AUTH', ...handshakePayloadObj }, '*');
+                    win.postMessage({ type: 'AUTH_TOKEN', ...handshakePayloadObj }, '*');
+                    win.postMessage({ action: 'setToken', ...handshakePayloadObj }, '*');
+                } catch (e) {
+                    // ignore
+                }
+            })();
         }
 
         if (!isValidBridgeMessage(parsedData)) {
@@ -375,33 +362,16 @@ export class ParentBridgeClient {
 
         if (this.iframeWindow) {
             try {
-                const target = this.iframeOrigin === '*' ? '*' : this.iframeOrigin;
-                this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...payloadObj }, target);
-                this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...payloadObj }, target);
-                this.iframeWindow.postMessage({ action: 'setToken', ...payloadObj }, target);
-                this.iframeWindow.postMessage({ type: 'BRIDGE_READY', ...payloadObj }, target);
-                this.iframeWindow.postMessage({ type: 'AUTH_SUCCESS', ...payloadObj }, target);
-                this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...payloadObj }, target);
-                this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadObj }, target);
+                this.iframeWindow.postMessage({ type: 'AUTH_TOKEN', ...payloadObj }, '*');
+                this.iframeWindow.postMessage({ type: 'DERIV_AUTH', ...payloadObj }, '*');
+                this.iframeWindow.postMessage({ action: 'setToken', ...payloadObj }, '*');
+                this.iframeWindow.postMessage({ type: 'BRIDGE_READY', ...payloadObj }, '*');
+                this.iframeWindow.postMessage({ type: 'AUTH_SUCCESS', ...payloadObj }, '*');
+                this.iframeWindow.postMessage({ type: 'SESSION_DATA', ...payloadObj }, '*');
+                this.iframeWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadObj }, '*');
             } catch (e) {
                 console.error('[ParentBridge] Error broadcasting legacy auth:', e);
             }
-        }
-    }
-
-    private handleSessionChange(session: SessionPayload | null) {
-        if (!session) {
-            this.diagnostics.sessionStatus = 'none';
-            return;
-        }
-        this.diagnostics.sessionStatus = 'valid';
-        if (this.stateMachine.getState() === BridgeState.CONNECTED) {
-            this.stateMachine.transitionTo(BridgeState.SYNCING);
-            this.sendMessage(BridgeEvent.ACCOUNT_CHANGED, session);
-            this.sendMessage(BridgeEvent.SESSION_DATA, session);
-            setTimeout(() => this.stateMachine.transitionTo(BridgeState.CONNECTED), 200);
-        } else if (this.stateMachine.getState() === BridgeState.READY || this.stateMachine.getState() === BridgeState.WAITING_READY) {
-            this.handleSessionRequest();
         }
     }
 

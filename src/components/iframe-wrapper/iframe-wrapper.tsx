@@ -69,7 +69,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             const token = await resolveValidDerivWSToken(loginid);
             const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
             const appId = getAppId() || '121856';
-            const targetOrigin = iframeOrigin === '*' ? '*' : iframeOrigin;
             const tokenPresent = !!token && !token.startsWith('ory_at_');
 
             const authPayload = {
@@ -93,14 +92,14 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             };
 
             try {
-                iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...authPayload }, targetOrigin);
-                iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, targetOrigin);
+                iframe.contentWindow.postMessage({ type: 'NEWDTRADER_BRIDGE_AUTH', ...authPayload }, '*');
+                iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...authPayload }, '*');
+                iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...authPayload }, '*');
+                iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...authPayload }, '*');
+                iframe.contentWindow.postMessage({ type: 'AUTH_SUCCESS', ...authPayload }, '*');
+                iframe.contentWindow.postMessage({ type: 'BRIDGE_AUTH_SUCCESS', ...authPayload }, '*');
+                iframe.contentWindow.postMessage({ type: 'HANDSHAKE_RESPONSE', ...authPayload }, '*');
+                iframe.contentWindow.postMessage({ action: 'setToken', ...authPayload }, '*');
             } catch (e) {
                 console.warn('[IframeWrapper] Error sending auth postMessage:', e);
             }
@@ -113,14 +112,11 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
             if (!isAllowed) return;
             if (!event.data) return;
 
-            const msgType = event.data.type || event.data.action || '';
+            // Immediately reply to any message from the iframe
+            sendAuthToIframe();
 
-            const authRequestTypes = [
-                'BRIDGE_READY', 'REQUEST_SESSION', 'REQUEST_AUTH',
-                'GET_SESSION', 'CHECK_AUTH', 'PING', 'HANDSHAKE_REQUEST',
-            ];
-            if (authRequestTypes.includes(msgType)) {
-                sendAuthToIframe();
+            const msgType = event.data.type || event.data.action || '';
+            if (['BRIDGE_READY', 'REQUEST_SESSION', 'REQUEST_AUTH', 'GET_SESSION', 'CHECK_AUTH', 'PING', 'HANDSHAKE_REQUEST'].includes(msgType)) {
                 return;
             }
 
