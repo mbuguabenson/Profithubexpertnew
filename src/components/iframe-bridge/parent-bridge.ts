@@ -86,6 +86,7 @@ export class ParentBridgeClient {
     }
 
     private sendAuthPayloadToWindow(targetWindow: Window, tok: string, loginid: string, currency: string, appIdStr: string) {
+        if (!targetWindow || targetWindow === window) return;
         try {
             const hasToken = !!tok && !String(tok).startsWith('ory_at_');
             const authMode = hasToken ? 'derivws_otp' : 'none';
@@ -233,11 +234,15 @@ export class ParentBridgeClient {
     }
 
     private handleMessage = (event: MessageEvent) => {
+        // Prevent postMessage feedback loops from window itself
+        if (!event.source || event.source === window) {
+            return;
+        }
+
         const allowedOrigins = [
             'https://deriv-dtrader.vercel.app',
             'https://trader.deriv.com',
             'https://app.deriv.com',
-            window.location.origin,
         ];
 
         const isAllowed = allowedOrigins.some(o => event.origin.startsWith(o)) ||
