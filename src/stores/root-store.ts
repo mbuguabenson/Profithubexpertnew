@@ -121,7 +121,7 @@ export default class RootStore {
         this.marketkiller = new MarketkillerStore(this);
         this.over_under = new OverUnderStore(this);
         this.smart_auto = new SmartAutoStore(this);
-        this.smart_trading = new SmartTradingStore(this, this.core);
+        this.smart_trading = new SmartTradingStore(this);
         this.copy_trader = new CopyTraderStore(this);
         this.free_bots = new FreeBotsStore(this);
 

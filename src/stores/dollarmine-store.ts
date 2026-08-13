@@ -1,8 +1,8 @@
-import { action, makeObservable, observable, runInAction, computed } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import RootStore from './root-store';
-import { localize } from '@deriv-com/translations';
-import { serialize } from 'v8';
+// import { localize } from '@deriv-com/translations';
+// import { serialize } from 'v8';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
 
 export type TStrategy = 'OVER_UNDER' | 'EVEN_ODD' | 'DIFFERS';
@@ -235,7 +235,7 @@ export default class DollarmineStore {
         if (this._execution_lock.get('OVER_UNDER')) return;
 
         // Auto market switch - find best market
-        let bestMarket = symbol;
+        // let bestMarket = symbol;
         if (!this.ou_active_market || (this.market_stats.get(symbol)?.underPercent || 0) > (this.market_stats.get(this.ou_active_market)?.underPercent || 0)) {
             // Very simplified auto-selection
             // this.ou_active_market = symbol;

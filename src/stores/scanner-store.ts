@@ -555,7 +555,8 @@ export default class ScannerStore implements IScannerStore {
     };
   };
 
-  private setupLiveListeners = () => {
+  // @ts-ignore
+  private _setupLiveListeners = () => {
     if (this.is_subscribed_to_messages || !api_base.api) return;
 
     api_base.api.onMessage().subscribe((data: any) => {
@@ -898,7 +899,7 @@ export default class ScannerStore implements IScannerStore {
 
     // Over/Under - Advanced Statistical Analysis
     const pctUnder = analysis.lowPercentage;
-    const pctOver = analysis.highPercentage;
+    // const pctOver = analysis.highPercentage;
 
     let isUnderIncreasing = true;
     if (prevAnalysis) {
@@ -1425,7 +1426,7 @@ export default class ScannerStore implements IScannerStore {
         if (this.target_switch_strategy !== 'auto') {
           nextStrategy = this.target_switch_strategy;
         } else {
-          const strategies = this.selected_strategies.length > 1 ? this.selected_strategies : ['even_odd', 'over_under', 'differs'];
+          const strategies: TStrategyType[] = this.selected_strategies.length > 1 ? this.selected_strategies : ['even_odd', 'over_under', 'differs'];
           const currentIndex = strategies.indexOf(this.selected_strategy);
           nextStrategy = strategies[(currentIndex + 1) % strategies.length];
         }

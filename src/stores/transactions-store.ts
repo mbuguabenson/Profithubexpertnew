@@ -2,6 +2,7 @@ import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import { formatDate, isEnded } from '@/components/shared';
 import { LogTypes } from '@/external/bot-skeleton';
 import { ProposalOpenContract } from '@deriv/api-types';
+// @ts-ignore
 import { TPortfolioPosition, TStores } from '@deriv/stores/types';
 import { TContractInfo } from '../components/summary/summary-card.types';
 import { transaction_elements } from '../constants/transactions';

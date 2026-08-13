@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { motion } from 'framer-motion';
 import Cookies from 'js-cookie';
-import classNames from 'classnames';
+// import classNames from 'classnames';
 import { useStore } from '@/hooks/useStore';
 import { DBOT_TABS } from '@/constants/bot-contents';
 import { localize } from '@deriv-com/translations';
@@ -53,7 +53,7 @@ const CardIcons = {
 export const UltimateWelcomePage = observer(({ handleTabChange: _handleTabChange }: { handleTabChange: (active_number: number) => void }) => {
     const store = useStore();
     if (!store) return null;
-    const { dashboard, load_modal, quick_strategy, client, scanner } = store;
+    const { dashboard, load_modal, quick_strategy } = store;
     const { toggleLoadModal, setActiveTabIndex } = load_modal;
     const { setActiveTab } = dashboard;
     const { setFormVisibility } = quick_strategy;
@@ -64,8 +64,8 @@ export const UltimateWelcomePage = observer(({ handleTabChange: _handleTabChange
     const [typedText, setTypedText] = useState('');
     const [wordIndex, setWordIndex] = useState(0);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [activeMarketsCount, setActiveMarketsCount] = useState(0);
-    const [botTemplatesCount, setBotTemplatesCount] = useState(0);
+    // const [activeMarketsCount, setActiveMarketsCount] = useState(0);
+    // const [botTemplatesCount, setBotTemplatesCount] = useState(0);
 
     // Determine Greeting & Username
     useEffect(() => {
@@ -128,8 +128,8 @@ export const UltimateWelcomePage = observer(({ handleTabChange: _handleTabChange
             const progress = Math.min((timestamp - startTime) / duration, 1);
             const easeProgress = progress * (2 - progress);
 
-            setActiveMarketsCount(Math.floor(easeProgress * 120));
-            setBotTemplatesCount(Math.floor(easeProgress * 350));
+            // setActiveMarketsCount(Math.floor(easeProgress * 120));
+            // setBotTemplatesCount(Math.floor(easeProgress * 350));
 
             if (progress < 1) {
                 requestAnimationFrame(animateCounters);
