@@ -4,9 +4,11 @@ import { useStore } from '@/hooks/useStore';
 import { TrendingUp, TrendingDown, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 const PurchaseButtonPanel: React.FC = observer(() => {
-    const { trader } = useStore();
+    const store = useStore();
 
-    if (!trader) return null;
+    if (!store?.trader) return null;
+
+    const { trader } = store;
 
     const {
         proposal_1,

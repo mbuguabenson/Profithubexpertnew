@@ -10,15 +10,17 @@ import './dtrader.scss';
 const ChartWrapper = lazy(() => import('../chart/chart-wrapper'));
 
 const DTraderWorkspace: React.FC = observer(() => {
-    const { trader, client } = useStore();
-
+    const store = useStore();
+    
     useEffect(() => {
-        if (trader) {
-            trader.requestProposals();
+        if (store?.trader) {
+            store.trader.requestProposals();
         }
-    }, [trader]);
+    }, [store?.trader]);
 
-    if (!trader) return null;
+    if (!store?.trader) return <ChunkLoader message="Loading workspace..." />;
+
+    const { trader, client } = store;
 
     const balance = client?.balance || '0.00';
     const currency = client?.currency || 'USD';

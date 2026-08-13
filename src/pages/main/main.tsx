@@ -46,7 +46,7 @@ const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-c
 const Marketkiller = lazy(() => import('../marketkiller'));
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
 const TradingBots = lazy(() => import('../free-bots/trading-bots'));
-const DTraderPage = lazy(() => import('../dtrader/dtrader'));
+const DTraderPage = lazy(() => import('../dtrader/index'));
 const ProJournal = lazy(() => import('../pro-journal'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';

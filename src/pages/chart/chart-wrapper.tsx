@@ -12,8 +12,11 @@ interface ChartWrapperProps {
 }
 
 const ChartWrapper = observer(({ prefix = 'chart', show_digits_stats }: ChartWrapperProps) => {
-    const { client } = useStore();
+    const store = useStore();
     const [uuid] = useState(uuidv4());
+
+    if (!store?.client) return null;
+    const { client } = store;
 
     const uniqueKey = client.loginid ? `${prefix}-${client.loginid}` : `${prefix}-${uuid}`;
 

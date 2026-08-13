@@ -32,9 +32,11 @@ const CATEGORIES: { id: TTradeCategory; label: string; icon: React.ElementType }
 ];
 
 const TradeParamsPanel: React.FC = observer(() => {
-    const { trader } = useStore();
-
-    if (!trader) return null;
+    const store = useStore();
+    
+    if (!store?.trader) return null;
+    
+    const { trader } = store;
 
     return (
         <div className="trade-params-panel">
