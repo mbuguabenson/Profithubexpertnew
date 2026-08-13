@@ -1,22 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import IframeWrapper from '@/components/iframe-wrapper/iframe-wrapper';
+import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { resolveValidDerivWSToken, getAccountsList } from '@/utils/token-bridge';
 import './dtrader.scss';
 
+const getInitialLoginId = (): string => {
+    try {
+        const stored = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+        if (stored) return stored;
+        const list = getAccountsList();
+        const keys = Object.keys(list);
+        return keys.length > 0 ? keys[0] : '';
+    } catch {
+        return '';
+    }
+};
+
+const getInitialToken = (loginid: string): string => {
+    try {
+        const list = getAccountsList();
+        if (loginid && list[loginid] && !list[loginid].startsWith('ory_at_')) {
+            return list[loginid];
+        }
+        for (const k in list) {
+            if (list[k] && !list[k].startsWith('ory_at_')) return list[k];
+        }
+        const direct =
+            localStorage.getItem('token') ||
+            localStorage.getItem('active_token') ||
+            localStorage.getItem('authToken') ||
+            localStorage.getItem('token1') ||
+            localStorage.getItem('deriv_api_token');
+        if (direct && !direct.startsWith('ory_at_')) return direct;
+    } catch {}
+    return '';
+};
+
 /**
  * DTraderPage — embeds the Vercel-hosted DTrader build.
- *
- * Host: https://deriv-dtrader.vercel.app
- * Passes exact login parameters: acct1, cur1, api_version=v2, chart_type=area,
- * interval=1t, symbol=1HZ100V, trade_type=accumulator, app_id=121856, lang=EN, token1.
+ * Synchronously initializes auth params before rendering iframe to prevent
+ * unauthenticated initial loads and race conditions.
  */
 const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
-    const [authToken, setAuthToken] = useState<string>('');
-    const [activeLoginId, setActiveLoginId] = useState<string>('');
+    const initialLoginId = getInitialLoginId() || (client as any)?.loginid || '';
+    const [activeLoginId, setActiveLoginId] = useState<string>(initialLoginId);
+    const [authToken, setAuthToken] = useState<string>(() => getInitialToken(initialLoginId));
+    const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
 
     useEffect(() => {
         let mounted = true;
@@ -25,7 +58,7 @@ const DTraderPage: React.FC = observer(() => {
             const storedLoginId =
                 localStorage.getItem('active_loginid') ||
                 (client as any)?.loginid ||
-                '';
+                activeLoginId;
 
             const accountsList = getAccountsList();
             let loginId = storedLoginId;
@@ -46,8 +79,9 @@ const DTraderPage: React.FC = observer(() => {
             }
 
             if (mounted) {
-                setActiveLoginId(loginId);
-                setAuthToken(token);
+                if (loginId) setActiveLoginId(loginId);
+                if (token) setAuthToken(token);
+                setIsAuthReady(true);
             }
         };
 
@@ -80,7 +114,28 @@ const DTraderPage: React.FC = observer(() => {
         queryParams.set('token1', authToken);
     }
 
+    // Populate all accounts from accountsList so iframe has full multi-account token map
+    try {
+        const accountsList = getAccountsList();
+        let index = 1;
+        for (const accId in accountsList) {
+            const accToken = accountsList[accId];
+            if (accToken && !accToken.startsWith('ory_at_')) {
+                if (accId !== loginId) {
+                    index++;
+                    queryParams.set(`acct${index}`, accId);
+                    queryParams.set(`token${index}`, accToken);
+                    queryParams.set(`cur${index}`, currency);
+                }
+            }
+        }
+    } catch {}
+
     const embedUrl = `${embedBase}?${queryParams.toString()}`;
+
+    if (!isAuthReady) {
+        return <ChunkLoader message="Loading DTrader Terminal..." />;
+    }
 
     return (
         <div className='dtrader-page-container'>
