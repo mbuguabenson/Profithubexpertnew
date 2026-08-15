@@ -71,6 +71,10 @@ export default class EntryScannerStore {
     @observable accessor use_automation_api: boolean = true;
     @observable accessor active_auto_run_id: string | number | null = null;
 
+    // Strategy Dynamic Recovery State
+    @observable accessor is_in_recovery_mode: boolean = false;
+    @observable accessor primary_strategy: TStrategyType = 'differs';
+
     // Trading State
     @observable accessor current_runs: number = 0;
     @observable accessor total_profit: number = 0;
@@ -407,15 +411,16 @@ export default class EntryScannerStore {
 
     // ─── Main Analysis Loop ───────────────────────────────────
 
-    @action private runAnalysis() {
+    @action private runAnalysis(excludedSymbol?: string) {
         if (!this.is_scanning) return;
         if (this.scan_phase === 'waiting_entry' || this.scan_phase === 'trading' || this.scan_phase === 'cooldown') return;
 
         this.scan_phase = 'analyzing';
         let bestMatch: TScanResult | null = null;
 
-        for (const [, stats] of this.market_stats.entries()) {
+        for (const [symbol, stats] of this.market_stats.entries()) {
             if (stats.recentDigits.length < 10) continue;
+            if (excludedSymbol && symbol === excludedSymbol && this.market_stats.size > 1) continue;
 
             for (const strat of this.selected_strategies) {
                 let res: TScanResult | null = null;
@@ -438,14 +443,11 @@ export default class EntryScannerStore {
             this.selected_market = bestMatch.displayName;
             this.selected_symbol = bestMatch.symbol;
             this.trade_type = bestMatch.direction;
+            this.primary_strategy = bestMatch.strategy;
             this.scan_phase = 'waiting_entry';
             this.wait_sequence = [];
             this.scan_progress = 100;
-            this.scan_status = `🎯 Match found on ${bestMatch.displayName}! (${bestMatch.confidence.toFixed(1)}% confidence)`;
-
-            if (this.auto_load_on_match) {
-                this.loadBotToBuilderAndRun(true);
-            }
+            this.scan_status = `🎯 High-confidence signal on ${bestMatch.displayName} (${bestMatch.confidence.toFixed(1)}% match). Strictly waiting for entry point: ${bestMatch.waitDescription}`;
         } else {
             const count = this.market_stats.size;
             this.scan_status = `🔍 Scanning ${count} market(s) for ${this.selected_strategies.map(s => s.replace('_', '/')).join(', ')} patterns...`;
@@ -617,49 +619,97 @@ export default class EntryScannerStore {
     // ═══════════════════════════════════════════════════════════
 
     @action private checkEntryPattern(digit: number, _market: TEntryScannerMarketStats) {
-        if (!this.scan_result || this.is_executing_trade) return;
+        if (!this.scan_result || this.is_executing_trade || this.scan_phase !== 'waiting_entry') return;
 
         this.wait_sequence.push(digit);
-        const result = this.scan_result;
+        if (this.wait_sequence.length > 20) this.wait_sequence.shift();
 
+        const result = this.scan_result;
+        const seq = this.wait_sequence;
+        const len = seq.length;
         let triggered = false;
 
-        switch (result.strategy) {
-            case 'over_under': {
-                if (digit === result.triggerDigit || this.wait_sequence.length >= 2) {
+        // If in recovery mode, apply strict Under 7 / Over 2 entry rules
+        const effectiveStrategy = this.is_in_recovery_mode ? 'over_under' : result.strategy;
+        const effectiveDirection = this.is_in_recovery_mode ? 'UNDER' : result.direction;
+
+        switch (effectiveStrategy) {
+            case 'differs': {
+                // Strict Differs Entry: Wait until the target cold digit (result.prediction) appears
+                // OR wait for 3 consecutive confirmed safe ticks without the cold digit
+                const targetColdDigit = result.prediction;
+                if (digit === targetColdDigit) {
                     triggered = true;
+                    this.scan_status = `🎯 [Entry Triggered] Cold digit ${targetColdDigit} just printed. Statistically optimal to execute Differs now!`;
+                } else if (len >= 3 && seq[len - 1] !== targetColdDigit && seq[len - 2] !== targetColdDigit && seq[len - 3] !== targetColdDigit) {
+                    triggered = true;
+                    this.scan_status = `🎯 [Entry Triggered] 3 consecutive safe ticks without digit ${targetColdDigit}. Executing Differs trade on ${result.displayName}!`;
+                }
+                break;
+            }
+            case 'over_under': {
+                if (effectiveDirection === 'UNDER') {
+                    // Strict Under Entry: Wait for a low confirmation digit (digit <= 4 or designated trigger)
+                    if (digit <= 4 || digit === result.triggerDigit) {
+                        triggered = true;
+                        this.scan_status = `🎯 [Entry Triggered] Low momentum confirmation digit ${digit} printed. Executing Under on ${result.displayName}!`;
+                    }
+                } else {
+                    // Strict Over Entry: Wait for a high confirmation digit (digit >= 5 or designated trigger)
+                    if (digit >= 5 || digit === result.triggerDigit) {
+                        triggered = true;
+                        this.scan_status = `🎯 [Entry Triggered] High momentum confirmation digit ${digit} printed. Executing Over on ${result.displayName}!`;
+                    }
                 }
                 break;
             }
             case 'even_odd': {
-                const len = this.wait_sequence.length;
-                if (len >= 1) {
-                    if (result.direction === 'EVEN' && digit % 2 === 0) triggered = true;
-                    if (result.direction === 'ODD' && digit % 2 !== 0) triggered = true;
-                }
-                break;
-            }
-            case 'differs': {
-                if (digit !== result.prediction) {
-                    triggered = true;
+                // Strict Even/Odd Entry: Wait for parity transition
+                if (len >= 2) {
+                    const prev = seq[len - 2];
+                    const curr = seq[len - 1];
+                    if (effectiveDirection === 'EVEN' && prev % 2 !== 0 && curr % 2 === 0) {
+                        triggered = true;
+                        this.scan_status = `🎯 [Entry Triggered] Parity reversal (Odd ${prev} ➔ Even ${curr}). Executing Even trade on ${result.displayName}!`;
+                    } else if (effectiveDirection === 'ODD' && prev % 2 === 0 && curr % 2 !== 0) {
+                        triggered = true;
+                        this.scan_status = `🎯 [Entry Triggered] Parity reversal (Even ${prev} ➔ Odd ${curr}). Executing Odd trade on ${result.displayName}!`;
+                    }
                 }
                 break;
             }
             case 'matches': {
-                if (digit === result.prediction || this.wait_sequence.length >= 3) {
+                // Strict Matches Entry: Wait until hot digit clusters
+                if (digit === result.prediction) {
                     triggered = true;
+                    this.scan_status = `🎯 [Entry Triggered] Hot digit cluster ${result.prediction} printed. Executing Matches trade on ${result.displayName}!`;
                 }
                 break;
             }
             case 'rise_fall': {
-                triggered = true;
+                // Strict Rise/Fall Entry: Wait for consecutive directional confirmation
+                if (len >= 2) {
+                    const prev = seq[len - 2];
+                    const curr = seq[len - 1];
+                    if (effectiveDirection === 'RISE' && curr > prev) {
+                        triggered = true;
+                        this.scan_status = `🎯 [Entry Triggered] Upward momentum (${prev} ➔ ${curr}). Executing Rise trade on ${result.displayName}!`;
+                    } else if (effectiveDirection === 'FALL' && curr < prev) {
+                        triggered = true;
+                        this.scan_status = `🎯 [Entry Triggered] Downward momentum (${prev} ➔ ${curr}). Executing Fall trade on ${result.displayName}!`;
+                    }
+                }
                 break;
             }
         }
 
         if (triggered) {
             this.scan_phase = 'trading';
-            this.executeTrade();
+            if (this.auto_load_on_match && !this.is_in_recovery_mode) {
+                this.loadBotToBuilderAndRun(true);
+            } else {
+                this.executeTrade();
+            }
         }
     }
 
@@ -707,7 +757,7 @@ export default class EntryScannerStore {
                 },
                 strategy_id: 'martingale',
                 strategy_parameters: {
-                    multiplier: Number(this.martingale) || 2.0,
+                    multiplier: this.is_in_recovery_mode ? Math.max(2.5, Number(this.martingale) || 2.0) : (Number(this.martingale) || 2.0),
                     take_profit: Number(this.take_profit) || 10,
                     stop_loss: Number(this.stop_loss) || 50,
                     max_stake: Number(this.stop_loss) || 100,
@@ -848,20 +898,33 @@ export default class EntryScannerStore {
 
                         runInAction(() => {
                             this.current_runs++;
-                            this.total_profit += profit;
+                            this.total_profit = Number((this.total_profit + profit).toFixed(2));
                             this.is_executing_trade = false;
                             this.trade_log.unshift({
                                 time: new Date().toLocaleTimeString(),
                                 market: result.displayName,
-                                direction: result.direction,
+                                direction: this.is_in_recovery_mode ? 'RECOVERY (Under 7)' : result.direction,
                                 prediction: barrier !== null ? barrier : 0,
                                 result: isWin ? 'WIN' : 'LOSS',
                                 profit,
                             });
 
-                            if (!isWin && this.use_martingale) {
-                                this.stake = Number((this.stake * this.martingale).toFixed(2));
-                            } else if (isWin) {
+                            if (!isWin) {
+                                // If Differs lost (or already recovering), switch to Over/Under (Under 7)
+                                if (result.strategy === 'differs' || this.primary_strategy === 'differs') {
+                                    this.is_in_recovery_mode = true;
+                                    this.primary_strategy = 'differs';
+                                    this.scan_status = `🛡️ Differs loss detected (-$${this.stake.toFixed(2)}). Strategy switched to Over/Under (Under 7) for Martingale recovery...`;
+                                }
+                                if (this.use_martingale) {
+                                    const mult = this.is_in_recovery_mode ? Math.max(2.5, this.martingale) : this.martingale;
+                                    this.stake = Number((this.stake * mult).toFixed(2));
+                                }
+                            } else {
+                                if (this.is_in_recovery_mode) {
+                                    this.is_in_recovery_mode = false;
+                                    this.scan_status = `✅ Recovery win (+$${profit.toFixed(2)})! Reverted to initial Differs strategy.`;
+                                }
                                 this.stake = this.initial_stake;
                             }
 
@@ -874,7 +937,10 @@ export default class EntryScannerStore {
                             } else if (this.current_runs >= this.max_runs_before_pause) {
                                 this.pauseAndReanalyze();
                             } else {
-                                setTimeout(() => this.executeTrade(), 1200);
+                                // Strictly wait for the next confirmed entry trigger on this market
+                                this.scan_phase = 'waiting_entry';
+                                this.wait_sequence = [];
+                                this.scan_status = `⏳ Trade completed. Strictly waiting for next confirmed entry trigger on ${result.displayName}...`;
                             }
                         });
                     } catch (e: any) {
@@ -897,6 +963,9 @@ export default class EntryScannerStore {
     }
 
     public getContractType(result: TScanResult): string {
+        if (this.is_in_recovery_mode) {
+            return 'DIGITUNDER';
+        }
         switch (result.strategy) {
             case 'over_under':
                 return result.direction === 'UNDER' ? 'DIGITUNDER' : 'DIGITOVER';
@@ -914,6 +983,9 @@ export default class EntryScannerStore {
     }
 
     public getBarrier(result: TScanResult): number | null {
+        if (this.is_in_recovery_mode) {
+            return 7;
+        }
         switch (result.strategy) {
             case 'over_under':
                 return result.prediction;
@@ -928,9 +1000,14 @@ export default class EntryScannerStore {
     // ─── Pause & Cooldown ─────────────────────────────────────
 
     @action private pauseAndReanalyze() {
+        const prevMarket = this.scan_result?.displayName || this.selected_market;
+        const prevSymbol = this.scan_result?.symbol || this.selected_symbol;
         this.scan_phase = 'cooldown';
-        this.scan_status = `⏸️ Completed ${this.max_runs_before_pause} runs. Cooling down 10s before re-analyzing...`;
+        this.scan_status = `⏸️ Completed ${this.current_runs} runs on ${prevMarket}. Pausing & searching for another high-probability market...`;
 
+        if (this.active_auto_run_id) {
+            void this.stopDerivAutomationRun();
+        }
         if (this._buy_sub) { this._buy_sub.unsubscribe(); this._buy_sub = null; }
 
         this._cooldown_timer = setTimeout(() => {
@@ -942,9 +1019,10 @@ export default class EntryScannerStore {
                 this.trade_type = '';
                 this.wait_sequence = [];
                 this.current_runs = 0;
-                this.scan_status = '🔄 Cooldown complete. Re-scanning markets...';
+                this.scan_status = `🔄 Scanning all synthetic markets to rotate from ${prevMarket}...`;
+                this.runAnalysis(prevSymbol);
             });
-        }, 10000);
+        }, 4000);
     }
 
     // ─── Bot Generation & Blockly Loading ─────────────────────

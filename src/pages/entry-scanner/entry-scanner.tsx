@@ -116,12 +116,15 @@ export const EntryScanner = observer(() => {
                             <span className="card-meta-label">DIRECTION</span>
                             <span className={classNames('card-meta-val direction-pill', {
                                 active: !!entry_scanner.scan_result,
-                                under: entry_scanner.scan_result?.direction === 'UNDER',
-                                over: entry_scanner.scan_result?.direction === 'OVER',
-                                even: entry_scanner.scan_result?.direction === 'EVEN',
-                                odd: entry_scanner.scan_result?.direction === 'ODD',
+                                recovery: entry_scanner.is_in_recovery_mode,
+                                under: !entry_scanner.is_in_recovery_mode && entry_scanner.scan_result?.direction === 'UNDER',
+                                over: !entry_scanner.is_in_recovery_mode && entry_scanner.scan_result?.direction === 'OVER',
+                                even: !entry_scanner.is_in_recovery_mode && entry_scanner.scan_result?.direction === 'EVEN',
+                                odd: !entry_scanner.is_in_recovery_mode && entry_scanner.scan_result?.direction === 'ODD',
                             })}>
-                                {entry_scanner.scan_result?.direction || 'SCANNING'}
+                                {entry_scanner.is_in_recovery_mode
+                                    ? 'UNDER 7 (RECOVERY)'
+                                    : (entry_scanner.scan_result?.direction || 'SCANNING')}
                             </span>
                         </div>
                         <div className="card-meta-col right">
