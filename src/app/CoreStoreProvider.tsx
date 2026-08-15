@@ -12,6 +12,8 @@ import { TSocketResponseData } from '@/types/api-types';
 import { clearInvalidTokenParams } from '@/utils/url-utils';
 import { useTranslations } from '@deriv-com/translations';
 
+import { getCookieDomain } from '@/utils/cookie-domain';
+
 type TClientInformation = {
     loginid?: string;
     email?: string;
@@ -23,7 +25,7 @@ type TClientInformation = {
     user_id?: number | string;
 };
 const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ children }) => {
-    const currentDomain = useMemo(() => '.' + window.location.hostname.split('.').slice(-2).join('.'), []);
+    const currentDomain = useMemo(() => getCookieDomain(), []);
     const { isAuthorizing, isAuthorized, connectionStatus, accountList, activeLoginid } = useApiBase();
 
     const appInitialization = useRef(false);

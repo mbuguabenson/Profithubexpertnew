@@ -218,28 +218,38 @@ export default class FreeBotsStore {
                     subscribe: 1,
                 });
             } catch (err: any) {
-                if (err.error?.code === 'AlreadySubscribed') {
-                    response = await api_base.api.send({
-                        ticks_history: this.symbol,
-                        count: 200,
-                        end: 'latest',
-                        style: 'ticks',
-                    });
+                if (err?.error?.code === 'AlreadySubscribed') {
+                    try {
+                        response = await api_base.api.send({
+                            ticks_history: this.symbol,
+                            count: 200,
+                            end: 'latest',
+                            style: 'ticks',
+                        });
+                    } catch (retryErr) {
+                        console.warn('[FreeBotsStore] ticks_history retry failed:', retryErr);
+                        this.is_subscribing = false;
+                        return;
+                    }
                 } else {
-                    throw err;
+                    console.warn('[FreeBotsStore] ticks_history subscription failed:', err);
+                    this.is_subscribing = false;
+                    return;
                 }
             }
 
-            if (response.subscription?.id) {
+            if (response?.subscription?.id) {
                 this.active_stream_id = response.subscription.id;
             }
 
-            if (response.error) {
-                throw new Error(response.error.message);
+            if (response?.error) {
+                console.warn('[FreeBotsStore] ticks_history response error:', response.error);
+                this.is_subscribing = false;
+                return;
             }
 
             // Handle initial history
-            if (response.history || response.ticks_history) {
+            if (response && (response.history || response.ticks_history)) {
                 const hist = response.history || response.ticks_history;
                 if (hist?.prices?.length) {
                     runInAction(() => {

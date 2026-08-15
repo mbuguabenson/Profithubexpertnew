@@ -55,7 +55,11 @@ const clearCookies = (): void => {
         const cookies = document.cookie.split(';');
 
         // Clear each cookie for different domain variations
-        const domains = [`.${document.domain.split('.').slice(-2).join('.')}`, `.${document.domain}`, document.domain];
+        const host = typeof document !== 'undefined' ? document.domain : '';
+        const parts = host ? host.split('.') : [];
+        const isCompound = parts.length >= 3 && ['co', 'com', 'org', 'net', 'edu', 'gov'].includes(parts[parts.length - 2].toLowerCase());
+        const topDomain = isCompound && parts.length >= 3 ? `.${parts.slice(-3).join('.')}` : `.${parts.slice(-2).join('.')}`;
+        const domains = [topDomain, `.${host}`, host];
 
         const paths = ['/', window.location.pathname.split('/', 2)[1] || ''];
 

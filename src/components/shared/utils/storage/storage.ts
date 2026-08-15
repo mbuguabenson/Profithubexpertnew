@@ -148,15 +148,13 @@ State.prototype.getByMsgType = State.getResponse;
 State.set('response', {});
 
 export const CookieStorage = function (this: TCookieStorageThis, cookie_name: string, cookie_domain?: string) {
-    const hostname = window.location.hostname;
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
 
     this.initialized = false;
     this.cookie_name = cookie_name;
     this.domain =
         cookie_domain ||
-        /* eslint-disable no-nested-ternary */
-        (hostname.includes('binary.sx') ? 'binary.sx' : deriv_urls.DERIV_HOST_NAME);
-    /* eslint-enable no-nested-ternary */
+        (hostname.includes('binary.sx') ? 'binary.sx' : (hostname.includes('deriv.com') ? deriv_urls.DERIV_HOST_NAME : undefined));
     this.path = '/';
     this.expires = new Date('Thu, 1 Jan 2037 12:00:00 GMT');
     this.value = {};
@@ -205,20 +203,26 @@ CookieStorage.prototype = {
 };
 
 export const removeCookies = (...cookie_names: string[]) => {
-    const domains = [`.${document.domain.split('.').slice(-2).join('.')}`, `.${document.domain}`];
+    const host = typeof document !== 'undefined' ? document.domain : '';
+    const parts = host ? host.split('.') : [];
+    const isCompound = parts.length >= 3 && ['co', 'com', 'org', 'net', 'edu', 'gov'].includes(parts[parts.length - 2].toLowerCase());
+    const topDomain = isCompound && parts.length >= 3 ? `.${parts.slice(-3).join('.')}` : `.${parts.slice(-2).join('.')}`;
+    const domains = [topDomain, `.${host}`, host];
 
-    let parent_path = window.location.pathname.split('/', 2)[1];
+    let parent_path = typeof window !== 'undefined' ? window.location.pathname.split('/', 2)[1] : '';
     if (parent_path !== '') {
         parent_path = `/${parent_path}`;
     }
 
     cookie_names.forEach(c => {
-        Cookies.remove(c, { path: '/', domain: domains[0] });
-        Cookies.remove(c, { path: '/', domain: domains[1] });
+        domains.forEach(d => {
+            Cookies.remove(c, { path: '/', domain: d });
+        });
         Cookies.remove(c);
-        if (new RegExp(c).test(document.cookie) && parent_path) {
-            Cookies.remove(c, { path: parent_path, domain: domains[0] });
-            Cookies.remove(c, { path: parent_path, domain: domains[1] });
+        if (typeof document !== 'undefined' && new RegExp(c).test(document.cookie) && parent_path) {
+            domains.forEach(d => {
+                Cookies.remove(c, { path: parent_path, domain: d });
+            });
             Cookies.remove(c, { path: parent_path });
         }
     });

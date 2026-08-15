@@ -291,29 +291,34 @@ export default class DigitCrackerStore {
                         style: 'ticks',
                     });
                 } else if (response?.error) {
-                    throw new Error(response.error.message);
+                    console.warn('[DigitCrackerStore] ticks_history response error:', response.error);
+                    return;
                 }
-
             } catch (err: any) {
-                if (err.error?.code === 'AlreadySubscribed') {
-                    // Fallback to history only if another store already runs the live tick
-                    response = await api_base.api.send({
-                        ticks_history: this.symbol,
-                        count: safeCount,
-                        end: 'latest',
-                        style: 'ticks',
-                    });
+                if (err?.error?.code === 'AlreadySubscribed') {
+                    try {
+                        response = await api_base.api.send({
+                            ticks_history: this.symbol,
+                            count: safeCount,
+                            end: 'latest',
+                            style: 'ticks',
+                        });
+                    } catch (retryErr) {
+                        console.warn('[DigitCrackerStore] ticks_history retry failed:', retryErr);
+                        return;
+                    }
                 } else {
-                    throw err;
+                    console.warn('[DigitCrackerStore] ticks_history subscription warning:', err);
+                    return;
                 }
             }
 
-            if (response.subscription?.id) {
+            if (response?.subscription?.id) {
                 this.active_stream_id = response.subscription.id;
             }
 
             // Handle initial history
-            if (response.history || response.ticks_history) {
+            if (response && (response.history || response.ticks_history)) {
                 const history = response.history || response.ticks_history;
                 if (history.prices) {
                     runInAction(() => {

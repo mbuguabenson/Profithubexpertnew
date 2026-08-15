@@ -152,7 +152,11 @@ export function createServices(): TServices {
                 const apiHelpers = ApiHelpers.instance as any;
 
                 if (!isApiHelpersInitialized(apiHelpers)) {
-                    throw new Error('ApiHelpers not initialized or active_symbols not available');
+                    // Try fallback check
+                    if (apiHelpers?.active_symbols?.active_symbols) {
+                        return apiHelpers.active_symbols.active_symbols;
+                    }
+                    return [];
                 }
 
                 // Retrieve active symbols using the existing service
@@ -160,22 +164,19 @@ export function createServices(): TServices {
 
                 // Convert the processed symbols back to array format for the adapter
                 if (!Array.isArray(activeSymbols)) {
-                    logger.warn('No active symbols available from ApiHelpers');
                     return [];
                 }
 
                 return activeSymbols;
             } catch (error) {
-                logger.error('Error getting active symbols:', error);
-
                 // Fallback: try to get from the raw active_symbols array if available
                 try {
                     const apiHelpers = ApiHelpers.instance as any;
                     if (isApiHelpersInitialized(apiHelpers) && apiHelpers.active_symbols.active_symbols) {
                         return apiHelpers.active_symbols.active_symbols;
                     }
-                } catch (fallbackError) {
-                    logger.error('Fallback active symbols retrieval failed:', fallbackError);
+                } catch {
+                    // Ignore fallback errors during startup
                 }
 
                 return [];
@@ -190,13 +191,7 @@ export function createServices(): TServices {
             try {
                 const apiHelpers = ApiHelpers.instance as any;
 
-                if (!apiHelpers) {
-                    logger.error('ApiHelpers instance not available');
-                    return {};
-                }
-
-                if (!apiHelpers.trading_times) {
-                    logger.error('trading_times not available on ApiHelpers instance');
+                if (!apiHelpers || !apiHelpers.trading_times) {
                     return {};
                 }
                 // Initialize trading times if not already done
@@ -206,15 +201,12 @@ export function createServices(): TServices {
                 const tradingTimesData = apiHelpers.trading_times.trading_times;
 
                 if (!tradingTimesData || typeof tradingTimesData !== 'object') {
-                    logger.warn('No trading times data available, trying fallback...');
-
                     // Try to trigger setTradingTimes fallback manually
                     if (typeof apiHelpers.trading_times.setTradingTimes === 'function') {
                         apiHelpers.trading_times.setTradingTimes();
                         const fallbackData = apiHelpers.trading_times.trading_times;
 
                         if (fallbackData && typeof fallbackData === 'object') {
-                            // Use the fallback data
                             return transformTradingTimesData(fallbackData);
                         }
                     }
@@ -223,9 +215,7 @@ export function createServices(): TServices {
                 }
 
                 return transformTradingTimesData(tradingTimesData);
-            } catch (error) {
-                logger.error('Error getting trading times:', error);
-                logger.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
+            } catch {
                 return {};
             }
         },

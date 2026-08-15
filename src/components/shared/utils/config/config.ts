@@ -963,21 +963,12 @@ export const isProduction = () => {
 export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
 
 const getDefaultServerURL = () => {
-    const isProductionEnv = isProduction();
-
-    try {
-        return isProductionEnv ? WS_SERVERS.PRODUCTION : WS_SERVERS.STAGING;
-    } catch (error) {
-        console.error('Error in getDefaultServerURL:', error);
-    }
-
-    // Production defaults to demov2, staging/preview defaults to qa194 (demo)
-    return isProductionEnv ? WS_SERVERS.PRODUCTION : WS_SERVERS.STAGING;
+    return getLegacyServerURL();
 };
 
 const getLegacyServerURL = () => {
     const { appId } = getDomainConfig();
-    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId)}`;
+    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId || '1089')}`;
 };
 
 /**

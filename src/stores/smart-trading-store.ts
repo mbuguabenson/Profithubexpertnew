@@ -953,25 +953,36 @@ export default class SmartTradingStore {
                     subscribe: 1,
                 });
             } catch (err: any) {
-                if (err.error?.code === 'AlreadySubscribed') {
+                if (err?.error?.code === 'AlreadySubscribed') {
+                    try {
+                        response = await api_base.api.send({
+                            ticks_history: this.symbol,
+                            count: 1000,
+                            end: 'latest',
+                            style: 'ticks',
+                        });
+                    } catch (retryErr) {
+                        console.warn(`[SmartTrading] Retry failed for ${this.symbol}:`, retryErr);
+                        return;
+                    }
+                } else {
+                    console.warn(`[SmartTrading] Subscription error for ${this.symbol}:`, err);
+                    return;
+                }
+            }
+
+            if (response?.error?.code === 'AlreadySubscribed') {
+                try {
                     response = await api_base.api.send({
                         ticks_history: this.symbol,
                         count: 1000,
                         end: 'latest',
                         style: 'ticks',
                     });
-                } else {
-                    throw err;
+                } catch (retryErr) {
+                    console.warn(`[SmartTrading] Fallback error for ${this.symbol}:`, retryErr);
+                    return;
                 }
-            }
-
-            if (response?.error?.code === 'AlreadySubscribed') {
-                response = await api_base.api.send({
-                    ticks_history: this.symbol,
-                    count: 1000,
-                    end: 'latest',
-                    style: 'ticks',
-                });
             }
 
             if (response?.error) {
