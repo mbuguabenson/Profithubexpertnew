@@ -1399,7 +1399,7 @@ export default class ScannerStore implements IScannerStore {
   setupAutomationListeners = () => {
     try {
       const { observer } = require('@/external/bot-skeleton/utils/observer');
-      observer.unregisterAll('bot.contract');
+      observer.unregister('bot.contract', this.handleContractEvent);
       observer.register('bot.contract', this.handleContractEvent);
     } catch (e) {
       console.warn('[ScannerStore] Failed to register bot contract observer:', e);

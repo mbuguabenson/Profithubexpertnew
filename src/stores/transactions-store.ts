@@ -241,9 +241,9 @@ export default class TransactionsStore {
                 data: contract,
             });
 
-            // Limit history to 500 items for maximum UI speed & responsiveness
-            if (account_elements.length > 500) {
-                account_elements.length = 500;
+            // Limit history to 200 items for maximum UI speed & responsiveness
+            if (account_elements.length > 200) {
+                account_elements.length = 200;
             }
         } else {
             // Update existing contract data in-place
@@ -275,13 +275,17 @@ export default class TransactionsStore {
     registerReactions() {
         const { client } = this.core;
 
-        // Write transactions to session storage on each change in transaction elements.
+        let storageDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+        // Write transactions to session storage with debounce to prevent UI freezes on high-frequency bulk trades
         const disposeTransactionElementsListener = reaction(
-            () => this.elements[client?.loginid as string],
-            elements => {
-                const stored_transactions = getStoredItemsByKey(this.TRANSACTION_CACHE, {});
-                stored_transactions[client.loginid as string] = elements?.slice(0, 5000) ?? [];
-                setStoredItemsByKey(this.TRANSACTION_CACHE, stored_transactions);
+            () => this.elements[client?.loginid as string]?.length,
+            () => {
+                if (storageDebounceTimer) clearTimeout(storageDebounceTimer);
+                storageDebounceTimer = setTimeout(() => {
+                    const stored_transactions = getStoredItemsByKey(this.TRANSACTION_CACHE, {});
+                    stored_transactions[client.loginid as string] = (this.elements[client?.loginid as string] ?? []).slice(0, 200);
+                    setStoredItemsByKey(this.TRANSACTION_CACHE, stored_transactions);
+                }, 500);
             }
         );
 
@@ -294,6 +298,7 @@ export default class TransactionsStore {
         );
 
         return () => {
+            if (storageDebounceTimer) clearTimeout(storageDebounceTimer);
             disposeTransactionElementsListener();
             disposeRecoverContracts();
         };

@@ -54,6 +54,7 @@ export default Engine =>
             if (allBulkDone) {
                 this.setContractFlags(contract);
                 this.data.contract = contract;
+                this.isSold = true;
                 this.contractId = '';
                 if (this.bulk_contract_ids) this.bulk_contract_ids.clear();
                 if (this.bulk_sold_contract_ids) this.bulk_sold_contract_ids.clear();
@@ -67,6 +68,7 @@ export default Engine =>
 
                 if (this.afterPromise) {
                     this.afterPromise();
+                    this.afterPromise = null;
                 }
 
                 this.store.dispatch(sell());
@@ -74,6 +76,9 @@ export default Engine =>
         }
 
         waitForAfter() {
+            if (this.isSold) {
+                return Promise.resolve();
+            }
             return new Promise(resolve => {
                 this.afterPromise = resolve;
             });
