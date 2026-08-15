@@ -16,7 +16,7 @@ const brandLabel = getBrandLabel();
 const deploymentName = getBrandWebsiteName();
 
 const AppRootLoader = () => {
-    return <ChunkLoader message={`Loading ${brandLabel}...`} />;
+    return <ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={true} />;
 };
 
 const ErrorComponentWrapper = observer(() => {

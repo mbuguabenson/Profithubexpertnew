@@ -58,7 +58,37 @@
 
         <div id="modal_root" class="modal-root"></div>
         <div id="popup_root" class="popup-root"></div>
-        <div id="root"></div>
+        <div id="root">
+            <div style="position:fixed;inset:0;background:#030712;background-image:radial-gradient(circle at 50% 20%, rgba(56,189,248,0.15), transparent 50%), radial-gradient(circle at 15% 85%, rgba(99,102,241,0.12), transparent 45%);display:flex;align-items:center;justify-content:center;font-family:'Inter',system-ui,sans-serif;color:#f8fafc;z-index:999999;">
+                <div style="display:flex;flex-direction:column;align-items:center;padding:2.5rem 2rem;border-radius:28px;background:rgba(15,23,42,0.75);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.08);box-shadow:0 30px 60px -15px rgba(0,0,0,0.85), 0 0 50px rgba(56,189,248,0.08);max-width:440px;width:90%;text-align:center;">
+                    <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 12px;border-radius:9999px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);margin-bottom:1.5rem;">
+                        <span style="width:6px;height:6px;border-radius:50%;background:#10b981;box-shadow:0 0 8px #10b981;"></span>
+                        <span style="font-size:11px;font-weight:700;letter-spacing:0.1em;color:#34d399;text-transform:uppercase;">SYSTEM INITIALIZING</span>
+                    </div>
+                    <div style="position:relative;width:80px;height:80px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:center;">
+                        <div style="position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(56,189,248,0.5);animation:spin 10s linear infinite;"></div>
+                        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg, #1e293b, #0f172a);border:1.5px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(56,189,248,0.35);">
+                            <img src="/logo.png" alt="ProfitHub" style="width:32px;height:32px;object-fit:contain;" onerror="this.style.display='none'">
+                        </div>
+                    </div>
+                    <h1 style="font-size:22px;font-weight:800;letter-spacing:0.02em;margin:0 0 6px 0;background:linear-gradient(135deg,#ffffff 15%,#bae6fd 60%,#38bdf8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+                        ProfitHub <span style="background:linear-gradient(135deg,#f59e0b,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">EXPERT</span>
+                    </h1>
+                    <p style="font-size:12px;color:#94a3b8;margin:0 0 1.5rem 0;line-height:1.4;">
+                        Institutional-Grade Algorithmic & AI Trading Suite
+                    </p>
+                    <div style="width:100%;height:6px;border-radius:9999px;background:rgba(15,23,42,0.8);border:1px solid rgba(255,255,255,0.05);overflow:hidden;position:relative;">
+                        <div style="height:100%;width:55%;border-radius:9999px;background:linear-gradient(90deg,#38bdf8,#6366f1,#f59e0b);box-shadow:0 0 12px rgba(56,189,248,0.6);"></div>
+                    </div>
+                    <div style="margin-top:10px;font-size:11px;color:#64748b;font-family:monospace;">
+                        Loading ProfitHub Expert Workspace...
+                    </div>
+                </div>
+            </div>
+            <style>
+                @keyframes spin { 100% { transform: rotate(360deg); } }
+            </style>
+        </div>
         <!-- LiveChat script -->
         <script type="text/javascript" defer>
             window.__lc = window.__lc || {};
