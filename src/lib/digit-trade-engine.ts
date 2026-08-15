@@ -19,6 +19,10 @@ export type TTradeConfig = {
     use_martingale?: boolean;
     max_stake?: number;
     global_max_loss?: number;
+    bulk_trades_count?: number;
+    // Special Matches configs
+    martingale_enabled?: boolean;
+    martingale_multiplier?: number;
 };
 
 export type TTradeLog = {
@@ -45,6 +49,7 @@ export class DigitTradeEngine {
         global_max_loss: 50,
         max_runs: 12,
         runs_count: 0,
+        bulk_trades_count: 1,
     };
     @observable accessor over_under_config: TTradeConfig = {
         stake: 0.35,
@@ -63,6 +68,7 @@ export class DigitTradeEngine {
         global_max_loss: 50,
         max_runs: 12,
         runs_count: 0,
+        bulk_trades_count: 1,
     };
     @observable accessor differs_config: TTradeConfig = {
         stake: 0.35,
@@ -81,6 +87,7 @@ export class DigitTradeEngine {
         global_max_loss: 50,
         max_runs: 12,
         runs_count: 0,
+        bulk_trades_count: 1,
     };
     @observable accessor matches_config: TTradeConfig = {
         stake: 0.35,
@@ -99,6 +106,7 @@ export class DigitTradeEngine {
         global_max_loss: 50,
         max_runs: 12,
         runs_count: 0,
+        bulk_trades_count: 1,
     };
 
     @observable accessor active_strategy: 'even_odd' | 'over_under' | 'differs' | 'matches' | null = null;
@@ -125,7 +133,7 @@ export class DigitTradeEngine {
     @action
     addLog = (message: string, type: 'info' | 'success' | 'error' | 'trade' | 'journal' = 'info') => {
         this.logs.unshift({ timestamp: Date.now(), message, type });
-        if (this.logs.length > 50) this.logs.pop();
+        if (this.logs.length > 100) this.logs.pop();
     };
 
     @action
@@ -168,7 +176,8 @@ export class DigitTradeEngine {
     executeManualTrade = (
         strategy: 'even_odd' | 'over_under' | 'differs' | 'matches',
         symbol: string,
-        currency: string
+        currency: string,
+        runs_count = 1
     ) => {
         if (!symbol || String(symbol).trim() === '') {
             this.addLog('⛔ Manual trade aborted: invalid symbol.', 'error');
@@ -196,9 +205,192 @@ export class DigitTradeEngine {
                 break;
         }
 
-        // Mark strategy as running for the manual one-shot trade
         config.is_running = true;
-        this.executeTrade(strategy, symbol, contract_type, prediction, currency);
+        const count = runs_count || config.bulk_trades_count || 1;
+        if (count > 1) {
+            this.executeBulkTrade(strategy, symbol, currency, count);
+        } else {
+            this.executeTrade(strategy, symbol, contract_type, prediction, currency);
+        }
+    };
+
+    @action
+    executeBulkTrade = async (
+        strategy: 'even_odd' | 'over_under' | 'differs' | 'matches',
+        symbol: string,
+        currency: string,
+        runs_count = 1
+    ) => {
+        if (this.is_executing) return;
+        this.is_executing = true;
+        const count = Math.max(1, Math.min(runs_count, 20));
+        this.trade_status = `EXECUTING ${count} BULK RUNS`;
+
+        try {
+            const api = api_base?.api;
+            if (!api) throw new Error('WebSocket API not connected.');
+            if (!api_base.is_authorized) throw new Error('API not authorized. Please log in.');
+
+            const config = (this as Record<string, unknown>)[`${strategy}_config`] as TTradeConfig;
+            if (!config) return;
+
+            let contract_type = '';
+            const prediction = config.prediction;
+
+            switch (strategy) {
+                case 'even_odd':
+                    contract_type = prediction === 0 ? 'DIGITEVEN' : 'DIGITODD';
+                    break;
+                case 'over_under':
+                    contract_type = prediction > 4 ? 'DIGITOVER' : 'DIGITUNDER';
+                    break;
+                case 'differs':
+                    contract_type = 'DIGITDIFF';
+                    break;
+                case 'matches':
+                    contract_type = 'DIGITMATCH';
+                    break;
+            }
+
+            const stake = this.calculateStake(config);
+            const max_stake = config.max_stake || 10;
+            const final_stake = Math.max(0.35, Math.min(stake, max_stake));
+
+            this.addLog(`🚀 Placing ${count} Bulk Trade(s) (${contract_type} on ${symbol} @ $${final_stake}) simultaneously...`, 'info');
+
+            const proposal_data: any = {
+                proposal: 1,
+                amount: String(final_stake),
+                basis: 'stake',
+                contract_type,
+                currency: currency || 'USD',
+                duration: 1,
+                duration_unit: 't',
+                symbol,
+            };
+
+            if (!['DIGITEVEN', 'DIGITODD'].includes(contract_type)) {
+                proposal_data.barrier = String(prediction);
+            }
+
+            const proposal = (await api.send(proposal_data)) as any;
+            if (proposal.error) throw new Error(proposal.error.message);
+            if (!proposal.proposal?.id) throw new Error('Failed to get proposal ID');
+
+            const buy_price = proposal.proposal.ask_price || final_stake;
+
+            // Trigger parallel buy requests for bulk execution
+            const buyPromises = Array.from({ length: count }, () =>
+                api.send({
+                    buy: proposal.proposal.id,
+                    price: buy_price,
+                }).catch(err => ({ error: err }))
+            );
+
+            const buyResults = await Promise.all(buyPromises);
+            const successfulContracts = buyResults
+                .filter((r: any) => r && r.buy && !r.error)
+                .map((r: any) => String(r.buy.contract_id));
+
+            if (successfulContracts.length === 0) {
+                const firstErr = buyResults.find((r: any) => r && r.error)?.error?.message || 'Bulk purchase failed';
+                throw new Error(firstErr);
+            }
+
+            this.addLog(`✅ Successfully placed ${successfulContracts.length} bulk contract(s)! Monitoring outcomes...`, 'trade');
+            this.monitorBulkTrades(successfulContracts, config);
+        } catch (e: any) {
+            const message = e.message || 'Bulk trade failed';
+            runInAction(() => {
+                this.addLog(`❌ Bulk Trade Error: ${message}`, 'error');
+                this.is_executing = false;
+                this.trade_status = 'ERROR';
+            });
+        }
+    };
+
+    private monitorBulkTrades = (contract_ids: string[], config: TTradeConfig) => {
+        let remaining = [...contract_ids];
+        let totalBatchProfit = 0;
+        let batchWins = 0;
+        let batchLosses = 0;
+
+        const check = setInterval(async () => {
+            try {
+                if (remaining.length === 0) {
+                    clearInterval(check);
+                    return;
+                }
+
+                const checkPromises = remaining.map(cid =>
+                    api_base.api?.send({ proposal_open_contract: 1, contract_id: cid }).catch(() => null)
+                );
+
+                const responses = await Promise.all(checkPromises);
+                const stillOpen: string[] = [];
+
+                responses.forEach((res: any, idx) => {
+                    const poc = res?.proposal_open_contract;
+                    if (poc && poc.is_sold) {
+                        const profit = Number(poc.profit || 0);
+                        totalBatchProfit += profit;
+                        if (profit > 0) batchWins++;
+                        else batchLosses++;
+                    } else {
+                        stillOpen.push(remaining[idx]);
+                    }
+                });
+
+                remaining = stillOpen;
+
+                if (remaining.length === 0) {
+                    clearInterval(check);
+                    runInAction(() => {
+                        this.handleBulkResult(totalBatchProfit, batchWins, batchLosses, config);
+                    });
+                }
+            } catch (e) {
+                clearInterval(check);
+                runInAction(() => {
+                    this.is_executing = false;
+                });
+            }
+        }, 1000);
+    };
+
+    @action
+    private handleBulkResult = (
+        totalProfit: number,
+        wins: number,
+        losses: number,
+        config: TTradeConfig
+    ) => {
+        const isWin = totalProfit > 0;
+        this.last_result = isWin ? 'WIN' : 'LOSS';
+        this.session_profit += totalProfit;
+        this.total_profit += totalProfit;
+        this.is_executing = false;
+
+        if (isWin) {
+            this.current_streak = 0;
+            this.addLog(`🏆 BULK BATCH WON: +$${totalProfit.toFixed(2)} (${wins}W / ${losses}L)`, 'success');
+            if (config.take_profit && this.session_profit >= config.take_profit) {
+                this.stopAll('TAKE PROFIT HIT');
+            }
+        } else {
+            this.current_streak++;
+            this.addLog(`❌ BULK BATCH LOSS: -$${Math.abs(totalProfit).toFixed(2)} (${wins}W / ${losses}L)`, 'error');
+            const total_loss = Math.abs(this.session_profit);
+            if (config.use_max_loss && total_loss >= config.max_loss) {
+                this.stopAll('INDIVIDUAL STOP LOSS HIT');
+            }
+            if (config.global_max_loss && total_loss >= config.global_max_loss) {
+                this.stopAll('GLOBAL MAX LOSS HIT');
+            }
+        }
+
+        if (config.runs_count !== undefined) config.runs_count += (wins + losses);
+        this.trade_status = 'IDLE';
     };
 
     @action
@@ -255,7 +447,7 @@ export class DigitTradeEngine {
                 this.checkDiffers(stats.digit_stats, config, symbol, currency);
                 break;
             case 'matches':
-                this.checkMatches(stats as any, config, symbol, currency);
+                this.checkMatches(stats, config, symbol, currency);
                 break;
         }
     };
@@ -266,15 +458,9 @@ export class DigitTradeEngine {
         symbol: string,
         currency: string
     ) => {
-        // Logic: Wait for streak break (2+ of opposite side)
-        // Even Strategy Trigger: Even > 55% AND we just ended an Odd streak of at least 2
-        if (percentages.even > 55 && this.consecutive_even === 1 && this.consecutive_odd === 0) {
-            // We need to know if the PREVIOUS state was a streak of 2+ odds
-            // Since processTick just zeroed consecutive_odd, we check our internal tracking
-            this.addLog(`🔍 Even Signal Detected (Power: ${percentages.even.toFixed(1)}%)`, 'journal');
+        if (percentages.even > 55 && this.consecutive_odd >= 2) {
             this.executeTrade('even_odd', symbol, 'DIGITEVEN', 0, currency);
-        } else if (percentages.odd > 55 && this.consecutive_odd === 1 && this.consecutive_even === 0) {
-            this.addLog(`🔍 Odd Signal Detected (Power: ${percentages.odd.toFixed(1)}%)`, 'journal');
+        } else if (percentages.odd > 55 && this.consecutive_even >= 2) {
             this.executeTrade('even_odd', symbol, 'DIGITODD', 0, currency);
         }
     };
@@ -285,134 +471,44 @@ export class DigitTradeEngine {
         symbol: string,
         currency: string
     ) => {
-        let prediction = config.prediction;
-        // Trigger Under: Percentage > 55% AND we just ended an Over streak of at least 2
-        if (percentages.under > 55 && this.consecutive_under === 1 && this.consecutive_over === 0) {
-            if (prediction < 6) prediction = 8;
-            this.addLog(`🔍 Under Signal Detected (Power: ${percentages.under.toFixed(1)}%)`, 'journal');
-            this.executeTrade('over_under', symbol, 'DIGITUNDER', prediction, currency);
-        } else if (percentages.over > 55 && this.consecutive_over === 1 && this.consecutive_under === 0) {
-            if (prediction > 3) prediction = 1;
-            this.addLog(`🔍 Over Signal Detected (Power: ${percentages.over.toFixed(1)}%)`, 'journal');
-            this.executeTrade('over_under', symbol, 'DIGITOVER', prediction, currency);
+        if (percentages.over > 55 && this.consecutive_under >= 2) {
+            this.executeTrade('over_under', symbol, 'DIGITOVER', config.prediction, currency);
+        } else if (percentages.under > 55 && this.consecutive_over >= 2) {
+            this.executeTrade('over_under', symbol, 'DIGITUNDER', config.prediction, currency);
         }
     };
 
-    private checkDiffers = (digit_stats: TDigitStat[], config: TTradeConfig, symbol: string, currency: string) => {
-        // Advanced Logic: Select digit 2-7. Not Highest, 2nd, or Least. < 10% prob. Decreasing trend.
-        const sorted = [...digit_stats].sort((a, b) => b.count - a.count);
-        const highest = sorted[0].digit;
-        const second = sorted[1].digit;
-        const least = sorted[9].digit;
-
-        const eligible = digit_stats.filter(s => {
-            return (
-                s.digit >= 2 &&
-                s.digit <= 7 &&
-                s.digit !== highest &&
-                s.digit !== second &&
-                s.digit !== least &&
-                s.percentage < 10 &&
-                !s.is_increasing
-            );
-        });
-
-        if (eligible.length > 0) {
-            const target = eligible.sort((a, b) => a.percentage - b.percentage)[0];
-            if (config.prediction !== target.digit) {
-                runInAction(() => (config.prediction = target.digit));
-            }
-            this.addLog(`🔍 Differ Signal: Digit ${target.digit} (Prob: ${target.percentage.toFixed(1)}%)`, 'journal');
-            this.executeTrade('differs', symbol, 'DIGITDIFF', target.digit, currency);
+    private checkDiffers = (
+        digit_stats: TDigitStat[],
+        config: TTradeConfig,
+        symbol: string,
+        currency: string
+    ) => {
+        const leastFrequent = [...digit_stats].sort((a, b) => a.count - b.count)[0];
+        if (leastFrequent && leastFrequent.percentage < 8) {
+            this.executeTrade('differs', symbol, 'DIGITDIFF', leastFrequent.digit, currency);
         }
     };
 
     private checkMatches = (
         stats: {
+            percentages: { even: number; odd: number; over: number; under: number; rise: number; fall: number };
             digit_stats: TDigitStat[];
             recent_powers?: number[][];
             ticks?: number[];
             ranks?: { most: number | null; second: number | null; least: number | null };
         },
-        config: TTradeConfig & any,
+        config: TTradeConfig,
         symbol: string,
         currency: string
     ) => {
-        const { digit_stats, recent_powers = [], ticks = [], ranks } = stats;
+        const targetDigit = stats.ranks?.most ?? 0;
+        const targetStat = stats.digit_stats.find(s => s.digit === targetDigit);
+        const condition1 = (stats.ticks?.length || 0) >= 5;
+        const condition2 = targetStat && targetStat.percentage >= 12;
 
-        // 0. Resolve Targets
-        let targets: number[] = config.is_auto 
-            ? [ranks?.most, ranks?.second, ranks?.least].filter(d => d !== null) as number[] 
-            : (config.predictions || [config.prediction]);
-        
-        // Elite Set for Rank Sync
-        const elite = [ranks?.most, ranks?.second, ranks?.least].filter(d => d !== null);
-
-        const updateStatus = (stage: number, msg: string) => {
-            if (config.verification_stage !== stage || config.verification_status !== msg) {
-                runInAction(() => {
-                    config.verification_stage = stage;
-                    config.verification_status = msg;
-                });
-            }
-        };
-
-        const checkDigit = (digit: number) => {
-            const stat = digit_stats[digit];
-            if (!stat) return false;
-
-            const enabled = config.enabled_conditions || [true, true, true, true];
-
-            // STAGE 1: Momentum
-            if (enabled[0]) {
-                if (!stat.is_increasing) return false;
-            }
-
-            // STAGE 2: Logic Hold (Double Increase)
-            if (enabled[1] && recent_powers.length >= 3) {
-                const len = recent_powers.length;
-                const p0 = recent_powers[len - 3][digit];
-                const p1 = recent_powers[len - 2][digit];
-                const p2 = recent_powers[len - 1][digit];
-                if (!(p2 > p1 && p1 > p0)) return false;
-            }
-
-            // STAGE 3: Power Threshold
-            if (enabled[2]) {
-                const op = config.c3_op || '>=';
-                const val = config.c3_val || 12;
-                const prob = stat.percentage;
-                let pass = false;
-                if (op === '>') pass = prob > val;
-                else if (op === '>=') pass = prob >= val;
-                else if (op === '==') pass = Math.abs(prob - val) < 0.1;
-                else if (op === '<') pass = prob < val;
-                else if (op === '<=') pass = prob <= val;
-                if (!pass) return false;
-            }
-
-            // STAGE 4: Rank Sync
-            if (enabled[3] && ticks.length >= config.c1_count) {
-                const lastX = ticks.slice(-config.c1_count);
-                if (!lastX.every(d => elite.includes(d))) return false;
-            }
-
-            return true;
-        };
-
-        // Filter valid targets through 4-stage gate
-        const valid_targets = targets.filter(checkDigit);
-
-        if (valid_targets.length === 0) {
-            updateStatus(0, '⏳ Analyzing market for Match pattern...');
-        } else {
-            const top_digit = valid_targets[0];
-            updateStatus(4, `🚀 STAGE 4: Synchronization Confirmed for Digit ${top_digit}!`);
-            
-            const trades_to_run = valid_targets.slice(0, config.simultaneous_trades || 1);
-            trades_to_run.forEach(digit => {
-                this.executeTrade('matches', symbol, 'DIGITMATCH', digit, currency);
-            });
+        if (condition1 && condition2) {
+            this.executeTrade('matches', symbol, 'DIGITMATCH', targetDigit, currency);
         }
     };
 
@@ -432,7 +528,6 @@ export class DigitTradeEngine {
             const api = api_base?.api;
             if (!api) throw new Error('WebSocket API not connected. Please wait for connection.');
 
-            // Check authorization state explicitly
             if (!api_base.is_authorized) {
                 this.addLog('⛔ API not authorized. Please log in first.', 'error');
                 throw new Error('API not authorized');
@@ -442,15 +537,12 @@ export class DigitTradeEngine {
             if (!config || !config.is_running) return;
 
             const stake = this.calculateStake(config);
-
-            // Safety: Max Stake Limit
             const max_stake = config.max_stake || 10;
             if (stake > max_stake) {
                 this.addLog(`⚠️ Max Stake hit! Capping ${stake} at ${max_stake}`, 'journal');
             }
             const final_stake = Math.min(stake, max_stake);
 
-            // Validate stake for real accounts (minimum 0.35)
             if (final_stake < 0.35) {
                 this.addLog(`⛔ Final stake ${final_stake} is below 0.35 minimum.`, 'error');
                 throw new Error(`Minimum stake required: 0.35`);
@@ -466,22 +558,18 @@ export class DigitTradeEngine {
                 amount: String(final_stake),
                 basis: 'stake',
                 contract_type,
-                currency,
+                currency: currency || 'USD',
                 duration: 1,
                 duration_unit: 't',
+                symbol,
             };
 
-            if (String(symbol).trim()) {
-                proposal_data.symbol = symbol;
-            }
-
-            // Add barrier for digit contracts that require it
             if (!['DIGITEVEN', 'DIGITODD'].includes(contract_type)) {
                 proposal_data.barrier = String(prediction);
             }
 
             this.addLog(
-                `📤 Proposal: ${contract_type} @ ${symbol} | stake=${stake} | barrier=${proposal_data.barrier ?? 'N/A'}`,
+                `📤 Proposal: ${contract_type} @ ${symbol} | stake=${final_stake} | barrier=${proposal_data.barrier ?? 'N/A'}`,
                 'journal'
             );
 
@@ -492,19 +580,15 @@ export class DigitTradeEngine {
 
             if (proposal.error) {
                 const errorMsg = `Proposal error: ${proposal.error.message} (${proposal.error.code})`;
-                this.addLog('ERROR', errorMsg);
+                this.addLog(errorMsg, 'error');
                 throw new Error(errorMsg);
             }
             if (!proposal.proposal?.id) throw new Error('No proposal ID returned from server');
 
-            this.addLog(`📋 Proposal OK: id=${proposal.proposal.id} price=${proposal.proposal.ask_price}`, 'journal');
-
             const buy_request = {
                 buy: proposal.proposal.id,
-                price: proposal.proposal.ask_price || stake,
+                price: proposal.proposal.ask_price || final_stake,
             };
-
-            this.addLog(`💰 Buying: id=${buy_request.buy} price=${buy_request.price}`, 'journal');
 
             const buy = (await api.send(buy_request)) as {
                 error?: { message: string; code: string };
@@ -513,13 +597,13 @@ export class DigitTradeEngine {
 
             if (buy.error) {
                 const errorMsg = `Buy error: ${buy.error.message} (${buy.error.code})`;
-                this.addLog('ERROR', errorMsg);
+                this.addLog(errorMsg, 'error');
                 throw new Error(errorMsg);
             }
             if (!buy.buy?.contract_id) throw new Error('No contract ID returned from server');
 
             this.trade_status = `TRADING ${contract_type}`;
-            this.addLog(`✅ Contract purchased: ${buy.buy.contract_id}`, 'info');
+            this.addLog(`✅ Contract purchased: ${buy.buy.contract_id}`, 'trade');
 
             // Monitor result
             this.monitorTrade(buy.buy.contract_id, config);

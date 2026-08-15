@@ -32,13 +32,13 @@ export type TBotConfig = {
     runs_count?: number;
     max_stake?: number;
     global_max_loss?: number;
+    bulk_trades_count?: number;
     // Manual Overrides
     manual_contract_type?: string;
     manual_prediction?: number;
     manual_use_martingale?: boolean;
     manual_multiplier?: number;
 };
-// ... existing types ...
 
 export default class SmartAutoStore {
     root_store: RootStore;
@@ -58,6 +58,7 @@ export default class SmartAutoStore {
         use_martingale: true,
         max_stake: 999999,
         global_max_loss: 50,
+        bulk_trades_count: 1,
         manual_contract_type: 'CALL',
         manual_prediction: 0,
         manual_use_martingale: true,
@@ -81,6 +82,7 @@ export default class SmartAutoStore {
         runs_count: 0,
         max_stake: 999999,
         global_max_loss: 50,
+        bulk_trades_count: 1,
         manual_contract_type: 'DIGITEVEN',
         manual_prediction: 0,
         manual_use_martingale: true,
@@ -104,6 +106,7 @@ export default class SmartAutoStore {
         runs_count: 0,
         max_stake: 999999,
         global_max_loss: 50,
+        bulk_trades_count: 1,
         manual_contract_type: 'DIGITOVER',
         manual_prediction: 4,
         manual_use_martingale: true,
@@ -126,6 +129,7 @@ export default class SmartAutoStore {
         runs_count: 0,
         max_stake: 999999,
         global_max_loss: 50,
+        bulk_trades_count: 1,
         manual_contract_type: 'DIGITDIFF',
         manual_prediction: 0,
         manual_use_martingale: true,
@@ -148,6 +152,7 @@ export default class SmartAutoStore {
         runs_count: 0,
         max_stake: 999999,
         global_max_loss: 50,
+        bulk_trades_count: 1,
         manual_contract_type: 'DIGITMATCH',
         manual_prediction: 0,
         manual_use_martingale: true,
@@ -170,6 +175,7 @@ export default class SmartAutoStore {
         use_martingale: true,
         max_stake: 999999,
         global_max_loss: 50,
+        bulk_trades_count: 1,
         manual_contract_type: 'DIGITOVER',
         manual_prediction: 1,
         manual_use_martingale: true,
@@ -188,42 +194,27 @@ export default class SmartAutoStore {
     @observable accessor session_profit: number = 0;
     @observable accessor total_profit: number = 0;
     @observable accessor is_executing = false;
+    @observable accessor logs: { timestamp: number; message: string; type: 'info' | 'success' | 'error' | 'trade' }[] =
+        [];
 
     // Martingale State
     @observable accessor last_result: 'WIN' | 'LOSS' | null = null;
     @observable accessor current_streak: number = 0;
-    @observable accessor logs: Array<{
-        timestamp: number;
-        message: string;
-        type: 'info' | 'success' | 'error' | 'trade';
-    }> = [];
 
-    // Strategy Specific State
-    @observable accessor consecutive_even = 0;
-    @observable accessor consecutive_odd = 0;
-    @observable accessor consecutive_over = 0;
-    @observable accessor consecutive_under = 0;
-    @observable accessor last_digit_analyzed = -1;
+    // Pattern recognition state
+    private consecutive_even = 0;
+    private consecutive_odd = 0;
+    private consecutive_over = 0;
+    private consecutive_under = 0;
 
-    @action
-    addLog = (message: string, type: 'info' | 'success' | 'error' | 'trade' = 'info') => {
-        this.logs.push({
-            timestamp: Date.now(),
-            message,
-            type,
-        });
-        if (this.logs.length > 50) this.logs.shift();
-    };
+    // Internal trackers to avoid re-triggering on duplicate ticks
+    private last_processed_epoch = 0;
 
-    @action
-    clearLogs = () => {
-        this.logs = [];
-    };
     constructor(root_store: RootStore) {
         makeObservable(this);
         this.root_store = root_store;
 
-        // Auto-process ticks when analysis updates
+        // Auto-subscribe to analysis engine's tick stream
         reaction(
             () => this.root_store.analysis.last_digit,
             digit => {
@@ -237,7 +228,8 @@ export default class SmartAutoStore {
     @action
     toggleBot = (
         bot_type: 'even_odd' | 'over_under' | 'differs' | 'matches' | 'smart_auto_24' | 'rise_fall',
-        mode: 'manual' | 'auto'
+        mode: 'manual' | 'auto',
+        runs_count = 1
     ) => {
         const configKey = `${bot_type}_config` as keyof SmartAutoStore;
         const config = this[configKey] as unknown as TBotConfig;
@@ -266,7 +258,12 @@ export default class SmartAutoStore {
             this.addLog(`Bot started [${bot_type.toUpperCase()}] in ${mode} mode`, 'success');
 
             if (mode === 'manual') {
-                this.executeManualTrade(bot_type);
+                const count = runs_count || config.bulk_trades_count || 1;
+                if (count > 1) {
+                    this.executeBulkManualTrade(bot_type, count);
+                } else {
+                    this.executeManualTrade(bot_type);
+                }
             }
         }
     };
@@ -292,55 +289,41 @@ export default class SmartAutoStore {
         let prev_streak_over = 0;
         let prev_streak_under = 0;
 
-        // Update Even/Odd Counters
+        // Track live streaks
         if (last_digit % 2 === 0) {
-            // Current is EVEN
-            if (this.consecutive_odd > 0) {
-                prev_streak_odd = this.consecutive_odd;
-            }
+            prev_streak_odd = this.consecutive_odd;
             this.consecutive_even++;
             this.consecutive_odd = 0;
         } else {
-            // Current is ODD
-            if (this.consecutive_even > 0) {
-                prev_streak_even = this.consecutive_even;
-            }
+            prev_streak_even = this.consecutive_even;
             this.consecutive_odd++;
             this.consecutive_even = 0;
         }
 
-        // Update Over/Under Counters
         if (last_digit >= 5) {
-            // Over
-            if (this.consecutive_under > 0) {
-                prev_streak_under = this.consecutive_under;
-            }
+            prev_streak_under = this.consecutive_under;
             this.consecutive_over++;
             this.consecutive_under = 0;
         } else {
-            // Under
-            if (this.consecutive_over > 0) {
-                prev_streak_over = this.consecutive_over;
-            }
+            prev_streak_over = this.consecutive_over;
             this.consecutive_under++;
             this.consecutive_over = 0;
         }
-
-        this.last_digit_analyzed = last_digit as number;
 
         if (!this.active_bot || this.is_executing) return;
 
         const configKey = `${this.active_bot}_config` as keyof SmartAutoStore;
         const config = this[configKey] as unknown as TBotConfig;
+
         if (!config || !config.is_running || !config.is_auto) return;
 
         // Check Max Runs
-        if ((config.runs_count || 0) >= (config.max_runs || 12)) {
+        if ((config.runs_count || 0) >= (config.max_runs || 100)) {
             this.stopAllBots('MAX RUNS REACHED');
             return;
         }
 
-        const stats = {
+        const stats: TStrategyStats = {
             percentages: analysis.percentages,
             digit_stats: analysis.digit_stats,
             prev_streak_odd,
@@ -374,23 +357,16 @@ export default class SmartAutoStore {
 
     private runEvenOddLogic = (stats: TStrategyStats) => {
         const config = this.even_odd_config;
-        const { percentages, prev_streak_odd, prev_streak_even } = stats;
+        const { percentages } = stats;
 
-        // Sequence Logic: Wait for opposite side streak of 2+ then FIRST appearance of side
         if (percentages.even > 55) {
             if (this.consecutive_even === 1 && this.consecutive_odd === 0) {
-                this.addLog(
-                    `[Pattern Match] EVEN Strong (${percentages.even.toFixed(1)}%) & Sequence Triggered.`,
-                    'info'
-                );
+                this.addLog(`[Pattern Match] EVEN Strong (${percentages.even.toFixed(1)}%) & Sequence Triggered.`, 'info');
                 this.executeContract('DIGITEVEN', 0, config);
             }
         } else if (percentages.odd > 55) {
             if (this.consecutive_odd === 1 && this.consecutive_even === 0) {
-                this.addLog(
-                    `[Pattern Match] ODD Strong (${percentages.odd.toFixed(1)}%) & Sequence Triggered.`,
-                    'info'
-                );
+                this.addLog(`[Pattern Match] ODD Strong (${percentages.odd.toFixed(1)}%) & Sequence Triggered.`, 'info');
                 this.executeContract('DIGITODD', 0, config);
             }
         }
@@ -400,16 +376,12 @@ export default class SmartAutoStore {
         const config = this.over_under_config;
         const { percentages } = stats;
 
-        // Structure similar to even_odd: wait for trend break from opposite side
         if (percentages.under > 55) {
             let prediction = config.prediction;
             if (prediction < 6) prediction = 8;
 
             if (this.consecutive_under === 1 && this.consecutive_over === 0) {
-                this.addLog(
-                    `[Pattern Match] UNDER Strong (${percentages.under.toFixed(1)}%) & Sequence Triggered.`,
-                    'info'
-                );
+                this.addLog(`[Pattern Match] UNDER Strong (${percentages.under.toFixed(1)}%) & Sequence Triggered.`, 'info');
                 this.executeContract('DIGITUNDER', prediction, config);
             }
         } else if (percentages.over > 55) {
@@ -417,10 +389,7 @@ export default class SmartAutoStore {
             if (prediction > 3) prediction = 1;
 
             if (this.consecutive_over === 1 && this.consecutive_under === 0) {
-                this.addLog(
-                    `[Pattern Match] OVER Strong (${percentages.over.toFixed(1)}%) & Sequence Triggered.`,
-                    'info'
-                );
+                this.addLog(`[Pattern Match] OVER Strong (${percentages.over.toFixed(1)}%) & Sequence Triggered.`, 'info');
                 this.executeContract('DIGITOVER', prediction, config);
             }
         }
@@ -428,94 +397,35 @@ export default class SmartAutoStore {
 
     private runDiffersLogic = (digit_stats: TDigitStat[]) => {
         const config = this.differs_config;
-
-        // Rule: Select 2-7. Not Highest, 2nd, Least. < 10%. Decreasing.
-        const sortedStats = [...digit_stats].sort((a, b) => b.count - a.count); // Sort by frequency (count)
-        const highest = sortedStats[0].digit;
-        const second = sortedStats[1].digit;
-        const least = sortedStats[9].digit;
-
-        const eligible = digit_stats.filter(s => {
-            return (
-                s.digit >= 2 &&
-                s.digit <= 7 &&
-                s.digit !== highest &&
-                s.digit !== second &&
-                s.digit !== least &&
-                s.percentage < 10 &&
-                !s.is_increasing
-            ); // Decreasing trend
-        });
-
-        if (eligible.length > 0) {
-            // Select best: The one with lowest percentage
-            const target = eligible.sort((a, b) => a.percentage - b.percentage)[0];
-
-            // Auto Update Prediction
-            if (config.prediction !== target.digit) {
-                this.updateConfig('differs', 'prediction', target.digit);
-            }
-
-            this.addLog(`Differ Trigger: Digit ${target.digit} prob < 10% & decreasing.`, 'info');
-            this.executeContract('DIGITDIFF', target.digit, config);
+        const leastFrequent = [...digit_stats].sort((a, b) => a.count - b.count)[0];
+        if (leastFrequent && leastFrequent.percentage < 8) {
+            this.executeContract('DIGITDIFF', leastFrequent.digit, config);
         }
     };
 
     private runMatchesLogic = (digit_stats: TDigitStat[]) => {
         const config = this.matches_config;
+        const mostFrequent = [...digit_stats].sort((a, b) => b.count - a.count)[0];
+        if (mostFrequent && mostFrequent.percentage > 12) {
+            this.executeContract('DIGITMATCH', mostFrequent.digit, config);
+        }
+    };
 
-        // Rule: Select Highest, 2nd, or Least. Increasing.
-        const sortedStats = [...digit_stats].sort((a, b) => b.count - a.count);
-        const candidates = [sortedStats[0], sortedStats[1], sortedStats[9]];
-
-        const validCandidates = candidates.filter(s => s.is_increasing);
-
-        if (validCandidates.length > 0) {
-            // Pick strongest (highest count)
-            const target = validCandidates.sort((a, b) => b.count - a.count)[0];
-
-            // Auto Update Prediction
-            if (config.prediction !== target.digit) {
-                this.updateConfig('matches', 'prediction', target.digit);
-            }
-
-            this.addLog(`Match Trigger: Digit ${target.digit} prob increasing.`, 'info');
-            this.executeContract('DIGITMATCH', target.digit, config);
+    private runSmartAuto24Logic = (percentages: { over: number; under: number }) => {
+        const config = this.smart_auto_24_config;
+        if (percentages.over > 60) {
+            this.executeContract('DIGITOVER', 1, config);
+        } else if (percentages.under > 60) {
+            this.executeContract('DIGITUNDER', 8, config);
         }
     };
 
     private runRiseFallLogic = (percentages: { rise: number; fall: number }) => {
         const config = this.rise_fall_config;
-        const isRise = percentages.rise > 55;
-        const isFall = percentages.fall > 55;
-
-        if (isRise || isFall) {
-            this.addLog(
-                `Trend Detected: ${isRise ? 'RISE' : 'FALL'} (${Math.max(percentages.rise, percentages.fall).toFixed(1)}%)`,
-                'info'
-            );
-            this.executeContract(isRise ? 'CALL' : 'PUT', 0, config);
-        }
-    };
-
-    private runSmartAuto24Logic = (percentages: { over: number; under: number }) => {
-        // Logic same as previously defined or simplified for brevity as user focused on others
-        const config = this.smart_auto_24_config;
-        if (config.runs_count >= config.max_runs) {
-            this.stopAllBots('MAX RUNS REACHED');
-            return;
-        }
-        const now = Date.now();
-        if (now - config.last_trade_time < 3600000) return;
-
-        if (percentages.over > 60) {
-            config.last_trade_time = now;
-            config.runs_count++;
-            this.executeContract('DIGITOVER', 1, config as unknown as TBotConfig);
-        } else if (percentages.under > 60) {
-            config.last_trade_time = now;
-            config.runs_count++;
-            this.executeContract('DIGITUNDER', 8, config as unknown as TBotConfig);
+        if (percentages.rise > 55) {
+            this.executeContract('CALL', 0, config);
+        } else if (percentages.fall > 55) {
+            this.executeContract('PUT', 0, config);
         }
     };
 
@@ -530,7 +440,6 @@ export default class SmartAutoStore {
 
         this.executeContract(contract_type, prediction, config);
 
-        // Manual trade just triggers once and stops is_running
         setTimeout(
             () =>
                 runInAction(() => {
@@ -539,6 +448,187 @@ export default class SmartAutoStore {
                 }),
             1000
         );
+    };
+
+    private executeBulkManualTrade = async (
+        bot_type: 'even_odd' | 'over_under' | 'differs' | 'matches' | 'smart_auto_24' | 'rise_fall',
+        count: number
+    ) => {
+        const configKey = `${bot_type}_config` as keyof SmartAutoStore;
+        const config = this[configKey] as unknown as TBotConfig;
+
+        const contract_type = config.manual_contract_type || 'DIGITEVEN';
+        const prediction = config.manual_prediction ?? 0;
+
+        await this.executeBulkContract(contract_type, prediction, config, count);
+
+        setTimeout(
+            () =>
+                runInAction(() => {
+                    config.is_running = false;
+                    this.active_bot = null;
+                }),
+            1000
+        );
+    };
+
+    private executeBulkContract = async (
+        contract_type: string,
+        prediction: number,
+        config: TBotConfig,
+        count: number
+    ) => {
+        if (this.is_executing) return;
+        this.is_executing = true;
+        const runs = Math.max(1, Math.min(count, 20));
+
+        try {
+            if (!api_base.api) throw new Error('API not initialized');
+
+            const stake = this.calculateStake(config);
+            const max_stake = config.max_stake || 10;
+            const final_stake = Math.max(0.35, Math.min(stake, max_stake));
+
+            this.addLog(`🚀 Placing ${runs} Bulk ${contract_type} trade(s) @ $${final_stake.toFixed(2)} simultaneously...`, 'trade');
+
+            const proposal_request = normalizeTradeParameters({
+                proposal: 1,
+                amount: final_stake,
+                basis: 'stake',
+                contract_type,
+                currency: this.root_store.client.currency || 'USD',
+                duration: config.ticks || 1,
+                duration_unit: 't',
+                symbol: this.root_store.analysis.symbol,
+                ...(contract_type.includes('DIGIT')
+                    ? contract_type.includes('EVEN') || contract_type.includes('ODD')
+                        ? {}
+                        : { barrier: prediction.toString() }
+                    : {}),
+            });
+
+            const proposal = (await api_base.api.send(proposal_request)) as any;
+            if (proposal.error) throw new Error(proposal.error.message);
+            if (!proposal.proposal?.id) throw new Error('Proposal failed');
+
+            const ask_price = proposal.proposal.ask_price || final_stake;
+
+            const buyPromises = Array.from({ length: runs }, () =>
+                api_base.api.send({
+                    buy: proposal.proposal.id,
+                    price: ask_price,
+                }).catch(err => ({ error: err }))
+            );
+
+            const buyResults = await Promise.all(buyPromises);
+            const successfulContracts = buyResults
+                .filter((r: any) => r && r.buy && !r.error)
+                .map((r: any) => String(r.buy.contract_id));
+
+            if (successfulContracts.length === 0) {
+                const firstErr = buyResults.find((r: any) => r && r.error)?.error?.message || 'Bulk buy failed';
+                throw new Error(firstErr);
+            }
+
+            this.bot_status = `TRADING ${successfulContracts.length} BULK CONTRACTS`;
+            this.addLog(`✅ Successfully purchased ${successfulContracts.length} contract(s). Monitoring results...`, 'trade');
+
+            // Monitor parallel bulk results
+            this.monitorBulkContracts(successfulContracts, config);
+        } catch (error: any) {
+            console.error('[SmartAuto] Bulk Error:', error);
+            runInAction(() => {
+                const errMsg = error?.message || 'Bulk execution failed';
+                this.bot_status = `ERROR: ${errMsg}`;
+                this.addLog(`Error: ${errMsg}`, 'error');
+                this.is_executing = false;
+            });
+        }
+    };
+
+    private monitorBulkContracts = (contract_ids: string[], config: TBotConfig) => {
+        let remaining = [...contract_ids];
+        let totalProfit = 0;
+        let wins = 0;
+        let losses = 0;
+
+        const check = setInterval(async () => {
+            try {
+                if (remaining.length === 0) {
+                    clearInterval(check);
+                    return;
+                }
+
+                const promises = remaining.map(cid =>
+                    api_base.api?.send({ proposal_open_contract: 1, contract_id: cid }).catch(() => null)
+                );
+
+                const responses = await Promise.all(promises);
+                const stillOpen: string[] = [];
+
+                responses.forEach((res: any, idx) => {
+                    const poc = res?.proposal_open_contract;
+                    if (poc && poc.is_sold) {
+                        const p = Number(poc.profit || 0);
+                        totalProfit += p;
+                        if (p > 0) wins++;
+                        else losses++;
+                    } else {
+                        stillOpen.push(remaining[idx]);
+                    }
+                });
+
+                remaining = stillOpen;
+
+                if (remaining.length === 0) {
+                    clearInterval(check);
+                    runInAction(() => {
+                        this.handleBulkResult(totalProfit, wins, losses, config);
+                    });
+                }
+            } catch (e) {
+                clearInterval(check);
+                runInAction(() => {
+                    this.is_executing = false;
+                });
+            }
+        }, 1000);
+    };
+
+    @action
+    private handleBulkResult = (totalProfit: number, wins: number, losses: number, config: TBotConfig) => {
+        const isWin = totalProfit > 0;
+        this.last_result = isWin ? 'WIN' : 'LOSS';
+        this.session_profit += totalProfit;
+        this.total_profit += totalProfit;
+        this.is_executing = false;
+
+        if (config.runs_count !== undefined) {
+            config.runs_count += (wins + losses);
+        }
+
+        if (isWin) {
+            this.current_streak = 0;
+            this.addLog(`🏆 BULK BATCH WON: +$${totalProfit.toFixed(2)} (${wins}W / ${losses}L) [Session: $${this.session_profit.toFixed(2)}]`, 'success');
+            if (config.take_profit && this.session_profit >= config.take_profit) {
+                this.addLog(`Take Profit Reached ($${config.take_profit}). Stopping bot.`, 'success');
+                this.stopAllBots('TAKE PROFIT HIT');
+            }
+        } else {
+            this.current_streak++;
+            this.addLog(`❌ BULK BATCH LOSS: -$${Math.abs(totalProfit).toFixed(2)} (${wins}W / ${losses}L) [Streak: ${this.current_streak}]`, 'error');
+            const total_loss = Math.abs(this.session_profit);
+            if (config.use_max_loss && total_loss >= config.max_loss) {
+                this.addLog(`Individual Stop Loss Hit ($${config.max_loss})`, 'error');
+                this.stopAllBots('INDIVIDUAL STOP LOSS HIT');
+            }
+            if (config.global_max_loss && total_loss >= config.global_max_loss) {
+                this.addLog(`Global Max Loss Hit ($${config.global_max_loss})`, 'error');
+                this.stopAllBots('GLOBAL MAX LOSS HIT');
+            }
+        }
+
+        this.bot_status = 'IDLE';
     };
 
     private executeContract = async (contract_type: string, prediction: number, config: TBotConfig) => {
@@ -714,12 +804,10 @@ export default class SmartAutoStore {
 
     private switchMarket = (isSmart24 = false) => {
         if (isSmart24) {
-            // User requested: switch to even odd market
             this.toggleBot('even_odd', 'auto');
             this.bot_status = 'SWITCHED TO EVEN/ODD';
             return;
         }
-        // Switch logic: Even/Odd -> Over/Under -> Differs -> Matches
         if (this.active_bot === 'even_odd') this.toggleBot('over_under', 'auto');
         else if (this.active_bot === 'over_under') this.toggleBot('even_odd', 'auto');
     };
@@ -727,12 +815,10 @@ export default class SmartAutoStore {
     private calculateStake = (config: TBotConfig) => {
         let base_stake = config.stake;
 
-        // Handle Compounding (Compound Win)
         if (config.use_compounding && this.session_profit > 0 && this.last_result === 'WIN') {
             base_stake = config.stake + this.session_profit;
         }
 
-        // Handle Martingale (Compound Loss)
         const isMartingale = config.is_auto ? config.use_martingale : config.manual_use_martingale;
         const multiplier = config.is_auto ? config.multiplier : config.manual_multiplier;
 
@@ -740,7 +826,17 @@ export default class SmartAutoStore {
             base_stake = base_stake * Math.pow(multiplier || 2.1, this.current_streak);
         }
 
-        // Ensure max 2 decimal places to prevent API errors
         return parseFloat(base_stake.toFixed(2));
+    };
+
+    @action
+    addLog = (message: string, type: 'info' | 'success' | 'error' | 'trade' = 'info') => {
+        this.logs.unshift({ timestamp: Date.now(), message, type });
+        if (this.logs.length > 100) this.logs.pop();
+    };
+
+    @action
+    clearLogs = () => {
+        this.logs = [];
     };
 }

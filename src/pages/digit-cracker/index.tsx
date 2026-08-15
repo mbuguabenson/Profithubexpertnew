@@ -1,6 +1,7 @@
-import { useEffect, useRef,useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
+import classNames from 'classnames';
 import TickSelector from '@/components/tick-selector/tick-selector';
 import { useStore } from '@/hooks/useStore';
 import { TTradeConfig } from '@/lib/digit-trade-engine';
@@ -15,6 +16,7 @@ const DigitCracker = observer(() => {
     const { digit_cracker, client } = useStore();
     const [activeStrategy, setActiveStrategy] = useState<'even_odd' | 'differs' | 'matches' | 'over_under'>('even_odd');
     const [activeLogTab, setActiveLogTab] = useState<'journal' | 'summary'>('journal');
+    const [bulkRuns, setBulkRuns] = useState<number>(1);
     const logRef = useRef<HTMLDivElement>(null);
 
     const { symbol, digit_stats, is_connected, total_ticks, setTotalTicks, markets, trade_engine, last_digit } =
@@ -42,42 +44,88 @@ const DigitCracker = observer(() => {
         digit_cracker.setSymbol(newSymbol);
     };
 
+    // Calculate ranked stats
+    const sortedStats = useMemo(() => [...digit_stats].sort((a, b) => b.count - a.count), [digit_stats]);
+    const maxCount = sortedStats[0]?.count || 1;
+    const minCount = sortedStats[sortedStats.length - 1]?.count || 0;
+
+    const availableMarkets = markets.length > 0 ? markets.flatMap(group => group.items) : [];
+
+    const totalTrades = logs.filter(l => l.type === 'success' || l.type === 'error').length;
+    const totalWins = logs.filter(l => l.type === 'success').length;
+    const winRate = totalTrades > 0 ? ((totalWins / totalTrades) * 100).toFixed(1) : '0.0';
+
     const renderDigitReactors = () => {
         return (
-            <div className='digit-reactor-grid'>
+            <div className='digit-reactor-hud-deck'>
                 {digit_stats.map((stat: TDigitStat) => {
                     const isCurrent = stat.digit === last_digit;
-                    const color = isCurrent ? '#f59e0b' : '#6366f1';
+                    const isHot = stat.count === maxCount && maxCount > minCount;
+                    const isCold = stat.count === minCount && maxCount > minCount;
+
+                    let ringColor = '#6366f1';
+                    if (isHot) ringColor = '#10b981';
+                    else if (isCold) ringColor = '#f43f5e';
+                    else if (stat.digit % 2 === 0) ringColor = '#06b6d4';
+                    else ringColor = '#a855f7';
+
+                    if (isCurrent) ringColor = '#f59e0b';
+
+                    const radius = 38;
+                    const circumference = 2 * Math.PI * radius;
+                    const strokeDashoffset = circumference - (stat.percentage / 100) * circumference;
+
+                    const rank = sortedStats.findIndex(s => s.digit === stat.digit) + 1;
 
                     return (
-                        <div key={stat.digit} className={`reactor-core ${isCurrent ? 'is-active' : ''}`}>
-                            <svg width='100' height='100' viewBox='0 0 100 100'>
-                                <circle
-                                    cx='50'
-                                    cy='50'
-                                    r='45'
-                                    fill='none'
-                                    stroke='rgba(255, 255, 255, 0.03)'
-                                    strokeWidth='4'
-                                />
-                                <circle
-                                    cx='50'
-                                    cy='50'
-                                    r='45'
-                                    fill='none'
-                                    stroke={color}
-                                    strokeWidth='4'
-                                    strokeDasharray={`${(stat.percentage / 100) * 282} 282`}
-                                    strokeLinecap='round'
-                                    style={{
-                                        filter: isCurrent ? `drop-shadow(0 0 8px ${color})` : 'none',
-                                        transition: 'all 0.5s ease',
-                                    }}
-                                />
-                            </svg>
-                            <div className='core-display'>
-                                <span className='digit'>{stat.digit}</span>
-                                <span className='pct'>{stat.percentage.toFixed(1)}%</span>
+                        <div
+                            key={stat.digit}
+                            className={classNames('reactor-core-card', {
+                                'is-active': isCurrent,
+                                'is-hot': isHot,
+                                'is-cold': isCold,
+                            })}
+                            onClick={() => {
+                                trade_engine.updateConfig(activeStrategy, 'prediction', stat.digit);
+                            }}
+                        >
+                            <div className='core-svg-wrap'>
+                                <svg width='92' height='92' viewBox='0 0 92 92'>
+                                    <circle
+                                        cx='46'
+                                        cy='46'
+                                        r={radius}
+                                        fill='none'
+                                        stroke='rgba(255, 255, 255, 0.04)'
+                                        strokeWidth='4'
+                                    />
+                                    <circle
+                                        cx='46'
+                                        cy='46'
+                                        r={radius}
+                                        fill='none'
+                                        stroke={ringColor}
+                                        strokeWidth={isCurrent ? '5' : '4'}
+                                        strokeDasharray={circumference}
+                                        strokeDashoffset={strokeDashoffset}
+                                        strokeLinecap='round'
+                                        transform='rotate(-90 46 46)'
+                                        style={{
+                                            filter: isCurrent ? `drop-shadow(0 0 10px ${ringColor})` : 'none',
+                                            transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        }}
+                                    />
+                                </svg>
+                                <div className='core-center-info'>
+                                    <span className='digit-num num'>{stat.digit}</span>
+                                    <span className='digit-pct num'>{stat.percentage.toFixed(1)}%</span>
+                                </div>
+                                {isCurrent && <div className='radar-ping-halo' />}
+                            </div>
+
+                            <div className='core-badges'>
+                                <span className='rank-tag num'>#{rank}</span>
+                                <span className='sample-n num'>n={stat.count}</span>
                             </div>
                         </div>
                     );
@@ -86,123 +134,124 @@ const DigitCracker = observer(() => {
         );
     };
 
-    const renderConfigPanel = () => {
+    const renderQuickConfig = () => {
         const configKey = `${activeStrategy}_config` as keyof typeof trade_engine;
         const config = trade_engine[configKey] as unknown as TTradeConfig;
 
         return (
-            <div className='config-card'>
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '1.5rem',
-                    }}
-                >
-                    <h3>Config: {activeStrategy.toUpperCase().replace('_', '/')}</h3>
-                    {config.runs_count !== undefined && (
-                        <div style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-                            Cycle: {config.runs_count}/{config.max_runs}
-                        </div>
-                    )}
+            <div className='quick-config-deck'>
+                <div className='deck-head'>
+                    <h4>Execution Parameters • {activeStrategy.toUpperCase().replace('_', ' ')}</h4>
+                    <span className='cycle-badge num'>
+                        Runs: {config.runs_count || 0} / {config.max_runs || 100}
+                    </span>
                 </div>
 
-                <div className='settings-stack'>
-                    <div className='input-group'>
-                        <label>Stake ($)</label>
+                <div className='config-inputs-grid'>
+                    <div className='input-box'>
+                        <label>BASE STAKE ($)</label>
                         <input
                             type='number'
-                            step='0.01'
+                            step='0.1'
+                            min='0.35'
                             value={config.stake}
-                            onChange={e =>
-                                trade_engine.updateConfig(activeStrategy, 'stake', parseFloat(e.target.value))
-                            }
+                            onChange={e => trade_engine.updateConfig(activeStrategy, 'stake', parseFloat(e.target.value) || 0.35)}
+                            className='num'
                         />
                     </div>
-                    <div className='input-group'>
-                        <label>Max Stake ($)</label>
+                    <div className='input-box'>
+                        <label>BULK RUNS (1-20)</label>
                         <input
                             type='number'
-                            step='0.01'
-                            value={config.max_stake || 10}
-                            onChange={e =>
-                                trade_engine.updateConfig(activeStrategy, 'max_stake', parseFloat(e.target.value))
-                            }
+                            step='1'
+                            min='1'
+                            max='20'
+                            value={bulkRuns}
+                            onChange={e => {
+                                const val = Math.max(1, Math.min(parseInt(e.target.value) || 1, 20));
+                                setBulkRuns(val);
+                                trade_engine.updateConfig(activeStrategy, 'bulk_trades_count' as any, val);
+                            }}
+                            className='num bulk-highlight'
                         />
                     </div>
-                    <div className='input-group'>
-                        <label>Stop Loss ($)</label>
+                    <div className='input-box'>
+                        <label>STOP LOSS ($)</label>
                         <input
                             type='number'
-                            step='0.01'
+                            step='1'
                             value={config.max_loss}
-                            onChange={e =>
-                                trade_engine.updateConfig(activeStrategy, 'max_loss', parseFloat(e.target.value))
-                            }
+                            onChange={e => trade_engine.updateConfig(activeStrategy, 'max_loss', parseFloat(e.target.value) || 5)}
+                            className='num'
+                        />
+                    </div>
+                    <div className='input-box'>
+                        <label>TAKE PROFIT ($)</label>
+                        <input
+                            type='number'
+                            step='1'
+                            value={config.take_profit || 10}
+                            onChange={e => trade_engine.updateConfig(activeStrategy, 'take_profit', parseFloat(e.target.value) || 10)}
+                            className='num'
+                        />
+                    </div>
+                    <div className='input-box'>
+                        <label>MAX STAKE ($)</label>
+                        <input
+                            type='number'
+                            step='1'
+                            value={config.max_stake || 25}
+                            onChange={e => trade_engine.updateConfig(activeStrategy, 'max_stake', parseFloat(e.target.value) || 25)}
+                            className='num'
                         />
                     </div>
                     {['over_under', 'matches', 'differs'].includes(activeStrategy) && (
-                        <div className='input-group'>
-                            <label>Prediction</label>
+                        <div className='input-box highlight-box'>
+                            <label>TARGET DIGIT</label>
                             <input
                                 type='number'
                                 min='0'
                                 max='9'
                                 value={config.prediction}
-                                onChange={e =>
-                                    trade_engine.updateConfig(activeStrategy, 'prediction', parseInt(e.target.value))
-                                }
+                                onChange={e => trade_engine.updateConfig(activeStrategy, 'prediction', parseInt(e.target.value) || 0)}
+                                className='num'
                             />
                         </div>
                     )}
                 </div>
 
-                <div className='action-btns'>
+                <div className='action-bar-dual'>
                     <button
-                        className={`btn-launch ${config.is_running ? 'active' : ''}`}
+                        className={classNames('btn-auto-launch', { 'is-running': config.is_running })}
                         onClick={() => trade_engine.toggleStrategy(activeStrategy)}
                     >
-                        {config.is_running ? 'Terminate Engine' : 'Initialize Auto-Trade'}
+                        <span>{config.is_running ? '⏹ TERMINATE ENGINE' : '▶ INITIALIZE AUTO TRADER'}</span>
                     </button>
                     <button
-                        style={{
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            color: '#fff',
-                        }}
-                        onClick={() =>
-                            trade_engine.executeManualTrade(activeStrategy, symbol, client.currency || 'USD')
-                        }
+                        className='btn-manual-launch'
+                        onClick={() => trade_engine.executeManualTrade(activeStrategy, symbol, client.currency || 'USD', bulkRuns)}
                         disabled={is_executing}
                     >
-                        Manual Trade
+                        <span>⚡ {bulkRuns > 1 ? `EXECUTE ${bulkRuns} BULK RUNS` : 'EXECUTE SINGLE TRADE'}</span>
                     </button>
                 </div>
             </div>
         );
     };
 
-    const availableMarkets = markets.length > 0 ? markets.flatMap(group => group.items) : [];
-
     return (
-        <div className='digit-cracker-page'>
-            {/* Header Area */}
-            <div className='cracker-header'>
-                <div className='header-main'>
-                    <div className='header-title'>
-                        <h1>CRACKER V2</h1>
-                        <p className='subtitle'>Neural-Link Probabilistic Trading Engine</p>
+        <div className='digit-cracker-hud-page'>
+            {/* 1. Header HUD */}
+            <div className='cracker-hud-header'>
+                <div className='header-left-box'>
+                    <div className='cyber-badge'>
+                        <span className='pulse-point' />
+                        <span className='badge-txt'>NEURAL CRACKER V2</span>
                     </div>
-                </div>
-                <div className='header-actions'>
-                    <div className='market-selector-v2'>
-                        <TickSelector value={total_ticks} onChange={setTotalTicks} label='Sample Size' />
-                    </div>
-                    <div className='market-selector-v2'>
-                        <label>Asset Stream</label>
+                    <div className='asset-selector-group'>
+                        <label>ASSET STREAM</label>
                         <select
-                            className='premium-select'
+                            className='asset-select num'
                             value={symbol}
                             onChange={e => handleMarketChange(e.target.value)}
                         >
@@ -214,153 +263,172 @@ const DigitCracker = observer(() => {
                         </select>
                     </div>
                 </div>
+
+                <div className='header-right-metrics'>
+                    <div className='metric-pill'>
+                        <TickSelector value={total_ticks} onChange={setTotalTicks} label='SAMPLE DEPTH' />
+                    </div>
+                    <div className='metric-pill spot-card'>
+                        <label>SPOT PRICE</label>
+                        <span className='val num'>{digit_cracker.current_price || '0.000'}</span>
+                    </div>
+                    <div className='metric-pill live-digit-box'>
+                        <label>LAST DIGIT</label>
+                        <span className='val num'>{last_digit ?? '-'}</span>
+                    </div>
+                    <div className='metric-pill network-box'>
+                        <label>NETWORK</label>
+                        <span className={classNames('status-chip', { online: is_connected })}>
+                            {is_connected ? 'SYNCHRONIZED' : 'OFFLINE'}
+                        </span>
+                    </div>
+                </div>
             </div>
 
-            {/* Reactor Stats */}
-            <div className='performance-stats'>
-                <div className='stat-card-v3 price-reactor'>
-                    <span className='label'>Spot Stream</span>
-                    <span className='value glowing'>{digit_cracker.current_price || '0.000'}</span>
+            {/* 2. Top Stats Strip */}
+            <div className='stats-telemetry-strip'>
+                <div className='telemetry-card'>
+                    <span className='lbl'>SESSION PROFIT</span>
+                    <span className={classNames('val num', { win: session_profit > 0, loss: session_profit < 0 })}>
+                        {session_profit >= 0 ? '+' : ''}${session_profit.toFixed(2)}
+                    </span>
                 </div>
-                <div className='stat-card-v3 digit-reactor'>
-                    <span className='label'>Last Digit</span>
-                    <span className='value glowing'>{last_digit ?? '-'}</span>
+                <div className='telemetry-card'>
+                    <span className='lbl'>WIN RATE</span>
+                    <span className='val num cyan'>{winRate}%</span>
                 </div>
-                <div className='stat-card-v3 balance-card'>
-                    <span className='label'>Account Balance</span>
-                    <span className='value'>
+                <div className='telemetry-card'>
+                    <span className='lbl'>ACCOUNT BALANCE</span>
+                    <span className='val num'>
                         ${client.balance ? parseFloat(String(client.balance)).toFixed(2) : '0.00'}
                     </span>
                 </div>
-                <div className='stat-card-v3 connection-card'>
-                    <span className='label'>Network Status</span>
-                    <span className='value' style={{ color: is_connected ? '#10b981' : '#f43f5e' }}>
-                        {is_connected ? 'SYNCHRONIZED' : 'CONNECTION LOST'}
-                    </span>
+                <div className='telemetry-card'>
+                    <span className='lbl'>ENGINE STATUS</span>
+                    <span className='val num amber'>{trade_status.toUpperCase()}</span>
                 </div>
             </div>
 
-            {/* Core Analytics */}
-            <div className='analytics-hub'>
-                <div className='distribution-panel'>
-                    <div className='section-header'>
-                        <h2>Digit Frequency Reactor</h2>
-                        <span className='badge'>
-                            {symbol} • {digit_cracker.ticks.length} Samples
-                        </span>
+            {/* 3. Digit Frequency Reactor (0-9) */}
+            <div className='reactor-section-deck'>
+                <div className='deck-header'>
+                    <div className='title-area'>
+                        <h3>10-Digit Reactor Spectrum</h3>
+                        <span className='meta-tag'>{symbol} • {digit_cracker.ticks.length} Samples</span>
                     </div>
-                    {renderDigitReactors()}
+                    <span className='hint-txt'>Click core to assign target digit</span>
                 </div>
+                {renderDigitReactors()}
+            </div>
 
-                <div className='side-panels'>
-                    <div className='side-panels-tabs glass-panel'>
-                        {['even_odd', 'differs', 'matches', 'over_under'].map(s => (
+            {/* 4. Strategy & Trading Control Workspace */}
+            <div className='cracker-workspace-grid'>
+                {/* LEFT: Strategy Tabs & Specific Strategy Deck */}
+                <div className='strategy-column'>
+                    <div className='strategy-tabs-nav'>
+                        {[
+                            { id: 'even_odd', label: '⚖️ EVEN / ODD' },
+                            { id: 'differs', label: '🎯 DIFFERS' },
+                            { id: 'matches', label: '🎲 MATCHES' },
+                            { id: 'over_under', label: '📊 OVER / UNDER' },
+                        ].map(s => (
                             <button
-                                key={s}
-                                onClick={() => setActiveStrategy(s as any)}
-                                className={`tab-btn-v2 ${activeStrategy === s ? 'active' : ''}`}
+                                key={s.id}
+                                onClick={() => setActiveStrategy(s.id as any)}
+                                className={classNames('nav-tab-btn', { active: activeStrategy === s.id })}
                             >
-                                {s.replace('_', ' ').toUpperCase()}
+                                {s.label}
                             </button>
                         ))}
                     </div>
-                    {activeStrategy === 'even_odd' ? (
-                        <EvenOddCracker />
-                    ) : activeStrategy === 'over_under' ? (
-                        <OverUnderCracker />
-                    ) : activeStrategy === 'differs' ? (
-                        <DiffersCracker />
-                    ) : activeStrategy === 'matches' ? (
-                        <MatchesCracker />
-                    ) : (
-                        renderConfigPanel()
-                    )}
-                </div>
-            </div>
 
-            {/* Trading Floor */}
-            <div className='trading-floor'>
-                <div className='journal-panel'>
-                    <div className='log-tabs'>
-                        <button
-                            className={activeLogTab === 'journal' ? 'active' : ''}
-                            onClick={() => setActiveLogTab('journal')}
-                        >
-                            JOURNAL
-                        </button>
-                        <button
-                            className={activeLogTab === 'summary' ? 'active' : ''}
-                            onClick={() => setActiveLogTab('summary')}
-                        >
-                            STATISTICS
-                        </button>
-                        <button onClick={() => trade_engine.clearLogs()} style={{ marginLeft: 'auto', opacity: 0.5 }}>
-                            CLEAR
-                        </button>
+                    <div className='strategy-body-wrapper'>
+                        {activeStrategy === 'even_odd' && <EvenOddCracker />}
+                        {activeStrategy === 'over_under' && <OverUnderCracker />}
+                        {activeStrategy === 'differs' && <DiffersCracker />}
+                        {activeStrategy === 'matches' && <MatchesCracker />}
                     </div>
-                    <div className='log-viewport' ref={logRef}>
-                        {activeLogTab === 'journal' ? (
-                            logs.map((log, i) => (
-                                <div key={i} className={`log-line ${log.type}`}>
-                                    <span className='time'>[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-                                    <span className='message'>{log.message}</span>
-                                </div>
-                            ))
-                        ) : (
-                            <div className='strategy-metrics'>
-                                <div className='metric-row'>
-                                    <span className='m-label'>Session Profit</span>
-                                    <span className={`m-value ${session_profit >= 0 ? 'win' : 'loss'}`}>
-                                        ${session_profit.toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className='metric-row'>
-                                    <span className='m-label'>Total Lifetime Profit</span>
-                                    <span className={`m-value ${total_profit >= 0 ? 'win' : 'loss'}`}>
-                                        ${total_profit.toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className='metric-row'>
-                                    <span className='m-label'>Active Engine Status</span>
-                                    <span className='m-value' style={{ color: '#6366f1' }}>
-                                        {trade_status.toUpperCase()}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+
+                    {renderQuickConfig()}
                 </div>
 
-                <div className='strategy-metrics glass-panel'>
-                    <div className='metric-row'>
-                        <span className='m-label'>Win Rate</span>
-                        <span className='m-value' style={{ color: '#10b981' }}>
-                            {(() => {
-                                const total = logs.filter(l => l.type === 'success' || l.type === 'error').length;
-                                const wins = logs.filter(l => l.type === 'success').length;
-                                return total > 0 ? ((wins / total) * 100).toFixed(1) : '0.0';
-                            })()}
-                            %
-                        </span>
+                {/* RIGHT: Live Journal & Performance Telemetry */}
+                <div className='telemetry-column'>
+                    <div className='journal-card-deck'>
+                        <div className='journal-tabs-row'>
+                            <button
+                                className={classNames('j-tab', { active: activeLogTab === 'journal' })}
+                                onClick={() => setActiveLogTab('journal')}
+                            >
+                                LIVE ORDER JOURNAL
+                            </button>
+                            <button
+                                className={classNames('j-tab', { active: activeLogTab === 'summary' })}
+                                onClick={() => setActiveLogTab('summary')}
+                            >
+                                METRIC SUMMARY
+                            </button>
+                            <button
+                                className='clear-j-btn'
+                                onClick={() => trade_engine.clearLogs()}
+                            >
+                                CLEAR
+                            </button>
+                        </div>
+
+                        <div className='journal-viewport' ref={logRef}>
+                            {activeLogTab === 'journal' ? (
+                                logs.length === 0 ? (
+                                    <div className='empty-journal'>Awaiting market triggers or manual orders...</div>
+                                ) : (
+                                    logs.map((log, i) => (
+                                        <div key={i} className={classNames('journal-entry', log.type)}>
+                                            <span className='time num'>[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+                                            <span className='msg'>{log.message}</span>
+                                        </div>
+                                    ))
+                                )
+                            ) : (
+                                <div className='summary-metrics-list'>
+                                    <div className='metric-line'>
+                                        <span>Current Session P&L:</span>
+                                        <strong className={session_profit >= 0 ? 'win' : 'loss'}>
+                                            ${session_profit.toFixed(2)}
+                                        </strong>
+                                    </div>
+                                    <div className='metric-line'>
+                                        <span>Lifetime P&L:</span>
+                                        <strong className={total_profit >= 0 ? 'win' : 'loss'}>
+                                            ${total_profit.toFixed(2)}
+                                        </strong>
+                                    </div>
+                                    <div className='metric-line'>
+                                        <span>Total Trades Run:</span>
+                                        <strong className='num'>{totalTrades}</strong>
+                                    </div>
+                                    <div className='metric-line'>
+                                        <span>Win Rate:</span>
+                                        <strong className='cyan num'>{winRate}%</strong>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className='journal-footer-action'>
+                            <button
+                                className='btn-reset-stats'
+                                onClick={() => {
+                                    runInAction(() => {
+                                        trade_engine.session_profit = 0;
+                                        trade_engine.total_profit = 0;
+                                        trade_engine.clearLogs();
+                                    });
+                                }}
+                            >
+                                RESET SESSION STATS
+                            </button>
+                        </div>
                     </div>
-                    <div className='metric-row'>
-                        <span className='m-label'>Status</span>
-                        <span className='m-value' style={{ color: is_executing ? '#f59e0b' : '#6366f1' }}>
-                            {is_executing ? 'EXECUTING' : 'IDLE'}
-                        </span>
-                    </div>
-                    <button
-                        className='btn-launch'
-                        style={{ marginTop: 'auto', width: '100%', padding: '1rem', background: '#f43f5e' }}
-                        onClick={() => {
-                            runInAction(() => {
-                                trade_engine.session_profit = 0;
-                                trade_engine.total_profit = 0;
-                            });
-                        }}
-                    >
-                        RESET PERFORMANCE
-                    </button>
                 </div>
             </div>
         </div>
