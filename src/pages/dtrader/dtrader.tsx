@@ -48,7 +48,7 @@ const DTraderPage: React.FC = observer(() => {
     const initialLoginId = getInitialLoginId() || (client as any)?.loginid || '';
     const [activeLoginId, setActiveLoginId] = useState<string>(initialLoginId);
     const [authToken, setAuthToken] = useState<string>(() => getInitialToken(initialLoginId));
-    const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
+    const [isAuthReady, setIsAuthReady] = useState<boolean>(true);
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
     useEffect(() => {
@@ -93,7 +93,7 @@ const DTraderPage: React.FC = observer(() => {
     const appId = getAppId() || '121856';
     const rawBaseUrl = process.env.DTRADER_URL || 'https://dtraderhub-mu.vercel.app';
     const baseUrl = rawBaseUrl.replace(/\/+$/, '');
-    const embedBase = baseUrl.includes('/dtrader') ? baseUrl : `${baseUrl}/dtrader`;
+    const embedBase = baseUrl;
 
     const loginId = activeLoginId || (client as any)?.loginid || localStorage.getItem('active_loginid') || '';
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
