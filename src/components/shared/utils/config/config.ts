@@ -827,7 +827,7 @@ export const getDomainConfig = (activeHostname = window.location.hostname): Doma
     // Fallback — used on localhost and Replit dev domains
     return {
         clientId: process.env.CLIENT_ID || '33Mmq9JHMrJaUKT2KIhKZ',
-        appId: process.env.APP_ID || '114292',
+        appId: process.env.APP_ID || '121856',
         redirectUri: process.env.REDIRECT_URI || `${window.location.origin}/`,
         botsFolder: process.env.BOTS_FOLDER || DEFAULT_BOTS_FOLDER,
         canonicalHost: hostname,

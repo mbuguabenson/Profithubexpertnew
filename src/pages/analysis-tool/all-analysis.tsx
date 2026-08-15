@@ -122,22 +122,13 @@ const AllAnalysis: React.FC = () => {
                         ws?.close();
                         return;
                     }
-                    console.log('WebSocket connected, requesting active symbols...');
 
-                    // Request active symbols to get the correct 1s volatility indices
+                    // Request active symbols to get verified available volatility indices
                     ws.send(
                         JSON.stringify({
                             active_symbols: 'brief',
                         })
                     );
-
-                    // Also subscribe to standard volatility indices immediately
-                    const standardSymbols = ['R_10', 'R_25', 'R_50', 'R_75', 'R_100'];
-                    standardSymbols.forEach(symbol => {
-                        if (!ticksStorage[symbol]) ticksStorage[symbol] = [];
-                        subscribeTicks(symbol);
-                        console.log('Subscribed to standard symbol:', symbol);
-                    });
                 };
 
                 ws.onmessage = event => {
@@ -145,32 +136,27 @@ const AllAnalysis: React.FC = () => {
                     try {
                         const data = JSON.parse(event.data);
 
-                        // Log any errors
+                        // Soft warn on errors without red spam
                         if (data.error) {
-                            console.error(
-                                'WebSocket error for symbol:',
+                            console.warn(
+                                '[AllAnalysis] Stream notice for symbol:',
                                 data.echo_req?.ticks_history || 'unknown',
-                                data.error
+                                data.error.message || data.error
                             );
                             return;
                         }
 
                         // Handle active symbols response
-                        if (data.active_symbols) {
-                            console.log('Active symbols received:', data.active_symbols.length, 'symbols');
-
-                            // Filter for 1-second volatility indices
-                            const oneSecondVolatilityIndices = data.active_symbols.filter(
-                                (symbol: any) => symbol.display_name && symbol.display_name.includes('(1s)')
+                        if (data.active_symbols && Array.isArray(data.active_symbols)) {
+                            // Filter for continuous synthetic indices (both 1s and standard)
+                            const syntheticSymbols = data.active_symbols.filter(
+                                (symbol: any) => symbol.market === 'synthetic_index' && symbol.submarket === 'random_index'
                             );
-                            console.log('1-Second Volatility Indices found:', oneSecondVolatilityIndices.length);
 
-                            // Subscribe to all 1s volatility indices
-                            oneSecondVolatilityIndices.forEach((symbolData: any) => {
+                            syntheticSymbols.forEach((symbolData: any) => {
                                 const symbol = symbolData.symbol;
                                 if (!ticksStorage[symbol]) ticksStorage[symbol] = [];
                                 subscribeTicks(symbol);
-                                console.log('Subscribed to 1s volatility symbol:', symbol, symbolData.display_name);
                             });
                             return;
                         }

@@ -158,14 +158,14 @@ export class TickSubscriber {
             };
 
             this.ws.onerror = (error) => {
-                console.error('WebSocket connection error in TickSubscriber:', error);
+                console.warn('WebSocket connection notice in TickSubscriber:', error);
             };
 
             this.ws.onclose = () => {
                 this.isStreaming = false;
             };
         } catch (e) {
-            console.error('Failed to get socket URL for TickSubscriber:', e);
+            console.warn('Failed to get socket URL for TickSubscriber:', e);
             this.isStreaming = false;
         }
     }
