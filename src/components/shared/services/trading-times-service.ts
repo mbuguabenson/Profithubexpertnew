@@ -56,7 +56,7 @@ class TradingTimesService {
             const trading_times = await this.fetchTradingTimes();
 
             if (!trading_times?.markets || !Array.isArray(trading_times.markets)) {
-                throw new Error('Invalid trading times data structure received from API');
+                return { markets: [] };
             }
 
             // Translate any API-returned category names
@@ -67,8 +67,8 @@ class TradingTimesService {
 
             return translated_trading_times;
         } catch (error) {
-            console.error('Failed to fetch trading times:', error);
-            throw error;
+            console.warn('Trading times unavailable, using fallback metadata:', error);
+            return { markets: [] };
         }
     }
 
@@ -77,33 +77,32 @@ class TradingTimesService {
      */
     private async fetchTradingTimes(): Promise<CachedTradingTimes> {
         if (!api_base.api) {
-            throw new Error('API connection not available for fetching trading times');
+            return { markets: [] };
         }
 
         try {
             // Add timeout to prevent hanging
-            const timeout = new Promise((_, reject) =>
+            const timeout = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error('Trading times fetch timeout')), this.FETCH_TIMEOUT_MS)
             );
 
             const tradingTimesPromise = api_base.api.send({ trading_times: new Date().toISOString().split('T')[0] });
 
-            const apiResult = await Promise.race([tradingTimesPromise, timeout]);
+            const apiResult = (await Promise.race([tradingTimesPromise, timeout])) as TradingTimesApiResponse;
 
-            const { trading_times, error } = apiResult as TradingTimesApiResponse;
+            const { trading_times, error } = apiResult || {};
 
             if (error && Object.keys(error).length > 0) {
-                throw new Error(`Trading times API error: ${error.message || 'Unknown error'}`);
+                return { markets: [] };
             }
 
             if (!trading_times?.markets || !Array.isArray(trading_times.markets)) {
-                throw new Error('Invalid trading times data structure received from API');
+                return { markets: [] };
             }
 
             return trading_times;
-        } catch (error) {
-            console.error('Failed to fetch trading times from API:', error);
-            throw error;
+        } catch {
+            return { markets: [] };
         }
     }
 

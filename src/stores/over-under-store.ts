@@ -114,10 +114,13 @@ export default class OverUnderStore {
             this._tick_sub = api_base.api.onMessage().subscribe((msg: any) => {
                 // Handle wrapped messages from new API mode
                 const data = msg?.data || msg;
+                if (!data) return;
                 
                 if (data.error) {
+                    const isForThisSymbol = data.echo_req?.ticks === this.symbol || data.echo_req?.ticks_history === this.symbol;
+                    if (!isForThisSymbol) return;
                     if (data.error.code === 'AlreadySubscribed' || data.error.code === 'InputValidationFailed') return;
-                    console.error('[OverUnderStore] Error:', data.error.message);
+                    console.warn('[OverUnderStore] Stream notice:', data.error.message);
                     return;
                 }
 
@@ -158,7 +161,7 @@ export default class OverUnderStore {
             // Start real-time stream
             api_base.api.send({ ticks: this.symbol, subscribe: 1 }).catch((e: any) => {
                 if (e?.error?.code !== 'AlreadySubscribed') {
-                    console.warn('[OverUnderStore] ticks subscribe error:', e);
+                    // handled quietly
                 }
             });
 
@@ -168,28 +171,17 @@ export default class OverUnderStore {
                 count: 100,
                 end: 'latest',
                 style: 'ticks',
-            }).catch((e: any) => {
-                if (e?.error?.code !== 'AlreadySubscribed') {
-                    console.warn('[OverUnderStore] ticks_history error:', e);
-                }
-            });
+            }).catch(() => {});
 
             // Auto-retry: if no data arrives within 8 seconds, re-subscribe
             setTimeout(() => {
                 if (this.recent_digits.length < 5 && this.isApiReady()) {
-                    console.warn('[OverUnderStore] No ticks received, retrying subscription...');
                     this.subscribeToTicks();
                 }
             }, 8000);
         };
 
-        // Try forget_all first, but don't let it block if it fails
-        api_base.api!.send({ forget_all: ['ticks'] })
-            .then(() => doSubscribe())
-            .catch(() => {
-                console.warn('[OverUnderStore] forget_all failed, subscribing anyway');
-                doSubscribe();
-            });
+        doSubscribe();
     }
 
     @computed

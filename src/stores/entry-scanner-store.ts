@@ -269,7 +269,7 @@ export default class EntryScannerStore {
                     count: 1000,
                     style: 'ticks',
                     subscribe: 1,
-                });
+                }).catch(() => {});
             }
         });
 

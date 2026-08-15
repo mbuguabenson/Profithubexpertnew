@@ -96,7 +96,8 @@ export default class DollarmineStore {
 
     @action
     private fetchActiveSymbols() {
-        api_base.api!.send({ active_symbols: 'brief' }).then((res: any) => {
+        if (!api_base.api) return;
+        api_base.api.send({ active_symbols: 'brief' }).then((res: any) => {
             if (res?.active_symbols) {
                 const filtered = res.active_symbols
                     .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
@@ -110,11 +111,12 @@ export default class DollarmineStore {
                     this.subscribeToAllMarkets();
                 });
             }
-        });
+        }).catch(() => {});
     }
 
     @action
     private subscribeToAllMarkets() {
+        if (!api_base.api) return;
         this.active_symbols.forEach(market => {
             if (!this._tick_subs.has(market.symbol)) {
                 // Initial history
@@ -131,19 +133,19 @@ export default class DollarmineStore {
                          const lastPrice = prices[prices.length - 1]?.toString() || '0';
                          this.updateMarketStats(market.symbol, market.display_name, market.is1s, digits, lastPrice);
                      }
-                });
+                }).catch(() => {});
 
                 // Stream
                 const sub = api_base.api!.onMessage().subscribe((msg: any) => {
                     const data = msg?.data || msg;
-                    if (data.msg_type === 'tick' && data.tick?.symbol === market.symbol && data.tick?.quote) {
+                    if (data?.msg_type === 'tick' && data.tick?.symbol === market.symbol && data.tick?.quote) {
                         const quote = data.tick.quote.toString();
                         const digit = parseInt(quote.slice(-1));
                         this.handleNewTick(market.symbol, digit, quote);
                     }
                 });
                 this._tick_subs.set(market.symbol, sub);
-                api_base.api!.send({ ticks: market.symbol, subscribe: 1 });
+                api_base.api!.send({ ticks: market.symbol, subscribe: 1 }).catch(() => {});
             }
         });
     }

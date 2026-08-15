@@ -253,7 +253,7 @@ export default class ContractsFor {
 
                 return filtered_contracts;
             } catch (error) {
-                console.error('Error in contracts_for API call:', error);
+                console.warn('contracts_for API call notice:', error);
                 if (this.retrieving_contracts_for[symbol]) {
                     this.retrieving_contracts_for[symbol].resolve();
                     delete this.retrieving_contracts_for[symbol];
