@@ -842,8 +842,7 @@ export default class EntryScannerStore {
         // Map to Quick Strategy trade type categories
         let tradetype = 'over_under';
         if (result.strategy === 'even_odd') tradetype = 'even_odd';
-        else if (result.strategy === 'differs') tradetype = 'differs';
-        else if (result.strategy === 'matches') tradetype = 'matches';
+        else if (result.strategy === 'differs' || result.strategy === 'matches') tradetype = 'matches_differs';
         else if (result.strategy === 'rise_fall') tradetype = 'rise_fall';
 
         const qs = this.root_store?.quick_strategy;

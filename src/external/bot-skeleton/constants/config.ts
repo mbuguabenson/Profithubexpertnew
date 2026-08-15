@@ -129,7 +129,23 @@ export const config = () => ({
                 DIGITDIFF: 'Differs',
             },
         ],
+        MATCHES_DIFFERS: [
+            {
+                DIGITMATCH: 'Matches',
+            },
+            {
+                DIGITDIFF: 'Differs',
+            },
+        ],
         EVENODD: [
+            {
+                DIGITEVEN: 'Even',
+            },
+            {
+                DIGITODD: 'Odd',
+            },
+        ],
+        EVEN_ODD: [
             {
                 DIGITEVEN: 'Even',
             },
@@ -143,6 +159,38 @@ export const config = () => ({
             },
             {
                 DIGITUNDER: 'Under',
+            },
+        ],
+        OVER_UNDER: [
+            {
+                DIGITOVER: 'Over',
+            },
+            {
+                DIGITUNDER: 'Under',
+            },
+        ],
+        RISE_FALL: [
+            {
+                CALL: 'Rise',
+            },
+            {
+                PUT: 'Fall',
+            },
+        ],
+        RISEFALL: [
+            {
+                CALL: 'Rise',
+            },
+            {
+                PUT: 'Fall',
+            },
+        ],
+        CALL_PUT: [
+            {
+                CALL: 'Rise',
+            },
+            {
+                PUT: 'Fall',
             },
         ],
         HIGHLOWTICKS: [

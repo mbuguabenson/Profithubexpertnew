@@ -508,7 +508,9 @@ export default class ContractsFor {
                 });
 
                 if (!is_disabled && has_durations) {
-                    const types = opposites[trade_type.toUpperCase()];
+                    const raw_tt = (trade_type || '').toUpperCase();
+                    const stripped_tt = (trade_type || '').replace(/_/g, '').toUpperCase();
+                    const types = opposites[raw_tt] || opposites[stripped_tt] || [];
                     const icons = [];
                     const names = [];
 
@@ -517,11 +519,13 @@ export default class ContractsFor {
                         names.push(Object.values(type)[0]);
                     });
 
-                    dropdown_options.push({
-                        name: names.join('/'),
-                        value: trade_type,
-                        icon: icons,
-                    });
+                    if (names.length > 0) {
+                        dropdown_options.push({
+                            name: names.join('/'),
+                            value: trade_type,
+                            icon: icons,
+                        });
+                    }
                 }
             }
         }
@@ -676,9 +680,13 @@ export default class ContractsFor {
                 });
 
                 if (!is_disabled && has_durations) {
-                    const types = opposites[trade_type.toUpperCase()];
-                    // e.g. [['Rise/Fall', 'callput']]
-                    trade_types.push([types.map(type => type[Object.keys(type)[0]]).join('/'), trade_type]);
+                    const raw_tt = (trade_type || '').toUpperCase();
+                    const stripped_tt = (trade_type || '').replace(/_/g, '').toUpperCase();
+                    const types = opposites[raw_tt] || opposites[stripped_tt] || [];
+                    if (types.length > 0) {
+                        // e.g. [['Rise/Fall', 'callput']]
+                        trade_types.push([types.map(type => type[Object.keys(type)[0]]).join('/'), trade_type]);
+                    }
                 }
             }
         }
@@ -703,11 +711,18 @@ export default class ContractsFor {
 
     getContractTypes = trade_type => {
         const { opposites } = config();
-        let trade_type_value = trade_type;
-        if (trade_type_value === 'ACCU') {
+        let trade_type_value = (trade_type || '').replace(/_/g, '');
+        if (trade_type_value.toUpperCase() === 'ACCU') {
             trade_type_value = 'accumulator';
+        } else if (trade_type_value.toUpperCase() === 'RISEFALL') {
+            trade_type_value = 'callput';
         }
-        const categories = opposites[trade_type_value.toUpperCase()].map(opposite => ({
+
+        const raw_key = (trade_type || '').toUpperCase();
+        const stripped_key = trade_type_value.toUpperCase();
+        const list = opposites[raw_key] || opposites[stripped_key] || opposites['CALLPUT'] || [];
+
+        const categories = list.map(opposite => ({
             value: Object.keys(opposite)[0],
             text: Object.values(opposite)[0],
         }));
