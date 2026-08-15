@@ -266,7 +266,10 @@ export default class TicksService {
             // Check if we already have a promise for these exact options
             if (!this.ticks_history_promise || this.ticks_history_promise.stringified_options !== stringified_options) {
                 this.ticks_history_promise = {
-                    promise: this.requestPipSizes().then(() => this.requestTicks(options)),
+                    promise: this.requestPipSizes().then(() => this.requestTicks(options)).catch(err => {
+                        console.warn('[TicksService] ticks_history stream notice:', err?.error?.message || err?.message || err);
+                        return this.ticks.get(options.symbol) || [];
+                    }),
                     stringified_options,
                 };
             }
@@ -278,7 +281,10 @@ export default class TicksService {
             // Check if we already have a promise for these exact options
             if (!this.candles_promise || this.candles_promise.stringified_options !== stringified_options) {
                 this.candles_promise = {
-                    promise: this.requestPipSizes().then(() => this.requestTicks(options)),
+                    promise: this.requestPipSizes().then(() => this.requestTicks(options)).catch(err => {
+                        console.warn('[TicksService] candles stream notice:', err?.error?.message || err?.message || err);
+                        return this.candles.getIn([options.symbol, Number(options.granularity)]) || [];
+                    }),
                     stringified_options,
                 };
             }
@@ -299,8 +305,11 @@ export default class TicksService {
             granularity: granularity ? Number(granularity) : undefined,
             style,
         };
-        return new Promise((resolve, reject) => {
-            if (!api_base.api) resolve([]);
+        return new Promise((resolve) => {
+            if (!api_base.api) {
+                resolve([]);
+                return;
+            }
             doUntilDone(() => api_base.api.send(request_object), ['AlreadySubscribed'], api_base)
                 .then(r => {
                     if (style === 'ticks') {
@@ -321,21 +330,14 @@ export default class TicksService {
                     }
                 })
                 .catch(error => {
-                    // Handle AlreadySubscribed errors gracefully - they're not fatal
-                    if (error?.error?.code === 'AlreadySubscribed') {
-                        // For AlreadySubscribed errors, we can still resolve with existing data
-                        if (style === 'ticks' && this.ticks.has(symbol)) {
-                            resolve(this.ticks.get(symbol));
-                        } else if (style === 'candles' && this.candles.hasIn([symbol, Number(granularity)])) {
-                            resolve(this.candles.getIn([symbol, Number(granularity)]));
-                        } else {
-                            resolve([]);
-                        }
-                        return;
+                    // Handle AlreadySubscribed or other API errors gracefully without uncaught rejection
+                    if (style === 'ticks' && this.ticks.has(symbol)) {
+                        resolve(this.ticks.get(symbol));
+                    } else if (style === 'candles' && this.candles.hasIn([symbol, Number(granularity)])) {
+                        resolve(this.candles.getIn([symbol, Number(granularity)]));
+                    } else {
+                        resolve([]);
                     }
-                    // Don't clear auth data for InvalidSymbol errors as it causes unwanted logouts
-                    // InvalidSymbol errors can occur for various reasons and don't necessarily mean the user is unauthorized
-                    reject(error);
                 });
         });
     }

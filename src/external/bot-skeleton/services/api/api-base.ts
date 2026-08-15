@@ -59,13 +59,15 @@ class APIBase {
 
     unsubscribeAllSubscriptions = () => {
         this.current_auth_subscriptions?.forEach(subscription_promise => {
-            subscription_promise.then(({ subscription }) => {
-                if (subscription?.id) {
-                    this.api?.send({
-                        forget: subscription.id,
-                    });
-                }
-            });
+            subscription_promise
+                ?.then(({ subscription }: any) => {
+                    if (subscription?.id) {
+                        this.api?.send({
+                            forget: subscription.id,
+                        }).catch(() => {});
+                    }
+                })
+                .catch(() => {});
         });
         this.current_auth_subscriptions = [];
     };

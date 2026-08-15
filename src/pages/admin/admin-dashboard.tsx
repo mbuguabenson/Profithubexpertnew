@@ -624,6 +624,9 @@ const AdminDashboard = observer(() => {
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
+                    if (data.error) {
+                        return;
+                    }
                     if (data.msg_type === 'tick' && data.tick) {
                         const symbol = data.tick.symbol;
                         const price = data.tick.quote;
