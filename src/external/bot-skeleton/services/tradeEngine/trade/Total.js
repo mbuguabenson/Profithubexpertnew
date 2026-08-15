@@ -4,6 +4,7 @@ import { LogTypes } from '../../../constants/messages';
 import { createError } from '../../../utils/error';
 import { observer as globalObserver } from '../../../utils/observer';
 import { info, log } from '../utils/broadcast';
+import { api_base } from '../../api/api-base';
 
 const skeleton = {
     totalProfit: 0,
@@ -29,75 +30,97 @@ export default Engine =>
         clearStatistics() {
             this.sessionRuns = 0;
             this.sessionProfit = 0;
-            if (!this.accountInfo) return;
-            const { loginid: accountID } = this.accountInfo;
+            const accountID = this.accountInfo?.loginid || api_base?.account_info?.loginid;
+            if (!accountID) return;
             globalStat[accountID] = { ...skeleton };
         }
 
         updateTotals(contract) {
-            const { sell_price: sellPrice, buy_price: buyPrice, currency } = contract;
+            try {
+                if (!contract) return;
+                const { sell_price: sellPrice = 0, buy_price: buyPrice = 0, currency = 'USD' } = contract;
 
-            const profit = getRoundedNumber(Number(sellPrice) - Number(buyPrice), currency);
+                const profit = getRoundedNumber(Number(sellPrice) - Number(buyPrice), currency);
+                const win = profit > 0;
+                const accountStat = this.getAccountStat();
+                const accountID = this.accountInfo?.loginid || api_base?.account_info?.loginid || 'CR_DEFAULT';
 
-            const win = profit > 0;
+                accountStat.totalWins += win ? 1 : 0;
+                accountStat.totalLosses += !win ? 1 : 0;
+                this.sessionProfit = getRoundedNumber(Number(this.sessionProfit) + Number(profit), currency);
+                accountStat.totalProfit = getRoundedNumber(Number(accountStat.totalProfit) + Number(profit), currency);
+                accountStat.totalStake = getRoundedNumber(Number(accountStat.totalStake) + Number(buyPrice), currency);
+                accountStat.totalPayout = getRoundedNumber(Number(accountStat.totalPayout) + Number(sellPrice), currency);
 
-            const accountStat = this.getAccountStat();
+                info({
+                    profit,
+                    contract,
+                    accountID,
+                    totalProfit: accountStat.totalProfit,
+                    totalWins: accountStat.totalWins,
+                    totalLosses: accountStat.totalLosses,
+                    totalStake: accountStat.totalStake,
+                    totalPayout: accountStat.totalPayout,
+                });
 
-            accountStat.totalWins += win ? 1 : 0;
+                log(win ? LogTypes.PROFIT : LogTypes.LOST, { currency, profit });
 
-            accountStat.totalLosses += !win ? 1 : 0;
-
-            this.sessionProfit = getRoundedNumber(Number(this.sessionProfit) + Number(profit), currency);
-
-            accountStat.totalProfit = getRoundedNumber(Number(accountStat.totalProfit) + Number(profit), currency);
-
-            accountStat.totalStake = getRoundedNumber(Number(accountStat.totalStake) + Number(buyPrice), currency);
-
-            accountStat.totalPayout = getRoundedNumber(Number(accountStat.totalPayout) + Number(sellPrice), currency);
-
-            info({
-                profit,
-                contract,
-                accountID: this.accountInfo.loginid,
-                totalProfit: accountStat.totalProfit,
-                totalWins: accountStat.totalWins,
-                totalLosses: accountStat.totalLosses,
-                totalStake: accountStat.totalStake,
-                totalPayout: accountStat.totalPayout,
-            });
-
-            log(win ? LogTypes.PROFIT : LogTypes.LOST, { currency, profit });
-
-            if (typeof window !== 'undefined' && window.scanner_store) {
-                window.scanner_store.recordTradeResult(win ? 'WIN' : 'LOSS', profit, Number(buyPrice));
-            }
-
-            // ⚡ Auto Switch / Alternate Markets check
-            const isAutoSwitch = (typeof window !== 'undefined' && window.scanner_store?.auto_switch_markets) || (typeof window !== 'undefined' && window.DBot?.__alt_markets?.enabled);
-            if (isAutoSwitch) {
-                const availableSymbols = ['R_10', 'R_25', 'R_50', 'R_75', 'R_100', '1HZ10V', '1HZ25V', '1HZ50V', '1HZ75V', '1HZ100V'];
-                const currentSymbol = (this.tradeOptions && this.tradeOptions.symbol) || 'R_100';
-                
-                let nextSymbol = currentSymbol;
-                if (window.scanner_store && window.scanner_store.signals && window.scanner_store.signals.length > 0) {
-                    const topSig = window.scanner_store.signals.find(s => s.symbol !== currentSymbol && s.confidence >= 0.60);
-                    if (topSig) nextSymbol = topSig.symbol;
-                }
-                if (nextSymbol === currentSymbol) {
-                    const idx = availableSymbols.indexOf(currentSymbol);
-                    nextSymbol = availableSymbols[(idx + 1) % availableSymbols.length];
-                }
-
-                if (nextSymbol && nextSymbol !== currentSymbol) {
-                    if (this.tradeOptions) {
-                        this.tradeOptions.symbol = nextSymbol;
+                if (typeof window !== 'undefined' && window.scanner_store) {
+                    try {
+                        window.scanner_store.recordTradeResult(win ? 'WIN' : 'LOSS', profit, Number(buyPrice));
+                    } catch (err) {
+                        console.warn('[Total] Error recording trade result in scanner:', err);
                     }
-                    if (window.scanner_store) {
-                        window.scanner_store.setSingleMarketSymbol(nextSymbol);
-                        window.scanner_store.subscribeToSymbolTicks(nextSymbol);
-                    }
-                    log(LogTypes.INFO, { message: `[AUTO SWITCH] Market automatically switched to ${nextSymbol}` });
                 }
+
+                // ⚡ Auto Switch / Alternate Markets check
+                const isAutoSwitch =
+                    (typeof window !== 'undefined' && window.scanner_store?.auto_switch_markets) ||
+                    (typeof window !== 'undefined' && window.DBot?.__alt_markets?.enabled);
+                if (isAutoSwitch) {
+                    const availableSymbols = [
+                        'R_10',
+                        'R_25',
+                        'R_50',
+                        'R_75',
+                        'R_100',
+                        '1HZ10V',
+                        '1HZ25V',
+                        '1HZ50V',
+                        '1HZ75V',
+                        '1HZ100V',
+                    ];
+                    const currentSymbol = (this.tradeOptions && this.tradeOptions.symbol) || 'R_100';
+
+                    let nextSymbol = currentSymbol;
+                    if (
+                        window.scanner_store &&
+                        window.scanner_store.signals &&
+                        window.scanner_store.signals.length > 0
+                    ) {
+                        const topSig = window.scanner_store.signals.find(
+                            s => s.symbol !== currentSymbol && s.confidence >= 0.6
+                        );
+                        if (topSig) nextSymbol = topSig.symbol;
+                    }
+                    if (nextSymbol === currentSymbol) {
+                        const idx = availableSymbols.indexOf(currentSymbol);
+                        nextSymbol = availableSymbols[(idx + 1) % availableSymbols.length];
+                    }
+
+                    if (nextSymbol && nextSymbol !== currentSymbol) {
+                        if (this.tradeOptions) {
+                            this.tradeOptions.symbol = nextSymbol;
+                        }
+                        if (window.scanner_store) {
+                            window.scanner_store.setSingleMarketSymbol(nextSymbol);
+                            window.scanner_store.subscribeToSymbolTicks(nextSymbol);
+                        }
+                        log(LogTypes.INFO, { message: `[AUTO SWITCH] Market automatically switched to ${nextSymbol}` });
+                    }
+                }
+            } catch (error) {
+                console.error('[Total] updateTotals error:', error);
             }
         }
 
@@ -158,7 +181,7 @@ export default Engine =>
         }
 
         getAccountStat() {
-            const { loginid: accountID } = this.accountInfo;
+            const accountID = this.accountInfo?.loginid || api_base?.account_info?.loginid || 'CR_DEFAULT';
 
             if (!(accountID in globalStat)) {
                 globalStat[accountID] = { ...skeleton };

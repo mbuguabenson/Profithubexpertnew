@@ -155,13 +155,21 @@ export default class SummaryCardStore {
     }
 
     onBotContractEvent(contract: TContractInfo) {
+        if (!contract) return;
         const { profit } = contract;
         const indicative = getIndicativePrice(contract as ProposalOpenContract);
         this.profit = profit;
 
-        if (this.contract_id !== contract.id) {
-            this.clear(false);
-            this.contract_id = contract.id;
+        const contractId = contract.id || (contract as any).contract_id;
+        if (this.contract_id && this.contract_id !== contractId) {
+            // Only clear when the previous contract was marked sold/completed
+            if (this.contract_info?.is_sold || this.contract_info?.is_completed) {
+                this.clear(false);
+                this.contract_id = contractId;
+                this.indicative = indicative;
+            }
+        } else if (!this.contract_id) {
+            this.contract_id = contractId;
             this.indicative = indicative;
         }
 

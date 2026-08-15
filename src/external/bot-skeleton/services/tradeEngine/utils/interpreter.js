@@ -81,8 +81,10 @@ const Interpreter = () => {
                     loop();
                 })
                 .catch(e => {
-                    // e.error for errors get from API, e for code errors
-                    $scope.observer.emit('Error', e.error || e);
+                    const err = e?.error || e;
+                    const msg = err?.message || err?.error?.message || (typeof err === 'string' ? err : 'Operation failed');
+                    globalObserver.emit('ui.log.error', msg);
+                    $scope.observer.emit('Error', err);
                 });
         };
 
@@ -253,24 +255,31 @@ const Interpreter = () => {
                 if ($scope.stopped) {
                     return;
                 }
+                const errObj = e?.error || e;
+                const errMsg = errObj?.message || errObj?.error?.message || (typeof errObj === 'string' ? errObj : 'Trading Error');
+
+                // Always log the error to Journal so user sees the notification
+                globalObserver.emit('ui.log.error', errMsg);
+
                 // DBot handles 'InvalidToken' internally
-                if (e.code === 'InvalidToken') {
+                if (errObj?.code === 'InvalidToken') {
                     globalObserver.emit('client.invalid_token');
                     return;
                 }
-                if (shouldStopOnError(bot, e?.code)) {
-                    globalObserver.emit('ui.log.error', e.message);
+                if (shouldStopOnError(bot, errObj?.code)) {
                     globalObserver.emit('bot.click_stop');
                     return;
                 }
 
                 $scope.is_error_triggered = true;
-                if (!shouldRestartOnError(bot, e.code) || !botStarted(bot)) {
-                    reject(e);
+                if (!shouldRestartOnError(bot, errObj?.code) || !botStarted(bot)) {
+                    globalObserver.emit('Error', errObj);
+                    globalObserver.emit('bot.click_stop');
+                    reject(errObj);
                     return;
                 }
 
-                globalObserver.emit('Error', e);
+                globalObserver.emit('Error', errObj);
                 const { initArgs, tradeOptions } = bot.tradeEngine;
                 terminateSession();
                 init();

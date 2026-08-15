@@ -147,11 +147,11 @@ export default class JournalStore {
         this.pushMessage(log_type, MessageTypes.SUCCESS, '', extra);
     }
 
-    onError(message: Error | string) {
+    onError(message: any) {
         let processedMessage = message;
 
         // Check if this is an error object with backend error information
-        if (typeof message === 'object' && message !== null && 'code' in message) {
+        if (typeof message === 'object' && message !== null) {
             const error = message as any;
 
             if (error.subcode && error.code_args) {
@@ -174,8 +174,12 @@ export default class JournalStore {
                 };
 
                 processedMessage = getLocalizedErrorMessage(error.code, details);
+            } else if (error.message) {
+                processedMessage = error.message;
+            } else if (error.error?.message) {
+                processedMessage = error.error.message;
             } else {
-                processedMessage = error.message || message;
+                processedMessage = String(message);
             }
         } else if (typeof message === 'string') {
             // Check if this is a backend error message that needs processing

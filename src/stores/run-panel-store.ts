@@ -838,7 +838,7 @@ export default class RunPanelStore {
         if (journal.journal_filters.some(filter => filter === MessageTypes.ERROR)) {
             this.toggleDrawer(true);
             this.setActiveTabIndex(run_panel.JOURNAL);
-            ui.setPromptHandler(false);
+            ui?.setPromptHandler?.(false);
         } else {
             // TODO: fix notifications
             // notifications.addNotificationMessage(journalError(this.switchToJournal));
@@ -885,19 +885,24 @@ export default class RunPanelStore {
         const { journal } = this.root_store;
 
         // Create a generic handler for ui.log.error that can extract error codes and use getLocalizedErrorMessage
-        const handleUiLogError = (errorMessage: string) => {
+        const handleUiLogError = (errorMessage: any) => {
+            const rawMessage =
+                typeof errorMessage === 'object' && errorMessage !== null
+                    ? errorMessage.message || errorMessage.error?.message || JSON.stringify(errorMessage)
+                    : String(errorMessage || 'Unknown trading error');
+
             // Check if this is a stake/payout error message first
             if (
-                typeof errorMessage === 'string' &&
-                errorMessage.includes('Minimum stake') &&
-                errorMessage.includes('maximum payout')
+                typeof rawMessage === 'string' &&
+                rawMessage.includes('Minimum stake') &&
+                rawMessage.includes('maximum payout')
             ) {
                 const { getLocalizedErrorMessage } = require('@/constants/backend-error-messages');
 
                 // Extract parameter values from the message
-                const stakeMatch = errorMessage.match(/Minimum stake of ([\d.]+)/);
-                const payoutMatch = errorMessage.match(/maximum payout of ([\d.]+)/);
-                const currentMatch = errorMessage.match(/Current (?:payout|stake) is ([\d.]+)/);
+                const stakeMatch = rawMessage.match(/Minimum stake of ([\d.]+)/);
+                const payoutMatch = rawMessage.match(/maximum payout of ([\d.]+)/);
+                const currentMatch = rawMessage.match(/Current (?:payout|stake) is ([\d.]+)/);
 
                 if (stakeMatch && payoutMatch && currentMatch) {
                     const details = {
@@ -908,9 +913,9 @@ export default class RunPanelStore {
 
                     // Determine which error code to use based on the message content
                     let errorCode = 'InvalidtoBuy'; // default
-                    if (errorMessage.includes('Current payout')) {
-                        errorCode = errorMessage.includes('stake') ? 'StakeLimits' : 'PayoutLimits';
-                    } else if (errorMessage.includes('Current stake')) {
+                    if (rawMessage.includes('Current payout')) {
+                        errorCode = rawMessage.includes('stake') ? 'StakeLimits' : 'PayoutLimits';
+                    } else if (rawMessage.includes('Current stake')) {
                         errorCode = 'StakeLimits';
                     }
 
@@ -921,7 +926,7 @@ export default class RunPanelStore {
             }
 
             // If errorMessage is a string with placeholder patterns, try to extract the error code
-            if (typeof errorMessage === 'string' && errorMessage.includes('[_')) {
+            if (typeof rawMessage === 'string' && rawMessage.includes('[_')) {
                 const {
                     getLocalizedErrorMessage,
                     getBackendErrorMessages,
@@ -932,7 +937,7 @@ export default class RunPanelStore {
                 let matchedErrorCode: string | null = null;
 
                 // Convert placeholders from [_1], [_2] format to {{param1}}, {{param2}} format for comparison
-                const normalizedMessage = errorMessage.replace(/\[_(\d+)\]/g, '{{param$1}}');
+                const normalizedMessage = rawMessage.replace(/\[_(\d+)\]/g, '{{param$1}}');
                 // Search through all error codes to find a match
                 for (const [errorCode, errorTemplate] of Object.entries(errorMessages)) {
                     // errorTemplate is a string (the localized template)
@@ -951,7 +956,7 @@ export default class RunPanelStore {
             }
 
             // Default behavior for other errors or when we can't find a match
-            this.showErrorMessage(errorMessage);
+            this.showErrorMessage(rawMessage);
         };
 
         observer.register('ui.log.error', handleUiLogError);
