@@ -153,7 +153,7 @@ export default class QuickStrategyStore implements IQuickStrategyStore {
     };
 
     onSubmit = async (data: TFormData) => {
-        const { contracts_for } = ApiHelpers?.instance ?? {};
+        const { contracts_for } = (ApiHelpers as any)?.instance ?? {};
         if (!contracts_for) return;
         const market = await contracts_for.getMarketBySymbol(data.symbol);
         const submarket = await contracts_for.getSubmarketBySymbol(data.symbol);
@@ -163,12 +163,12 @@ export default class QuickStrategyStore implements IQuickStrategyStore {
         // Persist the selected strategy for notifications in localStorage
         storeSetting('selected_strategy_for_notofy', this.selected_strategy);
         const strategy_xml = await import(/* webpackChunkName: `[request]` */ `../xml/${selected_strategy.name}.xml`);
-        const strategy_dom = window.Blockly.utils.xml.textToDom(strategy_xml.default);
-        addDynamicBlockToDOM('PREDICTION', 'last_digit_prediction', trade_type_cat, strategy_dom);
+        const strategy_dom = (window.Blockly as any).utils.xml.textToDom(strategy_xml.default);
+        addDynamicBlockToDOM('PREDICTION', 'last_digit_prediction', trade_type_cat, strategy_dom as any);
 
         const modifyValueInputs = (key: string, value: number) => {
             const el_value_inputs = strategy_dom?.querySelectorAll(`value[strategy_value="${key}"]`);
-            el_value_inputs?.forEach((el_value_input: HTMLElement) => {
+            el_value_inputs?.forEach((el_value_input: Element) => {
                 if (key.includes('boolean')) {
                     if (value)
                         el_value_input.innerHTML = `<block type="logic_boolean"><field name="BOOL">TRUE</field></block>`;
@@ -184,7 +184,7 @@ export default class QuickStrategyStore implements IQuickStrategyStore {
         const modifyFieldDropdownValues = (name: string, value: string) => {
             const name_list = `${name.toUpperCase()}_LIST`;
             const el_blocks = strategy_dom?.querySelectorAll(`field[name="${name_list}"]`);
-            el_blocks?.forEach((el_block: HTMLElement) => {
+            el_blocks?.forEach((el_block: Element) => {
                 el_block.innerHTML = value;
             });
         };
@@ -211,13 +211,37 @@ export default class QuickStrategyStore implements IQuickStrategyStore {
             }
         });
 
-        const { derivWorkspace: workspace } = Blockly;
+        // Set bulk trade parameters on purchase blocks if bulk trading is enabled
+        const { scanner } = this.root_store;
+        if (scanner?.is_bulk_trades_enabled) {
+            const purchase_blocks = strategy_dom?.querySelectorAll('block[type="purchase"]');
+            purchase_blocks?.forEach((b: Element) => {
+                const doc = b.ownerDocument || (strategy_dom as any).ownerDocument || document;
+                let allowBulkField = b.querySelector('field[name="ALLOW_BULK"]');
+                if (!allowBulkField) {
+                    allowBulkField = doc.createElement('field');
+                    allowBulkField.setAttribute('name', 'ALLOW_BULK');
+                    b.appendChild(allowBulkField);
+                }
+                allowBulkField.textContent = 'TRUE';
+
+                let bulkCountField = b.querySelector('field[name="BULK_COUNT"]');
+                if (!bulkCountField) {
+                    bulkCountField = doc.createElement('field');
+                    bulkCountField.setAttribute('name', 'BULK_COUNT');
+                    b.appendChild(bulkCountField);
+                }
+                bulkCountField.textContent = String(scanner.bulk_trades_count || 2);
+            });
+        }
+
+        const workspace = (window.Blockly as any)?.derivWorkspace;
 
         if (action === 'RUN') {
             workspace
                 ?.waitForBlockEvent({
                     block_type: 'trade_definition',
-                    event_type: window.Blockly.Events.BLOCK_CREATE,
+                    event_type: (window.Blockly as any)?.Events?.BLOCK_CREATE,
                     timeout: 5000,
                 })
                 .then(() => {

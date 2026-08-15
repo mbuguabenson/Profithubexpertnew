@@ -24,7 +24,7 @@ type TMobileFormWrapper = {
 const MobileFormWrapper = observer(
     ({ children, current_step, selected_trade_type, setCurrentStep, setSelectedTradeType }: TMobileFormWrapper) => {
         const { isValid, validateForm } = useFormikContext<TFormValues>();
-        const { quick_strategy } = useStore();
+        const { quick_strategy, scanner } = useStore();
         const { selected_strategy } = quick_strategy;
         const selected_startegy_label = STRATEGIES()[selected_strategy as keyof typeof STRATEGIES].label;
         const is_verified_or_completed_step =
@@ -55,9 +55,7 @@ const MobileFormWrapper = observer(
                             autohide={false}
                         >
                             <QSStepper
-                                setCurrentStep={setCurrentStep}
                                 current_step={current_step}
-                                isValid={isValid}
                                 is_mobile
                             />
                             {is_selected_strategy_step && (
@@ -87,6 +85,69 @@ const MobileFormWrapper = observer(
                                         </div>
                                     </div>
                                     <StrategyTabContent formfields={children} active_tab={'TRADE_PARAMETERS'} />
+
+                                    {/* Bot Builder Advanced Trade Parameters */}
+                                    <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
+                                        <Text size='xs' weight='bold' style={{ marginBottom: 8, display: 'block', color: '#f5c542' }}>
+                                            {localize('Bot Builder Advanced Parameters')}
+                                        </Text>
+
+                                        {/* 1. Auto Switch Markets Toggle */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                                            <Text size='xs' color='general'>⚡ {localize('Auto Switch Markets')}</Text>
+                                            <input
+                                                type='checkbox'
+                                                checked={scanner.auto_switch_markets}
+                                                onChange={e => { scanner.auto_switch_markets = e.target.checked; }}
+                                            />
+                                        </div>
+
+                                        {/* 2. Deriv Bulk Trades Engine */}
+                                        <div style={{ marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                                <Text size='xs' color='general'>📦 {localize('Bulk Trades Engine')}</Text>
+                                                <input
+                                                    type='checkbox'
+                                                    checked={scanner.is_bulk_trades_enabled}
+                                                    onChange={e => scanner.setBulkTradesEnabled(e.target.checked)}
+                                                />
+                                            </div>
+                                            {scanner.is_bulk_trades_enabled && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                                                    <Text size='xs' color='less-prominent'>{localize('Number of runs:')}</Text>
+                                                    <input
+                                                        type='number'
+                                                        min={1}
+                                                        max={100}
+                                                        style={{
+                                                            width: '60px',
+                                                            background: '#1e293b',
+                                                            color: '#fff',
+                                                            border: '1px solid #334155',
+                                                            borderRadius: 4,
+                                                            padding: '2px 6px',
+                                                            fontSize: 11,
+                                                        }}
+                                                        value={scanner.bulk_trades_count}
+                                                        onChange={e => scanner.setBulkTradesCount(parseInt(e.target.value, 10) || 1)}
+                                                    />
+                                                    <Text size='xxs' color='less-prominent'>{localize('trades at once')}</Text>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* 3. Virtual Hook Risk Filter */}
+                                        <div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Text size='xs' color='general'>🛡️ {localize('Virtual Hook')}</Text>
+                                                <input
+                                                    type='checkbox'
+                                                    checked={scanner.is_virtual_hook_enabled}
+                                                    onChange={e => scanner.setVirtualHookEnabled(e.target.checked)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </>
                             )}
                         </ThemedScrollbars>

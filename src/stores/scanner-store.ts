@@ -332,7 +332,7 @@ export default class ScannerStore implements IScannerStore {
   };
 
   setBulkTradesCount = (count: number) => {
-    this.bulk_trades_count = Math.max(1, Math.min(5, count));
+    this.bulk_trades_count = Math.max(1, Math.min(100, count));
   };
 
   setVirtualHookEnabled = (enabled: boolean) => {

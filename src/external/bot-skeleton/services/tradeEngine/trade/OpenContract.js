@@ -15,37 +15,62 @@ export default Engine =>
                         return;
                     }
 
-                    this.setContractFlags(contract);
-
-                    this.data.contract = contract;
-
                     if (this.bulk_group_map && this.bulk_group_map[contract.contract_id]) {
                         contract.bulk_group_id = this.bulk_group_map[contract.contract_id];
                     }
 
-                    broadcastContract({ accountID: api_base.account_info.loginid, ...contract });
+                    broadcastContract({ accountID: api_base.account_info?.loginid, ...contract });
 
-                    if (this.isSold) {
-                        this.contractId = '';
-                        clearTimeout(this.transaction_recovery_timeout);
-                        this.updateTotals(contract);
-                        contractStatus({
-                            id: 'contract.sold',
-                            data: contract.transaction_ids.sell,
-                            contract,
-                        });
-
-                        if (this.afterPromise) {
-                            this.afterPromise();
-                        }
-
-                        this.store.dispatch(sell());
+                    if (contract.is_sold) {
+                        this.handleContractSold(contract);
                     } else {
+                        this.setContractFlags(contract);
+                        this.data.contract = contract;
                         this.store.dispatch(openContractReceived());
                     }
                 }
             });
             api_base.pushSubscription(subscription);
+        }
+
+        handleContractSold(contract) {
+            if (!contract) return;
+            const cId = String(contract.contract_id);
+            if (!this.bulk_sold_contract_ids) {
+                this.bulk_sold_contract_ids = new Set();
+            }
+
+            if (this.bulk_sold_contract_ids.has(cId)) {
+                return;
+            }
+            this.bulk_sold_contract_ids.add(cId);
+
+            // Post win/loss result in Journal & update statistics for this contract
+            this.updateTotals(contract);
+
+            const isBulk = Boolean(this.bulk_contract_ids && this.bulk_contract_ids.size > 1);
+            const allBulkDone = !isBulk || this.bulk_sold_contract_ids.size >= this.bulk_contract_ids.size;
+
+            if (allBulkDone) {
+                this.setContractFlags(contract);
+                this.data.contract = contract;
+                this.contractId = '';
+                if (this.bulk_contract_ids) this.bulk_contract_ids.clear();
+                if (this.bulk_sold_contract_ids) this.bulk_sold_contract_ids.clear();
+                clearTimeout(this.transaction_recovery_timeout);
+
+                contractStatus({
+                    id: 'contract.sold',
+                    data: contract.transaction_ids?.sell,
+                    contract,
+                });
+
+                if (this.afterPromise) {
+                    this.afterPromise();
+                }
+
+                this.store.dispatch(sell());
+            }
         }
 
         waitForAfter() {
@@ -64,7 +89,12 @@ export default Engine =>
         }
 
         expectedContractId(contractId) {
-            return this.contractId && String(contractId) === String(this.contractId);
+            if (!contractId) return false;
+            const cIdStr = String(contractId);
+            if (this.bulk_contract_ids && this.bulk_contract_ids.has(cIdStr)) {
+                return true;
+            }
+            return Boolean(this.contractId && String(this.contractId) === cIdStr);
         }
 
         getSellPrice() {

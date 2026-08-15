@@ -46,7 +46,9 @@ export default Engine =>
                     buy,
                 });
 
-                this.contractId = buy.contract_id;
+                this.contractId = String(buy.contract_id);
+                this.bulk_contract_ids = new Set([String(buy.contract_id)]);
+                this.bulk_sold_contract_ids = new Set();
                 this.store.dispatch(purchaseSuccessful());
 
                 if (this.is_proposal_subscription_required) {
@@ -68,7 +70,7 @@ export default Engine =>
                 const watchdogDuration = (Number(this.tradeOptions?.duration || 5) * 1200) + 3500;
 
                 const watchdogTimer = setTimeout(async () => {
-                    if (this.contractId === purchasedContractId && !this.isSold) {
+                    if (this.contractId === String(purchasedContractId) && !this.isSold) {
                         try {
                             const res = await api_base.api?.send({
                                 proposal_open_contract: 1,
@@ -77,10 +79,7 @@ export default Engine =>
                             if (res && res.proposal_open_contract) {
                                 const poc = res.proposal_open_contract;
                                 if (poc.is_sold) {
-                                    this.data.contract = poc;
-                                    this.setContractFlags(poc);
-                                    if (this.afterPromise) this.afterPromise();
-                                    this.store.dispatch(sell());
+                                    this.handleContractSold(poc);
                                 }
                             }
                         } catch {}
@@ -127,37 +126,55 @@ export default Engine =>
                     });
                 } catch {}
 
-                const reqs = [];
-                const bulkGroupId = `BULK_${Date.now()}`;
-                
-                // Helper to add stagger
-                const sendRequestWithDelay = (delay) => {
-                    return new Promise(resolve => {
-                        setTimeout(() => {
-                            resolve(api_base.api.send(trade_option).catch(err => ({ error: err })));
-                        }, delay);
-                    });
-                };
-
-                for (let i = 0; i < bulkCount; i++) {
-                    reqs.push(sendRequestWithDelay(i * 30)); // 30ms stagger to avoid rate limits
-                }
-
+                const bulkGroupId = `BULK_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
                 this.isSold = false;
                 contractStatus({
                     id: 'contract.purchase_sent',
                     data: this.tradeOptions.amount,
                 });
 
+                // Send all requests simultaneously without stagger/delay
+                const reqs = Array.from({ length: bulkCount }, () =>
+                    api_base.api.send(trade_option).catch(err => ({ error: err }))
+                );
+
                 return Promise.all(reqs).then(responses => {
                     this.purchase_block_allow_bulk = 'no';
                     const validResponses = responses.filter(r => r && r.buy && !r.error);
 
+                    if (validResponses.length === 0) {
+                        const errObj = responses.find(r => r && r.error);
+                        const errMsg = errObj?.error?.message || errObj?.error || 'Bulk trade purchase failed';
+                        log(LogTypes.ERROR, { message: `❌ [BULK TRADES FAILED] ${errMsg}` });
+
+                        this.store.dispatch(purchaseSuccessful());
+                        if (this.afterPromise) {
+                            this.afterPromise();
+                        }
+                        return null;
+                    }
+
+                    this.bulk_group_map = this.bulk_group_map || {};
+                    this.bulk_contract_ids = new Set(validResponses.map(r => String(r.buy.contract_id)));
+                    this.bulk_sold_contract_ids = new Set();
+                    this.contractId = String(validResponses[0].buy.contract_id);
+
                     validResponses.forEach((res) => {
                         const { buy } = res;
                         buy.bulk_group_id = bulkGroupId; // Inject bulk group ID
-                        this.bulk_group_map = this.bulk_group_map || {};
                         this.bulk_group_map[buy.contract_id] = bulkGroupId;
+
+                        // Subscribe to proposal_open_contract for EACH contract in the bulk batch
+                        if (api_base.api && buy.contract_id) {
+                            try {
+                                api_base.api.send({
+                                    proposal_open_contract: 1,
+                                    contract_id: buy.contract_id,
+                                    subscribe: 1,
+                                });
+                            } catch {}
+                        }
+
                         contractStatus({
                             id: 'contract.purchase_received',
                             data: buy.transaction_id,
@@ -173,21 +190,36 @@ export default Engine =>
                         });
                     });
 
-                    if (validResponses.length > 0) {
-                        this.contractId = validResponses[0].buy.contract_id;
-                        this.store.dispatch(purchaseSuccessful());
-                        return validResponses[0];
-                    }
-
-                    const errObj = responses.find(r => r && r.error);
-                    const errMsg = errObj?.error?.message || errObj?.error || 'Bulk trade purchase failed';
-                    log(LogTypes.ERROR, { message: `❌ [BULK TRADES FAILED] ${errMsg}` });
-
                     this.store.dispatch(purchaseSuccessful());
-                    if (this.afterPromise) {
-                        this.afterPromise();
+
+                    if (this.is_proposal_subscription_required) {
+                        this.renewProposalsOnPurchase();
                     }
-                    return null;
+
+                    // 🛡️ Watchdog Recovery Timer across all contracts in the bulk batch
+                    const watchdogDuration = (Number(this.tradeOptions?.duration || 5) * 1200) + 4000;
+                    const contractIdsToCheck = new Set(this.bulk_contract_ids);
+                    setTimeout(async () => {
+                        for (const cid of contractIdsToCheck) {
+                            if (!this.bulk_sold_contract_ids.has(cid)) {
+                                try {
+                                    const res = await api_base.api?.send({
+                                        proposal_open_contract: 1,
+                                        contract_id: Number(cid),
+                                    });
+                                    if (res?.proposal_open_contract?.is_sold) {
+                                        const poc = res.proposal_open_contract;
+                                        if (this.bulk_group_map && this.bulk_group_map[poc.contract_id]) {
+                                            poc.bulk_group_id = this.bulk_group_map[poc.contract_id];
+                                        }
+                                        this.handleContractSold(poc);
+                                    }
+                                } catch {}
+                            }
+                        }
+                    }, watchdogDuration);
+
+                    return validResponses[0];
                 }).catch(err => {
                     this.purchase_block_allow_bulk = 'no';
                     log(LogTypes.ERROR, { message: `❌ [BULK TRADES ERROR] ${err?.message || err}` });

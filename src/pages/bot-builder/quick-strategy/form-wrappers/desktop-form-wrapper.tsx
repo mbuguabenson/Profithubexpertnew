@@ -82,17 +82,25 @@ const QuickSelectionPanel = observer(({
                     </div>
                     {scanner.is_bulk_trades_enabled && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                            <Text size='xs' color='less-prominent'>{localize('Parallel Contracts:')}</Text>
-                            <select
-                                style={{ background: '#1e293b', color: '#fff', border: '1px solid #334155', borderRadius: 4, padding: '2px 8px', fontSize: 11 }}
+                            <Text size='xs' color='less-prominent'>{localize('Number of runs:')}</Text>
+                            <input
+                                type='number'
+                                min={1}
+                                max={100}
+                                style={{
+                                    width: '65px',
+                                    background: '#1e293b',
+                                    color: '#fff',
+                                    border: '1px solid #334155',
+                                    borderRadius: 4,
+                                    padding: '3px 8px',
+                                    fontSize: 12,
+                                    outline: 'none',
+                                }}
                                 value={scanner.bulk_trades_count}
-                                onChange={e => scanner.setBulkTradesCount(parseInt(e.target.value, 10))}
-                            >
-                                <option value={2}>2 Parallel Contracts</option>
-                                <option value={3}>3 Parallel Contracts</option>
-                                <option value={4}>4 Parallel Contracts</option>
-                                <option value={5}>5 Parallel Contracts</option>
-                            </select>
+                                onChange={e => scanner.setBulkTradesCount(parseInt(e.target.value, 10) || 1)}
+                            />
+                            <Text size='xxs' color='less-prominent'>{localize('trades at once')}</Text>
                         </div>
                     )}
                 </div>

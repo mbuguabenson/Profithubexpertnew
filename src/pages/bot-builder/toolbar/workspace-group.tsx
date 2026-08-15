@@ -199,31 +199,6 @@ const WorkspaceGroup = observer(() => {
                         }
                     />
                     <ToolbarIcon
-                        popover_message={localize('Premium Signals')}
-                        icon={
-                            <span
-                                className={classNames('toolbar__icon', {
-                                    'toolbar__icon--active': dashboard.is_protool_assistant_visible,
-                                })}
-                                id='db-toolbar__protool-ai-button'
-                                onClick={() => {
-                                    dashboard.setProToolAssistantVisibility(!dashboard.is_protool_assistant_visible);
-                                }}
-                            >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ verticalAlign: 'middle', filter: dashboard.is_protool_assistant_visible ? 'drop-shadow(0 0 6px #f5c542)' : 'drop-shadow(0 0 4px rgba(245,197,66,0.3))' }}>
-                                    <defs>
-                                        <linearGradient id="ph_signals_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#f5c542" />
-                                            <stop offset="100%" stopColor="#e67e22" />
-                                        </linearGradient>
-                                    </defs>
-                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="url(#ph_signals_grad)" stroke="#f5c542" strokeWidth="1" strokeLinejoin="round" />
-                                    <circle cx="18" cy="5" r="1.5" fill="#38bdf8" />
-                                </svg>
-                            </span>
-                        }
-                    />
-                    <ToolbarIcon
                         popover_message={localize('Entry Scanner')}
                         icon={
                             <span
