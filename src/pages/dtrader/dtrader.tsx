@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import IframeWrapper from '@/components/iframe-wrapper/iframe-wrapper';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
-import { getAppId, generateOAuthURL } from '@/components/shared/utils/config/config';
+import { getAppId } from '@/components/shared/utils/config/config';
 import { resolveValidDerivWSToken, getAccountsList, getActiveLoginId } from '@/utils/token-bridge';
 import './dtrader.scss';
 
@@ -40,9 +40,8 @@ const getInitialToken = (loginid: string): string => {
 };
 
 /**
- * DTraderPage — embeds the Vercel-hosted DTrader build.
- * Synchronously initializes auth params before rendering iframe to prevent
- * unauthenticated initial loads and avoid regional guest restrictions in Kenya.
+ * DTraderPage — embeds the DTrader build hosted at https://dtraderhub-mu.vercel.app/
+ * Passes active login tokens directly and renders the trading terminal seamlessly.
  */
 const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
@@ -50,6 +49,7 @@ const DTraderPage: React.FC = observer(() => {
     const [activeLoginId, setActiveLoginId] = useState<string>(initialLoginId);
     const [authToken, setAuthToken] = useState<string>(() => getInitialToken(initialLoginId));
     const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
+    const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -90,22 +90,10 @@ const DTraderPage: React.FC = observer(() => {
         return () => { mounted = false; };
     }, [client?.loginid]);
 
-    const handleLoginRedirect = useCallback(async () => {
-        try {
-            const oauthUrl = await generateOAuthURL();
-            if (oauthUrl) {
-                window.location.href = oauthUrl;
-            }
-        } catch (e) {
-            console.error('Failed to generate login URL:', e);
-        }
-    }, []);
-
     const appId = getAppId() || '121856';
-    const baseUrl = process.env.DTRADER_URL || 'https://dtraderphub.vercel.app';
-    const embedBase = baseUrl.includes('/dtrader')
-        ? baseUrl
-        : `${baseUrl.replace(/\/$/, '')}/dtrader`;
+    const rawBaseUrl = process.env.DTRADER_URL || 'https://dtraderhub-mu.vercel.app';
+    const baseUrl = rawBaseUrl.replace(/\/+$/, '');
+    const embedBase = baseUrl.includes('/dtrader') ? baseUrl : `${baseUrl}/dtrader`;
 
     const loginId = activeLoginId || (client as any)?.loginid || localStorage.getItem('active_loginid') || '';
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
@@ -118,6 +106,9 @@ const DTraderPage: React.FC = observer(() => {
         trade_type: 'accumulator',
         app_id: appId,
         lang: 'EN',
+        theme: 'dark',
+        hide_header_login: 'true',
+        is_mobile_app: 'true',
     });
 
     if (loginId) {
@@ -148,79 +139,38 @@ const DTraderPage: React.FC = observer(() => {
 
     const embedUrl = `${embedBase}?${queryParams.toString()}`;
 
+    // Broadcast active token to child iframe via postMessage on load
+    useEffect(() => {
+        const handleIframeAuthSync = () => {
+            if (authToken) {
+                const accountsList = getAccountsList();
+                const payload = {
+                    type: 'DERIV_AUTH_PAYLOAD',
+                    active_loginid: loginId,
+                    token: authToken,
+                    accounts: accountsList,
+                };
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    try {
+                        iframe.contentWindow?.postMessage(payload, '*');
+                    } catch {}
+                });
+            }
+        };
+
+        window.addEventListener('message', (e) => {
+            if (e.data?.type === 'REQUEST_DERIV_AUTH') {
+                handleIframeAuthSync();
+            }
+        });
+
+        const timer = setTimeout(handleIframeAuthSync, 2000);
+        return () => clearTimeout(timer);
+    }, [authToken, loginId]);
+
     if (!isAuthReady) {
         return <ChunkLoader message="Loading DTrader Terminal..." />;
-    }
-
-    // If user has no active token at all, prompt them to log in to bypass Deriv's Kenya guest restriction
-    if (!authToken && !loginId) {
-        return (
-            <div className='dtrader-page-container' style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: '20px' }}>
-                <div style={{
-                    maxWidth: '480px',
-                    width: '100%',
-                    background: 'rgba(30, 41, 59, 0.65)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '16px',
-                    padding: '32px 24px',
-                    textAlign: 'center',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '16px'
-                }}>
-                    <div style={{
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.2))',
-                        border: '1px solid rgba(56, 189, 248, 0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '24px'
-                    }}>
-                        🔐
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#f8fafc' }}>
-                            Deriv Authentication Required
-                        </h3>
-                        <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8', lineHeight: 1.5 }}>
-                            Deriv requires an active logged-in session to access the DTrader terminal in Kenya and avoid regional guest restrictions.
-                        </p>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={handleLoginRedirect}
-                        style={{
-                            width: '100%',
-                            padding: '12px 20px',
-                            borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
-                            border: '1px solid rgba(56, 189, 248, 0.4)',
-                            color: '#ffffff',
-                            fontSize: '14px',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 16px rgba(37, 99, 235, 0.4)',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px'
-                        }}
-                    >
-                        <span>⚡ Log In with Deriv</span>
-                    </button>
-                </div>
-            </div>
-        );
     }
 
     return (
