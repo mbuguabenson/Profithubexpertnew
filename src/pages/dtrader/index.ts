@@ -1,3 +1,3 @@
-import DTraderPage from './dtrader';
+import DTraderWorkspace from './dtrader-workspace';
 
-export default DTraderPage;
+export default DTraderWorkspace;
