@@ -263,11 +263,11 @@ export const config = () => ({
     },
     TRADE_TYPE_CATEGORIES: {
         multiplier: ['multiplier'],
-        callput: ['callput', 'callputequal', 'higherlower'],
+        callput: ['callput', 'callputequal', 'higherlower', 'rise_fall', 'risefall', 'call_put'],
         touchnotouch: ['touchnotouch'],
         inout: ['endsinout', 'staysinout'],
         asian: ['asians'],
-        digits: ['matchesdiffers', 'evenodd', 'overunder'],
+        digits: ['matchesdiffers', 'evenodd', 'overunder', 'matches_differs', 'even_odd', 'over_under', 'differs', 'matches'],
         reset: ['reset'],
         callputspread: ['callputspread'],
         highlowticks: ['highlowticks'],

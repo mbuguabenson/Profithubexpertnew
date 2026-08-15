@@ -547,7 +547,7 @@ export default class EntryScannerStore {
         const rise = stats.risePercent || 50;
         const fall = stats.fallPercent || 50;
 
-        if (rise >= 55) {
+        if (rise >= 60) {
             return {
                 symbol: stats.symbol,
                 displayName: stats.displayName,
@@ -560,7 +560,7 @@ export default class EntryScannerStore {
             };
         }
 
-        if (fall >= 55) {
+        if (fall >= 60) {
             return {
                 symbol: stats.symbol,
                 displayName: stats.displayName,
@@ -840,10 +840,10 @@ export default class EntryScannerStore {
         const targetSymbol = result.symbol || this.target_single_symbol || '1HZ100V';
 
         // Map to Quick Strategy trade type categories
-        let tradetype = 'over_under';
-        if (result.strategy === 'even_odd') tradetype = 'even_odd';
-        else if (result.strategy === 'differs' || result.strategy === 'matches') tradetype = 'matches_differs';
-        else if (result.strategy === 'rise_fall') tradetype = 'rise_fall';
+        let tradetype = 'overunder';
+        if (result.strategy === 'even_odd') tradetype = 'evenodd';
+        else if (result.strategy === 'differs' || result.strategy === 'matches') tradetype = 'matchesdiffers';
+        else if (result.strategy === 'rise_fall') tradetype = 'callput';
 
         const qs = this.root_store?.quick_strategy;
         if (qs) {
