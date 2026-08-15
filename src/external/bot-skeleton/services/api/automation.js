@@ -7,9 +7,16 @@ const autoListStrategies = async () => {
     return api_base.api.send({ auto_list_strategies: 1 });
 };
 
+const autoList = async ({ subscribe = 0 } = {}) => {
+    if (!api_base.api) {
+        throw new Error('Deriv API is not initialized');
+    }
+    return api_base.api.send({ auto_list: 1, ...(subscribe ? { subscribe: 1 } : {}) });
+};
+
 const autoStart = async ({
     contract_template,
-    strategy_id,
+    strategy_id = 'martingale',
     strategy_parameters,
     subscribe = 1,
     passthrough,
@@ -60,9 +67,34 @@ const autoGet = async ({ auto_id, subscribe = 1, passthrough, req_id }) => {
     return api_base.api.send(request);
 };
 
-export { autoListStrategies, autoStart, autoGet };
+const autoPause = async (auto_id) => {
+    if (!api_base.api) {
+        throw new Error('Deriv API is not initialized');
+    }
+    return api_base.api.send({ auto_pause: 1, auto_id });
+};
+
+const autoResume = async (auto_id) => {
+    if (!api_base.api) {
+        throw new Error('Deriv API is not initialized');
+    }
+    return api_base.api.send({ auto_resume: 1, auto_id });
+};
+
+const autoStop = async (auto_id) => {
+    if (!api_base.api) {
+        throw new Error('Deriv API is not initialized');
+    }
+    return api_base.api.send({ auto_stop: 1, ...(auto_id ? { auto_id } : {}) });
+};
+
+export { autoListStrategies, autoList, autoStart, autoGet, autoPause, autoResume, autoStop };
 export default {
     autoListStrategies,
+    autoList,
     autoStart,
     autoGet,
+    autoPause,
+    autoResume,
+    autoStop,
 };

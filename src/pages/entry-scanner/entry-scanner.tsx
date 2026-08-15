@@ -397,10 +397,10 @@ export const EntryScanner = observer(() => {
                         </div>
                     </div>
 
-                    {/* Auto-Load Switch & Custom Prediction (Image 2 style toggle) */}
+                    {/* Auto-Load Switch & Deriv Automation API Switch */}
                     <div className="settings-toggle-bar">
                         <div className="custom-override-wrap">
-                            <span className="override-label">CUSTOM DIGIT OVERRIDE:</span>
+                            <span className="override-label">DIGIT OVERRIDE:</span>
                             <input
                                 type="number"
                                 min="0"
@@ -412,8 +412,15 @@ export const EntryScanner = observer(() => {
                             />
                         </div>
 
+                        <div className="ios-toggle-wrap" onClick={() => entry_scanner.setUseAutomationApi(!entry_scanner.use_automation_api)} title="Use Deriv Server-Side auto_start Automation Engine">
+                            <span className="toggle-caption">Deriv Auto API</span>
+                            <div className={classNames('ios-switch', { active: entry_scanner.use_automation_api })}>
+                                <div className="switch-thumb" />
+                            </div>
+                        </div>
+
                         <div className="ios-toggle-wrap" onClick={() => entry_scanner.setAutoLoadOnMatch(!entry_scanner.auto_load_on_match)}>
-                            <span className="toggle-caption">Auto-Trade on Signal</span>
+                            <span className="toggle-caption">Auto-Trade</span>
                             <div className={classNames('ios-switch', { active: entry_scanner.auto_load_on_match })}>
                                 <div className="switch-thumb" />
                             </div>

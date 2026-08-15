@@ -67,6 +67,10 @@ export default class EntryScannerStore {
     @observable accessor max_runs_before_pause: number = 5;
     @observable accessor custom_prediction: number | null = null;
 
+    // Deriv Automation API State
+    @observable accessor use_automation_api: boolean = true;
+    @observable accessor active_auto_run_id: string | number | null = null;
+
     // Trading State
     @observable accessor current_runs: number = 0;
     @observable accessor total_profit: number = 0;
@@ -124,6 +128,10 @@ export default class EntryScannerStore {
         this.auto_load_on_match = enabled;
     }
 
+    @action setUseAutomationApi(enabled: boolean) {
+        this.use_automation_api = enabled;
+    }
+
     @action resetScan() {
         this.scan_phase = 'idle';
         this.scan_status = 'Select strategies and click Scan Markets to begin.';
@@ -163,6 +171,10 @@ export default class EntryScannerStore {
         this.scan_phase = 'idle';
         this.scan_status = 'Scan stopped.';
         this.scan_progress = 0;
+
+        if (this.active_auto_run_id) {
+            void this.stopDerivAutomationRun();
+        }
 
         if (this._scan_interval) { clearInterval(this._scan_interval); this._scan_interval = null; }
         if (this._cooldown_timer) { clearTimeout(this._cooldown_timer); this._cooldown_timer = null; }
@@ -266,6 +278,31 @@ export default class EntryScannerStore {
                 const decimalPart = parts[1] || '0';
                 const digit = parseInt(decimalPart[decimalPart.length - 1] || '0', 10);
                 this.onNewTick(symbol, digit);
+            } else if (res.msg_type === 'auto_start' || res.auto_start || res.msg_type === 'auto_get' || res.auto_get) {
+                const autoData = res.auto_start || res.auto_get;
+                if (autoData) {
+                    runInAction(() => {
+                        if (autoData.id) this.active_auto_run_id = autoData.id;
+                        if (autoData.contracts && Array.isArray(autoData.contracts)) {
+                            this.current_runs = autoData.contracts.length;
+                            const totalProfit = autoData.contracts.reduce((sum: number, c: any) => sum + Number(c.profit || 0), 0);
+                            this.total_profit = Number(totalProfit.toFixed(2));
+                            const lastContract = autoData.contracts[autoData.contracts.length - 1];
+                            if (lastContract && lastContract.profit !== undefined) {
+                                const profit = Number(lastContract.profit || 0);
+                                const isWin = profit > 0;
+                                this.trade_log.unshift({
+                                    time: new Date().toLocaleTimeString(),
+                                    market: this.scan_result?.displayName || 'Deriv Auto Strategy',
+                                    direction: this.scan_result?.direction || 'AUTO',
+                                    prediction: this.scan_result?.prediction || 0,
+                                    result: isWin ? 'WIN' : 'LOSS',
+                                    profit,
+                                });
+                            }
+                        }
+                    });
+                }
             }
         });
 
@@ -627,7 +664,7 @@ export default class EntryScannerStore {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // DIRECT SCANNER TRADE EXECUTION
+    // DERIV AUTOMATION API & DIRECT TRADE EXECUTION
     // ═══════════════════════════════════════════════════════════
 
     @action public executeTrade() {
@@ -637,6 +674,86 @@ export default class EntryScannerStore {
             return;
         }
 
+        if (this.use_automation_api && this.isApiReady()) {
+            this.startDerivAutomationRun();
+        } else {
+            this.executeDirectTrade();
+        }
+    }
+
+    @action public async startDerivAutomationRun() {
+        if (!this.scan_result) return;
+        const result = this.scan_result;
+        const contract_type = this.getContractType(result);
+        const barrier = this.custom_prediction !== null ? this.custom_prediction : this.getBarrier(result);
+        const targetSymbol = result.symbol || this.target_single_symbol || '1HZ100V';
+
+        this.scan_phase = 'trading';
+        this.is_executing_trade = true;
+        this.scan_status = `🤖 [Deriv Automation API] Initializing server-side strategy for ${result.displayName}...`;
+
+        try {
+            const autoRequest = {
+                auto_start: 1,
+                contract_template: {
+                    underlying_symbol: targetSymbol,
+                    contract_type,
+                    amount: Number(this.stake) || 0.5,
+                    basis: 'stake',
+                    currency: this.root_store?.client?.currency || 'USD',
+                    duration: Number(this.duration) || 1,
+                    duration_unit: 't',
+                    ...(barrier !== null ? { barrier: String(barrier) } : {}),
+                },
+                strategy_id: 'martingale',
+                strategy_parameters: {
+                    multiplier: Number(this.martingale) || 2.0,
+                    take_profit: Number(this.take_profit) || 10,
+                    stop_loss: Number(this.stop_loss) || 50,
+                    max_stake: Number(this.stop_loss) || 100,
+                },
+                subscribe: 1,
+            };
+
+            const res = await api_base.api!.send(autoRequest) as any;
+
+            if (res?.error) {
+                console.warn('[EntryScannerStore] Deriv auto_start rejected. Falling back to local execution engine:', res.error);
+                this.executeDirectTrade();
+                return;
+            }
+
+            const autoId = res?.auto_start?.id || res?.auto_id || 'ACTIVE';
+            runInAction(() => {
+                this.active_auto_run_id = autoId;
+                this.scan_status = `⚡ Deriv Server Automation Running (Run #${autoId}). Live tracking enabled.`;
+                this.is_executing_trade = false;
+            });
+
+        } catch (err: any) {
+            console.warn('[EntryScannerStore] Deriv Automation API error, falling back to direct executor:', err);
+            this.executeDirectTrade();
+        }
+    }
+
+    @action public async stopDerivAutomationRun() {
+        if (this.active_auto_run_id && this.isApiReady()) {
+            try {
+                await api_base.api!.send({
+                    auto_stop: 1,
+                    ...(typeof this.active_auto_run_id === 'number' || typeof this.active_auto_run_id === 'string'
+                        ? { auto_id: this.active_auto_run_id }
+                        : {}),
+                });
+            } catch (err) {
+                console.warn('[EntryScannerStore] auto_stop notice:', err);
+            }
+            this.active_auto_run_id = null;
+        }
+    }
+
+    @action public executeDirectTrade() {
+        if (!this.scan_result || this.is_executing_trade) return;
         this.is_executing_trade = true;
         const result = this.scan_result;
         const contract_type = this.getContractType(result);
