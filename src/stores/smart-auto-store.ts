@@ -489,7 +489,12 @@ export default class SmartAutoStore {
             const max_stake = config.max_stake || 10;
             const final_stake = Math.max(0.35, Math.min(stake, max_stake));
 
-            this.addLog(`🚀 Placing ${runs} Bulk ${contract_type} trade(s) @ $${final_stake.toFixed(2)} simultaneously...`, 'trade');
+            const targetSymbol =
+                this.root_store.analysis?.symbol ||
+                (api_base.active_symbols?.[0] as any)?.symbol ||
+                '1HZ100V';
+
+            this.addLog(`🚀 Placing ${runs} Bulk ${contract_type} trade(s) on ${targetSymbol} @ $${final_stake.toFixed(2)} simultaneously...`, 'trade');
 
             const proposal_request = normalizeTradeParameters({
                 proposal: 1,
@@ -499,7 +504,7 @@ export default class SmartAutoStore {
                 currency: this.root_store.client.currency || 'USD',
                 duration: config.ticks || 1,
                 duration_unit: 't',
-                symbol: this.root_store.analysis.symbol,
+                symbol: targetSymbol,
                 ...(contract_type.includes('DIGIT')
                     ? contract_type.includes('EVEN') || contract_type.includes('ODD')
                         ? {}
@@ -559,19 +564,19 @@ export default class SmartAutoStore {
                     return;
                 }
 
-                const promises = remaining.map(cid =>
-                    api_base.api?.send({ proposal_open_contract: 1, contract_id: cid }).catch(() => null)
+                const checkPromises = remaining.map(cid =>
+                    api_base.api.send({ proposal_open_contract: 1, contract_id: cid }).catch(() => null)
                 );
 
-                const responses = await Promise.all(promises);
+                const responses = await Promise.all(checkPromises);
                 const stillOpen: string[] = [];
 
                 responses.forEach((res: any, idx) => {
                     const poc = res?.proposal_open_contract;
                     if (poc && poc.is_sold) {
-                        const p = Number(poc.profit || 0);
-                        totalProfit += p;
-                        if (p > 0) wins++;
+                        const profit = Number(poc.profit || 0);
+                        totalProfit += profit;
+                        if (profit > 0) wins++;
                         else losses++;
                     } else {
                         stillOpen.push(remaining[idx]);
@@ -646,7 +651,12 @@ export default class SmartAutoStore {
                 this.addLog(`[Safety] Capping stake $${stake} at $${max_stake}`, 'info');
             }
 
-            this.addLog(`Buying ${contract_type} for $${final_stake.toFixed(2)}`, 'trade');
+            const targetSymbol =
+                this.root_store.analysis?.symbol ||
+                (api_base.active_symbols?.[0] as any)?.symbol ||
+                '1HZ100V';
+
+            this.addLog(`Buying ${contract_type} on ${targetSymbol} for $${final_stake.toFixed(2)}`, 'trade');
 
             const proposal_request = normalizeTradeParameters({
                 proposal: 1,
@@ -656,7 +666,7 @@ export default class SmartAutoStore {
                 currency: this.root_store.client.currency || 'USD',
                 duration: config.ticks,
                 duration_unit: 't',
-                symbol: this.root_store.analysis.symbol,
+                symbol: targetSymbol,
                 ...(contract_type.includes('DIGIT')
                     ? contract_type.includes('EVEN') || contract_type.includes('ODD')
                         ? {}
