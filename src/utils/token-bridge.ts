@@ -9,16 +9,70 @@
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 
-/** Returns the raw accountsList map from localStorage */
+/** Returns the raw accountsList map from all localStorage/sessionStorage sources */
 export const getAccountsList = (): Record<string, string> => {
+    const map: Record<string, string> = {};
+
     try {
-        return JSON.parse(localStorage.getItem('accountsList') || '{}');
-    } catch {
-        return {};
-    }
+        // 1. Check accountsList
+        const rawAccountsList = localStorage.getItem('accountsList');
+        if (rawAccountsList) {
+            const parsed = JSON.parse(rawAccountsList);
+            if (parsed && typeof parsed === 'object') {
+                for (const k in parsed) {
+                    if (parsed[k] && !isInvalidBearerToken(parsed[k])) {
+                        map[k] = parsed[k];
+                    }
+                }
+            }
+        }
+
+        // 2. Check client.accounts / clientAccounts
+        const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+        if (rawClientAccounts) {
+            const parsed = JSON.parse(rawClientAccounts);
+            if (parsed && typeof parsed === 'object') {
+                for (const k in parsed) {
+                    const token = parsed[k]?.token || (typeof parsed[k] === 'string' ? parsed[k] : '');
+                    if (token && !isInvalidBearerToken(token)) {
+                        map[k] = token;
+                    }
+                }
+            }
+        }
+
+        // 3. Check deriv_accounts in session/local storage
+        const rawDerivAccounts = sessionStorage.getItem('deriv_accounts') || localStorage.getItem('deriv_accounts');
+        if (rawDerivAccounts) {
+            const parsed = JSON.parse(rawDerivAccounts);
+            if (Array.isArray(parsed)) {
+                parsed.forEach((item: any) => {
+                    const id = item?.account_id || item?.loginid;
+                    const token = item?.token;
+                    if (id && token && !isInvalidBearerToken(token)) {
+                        map[id] = token;
+                    }
+                });
+            }
+        }
+
+        // 4. Direct token fallback if mapped with active_loginid
+        const activeId = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid');
+        const directToken =
+            localStorage.getItem('token') ||
+            localStorage.getItem('active_token') ||
+            localStorage.getItem('authToken') ||
+            localStorage.getItem('token1') ||
+            localStorage.getItem('deriv_api_token');
+        if (activeId && directToken && !isInvalidBearerToken(directToken) && !map[activeId]) {
+            map[activeId] = directToken;
+        }
+    } catch {}
+
+    return map;
 };
 
-/** Returns the active loginid (e.g. "DOT12345" or "CR123456" or "VRTC1234") */
+/** Returns the active loginid (e.g. "CR123456" or "VRTC1234") */
 export const getActiveLoginId = (): string =>
     localStorage.getItem('active_loginid') ||
     localStorage.getItem('client.loginid') ||
@@ -39,17 +93,6 @@ export const getActiveToken = (): string | null => {
             return list[key];
         }
     }
-    try {
-        const clientAccounts = JSON.parse(localStorage.getItem('clientAccounts') || '{}');
-        if (id && clientAccounts[id]?.token && !isInvalidBearerToken(clientAccounts[id].token)) {
-            return clientAccounts[id].token;
-        }
-        for (const k in clientAccounts) {
-            if (clientAccounts[k]?.token && !isInvalidBearerToken(clientAccounts[k].token)) {
-                return clientAccounts[k].token;
-            }
-        }
-    } catch (e) {}
 
     const storedToken =
         localStorage.getItem('token') ||
