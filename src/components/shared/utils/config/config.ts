@@ -962,11 +962,11 @@ export const isProduction = () => {
 
 export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
 
-const getDefaultServerURL = () => {
+export const getDefaultServerURL = () => {
     return getLegacyServerURL();
 };
 
-const getLegacyServerURL = () => {
+export const getLegacyServerURL = () => {
     const { appId } = getDomainConfig();
     return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId || '1089')}`;
 };

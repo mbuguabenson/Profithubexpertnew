@@ -1,5 +1,5 @@
 import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
-import CopyTradingManager from './copy-trading-manager';
+import CopyTradingManager, { DerivClient } from './copy-trading-manager';
 import { getToken } from '@/external/bot-skeleton/services/api/appId';
 import { isSpecialCRAccount, getDemoAccountIdForSpecialCR } from '@/utils/special-accounts-config';
 import DBot from '@/external/bot-skeleton/scratch/dbot';
@@ -59,9 +59,6 @@ function cleanupKeys() {
     }
 }
 
-
-
-
 export function initReplicator(manager: CopyTradingManager) {
     const sub = async (payload: any) => {
         try {
@@ -83,7 +80,7 @@ export function initReplicator(manager: CopyTradingManager) {
                 return;
             }
 
-            // Check if copy trading is active
+            // Check if copy trading or demo-to-real is active
             const isCopyTrading = localStorage.getItem('iscopyTrading') === 'true';
             const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
 
@@ -92,15 +89,11 @@ export function initReplicator(manager: CopyTradingManager) {
                 return;
             }
 
-            // Get tokens array from localStorage (like the working code)
-            let tokens: string[] = [];
-            const copyTokensArray = JSON.parse(localStorage.getItem('copyTokensArray') || '[]');
-
             // Check if special CR account is active (SPECIAL CR LOGIC)
             const showAsCR = typeof window !== 'undefined' ? localStorage.getItem('show_as_cr') : null;
             const isSpecialCR = showAsCR && isSpecialCRAccount(showAsCR);
 
-            // Get current user token
+            // Get current user / master token
             let currentToken: any = null;
             let masterToken: string | undefined = undefined;
 
@@ -112,7 +105,6 @@ export function initReplicator(manager: CopyTradingManager) {
                     if (demoToken) {
                         masterToken = demoToken;
                         currentToken = { token: demoToken, account_id: demoAccountId };
-                        console.log('[Replicator] 🎯 Special CR mode - using demo token as master:', demoAccountId);
                     } else {
                         currentToken = getToken();
                         masterToken = currentToken?.token;
@@ -126,54 +118,41 @@ export function initReplicator(manager: CopyTradingManager) {
                 masterToken = currentToken?.token;
             }
 
-            if (!masterToken) {
-                updateReplicationStatus('error', 'No master token found');
-                return;
-            }
+            // Collect all target copier tokens (PAT tokens)
+            let copierTokens: string[] = [];
+            const copyTokensArray: string[] = JSON.parse(localStorage.getItem('copyTokensArray') || '[]');
+            const managerCopierTokens = manager.copiers
+                .filter(c => c.enabled !== false && c.token)
+                .map(c => c.token.trim());
 
             if (isCopyTrading) {
-                const uniqueCopierTokens = copyTokensArray.filter(
-                    (token: string) => token && token.trim() && token !== masterToken
-                );
-                tokens = [masterToken, ...uniqueCopierTokens];
-                const uniqueTokens = Array.from(new Set(tokens.filter(Boolean)));
-                tokens = uniqueTokens
-                    .filter((t: string) => t === masterToken)
-                    .concat(uniqueTokens.filter((t: string) => t !== masterToken));
-            } else if (isDemoToReal) {
-                const realToken = manager.master.token;
+                const combined = [...copyTokensArray, ...managerCopierTokens];
+                copierTokens = Array.from(new Set(combined.filter(t => t && t.trim() && t !== masterToken)));
+            }
+
+            if (isDemoToReal) {
+                const realToken = manager.master?.token;
                 if (realToken && realToken !== masterToken) {
-                    tokens = [masterToken, realToken];
+                    copierTokens.push(realToken);
                 } else {
                     const accountsList = JSON.parse(localStorage.getItem('accountsList') || '{}');
-                    const realLoginId = Object.keys(accountsList).find(k => !k.startsWith('VR') && (k.startsWith('CR') || k.startsWith('ROT')));
+                    const realLoginId = Object.keys(accountsList).find(k => !k.startsWith('VR') && (k.startsWith('CR') || k.startsWith('ROT') || k.startsWith('MLT')));
                     if (realLoginId) {
                         const realTokenFromList = accountsList[realLoginId];
                         if (realTokenFromList && realTokenFromList !== masterToken) {
-                            tokens = [masterToken, realTokenFromList];
-                        } else {
-                            tokens = [masterToken];
+                            copierTokens.push(realTokenFromList);
                         }
-                    } else {
-                        tokens = [masterToken];
                     }
                 }
-                tokens = Array.from(new Set(tokens.filter(Boolean)));
+                copierTokens = Array.from(new Set(copierTokens.filter(t => t && t.trim() && t !== masterToken)));
             }
 
-            if (tokens.length < 1) {
-                updateReplicationStatus('no_clients', 'No tokens added - Add tokens first');
+            if (copierTokens.length < 1) {
+                updateReplicationStatus('no_clients', 'No copier tokens active — Add PAT tokens in Copy Trading');
                 return;
             }
 
-            tokens = Array.from(new Set(tokens.filter((t: string) => t && t.trim() && t.length > 0)));
-
-            if (tokens.length < 1) {
-                updateReplicationStatus('no_clients', 'No valid tokens - Add tokens first');
-                return;
-            }
-
-            updateReplicationStatus('copying', `Copying to ${tokens.length} account(s)...`);
+            updateReplicationStatus('copying', `Mirroring to ${copierTokens.length} PAT copier account(s)...`);
 
             // Build request contract parameters
             let contract_parameters: any = null;
@@ -196,6 +175,8 @@ export function initReplicator(manager: CopyTradingManager) {
                         ...(matchedProposal.barrier2 !== undefined && { barrier2: matchedProposal.barrier2 }),
                         ...(matchedProposal.selected_tick !== undefined && { selected_tick: matchedProposal.selected_tick }),
                         ...(matchedProposal.prediction !== undefined && { prediction: matchedProposal.prediction }),
+                        ...(matchedProposal.multiplier !== undefined && { multiplier: matchedProposal.multiplier }),
+                        ...(matchedProposal.growth_rate !== undefined && { growth_rate: matchedProposal.growth_rate }),
                     };
                 }
             }
@@ -217,6 +198,8 @@ export function initReplicator(manager: CopyTradingManager) {
                     ...((params.barrier2 !== undefined || tradeOptions.barrier2 !== undefined) && { barrier2: params.barrier2 ?? tradeOptions.barrier2 }),
                     ...((params.selected_tick !== undefined || tradeOptions.selected_tick !== undefined) && { selected_tick: params.selected_tick ?? tradeOptions.selected_tick }),
                     ...((params.prediction !== undefined || tradeOptions.prediction !== undefined) && { prediction: params.prediction ?? tradeOptions.prediction }),
+                    ...((params.multiplier !== undefined || tradeOptions.multiplier !== undefined) && { multiplier: params.multiplier ?? tradeOptions.multiplier }),
+                    ...((params.growth_rate !== undefined || tradeOptions.growth_rate !== undefined) && { growth_rate: params.growth_rate ?? tradeOptions.growth_rate }),
                 };
             }
 
@@ -227,46 +210,35 @@ export function initReplicator(manager: CopyTradingManager) {
                 contract_parameters.amount = Number(amt.toFixed(2));
             }
 
-            // ── Execute trade purchases in parallel across all accounts via WebSocket ──
+            // ── Execute trade purchases in parallel across all PAT copier accounts via WebSocket ──
             const connectedClients = manager.getConnectedClients();
             let successCount = 0;
             let failCount = 0;
 
-            const executionPromises = tokens.map(async (token) => {
-                let targetClient = connectedClients.find(c => c.client.loginId && (token === c.client.loginId || token.includes(c.client.loginId)))?.client;
-                
-                // If client not connected in manager, try finding in manager copierClients map
-                if (!targetClient) {
-                    for (const [, client] of (manager as any).copierClients.entries()) {
-                        if (client.status === 'connected') {
-                            targetClient = client;
-                            break;
-                        }
-                    }
-                }
+            const executionPromises = copierTokens.map(async (token) => {
+                const cleanTok = token.trim();
+                let targetClient = connectedClients.find(c => c.token === cleanTok)?.client;
 
                 try {
-                    if (targetClient && targetClient.status === 'connected') {
+                    if (targetClient && targetClient.status === 'connected' && targetClient.ws?.readyState === WebSocket.OPEN) {
                         const buyRes = await targetClient.buyContract(contract_parameters);
                         successCount++;
                         tradeLogs.push({
                             id: `trade-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                            accountId: targetClient.loginId || 'Connected Account',
+                            accountId: targetClient.loginId || 'PAT Account',
                             payload: contract_parameters,
                             time: Date.now(),
                         });
                         return buyRes;
                     } else {
-                        // Fallback: connect standalone client for this token
-                        const { DerivClient } = await import('./copy-trading-manager-singleton').then(m => m) as any;
+                        // Connect standalone client for this PAT token
                         const standalone = new DerivClient();
-                        await standalone.connectAndAuthorize(token);
+                        await standalone.connectAndAuthorize(cleanTok);
                         const buyRes = await standalone.buyContract(contract_parameters);
-                        standalone.disconnect();
                         successCount++;
                         tradeLogs.push({
                             id: `trade-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                            accountId: standalone.loginId || 'Copier Account',
+                            accountId: standalone.loginId || 'PAT Account',
                             payload: contract_parameters,
                             time: Date.now(),
                         });
@@ -275,10 +247,10 @@ export function initReplicator(manager: CopyTradingManager) {
                 } catch (tradeErr: any) {
                     failCount++;
                     const errorMsg = tradeErr?.message || 'Trade purchase failed';
-                    console.warn(`[Replicator] ⚠️ Purchase failed for token ${token.slice(0, 6)}...:`, errorMsg);
+                    console.warn(`[Replicator] ⚠️ PAT Mirroring failed for token ${cleanTok.slice(0, 6)}...:`, errorMsg);
                     tradeLogs.push({
                         id: `err-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                        accountId: 'Copier Account',
+                        accountId: 'PAT Copier',
                         payload: contract_parameters,
                         time: Date.now(),
                         error: errorMsg,
@@ -289,9 +261,9 @@ export function initReplicator(manager: CopyTradingManager) {
             await Promise.allSettled(executionPromises);
 
             if (successCount > 0) {
-                updateReplicationStatus('success', `Copied to ${successCount} account(s) successfully${failCount > 0 ? ` (${failCount} failed)` : ''}`);
+                updateReplicationStatus('success', `Copied to ${successCount} PAT account(s) successfully${failCount > 0 ? ` (${failCount} failed)` : ''}`);
             } else {
-                updateReplicationStatus('error', `Trade replication failed for all accounts`);
+                updateReplicationStatus('error', `Trade mirroring failed for all PAT copier accounts`);
             }
 
             cleanupKeys();

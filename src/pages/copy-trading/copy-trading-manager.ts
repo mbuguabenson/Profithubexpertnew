@@ -1,6 +1,6 @@
 // @ts-ignore
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
-import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
+import { getAppId, getLegacyServerURL } from '@/components/shared/utils/config/config';
 
 export type TConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -30,9 +30,10 @@ const LS_KEYS = {
 };
 
 // Lightweight Deriv API client wrapper for isolated connections per token using native WebSocket
-class DerivClient {
+export class DerivClient {
     api: any | null = null;
     status: TConnectionStatus = 'disconnected';
+    token?: string;
     loginId?: string;
     balance?: number;
     currency?: string;
@@ -42,10 +43,11 @@ class DerivClient {
     async connectAndAuthorize(token: string) {
         this.status = 'connecting';
         const cleanToken = token.trim();
+        this.token = cleanToken;
 
-        return new Promise<any>(async (resolve, reject) => {
+        return new Promise<any>((resolve, reject) => {
             try {
-                const wsUrl = await getSocketURL();
+                const wsUrl = getLegacyServerURL();
                 const ws = new WebSocket(wsUrl);
                 this.ws = ws;
 
@@ -53,9 +55,9 @@ class DerivClient {
                     if (this.status === 'connecting') {
                         this.status = 'error';
                         ws.close();
-                        reject(new Error('WebSocket connection timeout'));
+                        reject(new Error('WebSocket connection timeout for PAT token'));
                     }
-                }, 10000);
+                }, 12000);
 
                 ws.onopen = () => {
                     ws.send(JSON.stringify({ authorize: cleanToken }));
@@ -69,7 +71,7 @@ class DerivClient {
                             if (data.error) {
                                 this.status = 'error';
                                 ws.close();
-                                reject(new Error(data.error.message || 'Authorization failed'));
+                                reject(new Error(data.error.message || 'Authorization failed for token'));
                                 return;
                             }
                             const auth = data.authorize;
@@ -99,7 +101,7 @@ class DerivClient {
                     clearTimeout(timeout);
                     if (this.status === 'connecting') {
                         this.status = 'error';
-                        reject(new Error('WebSocket connection failed'));
+                        reject(new Error('WebSocket connection failed for PAT token'));
                     }
                 };
 
@@ -118,17 +120,22 @@ class DerivClient {
 
     async buyContract(params: any): Promise<any> {
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-            throw new Error('WebSocket connection is not active');
+            if (this.token) {
+                await this.connectAndAuthorize(this.token);
+            } else {
+                throw new Error('WebSocket connection is not active');
+            }
         }
 
         const ws = this.ws;
+        if (!ws) throw new Error('WebSocket connection is not active');
         const reqId = Math.floor(Math.random() * 1000000);
 
         return new Promise<any>((resolve, reject) => {
             const timeout = setTimeout(() => {
                 ws.removeEventListener('message', handleMessage);
-                reject(new Error('Proposal/Buy request timeout'));
-            }, 10000);
+                reject(new Error('Proposal/Buy request timeout for copier trade'));
+            }, 12000);
 
             const handleMessage = (event: MessageEvent) => {
                 try {
@@ -139,7 +146,7 @@ class DerivClient {
                         if (data.error) {
                             clearTimeout(timeout);
                             ws.removeEventListener('message', handleMessage);
-                            reject(new Error(data.error.message || 'Proposal failed'));
+                            reject(new Error(data.error.message || 'Proposal failed for copier'));
                             return;
                         }
                         if (data.proposal?.id) {
@@ -157,7 +164,7 @@ class DerivClient {
                         clearTimeout(timeout);
                         ws.removeEventListener('message', handleMessage);
                         if (data.error) {
-                            reject(new Error(data.error.message || 'Buy failed'));
+                            reject(new Error(data.error.message || 'Buy execution failed for copier'));
                         } else {
                             resolve(data.buy);
                         }
@@ -170,18 +177,21 @@ class DerivClient {
             ws.addEventListener('message', handleMessage);
 
             // Construct proposal request
-            const proposalReq = {
+            const proposalReq: Record<string, any> = {
                 proposal: 1,
                 amount: params.amount || params.price || 1,
                 basis: params.basis || 'stake',
                 contract_type: params.contract_type,
-                currency: params.currency || this.currency || 'USD',
+                currency: this.currency || params.currency || 'USD',
                 duration: params.duration || 1,
                 duration_unit: params.duration_unit || 't',
                 symbol: params.underlying_symbol || params.symbol,
-                ...(params.barrier !== undefined && { barrier: typeof params.barrier === 'number' ? params.barrier : Number(params.barrier) }),
-                ...(params.barrier2 !== undefined && { barrier2: String(params.barrier2) }),
+                ...(params.barrier !== undefined && { barrier: params.barrier }),
+                ...(params.barrier2 !== undefined && { barrier2: params.barrier2 }),
                 ...(params.prediction !== undefined && { prediction: Number(params.prediction) }),
+                ...(params.selected_tick !== undefined && { selected_tick: Number(params.selected_tick) }),
+                ...(params.multiplier !== undefined && { multiplier: Number(params.multiplier) }),
+                ...(params.growth_rate !== undefined && { growth_rate: Number(params.growth_rate) }),
                 req_id: reqId,
             };
 
@@ -310,19 +320,19 @@ export class CopyTradingManager {
     }
 
     // Public method to get connected clients for replicator
-    getConnectedClients(): Array<{ id: string; client: DerivClient }> {
-        const clients: Array<{ id: string; client: DerivClient }> = [];
+    getConnectedClients(): Array<{ id: string; token: string; client: DerivClient }> {
+        const clients: Array<{ id: string; token: string; client: DerivClient }> = [];
 
         // Add master client if connected
         if (this.masterClient && this.master.status === 'connected') {
-            clients.push({ id: 'master', client: this.masterClient });
+            clients.push({ id: 'master', token: this.master.token, client: this.masterClient });
         }
 
         // Add copier clients if connected
         for (const [id, client] of this.copierClients.entries()) {
             const copier = this.copiers.find(c => c.id === id);
             if (copier && copier.status === 'connected' && copier.enabled) {
-                clients.push({ id, client });
+                clients.push({ id, token: copier.token, client });
             }
         }
 
