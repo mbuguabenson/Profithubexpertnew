@@ -91,7 +91,7 @@ export default function ChunkLoader({ message, isWelcome = false }: ChunkLoaderP
                     <div className='orbital-ring orbital-ring--3' />
                     <div className='brand-emblem'>
                         <img
-                            src='/logo.png'
+                            src='/logo_icon.svg'
                             alt={brandName}
                             className='brand-logo-img'
                             onError={e => {

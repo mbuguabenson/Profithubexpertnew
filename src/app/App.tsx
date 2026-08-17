@@ -38,7 +38,7 @@ const router = createBrowserRouter(
             path='/'
             element={
                 <Suspense
-                    fallback={<ChunkLoader message={`Initializing ${brandLabel}...`} isWelcome={true} />}
+                    fallback={<ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={false} />}
                 >
                     <TranslationProvider defaultLang='EN' i18nInstance={i18nInstance}>
                         <LanguageHandler>

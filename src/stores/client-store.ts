@@ -297,6 +297,7 @@ export default class ClientStore {
 
     /**
      * Request logout via WebSocket (legacy method for backward compatibility)
+     */
     logout = async () => {
         this.setIsLoggingOut(true);
         try {

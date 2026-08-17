@@ -229,9 +229,7 @@ const AppContent = observer(() => {
 
     if (common?.error) return null;
 
-    return is_loading ? (
-        <ChunkLoader message={`Initializing ${brandLabel} account...`} isWelcome={true} />
-    ) : (
+    return (
         <AuthLoadingWrapper>
             <ThemeProvider theme={is_dark_mode_on ? 'dark' : 'light'}>
                 <BlocklyLoading />

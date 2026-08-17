@@ -125,9 +125,9 @@ const WelcomeScreen = ({
                     <div className='ws-ring ws-ring--inner' />
                     <div className='ws-logo-core'>
                         <img
-                            src='/logo_light.png'
+                            src='/logo_icon.svg'
                             alt={brandLabel}
-                            style={{ width: '44px', height: 'auto', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 0 14px rgba(255,255,255,0.5))' }}
+                            style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 0 14px rgba(0, 242, 254, 0.6))' }}
                         />
                     </div>
                 </div>

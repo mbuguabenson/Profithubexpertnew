@@ -16,15 +16,23 @@ const isDomainAllowed = (domain_name: string) => {
 };
 
 export const getBrandWebsiteName = () => {
-    return config_data.domain_name;
+    try {
+        const siteConfig = JSON.parse(localStorage.getItem('site_config') || '{}');
+        if (siteConfig?.brandDomain) return siteConfig.brandDomain;
+    } catch {}
+    return config_data.domain_name || 'www.profithub.co.ke';
 };
 
 export const getBrandLabel = () => {
-    return config_data.brand_name;
+    try {
+        const siteConfig = JSON.parse(localStorage.getItem('site_config') || '{}');
+        if (siteConfig?.brandName) return siteConfig.brandName;
+    } catch {}
+    return config_data.brand_name || 'ProfitHub';
 };
 
 export const getBrandTitle = () => {
-    return config_data.brand_name;
+    return getBrandLabel();
 };
 
 export const getPlatformConfig = (): TPlatform => {

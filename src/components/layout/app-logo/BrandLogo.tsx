@@ -1,51 +1,78 @@
 import { observer } from 'mobx-react-lite';
 import useThemeSwitcher from '@/hooks/useThemeSwitcher';
 import { getSiteConfig } from '@/utils/supabase-copy';
+import { getBrandLabel } from '@/components/shared/utils/brand/brand';
 
 type TBrandLogoProps = {
     width?: number;
     height?: number;
     fill?: string;
     className?: string;
+    showTagline?: boolean;
 };
 
-export const BrandLogo = observer(({ height = 32, className = '' }: TBrandLogoProps) => {
+export const BrandLogo = observer(({ height = 34, className = '', showTagline = true }: TBrandLogoProps) => {
     const { is_dark_mode_on } = useThemeSwitcher();
     const cfg = getSiteConfig();
-    const customLogo = cfg.logoBase64;
-
-    const src = customLogo
-        ? customLogo
-        : is_dark_mode_on ? '/logo_dark.png' : '/logo_light.png';
+    const customLogo = cfg?.logoBase64;
+    const brandName = getBrandLabel() || 'ProfitHub';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }} className={className}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <img
-                    src={src}
-                    alt='Profit Hub Logo'
-                    style={{ height: `${height}px`, width: 'auto', display: 'block', objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))' }}
-                />
-                <span style={{ 
-                    fontSize: '1.4rem', 
-                    fontWeight: 800, 
-                    background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)', 
-                    WebkitBackgroundClip: 'text', 
-                    WebkitTextFillColor: 'transparent',
-                    letterSpacing: '0.5px'
-                }}>Pfhub</span>
-            </div>
-            <div style={{ 
-                fontSize: '0.65rem', 
-                color: 'var(--text-less-prominent)', 
-                marginTop: '0px', 
-                marginLeft: '42px', 
-                letterSpacing: '0.5px',
-                fontWeight: 600,
-                textTransform: 'uppercase'
-            }}>
-                Powered by Deriv
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {customLogo ? (
+                    <img
+                        src={customLogo}
+                        alt={brandName}
+                        style={{ height: `${height}px`, width: 'auto', display: 'block', objectFit: 'contain' }}
+                    />
+                ) : (
+                    <img
+                        src='/logo_icon.svg'
+                        alt={brandName}
+                        style={{
+                            height: `${height}px`,
+                            width: `${height}px`,
+                            display: 'block',
+                            objectFit: 'contain',
+                            filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.45))',
+                        }}
+                    />
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        <span style={{ 
+                            fontSize: '1.25rem', 
+                            fontWeight: 900, 
+                            color: '#ffffff',
+                            letterSpacing: '0.8px',
+                            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                        }}>PROFIT</span>
+                        <span style={{ 
+                            fontSize: '1.25rem', 
+                            fontWeight: 900, 
+                            background: 'linear-gradient(135deg, #00F2FE 0%, #3b82f6 100%)', 
+                            WebkitBackgroundClip: 'text', 
+                            WebkitTextFillColor: 'transparent',
+                            letterSpacing: '0.8px',
+                            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                        }}>HUB</span>
+                    </div>
+                    {showTagline && (
+                        <span style={{ 
+                            fontSize: '0.55rem', 
+                            color: 'rgba(255, 255, 255, 0.55)', 
+                            marginTop: '2px', 
+                            letterSpacing: '1px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase'
+                        }}>
+                            EXPERT ALGO TRADING
+                        </span>
+                    )}
+                </div>
             </div>
         </div>
     );
 });
+

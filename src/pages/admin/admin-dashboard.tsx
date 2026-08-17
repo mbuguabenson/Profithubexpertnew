@@ -1012,7 +1012,7 @@ Status: Systems functional. Replicator nodes ready.
                     <div className='adm-login__card-glow' />
                     <div className='adm-login__header'>
                         <div className='adm-login__icon-ring'>
-                            <img src='/logo_light.png' alt='ProfitHub' className='adm-login__logo' />
+                            <img src='/logo_icon.svg' alt='ProfitHub' className='adm-login__logo' style={{ width: 44, height: 44 }} />
                         </div>
                         <h2 className='adm-login__title'>Admin Console 3.0</h2>
                         <p className='adm-login__desc'>Secure access to ProfitHub platform management</p>
@@ -1080,7 +1080,7 @@ Status: Systems functional. Replicator nodes ready.
             <aside className='adm-sidebar'>
                 <div className='adm-sidebar__brand'>
                     <div className='adm-sidebar__brand-icon'>
-                        <img src='/logo_light.png' alt='' style={{ width: 20, height: 20 }} />
+                        <img src='/logo_icon.svg' alt='' style={{ width: 22, height: 22, filter: 'drop-shadow(0 0 6px rgba(0, 242, 254, 0.5))' }} />
                     </div>
                     {!sidebarCollapsed && <span className='adm-sidebar__brand-text'>RootAdmin</span>}
                 </div>
