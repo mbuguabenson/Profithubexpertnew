@@ -40,7 +40,7 @@ const getInitialToken = (loginid: string): string => {
 };
 
 /**
- * DTraderPage — embeds the DTrader build hosted at https://dtraderhub-mu.vercel.app/
+ * DTraderPage — embeds the DTrader build hosted at https://deriv-dtrader.vercel.app/
  * Passes active login tokens directly and renders the trading terminal seamlessly.
  */
 const DTraderPage: React.FC = observer(() => {
@@ -91,7 +91,7 @@ const DTraderPage: React.FC = observer(() => {
     }, [client?.loginid]);
 
     const appId = getAppId() || '121856';
-    const rawBaseUrl = process.env.DTRADER_URL || 'https://dtraderhub-mu.vercel.app';
+    const rawBaseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
     const baseUrl = rawBaseUrl.replace(/\/+$/, '');
     const embedBase = baseUrl;
 

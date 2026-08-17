@@ -37,7 +37,8 @@ const TradingView = lazy(() => import('../tradingview'));
 const AnalysisTools = lazy(() => import('../analysis-tool'));
 const Signals = lazy(() => import('../signals'));
 const ScannerPage = lazy(() => import('../scanner/scanner'));
-
+const CopyTrading = lazy(() => import('../copy-trading'));
+const AutoTrades = lazy(() => import('../auto-trades/auto-trades'));
 
 const ManualTrading = lazy(() => import('../manual-trading'));
 const EasyTool = lazy(() => import('../easy-tool'));
@@ -46,7 +47,12 @@ const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-c
 const Marketkiller = lazy(() => import('../marketkiller'));
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
 const TradingBots = lazy(() => import('../free-bots/trading-bots'));
+const AiCompoundingEngine = lazy(() => import('../ai-compounding-engine'));
 const DTraderPage = lazy(() => import('../dtrader/index'));
+const EntryScanner = lazy(() => import('../entry-scanner/entry-scanner').then(m => ({ default: m.EntryScanner })));
+const DCirclesPage = lazy(() => import('../dcircles/dcircles'));
+const AccountCenter = lazy(() => import('../account-center'));
+const SystemCenter = lazy(() => import('../system-center'));
 const ProJournal = lazy(() => import('../pro-journal'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
@@ -373,6 +379,18 @@ const AppWrapper = observer(() => {
             )
         },
         {
+            key: 'copy_trading',
+            id: 'id-copy-trading',
+            label: <TabIcon iconKey='copy_trading' label='Copy Trading' />,
+            content: (
+                <TabErrorBoundary tabId='id-copy-trading' tabName='Copy Trading'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Copy Trading...')} />}>
+                        <CopyTrading />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
             key: 'tradingview',
             id: 'id-tradingview',
             label: <TabIcon iconKey='tradingview' label='TradingView' />,
@@ -397,6 +415,18 @@ const AppWrapper = observer(() => {
             )
         },
         {
+            key: 'auto_trades',
+            id: 'id-auto-trades',
+            label: <TabIcon iconKey='auto_trades' label='Auto Trades' />,
+            content: (
+                <TabErrorBoundary tabId='id-auto-trades' tabName='Auto Trades'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Auto Trades...')} />}>
+                        <AutoTrades />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
             key: 'scanner',
             id: 'id-scanner',
             label: <TabIcon iconKey='scanner' label='AI Strategy Scanner' />,
@@ -408,7 +438,6 @@ const AppWrapper = observer(() => {
                 </TabErrorBoundary>
             )
         },
-
         {
             key: 'manual_trading',
             id: 'id-manual-trading',
@@ -482,6 +511,18 @@ const AppWrapper = observer(() => {
             )
         },
         {
+            key: 'ai_compounding_engine',
+            id: 'id-ai-compounding-engine',
+            label: <TabIcon iconKey='ai_compounding_engine' label='AI Compounding Engine' />,
+            content: (
+                <TabErrorBoundary tabId='id-ai-compounding-engine' tabName='AI Compounding Engine'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AI Compounding Engine...')} />}>
+                        <AiCompoundingEngine />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
             key: 'dtrader',
             id: 'id-dtrader',
             label: <TabIcon iconKey='dtrader' label='DTrader' />,
@@ -489,6 +530,54 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
                         <DTraderPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'ai_trading_engine',
+            id: 'id-ai-trading-engine',
+            label: <TabIcon iconKey='ai_trading_engine' label='AI Trading Engine' />,
+            content: (
+                <TabErrorBoundary tabId='id-ai-trading-engine' tabName='AI Trading Engine'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AI Trading Engine...')} />}>
+                        <EntryScanner />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'dcircles',
+            id: 'id-dcircles',
+            label: <TabIcon iconKey='dcircles' label='DCircles' />,
+            content: (
+                <TabErrorBoundary tabId='id-dcircles' tabName='DCircles'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DCircles...')} />}>
+                        <DCirclesPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'account_center',
+            id: 'id-account-center',
+            label: <TabIcon iconKey='account_center' label='Account Center' />,
+            content: (
+                <TabErrorBoundary tabId='id-account-center' tabName='Account Center'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Account Center...')} />}>
+                        <AccountCenter />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'system_center',
+            id: 'id-system-center',
+            label: <TabIcon iconKey='system_center' label='System Center' />,
+            content: (
+                <TabErrorBoundary tabId='id-system-center' tabName='System Center'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading System Center...')} />}>
+                        <SystemCenter />
                     </Suspense>
                 </TabErrorBoundary>
             )

@@ -150,7 +150,7 @@ Located at `src/utils/token-bridge.ts`, this engine enables multi-account switch
 ### 4.2 Cross-Iframe Token Injection (DTrader & Tools)
 1. **URL Query String Synchronization**:
    ```
-   https://dtraderhub-mu.vercel.app/?app_id=121856&symbol=1HZ100V&theme=dark&hide_header_login=true&is_mobile_app=true&acct1=CR123456&token1=a1-xxx&cur1=USD&acct2=VRTC9876&token2=a1-yyy
+   https://deriv-dtrader.vercel.app/?app_id=121856&symbol=1HZ100V&theme=dark&hide_header_login=true&is_mobile_app=true&acct1=CR123456&token1=a1-xxx&cur1=USD&acct2=VRTC9876&token2=a1-yyy
    ```
 2. **Window `postMessage` Broadcast**:
    ```ts
@@ -259,7 +259,7 @@ stateDiagram-v2
 Located at `src/components/iframe-wrapper/iframe-wrapper.tsx` and `src/components/iframe-bridge/`.
 
 ### 7.1 Supported Third-Party Analysis & Bot Iframes
-- `DTrader Terminal`: `https://dtraderhub-mu.vercel.app/`
+- `DTrader Terminal`: `https://deriv-dtrader.vercel.app/`
 - `Analysis Tool`: `https://analysisprofithub.vercel.app/`
 - `Smart Analysis`: `https://www.smartanalysistool.com/`
 - `Deriv Circles`: `https://dcircles-six.vercel.app/`
@@ -314,7 +314,7 @@ export const TRADE_TYPE_CATEGORIES = {
 3. The bot will automatically appear on the Free Bots dashboard with full metadata.
 
 ### 9.2 Modifying External URLs
-- Update `.env` (e.g. `DTRADER_URL=https://dtraderhub-mu.vercel.app`).
+- Update `.env` (e.g. `DTRADER_URL=https://deriv-dtrader.vercel.app`).
 - When referencing embedded tools, ensure the base URL does not double-append paths if the app is hosted at root `/`.
 
 ### 9.3 Verification & Build Commands
