@@ -7,6 +7,7 @@ import { useApiBase } from '@/hooks/useApiBase';
 import { useStore } from '@/hooks/useStore';
 import { isDemoAccount } from '@/utils/account-helpers';
 import { Localize, localize } from '@deriv-com/translations';
+import { DerivAccountWalletService, DerivWallet } from '@/services/deriv-account-wallet.service';
 import { TAccountSwitcher } from './common/types';
 import AccountInfoWrapper from './account-info-wrapper';
 const realAccountImg = '/real-account.jpg';
@@ -42,10 +43,23 @@ const RealIcon = ({ src }: { src: string }) => (
     </div>
 );
 
+// ─── Wallet icon ──────────────────────────────────────────────────────────────
+const WalletIcon = () => (
+    <div className='acc-icon acc-icon--real' style={{ background: '#ff444f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', borderRadius: '50%' }}>
+        <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+            <path d='M21 12V7H5a2 2 0 0 1 0-4h14v4' />
+            <path d='M3 5v14a2 2 0 0 0 2 2h16v-5' />
+            <path d='M18 12a2 2 0 0 0 0 4h4v-4Z' />
+        </svg>
+    </div>
+);
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'real' | 'demo'>('real');
+    const [activeTab, setActiveTab] = useState<'real' | 'demo' | 'wallets'>('real');
+    const [wallets, setWallets] = useState<DerivWallet[]>([]);
+    const [userNickname, setUserNickname] = useState<string>('');
     const wrapperRef = useRef<HTMLDivElement>(null);
     const { accountList, activeLoginid } = useApiBase();
     const { client, run_panel } = useStore() ?? {};
@@ -83,6 +97,25 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         window.addEventListener('currency_changed', handleSync);
         return () => window.removeEventListener('currency_changed', handleSync);
     }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+        DerivAccountWalletService.getAccountNickname()
+            .then(nick => {
+                if (isMounted && nick) setUserNickname(nick);
+            })
+            .catch(() => {});
+
+        DerivAccountWalletService.getWallets(displayCurrency)
+            .then(w => {
+                if (isMounted && w) setWallets(w);
+            })
+            .catch(() => {});
+
+        return () => {
+            isMounted = false;
+        };
+    }, [displayCurrency, isOpen]);
 
     const is_bot_running = run_panel?.is_running || api_base.is_running;
 
@@ -410,7 +443,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
             {/* ── Dropdown Panel ──────────────────────────────────────────── */}
             {isOpen && (
                 <div className='acc-panel' role='dialog' aria-label={localize('Account switcher')}>
-                    {/* Real / Demo tab toggle */}
+                    {/* Real / Demo / Wallets tab toggle */}
                     <div className='acc-panel__tabs'>
                         <button
                             className={classNames('acc-panel__tab', {
@@ -434,15 +467,69 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             <Localize i18n_default_text='Demo' />
                             {activeTab === 'demo' && <span className='acc-panel__tab-underline acc-panel__tab-underline--demo' />}
                         </button>
+                        <button
+                            className={classNames('acc-panel__tab', {
+                                'acc-panel__tab--active-wallets': activeTab === 'wallets',
+                                'acc-panel__tab--inactive': activeTab !== 'wallets',
+                            })}
+                            onClick={() => setActiveTab('wallets')}
+                            id='acc-tab-wallets'
+                        >
+                            <Localize i18n_default_text='Wallets' />
+                            {activeTab === 'wallets' && <span className='acc-panel__tab-underline acc-panel__tab-underline--wallets' />}
+                        </button>
                     </div>
 
-                    {/* Account list */}
+                    {/* Account / Wallet list */}
                     <div className='acc-panel__body'>
                         <p className='acc-panel__section-label'>
-                            <Localize i18n_default_text='Deriv accounts' />
+                            {activeTab === 'wallets'
+                                ? localize('Deriv Wallets')
+                                : userNickname
+                                ? `${localize('Deriv accounts')} (${userNickname})`
+                                : localize('Deriv accounts')}
                         </p>
 
-                        {tabAccounts.length === 0 ? (
+                        {activeTab === 'wallets' ? (
+                            wallets.length === 0 ? (
+                                <p className='acc-panel__empty'>
+                                    <Localize i18n_default_text='No wallets found' />
+                                </p>
+                            ) : (
+                                <div className='acc-panel__account-list' role='listbox'>
+                                    {wallets.map(wallet => (
+                                        <div
+                                            key={wallet.wallet_id}
+                                            role='option'
+                                            aria-selected={wallet.is_default}
+                                            tabIndex={0}
+                                            className='acc-panel__account'
+                                            onClick={() => {
+                                                window.open('https://app.deriv.com/wallets', '_blank');
+                                                setIsOpen(false);
+                                            }}
+                                        >
+                                            <div className='acc-panel__account-icon'>
+                                                <WalletIcon />
+                                            </div>
+                                            <div className='acc-panel__account-info'>
+                                                <span className='acc-panel__account-name'>
+                                                    {wallet.wallet_type.toUpperCase()} WALLET
+                                                </span>
+                                                <span className='acc-panel__account-id'>
+                                                    {wallet.currency}
+                                                </span>
+                                            </div>
+                                            <span className='acc-panel__account-balance'>
+                                                {displayCurrency === 'KES' && wallet.currency === 'USD'
+                                                    ? `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(wallet.balance * rate)} KES`
+                                                    : `${wallet.balance.toFixed(2)} ${wallet.currency}`}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        ) : tabAccounts.length === 0 ? (
                             <p className='acc-panel__empty'>
                                 {activeTab === 'real'
                                     ? localize('No real accounts')

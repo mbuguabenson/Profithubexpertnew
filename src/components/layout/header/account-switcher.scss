@@ -325,6 +325,11 @@
             color: #f43f5e;
         }
 
+        &--active-wallets {
+            background: rgba(255, 68, 79, 0.08);
+            color: #ff444f;
+        }
+
         &--inactive {
             background: transparent;
             color: rgba(255, 255, 255, 0.4);
@@ -349,6 +354,10 @@
 
         &--demo {
             background: #f43f5e;
+        }
+
+        &--wallets {
+            background: #ff444f;
         }
     }
 
