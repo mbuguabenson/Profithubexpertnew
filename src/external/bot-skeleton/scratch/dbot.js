@@ -114,102 +114,130 @@ class DBot {
             ApiHelpers.setInstance(api_helpers_store);
             DBotStore.setInstance(store);
             const window_width = window.innerWidth;
-            try {
-                let workspaceScale = 0.7;
+            let workspaceScale = 0.7;
 
-                const { handleFileChange } = DBotStore.instance;
-                if (window_width < 1640) {
-                    if (is_mobile) {
-                        workspaceScale = 0.6;
-                    } else {
-                        const scratch_div_width = document.getElementById('scratch_div')?.offsetWidth;
-                        const zoom_scale = scratch_div_width / window_width / 1.5;
-                        workspaceScale = zoom_scale;
-                    }
+            const { handleFileChange } = DBotStore.instance;
+            if (window_width < 1640) {
+                if (is_mobile) {
+                    workspaceScale = 0.6;
+                } else {
+                    const scratch_div_width = document.getElementById('scratch_div')?.offsetWidth || window_width;
+                    const zoom_scale = scratch_div_width / window_width / 1.5;
+                    workspaceScale = zoom_scale || 0.7;
                 }
-                const el_scratch_div = document.getElementById('scratch_div');
-                if (!el_scratch_div) {
-                    return;
-                }
-
-                this.workspace = window.Blockly.inject(el_scratch_div, {
-                    media: 'assets/media/',
-                    renderer: 'zelos',
-                    trashcan: !is_mobile,
-                    zoom: { wheel: true, startScale: workspaceScale },
-                    scrollbars: true,
-                    theme: window.Blockly.Themes.zelos_renderer,
-                });
-
-                this.workspace.RTL = isDbotRTL();
-
-                this.workspace.cached_xml = { main: main_xml };
-
-                this.workspace.addChangeListener(this.valueInputLimitationsListener.bind(this));
-                this.workspace.addChangeListener(event => updateDisabledBlocks(this.workspace, event));
-                this.workspace.addChangeListener(event => this.workspace.dispatchBlockEventEffects(event));
-                this.workspace.addChangeListener(event => {
-                    if (event.type === 'drag' && !event.isStart && !is_mobile) validateErrorOnBlockDelete();
-                    if (event.type == window.Blockly.Events.BLOCK_CHANGE) {
-                        const block = this.workspace.getBlockById(event.blockId);
-                        if (is_mobile && block && event.element == 'collapsed') {
-                            block.contextMenu = false;
-                        }
-                    }
-                });
-
-                window.Blockly.derivWorkspace = this.workspace;
-
-                const varDB = new window.Blockly.Names('window');
-                varDB.variableMap = window.Blockly.derivWorkspace.getVariableMap();
-
-                window.Blockly.JavaScript.variableDB_ = varDB;
-
-                this.addBeforeRunFunction(this.unselectBlocks.bind(this));
-                this.addBeforeRunFunction(this.disableStrayBlocks.bind(this));
-                this.addBeforeRunFunction(this.checkForErroredBlocks.bind(this));
-                this.addBeforeRunFunction(this.checkForRequiredBlocks.bind(this));
-
-                // Push main.xml to workspace and reset the undo stack.
-                this.workspace.current_strategy_id = window.Blockly.utils.idGenerator.genUid();
-
-                window.Blockly.derivWorkspace.strategy_to_load = main_xml;
-                window.Blockly.getMainWorkspace().strategy_to_load = main_xml;
-                window.Blockly.getMainWorkspace().RTL = isDbotRTL();
-
-                let file_name = config().default_file_name;
-                if (recent_files && recent_files.length) {
-                    const latest_file = recent_files[0];
-                    window.Blockly.derivWorkspace.strategy_to_load = latest_file.xml;
-                    window.Blockly.getMainWorkspace().strategy_to_load = latest_file.xml;
-                    file_name = latest_file.name;
-                    window.Blockly.derivWorkspace.current_strategy_id = latest_file.id;
-                    window.Blockly.getMainWorkspace().current_strategy_id = latest_file.id;
-                }
-
-                const event_group = `dbot-load${Date.now()}`;
-                window.Blockly.Events.setGroup(event_group);
-                window.Blockly.Xml.domToWorkspace(
-                    window.Blockly.utils.xml.textToDom(window.Blockly.derivWorkspace.strategy_to_load),
-                    this.workspace
-                );
-                const { save_modal } = DBotStore.instance;
-
-                save_modal.updateBotName(file_name);
-                this.workspace.cleanUp(0, is_mobile ? 60 : 56);
-                this.workspace.clearUndo();
-
-                window.dispatchEvent(new Event('resize'));
-                window.addEventListener('dragover', DBot.handleDragOver);
-                window.addEventListener('drop', e => DBot.handleDropOver(e, handleFileChange));
-                // disable overflow
-                el_scratch_div.parentNode.style.overflow = 'hidden';
-                resolve();
-            } catch (error) {
-                // TODO: Handle error.
-                reject(error);
-                throw error;
             }
+
+            const getScratchDiv = async () => {
+                let el = document.getElementById('scratch_div');
+                if (el) return el;
+                for (let i = 0; i < 40; i++) {
+                    await new Promise(r => setTimeout(r, 50));
+                    el = document.getElementById('scratch_div');
+                    if (el) return el;
+                }
+                return null;
+            };
+
+            getScratchDiv()
+                .then(el_scratch_div => {
+                    try {
+                        if (!el_scratch_div) {
+                            console.warn('scratch_div element not found for Blockly injection');
+                            resolve();
+                            return;
+                        }
+
+                        if (window.Blockly?.derivWorkspace && el_scratch_div.querySelector('.injectionDiv')) {
+                            this.workspace = window.Blockly.derivWorkspace;
+                            window.dispatchEvent(new Event('resize'));
+                            resolve();
+                            return;
+                        }
+
+                        this.workspace = window.Blockly.inject(el_scratch_div, {
+                            media: 'assets/media/',
+                            renderer: 'zelos',
+                            trashcan: !is_mobile,
+                            zoom: { wheel: true, startScale: workspaceScale },
+                            scrollbars: true,
+                            theme: window.Blockly.Themes.zelos_renderer,
+                        });
+
+                        this.workspace.RTL = isDbotRTL();
+
+                        this.workspace.cached_xml = { main: main_xml };
+
+                        this.workspace.addChangeListener(this.valueInputLimitationsListener.bind(this));
+                        this.workspace.addChangeListener(event => updateDisabledBlocks(this.workspace, event));
+                        this.workspace.addChangeListener(event => this.workspace.dispatchBlockEventEffects(event));
+                        this.workspace.addChangeListener(event => {
+                            if (event.type === 'drag' && !event.isStart && !is_mobile) validateErrorOnBlockDelete();
+                            if (event.type == window.Blockly.Events.BLOCK_CHANGE) {
+                                const block = this.workspace.getBlockById(event.blockId);
+                                if (is_mobile && block && event.element == 'collapsed') {
+                                    block.contextMenu = false;
+                                }
+                            }
+                        });
+
+                        window.Blockly.derivWorkspace = this.workspace;
+
+                        const varDB = new window.Blockly.Names('window');
+                        varDB.variableMap = window.Blockly.derivWorkspace.getVariableMap();
+
+                        window.Blockly.JavaScript.variableDB_ = varDB;
+
+                        this.addBeforeRunFunction(this.unselectBlocks.bind(this));
+                        this.addBeforeRunFunction(this.disableStrayBlocks.bind(this));
+                        this.addBeforeRunFunction(this.checkForErroredBlocks.bind(this));
+                        this.addBeforeRunFunction(this.checkForRequiredBlocks.bind(this));
+
+                        // Push main.xml to workspace and reset the undo stack.
+                        this.workspace.current_strategy_id = window.Blockly.utils.idGenerator.genUid();
+
+                        window.Blockly.derivWorkspace.strategy_to_load = main_xml;
+                        window.Blockly.getMainWorkspace().strategy_to_load = main_xml;
+                        window.Blockly.getMainWorkspace().RTL = isDbotRTL();
+
+                        let file_name = config().default_file_name;
+                        if (recent_files && recent_files.length) {
+                            const latest_file = recent_files[0];
+                            window.Blockly.derivWorkspace.strategy_to_load = latest_file.xml;
+                            window.Blockly.getMainWorkspace().strategy_to_load = latest_file.xml;
+                            file_name = latest_file.name;
+                            window.Blockly.derivWorkspace.current_strategy_id = latest_file.id;
+                            window.Blockly.getMainWorkspace().current_strategy_id = latest_file.id;
+                        }
+
+                        const event_group = `dbot-load${Date.now()}`;
+                        window.Blockly.Events.setGroup(event_group);
+                        window.Blockly.Xml.domToWorkspace(
+                            window.Blockly.utils.xml.textToDom(window.Blockly.derivWorkspace.strategy_to_load),
+                            this.workspace
+                        );
+                        const { save_modal } = DBotStore.instance;
+
+                        save_modal.updateBotName(file_name);
+                        this.workspace.cleanUp(0, is_mobile ? 60 : 56);
+                        this.workspace.clearUndo();
+
+                        window.dispatchEvent(new Event('resize'));
+                        window.addEventListener('dragover', DBot.handleDragOver);
+                        window.addEventListener('drop', e => DBot.handleDropOver(e, handleFileChange));
+                        // disable overflow
+                        if (el_scratch_div?.parentNode) {
+                            el_scratch_div.parentNode.style.overflow = 'hidden';
+                        }
+                        resolve();
+                    } catch (innerError) {
+                        console.error('Error during Blockly injection:', innerError);
+                        resolve();
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to locate scratch_div:', err);
+                    resolve();
+                });
         });
     }
 

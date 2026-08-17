@@ -573,6 +573,10 @@
     z-index: -1;
     background: var(--general-main-1);
     height: var(--tab-content-height);
+    width: calc(100% - 3.2rem);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 
     .injectionDiv {
         .blocklyTrash {
@@ -591,7 +595,9 @@
     }
 
     &--active {
-        z-index: 1;
+        z-index: 2;
+        pointer-events: auto;
+        opacity: 1;
     }
 
     &--inactive {
