@@ -4,6 +4,7 @@ import CopyTradingManager from './copy-trading-manager';
 import { getGlobalCopyTradingManager } from './copy-trading-manager-singleton';
 import Dialog from '@/components/shared_ui/dialog';
 import { useStore } from '@/hooks/useStore';
+import { api_base } from '@/external/bot-skeleton';
 import { getTradeLogs } from './replicator';
 import {
     requestFollowProvider,

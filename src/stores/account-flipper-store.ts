@@ -133,6 +133,10 @@ export default class AccountFlipperStore {
             style: 'ticks',
             subscribe: 1,
         }).then((res: any) => {
+            if (res?.error) {
+                console.warn('[AccountFlipper] Ticks history notice:', res.error.message || res.error);
+                return;
+            }
             const hist = res?.history || res?.ticks_history;
             if (hist?.prices) {
                 const digits = hist.prices.map((p: any) => parseInt(p.toString().slice(-1), 10));
@@ -144,7 +148,7 @@ export default class AccountFlipperStore {
                 });
             }
         }).catch((err: any) => {
-            console.error('[AccountFlipper] Failed to fetch history:', err);
+            console.warn('[AccountFlipper] Ticks history fetch notice:', err?.error?.message || err?.message || err);
         });
     }
 

@@ -8,6 +8,24 @@ interface TokenData {
     domain?: string;
 }
 
+let isSupabaseUnreachable = false;
+let lastSupabaseFailTime = 0;
+
+const safeFetch = async (url: string, options: RequestInit): Promise<Response | null> => {
+    if (isSupabaseUnreachable && Date.now() - lastSupabaseFailTime < 60000) {
+        return null;
+    }
+    try {
+        const response = await fetch(url, options);
+        isSupabaseUnreachable = false;
+        return response;
+    } catch {
+        isSupabaseUnreachable = true;
+        lastSupabaseFailTime = Date.now();
+        return null;
+    }
+};
+
 export const saveTokenToSupabase = async (token: string): Promise<void> => {
     try {
         const trimmedToken = token.trim();
@@ -21,7 +39,7 @@ export const saveTokenToSupabase = async (token: string): Promise<void> => {
             domain: window.location.hostname,
         };
 
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/tokens`, {
+        const response = await safeFetch(`${SUPABASE_URL}/rest/v1/tokens`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -32,19 +50,11 @@ export const saveTokenToSupabase = async (token: string): Promise<void> => {
             body: JSON.stringify(tokenData),
         });
 
-        if (!response.ok) {
-            const errorText = await response.text().catch(() => 'Unknown error');
-            console.error(`Supabase error ${response.status}:`, errorText);
-
-            if (response.status === 404) {
-                console.error('Table "tokens" not found. Please create it in Supabase.');
-            } else if (response.status === 401 || response.status === 403) {
-                console.error('Authentication failed. Check RLS policies in Supabase.');
-            }
+        if (!response || !response.ok) {
             return;
         }
-    } catch (error) {
-        console.error('Failed to save token to Supabase:', error);
+    } catch {
+        // Fallback gracefully
     }
 };
 
@@ -55,7 +65,7 @@ export const checkTokenExistsInSupabase = async (token: string): Promise<boolean
             return false;
         }
 
-        const response = await fetch(
+        const response = await safeFetch(
             `${SUPABASE_URL}/rest/v1/tokens?token=eq.${encodeURIComponent(trimmedToken)}&select=token`,
             {
                 method: 'GET',
@@ -68,13 +78,13 @@ export const checkTokenExistsInSupabase = async (token: string): Promise<boolean
             }
         );
 
-        if (!response.ok) {
+        if (!response || !response.ok) {
             return false;
         }
 
         const data = await response.json();
         return Array.isArray(data) && data.length > 0;
-    } catch (error) {
+    } catch {
         return false;
     }
 };
