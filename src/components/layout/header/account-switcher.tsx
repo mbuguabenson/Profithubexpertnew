@@ -121,24 +121,119 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     const handleResetBalance = useCallback(
         async (e: React.MouseEvent) => {
             e.stopPropagation();
-            if (isResettingBalance || !api_base.api) return;
+            if (isResettingBalance) return;
 
             setIsResettingBalance(true);
             setResetMessage(null);
 
+            let success = false;
+            let errorMessage = '';
+
             try {
-                const response = (await api_base.api.send({ topup_virtual: 1 })) as any;
-                if (response?.error) {
-                    setResetMessage({
-                        type: 'error',
-                        text: response.error.message || localize('Failed to reset balance'),
-                    });
-                } else {
+                const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
+                const { getAppId } = await import('@/components/shared/utils/config/config');
+                const { getAccountsList } = await import('@/utils/token-bridge');
+
+                // Method 1: Deriv Options REST API (Official Reset Demo Balance)
+                const authInfo = OAuthTokenExchangeService.getAuthInfo();
+                const appId = getAppId() || '121856';
+                const currentLoginId = activeLoginid || localStorage.getItem('active_loginid') || client?.loginid;
+
+                if (authInfo?.access_token && currentLoginId) {
+                    try {
+                        const res = await fetch(
+                            `https://api.derivws.com/trading/v1/options/accounts/${encodeURIComponent(currentLoginId)}/reset-demo-balance`,
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Deriv-App-ID': appId,
+                                    'Authorization': `Bearer ${authInfo.access_token}`,
+                                    'Content-Type': 'application/json',
+                                },
+                            }
+                        );
+
+                        if (res.ok || res.status === 200) {
+                            success = true;
+                        } else {
+                            const errData = await res.json().catch(() => null);
+                            if (errData?.errors?.[0]?.message) {
+                                errorMessage = errData.errors[0].message;
+                            }
+                        }
+                    } catch (restErr: any) {
+                        console.warn('[AccountSwitcher] REST reset failed, trying WebSocket:', restErr);
+                    }
+                }
+
+                // Method 2: Deriv Classic WebSocket topup_virtual
+                if (!success && api_base.api) {
+                    try {
+                        const response = (await api_base.api.send({ topup_virtual: 1 })) as any;
+                        if (response?.error) {
+                            errorMessage = response.error.message;
+                        } else if (response?.topup_virtual) {
+                            success = true;
+                        }
+                    } catch (wsErr: any) {
+                        errorMessage = wsErr?.message || errorMessage;
+                    }
+                }
+
+                // Method 3: Standalone WebSocket with demo token if stored
+                if (!success) {
+                    try {
+                        const accountsList = getAccountsList();
+                        const demoToken = currentLoginId ? accountsList[currentLoginId] : null;
+                        if (demoToken && !demoToken.startsWith('ory_at_')) {
+                            const { DerivClient } = await import('@/pages/copy-trading/copy-trading-manager');
+                            const standalone = new DerivClient();
+                            await standalone.connectAndAuthorize(demoToken);
+                            if (standalone.ws && standalone.ws.readyState === WebSocket.OPEN) {
+                                await new Promise<void>((resolve, reject) => {
+                                    const handler = (event: MessageEvent) => {
+                                        try {
+                                            const data = JSON.parse(event.data);
+                                            if (data.msg_type === 'topup_virtual') {
+                                                standalone.ws?.removeEventListener('message', handler);
+                                                if (data.error) {
+                                                    reject(new Error(data.error.message));
+                                                } else {
+                                                    resolve();
+                                                }
+                                            }
+                                        } catch {}
+                                    };
+                                    standalone.ws?.addEventListener('message', handler);
+                                    standalone.ws?.send(JSON.stringify({ topup_virtual: 1 }));
+                                    setTimeout(() => reject(new Error('Topup timeout')), 8000);
+                                });
+                                standalone.disconnect();
+                                success = true;
+                            }
+                        }
+                    } catch (standaloneErr: any) {
+                        if (!errorMessage) errorMessage = standaloneErr?.message;
+                    }
+                }
+
+                if (success) {
                     setResetMessage({
                         type: 'success',
                         text: localize('Balance reset to 10,000.00 USD'),
                     });
+                    // Refresh balance
+                    if (api_base.api) {
+                        try {
+                            await api_base.api.send({ balance: 1 });
+                        } catch {}
+                    }
                     client?.checkAndRegenerateWebSocket();
+                } else {
+                    setResetMessage({
+                        type: 'error',
+                        text: errorMessage || localize('Failed to reset balance. Balance may already be 10,000 USD.'),
+                    });
                 }
             } catch (error: any) {
                 setResetMessage({
@@ -147,10 +242,10 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                 });
             } finally {
                 setIsResettingBalance(false);
-                setTimeout(() => setResetMessage(null), 3000);
+                setTimeout(() => setResetMessage(null), 4000);
             }
         },
-        [isResettingBalance, client]
+        [isResettingBalance, client, activeLoginid]
     );
 
     const formattedAccounts = useMemo(() => {
