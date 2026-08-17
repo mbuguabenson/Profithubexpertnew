@@ -123,13 +123,23 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
             const data = (res as Record<string, unknown>).data as TSocketResponseData<'balance'>;
             const { msg_type, error } = data;
 
-            // Handle auth errors by calling client.logout() directly instead of useLogout hook
-            // This prevents redundant logout operations since useLogout internally calls client.logout()
-            // Note: AuthorizationRequired is a transient state during socket reconnection and MUST NOT trigger logout
+            // Handle auth errors by attempting refresh first, preventing accidental logouts
             if (
                 error?.code === 'DisabledClient' ||
                 (error?.code === 'InvalidToken' && msg_type === 'authorize')
             ) {
+                try {
+                    const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
+                    const authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+                    if (authInfo?.refresh_token) {
+                        const refreshed = await OAuthTokenExchangeService.refreshAccessToken(authInfo.refresh_token);
+                        if (refreshed.access_token) {
+                            client?.checkAndRegenerateWebSocket();
+                            return;
+                        }
+                    }
+                } catch {}
+
                 // Clear all URL query parameters for these auth errors
                 clearInvalidTokenParams();
                 // Call client store logout directly to avoid double logout

@@ -45,6 +45,8 @@ export const useLogout = () => {
                 } catch (finalError) {
                     ErrorLogger.error('Logout', 'Failed to clear all storage', finalError);
                 }
+            } finally {
+                window.location.replace('/');
             }
         }
     }, [client]);

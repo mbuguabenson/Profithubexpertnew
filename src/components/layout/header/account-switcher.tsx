@@ -655,9 +655,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
 
                             <button
                                 className='acc-panel__logout-btn'
-                                onClick={() => {
-                                    client?.logout();
+                                onClick={async () => {
                                     setIsOpen(false);
+                                    await client?.logout();
                                 }}
                                 id='acc-logout-btn'
                             >

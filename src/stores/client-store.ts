@@ -297,11 +297,9 @@ export default class ClientStore {
 
     /**
      * Request logout via WebSocket (legacy method for backward compatibility)
-     * @returns Promise with logout response
-     */
-
     logout = async () => {
-        if (localStorage.getItem('active_loginid')) {
+        this.setIsLoggingOut(true);
+        try {
             // Clear DerivAPI singleton instance and close WebSocket
             const { clearDerivApiInstance } = await import('@/external/bot-skeleton/services/api/appId');
             clearDerivApiInstance();
@@ -311,11 +309,11 @@ export default class ClientStore {
             DerivWSAccountsService.clearStoredAccounts();
             DerivWSAccountsService.clearCache();
 
-            // Clear OAuth token from sessionStorage
+            // Clear OAuth token from sessionStorage and localStorage
             const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
             OAuthTokenExchangeService.clearAuthInfo();
 
-            // Reset all the states
+            // Reset all client store states
             this.account_list = [];
             this.accounts = {};
             this.is_logged_in = false;
@@ -324,15 +322,39 @@ export default class ClientStore {
             this.currency = 'USD';
             this.all_accounts_balance = null;
 
-            // Clear localStorage
-            localStorage.removeItem('active_loginid');
-            localStorage.removeItem('accountsList');
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('clientAccounts');
-            localStorage.removeItem('account_type');
-
-            // Clear sessionStorage
-            sessionStorage.clear();
+            // Clear all auth-related storage keys
+            const keysToRemove = [
+                'active_loginid',
+                'accountsList',
+                'authToken',
+                'active_token',
+                'auth_info',
+                'client.loginid',
+                'client.currency',
+                'client.accounts',
+                'clientAccounts',
+                'account_type',
+                'deriv_api_token',
+                'token1',
+                'token2',
+                'token3',
+                'token4',
+                'token5',
+                'acct1',
+                'acct2',
+                'acct3',
+                'acct4',
+                'acct5',
+                'cur1',
+                'cur2',
+                'cur3',
+                'cur4',
+                'cur5',
+            ];
+            keysToRemove.forEach(k => {
+                localStorage.removeItem(k);
+                sessionStorage.removeItem(k);
+            });
 
             // Clear cookies
             removeCookies('client_information');
@@ -345,17 +367,21 @@ export default class ClientStore {
             this.setIsLoggingOut(false);
 
             // Disable livechat
-            window.LC_API?.close_chat?.();
-            window.LiveChatWidget?.call('hide');
+            try {
+                window.LC_API?.close_chat?.();
+                window.LiveChatWidget?.call('hide');
+                if (window.Intercom) {
+                    window.Intercom('shutdown');
+                }
+            } catch {}
 
-            // Shutdown and initialize intercom
-            if (window.Intercom) {
-                window.Intercom('shutdown');
-                window.DerivInterCom.initialize({
-                    hideLauncher: true,
-                    token: null,
-                });
-            }
+            // Cleanly redirect to root / login
+            window.location.replace('/');
+        } catch (e) {
+            console.error('Logout error:', e);
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.replace('/');
         }
     };
 
