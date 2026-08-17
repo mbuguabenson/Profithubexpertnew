@@ -692,7 +692,7 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
             currency,
             duration: 1,
             duration_unit: 't',
-            symbol: selectedSymbol,
+            underlying_symbol: selectedSymbol,
         };
         if (signal.barrier) params.barrier = signal.barrier;
         return params;

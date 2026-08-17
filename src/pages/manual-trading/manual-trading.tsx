@@ -769,7 +769,7 @@ const ManualTrading = observer(() => {
                 currency,
                 duration,
                 duration_unit: 't',
-                symbol: selectedSymbol,
+                underlying_symbol: selectedSymbol,
             };
 
             if (needsBarrier) parameters.barrier = barrierValue;
