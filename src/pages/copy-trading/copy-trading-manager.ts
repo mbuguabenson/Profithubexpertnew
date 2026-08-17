@@ -1,6 +1,6 @@
 // @ts-ignore
 import DerivAPIBasic from '@deriv/deriv-api/dist/DerivAPIBasic';
-import { getAppId } from '@/components/shared/utils/config/config';
+import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
 
 export type TConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -43,10 +43,9 @@ class DerivClient {
         this.status = 'connecting';
         const cleanToken = token.trim();
 
-        return new Promise<any>((resolve, reject) => {
+        return new Promise<any>(async (resolve, reject) => {
             try {
-                const appId = getAppId?.() ?? localStorage.getItem('APP_ID') ?? '68249';
-                const wsUrl = `wss://ws.derivws.com/websockets/v3?app_id=${appId}`;
+                const wsUrl = await getSocketURL();
                 const ws = new WebSocket(wsUrl);
                 this.ws = ws;
 

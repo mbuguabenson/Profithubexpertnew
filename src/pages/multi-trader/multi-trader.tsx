@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { observer } from 'mobx-react-lite';
 import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
+import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import './multi-trader.scss';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -50,12 +51,6 @@ interface TradeResult {
     stakeUsed: number;
     transaction: Transaction;
 }
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const APP_ID = getAppId();
-const SERVER_URL = getSocketURL();
-const WS_URL = `wss://${SERVER_URL}/websockets/v3?app_id=${APP_ID}`;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -207,22 +202,28 @@ const MultiTrader: React.FC = observer(() => {
         }
     }, [addLog]);
 
-    const connect = useCallback(() => {
+    const connect = useCallback(async () => {
         if (wsRef.current?.readyState === WebSocket.OPEN) return;
-        const currentToken = client.getToken();
+        const currentToken = client.getToken() || (await resolveValidDerivWSToken());
         if (!currentToken) { addLog('Please log in first.', 'error'); return; }
 
         setStatus('connecting');
 
-        const ws = new WebSocket(WS_URL);
-        wsRef.current = ws;
-        ws.onopen    = () => { addLog('Connected. Authorizing…', 'info'); ws.send(JSON.stringify({ authorize: currentToken })); };
-        ws.onmessage = handleMessage;
-        ws.onclose   = () => {
+        try {
+            const wsUrl = await getSocketURL();
+            const ws = new WebSocket(wsUrl);
+            wsRef.current = ws;
+            ws.onopen    = () => { addLog('Connected. Authorizing…', 'info'); ws.send(JSON.stringify({ authorize: currentToken })); };
+            ws.onmessage = handleMessage;
+            ws.onclose   = () => {
+                setStatus('disconnected');
+                if (runningRef.current) { runningRef.current = false; setRunning(false); addLog('Connection lost. Bot stopped.', 'error'); }
+            };
+            ws.onerror   = () => addLog('WebSocket error — check console.', 'error');
+        } catch (err: any) {
             setStatus('disconnected');
-            if (runningRef.current) { runningRef.current = false; setRunning(false); addLog('Connection lost. Bot stopped.', 'error'); }
-        };
-        ws.onerror   = () => addLog('WebSocket error — check console.', 'error');
+            addLog(`WebSocket connection error: ${err?.message || err}`, 'error');
+        }
     }, [client, handleMessage, addLog]);
 
     // Auto-connect on mount

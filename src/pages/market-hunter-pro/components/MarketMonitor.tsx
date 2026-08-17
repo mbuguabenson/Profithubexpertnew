@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { X, Wifi, WifiOff, ChevronDown, ChevronUp, Activity, LayoutGrid, Upload } from 'lucide-react';
+import { getSocketURL } from '@/components/shared/utils/config/config';
 import { SYMBOLS } from '../lib/symbols';
 import { analyzeMultiWindow, MultiWindowAnalysis } from '../lib/analysis';
 import { generateCombinedRankedSignals, SignalType } from '../lib/signals';
@@ -13,8 +14,6 @@ type MarketState = {
   lastDigit: number | null;
   mwa: MultiWindowAnalysis | null;
 };
-
-const APP_ID = '1089';
 
 const STRATEGIES = [
   { id: 'even_odd',   label: 'Even / Odd',  types: ['even_odd', 'pro_even_odd'] as SignalType[] },
@@ -75,31 +74,33 @@ function useSharedMarketWS(symbols: string[]) {
     }));
   }, []);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (!mountedRef.current) return;
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`);
-    wsRef.current = ws;
+    try {
+      const wsUrl = await getSocketURL();
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-    ws.onopen = () => {
-      if (!mountedRef.current) return;
-      setIsConnected(true);
-      for (const sym of symbolsRef.current) fetchHistory(ws, sym);
-    };
+      ws.onopen = () => {
+        if (!mountedRef.current) return;
+        setIsConnected(true);
+        for (const sym of symbolsRef.current) fetchHistory(ws, sym);
+      };
 
-    ws.onclose = () => {
-      if (!mountedRef.current) return;
-      setIsConnected(false);
-      subIds.current.clear();
-      wsRef.current = null;
-      if (reconnectRef.current) clearTimeout(reconnectRef.current);
-      reconnectRef.current = setTimeout(() => { if (mountedRef.current) connect(); }, 2500);
-    };
+      ws.onclose = () => {
+        if (!mountedRef.current) return;
+        setIsConnected(false);
+        subIds.current.clear();
+        wsRef.current = null;
+        if (reconnectRef.current) clearTimeout(reconnectRef.current);
+        reconnectRef.current = setTimeout(() => { if (mountedRef.current) connect(); }, 2500);
+      };
 
-    ws.onerror = () => ws.close();
+      ws.onerror = () => ws.close();
 
-    ws.onmessage = (ev) => {
+      ws.onmessage = (ev) => {
       if (!mountedRef.current) return;
       try {
         const data = JSON.parse(ev.data);
@@ -140,6 +141,7 @@ function useSharedMarketWS(symbols: string[]) {
         }
       } catch { /* ignore */ }
     };
+    } catch { /* ignore */ }
   }, [fetchHistory]);
 
   // Fetch history for newly added symbols while already connected

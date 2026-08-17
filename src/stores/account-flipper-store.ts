@@ -113,9 +113,10 @@ export default class AccountFlipperStore {
         if (!api_base.api || this.tick_subscription) return;
 
         this.tick_subscription = api_base.api.onMessage().subscribe((msg: any) => {
-            if (msg.msg_type === 'tick' && msg.tick.symbol === this.symbol) {
-                const digit = parseInt(msg.tick.quote.toString().slice(-1));
-                const price = msg.tick.quote;
+            const data = msg?.data || msg;
+            if (data?.msg_type === 'tick' && data?.tick?.symbol === this.symbol) {
+                const digit = parseInt(data.tick.quote.toString().slice(-1), 10);
+                const price = data.tick.quote;
                 runInAction(() => {
                     this.current_price = price;
                     this.recent_digits = [...this.recent_digits, digit].slice(-200);
@@ -123,18 +124,23 @@ export default class AccountFlipperStore {
             }
         });
 
-        // Initial historical data
+        // Request historical data + subscribe to live ticks
         api_base.api.send({
             ticks_history: this.symbol,
             adjust_start_time: 1,
             count: 200,
             end: 'latest',
             style: 'ticks',
+            subscribe: 1,
         }).then((res: any) => {
-            if (res.history) {
-                const digits = res.history.prices.map((p: any) => parseInt(p.toString().slice(-1)));
+            const hist = res?.history || res?.ticks_history;
+            if (hist?.prices) {
+                const digits = hist.prices.map((p: any) => parseInt(p.toString().slice(-1), 10));
                 runInAction(() => {
                     this.recent_digits = digits;
+                    if (hist.prices.length > 0) {
+                        this.current_price = hist.prices[hist.prices.length - 1];
+                    }
                 });
             }
         }).catch((err: any) => {

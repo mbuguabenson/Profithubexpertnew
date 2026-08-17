@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { getSocketURL } from '@/components/shared/utils/config/config';
 
 export type TickData = {
   quote: number;
@@ -49,12 +50,14 @@ export function useDerivWS(options: DerivWSOptions = {}) {
     return { symbol, ticks, quotes };
   }, []);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
     if (!mountedRef.current) return;
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
 
     try {
-      const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
+      const wsUrl = await getSocketURL();
+      if (!mountedRef.current) return;
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {

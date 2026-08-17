@@ -294,8 +294,9 @@ export default class MarketkillerStore {
             // Register fresh RxJS event listener for the tick stream
             if (api_base.api.onMessage) {
                 this.tick_listener_sub = api_base.api.onMessage().subscribe((res: any) => {
-                    if (res?.data?.msg_type === 'tick' && res?.data?.tick?.symbol === this.symbol) {
-                        this.onTickArrival(res.data.tick);
+                    const data = res?.data || res;
+                    if (data?.msg_type === 'tick' && data?.tick?.symbol === this.symbol) {
+                        this.onTickArrival(data.tick);
                     }
                 });
             }
@@ -320,8 +321,9 @@ export default class MarketkillerStore {
         });
 
         api_base.api.onMessage().subscribe((res: any) => {
-            if (res?.data?.msg_type === 'tick' && res?.data?.tick) {
-                const tick = res.data.tick;
+            const data = res?.data || res;
+            if (data?.msg_type === 'tick' && data?.tick) {
+                const tick = data.tick;
                 const index = this.live_market_ribbon.findIndex(m => m?.symbol === tick.symbol);
                 if (index !== -1) {
                     runInAction(() => {
@@ -641,9 +643,10 @@ export default class MarketkillerStore {
             });
 
             const sub = api_base.api.onMessage().subscribe((res: any) => {
-                const poc = res?.data?.proposal_open_contract;
+                const data = res?.data || res;
+                const poc = data?.proposal_open_contract;
                 if (
-                    res?.data?.msg_type === 'proposal_open_contract' &&
+                    data?.msg_type === 'proposal_open_contract' &&
                     poc?.contract_id === contractId &&
                     poc?.is_sold
                 ) {

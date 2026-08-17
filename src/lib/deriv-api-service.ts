@@ -1,4 +1,4 @@
-import { getAppId } from '@/components/shared/utils/config/config';
+import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
 
 export enum ConnectionState {
     DISCONNECTED = 'DISCONNECTED',
@@ -25,7 +25,6 @@ class DerivApiService {
     private static instance: DerivApiService;
     private ws: WebSocket | null = null;
     private appId: string;
-    private endpoint: string = 'wss://ws.derivws.com/websockets/v3';
     private state: ConnectionState = ConnectionState.DISCONNECTED;
     private reconnectAttempts: number = 0;
     private maxReconnectDelay: number = 5000;
@@ -60,7 +59,7 @@ class DerivApiService {
         return DerivApiService.instance;
     }
 
-    public connect(token?: string): void {
+    public async connect(token?: string): Promise<void> {
         if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
             return;
         }
@@ -70,10 +69,11 @@ class DerivApiService {
         this.setState(ConnectionState.CONNECTING);
 
         try {
-            this.ws = new WebSocket(`${this.endpoint}?app_id=${this.appId}`);
+            const wsUrl = await getSocketURL();
+            this.ws = new WebSocket(wsUrl);
 
             this.ws.onopen = () => {
-                console.log('[DerivApiService] WebSocket connected');
+                console.log('[DerivApiService] WebSocket connected to:', wsUrl);
                 this.setState(ConnectionState.CONNECTED);
                 this.reconnectAttempts = 0;
                 this.startPing();

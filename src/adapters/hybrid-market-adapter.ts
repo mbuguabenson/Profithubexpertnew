@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+import { getSocketURL } from '@/components/shared/utils/config/config';
 
 export interface HybridTickData {
   quote: number;
@@ -43,13 +44,14 @@ class HybridMarketAdapter {
     this.listenPrimaryApi();
   }
 
-  private connectFallback() {
+  private async connectFallback() {
     if (this.fallbackWs && (this.fallbackWs.readyState === WebSocket.OPEN || this.fallbackWs.readyState === WebSocket.CONNECTING)) {
       return;
     }
 
     try {
-      this.fallbackWs = new WebSocket('wss://ws.derivws.com/websockets/v3?app_id=1089');
+      const wsUrl = await getSocketURL();
+      this.fallbackWs = new WebSocket(wsUrl);
 
       this.fallbackWs.onopen = () => {
         // Resubscribe active symbols on fallback WS

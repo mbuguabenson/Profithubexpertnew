@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getAppId } from '@/components/shared/utils/config/config';
+import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
 
 export interface SymbolMarketData {
     symbol: string;
@@ -104,43 +104,45 @@ export function useCompoundingWS() {
         }
     };
 
-    const connect = useCallback(() => {
+    const connect = useCallback(async () => {
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
 
-        const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
-        wsRef.current = ws;
+        try {
+            const wsUrl = await getSocketURL();
+            const ws = new WebSocket(wsUrl);
+            wsRef.current = ws;
 
-        ws.onopen = () => {
-            setIsConnected(true);
-            const tokenToUse = manualToken || getStoredDerivToken();
-            if (tokenToUse) {
-                ws.send(JSON.stringify({ authorize: tokenToUse, req_id: reqId.current++ }));
-            }
-            ws.send(JSON.stringify({ balance: 1, subscribe: 1, req_id: reqId.current++ }));
-            ws.send(JSON.stringify({
-                ticks_history: activeSymbol,
-                count: 1000,
-                end: 'latest',
-                style: 'ticks',
-                subscribe: 1,
-                req_id: reqId.current++
-            }));
-        };
+            ws.onopen = () => {
+                setIsConnected(true);
+                const tokenToUse = manualToken || getStoredDerivToken();
+                if (tokenToUse) {
+                    ws.send(JSON.stringify({ authorize: tokenToUse, req_id: reqId.current++ }));
+                }
+                ws.send(JSON.stringify({ balance: 1, subscribe: 1, req_id: reqId.current++ }));
+                ws.send(JSON.stringify({
+                    ticks_history: activeSymbol,
+                    count: 1000,
+                    end: 'latest',
+                    style: 'ticks',
+                    subscribe: 1,
+                    req_id: reqId.current++
+                }));
+            };
 
-        ws.onclose = () => {
-            setIsConnected(false);
-            setIsAuthorized(false);
-            wsRef.current = null;
-            setTimeout(connect, 3000);
-        };
+            ws.onclose = () => {
+                setIsConnected(false);
+                setIsAuthorized(false);
+                wsRef.current = null;
+                setTimeout(connect, 3000);
+            };
 
-        ws.onerror = () => {
-            setIsConnected(false);
-        };
+            ws.onerror = () => {
+                setIsConnected(false);
+            };
 
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
 
                 if (data.msg_type === 'authorize' && data.authorize) {
                     setIsAuthorized(true);
@@ -238,7 +240,11 @@ export function useCompoundingWS() {
                 /* parse error */
             }
         };
-    }, [appId, activeSymbol, manualToken]);
+    } catch (err) {
+        console.error('[useCompoundingWS] Error connecting:', err);
+        setTimeout(connect, 3000);
+    }
+}, [activeSymbol, manualToken]);
 
     useEffect(() => {
         connect();

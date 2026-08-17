@@ -1,7 +1,7 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
 import { ProposalOpenContract } from '@deriv/api-types';
 import RootStore from './root-store';
-import { getAppId } from '@/components/shared';
+import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
 
 export type TCopyAccount = {
@@ -141,23 +141,24 @@ export default class CopyTraderStore {
     };
 
     @action
-    connectAccount = (account: TCopyAccount) => {
+    connectAccount = async (account: TCopyAccount) => {
         if (account.ws) {
             account.ws.close();
         }
 
-        const app_id = getAppId();
-        const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+        try {
+            const wsUrl = await getSocketURL();
+            const ws = new WebSocket(wsUrl);
 
-        account.ws = ws;
-        account.status = 'Pending';
+            account.ws = ws;
+            account.status = 'Pending';
 
-        ws.onopen = () => {
-            ws.send(JSON.stringify({ authorize: account.token }));
-        };
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ authorize: account.token }));
+            };
 
-        ws.onmessage = msg => {
-            const data = JSON.parse(msg.data);
+            ws.onmessage = msg => {
+                const data = JSON.parse(msg.data);
 
             if (data.error) {
                 console.error('CopyTrader Auth Error:', data.error.message);
@@ -191,6 +192,11 @@ export default class CopyTraderStore {
                 account.status = 'Error';
             });
         };
+        } catch (e) {
+            runInAction(() => {
+                account.status = 'Error';
+            });
+        }
     };
 
     @action
@@ -373,61 +379,68 @@ export default class CopyTraderStore {
     };
 
     @action
-    connectRealAccount = (token: string) => {
+    connectRealAccount = async (token: string) => {
         if (this.real_account_ws) {
             this.real_account_ws.close();
         }
 
-        const app_id = getAppId();
-        const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+        try {
+            const wsUrl = await getSocketURL();
+            const ws = new WebSocket(wsUrl);
 
-        this.real_account_ws = ws;
+            this.real_account_ws = ws;
 
-        ws.onopen = () => {
-            ws.send(JSON.stringify({ authorize: token }));
-        };
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ authorize: token }));
+            };
 
-        ws.onmessage = msg => {
-            const data = JSON.parse(msg.data);
+            ws.onmessage = msg => {
+                const data = JSON.parse(msg.data);
 
-            if (data.error) {
-                console.error('Demo to Real Auth Error:', data.error.message);
+                if (data.error) {
+                    console.error('Demo to Real Auth Error:', data.error.message);
+                    runInAction(() => {
+                        this.demo_to_real_status = 'error';
+                        this.demo_to_real_error = data.error.message;
+                    });
+                    return;
+                }
+
+                if (data.msg_type === 'authorize') {
+                    runInAction(() => {
+                        this.demo_to_real_status = 'active';
+                        this.is_demo_to_real_active = true;
+                    });
+                    console.log('Demo to Real account connected successfully');
+                }
+
+                // Handle buy response for demo-to-real
+                if (data.msg_type === 'buy') {
+                    console.log('Trade copied to real account:', data);
+                }
+            };
+
+            ws.onerror = () => {
                 runInAction(() => {
                     this.demo_to_real_status = 'error';
-                    this.demo_to_real_error = data.error.message;
+                    this.demo_to_real_error = 'Connection error';
                 });
-                return;
-            }
+            };
 
-            if (data.msg_type === 'authorize') {
+            ws.onclose = () => {
                 runInAction(() => {
-                    this.demo_to_real_status = 'active';
-                    this.is_demo_to_real_active = true;
+                    if (this.is_demo_to_real_active) {
+                        this.demo_to_real_status = 'idle';
+                        this.is_demo_to_real_active = false;
+                    }
                 });
-                console.log('Demo to Real account connected successfully');
-            }
-
-            // Handle buy response for demo-to-real
-            if (data.msg_type === 'buy') {
-                console.log('Trade copied to real account:', data);
-            }
-        };
-
-        ws.onerror = () => {
+            };
+        } catch (e: any) {
             runInAction(() => {
                 this.demo_to_real_status = 'error';
-                this.demo_to_real_error = 'Connection error';
+                this.demo_to_real_error = e?.message || 'Connection failed';
             });
-        };
-
-        ws.onclose = () => {
-            runInAction(() => {
-                if (this.is_demo_to_real_active) {
-                    this.demo_to_real_status = 'idle';
-                    this.is_demo_to_real_active = false;
-                }
-            });
-        };
+        }
     };
 
     @action

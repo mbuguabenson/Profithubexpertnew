@@ -109,11 +109,20 @@ const useMobileMenuConfig = (
                         window.dispatchEvent(new Event('open_account_info'));
                     },
                 },
+                // Master Admin Panel Option
+                {
+                    as: 'button',
+                    label: localize('Master Admin Panel'),
+                    LeftComponent: UserIcon,
+                    onClick: () => {
+                        window.location.href = '/admin/dashboard';
+                    },
+                },
                 // System Center Option
                 {
                     as: 'button',
-                    label: localize('Admin Center'),
-                    LeftComponent: InfoIcon, // Using InfoIcon as placeholder, can change later
+                    label: localize('System Center (NOC)'),
+                    LeftComponent: InfoIcon,
                     onClick: () => {
                         window.dispatchEvent(new Event('open_system_center'));
                     },

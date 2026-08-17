@@ -53,6 +53,31 @@ export const SystemCenter = observer(() => {
                     </div>
                 ))}
             </div>
+
+            <div style={{ marginTop: 'auto', padding: '16px 12px 12px' }}>
+                <a
+                    href="/admin/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        background: 'linear-gradient(135deg, #00a76f 0%, #0078cd 100%)',
+                        color: '#fff',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        textAlign: 'center',
+                        boxShadow: '0 4px 12px rgba(0,167,111,0.25)',
+                    }}
+                >
+                    👑 {localize('Open Master Admin')}
+                </a>
+            </div>
         </div>
     );
 

@@ -18,7 +18,7 @@ import {
 } from '@/utils/supabase-copy';
 import { getTradeLogs } from '@/pages/copy-trading/replicator';
 import { getGlobalCopyTradingManager } from '@/pages/copy-trading/copy-trading-manager-singleton';
-import { getAppId, isProduction } from '@/components/shared/utils/config/config';
+import { getAppId, getSocketURL, isProduction } from '@/components/shared/utils/config/config';
 import './admin-dashboard.scss';
 
 // ─── Real Data Helpers ────────────────────────────────────────────────────────
@@ -599,16 +599,21 @@ const AdminDashboard = observer(() => {
     useEffect(() => {
         if (!isAuthenticated) return;
         let ws: WebSocket | null = null;
-        try {
-            const appId = getAppId() || '1089';
-            ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
+        let isCleanedUp = false;
 
-            ws.onopen = () => {
-                const symbols = [
-                    '1HZ10V', '1HZ25V', '1HZ50V', '1HZ75V', '1HZ100V',
-                    'R_10', 'R_25', 'R_50', 'R_75', 'R_100',
-                    'JD10', 'JD25', 'JD50', 'JD75', 'JD100'
-                ];
+        const initWs = async () => {
+            try {
+                const wsUrl = await getSocketURL();
+                if (isCleanedUp) return;
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = () => {
+                    if (isCleanedUp) { ws?.close(); return; }
+                    const symbols = [
+                        '1HZ10V', '1HZ25V', '1HZ50V', '1HZ75V', '1HZ100V',
+                        'R_10', 'R_25', 'R_50', 'R_75', 'R_100',
+                        'JD10', 'JD25', 'JD50', 'JD75', 'JD100'
+                    ];
                 symbols.forEach((sym, idx) => {
                     ws?.send(JSON.stringify({
                         ticks_history: sym,
@@ -663,8 +668,12 @@ const AdminDashboard = observer(() => {
                 } catch { /* parse error */ }
             };
         } catch { /* connection error */ }
+        };
+
+        initWs();
 
         return () => {
+            isCleanedUp = true;
             if (ws && ws.readyState === WebSocket.OPEN) ws.close();
         };
     }, [isAuthenticated]);
@@ -730,7 +739,8 @@ const AdminDashboard = observer(() => {
     };
 
     // ─── Commissions Filters ─────────────────────────────────────────────────
-    const [commFilterRange, setCommFilterRange] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('weekly');
+    type TCommRange = 'daily' | 'weekly' | 'monthly' | 'all' | '7d' | '30d' | '3m' | '6m' | '12m' | 'custom';
+    const [commFilterRange, setCommFilterRange] = useState<TCommRange>('weekly');
     const [commStartDate, setCommStartDate] = useState('');
     const [commEndDate, setCommEndDate] = useState('');
     const [commissions, setCommissionsState] = useState<MarkupCommission[]>(getCommissions());
@@ -742,10 +752,16 @@ const AdminDashboard = observer(() => {
             const cTime = new Date(c.date).getTime();
             if (commFilterRange === 'daily') {
                 return now - cTime <= 3600000 * 24;
-            } else if (commFilterRange === 'weekly') {
+            } else if (commFilterRange === 'weekly' || commFilterRange === '7d') {
                 return now - cTime <= 3600000 * 24 * 7;
-            } else if (commFilterRange === 'monthly') {
+            } else if (commFilterRange === 'monthly' || commFilterRange === '30d') {
                 return now - cTime <= 3600000 * 24 * 30;
+            } else if (commFilterRange === '3m') {
+                return now - cTime <= 3600000 * 24 * 90;
+            } else if (commFilterRange === '6m') {
+                return now - cTime <= 3600000 * 24 * 180;
+            } else if (commFilterRange === '12m') {
+                return now - cTime <= 3600000 * 24 * 365;
             } else if (commFilterRange === 'custom') {
                 const s = commStartDate ? new Date(commStartDate).getTime() : 0;
                 const e = commEndDate ? new Date(commEndDate).getTime() + 86400000 : Infinity;
@@ -1606,7 +1622,7 @@ Status: Systems functional. Replicator nodes ready.
                                                 const oddCount = last100.filter(d => d % 2 !== 0).length;
                                                 const evenCount = total - oddCount;
                                                 const oddPct = Math.round((oddCount / total) * 100);
-                                                const evenPct = 100 - oddPct;
+                                                const evenPct = Math.round((evenCount / total) * 100);
 
                                                 const overCount = last100.filter(d => d > 4).length;
                                                 const overPct = Math.round((overCount / total) * 100);

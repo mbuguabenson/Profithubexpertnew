@@ -299,18 +299,32 @@ const AppHeader = observer(() => {
                         {activeLoginid && (
                             <>
                                 {isDesktop && (
-                                    <button 
-                                        className="app-header__admin-btn"
-                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                        onClick={() => window.dispatchEvent(new Event('open_system_center'))}
-                                        title="System Center (Admin)"
-                                    >
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-general)' }}>
-                                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                                        </svg>
-                                    </button>
+                                    <>
+                                        <a 
+                                            href="/admin/dashboard"
+                                            className="app-header__admin-btn"
+                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-general)' }}
+                                            title="Master Admin Panel"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#00a76f' }}>
+                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                                            </svg>
+                                        </a>
+                                        <button 
+                                            className="app-header__admin-btn"
+                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            onClick={() => window.dispatchEvent(new Event('open_system_center'))}
+                                            title="System Center (NOC Monitor)"
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-general)' }}>
+                                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                                            </svg>
+                                        </button>
+                                    </>
                                 )}
                                 <CurrencyDropdown />
                                 {isDesktop && <CustomNotifications />}

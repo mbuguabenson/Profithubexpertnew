@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
-import { observer as globalObserver } from '@/external/bot-skeleton';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import './signal-centre-tab.scss';
 
 /* ─────────────────────── CONSTANTS ─────────────────────── */
@@ -272,16 +272,21 @@ const SignalCentreTab = observer(() => {
 
     const api_base_ref = useRef<any>(null);
     useEffect(() => {
-        import('@/external/bot-skeleton').then(mod => {
-            api_base_ref.current = mod.api_base.api;
-        });
+        if (!api_base?.api) {
+            api_base?.init?.();
+        }
+        api_base_ref.current = api_base?.api;
     }, []);
 
     const subscribeSymbol = useCallback((sym: string): Promise<number[]> => {
         return new Promise(resolve => {
-            if (!api_base_ref.current) { resolve([]); return; }
+            const api = api_base_ref.current || api_base?.api;
+            if (!api) {
+                if (!api_base?.api) api_base?.init?.();
+                resolve([]);
+                return;
+            }
             const acc: number[] = [];
-            const api = api_base_ref.current;
             
             const doRequest = async () => {
                 try {
@@ -395,8 +400,8 @@ const SignalCentreTab = observer(() => {
     }, [clearAllSubs]);
 
     const executeTrade = useCallback(async (analysis: MarketAnalysis, stakeAmt: number, customPrediction?: number) => {
-        if (!api_base_ref.current || !is_socket_opened) return null;
-        const api = api_base_ref.current;
+        const api = api_base_ref.current || api_base?.api;
+        if (!api || !is_socket_opened) return null;
         let contractType = '';
         let barrier: number | undefined;
 
@@ -459,7 +464,7 @@ const SignalCentreTab = observer(() => {
         lastDigit?: number | null
     } | null> => {
         return new Promise(resolve => {
-            const api = api_base_ref.current;
+            const api = api_base_ref.current || api_base?.api;
             if (!api) { resolve(null); return; }
             
             // Subscribe to POC for this contract

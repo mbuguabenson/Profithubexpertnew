@@ -810,19 +810,47 @@ export default class SmartTradingStore {
     @action
     fetchMarkets = async () => {
         let symbols: any[] = [];
-        try {
-            if (api_base.api) {
-                const response = await api_base.api.send({ active_symbols: 'brief' });
-                if (response.active_symbols && response.active_symbols.length > 0) {
-                    symbols = response.active_symbols;
-                }
-            }
-        } catch (error) {
-            console.warn('[SmartTradingStore] API active_symbols fetch failed:', error);
+
+        // 1. Check if api_base already has active_symbols cached
+        if (api_base?.active_symbols && Array.isArray(api_base.active_symbols) && api_base.active_symbols.length > 0) {
+            symbols = api_base.active_symbols;
         }
 
+        // 2. Fetch using api_base.getActiveSymbols() if available
+        if (symbols.length === 0 && typeof api_base?.getActiveSymbols === 'function') {
+            try {
+                const fetched = await api_base.getActiveSymbols();
+                if (fetched && Array.isArray(fetched) && fetched.length > 0) {
+                    symbols = fetched;
+                }
+            } catch (err) {
+                console.warn('[SmartTradingStore] api_base.getActiveSymbols failed:', err);
+            }
+        }
+
+        // 3. Try direct API send if connected
         if (symbols.length === 0) {
             try {
+                if (api_base?.api && api_base.api?.connection?.readyState === 1) {
+                    const response = await api_base.api.send({ active_symbols: 'brief' });
+                    if (response?.active_symbols && Array.isArray(response.active_symbols) && response.active_symbols.length > 0) {
+                        symbols = response.active_symbols;
+                    }
+                }
+            } catch (error) {
+                console.warn('[SmartTradingStore] API active_symbols fetch failed:', error);
+            }
+        }
+
+        // 4. Try ApiHelpers
+        if (symbols.length === 0) {
+            try {
+                if (!ApiHelpers.instance && api_base?.api) {
+                    ApiHelpers.setInstance({
+                        server_time: this.root_store?.common?.server_time,
+                        ws: api_base.api,
+                    });
+                }
                 if (
                     ApiHelpers.instance &&
                     typeof (ApiHelpers.instance as any).active_symbols?.retrieveActiveSymbols === 'function'
@@ -834,6 +862,7 @@ export default class SmartTradingStore {
             }
         }
 
+        // 5. Comprehensive Fallback Symbols if offline / initializing
         if (!symbols || symbols.length === 0) {
             symbols = [
                 {
@@ -874,6 +903,55 @@ export default class SmartTradingStore {
                 {
                     market: 'synthetic_index',
                     market_display_name: 'Derived',
+                    symbol: '1HZ10V',
+                    display_name: 'Volatility 10 (1s) Index',
+                    pip: 0.001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: '1HZ15V',
+                    display_name: 'Volatility 15 (1s) Index',
+                    pip: 0.001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: '1HZ25V',
+                    display_name: 'Volatility 25 (1s) Index',
+                    pip: 0.001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: '1HZ30V',
+                    display_name: 'Volatility 30 (1s) Index',
+                    pip: 0.001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: '1HZ50V',
+                    display_name: 'Volatility 50 (1s) Index',
+                    pip: 0.0001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: '1HZ75V',
+                    display_name: 'Volatility 75 (1s) Index',
+                    pip: 0.0001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: '1HZ90V',
+                    display_name: 'Volatility 90 (1s) Index',
+                    pip: 0.001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
                     symbol: '1HZ100V',
                     display_name: 'Volatility 100 (1s) Index',
                     pip: 0.01,
@@ -881,9 +959,23 @@ export default class SmartTradingStore {
                 {
                     market: 'synthetic_index',
                     market_display_name: 'Derived',
-                    symbol: '1HZ10V',
-                    display_name: 'Volatility 10 (1s) Index',
+                    symbol: 'BOOM500',
+                    display_name: 'Boom 500 Index',
                     pip: 0.001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: 'CRASH500',
+                    display_name: 'Crash 500 Index',
+                    pip: 0.001,
+                },
+                {
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    symbol: 'STEPS',
+                    display_name: 'Step Index',
+                    pip: 0.1,
                 },
             ];
         }
@@ -896,8 +988,8 @@ export default class SmartTradingStore {
                 if (s.is_trading_suspended) return;
                 const market_name = s.market_display_name || s.market || 'Synthetic Indices';
                 if (!groups[market_name]) groups[market_name] = { group: market_name, items: [] };
-                groups[market_name].items.push({ value: s.symbol, label: s.display_name });
-                symbolData[s.symbol] = { pip: s.pip || 0.01, symbol: s.symbol, display_name: s.display_name };
+                groups[market_name].items.push({ value: s.symbol, label: s.display_name || s.symbol });
+                symbolData[s.symbol] = { pip: s.pip || 0.01, symbol: s.symbol, display_name: s.display_name || s.symbol };
             });
             this.markets = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
             this.active_symbols_data = symbolData;
@@ -936,13 +1028,20 @@ export default class SmartTradingStore {
             this.active_stream_id = null;
         }
 
-        if (!this.symbol || !this.is_connected) return;
+        if (!this.symbol) return;
+
+        // Ensure API is connected or initializing
+        if (!api_base?.api || api_base.api?.connection?.readyState !== 1) {
+            if (retry_count < 5) {
+                if (!api_base?.api) {
+                    api_base.init();
+                }
+                setTimeout(() => this.subscribeToActiveSymbol(retry_count + 1), 1000);
+            }
+            return;
+        }
 
         try {
-            if (!api_base.api) {
-                throw new Error('API not initialized');
-            }
-
             let response: any;
             try {
                 response = await api_base.api.send({
@@ -990,36 +1089,47 @@ export default class SmartTradingStore {
                 return;
             }
 
+            // Save subscription ID if provided for clean unsubscribe
+            if (response?.subscription?.id) {
+                this.active_stream_id = response.subscription.id;
+            }
+
             // Handle initial history
-            if (response.history || response.ticks_history) {
+            if (response?.history || response?.ticks_history) {
                 const history = response.history || response.ticks_history;
-                if (history.prices) {
+                if (history?.prices && Array.isArray(history.prices)) {
                     const digits = history.prices.map((p: any) => {
                         const s = String(p);
-                        return parseInt(s[s.length - 1]);
+                        return parseInt(s[s.length - 1], 10);
                     });
                     this.updateDigitStats(digits, history.prices[history.prices.length - 1]);
                 }
             }
 
             // Setup real-time listener
-            const subscription = api_base.api.onMessage().subscribe((msg: any) => {
-                if (msg.msg_type === 'tick' && msg.tick && msg.tick.symbol === this.symbol) {
-                    const quote = msg.tick.quote;
-                    const price_str = String(quote);
-                    const last_char = price_str[price_str.length - 1];
-                    const digit = parseInt(last_char);
+            if (api_base.api?.onMessage) {
+                const subscription = api_base.api.onMessage().subscribe((msg: any) => {
+                    if (msg?.msg_type === 'tick' && msg?.tick && msg.tick.symbol === this.symbol) {
+                        const quote = msg.tick.quote;
+                        const price_str = String(quote);
+                        const last_char = price_str[price_str.length - 1];
+                        const digit = parseInt(last_char, 10);
 
-                    if (!isNaN(digit)) {
-                        const new_ticks = [...this.ticks, digit].slice(-1000);
-                        this.updateDigitStats(new_ticks, quote);
+                        if (!isNaN(digit)) {
+                            const new_ticks = [...this.ticks, digit].slice(-1000);
+                            this.updateDigitStats(new_ticks, quote);
+                        }
                     }
-                }
-            });
+                });
 
-            this.unsubscribeTicks = () => subscription.unsubscribe();
+                this.unsubscribeTicks = () => {
+                    try {
+                        subscription?.unsubscribe?.();
+                    } catch (e) {}
+                };
+            }
 
-            console.log(`[SmartTrading] Subscribed to ${this.symbol} via direct API`);
+            console.log(`[SmartTrading] Subscribed to ${this.symbol} via API`);
         } catch (error) {
             console.error('[SmartTrading] Tick subscription failed:', error);
             if (retry_count < 3) {
