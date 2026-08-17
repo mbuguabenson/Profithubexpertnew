@@ -10,10 +10,18 @@ import './workspace.scss';
 const WorkspaceWrapper = observer(() => {
     const { blockly_store } = useStore();
     const { onMount, onUnmount, is_loading } = blockly_store;
+    const [, forceUpdate] = React.useState({});
 
     React.useEffect(() => {
         onMount();
+        const timer = setInterval(() => {
+            if (window.Blockly?.derivWorkspace) {
+                forceUpdate({});
+                clearInterval(timer);
+            }
+        }, 100);
         return () => {
+            clearInterval(timer);
             onUnmount();
         };
     }, []);

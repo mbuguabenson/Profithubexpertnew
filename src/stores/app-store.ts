@@ -33,11 +33,16 @@ export default class AppStore {
         this.dbot_store = null;
         this.api_helpers_store = null;
         this.timer = null;
+        this.setDBotEngineStores();
     }
 
     onMount = async () => {
         const { blockly_store, run_panel } = this.root_store;
         const { ui } = this.core;
+
+        if (!this.dbot_store || !this.api_helpers_store) {
+            this.setDBotEngineStores();
+        }
 
         let timer_counter = 1;
 
@@ -56,10 +61,15 @@ export default class AppStore {
         if (!this.dbot_store) return;
 
         blockly_store.setLoading(true);
-        await DBot.initWorkspace('/', this.dbot_store, this.api_helpers_store, ui.is_mobile, false);
+        try {
+            await DBot.initWorkspace('/', this.dbot_store, this.api_helpers_store, ui?.is_mobile || false, false);
+        } catch (err) {
+            console.error('Error initializing DBot workspace:', err);
+        } finally {
+            blockly_store.setLoading(false);
+        }
 
         blockly_store.setContainerSize();
-        blockly_store.setLoading(false);
 
         this.registerCurrencyReaction.call(this);
         this.registerOnAccountSwitch.call(this);
