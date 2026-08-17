@@ -664,6 +664,8 @@ export default class ContractsFor {
     async getTradeTypes(market, submarket, symbol, trade_type_category) {
         const { NOT_AVAILABLE_DURATIONS, TRADE_TYPE_CATEGORIES, opposites } = config();
         const trade_types = [];
+        const seen_labels = new Set();
+        const seen_values = new Set();
         const subcategories = TRADE_TYPE_CATEGORIES[trade_type_category];
 
         if (subcategories) {
@@ -684,8 +686,13 @@ export default class ContractsFor {
                     const stripped_tt = (trade_type || '').replace(/_/g, '').toUpperCase();
                     const types = opposites[raw_tt] || opposites[stripped_tt] || [];
                     if (types.length > 0) {
-                        // e.g. [['Rise/Fall', 'callput']]
-                        trade_types.push([types.map(type => type[Object.keys(type)[0]]).join('/'), trade_type]);
+                        const label = types.map(type => type[Object.keys(type)[0]]).join('/');
+                        if (!seen_labels.has(label) && !seen_values.has(trade_type)) {
+                            seen_labels.add(label);
+                            seen_values.add(trade_type);
+                            // e.g. [['Rise/Fall', 'callput']]
+                            trade_types.push([label, trade_type]);
+                        }
                     }
                 }
             }
