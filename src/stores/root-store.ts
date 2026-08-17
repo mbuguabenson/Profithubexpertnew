@@ -131,5 +131,7 @@ export default class RootStore {
         this.chart_store = new ChartStore(this);
         this.blockly_store = new BlocklyStore(this);
         this.data_collection_store = new DataCollectionStore(this, this.core);
+
+        this.app.setDBotEngineStores();
     }
 }

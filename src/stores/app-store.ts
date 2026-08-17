@@ -33,7 +33,6 @@ export default class AppStore {
         this.dbot_store = null;
         this.api_helpers_store = null;
         this.timer = null;
-        this.setDBotEngineStores();
     }
 
     onMount = async () => {
@@ -108,7 +107,9 @@ export default class AppStore {
         // TODO: fix
         const { ui } = this.core;
 
-        ui.setAccountSwitcherDisabledMessage();
+        if (ui) {
+            ui.setAccountSwitcherDisabledMessage('');
+        }
         ui.setPromptHandler(false);
 
         if (this.timer) clearInterval(this.timer);
@@ -116,56 +117,36 @@ export default class AppStore {
     };
 
     registerCurrencyReaction = () => {
-        // Syncs all trade options blocks' currency with the client's active currency.
+        // Dynamic subscription to currency from reactive account stream
+        const { client } = this.core;
         this.disposeCurrencyReaction = reaction(
-            () => this.core.client.currency,
-            () => {
-                if (!window.Blockly?.derivWorkspace) return;
-
-                const trade_options_blocks = window.Blockly?.derivWorkspace
-                    .getAllBlocks()
-                    .filter(
-                        b =>
-                            b.type === 'trade_definition_tradeoptions' ||
-                            b.type === 'trade_definition_multiplier' ||
-                            b.type === 'trade_definition_accumulator' ||
-                            (b.isDescendantOf('trade_definition_multiplier') && b.category_ === 'trade_parameters')
-                    );
-
-                trade_options_blocks.forEach(trade_options_block => setCurrency(trade_options_block));
+            () => client?.currency,
+            currency => {
+                if (!currency) return;
+                const { contracts_for } = ApiHelpers.instance;
+                if (!contracts_for) return;
+                contracts_for.disposeCache();
             }
         );
     };
 
     registerOnAccountSwitch = () => {
+        const { client } = this.core;
+
         this.disposeSwitchAccountListener = reaction(
-            () => this.root_store.common?.is_socket_opened,
-            is_socket_opened => {
-                if (!is_socket_opened) return;
-                this.api_helpers_store = {
-                    server_time: this.root_store.common.server_time,
-                    ws: api_base.api,
-                };
-
-                if (!ApiHelpers?.instance) {
-                    ApiHelpers.setInstance(this.api_helpers_store);
-                }
-
-                const active_symbols = ApiHelpers?.instance?.active_symbols;
-                const contracts_for = ApiHelpers?.instance?.contracts_for;
-
-                if (ApiHelpers?.instance && active_symbols && contracts_for) {
-                    if (window.Blockly?.derivWorkspace) {
-                        active_symbols?.retrieveActiveSymbols(true).then(() => {
+            () => client?.loginid,
+            () => {
+                const { contracts_for } = ApiHelpers.instance;
+                if (window.Blockly?.derivWorkspace) {
+                    if (contracts_for) {
+                        runIrreversibleEvents(() => {
                             contracts_for.disposeCache();
                             window.Blockly?.derivWorkspace
                                 .getAllBlocks()
                                 .filter(block => block.type === 'trade_definition_market')
                                 .forEach(block => {
-                                    runIrreversibleEvents(() => {
-                                        const fake_create_event = new window.Blockly.Events.BlockCreate(block);
-                                        window.Blockly.Events.fire(fake_create_event);
-                                    });
+                                    const fake_create_event = new window.Blockly.Events.BlockCreate(block);
+                                    window.Blockly.Events.fire(fake_create_event);
                                 });
                         });
                     }
@@ -182,14 +163,12 @@ export default class AppStore {
 
     setDBotEngineStores = () => {
         const { flyout, toolbar, save_modal, dashboard, load_modal, run_panel, blockly_store, summary_card } =
-            this.root_store;
-        const { client, common } = this.core;
-        const { handleFileChange } = load_modal;
-        const { setLoading } = blockly_store;
-        const { setContractUpdateConfig } = summary_card;
-        const {
-            ui: { is_mobile },
-        } = this.core;
+            this.root_store || {};
+        const { client, common, ui } = this.core || {};
+        const handleFileChange = load_modal?.handleFileChange;
+        const setLoading = blockly_store?.setLoading;
+        const setContractUpdateConfig = summary_card?.setContractUpdateConfig;
+        const is_mobile = ui?.is_mobile;
 
         this.dbot_store = {
             client,
@@ -207,7 +186,7 @@ export default class AppStore {
         };
 
         this.api_helpers_store = {
-            server_time: this.core.common.server_time,
+            server_time: this.core?.common?.server_time,
             ws: api_base.api,
         };
     };
