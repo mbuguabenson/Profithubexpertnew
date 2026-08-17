@@ -7,6 +7,22 @@ import {
     BarChart, Bar, Cell
 } from 'recharts';
 import {
+    Button,
+    Badge,
+    Chip,
+    Heading,
+    Text,
+    CaptionText,
+    Tag,
+    ToggleSwitch,
+    SearchField,
+    TextField,
+    SectionMessage,
+    Skeleton,
+    Spinner,
+} from '@deriv-com/quill-ui';
+import { DerivAnalyticsService, LiveSiteMetrics } from '@/services/deriv-analytics.service';
+import {
     getPendingRequestsForProvider, updateCopyRequestStatus, CopyRequest,
     getSiteConfig, saveSiteConfig, SiteConfig, getDefaultTabConfig,
     getChatSessions, getChatMessages, sendChatMessage, ChatMessage,
@@ -19,6 +35,7 @@ import {
 import { getTradeLogs } from '@/pages/copy-trading/replicator';
 import { getGlobalCopyTradingManager } from '@/pages/copy-trading/copy-trading-manager-singleton';
 import { getAppId, getSocketURL, isProduction } from '@/components/shared/utils/config/config';
+import { convertCurrencyAmount, getDisplayCurrency } from '@/utils/currency-converter';
 import './admin-dashboard.scss';
 
 // ─── Real Data Helpers ────────────────────────────────────────────────────────
@@ -219,6 +236,17 @@ const AdminDashboard = observer(() => {
     const [wsLatency, setWsLatency] = useState(38);
     const [apiOperational, setApiOperational] = useState(true);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [liveMetrics, setLiveMetrics] = useState<LiveSiteMetrics>(() => DerivAnalyticsService.getLiveSiteMetrics());
+
+    useEffect(() => {
+        DerivAnalyticsService.initialize();
+        const refreshMetrics = () => {
+            setLiveMetrics(DerivAnalyticsService.getLiveSiteMetrics());
+        };
+        refreshMetrics();
+        const iv = setInterval(refreshMetrics, 3000);
+        return () => clearInterval(iv);
+    }, []);
 
     // Settings
     const [settings, setSettings] = useState({
@@ -1796,40 +1824,165 @@ Status: Systems functional. Replicator nodes ready.
                         </div>
                     )}
 
-                    {/* ═══════════════ ANALYTICS ═══════════════ */}
+                    {/* ═══════════════ LIVE SITE ANALYTICS (QUILL UI + REAL DATA) ═══════════════ */}
                     {activeSubPage === 'analytics' && (
-                        <div className='adm-card'>
-                            <div className='adm-card__header'><h3 className='adm-card__title'>📉 Aggregated Performance Analytics</h3></div>
-                            <div className='adm-kpi-grid' style={{ marginBottom: 24 }}>
-                                <div className='adm-kpi adm-kpi--blue'><div className='adm-kpi__body'>
-                                    <span className='adm-kpi__label'>PROFIT FACTOR</span>
-                                    <h2 className='adm-kpi__value'>2.45</h2>
-                                </div></div>
-                                <div className='adm-kpi adm-kpi--green'><div className='adm-kpi__body'>
-                                    <span className='adm-kpi__label'>AVERAGE WIN</span>
-                                    <h2 className='adm-kpi__value'>+$8.42</h2>
-                                </div></div>
-                                <div className='adm-kpi adm-kpi--red'><div className='adm-kpi__body'>
-                                    <span className='adm-kpi__label'>MAX DRAWDOWN RECORDED</span>
-                                    <h2 className='adm-kpi__value'>8.2%</h2>
-                                </div></div>
-                            </div>
-                            {chartData.length > 0 ? (
-                                <ResponsiveContainer width='100%' height={280}>
-                                    <AreaChart data={chartData}>
-                                        <defs><linearGradient id='ag' x1='0' y1='0' x2='0' y2='1'><stop offset='5%' stopColor='#8b5cf6' stopOpacity={0.3} /><stop offset='95%' stopColor='#8b5cf6' stopOpacity={0} /></linearGradient></defs>
-                                        <CartesianGrid strokeDasharray='3 3' stroke='rgba(255,255,255,0.03)' />
-                                        <XAxis dataKey='name' stroke='rgba(255,255,255,0.2)' fontSize={10} tickLine={false} />
-                                        <YAxis stroke='rgba(255,255,255,0.2)' fontSize={10} tickLine={false} />
-                                        <Tooltip contentStyle={{ background: '#0a0e17', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, color: '#fff' }} />
-                                        <Area type='monotone' dataKey='PnL' stroke='#8b5cf6' fill='url(#ag)' strokeWidth={2} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className='adm-empty' style={{ height: 280, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    No analytics data compiled. Replication activity required.
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                            {/* Quill Header Card */}
+                            <div className='adm-card'>
+                                <div className='adm-card__header' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <Heading.H3>Deriv Live Site Analytics</Heading.H3>
+                                            <Tag size='sm' variant='success' label='LIVE TELEMETRY' />
+                                        </div>
+                                        <Text size='sm' color='subtle' style={{ marginTop: 4 }}>
+                                            Real-time user engagement, session statistics, live trade telemetry & contract execution metrics powered by @deriv-com/analytics.
+                                        </Text>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        <CaptionText size='sm' color='subtle'>
+                                            Updated: {liveMetrics.lastUpdated}
+                                        </CaptionText>
+                                        <Button
+                                            size='sm'
+                                            variant='secondary'
+                                            onClick={() => setLiveMetrics(DerivAnalyticsService.getLiveSiteMetrics())}
+                                        >
+                                            Refresh Telemetry
+                                        </Button>
+                                    </div>
                                 </div>
-                            )}
+
+                                {/* 4 Primary Live Real Metric Cards */}
+                                <div className='adm-kpi-grid' style={{ marginTop: 20 }}>
+                                    <div className='adm-kpi adm-kpi--blue'>
+                                        <div className='adm-kpi__body'>
+                                            <span className='adm-kpi__label'>REAL ACTIVE USERS & SESSIONS</span>
+                                            <h2 className='adm-kpi__value'>{liveMetrics.activeUsersCount} <span style={{ fontSize: 13, opacity: 0.7 }}>({liveMetrics.totalSessions} Sessions)</span></h2>
+                                            <CaptionText size='xs' color='subtle'>Active accounts & token connections</CaptionText>
+                                        </div>
+                                    </div>
+                                    <div className='adm-kpi adm-kpi--green'>
+                                        <div className='adm-kpi__body'>
+                                            <span className='adm-kpi__label'>TOTAL TRADES EXECUTED</span>
+                                            <h2 className='adm-kpi__value'>{liveMetrics.totalTradesExecuted.toLocaleString()}</h2>
+                                            <CaptionText size='xs' color='subtle'>Replicator & manual contract runs</CaptionText>
+                                        </div>
+                                    </div>
+                                    <div className='adm-kpi adm-kpi--purple'>
+                                        <div className='adm-kpi__body'>
+                                            <span className='adm-kpi__label'>REAL TRADE VOLUME</span>
+                                            <h2 className='adm-kpi__value'>${liveMetrics.totalTradeVolumeUSD.toLocaleString()}</h2>
+                                            <CaptionText size='xs' color='subtle'>KES {(liveMetrics.totalTradeVolumeUSD * 130).toLocaleString()}</CaptionText>
+                                        </div>
+                                    </div>
+                                    <div className={`adm-kpi ${liveMetrics.totalProfitLossUSD >= 0 ? 'adm-kpi--green' : 'adm-kpi--red'}`}>
+                                        <div className='adm-kpi__body'>
+                                            <span className='adm-kpi__label'>NET PROFIT / LOSS</span>
+                                            <h2 className='adm-kpi__value'>
+                                                {liveMetrics.totalProfitLossUSD >= 0 ? `+$${liveMetrics.totalProfitLossUSD.toFixed(2)}` : `-$${Math.abs(liveMetrics.totalProfitLossUSD).toFixed(2)}`}
+                                            </h2>
+                                            <CaptionText size='xs' color='subtle'>
+                                                Win Rate: {liveMetrics.winRate}% ({liveMetrics.winCount}W / {liveMetrics.lossCount}L)
+                                            </CaptionText>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Secondary Real Analytics Grid */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                                {/* Device & Traffic Breakdown */}
+                                <div className='adm-card'>
+                                    <div className='adm-card__header'>
+                                        <Heading.H4>📱 Device & Client Breakdown</Heading.H4>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                <span style={{ fontSize: 18 }}>💻</span>
+                                                <Text size='sm'>Desktop Browsers</Text>
+                                            </div>
+                                            <Badge label={`${liveMetrics.deviceBreakdown.desktop} hits`} size='sm' variant='neutral' />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                <span style={{ fontSize: 18 }}>📱</span>
+                                                <Text size='sm'>Mobile Devices</Text>
+                                            </div>
+                                            <Badge label={`${liveMetrics.deviceBreakdown.mobile} hits`} size='sm' variant='neutral' />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                <span style={{ fontSize: 18 }}>📟</span>
+                                                <Text size='sm'>Tablet Devices</Text>
+                                            </div>
+                                            <Badge label={`${liveMetrics.deviceBreakdown.tablet} hits`} size='sm' variant='neutral' />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                <span style={{ fontSize: 18 }}>📄</span>
+                                                <Text size='sm'>Total Page Views</Text>
+                                            </div>
+                                            <Badge label={`${liveMetrics.pageViewsCount} views`} size='sm' variant='primary' />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Top Active Platform Tools */}
+                                <div className='adm-card'>
+                                    <div className='adm-card__header'>
+                                        <Heading.H4>🔥 Top Visited Platform Pages</Heading.H4>
+                                    </div>
+                                    <div className='adm-table-wrap'>
+                                        <table className='adm-table'>
+                                            <thead>
+                                                <tr>
+                                                    <th>Platform Route / Tab</th>
+                                                    <th style={{ textAlign: 'right' }}>Views</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {liveMetrics.topPages.map((tp, idx) => (
+                                                    <tr key={idx}>
+                                                        <td><code className='adm-mono'>{tp.path}</code></td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            <Badge label={`${tp.views}`} size='sm' variant='neutral' />
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Real Telemetry Live Event Stream */}
+                            <div className='adm-card'>
+                                <div className='adm-card__header' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Heading.H4>⚡ Real-Time User Telemetry Activity Stream</Heading.H4>
+                                    <Tag size='sm' variant='info' label='LIVE STREAM' />
+                                </div>
+                                <div className='adm-feed' style={{ maxHeight: 320, overflowY: 'auto' }}>
+                                    {liveMetrics.recentEvents.length === 0 ? (
+                                        <div className='adm-empty' style={{ padding: 24, textAlign: 'center' }}>
+                                            <Text size='sm' color='subtle'>No telemetry events recorded yet in this session.</Text>
+                                        </div>
+                                    ) : (
+                                        liveMetrics.recentEvents.map((ev, idx) => (
+                                            <div key={idx} className='adm-feed-item adm-feed-item--ok'>
+                                                <span className='adm-feed-item__time'>{new Date(ev.timestamp).toLocaleTimeString()}</span>
+                                                <span className='adm-feed-item__acct'>
+                                                    <Badge label={ev.eventName} size='sm' variant='neutral' />
+                                                </span>
+                                                <span className='adm-feed-item__msg'>
+                                                    {ev.details?.symbol ? `Contract on ${ev.details.symbol} (${ev.details.contractType}) — Stake $${ev.details.stake}` : JSON.stringify(ev.details)}
+                                                </span>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     )}
 

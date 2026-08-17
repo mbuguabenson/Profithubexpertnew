@@ -5,6 +5,7 @@ import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { resolveValidDerivWSToken, getAccountsList, getActiveLoginId } from '@/utils/token-bridge';
+import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
 import './dtrader.scss';
 
 const getInitialLoginId = (): string => {
@@ -41,7 +42,7 @@ const getInitialToken = (loginid: string): string => {
 
 /**
  * DTraderPage — embeds the DTrader build hosted at https://deriv-dtrader.vercel.app/
- * Passes active login tokens directly and renders the trading terminal seamlessly.
+ * Passes active login tokens directly and communicates via @deriv-com/shared-actions protocol.
  */
 const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
@@ -49,7 +50,21 @@ const DTraderPage: React.FC = observer(() => {
     const [activeLoginId, setActiveLoginId] = useState<string>(initialLoginId);
     const [authToken, setAuthToken] = useState<string>(() => getInitialToken(initialLoginId));
     const [isAuthReady, setIsAuthReady] = useState<boolean>(true);
-    const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+    useEffect(() => {
+        SharedActionsBridge.initialize();
+
+        const unsubscribe = SharedActionsBridge.subscribe(message => {
+            if (message.action === 'SWITCH_ACCOUNT' && message.payload?.loginid) {
+                setActiveLoginId(message.payload.loginid);
+                if (message.payload.token) {
+                    setAuthToken(message.payload.token);
+                }
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         let mounted = true;
@@ -139,7 +154,7 @@ const DTraderPage: React.FC = observer(() => {
 
     const embedUrl = `${embedBase}?${queryParams.toString()}`;
 
-    // Broadcast active token to child iframe via postMessage on load
+    // Broadcast active token to child iframe via postMessage & SharedActionsBridge on load
     useEffect(() => {
         const handleIframeAuthSync = () => {
             if (authToken) {
@@ -150,6 +165,8 @@ const DTraderPage: React.FC = observer(() => {
                     token: authToken,
                     accounts: accountsList,
                 };
+                SharedActionsBridge.dispatch('INITIALIZE_AUTH', payload);
+
                 const iframes = document.querySelectorAll('iframe');
                 iframes.forEach(iframe => {
                     try {
@@ -160,12 +177,12 @@ const DTraderPage: React.FC = observer(() => {
         };
 
         window.addEventListener('message', (e) => {
-            if (e.data?.type === 'REQUEST_DERIV_AUTH') {
+            if (e.data?.type === 'REQUEST_DERIV_AUTH' || e.data?.action === 'REQUEST_DERIV_AUTH') {
                 handleIframeAuthSync();
             }
         });
 
-        const timer = setTimeout(handleIframeAuthSync, 2000);
+        const timer = setTimeout(handleIframeAuthSync, 1500);
         return () => clearTimeout(timer);
     }, [authToken, loginId]);
 
