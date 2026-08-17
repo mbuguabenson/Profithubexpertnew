@@ -9,6 +9,7 @@ import { MarketIcon } from '../market/market-icon';
 import { convertDateFormat } from '../shared';
 import Popover from '../shared_ui/popover';
 import { TradeTypeIcon } from '../trade-type/trade-type-icon';
+import { convertCurrencyAmount, useDisplayCurrency } from '@/utils/currency-converter';
 import { TColumn, TDesktopTransactionTable, TTableCell } from './transaction-details.types';
 
 const PARENT_CLASS = 'transaction-details-modal-desktop';
@@ -64,6 +65,8 @@ export default function DesktopTransactionTable({
     account,
     balance,
 }: TDesktopTransactionTable) {
+    const { convert } = useDisplayCurrency();
+
     return (
         <div data-testid='transaction_details_tables' className='transaction-details-tables'>
             <div
@@ -76,6 +79,9 @@ export default function DesktopTransactionTable({
                 {transactions?.map(transaction => {
                     const { data, type } = transaction;
                     if (type === transaction_elements.CONTRACT) {
+                        const buyPriceConv = convert(data?.buy_price, data?.currency || 'USD');
+                        const profitConv = convert(data?.profit, data?.currency || 'USD');
+
                         return (
                             <div className={`${PARENT_CLASS}__table-row`} key={data?.transaction_ids?.buy}>
                                 <TableCell
@@ -114,16 +120,16 @@ export default function DesktopTransactionTable({
                                 />
                                 <TableCell label={data?.entry_spot} loader={!data?.entry_spot} />
                                 <TableCell label={data?.exit_spot} loader={!data.exit_spot} />
-                                <TableCell label={Math.abs(data?.buy_price ?? 0).toFixed(2)} />
+                                <TableCell label={Math.abs(buyPriceConv.amount).toFixed(2)} />
                                 <TableCell
                                     label={
                                         <div
                                             className={classNames({
-                                                [`${PARENT_CLASS}__profit--win`]: data?.profit > 0,
-                                                [`${PARENT_CLASS}__profit--loss`]: data?.profit < 0,
+                                                [`${PARENT_CLASS}__profit--win`]: profitConv.amount > 0,
+                                                [`${PARENT_CLASS}__profit--loss`]: profitConv.amount < 0,
                                             })}
                                         >
-                                            {Math.abs(data?.profit ?? 0).toFixed(2)}
+                                            {Math.abs(profitConv.amount).toFixed(2)}
                                         </div>
                                     }
                                     loader={!data.is_completed}
@@ -151,8 +157,8 @@ export default function DesktopTransactionTable({
                 <div className={`${PARENT_CLASS}__table-row`}>
                     <TableCell label={account} extra_classes={[`${PARENT_CLASS}__table-cell--grow-mid`]} />
                     <TableCell label={result?.number_of_runs} />
-                    <TableCell label={Math.abs(result?.total_stake ?? 0).toFixed(2)} />
-                    <TableCell label={Math.abs(result?.total_payout ?? 0).toFixed(2)} />
+                    <TableCell label={Math.abs(convert(result?.total_stake).amount).toFixed(2)} />
+                    <TableCell label={Math.abs(convert(result?.total_payout).amount).toFixed(2)} />
                     <TableCell label={result?.won_contracts} />
                     <TableCell label={result?.lost_contracts} extra_classes={[`${PARENT_CLASS}__loss`]} />
                     <TableCell
@@ -166,7 +172,7 @@ export default function DesktopTransactionTable({
                                 )}
                                 data-testid='transaction_details_table_profit'
                             >
-                                {Math.abs(result?.total_profit ?? 0).toFixed(2)}
+                                {Math.abs(convert(result?.total_profit).amount).toFixed(2)}
                             </div>
                         }
                     />

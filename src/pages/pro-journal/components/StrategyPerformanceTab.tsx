@@ -2,15 +2,20 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { IStrategyPerformance } from '../services/journal-types';
 import { getStrategyPerformance } from '../services/journal-storage';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 
 const StrategyPerformanceTab = observer(() => {
+    const { convert } = useDisplayCurrency();
     const [performance, setPerformance] = useState<IStrategyPerformance[]>([]);
 
     useEffect(() => {
         setPerformance(getStrategyPerformance());
     }, []);
 
-    const formatMoney = (amount: number) => `${amount > 0 ? '+' : ''}${amount.toFixed(2)}`;
+    const formatMoney = (amount: number, curr = 'USD') => {
+        const { formatted } = convert(amount, curr);
+        return `${amount > 0 ? '+' : ''}${formatted}`;
+    };
 
     return (
         <div className="pj-strategy-performance-tab">

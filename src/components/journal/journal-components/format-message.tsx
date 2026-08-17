@@ -1,11 +1,21 @@
+import React, { useEffect, useState } from 'react';
 import classnames from 'classnames';
 import { formatMoney, getCurrencyDisplayCode } from '@/components/shared';
 import Text from '@/components/shared_ui/text';
 import { LogTypes } from '@/external/bot-skeleton';
 import { Localize, localize } from '@deriv-com/translations';
+import { convertCurrencyAmount } from '@/utils/currency-converter';
 import { TFormatMessageProps } from '../journal.types';
 
 const FormatMessage = ({ logType, className, extra }: TFormatMessageProps) => {
+    const [, setTick] = useState(0);
+
+    useEffect(() => {
+        const handleSync = () => setTick(t => t + 1);
+        window.addEventListener('currency_changed', handleSync);
+        return () => window.removeEventListener('currency_changed', handleSync);
+    }, []);
+
     const getLogMessage = () => {
         switch (logType) {
             case LogTypes.LOAD_BLOCK: {
@@ -27,33 +37,40 @@ const FormatMessage = ({ logType, className, extra }: TFormatMessageProps) => {
             }
             case LogTypes.SELL: {
                 const { sold_for } = extra;
+                let display_sold = sold_for;
+                if (typeof sold_for === 'number' || (typeof sold_for === 'string' && !isNaN(parseFloat(sold_for)) && isFinite(Number(sold_for)))) {
+                    const { amount: convertedSold, currency: targetCurrency } = convertCurrencyAmount(sold_for, extra?.currency || 'USD');
+                    display_sold = `${formatMoney(targetCurrency, convertedSold, true)} ${getCurrencyDisplayCode(targetCurrency)}`;
+                }
                 return (
                     <Localize
                         i18n_default_text='<0>Sold for</0>: {{sold_for}}'
-                        values={{ sold_for }}
+                        values={{ sold_for: display_sold }}
                         components={[<Text key={0} size='xxs' styles={{ color: 'var(--status-warning)' }} />]}
                     />
                 );
             }
             case LogTypes.PROFIT: {
-                const { currency, profit } = extra;
+                const { currency = 'USD', profit } = extra;
+                const { amount: convertedProfit, currency: targetCurrency } = convertCurrencyAmount(profit, currency);
                 return (
                     <Localize
                         i18n_default_text='Profit amount: <0>{{profit}}</0>'
                         values={{
-                            profit: `${formatMoney(currency, profit, true)} ${getCurrencyDisplayCode(currency)}`,
+                            profit: `${formatMoney(targetCurrency, convertedProfit, true)} ${getCurrencyDisplayCode(targetCurrency)}`,
                         }}
                         components={[<Text key={0} size='xxs' styles={{ color: 'var(--status-success)' }} />]}
                     />
                 );
             }
             case LogTypes.LOST: {
-                const { currency, profit } = extra;
+                const { currency = 'USD', profit } = extra;
+                const { amount: convertedProfit, currency: targetCurrency } = convertCurrencyAmount(profit, currency);
                 return (
                     <Localize
                         i18n_default_text='Loss amount: <0>{{profit}}</0>'
                         values={{
-                            profit: `${formatMoney(currency, profit, true)} ${getCurrencyDisplayCode(currency)}`,
+                            profit: `${formatMoney(targetCurrency, convertedProfit, true)} ${getCurrencyDisplayCode(targetCurrency)}`,
                         }}
                         components={[<Text key={0} size='xxs' styles={{ color: 'var(--status-danger)' }} />]}
                     />

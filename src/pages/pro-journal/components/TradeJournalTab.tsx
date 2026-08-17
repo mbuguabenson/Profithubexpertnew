@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { IJournalTrade, TradeDirection } from '../services/journal-types';
 import { getTrades, addTrade, deleteTrade } from '../services/journal-storage';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 
 const TradeJournalTab = observer(() => {
     const [trades, setTrades] = useState<IJournalTrade[]>([]);
@@ -72,7 +73,11 @@ const TradeJournalTab = observer(() => {
         }
     };
 
-    const formatMoney = (amount: number, curr: string) => `${amount < 0 ? '-' : ''}${Math.abs(amount).toFixed(2)} ${curr}`;
+    const { convert } = useDisplayCurrency();
+    const formatMoney = (amount: number, curr = 'USD') => {
+        const { formatted } = convert(amount, curr);
+        return formatted;
+    };
 
     return (
         <div className="pj-trade-journal-tab">

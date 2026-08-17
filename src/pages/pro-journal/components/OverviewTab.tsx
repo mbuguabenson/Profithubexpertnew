@@ -1,12 +1,14 @@
 import { observer } from 'mobx-react-lite';
 import { IAccountProfile } from '../services/journal-types';
 import { getJournalOverview } from '../services/journal-storage';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 
 interface IOverviewTabProps {
     accountProfile: IAccountProfile;
 }
 
 const OverviewTab = observer(({ accountProfile }: IOverviewTabProps) => {
+    const { convert } = useDisplayCurrency();
     const overview = getJournalOverview(
         accountProfile.account_id,
         accountProfile.currency,
@@ -14,7 +16,8 @@ const OverviewTab = observer(({ accountProfile }: IOverviewTabProps) => {
     );
 
     const formatMoney = (amount: number) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: overview.currency }).format(amount);
+        const { formatted } = convert(amount, overview.currency || 'USD');
+        return formatted;
     };
 
     const isProfit = overview.total_journal_pl >= 0;

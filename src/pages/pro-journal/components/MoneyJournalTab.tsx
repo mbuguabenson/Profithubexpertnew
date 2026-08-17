@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { IJournalDeposit, IJournalWithdrawal, TransactionStatus } from '../services/journal-types';
 import { getDeposits, getWithdrawals, addDeposit, addWithdrawal, deleteDeposit, deleteWithdrawal } from '../services/journal-storage';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 
 const MoneyJournalTab = observer(() => {
+    const { convert } = useDisplayCurrency();
     const [activeTab, setActiveTab] = useState<'deposits' | 'withdrawals'>('deposits');
     const [deposits, setDeposits] = useState<IJournalDeposit[]>([]);
     const [withdrawals, setWithdrawals] = useState<IJournalWithdrawal[]>([]);
@@ -67,7 +69,10 @@ const MoneyJournalTab = observer(() => {
         }
     };
 
-    const formatMoney = (amount: number) => `$${amount.toFixed(2)}`;
+    const formatMoney = (amount: number, curr = 'USD') => {
+        const { formatted } = convert(amount, curr);
+        return formatted;
+    };
 
     return (
         <div className="pj-money-journal-tab">

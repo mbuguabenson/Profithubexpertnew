@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ICompoundingChallenge, ChallengeStatus } from '../services/journal-types';
 import { getChallenges, addChallenge, updateChallengeDay } from '../services/journal-storage';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 
 const CompoundingJournalTab = observer(() => {
+    const { convert } = useDisplayCurrency();
     const [challenges, setChallenges] = useState<ICompoundingChallenge[]>([]);
     const [activeChallenge, setActiveChallenge] = useState<ICompoundingChallenge | null>(null);
     const [isCreateMode, setIsCreateMode] = useState(false);
@@ -71,7 +73,10 @@ const CompoundingJournalTab = observer(() => {
         }
     };
 
-    const formatMoney = (amount: number) => `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const formatMoney = (amount: number, curr = 'USD') => {
+        const { formatted } = convert(amount, curr);
+        return formatted;
+    };
 
     if (isCreateMode || challenges.length === 0) {
         return (

@@ -9,6 +9,7 @@ import { MarketIcon } from '../market/market-icon';
 import { convertDateFormat } from '../shared';
 import Popover from '../shared_ui/popover';
 import { TradeTypeIcon } from '../trade-type/trade-type-icon';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 import { TTransaction } from './transaction-details.types';
 
 const PARENT_CLASS = 'transaction-details-modal-mobile';
@@ -72,6 +73,10 @@ const IconContainer = ({ message, icon }: { message: string; icon: ReactElement 
 );
 
 export default function MobileTransactionCards({ transaction }: { transaction: TTransaction }) {
+    const { convert } = useDisplayCurrency();
+    const buyPriceConv = convert(transaction?.buy_price, transaction?.currency || 'USD');
+    const profitConv = convert(transaction?.profit, transaction?.currency || 'USD');
+
     return (
         <div className={`${PARENT_CLASS}__card`} data-testid='dt_mobile_transaction_card'>
             <div className={`${PARENT_CLASS}__card__row`}>
@@ -113,7 +118,7 @@ export default function MobileTransactionCards({ transaction }: { transaction: T
                 />
             </div>
             <div className={`${PARENT_CLASS}__card__row`}>
-                <CardColumn title='Buy Price' label={Math.abs(transaction?.buy_price ?? 0).toFixed(2)} />
+                <CardColumn title='Buy Price' label={Math.abs(buyPriceConv.amount).toFixed(2)} />
                 <CardColumn
                     title='Exit Spot'
                     label={transaction?.exit_spot}
@@ -128,11 +133,11 @@ export default function MobileTransactionCards({ transaction }: { transaction: T
                     label={
                         <div
                             className={classNames({
-                                [`${PARENT_CLASS}__card__profit--win`]: transaction?.profit > 0,
-                                [`${PARENT_CLASS}__card__profit--loss`]: transaction?.profit < 0,
+                                [`${PARENT_CLASS}__card__profit--win`]: profitConv.amount > 0,
+                                [`${PARENT_CLASS}__card__profit--loss`]: profitConv.amount < 0,
                             })}
                         >
-                            {Math.abs(transaction?.profit ?? 0).toFixed(2)}
+                            {Math.abs(profitConv.amount).toFixed(2)}
                         </div>
                     }
                     right_aligned

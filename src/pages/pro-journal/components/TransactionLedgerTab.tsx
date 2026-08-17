@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ILedgerEntry, LedgerEntryType } from '../services/journal-types';
 import { getLedger, rebuildLedger } from '../services/journal-storage';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 
 const TransactionLedgerTab = observer(() => {
+    const { convert } = useDisplayCurrency();
     const [ledger, setLedger] = useState<ILedgerEntry[]>([]);
     
     const loadData = () => {
@@ -17,9 +19,10 @@ const TransactionLedgerTab = observer(() => {
         loadData();
     }, []);
 
-    const formatMoney = (amount: number) => {
+    const formatMoney = (amount: number, curr = 'USD') => {
         if (amount === 0) return '-';
-        return amount.toFixed(2);
+        const { formatted } = convert(amount, curr);
+        return formatted;
     };
 
     return (
@@ -82,7 +85,7 @@ const TransactionLedgerTab = observer(() => {
                                             {isDebit ? '-' : ''}{formatMoney(entry.debit)}
                                         </td>
                                         <td style={{ textAlign: 'right', background: 'rgba(0,0,0,0.1)', fontWeight: 700, color: '#f8fafc' }}>
-                                            {entry.balance.toFixed(2)}
+                                            {formatMoney(entry.balance)}
                                         </td>
                                     </tr>
                                 );
