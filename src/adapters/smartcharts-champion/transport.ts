@@ -79,6 +79,16 @@ export function createTransport(): TTransport {
             chart_api.api
                 .send(subscribeRequest)
                 .then((response: any) => {
+                    if (response?.error) {
+                        logger.warn('Subscription returned API error:', response.error?.message || response.error);
+                        const storedSub = subscriptions.get(tempId);
+                        if (storedSub?.messageSubscription) {
+                            storedSub.messageSubscription.unsubscribe();
+                        }
+                        subscriptions.delete(tempId);
+                        return;
+                    }
+
                     const subscriptionId = response?.subscription?.id;
 
                     if (subscriptionId) {
@@ -91,12 +101,14 @@ export function createTransport(): TTransport {
 
                         // Call callback with initial response
                         callback(response);
+                    } else if (response?.history || response?.candles || response?.tick) {
+                        callback(response);
                     } else {
-                        logger.error('No subscription ID in response:', response);
+                        logger.warn('No subscription ID in response:', response);
                     }
                 })
                 .catch((error: any) => {
-                    logger.error('Subscription failed:', error);
+                    logger.warn('Subscription request failed gracefully:', error?.error?.message || error?.message || error);
                     // Clean up failed subscription
                     const storedSub = subscriptions.get(tempId);
                     if (storedSub?.messageSubscription) {
