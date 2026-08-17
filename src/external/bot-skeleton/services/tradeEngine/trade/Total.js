@@ -73,11 +73,11 @@ export default Engine =>
                     }
                 }
 
-                // ⚡ Auto Switch / Alternate Markets check
-                const isAutoSwitch =
-                    (typeof window !== 'undefined' && window.scanner_store?.auto_switch_markets) ||
-                    (typeof window !== 'undefined' && window.DBot?.__alt_markets?.enabled);
-                if (isAutoSwitch) {
+                // ⚡ Strictly enforce the user's defined input market.
+                // Never hijack or switch the symbol without the user's explicit consent.
+                const isExplicitAltMarkets =
+                    typeof window !== 'undefined' && window.DBot?.__alt_markets?.enabled === true;
+                if (isExplicitAltMarkets) {
                     const availableSymbols = [
                         'R_10',
                         'R_25',
@@ -90,33 +90,20 @@ export default Engine =>
                         '1HZ75V',
                         '1HZ100V',
                     ];
-                    const currentSymbol = (this.tradeOptions && this.tradeOptions.symbol) || 'R_100';
-
-                    let nextSymbol = currentSymbol;
-                    if (
-                        window.scanner_store &&
-                        window.scanner_store.signals &&
-                        window.scanner_store.signals.length > 0
-                    ) {
-                        const topSig = window.scanner_store.signals.find(
-                            s => s.symbol !== currentSymbol && s.confidence >= 0.6
-                        );
-                        if (topSig) nextSymbol = topSig.symbol;
-                    }
-                    if (nextSymbol === currentSymbol) {
-                        const idx = availableSymbols.indexOf(currentSymbol);
-                        nextSymbol = availableSymbols[(idx + 1) % availableSymbols.length];
-                    }
+                    const currentSymbol = (this.tradeOptions && this.tradeOptions.symbol) || this.options?.symbol || 'R_100';
+                    const idx = availableSymbols.indexOf(currentSymbol);
+                    const nextSymbol = availableSymbols[(idx + 1) % availableSymbols.length];
 
                     if (nextSymbol && nextSymbol !== currentSymbol) {
                         if (this.tradeOptions) {
                             this.tradeOptions.symbol = nextSymbol;
                         }
-                        if (window.scanner_store) {
-                            window.scanner_store.setSingleMarketSymbol(nextSymbol);
-                            window.scanner_store.subscribeToSymbolTicks(nextSymbol);
-                        }
-                        log(LogTypes.INFO, { message: `[AUTO SWITCH] Market automatically switched to ${nextSymbol}` });
+                        log(LogTypes.INFO, { message: `[ALTERNATE MARKETS] Market switched to ${nextSymbol}` });
+                    }
+                } else if (this.options?.symbol) {
+                    // Lock symbol strictly to the user's configured input market
+                    if (this.tradeOptions) {
+                        this.tradeOptions.symbol = this.options.symbol;
                     }
                 }
             } catch (error) {

@@ -125,10 +125,10 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
 
             // Handle auth errors by calling client.logout() directly instead of useLogout hook
             // This prevents redundant logout operations since useLogout internally calls client.logout()
+            // Note: AuthorizationRequired is a transient state during socket reconnection and MUST NOT trigger logout
             if (
-                error?.code === 'AuthorizationRequired' ||
                 error?.code === 'DisabledClient' ||
-                error?.code === 'InvalidToken'
+                (error?.code === 'InvalidToken' && msg_type === 'authorize')
             ) {
                 // Clear all URL query parameters for these auth errors
                 clearInvalidTokenParams();

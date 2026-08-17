@@ -147,7 +147,7 @@ export default class ScannerStore implements IScannerStore {
   stop_loss = 10;
   martingale_multiplier = 2.0;
   alternate_after_losses = false;
-  auto_switch_markets = true;
+  auto_switch_markets = false;
   loss_threshold = 1;
   is_auto_trading = false;
   is_full_ai_automation = false;

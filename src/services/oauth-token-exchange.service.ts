@@ -43,6 +43,8 @@ export class OAuthTokenExchangeService {
         return brandConfig.platform.auth2_url[environment];
     }
 
+    private static refreshPromise: Promise<TokenExchangeResponse> | null = null;
+
     private static storeAuthInfo(authInfo: AuthInfo): void {
         const payload = JSON.stringify(authInfo);
         localStorage.setItem(AUTH_INFO_KEY, payload);
@@ -51,9 +53,9 @@ export class OAuthTokenExchangeService {
 
     /**
      * Get stored authentication info from localStorage with sessionStorage fallback.
-     * @returns AuthInfo object or null if not found or expired
+     * @returns AuthInfo object or null if not found
      */
-    static getAuthInfo({ allowExpiredWithRefresh = false } = {}): AuthInfo | null {
+    static getAuthInfo({ allowExpiredWithRefresh = true } = {}): AuthInfo | null {
         try {
             const authInfoStr = localStorage.getItem(AUTH_INFO_KEY) || sessionStorage.getItem(AUTH_INFO_KEY);
             if (!authInfoStr) {
@@ -62,13 +64,32 @@ export class OAuthTokenExchangeService {
 
             const authInfo: AuthInfo = JSON.parse(authInfoStr);
 
-            // Check if token is expired
-            if (authInfo.expires_at && Date.now() >= authInfo.expires_at) {
-                if (allowExpiredWithRefresh && authInfo.refresh_token) {
-                    return authInfo;
+            // Check if token is near expiration (within 5 minutes) or expired
+            const isExpired = authInfo.expires_at && Date.now() >= authInfo.expires_at;
+            const isNearExpiry = authInfo.expires_at && Date.now() >= authInfo.expires_at - 300000;
+
+            if (authInfo.refresh_token && (isExpired || isNearExpiry)) {
+                if (!this.refreshPromise) {
+                    this.refreshPromise = this.refreshAccessToken(authInfo.refresh_token)
+                        .catch(err => {
+                            console.warn('[OAuth] Background token refresh failed:', err);
+                            return {};
+                        })
+                        .finally(() => {
+                            this.refreshPromise = null;
+                        });
                 }
-                this.clearAuthInfo();
-                return null;
+                // Return current token so active requests/connections don't fail
+                return authInfo;
+            }
+
+            if (isExpired && !authInfo.refresh_token) {
+                // If legacy tokens or active account exist, do not abruptly destroy session
+                const hasLegacyAccount = !!localStorage.getItem('accountsList') || !!localStorage.getItem('active_loginid');
+                if (!hasLegacyAccount) {
+                    this.clearAuthInfo();
+                    return null;
+                }
             }
 
             return authInfo;

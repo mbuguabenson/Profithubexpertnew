@@ -113,21 +113,19 @@ export const useOAuthCallback = (): OAuthCallbackResult => {
         // Validate CSRF token (state parameter)
         if (!state) {
             console.error('[DEBUG] Missing state parameter in OAuth callback');
-            clearAuthData();
+            cleanupURL();
             setResult({
                 isProcessing: false,
                 isValid: false,
                 params: { code, state, error, error_description },
                 error: 'Missing state parameter - potential security threat',
             });
-
-            window.location.replace(window.location.origin);
             return;
         }
 
         if (!validateCSRFToken(state)) {
             console.error('[DEBUG] CSRF token validation failed - potential security threat');
-            clearAuthData();
+            cleanupURL();
             setResult({
                 isProcessing: false,
                 isValid: false,
