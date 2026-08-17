@@ -504,6 +504,7 @@ export const CONTRACT_TYPES = {
         ['Down', 'MULTDOWN'],
     ],
     accumulator: [['Buy', 'ACCU']],
+    accu: [['Buy', 'ACCU']],
     asians: [
         ['Asian Up', 'ASIANU'],
         ['Asian Down', 'ASIAND'],
@@ -524,6 +525,38 @@ export const CONTRACT_TYPES = {
         ['Call Spread', 'CALLSPREAD'],
         ['Put Spread', 'PUTSPREAD'],
     ],
+    differs: [
+        ['Differs', 'DIGITDIFF'],
+        ['Matches', 'DIGITMATCH'],
+    ],
+    matches: [
+        ['Matches', 'DIGITMATCH'],
+        ['Differs', 'DIGITDIFF'],
+    ],
+    matches_differs: [
+        ['Matches', 'DIGITMATCH'],
+        ['Differs', 'DIGITDIFF'],
+    ],
+    even_odd: [
+        ['Even', 'DIGITEVEN'],
+        ['Odd', 'DIGITODD'],
+    ],
+    over_under: [
+        ['Over', 'DIGITOVER'],
+        ['Under', 'DIGITUNDER'],
+    ],
+    rise_fall: [
+        ['Rise', 'CALL'],
+        ['Fall', 'PUT'],
+    ],
+    risefall: [
+        ['Rise', 'CALL'],
+        ['Fall', 'PUT'],
+    ],
+    call_put: [
+        ['Rise', 'CALL'],
+        ['Fall', 'PUT'],
+    ],
 
     // Default fallback when no trade type matches
     DEFAULT_FALLBACK: [
@@ -531,8 +564,16 @@ export const CONTRACT_TYPES = {
         ['Fall', 'PUT'],
         ['Rise Equals', 'CALLE'],
         ['Fall Equals', 'PUTE'],
-        ['Higher', 'CALLSPREAD'],
-        ['Lower', 'PUTSPREAD'],
+        ['Higher', 'CALL'],
+        ['Lower', 'PUT'],
+        ['Touch', 'ONETOUCH'],
+        ['No Touch', 'NOTOUCH'],
+        ['Matches', 'DIGITMATCH'],
+        ['Differs', 'DIGITDIFF'],
+        ['Even', 'DIGITEVEN'],
+        ['Odd', 'DIGITODD'],
+        ['Over', 'DIGITOVER'],
+        ['Under', 'DIGITUNDER'],
     ],
 };
 

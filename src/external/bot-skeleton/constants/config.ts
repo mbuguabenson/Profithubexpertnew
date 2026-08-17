@@ -225,6 +225,75 @@ export const config = () => ({
                 PUTSPREAD: 'Put Spread',
             },
         ],
+        DIFFERS: [
+            {
+                DIGITDIFF: 'Differs',
+            },
+            {
+                DIGITMATCH: 'Matches',
+            },
+        ],
+        MATCHES: [
+            {
+                DIGITMATCH: 'Matches',
+            },
+            {
+                DIGITDIFF: 'Differs',
+            },
+        ],
+        ACCU: [
+            {
+                ACCU: 'Buy',
+            },
+        ],
+        DIGITDIFF: [
+            {
+                DIGITDIFF: 'Differs',
+            },
+            {
+                DIGITMATCH: 'Matches',
+            },
+        ],
+        DIGITMATCH: [
+            {
+                DIGITMATCH: 'Matches',
+            },
+            {
+                DIGITDIFF: 'Differs',
+            },
+        ],
+        DIGITEVEN: [
+            {
+                DIGITEVEN: 'Even',
+            },
+            {
+                DIGITODD: 'Odd',
+            },
+        ],
+        DIGITODD: [
+            {
+                DIGITODD: 'Odd',
+            },
+            {
+                DIGITEVEN: 'Even',
+            },
+        ],
+        DIGITOVER: [
+            {
+                DIGITOVER: 'Over',
+            },
+            {
+                DIGITUNDER: 'Under',
+            },
+        ],
+        DIGITUNDER: [
+            {
+                DIGITUNDER: 'Under',
+            },
+            {
+                DIGITOVER: 'Over',
+            },
+        ],
     },
     BARRIER_TYPES: [
         ['Offset +', '+'],
