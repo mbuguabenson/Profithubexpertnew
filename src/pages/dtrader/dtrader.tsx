@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import IframeWrapper from '@/components/iframe-wrapper/iframe-wrapper';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
-import { getAppId } from '@/components/shared/utils/config/config';
+import { getAppId, generateOAuthURL } from '@/components/shared/utils/config/config';
 import { resolveValidDerivWSToken, getAccountsList, getActiveLoginId } from '@/utils/token-bridge';
 import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
+import { Heading, Text, CaptionText, Button, TextField, Badge } from '@deriv-com/quill-ui';
 import './dtrader.scss';
 
 const getInitialLoginId = (): string => {
@@ -34,22 +35,32 @@ const getInitialToken = (loginid: string): string => {
             localStorage.getItem('active_token') ||
             localStorage.getItem('authToken') ||
             localStorage.getItem('token1') ||
+            localStorage.getItem('client.token') ||
+            localStorage.getItem('copy_trading.master_token') ||
             localStorage.getItem('deriv_api_token');
         if (direct && !direct.startsWith('ory_at_')) return direct;
+
+        const copyTokens = JSON.parse(localStorage.getItem('copyTokensArray') || '[]');
+        if (Array.isArray(copyTokens) && copyTokens.length > 0 && copyTokens[0]) {
+            return copyTokens[0];
+        }
     } catch {}
     return '';
 };
 
 /**
  * DTraderPage — embeds the DTrader build hosted at https://deriv-dtrader.vercel.app/
- * Passes active login tokens directly and communicates via @deriv-com/shared-actions protocol.
+ * Passes active login tokens directly to bypass Kenya/regional restrictions and communicates via @deriv-com/shared-actions protocol.
  */
 const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
     const initialLoginId = getInitialLoginId() || (client as any)?.loginid || '';
     const [activeLoginId, setActiveLoginId] = useState<string>(initialLoginId);
     const [authToken, setAuthToken] = useState<string>(() => getInitialToken(initialLoginId));
-    const [isAuthReady, setIsAuthReady] = useState<boolean>(true);
+    const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
+    const [manualToken, setManualToken] = useState<string>('');
+    const [tokenError, setTokenError] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     useEffect(() => {
         SharedActionsBridge.initialize();
@@ -90,6 +101,10 @@ const DTraderPage: React.FC = observer(() => {
                 }
             }
 
+            if (!token) {
+                token = getInitialToken(loginId || '');
+            }
+
             if (token && token.startsWith('ory_at_')) {
                 token = '';
             }
@@ -104,6 +119,49 @@ const DTraderPage: React.FC = observer(() => {
         loadAuthParams();
         return () => { mounted = false; };
     }, [client?.loginid]);
+
+    const handleOAuthLogin = async () => {
+        try {
+            const oauthUrl = await generateOAuthURL();
+            window.location.href = oauthUrl;
+        } catch (e) {
+            console.error('OAuth URL error:', e);
+        }
+    };
+
+    const handleManualTokenSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmed = manualToken.trim();
+        if (!trimmed) {
+            setTokenError('Please enter a valid Deriv API token');
+            return;
+        }
+
+        setIsSubmitting(true);
+        setTokenError('');
+
+        try {
+            const { DerivClient } = await import('@/pages/copy-trading/copy-trading-manager');
+            const testClient = new DerivClient();
+            const authRes = await testClient.connectAndAuthorize(trimmed);
+            testClient.disconnect();
+
+            const newLoginId = authRes.loginid || 'CR_ACCOUNT';
+            const accountsList = getAccountsList();
+            accountsList[newLoginId] = trimmed;
+            localStorage.setItem('accountsList', JSON.stringify(accountsList));
+            localStorage.setItem('active_loginid', newLoginId);
+            localStorage.setItem('active_token', trimmed);
+            localStorage.setItem('token1', trimmed);
+
+            setActiveLoginId(newLoginId);
+            setAuthToken(trimmed);
+        } catch (err: any) {
+            setTokenError(err?.message || 'Invalid Deriv API token. Please check and try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const appId = getAppId() || '121856';
     const rawBaseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app';
@@ -187,7 +245,70 @@ const DTraderPage: React.FC = observer(() => {
     }, [authToken, loginId]);
 
     if (!isAuthReady) {
-        return <ChunkLoader message="Loading DTrader Terminal..." />;
+        return <ChunkLoader message="Initializing DTrader Terminal..." />;
+    }
+
+    // If unauthenticated, show Quill UI login prompt to prevent regional IP block in iframe
+    if (!authToken) {
+        return (
+            <div className='dtrader-page-container' style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: 24 }}>
+                <div style={{
+                    maxWidth: 520,
+                    width: '100%',
+                    background: '#0d111c',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: 16,
+                    padding: 32,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 20,
+                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Heading.H3>Deriv DTrader Terminal</Heading.H3>
+                        <Badge label='AUTH REQUIRED' size='sm' variant='warning' />
+                    </div>
+
+                    <Text size='sm' color='subtle'>
+                        To open the DTrader interface in Kenya without landing restrictions, connect your Deriv account or provide an API token.
+                    </Text>
+
+                    <Button
+                        size='lg'
+                        variant='primary'
+                        fullWidth
+                        onClick={handleOAuthLogin}
+                    >
+                        Log In with Deriv
+                    </Button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '8px 0' }}>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(255, 255, 255, 0.08)' }} />
+                        <CaptionText size='xs' color='subtle'>OR CONNECT VIA API TOKEN</CaptionText>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(255, 255, 255, 0.08)' }} />
+                    </div>
+
+                    <form onSubmit={handleManualTokenSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <TextField
+                            placeholder="Enter Deriv API Token (e.g. a1-XYZ...)"
+                            value={manualToken}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualToken(e.target.value)}
+                            status={tokenError ? 'error' : undefined}
+                            statusMessage={tokenError}
+                        />
+                        <Button
+                            size='md'
+                            variant='secondary'
+                            fullWidth
+                            type='submit'
+                            isLoading={isSubmitting}
+                        >
+                            Launch DTrader with Token
+                        </Button>
+                    </form>
+                </div>
+            </div>
+        );
     }
 
     return (
