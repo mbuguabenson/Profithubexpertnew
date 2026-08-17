@@ -227,30 +227,32 @@ const AppRoot = () => {
     }, []);
 
     useEffect(() => {
+        let animationFrameId: number;
         const step = () => {
             const current = progressRef.current;
             const target = targetProgressRef.current;
-            const increment = isReducedMotion ? 0.16 : Math.max(0.06, (target - current) * 0.04);
+            const increment = isReducedMotion ? 1.5 : Math.max(0.75, (target - current) * 0.12);
             const next = Math.min(100, current + increment);
             progressRef.current = next;
             setProgress(next);
             if (next < 100) {
-                window.requestAnimationFrame(step);
+                animationFrameId = window.requestAnimationFrame(step);
             }
         };
-        window.requestAnimationFrame(step);
+        animationFrameId = window.requestAnimationFrame(step);
+        return () => window.cancelAnimationFrame(animationFrameId);
     }, [isReducedMotion]);
 
     useEffect(() => {
         if (!backgroundLoaded) return;
-        targetProgressRef.current = 36;
+        targetProgressRef.current = 50;
     }, [backgroundLoaded]);
 
     useEffect(() => {
         if (is_api_initialized) {
             targetProgressRef.current = 100;
         } else if (backgroundLoaded) {
-            targetProgressRef.current = 78;
+            targetProgressRef.current = 85;
         }
     }, [is_api_initialized, backgroundLoaded]);
 
@@ -259,8 +261,9 @@ const AppRoot = () => {
             if (!api_base_initialized.current) {
                 console.warn('API initialization timeout reached; proceeding to app content.');
                 setIsApiInitialized(true);
+                targetProgressRef.current = 100;
             }
-        }, 5000);
+        }, 2000);
 
         const initializeApi = async () => {
             if (api_base_initialization_started.current) return;
@@ -275,6 +278,7 @@ const AppRoot = () => {
                 api_base_initialized.current = false;
             } finally {
                 setIsApiInitialized(true);
+                targetProgressRef.current = 100;
                 window.clearTimeout(timeoutId);
             }
         };
@@ -285,12 +289,13 @@ const AppRoot = () => {
     useEffect(() => {
         welcomeTimeoutRef.current = window.setTimeout(() => {
             setWelcomeForceExit(true);
-        }, 12000);
+            setShowWelcome(false);
+        }, 2500);
 
         welcomeHardExitRef.current = window.setTimeout(() => {
             console.warn('Forced welcome exit after hard timeout.');
             setShowWelcome(false);
-        }, 15000);
+        }, 3500);
 
         return () => {
             if (welcomeTimeoutRef.current) {
@@ -304,7 +309,7 @@ const AppRoot = () => {
 
     const loadingText = `Initializing AI Trading Engine${'.'.repeat(dotPhase)}`;
     const statusMessage = statusMessages[statusIndex];
-    const welcomeComplete = (is_api_initialized && progress >= 99 && backgroundLoaded) || welcomeForceExit;
+    const welcomeComplete = (is_api_initialized && progress >= 95) || welcomeForceExit;
 
     if (showWelcome) {
         return (

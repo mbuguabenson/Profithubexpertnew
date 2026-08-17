@@ -133,7 +133,7 @@ const AppContent = observer(() => {
             const fallbackTimeout = window.setTimeout(() => {
                 console.warn('Active symbol retrieval timed out, continuing without blocking UI.');
                 setIsLoading(false);
-            }, 12000);
+            }, 2500);
 
             try {
                 active_symbols
@@ -161,13 +161,13 @@ const AppContent = observer(() => {
                     window.clearInterval(activeSymbolsPoller.current.intervalId);
                     retrieveActiveSymbols();
                 }
-            }, 1000);
+            }, 500);
 
             activeSymbolsPoller.current.timeoutId = window.setTimeout(() => {
                 window.clearInterval(activeSymbolsPoller.current.intervalId);
                 console.warn('Active symbol instance did not become available in time, continuing.');
                 setIsLoading(false);
-            }, 12000);
+            }, 3000);
 
             return () => {
                 if (activeSymbolsPoller.current.intervalId) {
@@ -220,7 +220,7 @@ const AppContent = observer(() => {
                 console.warn('App content loading timeout reached, rendering UI anyway.');
                 setIsLoading(false);
             }
-        }, 20000);
+        }, 3500);
 
         return () => {
             window.clearTimeout(timeoutId);
