@@ -36,6 +36,12 @@ export const clearDerivApiInstance = () => {
  * @returns Promise with DerivAPIBasic instance
  */
 export const generateDerivApiInstance = async (forceNew = false) => {
+    // OTP-authenticated URLs are single-use. Reuse an in-flight connection when
+    // concurrent startup/reconnect callers arrive before it finishes opening.
+    if (forceNew && derivApiInstance?.connection?.readyState === WebSocket.CONNECTING) {
+        return derivApiInstance;
+    }
+
     // If forcing new instance, clear existing one
     if (forceNew) {
         console.log('[DerivAPI] Forcing new instance creation');

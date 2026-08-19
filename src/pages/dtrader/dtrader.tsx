@@ -54,6 +54,13 @@ const getInitialToken = (loginid: string): string => {
     return '';
 };
 
+const isKenyaDeployment = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname.toLowerCase();
+    const residence = (localStorage.getItem('residence') || localStorage.getItem('country') || '').toLowerCase();
+    return hostname.endsWith('.co.ke') || hostname === 'profithub.co.ke' || residence === 'ke' || residence === 'kenya';
+};
+
 /**
  * DTraderPage — embeds the official DTrader terminal via iframed URL (https://deriv-dtrader.vercel.app/dtrader)
  * Passes active login tokens and valid numeric app_id (121856) directly to bypass Kenya/regional restrictions.
@@ -68,14 +75,21 @@ const DTraderPage: React.FC = observer(() => {
     const [tokenError, setTokenError] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [viewMode, setViewMode] = useState<'iframe' | 'native'>(() => {
+        const isKenya = isKenyaDeployment();
         try {
             const saved = localStorage.getItem('dtrader_view_mode');
-            if (saved === 'iframe' || saved === 'native') return saved;
+            if (saved === 'native') return 'native';
+            if (saved === 'iframe' && !isKenya) return 'iframe';
         } catch {}
-        return 'iframe';
+        return isKenya ? 'native' : 'iframe';
     });
 
     const handleViewModeChange = (mode: 'iframe' | 'native') => {
+        if (mode === 'iframe' && isKenyaDeployment()) {
+            setViewMode('native');
+            localStorage.setItem('dtrader_view_mode', 'native');
+            return;
+        }
         setViewMode(mode);
         try {
             localStorage.setItem('dtrader_view_mode', mode);
