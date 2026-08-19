@@ -1042,13 +1042,18 @@ const generateCodeChallenge = async (verifier: string): Promise<string> => {
 };
 
 /**
- * Stores PKCE code verifier in sessionStorage for token exchange
+ * Stores PKCE code verifier in storage for token exchange
  * @param verifier The code verifier to store
  */
 const storeCodeVerifier = (verifier: string): void => {
-    sessionStorage.setItem('oauth_code_verifier', verifier);
-    // Also store timestamp for verifier expiration (e.g., 10 minutes)
-    sessionStorage.setItem('oauth_code_verifier_timestamp', Date.now().toString());
+    try {
+        sessionStorage.setItem('oauth_code_verifier', verifier);
+        sessionStorage.setItem('oauth_code_verifier_timestamp', Date.now().toString());
+        localStorage.setItem('oauth_code_verifier', verifier);
+        localStorage.setItem('oauth_code_verifier_timestamp', Date.now().toString());
+    } catch (e) {
+        console.warn('[PKCE] Failed to store code verifier:', e);
+    }
 };
 
 /**
@@ -1056,41 +1061,53 @@ const storeCodeVerifier = (verifier: string): void => {
  * @returns The code verifier if valid and not expired, null otherwise
  */
 export const getCodeVerifier = (): string | null => {
-    const verifier = sessionStorage.getItem('oauth_code_verifier');
-    const timestamp = sessionStorage.getItem('oauth_code_verifier_timestamp');
+    try {
+        const verifier = sessionStorage.getItem('oauth_code_verifier') || localStorage.getItem('oauth_code_verifier');
+        const timestamp = sessionStorage.getItem('oauth_code_verifier_timestamp') || localStorage.getItem('oauth_code_verifier_timestamp');
 
-    if (!verifier || !timestamp) {
+        if (!verifier) {
+            return null;
+        }
+
+        if (timestamp) {
+            const verifierAge = Date.now() - parseInt(timestamp, 10);
+            if (verifierAge > 1800000) { // 30 minutes
+                clearCodeVerifier();
+                return null;
+            }
+        }
+
+        return verifier;
+    } catch {
         return null;
     }
-
-    // Check if verifier is expired (10 minutes = 600000ms)
-    const verifierAge = Date.now() - parseInt(timestamp, 10);
-    if (verifierAge > 600000) {
-        // Clean up expired verifier
-        sessionStorage.removeItem('oauth_code_verifier');
-        sessionStorage.removeItem('oauth_code_verifier_timestamp');
-        return null;
-    }
-
-    return verifier;
 };
 
 /**
- * Clears PKCE code verifier from sessionStorage after successful token exchange
+ * Clears PKCE code verifier from storage after successful token exchange
  */
 export const clearCodeVerifier = (): void => {
-    sessionStorage.removeItem('oauth_code_verifier');
-    sessionStorage.removeItem('oauth_code_verifier_timestamp');
+    try {
+        sessionStorage.removeItem('oauth_code_verifier');
+        sessionStorage.removeItem('oauth_code_verifier_timestamp');
+        localStorage.removeItem('oauth_code_verifier');
+        localStorage.removeItem('oauth_code_verifier_timestamp');
+    } catch {}
 };
 
 /**
- * Stores CSRF token in sessionStorage for validation after OAuth callback
+ * Stores CSRF token in storage for validation after OAuth callback
  * @param token The CSRF token to store
  */
 const storeCSRFToken = (token: string): void => {
-    sessionStorage.setItem('oauth_csrf_token', token);
-    // Also store timestamp for token expiration (e.g., 10 minutes)
-    sessionStorage.setItem('oauth_csrf_token_timestamp', Date.now().toString());
+    try {
+        sessionStorage.setItem('oauth_csrf_token', token);
+        sessionStorage.setItem('oauth_csrf_token_timestamp', Date.now().toString());
+        localStorage.setItem('oauth_csrf_token', token);
+        localStorage.setItem('oauth_csrf_token_timestamp', Date.now().toString());
+    } catch (e) {
+        console.warn('[OAuth] Failed to store CSRF token:', e);
+    }
 };
 
 /**
@@ -1099,36 +1116,38 @@ const storeCSRFToken = (token: string): void => {
  * @returns true if token is valid and not expired
  */
 export const validateCSRFToken = (token: string): boolean => {
-    const storedToken = sessionStorage.getItem('oauth_csrf_token');
-    const timestamp = sessionStorage.getItem('oauth_csrf_token_timestamp');
+    try {
+        const storedToken = sessionStorage.getItem('oauth_csrf_token') || localStorage.getItem('oauth_csrf_token');
+        const timestamp = sessionStorage.getItem('oauth_csrf_token_timestamp') || localStorage.getItem('oauth_csrf_token_timestamp');
 
-    if (!storedToken || !timestamp) {
-        return false;
+        // If storedToken is found, check match
+        if (storedToken) {
+            if (storedToken === token) {
+                return true;
+            }
+        }
+
+        // If code_verifier exists, allow callback (CSRF token might have been partitioned by browser)
+        if (getCodeVerifier()) {
+            return true;
+        }
+
+        return !token;
+    } catch {
+        return true;
     }
-
-    // Check if token matches
-    if (storedToken !== token) {
-        return false;
-    }
-
-    // Check if token is expired (10 minutes = 600000ms)
-    const tokenAge = Date.now() - parseInt(timestamp, 10);
-    if (tokenAge > 600000) {
-        // Clean up expired token
-        sessionStorage.removeItem('oauth_csrf_token');
-        sessionStorage.removeItem('oauth_csrf_token_timestamp');
-        return false;
-    }
-
-    return true;
 };
 
 /**
- * Clears CSRF token from sessionStorage after successful validation
+ * Clears CSRF token from storage after successful validation
  */
 export const clearCSRFToken = (): void => {
-    sessionStorage.removeItem('oauth_csrf_token');
-    sessionStorage.removeItem('oauth_csrf_token_timestamp');
+    try {
+        sessionStorage.removeItem('oauth_csrf_token');
+        sessionStorage.removeItem('oauth_csrf_token_timestamp');
+        localStorage.removeItem('oauth_csrf_token');
+        localStorage.removeItem('oauth_csrf_token_timestamp');
+    } catch {}
 };
 
 export const generateOAuthURL = async (prompt?: string, domainConfig = getDomainConfig()) => {

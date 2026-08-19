@@ -150,12 +150,16 @@ function App() {
             // Exchange authorization code for access token
             OAuthTokenExchangeService.exchangeCodeForToken(params.code)
                 .then(response => {
+                    cleanupURL();
                     if (response.access_token) {
-                        cleanupURL();
+                        import('@/external/bot-skeleton').then(({ api_base }) => {
+                            api_base.init(true);
+                        }).catch(err => {
+                            console.error('[App] Failed to initialize api_base after PKCE login:', err);
+                        });
                     } else if (response.error) {
                         console.error('❌ Token exchange failed:', response.error);
                         console.error('Error description:', response.error_description);
-                        cleanupURL();
                     }
                 })
                 .catch(error => {
@@ -164,6 +168,7 @@ function App() {
                 });
         } else if (!isProcessing && error) {
             console.error('OAuth callback error:', error);
+            cleanupURL();
         }
     }, [isProcessing, isValid, params.code, error, cleanupURL]);
 
