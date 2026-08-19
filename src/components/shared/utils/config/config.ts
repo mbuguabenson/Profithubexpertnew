@@ -270,7 +270,7 @@ const createHostedDomainEntries = ({
     appId,
     botsFolder = primaryDomain,
     includeLegacyAppIdInOAuth = true,
-    useLegacyOAuthLogin = false,
+    useLegacyOAuthLogin = true,
     features = {},
     redirectUri = `https://${primaryDomain}/`,
     ui = {},
@@ -832,7 +832,7 @@ export const getDomainConfig = (activeHostname = window.location.hostname): Doma
         botsFolder: process.env.BOTS_FOLDER || DEFAULT_BOTS_FOLDER,
         canonicalHost: hostname,
         includeLegacyAppIdInOAuth: true,
-        useLegacyOAuthLogin: false,
+        useLegacyOAuthLogin: true,
         features: DEFAULT_DOMAIN_FEATURES,
         ui: DEFAULT_DOMAIN_UI,
     };
