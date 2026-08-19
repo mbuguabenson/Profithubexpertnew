@@ -43,24 +43,7 @@
 
         &--mobile {
             position: fixed;
-            inset: 0;
-            width: 100vw;
             z-index: 900;
-            height: calc(100% - env(safe-area-inset-bottom, 0));
-            padding-bottom: env(safe-area-inset-bottom, 0);
-            overflow: hidden;
-
-            > .dc-drawer {
-                position: absolute !important;
-                inset: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                transform: none !important;
-            }
-
-            &-closed {
-                position: unset;
-            }
         }
 
         &.dc-drawer--right {

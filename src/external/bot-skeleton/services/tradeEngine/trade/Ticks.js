@@ -27,6 +27,8 @@ export default Engine =>
                         this.checkProposalReady();
                     }
                     const lastTick = ticks.slice(-1)[0];
+                    if (!lastTick || typeof lastTick.epoch !== 'number') return;
+
                     const { epoch } = lastTick;
                     this.store.dispatch({ type: constants.NEW_TICK, payload: epoch });
                 };
