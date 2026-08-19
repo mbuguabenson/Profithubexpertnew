@@ -507,7 +507,6 @@ export default class ScannerStore implements IScannerStore {
             if (!sym) return false;
             const s = sym.toUpperCase();
             if (s.includes('BOOM') || s.includes('CRASH')) return false;
-            if (s.includes('1HZ15V') || s.includes('1HZ30V') || s.includes('1HZ90V')) return false;
             return s.includes('1HZ') || s.startsWith('R_') || s.includes('JD') || s.includes('JUMP');
           });
         this.selected_symbols = allSymbols;

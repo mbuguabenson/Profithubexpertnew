@@ -546,6 +546,64 @@ class APIBase {
             throw new Error('No active symbols received from API');
         }
 
+        // Ensure 1s volatility indices (15, 30, 90) are always present
+        const required_1s_symbols = [
+            {
+                symbol: '1HZ15V',
+                underlying_symbol: '1HZ15V',
+                display_name: 'Volatility 15 (1s) Index',
+                market: 'synthetic_index',
+                market_display_name: 'Derived',
+                submarket: 'random_index',
+                submarket_display_name: 'Continuous Indices',
+                subgroup: 'synthetics',
+                subgroup_display_name: 'Synthetics',
+                pip: 0.001,
+                pip_size: 0.001,
+                exchange_is_open: true,
+                is_trading_suspended: false,
+            },
+            {
+                symbol: '1HZ30V',
+                underlying_symbol: '1HZ30V',
+                display_name: 'Volatility 30 (1s) Index',
+                market: 'synthetic_index',
+                market_display_name: 'Derived',
+                submarket: 'random_index',
+                submarket_display_name: 'Continuous Indices',
+                subgroup: 'synthetics',
+                subgroup_display_name: 'Synthetics',
+                pip: 0.001,
+                pip_size: 0.001,
+                exchange_is_open: true,
+                is_trading_suspended: false,
+            },
+            {
+                symbol: '1HZ90V',
+                underlying_symbol: '1HZ90V',
+                display_name: 'Volatility 90 (1s) Index',
+                market: 'synthetic_index',
+                market_display_name: 'Derived',
+                submarket: 'random_index',
+                submarket_display_name: 'Continuous Indices',
+                subgroup: 'synthetics',
+                subgroup_display_name: 'Synthetics',
+                pip: 0.001,
+                pip_size: 0.001,
+                exchange_is_open: true,
+                is_trading_suspended: false,
+            },
+        ];
+
+        required_1s_symbols.forEach(req => {
+            const exists = active_symbols.some(
+                (s: any) => s.symbol === req.symbol || s.underlying_symbol === req.symbol
+            );
+            if (!exists) {
+                active_symbols.push(req);
+            }
+        });
+
         try {
             this.has_active_symbols = true;
 

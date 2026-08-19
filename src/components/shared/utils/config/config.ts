@@ -270,7 +270,7 @@ const createHostedDomainEntries = ({
     appId,
     botsFolder = primaryDomain,
     includeLegacyAppIdInOAuth = true,
-    useLegacyOAuthLogin = true,
+    useLegacyOAuthLogin = false,
     features = {},
     redirectUri = `https://${primaryDomain}/`,
     ui = {},
@@ -304,8 +304,8 @@ export const DOMAIN_CONFIG: Record<string, DomainConfig> = {
         primaryDomain: 'profithub.co.ke',
         aliases: ['www.profithub.co.ke', 'staging.profithub.co.ke'],
         clientId: '33Mmq9JHMrJaUKT2KIhKZ',
-        appId: '121856',
-        redirectUri: 'https://profithub.co.ke',
+        LegacyappId: '121856',
+        redirectUri: 'https://profithub.co.ke/',
         includeLegacyAppIdInOAuth: true,
         features: {
             autoTrades: true,
@@ -342,7 +342,7 @@ export const DOMAIN_CONFIG: Record<string, DomainConfig> = {
         primaryDomain: 'riskmanagers.site',
         aliases: ['www.riskmanagers.site'],
         clientId: '33cCr2bWsByPgLlormNFw',
-        appId: '71937',
+        legacyappId: '121856',
         redirectUri: 'https://riskmanagers.site/',
         includeLegacyAppIdInOAuth: true,
         features: {

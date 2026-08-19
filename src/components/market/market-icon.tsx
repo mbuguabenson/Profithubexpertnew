@@ -227,14 +227,23 @@ const MARKET_ICONS = {
     '1HZ10V': lazy(() =>
         import('@deriv/quill-icons/Markets').then(module => ({ default: module.MarketDerivedVolatility101sIcon }))
     ),
+    '1HZ15V': lazy(() =>
+        import('@deriv/quill-icons/Markets').then(module => ({ default: (module as any).MarketDerivedVolatility151sIcon || module.MarketDerivedVolatility101sIcon }))
+    ),
     '1HZ25V': lazy(() =>
         import('@deriv/quill-icons/Markets').then(module => ({ default: module.MarketDerivedVolatility251sIcon }))
+    ),
+    '1HZ30V': lazy(() =>
+        import('@deriv/quill-icons/Markets').then(module => ({ default: (module as any).MarketDerivedVolatility301sIcon || module.MarketDerivedVolatility251sIcon }))
     ),
     '1HZ50V': lazy(() =>
         import('@deriv/quill-icons/Markets').then(module => ({ default: module.MarketDerivedVolatility501sIcon }))
     ),
     '1HZ75V': lazy(() =>
         import('@deriv/quill-icons/Markets').then(module => ({ default: module.MarketDerivedVolatility751sIcon }))
+    ),
+    '1HZ90V': lazy(() =>
+        import('@deriv/quill-icons/Markets').then(module => ({ default: (module as any).MarketDerivedVolatility901sIcon || module.MarketDerivedVolatility1001sIcon }))
     ),
     '1HZ100V': lazy(() =>
         import('@deriv/quill-icons/Markets').then(module => ({ default: module.MarketDerivedVolatility1001sIcon }))

@@ -761,7 +761,7 @@ const AdminDashboard = observer(() => {
                 ws.onopen = () => {
                     if (isCleanedUp) { ws?.close(); return; }
                     const symbols = [
-                        '1HZ10V', '1HZ25V', '1HZ50V', '1HZ75V', '1HZ100V',
+                        '1HZ10V', '1HZ15V', '1HZ25V', '1HZ30V', '1HZ50V', '1HZ75V', '1HZ90V', '1HZ100V',
                         'R_10', 'R_25', 'R_50', 'R_75', 'R_100',
                         'JD10', 'JD25', 'JD50', 'JD75', 'JD100'
                     ];
@@ -790,9 +790,12 @@ const AdminDashboard = observer(() => {
                         const digit = parseInt(s[s.length - 1], 10);
                         const labelMap: Record<string, string> = {
                             '1HZ10V': 'Volatility 10 (1s) Index',
+                            '1HZ15V': 'Volatility 15 (1s) Index',
                             '1HZ25V': 'Volatility 25 (1s) Index',
+                            '1HZ30V': 'Volatility 30 (1s) Index',
                             '1HZ50V': 'Volatility 50 (1s) Index',
                             '1HZ75V': 'Volatility 75 (1s) Index',
+                            '1HZ90V': 'Volatility 90 (1s) Index',
                             '1HZ100V': 'Volatility 100 (1s) Index',
                             'R_10': 'Volatility 10 Index',
                             'R_25': 'Volatility 25 Index',

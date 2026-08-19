@@ -14,9 +14,12 @@ window.Blockly.Blocks.active_symbol_changer = {
                         [localize('Disable switching'), 'disable'],
                         // Popular continuous indices; users can extend via XML
                         ['Volatility 10 (1s)', '1HZ10V'],
+                        ['Volatility 15 (1s)', '1HZ15V'],
                         ['Volatility 25 (1s)', '1HZ25V'],
+                        ['Volatility 30 (1s)', '1HZ30V'],
                         ['Volatility 50 (1s)', '1HZ50V'],
                         ['Volatility 75 (1s)', '1HZ75V'],
+                        ['Volatility 90 (1s)', '1HZ90V'],
                         ['Volatility 100 (1s)', '1HZ100V'],
                         ['Volatility 10 Index', 'R_10'],
                         ['Volatility 25 Index', 'R_25'],

@@ -29,9 +29,12 @@ export type DigitStrategyEvaluation = {
 
 export const SUPPORTED_VOLATILITY_MARKETS: SupportedMarket[] = [
     { label: 'Volatility 10 (1s) Index', pip: 2, symbol: '1HZ10V' },
+    { label: 'Volatility 15 (1s) Index', pip: 3, symbol: '1HZ15V' },
     { label: 'Volatility 25 (1s) Index', pip: 2, symbol: '1HZ25V' },
+    { label: 'Volatility 30 (1s) Index', pip: 3, symbol: '1HZ30V' },
     { label: 'Volatility 50 (1s) Index', pip: 2, symbol: '1HZ50V' },
     { label: 'Volatility 75 (1s) Index', pip: 2, symbol: '1HZ75V' },
+    { label: 'Volatility 90 (1s) Index', pip: 3, symbol: '1HZ90V' },
     { label: 'Volatility 100 (1s) Index', pip: 2, symbol: '1HZ100V' },
     { label: 'Volatility 10 Index', pip: 3, symbol: 'R_10' },
     { label: 'Volatility 25 Index', pip: 3, symbol: 'R_25' },

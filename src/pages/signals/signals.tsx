@@ -26,7 +26,6 @@ const Signals = observer(() => {
                     if (!s.symbol && !s.underlying_symbol) return false;
                     const sym = (s.symbol || s.underlying_symbol).toUpperCase();
                     if (sym.includes('BOOM') || sym.includes('CRASH')) return false;
-                    if (sym.includes('1HZ15V') || sym.includes('1HZ30V') || sym.includes('1HZ90V')) return false;
                     return sym.includes('1HZ') || sym.startsWith('R_') || sym.includes('JD') || sym.includes('JUMP');
                 })
                 .map((s: any) => ({

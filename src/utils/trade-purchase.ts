@@ -329,7 +329,7 @@ export const streamContractUntilSettled = ({
     contractId,
     fallback = {},
     onUpdate,
-    settlementCheckMs = api_base.execution_config?.settlementCheckMs ?? 500,
+    settlementCheckMs = (api_base as any).execution_config?.settlementCheckMs ?? 500,
     signal,
     source,
     timeoutMs = 90000,
@@ -495,7 +495,7 @@ export const streamContractUntilSettled = ({
             startSettlementPolling(
                 Math.max(
                     settlementCheckMs,
-                    api_base.execution_config?.settlementRecoveryCheckMs ?? settlementCheckMs
+                    (api_base as any).execution_config?.settlementRecoveryCheckMs ?? settlementCheckMs
                 )
             );
             void requestSettlementSnapshot('timeout-recovery');

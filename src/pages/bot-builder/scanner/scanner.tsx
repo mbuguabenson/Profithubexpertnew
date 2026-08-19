@@ -886,7 +886,6 @@ const Scanner = observer(() => {
       const symbols = api_base.active_symbols.filter((s: any) => {
         const sym = (s.symbol || s.underlying_symbol || '').toUpperCase();
         if (sym.includes('BOOM') || sym.includes('CRASH')) return false;
-        if (sym.includes('1HZ15V') || sym.includes('1HZ30V') || sym.includes('1HZ90V')) return false;
         return sym.includes('1HZ') || sym.startsWith('R_') || sym.includes('JD') || sym.includes('JUMP');
       });
       const final = symbols.length > 0 ? symbols : api_base.active_symbols;
