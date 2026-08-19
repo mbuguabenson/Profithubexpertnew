@@ -112,6 +112,11 @@ export class ParentBridgeClient {
                 }];
 
             const activeAccId = loginid || accounts[0].account_id;
+            const profileCountry =
+                localStorage.getItem('residence') ||
+                localStorage.getItem('country') ||
+                localStorage.getItem('client.country') ||
+                'ke';
 
             // Exact NewdtraderAuthMsg schema required by isAuthMsg in @deriv/api-v2 bridge-types.ts
             const v2AuthMsg = {
@@ -126,7 +131,7 @@ export class ParentBridgeClient {
                 accounts: accounts,
                 otpUrl: '',
                 userProfile: {
-                    country: 'za',
+                    country: profileCountry.toLowerCase(),
                     currency: currency || 'USD',
                     email: 'user@profithub.co.ke',
                     fullname: 'Profithub Trader',

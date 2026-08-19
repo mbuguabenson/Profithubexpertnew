@@ -39,22 +39,32 @@ const TradeTypeSelect: React.FC = () => {
         if (values?.symbol) {
             const selected = values?.tradetype;
             const is_symbol_accumulator = is_strategy_accumulator ? 'ACCU' : '';
+            let cancelled = false;
+            let attempts = 0;
 
-            const { contracts_for } = (ApiHelpers?.instance as unknown as TApiHelpersInstance) ?? {};
             const getTradeTypes = async () => {
+                const { contracts_for } = (ApiHelpers?.instance as unknown as TApiHelpersInstance) ?? {};
+                if (!contracts_for) {
+                    if (!cancelled && attempts++ < 10) window.setTimeout(getTradeTypes, 300);
+                    return;
+                }
                 const trade_types = await contracts_for?.getTradeTypesForQuickStrategy?.(
                     values?.symbol,
                     is_symbol_accumulator
                 );
+                if (cancelled || !Array.isArray(trade_types) || trade_types.length === 0) return;
                 const has_selected = trade_types?.some(trade_type => trade_type.value === selected);
-                if (!has_selected && trade_types?.[0]?.value !== selected) {
+                if (!has_selected && trade_types[0]?.value !== selected) {
                     setFieldValue?.('tradetype', trade_types?.[0].value || '');
                     setValue('tradetype', trade_types?.[0].value);
                 }
                 setTradeTypes(trade_types);
             };
-            getTradeTypes();
+            getTradeTypes().catch(() => {});
             validateForm();
+            return () => {
+                cancelled = true;
+            };
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [values?.symbol]);

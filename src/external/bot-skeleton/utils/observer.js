@@ -81,9 +81,12 @@ export default class Observer {
     }
 
     unregister(event, f) {
+        const actionList = this.eam.get(event);
+        if (!actionList) return;
+
         this.eam = this.eam.set(
             event,
-            this.eam.get(event).filter(r => r.searchBy !== f)
+            actionList.filter(r => r.searchBy !== f)
         );
     }
 

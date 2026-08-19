@@ -6,10 +6,9 @@ import { useStore } from '@/hooks/useStore';
 import { getAppId, generateOAuthURL } from '@/components/shared/utils/config/config';
 import { resolveValidDerivWSToken, getAccountsList, getActiveLoginId, getActiveToken } from '@/utils/token-bridge';
 import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
-import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { Heading, Text, CaptionText, Button, TextField, Badge } from '@deriv-com/quill-ui';
 import DTraderWorkspace from './dtrader-workspace';
-import { Zap, Globe, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
+import { Zap, Globe } from 'lucide-react';
 import './dtrader.scss';
 
 const getInitialLoginId = (): string => {
@@ -43,22 +42,14 @@ const getInitialToken = (loginid: string): string => {
             localStorage.getItem('deriv_api_token');
         if (direct) return direct;
 
-        const authInfo = OAuthTokenExchangeService.getAuthInfo();
-        if (authInfo?.access_token) return authInfo.access_token;
-
         const copyTokens = JSON.parse(localStorage.getItem('copyTokensArray') || '[]');
         if (Array.isArray(copyTokens) && copyTokens.length > 0 && copyTokens[0]) {
             return copyTokens[0];
         }
-    } catch {}
+    } catch (error) {
+        void error;
+    }
     return '';
-};
-
-const isKenyaDeployment = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    const hostname = window.location.hostname.toLowerCase();
-    const residence = (localStorage.getItem('residence') || localStorage.getItem('country') || '').toLowerCase();
-    return hostname.endsWith('.co.ke') || hostname === 'profithub.co.ke' || residence === 'ke' || residence === 'kenya';
 };
 
 /**
@@ -75,25 +66,22 @@ const DTraderPage: React.FC = observer(() => {
     const [tokenError, setTokenError] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [viewMode, setViewMode] = useState<'iframe' | 'native'>(() => {
-        const isKenya = isKenyaDeployment();
         try {
             const saved = localStorage.getItem('dtrader_view_mode');
-            if (saved === 'native') return 'native';
-            if (saved === 'iframe' && !isKenya) return 'iframe';
-        } catch {}
-        return isKenya ? 'native' : 'iframe';
+            if (saved === 'iframe') return 'iframe';
+        } catch (error) {
+            void error;
+        }
+        return 'iframe';
     });
 
     const handleViewModeChange = (mode: 'iframe' | 'native') => {
-        if (mode === 'iframe' && isKenyaDeployment()) {
-            setViewMode('native');
-            localStorage.setItem('dtrader_view_mode', 'native');
-            return;
-        }
         setViewMode(mode);
         try {
             localStorage.setItem('dtrader_view_mode', mode);
-        } catch {}
+        } catch (error) {
+            void error;
+        }
     };
 
     useEffect(() => {
@@ -204,7 +192,7 @@ const DTraderPage: React.FC = observer(() => {
 
     // FIX #6: Better token fallback chain for Kenya access and regional restrictions
     const getValidAuthToken = (): string => {
-        if (authToken && authToken !== 'a1-guest' && authToken !== 'dummy_token' && authToken.length > 0) {
+        if (authToken.startsWith('a1-') && authToken !== 'a1-guest') {
             return authToken;
         }
         
@@ -218,7 +206,7 @@ const DTraderPage: React.FC = observer(() => {
         ];
         
         for (const source of fallbackSources) {
-            if (source && source.length > 0 && source !== 'a1-guest' && source !== 'dummy_token') {
+            if (source?.startsWith('a1-') && source !== 'a1-guest') {
                 return source;
             }
         }
@@ -232,7 +220,6 @@ const DTraderPage: React.FC = observer(() => {
         queryParams.set('cur1', currency);
     }
 
-    // FIX #6: Always use valid app_id to bypass Kenya/regional restrictions
     queryParams.set('app_id', appId);
 
     const validToken = getValidAuthToken();
@@ -253,7 +240,9 @@ const DTraderPage: React.FC = observer(() => {
                 queryParams.set(`cur${index}`, currency);
             }
         }
-    } catch {}
+    } catch (error) {
+        void error;
+    }
 
     // Note: app_id already set above; don't duplicate
     queryParams.set('lang', 'EN');
@@ -264,10 +253,6 @@ const DTraderPage: React.FC = observer(() => {
     queryParams.set('is_mobile_app', 'false');
     queryParams.set('account_type', isDemo ? 'demo' : 'real');
     queryParams.set('server', 'green');
-    const residence = localStorage.getItem('residence') || localStorage.getItem('country') || 'ke';
-    queryParams.set('residence', residence.toLowerCase());
-    queryParams.set('country', residence.toLowerCase());
-
     const embedUrl = `${embedBase}?${queryParams.toString()}`;
 
     // Broadcast active token to child iframe via postMessage & SharedActionsBridge on load
@@ -287,7 +272,9 @@ const DTraderPage: React.FC = observer(() => {
                 iframes.forEach(iframe => {
                     try {
                         iframe.contentWindow?.postMessage(payload, '*');
-                    } catch {}
+                    } catch (error) {
+                        void error;
+                    }
                 });
             }
         };

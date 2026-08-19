@@ -8,14 +8,10 @@ class ChartAPI {
         this.reconnectIfNotConnected();
     }
 
-    init = async (force_create_connection = false) => {
-        if (!this.api || force_create_connection) {
-            if (this.api?.connection) {
-                this.api.disconnect();
-                this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
-            }
+    init = async () => {
+        const connectionState = this.api?.connection?.readyState;
+        if (!this.api || connectionState === WebSocket.CLOSED || connectionState === WebSocket.CLOSING) {
             this.api = await generateDerivApiInstance();
-            this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
 
             // Intercept the send method to filter active_symbols responses for chart
             // this.interceptApiCalls();

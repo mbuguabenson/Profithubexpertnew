@@ -1,4 +1,5 @@
 import { DURATIONS, TRADE_TYPE_CATEGORIES, TRADE_TYPES } from '../../../../components/shared/utils/common-data';
+import { isProduction } from '../../../../components/shared/utils/config/config';
 import { config } from '../../constants/config';
 import PendingPromise from '../../utils/pending-promise';
 import { api_base } from './api-base';
@@ -195,11 +196,6 @@ export default class ContractsFor {
             return [];
         }
 
-        // Check if API is available
-        if (!api_base.api) {
-            return [];
-        }
-
         const getContractsForFromApi = async () => {
             if (this.retrieving_contracts_for[symbol]) {
                 await this.retrieving_contracts_for[symbol];
@@ -222,7 +218,10 @@ export default class ContractsFor {
                 if (!response || !response.contracts_for || !Array.isArray(response.contracts_for.available) || response.error) {
                     try {
                         response = await new Promise((resolve) => {
-                            const ws = new WebSocket('wss://api.derivws.com/trading/v1/options/ws/public');
+                            const wsUrl = isProduction()
+                                ? 'wss://api.derivws.com/trading/v1/options/ws/public'
+                                : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
+                            const ws = new WebSocket(wsUrl);
                             ws.onopen = () => {
                                 ws.send(JSON.stringify({ contracts_for: symbol }));
                             };

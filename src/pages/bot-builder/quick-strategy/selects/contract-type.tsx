@@ -40,9 +40,16 @@ const ContractTypes: React.FC<TContractTypes> = observer(({ name }) => {
     React.useEffect(() => {
         if (tradetype && symbol) {
             const selected = values?.type;
+            let cancelled = false;
+            let attempts = 0;
             const getContractTypes = async () => {
                 const { contracts_for } = (ApiHelpers?.instance as unknown as TApiHelpersInstance) ?? {};
+                if (!contracts_for) {
+                    if (!cancelled && attempts++ < 10) window.setTimeout(getContractTypes, 300);
+                    return;
+                }
                 const categories = await contracts_for?.getContractTypes?.(tradetype);
+                if (cancelled || !Array.isArray(categories) || categories.length === 0) return;
                 setList(categories);
                 const has_selected = categories?.some(contract => contract.value === selected);
                 if (!has_selected) {
@@ -50,7 +57,10 @@ const ContractTypes: React.FC<TContractTypes> = observer(({ name }) => {
                     setValue(name, categories?.[0]?.value);
                 }
             };
-            getContractTypes();
+            getContractTypes().catch(() => {});
+            return () => {
+                cancelled = true;
+            };
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [symbol, tradetype]);

@@ -957,16 +957,19 @@ export const getLegacyServerURL = () => {
  */
 export const getSocketURL = async (): Promise<string> => {
     try {
-        let authInfo = OAuthTokenExchangeService.getAuthInfo();
-        if (!authInfo) {
-            const expiredAuthInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
-            if (expiredAuthInfo?.refresh_token) {
-                const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(expiredAuthInfo.refresh_token);
-                if (refreshedAuth.access_token) {
-                    authInfo = OAuthTokenExchangeService.getAuthInfo();
-                }
+        let authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+        const tokenNeedsRefresh =
+            !!authInfo?.refresh_token &&
+            !!authInfo.expires_at &&
+            Date.now() >= authInfo.expires_at - 300000;
+
+        if (tokenNeedsRefresh && authInfo?.refresh_token) {
+            const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(authInfo.refresh_token);
+            if (refreshedAuth.access_token) {
+                authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: false });
             }
         }
+
         if (authInfo?.access_token) {
             try {
                 const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
