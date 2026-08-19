@@ -5,6 +5,7 @@
 .sass-cache/
 .vscode/
 dist/
+public/js/
 node_modules/
 dtrader-template/
 dtraderphub/

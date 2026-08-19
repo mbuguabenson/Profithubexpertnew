@@ -44,15 +44,26 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
     );
 
     useEffect(() => {
-        if (client && activeAccount && isAuthorized) {
-            client?.setLoginId(activeLoginid);
-            client?.setAccountList(accountList);
-            client?.setIsLoggedIn(true);
-        } else if (client && !isAuthorized) {
-            // Ensure client shows as not logged in until authorization is complete
-            client?.setIsLoggedIn(false);
+        if (client && isAuthorized) {
+            if (activeLoginid) client.setLoginId(activeLoginid);
+            if (accountList && accountList.length > 0) client.setAccountList(accountList);
+            client.setIsLoggedIn(true);
+        } else if (client && !isAuthorized && !isAuthorizing) {
+            // Only mark as logged out if NO stored credentials exist in storage
+            const hasStoredSession =
+                !!localStorage.getItem('active_loginid') ||
+                !!localStorage.getItem('accountsList') ||
+                !!localStorage.getItem('authToken') ||
+                !!localStorage.getItem('active_token') ||
+                !!localStorage.getItem('token1') ||
+                !!localStorage.getItem('auth_info') ||
+                !!sessionStorage.getItem('auth_info');
+
+            if (!hasStoredSession) {
+                client.setIsLoggedIn(false);
+            }
         }
-    }, [accountList, activeAccount, activeLoginid, client, isAuthorized]);
+    }, [accountList, activeAccount, activeLoginid, client, isAuthorized, isAuthorizing]);
 
     useEffect(() => {
         initFormErrorMessages(FORM_ERROR_MESSAGES());

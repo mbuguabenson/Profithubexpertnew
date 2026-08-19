@@ -477,13 +477,11 @@ export default class ClientStore {
 
                 this.account_list = [];
 
-                this.accounts = {};
-                this.setIsLoggedIn(false);
-
-                this.balance = '0';
-                this.currency = 'USD';
-
-                this.all_accounts_balance = null;
+                // Preserve is_logged_in state during WebSocket regeneration if active credentials exist
+                const hasActiveCredentials = !!active_login_id && (!!localStorage.getItem('accountsList') || !!localStorage.getItem('authToken') || !!localStorage.getItem('token1'));
+                if (!hasActiveCredentials) {
+                    this.setIsLoggedIn(false);
+                }
 
                 // NOTE: Do NOT remove accountsList, authToken, clientAccounts, or account_type
                 // from localStorage here. Clearing them would permanently log the user out

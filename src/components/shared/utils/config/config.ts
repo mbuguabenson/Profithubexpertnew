@@ -1199,6 +1199,18 @@ export const generateOAuthURL = async (prompt?: string, domainConfig = getDomain
 export const getAppId = (): string => {
     try {
         const domainConfig = getDomainConfig();
+        if (domainConfig && domainConfig.appId) {
+            return domainConfig.appId;
+        }
+    } catch (e) {
+        // ignore and fallback
+    }
+    return process.env.APP_ID || '121856';
+};
+
+export const getClientId = (): string => {
+    try {
+        const domainConfig = getDomainConfig();
         if (domainConfig && domainConfig.clientId) {
             return domainConfig.clientId;
         }
