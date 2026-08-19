@@ -937,7 +937,7 @@ export const WS_SERVERS = {
 // DerivAPIBasic expects this `/websockets/v3` protocol for calls such as
 // `authorize`, `balance`, `proposal`, `buy`, etc. Legacy `a1-...` tokens do
 // not authorize correctly against the newer DerivWS `/trading/v1/...` URLs.
-const LEGACY_WS_SERVER = 'wss://ws.derivws.com/websockets/v3';
+const LEGACY_WS_SERVER = 'wss://ws.binaryws.com/websockets/v3';
 
 // Legacy — kept for backward-compat with imports elsewhere
 export const PRODUCTION_DOMAINS = {
@@ -963,12 +963,18 @@ export const isProduction = () => {
 export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
 
 export const getDefaultServerURL = () => {
-    return getLegacyServerURL();
+    const isProductionEnv = isProduction();
+    try {
+        return isProductionEnv ? WS_SERVERS.PRODUCTION : WS_SERVERS.STAGING;
+    } catch (error) {
+        console.error('Error in getDefaultServerURL:', error);
+        return WS_SERVERS.PRODUCTION;
+    }
 };
 
 export const getLegacyServerURL = () => {
     const { appId } = getDomainConfig();
-    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId || '1089')}`;
+    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId || '121856')}`;
 };
 
 /**
@@ -991,10 +997,53 @@ export const getLegacyServerURL = () => {
  */
 export const getSocketURL = async (): Promise<string> => {
     try {
-        // DerivAPIBasic (Bot Skeleton, Interpreter, SmartCharts) communicates via the
-        // classic /websockets/v3 protocol (wss://ws.derivws.com/websockets/v3?app_id=...).
-        // This ensures rock-solid connections without OTP endpoint timeouts or drops.
-        return getLegacyServerURL();
+        // 1. Check PKCE OAuth first (official OAuth 2.0 PKCE flow)
+        let authInfo = OAuthTokenExchangeService.getAuthInfo();
+        if (!authInfo) {
+            const expiredAuthInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+            if (expiredAuthInfo?.refresh_token) {
+                const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(expiredAuthInfo.refresh_token);
+                if (refreshedAuth.access_token) {
+                    authInfo = OAuthTokenExchangeService.getAuthInfo();
+                }
+            }
+        }
+        if (authInfo?.access_token) {
+            console.log('[getSocketURL] PKCE user detected - fetching authenticated WebSocket URL');
+            try {
+                const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
+                if (wsUrl) {
+                    return wsUrl;
+                }
+            } catch (pkceError) {
+                console.error('[getSocketURL] Failed to get authenticated WebSocket URL via PKCE OTP:', pkceError);
+            }
+        }
+
+        // 2. Check for legacy API token or accountsList
+        const pendingApiToken = getPendingApiToken();
+        if (pendingApiToken) {
+            console.log('[getSocketURL] API token login detected - using classic WebSocket URL');
+            return getLegacyServerURL();
+        }
+
+        const accountsList_raw = localStorage.getItem('accountsList');
+        if (accountsList_raw) {
+            try {
+                const accountsList = JSON.parse(accountsList_raw);
+                const active_loginid = localStorage.getItem('active_loginid');
+                if (active_loginid && accountsList[active_loginid]) {
+                    console.log('[getSocketURL] Legacy user detected with token - using classic WebSocket URL');
+                    return getLegacyServerURL();
+                }
+            } catch (e) {
+                console.error('[getSocketURL] Error parsing legacy accountsList:', e);
+            }
+        }
+
+        // 3. Fallback to public options WebSocket server
+        console.log('[getSocketURL] No authentication found - returning default server URL');
+        return getDefaultServerURL();
     } catch (error) {
         console.error('[DerivWS] Error in getSocketURL:', error);
         return getDefaultServerURL();
