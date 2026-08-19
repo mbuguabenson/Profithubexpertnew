@@ -305,7 +305,7 @@ export const DOMAIN_CONFIG: Record<string, DomainConfig> = {
         primaryDomain: 'profithub.co.ke',
         aliases: ['www.profithub.co.ke', 'staging.profithub.co.ke'],
         clientId: '33Mmq9JHMrJaUKT2KIhKZ',
-        redirectUri: 'https://profithub.co.ke/',
+        redirectUri: 'https://profithub.co.ke',
         features: {
             autoTrades: true,
             manualTrading: true,
