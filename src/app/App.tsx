@@ -62,24 +62,72 @@ const router = createBrowserRouter(
     )
 );
 
+import { isDemoAccount } from '@/utils/account-helpers';
+
+/**
+ * Stores legacy Deriv OAuth accounts in localStorage for authorization.
+ *
+ * Deriv OAuth returns: ?acct1=CR123&token1=a1-xxx&cur1=USD&acct2=...
+ * We store in localStorage:
+ *   accountsList   → { loginid: token, ... }
+ *   clientAccounts → { loginid: { currency, token }, ... }
+ *   authToken      → token of the first account
+ *   active_loginid → loginid of the first real account (or first account)
+ *   account_type   → 'demo' or 'real'
+ */
+function storeLegacyAccounts(accounts: import('@/hooks/useOAuthCallback').LegacyAccount[]): void {
+    const accountsList: Record<string, string> = {};
+    const clientAccounts: Record<string, { currency: string; token: string }> = {};
+
+    for (const { loginid, token, currency } of accounts) {
+        accountsList[loginid] = token;
+        clientAccounts[loginid] = { currency, token };
+    }
+
+    localStorage.setItem('accountsList', JSON.stringify(accountsList));
+    localStorage.setItem('clientAccounts', JSON.stringify(clientAccounts));
+
+    const realAccount = accounts.find(a => !isDemoAccount(a.loginid)) ?? accounts[0];
+    if (realAccount) {
+        localStorage.setItem('authToken', realAccount.token);
+        localStorage.setItem('active_token', realAccount.token);
+        localStorage.setItem('token1', realAccount.token);
+        localStorage.setItem('active_loginid', realAccount.loginid);
+        const isDemo = isDemoAccount(realAccount.loginid);
+        localStorage.setItem('account_type', isDemo ? 'demo' : 'real');
+
+        console.log('[Legacy OAuth] ✅ Legacy account stored:', {
+            loginid: realAccount.loginid,
+            account_type: isDemo ? 'demo' : 'real',
+            accountsList,
+        });
+    }
+}
+
 /**
  * Main App component
  *
  * Responsibilities:
- * 1. OAuth callback handling (via useOAuthCallback hook)
+ * 1. OAuth callback handling (via useOAuthCallback hook) — both legacy and PKCE
  * 2. Account switching from URL (via useAccountSwitching hook)
  * 3. Router provider setup
- *
- * All complex logic has been extracted into custom hooks for better maintainability
  */
 function App() {
-    // Handle OAuth callback flow (CSRF validation + code extraction)
-    const { isProcessing, isValid, params, error, cleanupURL } = useOAuthCallback();
+    // Handle OAuth callback flow (both PKCE and legacy accounts)
+    const { isProcessing, isValid, params, legacyAccounts, error, cleanupURL } = useOAuthCallback();
 
     // Handle account switching via URL parameter
     useAccountSwitching();
 
-    // Process the authorization code when OAuth callback is valid
+    // ── Legacy Deriv OAuth: tokens arrive directly in URL ─────────────────────
+    React.useEffect(() => {
+        if (!isProcessing && legacyAccounts && legacyAccounts.length > 0) {
+            cleanupURL();
+            storeLegacyAccounts(legacyAccounts);
+        }
+    }, [isProcessing, legacyAccounts, cleanupURL]);
+
+    // ── PKCE OAuth2: Process authorization code ──────────────────────────────
     React.useEffect(() => {
         if (!isProcessing && isValid && params.code) {
             // Exchange authorization code for access token
@@ -90,13 +138,11 @@ function App() {
                     } else if (response.error) {
                         console.error('❌ Token exchange failed:', response.error);
                         console.error('Error description:', response.error_description);
-                        // Clean up URL even on error
                         cleanupURL();
                     }
                 })
                 .catch(error => {
                     console.error('❌ Token exchange request failed:', error);
-                    // Clean up URL even on error
                     cleanupURL();
                 });
         } else if (!isProcessing && error) {
@@ -108,3 +154,4 @@ function App() {
 }
 
 export default App;
+

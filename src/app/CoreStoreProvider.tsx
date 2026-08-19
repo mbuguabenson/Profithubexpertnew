@@ -142,8 +142,13 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
 
                 // Clear all URL query parameters for these auth errors
                 clearInvalidTokenParams();
-                // Call client store logout directly to avoid double logout
-                await client?.logout();
+
+                // Only perform a full redirect logout if the client was actively logged in
+                if (client?.is_logged_in) {
+                    await client?.logout();
+                } else {
+                    client?.setIsLoggedIn(false);
+                }
             }
 
             if (msg_type === 'balance' && data && !error) {

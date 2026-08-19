@@ -63,27 +63,39 @@ export default class ClientStore {
     };
 
     constructor() {
-        // Hydrate immediately from localStorage cache for instant account details display (<1ms)
+        // Hydrate from localStorage cache only if a genuine active session exists
         try {
-            const cachedLoginid = localStorage.getItem('active_loginid') || localStorage.getItem('active_token') || localStorage.getItem('token') || localStorage.getItem('deriv_api_token') || 'VRTC100001';
-            const cachedDetails = localStorage.getItem('client_account_details');
-            this.loginid = cachedLoginid;
-            this.is_logged_in = true;
+            const hasAuthInfo = !!localStorage.getItem('auth_info') || !!sessionStorage.getItem('auth_info');
+            const hasAccountsList = !!localStorage.getItem('accountsList');
+            const hasTokens = !!localStorage.getItem('authToken') || !!localStorage.getItem('active_token') || !!localStorage.getItem('token1') || !!localStorage.getItem('deriv_api_token');
+            const cachedLoginid = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid');
 
-            if (cachedDetails) {
-                const list = JSON.parse(cachedDetails);
-                if (Array.isArray(list) && list.length > 0) {
-                    this.setAccountList(list);
-                    const active = list.find((a: any) => a.loginid === cachedLoginid) || list[0];
-                    if (active) {
-                        this.currency = active.currency || 'USD';
-                        if (active.balance !== undefined && active.balance !== null) {
-                            this.balance = active.balance.toString();
+            if (cachedLoginid && (hasAuthInfo || hasAccountsList || hasTokens)) {
+                this.loginid = cachedLoginid;
+                this.is_logged_in = true;
+
+                const cachedDetails = localStorage.getItem('client_account_details');
+                if (cachedDetails) {
+                    const list = JSON.parse(cachedDetails);
+                    if (Array.isArray(list) && list.length > 0) {
+                        this.setAccountList(list);
+                        const active = list.find((a: any) => a.loginid === cachedLoginid) || list[0];
+                        if (active) {
+                            this.currency = active.currency || 'USD';
+                            if (active.balance !== undefined && active.balance !== null) {
+                                this.balance = active.balance.toString();
+                            }
                         }
                     }
                 }
+            } else {
+                this.loginid = '';
+                this.is_logged_in = false;
             }
-        } catch {}
+        } catch {
+            this.loginid = '';
+            this.is_logged_in = false;
+        }
 
         observer.register('api.authorize', this.onAuthorizeEvent);
 

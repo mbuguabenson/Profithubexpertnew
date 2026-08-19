@@ -154,6 +154,10 @@ class DBot {
                             return;
                         }
 
+                        // Clean up any stale injectionDiv elements if workspace was disposed
+                        const staleInjections = el_scratch_div.querySelectorAll('.injectionDiv');
+                        staleInjections.forEach(el => el.remove());
+
                         this.workspace = window.Blockly.inject(el_scratch_div, {
                             media: 'assets/media/',
                             renderer: 'zelos',

@@ -84,8 +84,11 @@ export default class AppStore {
         DBot.terminateBot();
         DBot.terminateConnection();
         if (window.Blockly?.derivWorkspace) {
-            clearInterval(window.Blockly?.derivWorkspace.save_workspace_interval);
-            window.Blockly.derivWorkspace?.dispose();
+            try {
+                clearInterval(window.Blockly.derivWorkspace.save_workspace_interval);
+                window.Blockly.derivWorkspace.dispose();
+            } catch {}
+            window.Blockly.derivWorkspace = null;
         }
         if (typeof this.disposeReloadOnLanguageChangeReaction === 'function') {
             this.disposeReloadOnLanguageChangeReaction();
