@@ -10,7 +10,8 @@
         height: var(--bot-content-height) !important;
         top: 10.4rem !important;
         width: 36.6rem !important;
-        right: 0;
+        left: calc(100vw - 16px) !important;
+        right: auto !important;
 
         &--mobile {
             position: absolute;

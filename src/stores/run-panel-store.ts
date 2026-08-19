@@ -407,8 +407,12 @@ export default class RunPanelStore {
         this.is_statistics_info_modal_open = !this.is_statistics_info_modal_open;
     };
 
-    toggleDrawer = (is_open: boolean) => {
-        this.is_drawer_open = is_open;
+    toggleDrawer = (is_open?: boolean) => {
+        if (typeof is_open === 'boolean') {
+            this.is_drawer_open = is_open;
+        } else {
+            this.is_drawer_open = !this.is_drawer_open;
+        }
     };
 
     setRunId = (run_id: string) => {
