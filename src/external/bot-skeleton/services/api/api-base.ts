@@ -268,22 +268,18 @@ class APIBase {
             let authResult: any = null;
 
             // 1. Check if the WebSocket is already authenticated via an OTP in the connection URL.
-            // Sending a simple balance request will succeed if authorized, and fail if not.
             try {
-                const balanceRes = await (this.api as any).balance();
+                const balanceRes = await (this.api as any).send({ balance: 1 });
                 if (balanceRes?.balance) {
                     authResult = balanceRes;
-                    console.log('[APIBase] WebSocket already authorized via connection URL');
+                    console.log('[APIBase] WebSocket authorized via OTP connection URL');
                 }
             } catch (authCheckErr: any) {
-                // If it fails with AuthorizationRequired, we proceed to manual authorization.
-                // Otherwise, it might be a different issue, but we still try to authorize just in case.
+                // If it fails with AuthorizationRequired or on public socket, proceed
             }
 
-            // 2. If not already authenticated, proceed with manual token authorization
+            // 2. If not already authenticated, proceed with token authorization if available
             if (!authResult) {
-                // Resolve a valid Deriv WebSocket token using centralized token bridge.
-                // This avoids sending invalid bearer tokens (e.g. 'ory_at_...') to api.authorize
                 const token = await resolveValidDerivWSToken();
                 
                 if (token) {
@@ -310,11 +306,14 @@ class APIBase {
                 }
             }
 
-            // 3. Ensure we have authResult populated. If authorize was successful, authResult is populated.
-            // If it failed and we still don't have authResult, this will throw or return an error.
+            // 3. Ensure we have authResult populated
             if (!authResult) {
-                const res = await (this.api as any).balance();
-                authResult = res;
+                try {
+                    const res = await (this.api as any).send({ balance: 1 });
+                    authResult = res;
+                } catch {
+                    // Unauthenticated
+                }
             }
 
             const balance = authResult?.balance;
@@ -322,13 +321,16 @@ class APIBase {
 
             if (error || !balance) {
                 const errorMessage = error
-                    ? (isBackendError(error) ? handleBackendError(error) : error.message || 'Authorization failed')
-                    : 'No balance data received';
-
-                // Authorization error
-                console.error('Authorization error:', errorMessage);
+                    ? (isBackendError(error) ? handleBackendError(error) : error.message || 'Unauthenticated')
+                    : 'Unauthenticated session';
 
                 setIsAuthorizing(false);
+                this.is_authorized = false;
+                if (this.has_active_symbols) {
+                    this.toggleRunButton(false);
+                } else {
+                    this.active_symbols_promise = this.getActiveSymbols();
+                }
                 return { localizedMessage: errorMessage };
             }
 

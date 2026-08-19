@@ -193,7 +193,6 @@ export class OAuthTokenExchangeService {
 
             const response = await fetch(tokenEndpoint, {
                 method: 'POST',
-                credentials: 'include', // Include cookies for session-based auth
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
@@ -319,7 +318,6 @@ export class OAuthTokenExchangeService {
 
             const response = await fetch(tokenEndpoint, {
                 method: 'POST',
-                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },

@@ -12,13 +12,14 @@ import brandConfig from '../../../../../brand.config.json';
 
 interface DomainConfig {
     clientId: string; // OAuth 2.0 CLIENT_ID (new OAuth app)
-    appId: string; // Legacy Deriv APP_ID for intelligent platform routing
+    appId?: string; // Kept as optional for backwards compatibility
     redirectUri: string; // MUST match the redirect URL registered in the OAuth app exactly
     botsFolder: string; // Public folder used by Best Bots XML loading for this domain
     canonicalHost: string; // Preferred host used for redirects and auth/session consistency
-    includeLegacyAppIdInOAuth: boolean; // Only enable when the legacy app redirects to this domain
-    useLegacyOAuthLogin: boolean; // Use old OAuth app_id login when OAuth2 client setup is not valid yet
+    includeLegacyAppIdInOAuth?: boolean;
+    useLegacyOAuthLogin?: boolean;
     features: DomainFeatureFlags;
+    ui: DomainUIConfig;
 }
 
 type MartingaleMode = 'no_martingale' | 'fixed_loss_trigger' | 'consecutive_loss_trigger';
@@ -927,29 +928,11 @@ export const getBestBotsFileUrl = (file_name: string) => buildBestBotsFileUrl(ge
 // Constants - Server Configuration (from brand.config.json)
 // =============================================================================
 
-// WebSocket server URLs - route to Deriv v3 endpoint
+// WebSocket server URLs - modern Deriv options public/auth endpoints
 export const WS_SERVERS = {
-    STAGING: 'wss://ws.derivws.com/websockets/v3',
-    PRODUCTION: 'wss://ws.derivws.com/websockets/v3',
+    STAGING: 'wss://api.derivws.com/trading/v1/options/ws/public',
+    PRODUCTION: 'wss://api.derivws.com/trading/v1/options/ws/public',
 } as const;
-
-// Classic Deriv WebSocket API used by legacy OAuth tokens.
-// DerivAPIBasic expects this `/websockets/v3` protocol for calls such as
-// `authorize`, `balance`, `proposal`, `buy`, etc.
-const LEGACY_WS_SERVER = 'wss://ws.derivws.com/websockets/v3';
-
-// Legacy — kept for backward-compat with imports elsewhere
-export const PRODUCTION_DOMAINS = {
-    COM: brandConfig.platform.hostname.production.com,
-} as const;
-
-export const STAGING_DOMAINS = {
-    COM: brandConfig.platform.hostname.staging.com,
-} as const;
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
 
 // Helper to check if we're on production domains
 export const isProduction = () => {
@@ -962,25 +945,45 @@ export const isProduction = () => {
 export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
 
 export const getDefaultServerURL = () => {
-    return getLegacyServerURL();
+    return 'wss://api.derivws.com/trading/v1/options/ws/public';
 };
 
 export const getLegacyServerURL = () => {
-    const { appId } = getDomainConfig();
-    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId || '121856')}&l=EN&brand=deriv`;
+    return getDefaultServerURL();
 };
 
 /**
- * Gets the WebSocket URL using the standard Deriv WebSocket v3 connection.
- * DerivAPIBasic (Bot Skeleton, Interpreter, SmartCharts) communicates via
- * wss://ws.derivws.com/websockets/v3?app_id=... with api.authorize(token).
+ * Gets the WebSocket URL using Deriv OAuth 2.0 PKCE.
+ * For authenticated sessions with an access token, fetches an OTP-authenticated URL.
+ * For unauthenticated sessions, connects to the public market data WebSocket endpoint.
  */
 export const getSocketURL = async (): Promise<string> => {
     try {
-        return getLegacyServerURL();
+        let authInfo = OAuthTokenExchangeService.getAuthInfo();
+        if (!authInfo) {
+            const expiredAuthInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+            if (expiredAuthInfo?.refresh_token) {
+                const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(expiredAuthInfo.refresh_token);
+                if (refreshedAuth.access_token) {
+                    authInfo = OAuthTokenExchangeService.getAuthInfo();
+                }
+            }
+        }
+        if (authInfo?.access_token) {
+            try {
+                const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
+                if (wsUrl) {
+                    return wsUrl;
+                }
+            } catch (pkceError) {
+                console.error('[getSocketURL] Error retrieving authenticated WebSocket URL:', pkceError);
+            }
+        }
+
+        return getDefaultServerURL();
     } catch (error) {
         console.error('[DerivWS] Error in getSocketURL:', error);
-        return getLegacyServerURL();
+        return getDefaultServerURL();
     }
 };
 
@@ -1130,27 +1133,15 @@ export const clearCSRFToken = (): void => {
 
 export const generateOAuthURL = async (prompt?: string, domainConfig = getDomainConfig()) => {
     try {
-        // Resolve config for the current domain (auto-selects the right
-        // CLIENT_ID, APP_ID, and redirect URI from DOMAIN_CONFIG)
         const domainCfg = domainConfig;
-        const { clientId, appId, redirectUri, includeLegacyAppIdInOAuth } = {
+        const { clientId, redirectUri } = {
             clientId: domainCfg.clientId,
-            appId: domainCfg.appId || '121856',
             redirectUri: domainCfg.redirectUri,
-            includeLegacyAppIdInOAuth: domainCfg.includeLegacyAppIdInOAuth,
         };
-
-        if (domainCfg.useLegacyOAuthLogin !== false && appId) {
-            const params = new URLSearchParams({ app_id: appId, l: 'EN' });
-            if (prompt) {
-                params.set('prompt', prompt);
-            }
-            return `https://oauth.deriv.com/oauth2/authorize?${params.toString()}`;
-        }
 
         // Use brand config for the OAuth2 base URL
         const environment = isProduction() ? 'production' : 'staging';
-        const hostname = brandConfig?.platform.auth2_url?.[environment];
+        const hostname = brandConfig?.platform.auth2_url?.[environment] || 'https://auth.deriv.com/oauth2/';
 
         if (hostname && clientId) {
             // Generate CSRF token for security
@@ -1165,10 +1156,10 @@ export const generateOAuthURL = async (prompt?: string, domainConfig = getDomain
             // redirectUri is sourced from DOMAIN_CONFIG and must match the URL
             // registered in the Deriv OAuth app for clientId exactly.
             const params = new URLSearchParams({
-                scope: 'trade account_manage',
                 response_type: 'code',
                 client_id: clientId,
                 redirect_uri: redirectUri,
+                scope: 'trade account_manage',
                 state: csrfToken,
                 code_challenge: codeChallenge,
                 code_challenge_method: 'S256',
@@ -1179,36 +1170,25 @@ export const generateOAuthURL = async (prompt?: string, domainConfig = getDomain
                 params.set('prompt', prompt);
             }
 
-            // Include legacy app_id for intelligent platform routing
-            // According to Deriv OAuth 2.0 docs: "Deriv will check whether the user belongs
-            // to the old or new platform and route them to the appropriate version of your app."
-            // This allows the app to support both:
-            // - New users who use PKCE OAuth (returns access_token)
-            // - Legacy users who have old accounts (returns via legacy OAuth params)
-            // Both token types are then handled appropriately by the app
-            if (includeLegacyAppIdInOAuth && appId) {
-                params.set('app_id', appId);
-            }
-
             return `${hostname}auth?${params.toString()}`;
         }
     } catch (error) {
         console.error('Error generating OAuth URL:', error);
     }
 
-    return ``;
+    return '';
 };
 
 export const getAppId = (): string => {
     try {
         const domainConfig = getDomainConfig();
-        if (domainConfig && domainConfig.appId) {
-            return domainConfig.appId;
+        if (domainConfig && domainConfig.clientId) {
+            return domainConfig.clientId;
         }
     } catch (e) {
         // ignore and fallback
     }
-    return process.env.APP_ID || '121856';
+    return process.env.CLIENT_ID || '33Mmq9JHMrJaUKT2KIhKZ';
 };
 
 

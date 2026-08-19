@@ -93,7 +93,7 @@ export const generateDerivApiInstance = async (forceNew = false) => {
             const originalAuthorize = deriv_api.authorize;
             if (typeof originalAuthorize === 'function') {
                 deriv_api.authorize = async function (token) {
-                    if (deriv_api.authorized_token === token) {
+                    if (deriv_api.authorized_token === token || (currentWebSocketURL && currentWebSocketURL.includes('otp='))) {
                         return {
                             authorize: {
                                 loginid: localStorage.getItem('active_loginid'),
