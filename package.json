@@ -7,7 +7,7 @@
     },
     "scripts": {
         "start": "node scripts/generate-manifest.js && node scripts/copy-assets.js && rsbuild dev -o",
-        "build": "node scripts/generate-manifest.js && rsbuild build && node scripts/copy-assets.js",
+        "build": "node scripts/generate-manifest.js && node --max-old-space-size=4096 ./node_modules/@rsbuild/core/bin/rsbuild.js build && node scripts/copy-assets.js",
         "watch": "rsbuild build --watch",
         "serve": "http-server dist -p 8443 -a localhost -o",
         "start:webpack": "webpack serve --open --config webpack.config.js",

@@ -304,8 +304,8 @@ export const DOMAIN_CONFIG: Record<string, DomainConfig> = {
         primaryDomain: 'profithub.co.ke',
         aliases: ['www.profithub.co.ke', 'staging.profithub.co.ke'],
         clientId: '33Mmq9JHMrJaUKT2KIhKZ',
-        LegacyappId: '121856',
-        redirectUri: 'https://profithub.co.ke/',
+        appId: '121856',
+        redirectUri: 'https://profithub.co.ke',
         includeLegacyAppIdInOAuth: true,
         features: {
             autoTrades: true,
@@ -342,7 +342,7 @@ export const DOMAIN_CONFIG: Record<string, DomainConfig> = {
         primaryDomain: 'riskmanagers.site',
         aliases: ['www.riskmanagers.site'],
         clientId: '33cCr2bWsByPgLlormNFw',
-        legacyappId: '121856',
+        appId: '71937',
         redirectUri: 'https://riskmanagers.site/',
         includeLegacyAppIdInOAuth: true,
         features: {
@@ -828,11 +828,11 @@ export const getDomainConfig = (activeHostname = window.location.hostname): Doma
     return {
         clientId: process.env.CLIENT_ID || '33Mmq9JHMrJaUKT2KIhKZ',
         appId: process.env.APP_ID || '121856',
-        redirectUri: process.env.REDIRECT_URI || `${window.location.origin}/`,
+        redirectUri: process.env.REDIRECT_URI || 'https://profithub.co.ke',
         botsFolder: process.env.BOTS_FOLDER || DEFAULT_BOTS_FOLDER,
         canonicalHost: hostname,
         includeLegacyAppIdInOAuth: true,
-        useLegacyOAuthLogin: true,
+        useLegacyOAuthLogin: false,
         features: DEFAULT_DOMAIN_FEATURES,
         ui: DEFAULT_DOMAIN_UI,
     };
