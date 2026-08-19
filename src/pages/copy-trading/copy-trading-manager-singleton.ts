@@ -1,5 +1,6 @@
 import CopyTradingManager from './copy-trading-manager';
 import { initReplicator } from './replicator';
+import { getAccountsList } from '@/utils/token-bridge';
 
 let globalCopyTradingManager: CopyTradingManager | null = null;
 
@@ -14,7 +15,7 @@ export const getGlobalCopyTradingManager = (): CopyTradingManager => {
 
             const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
             if (isDemoToReal) {
-                const accounts_list = JSON.parse(localStorage.getItem('accountsList') || '{}');
+                const accounts_list = getAccountsList();
                 const keys = Object.keys(accounts_list);
                 const key = keys.find(k => !k.startsWith('VR'));
                 if (key) {

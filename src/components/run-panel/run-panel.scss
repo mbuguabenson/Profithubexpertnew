@@ -7,23 +7,70 @@
     height: 0;
 
     &__container {
-        height: var(--bot-content-height) !important;
+        box-sizing: border-box;
+        height: calc(100vh - 10.4rem) !important;
+        min-height: 0 !important;
+        position: fixed !important;
         top: 10.4rem !important;
+        bottom: 0 !important;
         width: 36.6rem !important;
-        left: calc(100vw - 16px) !important;
-        right: auto !important;
+        right: 0;
+        background: var(--general-main-2);
+        overflow: visible;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 1000 !important;
+
+        .dc-drawer__container {
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .dc-drawer__content,
+        .run-panel__content {
+            display: flex;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .dc-tabs {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            height: 100%;
+            min-height: 0;
+            width: 100%;
+        }
 
         &--mobile {
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: fixed;
+            inset: 0;
             width: 100vw;
-            z-index: var(--zindex-drawer);
+            z-index: 900;
             height: calc(100% - env(safe-area-inset-bottom, 0));
             padding-bottom: env(safe-area-inset-bottom, 0);
+            overflow: hidden;
+
+            > .dc-drawer {
+                position: absolute !important;
+                inset: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                transform: none !important;
+            }
 
             &-closed {
                 position: unset;
+            }
+        }
+
+        &.dc-drawer--right {
+            left: auto !important;
+            right: 0 !important;
+            transform: none !important;
+
+            .dc-drawer__toggle {
+                top: 50%;
+                transform: translateY(-50%) translateX(-50%);
             }
         }
 

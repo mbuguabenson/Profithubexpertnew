@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { ErrorLogger } from '@/utils/error-logger';
 
 /**
@@ -14,6 +15,16 @@ import { ErrorLogger } from '@/utils/error-logger';
 export const useInvalidTokenHandler = (): { unregisterHandler: () => void } => {
     const handleInvalidToken = async () => {
         try {
+            const authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+            if (authInfo?.refresh_token) {
+                const refreshed = await OAuthTokenExchangeService.refreshAccessToken(authInfo.refresh_token);
+                if (refreshed.access_token) {
+                    const { api_base } = await import('@/external/bot-skeleton');
+                    await api_base.init(true);
+                    return;
+                }
+            }
+
             // Clear invalid session data to prevent infinite reload loop
             localStorage.removeItem('auth_info');
             sessionStorage.removeItem('auth_info');

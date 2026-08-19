@@ -60,70 +60,9 @@ export default class TransactionsStore {
     get transactions(): TTransaction[] {
         if (!this.core?.client?.loginid) return [];
         const raw_elements = this.elements[this.core.client.loginid] ?? [];
-        
-        // Group transactions with the same bulk_group_id
-        const grouped: TTransaction[] = [];
-        let current_bulk_group: { group_id: string; items: TContractInfo[] } | null = null;
-        
-        const pushCurrentGroup = () => {
-            if (current_bulk_group && current_bulk_group.items.length > 0) {
-                if (current_bulk_group.items.length === 1) {
-                    grouped.push({ type: transaction_elements.CONTRACT, data: current_bulk_group.items[0] });
-                } else {
-                    // Aggregate multiple contracts
-                    const items = current_bulk_group.items;
-                    const base = { ...items[0] };
-                    let total_buy = 0;
-                    let total_profit = 0;
-                    let total_payout = 0;
-                    let all_completed = true;
-                    
-                    items.forEach(c => {
-                        total_buy += Number(c.buy_price) || 0;
-                        total_profit += Number(c.profit) || 0;
-                        total_payout += Number(c.payout) || Number(c.bid_price) || 0;
-                        if (!c.is_completed) all_completed = false;
-                    });
-                    
-                    base.buy_price = total_buy;
-                    base.profit = total_profit;
-                    base.payout = total_payout;
-                    base.bid_price = total_payout;
-                    base.is_completed = all_completed;
-                    
-                    // Mark as bulk group for UI if needed
-                    base.is_bulk_group = true;
-                    base.bulk_count = items.length;
-                    
-                    grouped.push({ type: transaction_elements.CONTRACT, data: base });
-                }
-                current_bulk_group = null;
-            }
-        };
-
-        raw_elements.forEach(el => {
-            if (el.type === transaction_elements.CONTRACT && typeof el.data === 'object') {
-                const contract = el.data as TContractInfo;
-                if ((contract as any).bulk_group_id) {
-                    const group_id = (contract as any).bulk_group_id;
-                    if (current_bulk_group && current_bulk_group.group_id === group_id) {
-                        current_bulk_group.items.push(contract);
-                    } else {
-                        pushCurrentGroup();
-                        current_bulk_group = { group_id, items: [contract] };
-                    }
-                } else {
-                    pushCurrentGroup();
-                    grouped.push(el);
-                }
-            } else {
-                pushCurrentGroup();
-                grouped.push(el);
-            }
-        });
-        
-        pushCurrentGroup();
-        return grouped;
+        // Keep every bulk contract as its own drawer row. The card can still
+        // display bulk metadata without hiding individual trades.
+        return raw_elements;
     }
 
     get statistics() {

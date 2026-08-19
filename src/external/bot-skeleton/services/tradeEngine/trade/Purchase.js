@@ -17,7 +17,7 @@ export default Engine =>
             return this.purchase(contract_type);
         }
         
-        purchase(contract_type) {
+        async purchase(contract_type) {
             // Prevent calling purchase twice
             const speed = localStorage.getItem('bot_execution_speed') || '1';
             const isSpeedMode = speed !== '1';
@@ -133,12 +133,19 @@ export default Engine =>
                     data: this.tradeOptions.amount,
                 });
 
-                // Send all requests simultaneously without stagger/delay
-                const reqs = Array.from({ length: bulkCount }, () =>
-                    api_base.api.send(trade_option).catch(err => ({ error: err }))
-                );
+                // Keep concurrency bounded so large bulk orders do not freeze the
+                // browser or overwhelm the WebSocket connection.
+                const batchSize = 8;
+                const responses = [];
+                for (let index = 0; index < bulkCount; index += batchSize) {
+                    const batch = Array.from(
+                        { length: Math.min(batchSize, bulkCount - index) },
+                        () => api_base.api.send(trade_option).catch(err => ({ error: err }))
+                    );
+                    responses.push(...(await Promise.all(batch)));
+                }
 
-                return Promise.all(reqs).then(responses => {
+                return Promise.resolve(responses).then(responses => {
                     this.purchase_block_allow_bulk = 'no';
                     const validResponses = responses.filter(r => r && r.buy && !r.error);
 
@@ -162,6 +169,8 @@ export default Engine =>
                     validResponses.forEach((res) => {
                         const { buy } = res;
                         buy.bulk_group_id = bulkGroupId; // Inject bulk group ID
+                        buy.is_bulk_group = true;
+                        buy.bulk_count = validResponses.length;
                         this.bulk_group_map[buy.contract_id] = bulkGroupId;
 
                         // Subscribe to proposal_open_contract for EACH contract in the bulk batch

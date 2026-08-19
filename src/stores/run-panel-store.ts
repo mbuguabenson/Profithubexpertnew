@@ -291,11 +291,6 @@ export default class RunPanelStore {
         try {
             observer.emit('bot.resume');
             
-            // If the interpreter loop is active, emitting bot.resume is sufficient.
-            if (this.dbot?.interpreter) {
-                return;
-            }
-
             const tradeEngine = this.dbot?.interpreter?.bot?.tradeEngine;
             if (tradeEngine) {
                 // If trade engine is present, trigger start with saved options to resume loop
@@ -303,6 +298,12 @@ export default class RunPanelStore {
                     tradeEngine.start(tradeEngine.tradeOptions);
                     return;
                 }
+                return;
+            }
+
+            // If the interpreter loop is active without a trade engine, emitting bot.resume is sufficient.
+            if (this.dbot?.interpreter) {
+                return;
             }
             // Fallback: re-run the bot if options or engine not present
             this.dbot.runBot();
@@ -583,10 +584,17 @@ export default class RunPanelStore {
         const { client, common } = this.core;
         // eslint-disable-next-line prefer-const
         let disposeIsSocketOpenedListener: (() => void) | undefined, disposeLogoutListener: (() => void) | undefined;
+        let isRegisteredFlag = false;
 
         const registerIsSocketOpenedListener = () => {
+            // FIX #2: Prevent multiple registrations and premature cleanup
+            if (isRegisteredFlag) {
+                return;
+            }
+            
             // TODO: fix notifications
             if (common.is_socket_opened) {
+                isRegisteredFlag = true;
                 disposeIsSocketOpenedListener = reaction(
                     () => client.loginid,
                     loginid => {
@@ -607,7 +615,11 @@ export default class RunPanelStore {
 
         disposeLogoutListener = reaction(
             () => common.is_socket_opened,
-            () => registerIsSocketOpenedListener()
+            () => {
+                // Reset flag when socket state changes
+                isRegisteredFlag = false;
+                registerIsSocketOpenedListener();
+            }
         );
 
         const disposeStopBotListener = reaction(
@@ -629,6 +641,8 @@ export default class RunPanelStore {
             if (typeof disposeStopBotListener === 'function') {
                 disposeStopBotListener();
             }
+            
+            isRegisteredFlag = false;
         };
     };
 

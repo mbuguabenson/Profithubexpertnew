@@ -5,6 +5,7 @@ import { getGlobalCopyTradingManager } from './copy-trading-manager-singleton';
 import Dialog from '@/components/shared_ui/dialog';
 import { useStore } from '@/hooks/useStore';
 import { api_base } from '@/external/bot-skeleton';
+import { getAccountsList as getBridgedAccountsList, getActiveToken as getBridgedActiveToken } from '@/utils/token-bridge';
 import { getTradeLogs } from './replicator';
 import {
     requestFollowProvider,
@@ -15,19 +16,13 @@ import './copy-trading.scss';
 
 // ─── Token Bridge Utilities ───────────────────────────────────────────────────
 const getAccountsList = (): Record<string, string> => {
-    try {
-        return JSON.parse(localStorage.getItem('accountsList') || '{}');
-    } catch {
-        return {};
-    }
+    return getBridgedAccountsList();
 };
 
 const getActiveLoginId = (): string => localStorage.getItem('active_loginid') || '';
 
 const getActiveToken = (): string | null => {
-    const list = getAccountsList();
-    const id = getActiveLoginId();
-    return list[id] || null;
+    return getBridgedActiveToken();
 };
 
 const getCopyTokensArray = (): string[] => {
@@ -104,27 +99,48 @@ const CopyTrading = observer(() => {
                 let storedTokens = getCopyTokensArray();
                 let updated = false;
 
-                Object.keys(accountsList).forEach(key => {
+                // FIX #5: Validate tokens before adding them to the copiers list
+                const validatedTokens: string[] = [];
+                for (const token of storedTokens) {
+                    if (token && token.length > 0 && token !== 'a1-guest' && token !== 'dummy_token') {
+                        validatedTokens.push(token);
+                    }
+                }
+                storedTokens = validatedTokens;
+
+                for (const key in accountsList) {
                     const token = accountsList[key];
-                    if (token && token !== activeToken && !storedTokens.includes(token)) {
+                    // FIX #5: Validate token before adding (better validation logic)
+                    if (
+                        token &&
+                        token.length > 0 &&
+                        token !== activeToken &&
+                        token !== 'a1-guest' &&
+                        token !== 'dummy_token' &&
+                        !storedTokens.includes(token)
+                    ) {
                         storedTokens.push(token);
                         updated = true;
                     }
-                });
+                }
 
                 if (updated) {
                     localStorage.setItem('copyTokensArray', JSON.stringify(storedTokens));
-                    for (const token of storedTokens) {
-                        if (!manager.copiers.find(c => c.token === token)) {
-                            try {
-                                const copier = manager.addCopier(token);
-                                const isCopyTrading = localStorage.getItem('iscopyTrading') === 'true';
-                                if (isCopyTrading && copier) {
-                                    void manager.connectCopier(copier.id);
-                                }
-                            } catch {
-                                /* Already added */
+                }
+
+                // FIX #5: Add copiers with error handling and deduplication
+                const existingTokens = new Set(manager.copiers.map(c => c.token));
+                for (const token of storedTokens) {
+                    if (!existingTokens.has(token) && token) {
+                        try {
+                            const copier = manager.addCopier(token);
+                            const isCopyTrading = localStorage.getItem('iscopyTrading') === 'true';
+                            if (isCopyTrading && copier) {
+                                void manager.connectCopier(copier.id);
                             }
+                        } catch (e) {
+                            console.warn(`Failed to add copier for token: ${token?.substring(0, 10)}...`, e);
+                            // Don't stop processing other tokens on error
                         }
                     }
                 }

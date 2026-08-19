@@ -80,9 +80,15 @@ export const SignalCard: React.FC<SignalCardProps> = ({ signal, isSuper = false 
                     className="signal-card__trade-btn"
                     onClick={() => {
                         if (scanner) {
-                            scanner.setSelectedStrategy(signal.type as any);
-                            if (signal.symbol) scanner.setSingleMarketSymbol(signal.symbol);
-                            scanner.setScannerVisibility(true);
+                            void scanner.loadSignalStrategyToBuilder({
+                                symbol: signal.symbol,
+                                type: signal.type as any,
+                                status: signal.status === 'STRONG' ? 'TRADE NOW' : signal.status,
+                                probability: signal.probability,
+                                recommendation: signal.recommendation,
+                                entryCondition: signal.entryCondition,
+                                targetDigit: signal.targetDigit,
+                            });
                         }
                     }}
                 >

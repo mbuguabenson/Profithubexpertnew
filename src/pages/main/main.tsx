@@ -82,7 +82,7 @@ const AppWrapper = observer(() => {
     const { dashboard_strategies = [] } = load_modal || {};
     const {
         is_dialog_open = false,
-        is_drawer_open = false,
+        is_drawer_open = true,
         dialog_options = {},
         onCancelButtonClick,
         onCloseDialog,
@@ -648,7 +648,7 @@ const AppWrapper = observer(() => {
                 <div
                     className={classNames('main__container', {
                         'main__container--active': active_tour && active_tab === DASHBOARD && !isDesktop,
-                        'main__container--drawer-open': isDesktop && is_drawer_open && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER,
+                        'main__container--drawer-open': isDesktop && is_drawer_open && active_tab !== DBOT_TABS.DASHBOARD,
                     })}
                 >
                     <div style={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -665,11 +665,11 @@ const AppWrapper = observer(() => {
             <DesktopWrapper>
                 <div className='main__run-strategy-wrapper'>
                     {active_tab !== DBOT_TABS.TRADING_BOTS && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunStrategy />}
+                    {active_tab !== DBOT_TABS.DASHBOARD && <RunPanel />}
                 </div>
-                {active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunPanel />}
             </DesktopWrapper>
             <MobileWrapper>
-                {!is_open && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunPanel />}
+                {!is_open && active_tab === DBOT_TABS.BOT_BUILDER && <RunPanel />}
             </MobileWrapper>
 
             <ChartModal />

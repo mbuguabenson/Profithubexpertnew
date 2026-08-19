@@ -100,9 +100,24 @@ export const applyPendingUrlTradeType = (tradeTypeBlock: any): boolean => {
             window.Blockly.Events.fire(categoryChangeEvent);
         }
 
-        // Set a timeout to apply the trade type after the category change has populated the trade type options
-        setTimeout(() => {
+        // FIX #4: Better error handling for trade type application with workspace validation
+        const applyTradeTypeWithValidation = () => {
             try {
+                // Check if workspace still exists (FIX #4: prevent errors when workspace is cleared)
+                const workspace = window.Blockly?.derivWorkspace;
+                if (!workspace) {
+                    console.warn('Workspace no longer available, clearing pending trade type');
+                    pendingUrlTradeType = null;
+                    return;
+                }
+
+                // Re-validate block is still in workspace
+                if (!tradeTypeBlock || !tradeTypeBlock.workspace) {
+                    console.warn('Trade type block no longer in workspace, clearing pending');
+                    pendingUrlTradeType = null;
+                    return;
+                }
+
                 // Re-check if pendingUrlTradeType is still valid (might have been cleared)
                 if (!pendingUrlTradeType) {
                     window.Blockly.Events.setGroup(originalGroup);
@@ -127,8 +142,7 @@ export const applyPendingUrlTradeType = (tradeTypeBlock: any): boolean => {
                     window.Blockly.Events.fire(tradeTypeChangeEvent);
 
                     // Force workspace to re-render
-                    const workspace = window.Blockly?.derivWorkspace;
-                    if (workspace) {
+                    if (workspace && workspace.render) {
                         workspace.render();
                     }
                 }
@@ -140,10 +154,14 @@ export const applyPendingUrlTradeType = (tradeTypeBlock: any): boolean => {
                 window.Blockly.Events.setGroup(originalGroup);
             } catch (error) {
                 console.warn('Failed to apply trade type changes to Blockly workspace:', error);
-                // Restore original event group on error
+                // Restore original event group on error and clear pending
                 window.Blockly.Events.setGroup(originalGroup);
+                pendingUrlTradeType = null;
             }
-        }, FIELD_POPULATION_DELAY); // Delay to ensure field options are fully populated
+        };
+
+        // Set a timeout to apply the trade type after the category change has populated the trade type options
+        setTimeout(applyTradeTypeWithValidation, FIELD_POPULATION_DELAY); // Delay to ensure field options are fully populated
 
         return true;
     } catch (error) {

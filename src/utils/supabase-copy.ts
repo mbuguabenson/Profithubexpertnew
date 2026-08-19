@@ -1,6 +1,10 @@
-const SUPABASE_URL = 'https://bljwlgebdrgfqcsawygs.supabase.co';
-const SUPABASE_ANON_KEY =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsandsZ2ViZHJnZnFjc2F3eWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MjA5NTgsImV4cCI6MjA4MzI5Njk1OH0.vgcxmT6mR62LbynwhS177biIwZCqr-GR9kIigr5HLO4';
+// Use the serverless proxy by default to avoid CORS issues when calling Supabase from browser
+const USE_PROXY = true;
+const SUPABASE_PROXY_PREFIX = '/api/supabase/';
+const SUPABASE_URL = USE_PROXY ? SUPABASE_PROXY_PREFIX : 'https://bljwlgebdrgfqcsawygs.supabase.co';
+const SUPABASE_ANON_KEY = USE_PROXY
+    ? ''
+    : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsandsZ2ViZHJnZnFjc2F3eWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3MjA5NTgsImV4cCI6MjA4MzI5Njk1OH0.vgcxmT6mR62LbynwhS177biIwZCqr-GR9kIigr5HLO4';
 
 export interface CopyTraderProfile {
     loginid: string;
@@ -44,7 +48,8 @@ const safeFetch = async (url: string, options: RequestInit): Promise<Response | 
 
 export const publishTraderProfile = async (profile: CopyTraderProfile): Promise<boolean> => {
     try {
-        const response = await safeFetch(`${SUPABASE_URL}/rest/v1/copy_traders`, {
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_traders` : `${SUPABASE_URL}/rest/v1/copy_traders`;
+        const response = await safeFetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -62,17 +67,15 @@ export const publishTraderProfile = async (profile: CopyTraderProfile): Promise<
 
 export const getPublicTraders = async (): Promise<CopyTraderProfile[]> => {
     try {
-        const response = await safeFetch(
-            `${SUPABASE_URL}/rest/v1/copy_traders?is_public=eq.true&select=*`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    apikey: SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                },
-            }
-        );
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_traders?is_public=eq.true&select=*` : `${SUPABASE_URL}/rest/v1/copy_traders?is_public=eq.true&select=*`;
+        const response = await safeFetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+        });
         if (!response?.ok) return [];
         return await response.json();
     } catch {
@@ -82,17 +85,15 @@ export const getPublicTraders = async (): Promise<CopyTraderProfile[]> => {
 
 export const getTraderProfile = async (loginid: string): Promise<CopyTraderProfile | null> => {
     try {
-        const response = await safeFetch(
-            `${SUPABASE_URL}/rest/v1/copy_traders?loginid=eq.${encodeURIComponent(loginid)}&select=*`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    apikey: SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                },
-            }
-        );
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_traders?loginid=eq.${encodeURIComponent(loginid)}&select=*` : `${SUPABASE_URL}/rest/v1/copy_traders?loginid=eq.${encodeURIComponent(loginid)}&select=*`;
+        const response = await safeFetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+        });
         if (!response?.ok) return null;
         const data = await response.json();
         return data && data.length > 0 ? data[0] : null;
@@ -119,7 +120,8 @@ export const requestFollowProvider = async (
         // First clean up any existing request for the same pair
         await deleteRequest(requesterLoginid, providerLoginid);
 
-        const response = await safeFetch(`${SUPABASE_URL}/rest/v1/copy_requests`, {
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_requests` : `${SUPABASE_URL}/rest/v1/copy_requests`;
+        const response = await safeFetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -136,18 +138,17 @@ export const requestFollowProvider = async (
 
 export const deleteRequest = async (requesterLoginid: string, providerLoginid: string): Promise<boolean> => {
     try {
-        const response = await safeFetch(
-            `${SUPABASE_URL}/rest/v1/copy_requests?requester_loginid=eq.${encodeURIComponent(
-                requesterLoginid
-            )}&provider_loginid=eq.${encodeURIComponent(providerLoginid)}`,
-            {
-                method: 'DELETE',
-                headers: {
-                    apikey: SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                },
-            }
-        );
+        const query = `copy_requests?requester_loginid=eq.${encodeURIComponent(
+            requesterLoginid
+        )}&provider_loginid=eq.${encodeURIComponent(providerLoginid)}`;
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}${query}` : `${SUPABASE_URL}/rest/v1/${query}`;
+        const response = await safeFetch(endpoint, {
+            method: 'DELETE',
+            headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+        });
         return !!response?.ok;
     } catch {
         return false;
@@ -159,19 +160,18 @@ export const getCopyRequestStatus = async (
     providerLoginid: string
 ): Promise<CopyRequest | null> => {
     try {
-        const response = await safeFetch(
-            `${SUPABASE_URL}/rest/v1/copy_requests?requester_loginid=eq.${encodeURIComponent(
-                requesterLoginid
-            )}&provider_loginid=eq.${encodeURIComponent(providerLoginid)}&select=*`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    apikey: SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                },
-            }
-        );
+        const query = `copy_requests?requester_loginid=eq.${encodeURIComponent(
+            requesterLoginid
+        )}&provider_loginid=eq.${encodeURIComponent(providerLoginid)}&select=*`;
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}${query}` : `${SUPABASE_URL}/rest/v1/${query}`;
+        const response = await safeFetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+        });
         if (!response?.ok) return null;
         const data = await response.json();
         return data && data.length > 0 ? data[0] : null;
@@ -184,19 +184,16 @@ export const getCopyRequestStatus = async (
 
 export const getPendingRequestsForProvider = async (providerLoginid: string): Promise<CopyRequest[]> => {
     try {
-        const response = await safeFetch(
-            `${SUPABASE_URL}/rest/v1/copy_requests?provider_loginid=eq.${encodeURIComponent(
-                providerLoginid
-            )}&select=*`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    apikey: SUPABASE_ANON_KEY,
-                    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                },
-            }
-        );
+        const query = `copy_requests?provider_loginid=eq.${encodeURIComponent(providerLoginid)}&select=*`;
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}${query}` : `${SUPABASE_URL}/rest/v1/${query}`;
+        const response = await safeFetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+        });
         if (!response?.ok) return [];
         return await response.json();
     } catch {
@@ -214,7 +211,8 @@ export const updateCopyRequestStatus = async (
             ...(status === 'accepted' && { accepted_at: new Date().toISOString() }),
         };
 
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/copy_requests?id=eq.${requestId}`, {
+        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_requests?id=eq.${requestId}` : `${SUPABASE_URL}/rest/v1/copy_requests?id=eq.${requestId}`;
+        const response = await fetch(endpoint, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

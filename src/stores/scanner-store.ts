@@ -99,6 +99,24 @@ interface IScannerStore {
   setBulkTradesCount: (count: number) => void;
   setVirtualHookEnabled: (enabled: boolean) => void;
   setVirtualLossThreshold: (threshold: number) => void;
+  selectSignalFromSignalsTab: (signal: {
+    symbol?: string;
+    type: TStrategyType;
+    status: TSignalStatus;
+    probability: number;
+    recommendation: string;
+    entryCondition: string;
+    targetDigit?: number;
+  }) => void;
+  loadSignalStrategyToBuilder: (signal: {
+    symbol?: string;
+    type: TStrategyType;
+    status: TSignalStatus;
+    probability: number;
+    recommendation: string;
+    entryCondition: string;
+    targetDigit?: number;
+  }) => Promise<void>;
   setScannerVisibility: (is_open?: boolean) => void;
   setSelectedStrategy: (strategy: TStrategyType) => void;
   setSelectedSymbols: (symbols: string[]) => void;
@@ -247,6 +265,7 @@ export default class ScannerStore implements IScannerStore {
       setBulkTradesCount: action,
       setVirtualHookEnabled: action,
       setVirtualLossThreshold: action,
+      selectSignalFromSignalsTab: action,
     });
 
     this.root_store = root_store;
@@ -479,6 +498,61 @@ export default class ScannerStore implements IScannerStore {
 
   setSelectedStrategy = (strategy: TStrategyType) => {
     this.selected_strategy = strategy;
+  };
+
+  selectSignalFromSignalsTab = (signal: {
+    symbol?: string;
+    type: TStrategyType;
+    status: TSignalStatus;
+    probability: number;
+    recommendation: string;
+    entryCondition: string;
+    targetDigit?: number;
+  }) => {
+    const symbol = signal.symbol || this.single_market_symbol || 'R_100';
+    this.current_signal = {
+      symbol,
+      strategy: signal.type,
+      confidence: signal.probability / 100,
+      timestamp: Date.now(),
+      details: {
+        type: signal.type,
+        status: signal.status,
+        probability: signal.probability,
+        recommendation: signal.recommendation,
+        entryCondition: signal.entryCondition,
+        targetDigit: signal.targetDigit,
+      },
+      analysisResult: this.symbol_analysis[symbol] || ({} as TAnalysisResult),
+    };
+    this.is_manual_selection = true;
+    this.setSelectedStrategy(signal.type);
+    this.setSingleMarketSymbol(symbol);
+    this.setScannerVisibility(true);
+  };
+
+  loadSignalStrategyToBuilder = async (signal: {
+    symbol?: string;
+    type: TStrategyType;
+    status: TSignalStatus;
+    probability: number;
+    recommendation: string;
+    entryCondition: string;
+    targetDigit?: number;
+  }) => {
+    this.selectSignalFromSignalsTab(signal);
+    this.setScannerVisibility(false);
+    this.root_store.dashboard.setActiveTab(1);
+
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if (typeof window !== 'undefined' && window.Blockly?.derivWorkspace) {
+        await this.loadBotWithStrategy();
+        return;
+      }
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    console.warn('[ScannerStore] Bot Builder workspace did not initialize for signal strategy load');
   };
 
   setSelectedSymbols = (symbols: string[]) => {

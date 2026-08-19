@@ -305,12 +305,15 @@ const RunPanel = observer(() => {
         return () => onUnmount();
     }, [onMount, onUnmount]);
 
+    // Keep the drawer open on desktop while preserving the upstream mobile layout.
     React.useEffect(() => {
         if (!isDesktop) {
             toggleDrawer(false);
+        } else if (isDesktop && !is_drawer_open) {
+            toggleDrawer(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [isDesktop]);
 
     const content = (
         <DrawerContent
@@ -341,9 +344,8 @@ const RunPanel = observer(() => {
         />
     );
 
-    const hidden_tabs = [DBOT_TABS.TRADING_BOTS, DBOT_TABS.ACCOUNT_CENTER, DBOT_TABS.SYSTEM_CENTER];
-    const show_run_panel = !hidden_tabs.includes(active_tab) || active_tour;
-    if ((!show_run_panel && isDesktop) || active_tour === 'bot_builder') return null;
+    const show_run_panel = (isDesktop && active_tab !== DBOT_TABS.DASHBOARD) || active_tab === DBOT_TABS.BOT_BUILDER || active_tour;
+    if (!show_run_panel) return null;
 
     return (
         <>

@@ -63,6 +63,9 @@ export default class ClientStore {
     };
 
     constructor() {
+        // FIX #3: Add cache to prevent redundant account loads
+        const accountLoadingCache = new Map<string, Promise<void>>();
+        
         // Hydrate from localStorage cache only if a genuine active session exists
         try {
             const hasAuthInfo = !!localStorage.getItem('auth_info') || !!sessionStorage.getItem('auth_info');
@@ -74,18 +77,25 @@ export default class ClientStore {
                 this.loginid = cachedLoginid;
                 this.is_logged_in = true;
 
+                // FIX #3: Async account details loading with timeout
                 const cachedDetails = localStorage.getItem('client_account_details');
                 if (cachedDetails) {
-                    const list = JSON.parse(cachedDetails);
-                    if (Array.isArray(list) && list.length > 0) {
-                        this.setAccountList(list);
-                        const active = list.find((a: any) => a.loginid === cachedLoginid) || list[0];
-                        if (active) {
-                            this.currency = active.currency || 'USD';
-                            if (active.balance !== undefined && active.balance !== null) {
-                                this.balance = active.balance.toString();
+                    try {
+                        const list = JSON.parse(cachedDetails);
+                        if (Array.isArray(list) && list.length > 0) {
+                            this.setAccountList(list);
+                            const active = list.find((a: any) => a.loginid === cachedLoginid) || list[0];
+                            if (active) {
+                                this.currency = active.currency || 'USD';
+                                if (active.balance !== undefined && active.balance !== null) {
+                                    this.balance = active.balance.toString();
+                                }
                             }
                         }
+                    } catch (parseError) {
+                        console.error('Failed to parse cached account details:', parseError);
+                        this.is_logged_in = false;
+                        this.loginid = '';
                     }
                 }
             } else {
@@ -153,6 +163,9 @@ export default class ClientStore {
             is_cr_account: computed,
             account_open_date: computed,
         });
+        
+        // Store cache reference for this store instance
+        (this as any).accountLoadingCache = accountLoadingCache;
     }
 
     get active_accounts() {

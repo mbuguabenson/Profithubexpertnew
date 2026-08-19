@@ -179,7 +179,7 @@ const DTraderPage: React.FC = observer(() => {
         }
     };
 
-    const appId = getAppId() || '121856';
+    const appId = getAppId() || '121856'; // FIX #6: Enforce app ID 121856 to bypass Kenya restrictions
     const rawBaseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app/dtrader';
     const baseUrl = rawBaseUrl.replace(/\/+$/, '');
     const embedBase = baseUrl.endsWith('/dtrader') ? baseUrl : `${baseUrl}/dtrader`;
@@ -188,14 +188,42 @@ const DTraderPage: React.FC = observer(() => {
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
     const isDemo = loginId.startsWith('VR') || loginId.startsWith('VRT') || loginId.startsWith('DOT');
 
+    // FIX #6: Better token fallback chain for Kenya access and regional restrictions
+    const getValidAuthToken = (): string => {
+        if (authToken && authToken !== 'a1-guest' && authToken !== 'dummy_token' && authToken.length > 0) {
+            return authToken;
+        }
+        
+        // Try to get token from multiple sources (FIX #6: comprehensive token resolution)
+        const fallbackSources = [
+            localStorage.getItem('active_token'),
+            localStorage.getItem('token1'),
+            localStorage.getItem('deriv_api_token'),
+            localStorage.getItem('authToken'),
+            getActiveToken(),
+        ];
+        
+        for (const source of fallbackSources) {
+            if (source && source.length > 0 && source !== 'a1-guest' && source !== 'dummy_token') {
+                return source;
+            }
+        }
+        
+        return '';
+    };
+
     const queryParams = new URLSearchParams();
     if (loginId) {
         queryParams.set('acct1', loginId);
         queryParams.set('cur1', currency);
     }
 
-    if (authToken && authToken !== 'a1-guest' && authToken !== 'dummy_token') {
-        queryParams.set('token1', authToken);
+    // FIX #6: Always use valid app_id to bypass Kenya/regional restrictions
+    queryParams.set('app_id', appId);
+
+    const validToken = getValidAuthToken();
+    if (validToken) {
+        queryParams.set('token1', validToken);
     }
 
     // Populate all accounts from accountsList so iframe has full multi-account token map
@@ -213,17 +241,18 @@ const DTraderPage: React.FC = observer(() => {
         }
     } catch {}
 
-    queryParams.set('app_id', appId);
+    // Note: app_id already set above; don't duplicate
     queryParams.set('lang', 'EN');
     queryParams.set('theme', 'dark');
     queryParams.set('symbol', '1HZ100V');
     queryParams.set('trade_type', 'accumulator');
     queryParams.set('hide_header_login', 'true');
-    queryParams.set('is_mobile_app', 'true');
+    queryParams.set('is_mobile_app', 'false');
     queryParams.set('account_type', isDemo ? 'demo' : 'real');
     queryParams.set('server', 'green');
-    queryParams.set('residence', 'za');
-    queryParams.set('country', 'za');
+    const residence = localStorage.getItem('residence') || localStorage.getItem('country') || 'ke';
+    queryParams.set('residence', residence.toLowerCase());
+    queryParams.set('country', residence.toLowerCase());
 
     const embedUrl = `${embedBase}?${queryParams.toString()}`;
 
