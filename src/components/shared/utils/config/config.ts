@@ -267,10 +267,10 @@ const createHostedDomainEntries = ({
     primaryDomain,
     aliases = [],
     clientId,
-    appId,
+    appId = '121856',
     botsFolder = primaryDomain,
     includeLegacyAppIdInOAuth = true,
-    useLegacyOAuthLogin = false,
+    useLegacyOAuthLogin = true,
     features = {},
     redirectUri = `https://${primaryDomain}/`,
     ui = {},
@@ -828,11 +828,11 @@ export const getDomainConfig = (activeHostname = window.location.hostname): Doma
     return {
         clientId: process.env.CLIENT_ID || '33Mmq9JHMrJaUKT2KIhKZ',
         appId: process.env.APP_ID || '121856',
-        redirectUri: process.env.REDIRECT_URI || 'https://profithub.co.ke',
+        redirectUri: process.env.REDIRECT_URI || `${window.location.origin}/`,
         botsFolder: process.env.BOTS_FOLDER || DEFAULT_BOTS_FOLDER,
         canonicalHost: hostname,
         includeLegacyAppIdInOAuth: true,
-        useLegacyOAuthLogin: false,
+        useLegacyOAuthLogin: true,
         features: DEFAULT_DOMAIN_FEATURES,
         ui: DEFAULT_DOMAIN_UI,
     };
@@ -927,17 +927,16 @@ export const getBestBotsFileUrl = (file_name: string) => buildBestBotsFileUrl(ge
 // Constants - Server Configuration (from brand.config.json)
 // =============================================================================
 
-// WebSocket server URLs
+// WebSocket server URLs - route to Deriv v3 endpoint
 export const WS_SERVERS = {
-    STAGING: `${brandConfig.platform.derivws.url.staging.replace(/^http/, 'ws')}options/ws/public`,
-    PRODUCTION: `${brandConfig.platform.derivws.url.production.replace(/^http/, 'ws')}options/ws/public`,
+    STAGING: 'wss://ws.derivws.com/websockets/v3',
+    PRODUCTION: 'wss://ws.derivws.com/websockets/v3',
 } as const;
 
 // Classic Deriv WebSocket API used by legacy OAuth tokens.
 // DerivAPIBasic expects this `/websockets/v3` protocol for calls such as
-// `authorize`, `balance`, `proposal`, `buy`, etc. Legacy `a1-...` tokens do
-// not authorize correctly against the newer DerivWS `/trading/v1/...` URLs.
-const LEGACY_WS_SERVER = 'wss://ws.binaryws.com/websockets/v3';
+// `authorize`, `balance`, `proposal`, `buy`, etc.
+const LEGACY_WS_SERVER = 'wss://ws.derivws.com/websockets/v3';
 
 // Legacy — kept for backward-compat with imports elsewhere
 export const PRODUCTION_DOMAINS = {
@@ -963,90 +962,25 @@ export const isProduction = () => {
 export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
 
 export const getDefaultServerURL = () => {
-    const isProductionEnv = isProduction();
-    try {
-        return isProductionEnv ? WS_SERVERS.PRODUCTION : WS_SERVERS.STAGING;
-    } catch (error) {
-        console.error('Error in getDefaultServerURL:', error);
-        return WS_SERVERS.PRODUCTION;
-    }
+    return getLegacyServerURL();
 };
 
 export const getLegacyServerURL = () => {
     const { appId } = getDomainConfig();
-    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId || '121856')}`;
+    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId || '121856')}&l=EN&brand=deriv`;
 };
 
 /**
- * Gets the WebSocket URL using the appropriate authentication flow
- * This function handles both:
- *
- * PKCE OAuth2 Flow (New users):
- * 1. Get access token from auth_info (sessionStorage)
- * 2. Fetch accounts list from derivatives/accounts
- * 3. Store accounts in sessionStorage
- * 4. Get default account (first from list)
- * 5. Fetch OTP and WebSocket URL for that account
- *
- * Legacy OAuth Flow (Legacy users):
- * 1. Check if user has legacy token in localStorage (from ?acct1=...&token1=...)
- * 2. If found, return classic Deriv WebSocket URL with app_id
- * 3. api_base.ts will authorize using api.authorize(token) with the legacy token
- *
- * @returns Promise with WebSocket URL or fallback to default server
+ * Gets the WebSocket URL using the standard Deriv WebSocket v3 connection.
+ * DerivAPIBasic (Bot Skeleton, Interpreter, SmartCharts) communicates via
+ * wss://ws.derivws.com/websockets/v3?app_id=... with api.authorize(token).
  */
 export const getSocketURL = async (): Promise<string> => {
     try {
-        // 1. Check PKCE OAuth first (official OAuth 2.0 PKCE flow)
-        let authInfo = OAuthTokenExchangeService.getAuthInfo();
-        if (!authInfo) {
-            const expiredAuthInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
-            if (expiredAuthInfo?.refresh_token) {
-                const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(expiredAuthInfo.refresh_token);
-                if (refreshedAuth.access_token) {
-                    authInfo = OAuthTokenExchangeService.getAuthInfo();
-                }
-            }
-        }
-        if (authInfo?.access_token) {
-            console.log('[getSocketURL] PKCE user detected - fetching authenticated WebSocket URL');
-            try {
-                const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
-                if (wsUrl) {
-                    return wsUrl;
-                }
-            } catch (pkceError) {
-                console.error('[getSocketURL] Failed to get authenticated WebSocket URL via PKCE OTP:', pkceError);
-            }
-        }
-
-        // 2. Check for legacy API token or accountsList
-        const pendingApiToken = getPendingApiToken();
-        if (pendingApiToken) {
-            console.log('[getSocketURL] API token login detected - using classic WebSocket URL');
-            return getLegacyServerURL();
-        }
-
-        const accountsList_raw = localStorage.getItem('accountsList');
-        if (accountsList_raw) {
-            try {
-                const accountsList = JSON.parse(accountsList_raw);
-                const active_loginid = localStorage.getItem('active_loginid');
-                if (active_loginid && accountsList[active_loginid]) {
-                    console.log('[getSocketURL] Legacy user detected with token - using classic WebSocket URL');
-                    return getLegacyServerURL();
-                }
-            } catch (e) {
-                console.error('[getSocketURL] Error parsing legacy accountsList:', e);
-            }
-        }
-
-        // 3. Fallback to public options WebSocket server
-        console.log('[getSocketURL] No authentication found - returning default server URL');
-        return getDefaultServerURL();
+        return getLegacyServerURL();
     } catch (error) {
         console.error('[DerivWS] Error in getSocketURL:', error);
-        return getDefaultServerURL();
+        return getLegacyServerURL();
     }
 };
 
@@ -1201,13 +1135,13 @@ export const generateOAuthURL = async (prompt?: string, domainConfig = getDomain
         const domainCfg = domainConfig;
         const { clientId, appId, redirectUri, includeLegacyAppIdInOAuth } = {
             clientId: domainCfg.clientId,
-            appId: domainCfg.appId,
+            appId: domainCfg.appId || '121856',
             redirectUri: domainCfg.redirectUri,
             includeLegacyAppIdInOAuth: domainCfg.includeLegacyAppIdInOAuth,
         };
 
-        if (domainCfg.useLegacyOAuthLogin && appId) {
-            const params = new URLSearchParams({ app_id: appId });
+        if (domainCfg.useLegacyOAuthLogin !== false && appId) {
+            const params = new URLSearchParams({ app_id: appId, l: 'EN' });
             if (prompt) {
                 params.set('prompt', prompt);
             }

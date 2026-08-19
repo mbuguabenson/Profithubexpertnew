@@ -78,21 +78,33 @@ import { isDemoAccount } from '@/utils/account-helpers';
 function storeLegacyAccounts(accounts: import('@/hooks/useOAuthCallback').LegacyAccount[]): void {
     const accountsList: Record<string, string> = {};
     const clientAccounts: Record<string, { currency: string; token: string }> = {};
+    const client_account_details: Array<{ loginid: string; currency: string; token: string; is_virtual: number }> = [];
 
     for (const { loginid, token, currency } of accounts) {
+        if (!loginid || !token) continue;
         accountsList[loginid] = token;
-        clientAccounts[loginid] = { currency, token };
+        clientAccounts[loginid] = { currency: currency || 'USD', token };
+        client_account_details.push({
+            loginid,
+            currency: currency || 'USD',
+            token,
+            is_virtual: isDemoAccount(loginid) ? 1 : 0,
+        });
     }
 
     localStorage.setItem('accountsList', JSON.stringify(accountsList));
+    localStorage.setItem('client.accounts', JSON.stringify(clientAccounts));
     localStorage.setItem('clientAccounts', JSON.stringify(clientAccounts));
+    localStorage.setItem('client_account_details', JSON.stringify(client_account_details));
 
     const realAccount = accounts.find(a => !isDemoAccount(a.loginid)) ?? accounts[0];
     if (realAccount) {
         localStorage.setItem('authToken', realAccount.token);
         localStorage.setItem('active_token', realAccount.token);
         localStorage.setItem('token1', realAccount.token);
+        localStorage.setItem('token', realAccount.token);
         localStorage.setItem('active_loginid', realAccount.loginid);
+        localStorage.setItem('client.loginid', realAccount.loginid);
         const isDemo = isDemoAccount(realAccount.loginid);
         localStorage.setItem('account_type', isDemo ? 'demo' : 'real');
 
@@ -122,8 +134,13 @@ function App() {
     // ── Legacy Deriv OAuth: tokens arrive directly in URL ─────────────────────
     React.useEffect(() => {
         if (!isProcessing && legacyAccounts && legacyAccounts.length > 0) {
-            cleanupURL();
             storeLegacyAccounts(legacyAccounts);
+            cleanupURL();
+            import('@/external/bot-skeleton').then(({ api_base }) => {
+                api_base.init(true);
+            }).catch(err => {
+                console.error('[App] Failed to initialize api_base after login:', err);
+            });
         }
     }, [isProcessing, legacyAccounts, cleanupURL]);
 

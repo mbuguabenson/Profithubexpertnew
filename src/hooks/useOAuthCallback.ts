@@ -42,14 +42,22 @@ export interface OAuthCallbackResult {
 function parseLegacyAccounts(urlParams: URLSearchParams): LegacyAccount[] {
     const accounts: LegacyAccount[] = [];
     let i = 1;
-    while (urlParams.has(`acct${i}`)) {
+    while (urlParams.has(`acct${i}`) || urlParams.has(`token${i}`)) {
         const loginid = urlParams.get(`acct${i}`) || '';
         const token = urlParams.get(`token${i}`) || '';
         const currency = urlParams.get(`cur${i}`) || '';
-        if (loginid && token) {
-            accounts.push({ loginid, token, currency });
+        if (token) {
+            accounts.push({ loginid: loginid || (i === 1 ? (urlParams.get('account') || '') : ''), token, currency: currency || 'USD' });
         }
         i++;
+    }
+    if (accounts.length === 0 && (urlParams.has('token') || urlParams.has('token1'))) {
+        const token = urlParams.get('token') || urlParams.get('token1') || '';
+        const loginid = urlParams.get('acct1') || urlParams.get('account') || urlParams.get('loginid') || '';
+        const currency = urlParams.get('cur1') || urlParams.get('cur') || 'USD';
+        if (token) {
+            accounts.push({ loginid, token, currency });
+        }
     }
     return accounts;
 }
@@ -85,15 +93,17 @@ export const useOAuthCallback = (): OAuthCallbackResult => {
         url.searchParams.delete('scope');
         url.searchParams.delete('error');
         url.searchParams.delete('error_description');
+        url.searchParams.delete('token');
+        url.searchParams.delete('token1');
         // Legacy Deriv OAuth params
         let i = 1;
-        while (url.searchParams.has(`acct${i}`)) {
+        while (url.searchParams.has(`acct${i}`) || url.searchParams.has(`token${i}`) || url.searchParams.has(`cur${i}`)) {
             url.searchParams.delete(`acct${i}`);
             url.searchParams.delete(`token${i}`);
             url.searchParams.delete(`cur${i}`);
             i++;
         }
-        window.history.replaceState({}, '', url.toString());
+        window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash);
     }, []);
 
     useEffect(() => {

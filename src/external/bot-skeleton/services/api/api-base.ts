@@ -290,7 +290,7 @@ class APIBase {
                     try {
                         const res = await this.api.authorize(token);
                         if (res?.authorize) {
-                            authResult = { balance: res.authorize };
+                            authResult = { balance: res.authorize, account_list: res.authorize.account_list };
                         } else if (res?.error) {
                             console.warn('[APIBase] Token authorize returned error:', res.error.message || res.error);
                             if (res.error.code === 'InvalidToken') {
@@ -349,22 +349,42 @@ class APIBase {
                   }
                 : null;
 
-            // Build full account list from sessionStorage (populated during OAuth flow)
-            // Falls back to just the current account if sessionStorage has no data
+            // Build full account list from authorize response, localStorage, or DerivWSAccountsService
+            const responseAccountList = balance?.account_list || authResult?.account_list;
             const storedAccounts = DerivWSAccountsService.getStoredAccounts();
-            const accountList =
-                storedAccounts && storedAccounts.length > 0
-                    ? storedAccounts
-                          .filter(a => !a.status || a.status === 'active')
-                          .map(a => ({
-                              balance: parseFloat(a.balance) || 0,
-                              currency: a.currency || 'USD',
-                              is_virtual: a.account_type === 'demo' ? 1 : 0,
-                              loginid: a.account_id,
-                          }))
-                    : currentAccount
-                      ? [currentAccount]
-                      : [];
+            let rawStoredClientAccounts: any = null;
+            try {
+                const storedRaw = localStorage.getItem('client_account_details');
+                if (storedRaw) rawStoredClientAccounts = JSON.parse(storedRaw);
+            } catch {}
+
+            let accountList: any[] = [];
+            if (responseAccountList && Array.isArray(responseAccountList) && responseAccountList.length > 0) {
+                accountList = responseAccountList.map((a: any) => ({
+                    balance: typeof a.balance === 'number' ? a.balance : (a.loginid === balance?.loginid ? (typeof balance?.balance === 'number' ? balance.balance : 0) : 0),
+                    currency: a.currency || 'USD',
+                    is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                    loginid: a.loginid,
+                }));
+            } else if (Array.isArray(rawStoredClientAccounts) && rawStoredClientAccounts.length > 0) {
+                accountList = rawStoredClientAccounts.map((a: any) => ({
+                    balance: typeof a.balance === 'number' ? a.balance : (a.loginid === balance?.loginid ? (typeof balance?.balance === 'number' ? balance.balance : 0) : 0),
+                    currency: a.currency || 'USD',
+                    is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                    loginid: a.loginid,
+                }));
+            } else if (storedAccounts && storedAccounts.length > 0) {
+                accountList = storedAccounts
+                    .filter(a => !a.status || a.status === 'active')
+                    .map(a => ({
+                        balance: parseFloat(a.balance) || 0,
+                        currency: a.currency || 'USD',
+                        is_virtual: a.account_type === 'demo' ? 1 : 0,
+                        loginid: a.account_id,
+                    }));
+            } else if (currentAccount) {
+                accountList = [currentAccount];
+            }
 
             setAccountList(accountList); // Observable stream
             setAuthData({
@@ -399,6 +419,13 @@ class APIBase {
             const currentClientStore = globalObserver.getState('client.store');
             if (currentClientStore && balance?.loginid) {
                 currentClientStore.setWebSocketLoginId(balance.loginid);
+                currentClientStore.setLoginId(balance.loginid);
+                currentClientStore.setCurrency(balance.currency || 'USD');
+                currentClientStore.setIsLoggedIn(true);
+                currentClientStore.setAccountList(accountList);
+                if (typeof balance?.balance === 'number') {
+                    currentClientStore.setBalance(balance.balance.toString());
+                }
             }
 
             setIsAuthorized(true);

@@ -492,6 +492,9 @@ export default class RunPanelStore {
             this.is_dialog_open = false;
         };
         this.onCancelButtonClick = () => {
+            generateOAuthURL().then(url => {
+                if (url) window.location.replace(url);
+            });
             this.is_dialog_open = false;
         };
         this.dialog_options = {
