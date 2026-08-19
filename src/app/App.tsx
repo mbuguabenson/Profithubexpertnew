@@ -151,13 +151,7 @@ function App() {
             OAuthTokenExchangeService.exchangeCodeForToken(params.code)
                 .then(response => {
                     cleanupURL();
-                    if (response.access_token) {
-                        import('@/external/bot-skeleton').then(({ api_base }) => {
-                            api_base.init(true);
-                        }).catch(err => {
-                            console.error('[App] Failed to initialize api_base after PKCE login:', err);
-                        });
-                    } else if (response.error) {
+                    if (response.error) {
                         console.error('❌ Token exchange failed:', response.error);
                         console.error('Error description:', response.error_description);
                     }

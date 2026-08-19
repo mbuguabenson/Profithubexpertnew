@@ -209,18 +209,49 @@ export default class ContractsFor {
             this.retrieving_contracts_for[symbol] = new PendingPromise();
 
             try {
-                const response = await api_base.api.send({ contracts_for: symbol });
-
-                if (!response || response.error) {
-                    console.warn('contracts_for API error for symbol:', symbol, response?.error);
-                    if (this.retrieving_contracts_for[symbol]) {
-                        this.retrieving_contracts_for[symbol].resolve();
-                        delete this.retrieving_contracts_for[symbol];
+                let response = null;
+                if (api_base.api && api_base.api.connection?.readyState === 1) {
+                    try {
+                        response = await api_base.api.send({ contracts_for: symbol });
+                    } catch (err) {
+                        console.warn('[ContractsFor] api_base.api.send notice for symbol:', symbol, err);
                     }
-                    return [];
+                }
+
+                // If api_base send didn't yield contracts, fetch immediately from public WebSocket
+                if (!response || !response.contracts_for || !Array.isArray(response.contracts_for.available) || response.error) {
+                    try {
+                        response = await new Promise((resolve) => {
+                            const ws = new WebSocket('wss://api.derivws.com/trading/v1/options/ws/public');
+                            ws.onopen = () => {
+                                ws.send(JSON.stringify({ contracts_for: symbol }));
+                            };
+                            ws.onmessage = (event) => {
+                                try {
+                                    const data = JSON.parse(event.data);
+                                    ws.close();
+                                    resolve(data);
+                                } catch {
+                                    ws.close();
+                                    resolve(null);
+                                }
+                            };
+                            ws.onerror = () => {
+                                ws.close();
+                                resolve(null);
+                            };
+                            setTimeout(() => {
+                                if (ws.readyState <= 1) ws.close();
+                                resolve(null);
+                            }, 5000);
+                        });
+                    } catch (fallbackErr) {
+                        console.warn('[ContractsFor] Public WS fallback notice:', fallbackErr);
+                    }
                 }
 
                 if (
+                    !response ||
                     !response.contracts_for ||
                     !response.contracts_for.available ||
                     !Array.isArray(response.contracts_for.available)
@@ -237,13 +268,16 @@ export default class ContractsFor {
                     contracts_for: { available: contracts },
                 } = response;
 
-                // We don't offer forward-starting contracts in bot.
-                // Note: start_type field may not be available in API response anymore
+                // Filter out forward-starting contracts if any
                 const filtered_contracts = contracts.filter(c => !c.start_type || c.start_type !== 'forward');
+
+                const currentTimestamp = (typeof this.server_time?.unix === 'function')
+                    ? this.server_time.unix()
+                    : Math.floor(Date.now() / 1000);
 
                 this.contracts_for[symbol] = {
                     contracts: filtered_contracts,
-                    timestamp: this.server_time.unix(),
+                    timestamp: currentTimestamp,
                 };
 
                 if (this.retrieving_contracts_for[symbol]) {
