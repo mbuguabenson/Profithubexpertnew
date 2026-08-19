@@ -64,6 +64,8 @@ const Tabs = ({
     const [active_line_style, updateActiveLineStyle] = React.useState({});
     const active_tab_ref = React.useRef<HTMLLIElement>(null);
     const tabs_wrapper_ref = React.useRef<HTMLUListElement>(null);
+    const active_line_retry_timeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const active_line_retry_count = React.useRef(0);
     const pushHash = (hash: string) => {
         history.replace(`${history.location.pathname}${window.location.search}#${hash}`);
     };
@@ -72,14 +74,23 @@ const Tabs = ({
         const tabs_wrapper_bounds = tabs_wrapper_ref?.current?.getBoundingClientRect();
         const active_tab_bounds = active_tab_ref?.current?.getBoundingClientRect();
         if (tabs_wrapper_bounds && active_tab_bounds) {
+            active_line_retry_count.current = 0;
             updateActiveLineStyle({
                 left: active_tab_bounds.left - tabs_wrapper_bounds.left,
                 width: active_tab_bounds.width,
             });
-        } else {
-            setTimeout(() => {
+        } else if (active_line_retry_count.current < 10 && !active_line_retry_timeout.current) {
+            active_line_retry_count.current += 1;
+            active_line_retry_timeout.current = setTimeout(() => {
+                active_line_retry_timeout.current = null;
                 setActiveLineStyle();
             }, 500);
+        }
+    }, []);
+
+    React.useEffect(() => () => {
+        if (active_line_retry_timeout.current) {
+            clearTimeout(active_line_retry_timeout.current);
         }
     }, []);
 

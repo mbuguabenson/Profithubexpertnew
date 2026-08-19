@@ -311,17 +311,21 @@ export class DerivWSAccountsService {
      */
     static async getAuthenticatedWebSocketURL(accessToken: string): Promise<string> {
         try {
-            let accounts: DerivAccount[] | null = null;
-
             const storedAccounts = this.getStoredAccounts();
-            if (storedAccounts && storedAccounts.length > 0) {
-                accounts = storedAccounts;
-            } else {
-                accounts = await this.fetchAccountsList(accessToken);
+            let accounts: DerivAccount[];
 
-                if (!accounts || accounts.length === 0) {
-                    throw new Error('No accounts available');
-                }
+            // Cached accounts can contain stale special/DOT IDs that the Options
+            // API does not recognize. Always prefer the live account list before
+            // requesting a single-use OTP URL.
+            try {
+                accounts = await this.fetchAccountsList(accessToken);
+            } catch (error) {
+                accounts = (storedAccounts || []).filter(account => !account.account_id.startsWith('DOT'));
+                if (accounts.length === 0) throw error;
+            }
+
+            if (accounts.length === 0) {
+                throw new Error('No accounts available');
             }
 
             const activeLoginId = localStorage.getItem('active_loginid');

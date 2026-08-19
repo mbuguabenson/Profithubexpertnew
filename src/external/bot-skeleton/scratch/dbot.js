@@ -364,6 +364,9 @@ class DBot {
                     sleep(5);
                     currentTickTime = Bot.getLastTick(true);
                 }
+                if (!currentTickTime || typeof currentTickTime.epoch !== 'number') {
+                    return;
+                }
                 currentTickTime = currentTickTime.epoch;
                 if (currentTickTime === BinaryBotPrivateLastTickTime) {
                     return;

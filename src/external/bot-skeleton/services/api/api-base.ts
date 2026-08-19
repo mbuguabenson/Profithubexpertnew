@@ -19,7 +19,6 @@ import {
     setIsAuthorized,
     setIsAuthorizing,
 } from './observables/connection-status-stream';
-import ApiHelpers from './api-helpers';
 import { generateDerivApiInstance, V2GetActiveAccountId } from './appId';
 import chart_api from './chart-api';
 
@@ -178,7 +177,6 @@ class APIBase {
 
         if (!this.api || this.api?.connection.readyState !== 1 || force_create_connection) {
             if (this.api?.connection) {
-                ApiHelpers.disposeInstance();
                 setConnectionStatus(CONNECTION_STATUS.CLOSED);
                 this.api.disconnect();
                 this.api.connection.removeEventListener('open', this.onsocketopen.bind(this));
@@ -212,7 +210,7 @@ class APIBase {
         if (this.time_interval) clearInterval(this.time_interval);
         this.time_interval = null;
 
-        chart_api.init(force_create_connection);
+        chart_api.init();
     }
 
     getConnectionStatus() {
