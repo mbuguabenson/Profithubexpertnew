@@ -210,23 +210,23 @@ export const V2GetActiveToken = () => {
     }
 
     const oidcToken = typeof window !== 'undefined' ? localStorage.getItem('oidc_access_token') : null;
-    if (oidcToken && oidcToken !== 'null' && !oidcToken.startsWith('ory_at_')) {
+    if (oidcToken && oidcToken !== 'null' && oidcToken !== 'undefined') {
         return oidcToken;
     }
 
     const authToken = localStorage.getItem('authToken');
-    if (authToken && authToken !== 'null' && !authToken.startsWith('ory_at_')) {
+    if (authToken && authToken !== 'null' && authToken !== 'undefined') {
         return authToken;
     }
 
     const legacyToken = localStorage.getItem('deriv_api_token');
-    if (legacyToken && legacyToken !== 'null') {
+    if (legacyToken && legacyToken !== 'null' && legacyToken !== 'undefined') {
         return legacyToken;
     }
 
     try {
         const oauthToken = OAuthTokenExchangeService.getAccessToken();
-        if (oauthToken && !oauthToken.startsWith('ory_at_')) {
+        if (oauthToken && oauthToken !== 'null' && oauthToken !== 'undefined') {
             return oauthToken;
         }
     } catch (e) {

@@ -6,6 +6,7 @@ import { useStore } from '@/hooks/useStore';
 import { getAppId, generateOAuthURL } from '@/components/shared/utils/config/config';
 import { resolveValidDerivWSToken, getAccountsList, getActiveLoginId, getActiveToken } from '@/utils/token-bridge';
 import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { Heading, Text, CaptionText, Button, TextField, Badge } from '@deriv-com/quill-ui';
 import DTraderWorkspace from './dtrader-workspace';
 import { Zap, Globe, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
@@ -26,11 +27,11 @@ const getInitialLoginId = (): string => {
 const getInitialToken = (loginid: string): string => {
     try {
         const list = getAccountsList();
-        if (loginid && list[loginid] && !list[loginid].startsWith('ory_at_')) {
+        if (loginid && list[loginid]) {
             return list[loginid];
         }
         for (const k in list) {
-            if (list[k] && !list[k].startsWith('ory_at_')) return list[k];
+            if (list[k]) return list[k];
         }
         const direct =
             localStorage.getItem('token') ||
@@ -40,7 +41,10 @@ const getInitialToken = (loginid: string): string => {
             localStorage.getItem('client.token') ||
             localStorage.getItem('copy_trading.master_token') ||
             localStorage.getItem('deriv_api_token');
-        if (direct && !direct.startsWith('ory_at_')) return direct;
+        if (direct) return direct;
+
+        const authInfo = OAuthTokenExchangeService.getAuthInfo();
+        if (authInfo?.access_token) return authInfo.access_token;
 
         const copyTokens = JSON.parse(localStorage.getItem('copyTokensArray') || '[]');
         if (Array.isArray(copyTokens) && copyTokens.length > 0 && copyTokens[0]) {
@@ -121,10 +125,6 @@ const DTraderPage: React.FC = observer(() => {
                 token = getInitialToken(loginId || '') || getActiveToken() || '';
             }
 
-            if (token && token.startsWith('ory_at_')) {
-                token = '';
-            }
-
             if (mounted) {
                 if (loginId) setActiveLoginId(loginId);
                 if (token) setAuthToken(token);
@@ -186,20 +186,9 @@ const DTraderPage: React.FC = observer(() => {
 
     const loginId = activeLoginId || (client as any)?.loginid || localStorage.getItem('active_loginid') || '';
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
+    const isDemo = loginId.startsWith('VR') || loginId.startsWith('VRT') || loginId.startsWith('DOT');
 
-    const queryParams = new URLSearchParams({
-        api_version: 'v2',
-        chart_type: 'area',
-        interval: '1t',
-        symbol: '1HZ100V',
-        trade_type: 'accumulator',
-        app_id: appId,
-        lang: 'EN',
-        theme: 'dark',
-        hide_header_login: 'true',
-        is_mobile_app: 'true',
-    });
-
+    const queryParams = new URLSearchParams();
     if (loginId) {
         queryParams.set('acct1', loginId);
         queryParams.set('cur1', currency);
@@ -215,16 +204,26 @@ const DTraderPage: React.FC = observer(() => {
         let index = 1;
         for (const accId in accountsList) {
             const accToken = accountsList[accId];
-            if (accToken && !accToken.startsWith('ory_at_')) {
-                if (accId !== loginId) {
-                    index++;
-                    queryParams.set(`acct${index}`, accId);
-                    queryParams.set(`token${index}`, accToken);
-                    queryParams.set(`cur${index}`, currency);
-                }
+            if (accToken && accId !== loginId) {
+                index++;
+                queryParams.set(`acct${index}`, accId);
+                queryParams.set(`token${index}`, accToken);
+                queryParams.set(`cur${index}`, currency);
             }
         }
     } catch {}
+
+    queryParams.set('app_id', appId);
+    queryParams.set('lang', 'EN');
+    queryParams.set('theme', 'dark');
+    queryParams.set('symbol', '1HZ100V');
+    queryParams.set('trade_type', 'accumulator');
+    queryParams.set('hide_header_login', 'true');
+    queryParams.set('is_mobile_app', 'true');
+    queryParams.set('account_type', isDemo ? 'demo' : 'real');
+    queryParams.set('server', 'green');
+    queryParams.set('residence', 'za');
+    queryParams.set('country', 'za');
 
     const embedUrl = `${embedBase}?${queryParams.toString()}`;
 

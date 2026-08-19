@@ -4,7 +4,7 @@ import { getAppId } from '@/components/shared/utils/config/config';
 import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 
 const isInvalidToken = (token: string | null | undefined): boolean =>
-    !token || token === 'null' || token.startsWith('ory_at_');
+    !token || token === 'null' || token === 'undefined' || token === 'a1-guest';
 
 import { isDemoAccount } from '@/utils/account-helpers';
 

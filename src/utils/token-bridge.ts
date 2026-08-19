@@ -79,9 +79,9 @@ export const getActiveLoginId = (): string =>
     '';
 
 const isInvalidBearerToken = (token: string | null | undefined): boolean =>
-    !token || token === 'null' || token === 'undefined' || token.startsWith('ory_at_');
+    !token || token === 'null' || token === 'undefined' || token === 'a1-guest';
 
-/** Synchronously checks if a valid non-bearer token is available in storage or URL */
+/** Synchronously checks if a valid token is available in storage or URL */
 export const getActiveToken = (): string | null => {
     const list = getAccountsList();
     const id = getActiveLoginId();
@@ -107,6 +107,12 @@ export const getActiveToken = (): string | null => {
     if (!isInvalidBearerToken(storedToken)) {
         return storedToken!;
     }
+
+    const oauthToken = OAuthTokenExchangeService.getAccessToken();
+    if (!isInvalidBearerToken(oauthToken)) {
+        return oauthToken!;
+    }
+
     return null;
 };
 
@@ -172,12 +178,12 @@ export const isLoggedIn = (): boolean =>
 export const getAllSessionTokens = (): string[] =>
     Object.values(getAccountsList()).filter(Boolean);
 
-/** Remove invalid bearer tokens (ory_at_...) from localStorage accountsList in-place */
+/** Sanitize accountsList in-place */
 export const sanitizeAccountsList = (): void => {
     try {
         const raw = getAccountsList();
         const filtered = Object.fromEntries(
-            Object.entries(raw).filter(([, v]) => v && !String(v).startsWith('ory_at_'))
+            Object.entries(raw).filter(([, v]) => v && v !== 'null' && v !== 'undefined')
         );
         if (JSON.stringify(filtered) !== JSON.stringify(raw)) {
             localStorage.setItem('accountsList', JSON.stringify(filtered));
