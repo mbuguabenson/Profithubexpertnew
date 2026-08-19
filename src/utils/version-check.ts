@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import { BOT_VERSION_CONFIG } from '@/constants/bot-version';
+import { getCookieDomain } from '@/utils/cookie-domain';
 
 /**
  * Clears all localStorage data except for the bot_version
@@ -10,7 +11,6 @@ const clearLocalStorage = (): void => {
         const currentBotVersion = localStorage.getItem(BOT_VERSION_CONFIG.STORAGE_KEY);
 
         // Preserve auth data across version bumps to prevent unwanted logouts.
-        // Only non-auth cache data (UI preferences, stale config, etc.) should be reset.
         const authKeysToPreserve = [
             'active_loginid',
             'accountsList',
@@ -19,6 +19,7 @@ const clearLocalStorage = (): void => {
             'authToken',
             'active_token',
             'deriv_api_token',
+            'token1',
             'client_account_details',
             'account_type',
         ];
@@ -47,33 +48,30 @@ const clearLocalStorage = (): void => {
 };
 
 /**
- * Clears all cookies for the current domain and parent domains
+ * Clears application-specific cookies safely without triggering cross-domain warnings
  */
 const clearCookies = (): void => {
     try {
-        // Get all cookies
         const cookies = document.cookie.split(';');
-
-        // Clear each cookie for different domain variations
-        const host = typeof document !== 'undefined' ? document.domain : '';
-        const parts = host ? host.split('.') : [];
-        const isCompound = parts.length >= 3 && ['co', 'com', 'org', 'net', 'edu', 'gov'].includes(parts[parts.length - 2].toLowerCase());
-        const topDomain = isCompound && parts.length >= 3 ? `.${parts.slice(-3).join('.')}` : `.${parts.slice(-2).join('.')}`;
-        const domains = [topDomain, `.${host}`, host];
-
-        const paths = ['/', window.location.pathname.split('/', 2)[1] || ''];
+        const cookieDomain = getCookieDomain();
 
         cookies.forEach(cookie => {
             const cookieName = cookie.split('=')[0].trim();
-            if (cookieName) {
-                // Remove cookie for different domain and path combinations
-                domains.forEach(domain => {
-                    paths.forEach(path => {
-                        Cookies.remove(cookieName, { domain, path });
-                    });
-                });
-                // Also try removing without domain/path
-                Cookies.remove(cookieName);
+            // Do not attempt to touch third-party analytics or CDN cookies
+            if (
+                cookieName &&
+                !cookieName.startsWith('_ga') &&
+                !cookieName.startsWith('_gc') &&
+                !cookieName.startsWith('_gid') &&
+                !cookieName.startsWith('__cf')
+            ) {
+                try {
+                    if (cookieDomain) {
+                        Cookies.remove(cookieName, { domain: cookieDomain, path: '/' });
+                    }
+                    Cookies.remove(cookieName, { path: '/' });
+                    Cookies.remove(cookieName);
+                } catch {}
             }
         });
     } catch (error) {
@@ -94,46 +92,34 @@ const setBotVersion = (): void => {
 
 /**
  * Checks if the current bot version matches the required version
- * @returns true if version matches or is not set, false if version is different
  */
 const isVersionValid = (): boolean => {
     try {
         const currentVersion = localStorage.getItem(BOT_VERSION_CONFIG.STORAGE_KEY);
 
-        // If no version is set, consider it invalid (needs clearing)
+        // On first visit or initial load, initialize version without wiping
         if (currentVersion === null) {
-            return false;
+            setBotVersion();
+            return true;
         }
 
-        // Parse the version and check if it matches
         const versionNumber = parseInt(currentVersion, 10);
         return versionNumber === BOT_VERSION_CONFIG.REQUIRED_VERSION;
     } catch (error) {
         console.error('Error checking bot version:', error);
-        return false;
+        return true;
     }
 };
 
 /**
- * Performs version check and clears storage if necessary
- * This function should be called at the very beginning of app initialization
- * before any other localStorage or cookie operations
+ * Performs version check and clears stale cache if necessary
  */
 export const performVersionCheck = (): void => {
-    console.log('Performing bot version check...');
-
     if (!isVersionValid()) {
-        console.log('Bot version mismatch or not set. Clearing localStorage and cookies...');
-
-        // Clear all storage
+        console.log('Bot version mismatch. Clearing stale cache...');
         clearLocalStorage();
         clearCookies();
-
-        // Set the correct version to prevent infinite clearing
         setBotVersion();
-
-        console.log('Storage cleared and bot version set to:', BOT_VERSION_CONFIG.REQUIRED_VERSION);
-    } else {
-        console.log('Bot version is valid:', BOT_VERSION_CONFIG.REQUIRED_VERSION);
     }
 };
+

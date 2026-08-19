@@ -1,25 +1,19 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginSass } from '@rsbuild/plugin-sass';
-import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl';
-
-const path = require('path');
-require('dotenv').config();
+import path from 'path';
+import 'dotenv/config';
 
 export default defineConfig({
     plugins: [
         pluginSass({
             sassLoaderOptions: {
-                sourceMap: true,
-                sassOptions: {
-                    // includePaths: [path.resolve(__dirname, 'src')],
-                },
-                // additionalData: `@use "${path.resolve(__dirname, 'src/components/shared/styles')}" as *;`,
+                sourceMap: false,
+                sassOptions: {},
             },
             exclude: /node_modules/,
         }),
         pluginReact(),
-        pluginBasicSsl(),
     ],
     source: {
         entry: {
@@ -50,26 +44,12 @@ export default defineConfig({
         },
     },
     output: {
+        minify: false,
+        sourceMap: {
+            js: false,
+            css: false,
+        },
         assetPrefix: '/',
-        copy: [
-            {
-                from: 'node_modules/@deriv-com/smartcharts-champion/dist/*',
-                to: 'js/smartcharts/[name][ext]',
-                globOptions: {
-                    ignore: ['**/*.LICENSE.txt'],
-                },
-            },
-            { from: 'node_modules/@deriv-com/smartcharts-champion/dist/assets/*', to: 'assets/[name][ext]' },
-            {
-                from: 'node_modules/@deriv-com/smartcharts-champion/dist/assets/fonts/*',
-                to: 'assets/fonts/[name][ext]',
-            },
-            {
-                from: 'node_modules/@deriv-com/smartcharts-champion/dist/assets/shaders/*',
-                to: 'assets/shaders/[name][ext]',
-            },
-            { from: path.join(__dirname, 'public') },
-        ],
     },
     html: {
         template: './index.html',
@@ -99,6 +79,7 @@ export default defineConfig({
     },
     tools: {
         rspack: {
+            parallelism: 1,
             plugins: [],
             resolve: {},
             module: {

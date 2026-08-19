@@ -991,56 +991,10 @@ export const getLegacyServerURL = () => {
  */
 export const getSocketURL = async (): Promise<string> => {
     try {
-        // ── AUTH PATH SELECTION ─────────────────────────────────────────────────
-        // 1. API token pending login always uses the classic legacy WS URL.
-        // 2. PKCE OAuth2 users with auth_info should use the authenticated OTP flow.
-        // 3. Legacy accountsList-only users fall back to the classic WS URL.
-        const pendingApiToken = getPendingApiToken();
-        if (pendingApiToken) {
-            console.log('[getSocketURL] API token login detected - using classic WebSocket URL');
-            return getLegacyServerURL();
-        }
-
-        let authInfo = OAuthTokenExchangeService.getAuthInfo();
-        if (!authInfo) {
-            const expiredAuthInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
-            if (expiredAuthInfo?.refresh_token) {
-                const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(expiredAuthInfo.refresh_token);
-                if (refreshedAuth.access_token) {
-                    authInfo = OAuthTokenExchangeService.getAuthInfo();
-                }
-            }
-        }
-
-        if (authInfo?.access_token) {
-            console.log('[getSocketURL] PKCE user detected - fetching authenticated WebSocket URL');
-            try {
-                const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
-                return wsUrl;
-            } catch (pkceError) {
-                // OTP endpoint unreachable — fall through to legacy URL fallback
-                console.warn('[getSocketURL] PKCE OTP fetch failed, falling back to legacy WS URL:', pkceError);
-                return getLegacyServerURL();
-            }
-        }
-
-        const accountsList_raw = localStorage.getItem('accountsList');
-        if (accountsList_raw) {
-            try {
-                const accountsList = JSON.parse(accountsList_raw);
-                const active_loginid = localStorage.getItem('active_loginid');
-                if (active_loginid && accountsList[active_loginid]) {
-                    console.log('[getSocketURL] Legacy accountsList login detected - using classic WebSocket URL');
-                    return getLegacyServerURL();
-                }
-            } catch (e) {
-                console.error('[getSocketURL] Error parsing legacy accountsList:', e);
-            }
-        }
-
-        // No authentication found
-        console.log('[getSocketURL] No authentication found - returning default server URL');
-        return getDefaultServerURL();
+        // DerivAPIBasic (Bot Skeleton, Interpreter, SmartCharts) communicates via the
+        // classic /websockets/v3 protocol (wss://ws.derivws.com/websockets/v3?app_id=...).
+        // This ensures rock-solid connections without OTP endpoint timeouts or drops.
+        return getLegacyServerURL();
     } catch (error) {
         console.error('[DerivWS] Error in getSocketURL:', error);
         return getDefaultServerURL();
