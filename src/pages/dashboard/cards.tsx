@@ -10,6 +10,7 @@ import { useStore } from '@/hooks/useStore';
 import { Localize, localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import DashboardBotList from './bot-list/dashboard-bot-list';
+import { HardDrive, Cloud, Bot, Zap, ArrowRight } from 'lucide-react';
 
 type TCardProps = {
     has_dashboard_strategies: boolean;
@@ -21,39 +22,16 @@ type TCardArray = {
     icon: React.ReactElement;
     title: React.ReactElement;
     description: string;
-    colorClass: string;
+    pillText: string;
+    pillColor: string;
     callback: () => void;
 };
 
-const SoftIcons = {
-    computer: (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <path d="M8 21h8" />
-            <path d="M12 17v4" />
-        </svg>
-    ),
-    drive: (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-            <path d="M12 12v6" />
-            <path d="M9 15l3-3 3 3" />
-        </svg>
-    ),
-    builder: (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="10" rx="2" />
-            <circle cx="12" cy="5" r="2" />
-            <path d="M12 7v4" />
-            <path d="M8 16h.01" />
-            <path d="M16 16h.01" />
-        </svg>
-    ),
-    lightning: (
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-        </svg>
-    ),
+const Soft5Icons = {
+    computer: <HardDrive size={28} className="soft-5-icon text-cyan" />,
+    drive: <Cloud size={28} className="soft-5-icon text-emerald" />,
+    builder: <Bot size={28} className="soft-5-icon text-purple" />,
+    lightning: <Zap size={28} className="soft-5-icon text-amber" />,
 };
 
 const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => {
@@ -79,40 +57,38 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
     const actions: TCardArray[] = [
         {
             id: 'my-computer',
-            icon: SoftIcons.computer,
+            icon: Soft5Icons.computer,
             title: is_mobile ? <Localize i18n_default_text='Local' /> : <Localize i18n_default_text='My Computer' />,
-            description: 'Import local XML bots',
-            colorClass: 'soft-card--cyan',
-            callback: () => {
-                openFileLoader();
-            },
+            description: 'Import saved XML bots',
+            pillText: 'IMPORT XML',
+            pillColor: 'pill--cyan',
+            callback: () => openFileLoader(),
         },
         {
             id: 'google-drive',
-            icon: SoftIcons.drive,
+            icon: Soft5Icons.drive,
             title: <Localize i18n_default_text='Google Drive' />,
-            description: 'Load from Google Drive',
-            colorClass: 'soft-card--emerald',
-            callback: () => {
-                openGoogleDriveDialog();
-            },
+            description: 'Cloud storage integration',
+            pillText: 'GOOGLE DRIVE',
+            pillColor: 'pill--emerald',
+            callback: () => openGoogleDriveDialog(),
         },
         {
             id: 'bot-builder',
-            icon: SoftIcons.builder,
+            icon: Soft5Icons.builder,
             title: <Localize i18n_default_text='Bot Builder' />,
-            description: 'Build strategy visual blocks',
-            colorClass: 'soft-card--purple',
-            callback: () => {
-                setActiveTab(DBOT_TABS.BOT_BUILDER);
-            },
+            description: 'Visual block programming',
+            pillText: 'VISUAL BUILDER',
+            pillColor: 'pill--purple',
+            callback: () => setActiveTab(DBOT_TABS.BOT_BUILDER),
         },
         {
             id: 'quick-strategy',
-            icon: SoftIcons.lightning,
+            icon: Soft5Icons.lightning,
             title: <Localize i18n_default_text='Quick Strategy' />,
-            description: 'Launch ready-made algorithms',
-            colorClass: 'soft-card--amber',
+            description: 'Pre-built trading algorithms',
+            pillText: 'PRESET ALGOS',
+            pillColor: 'pill--amber',
             callback: () => {
                 setActiveTab(DBOT_TABS.BOT_BUILDER);
                 setFormVisibility(true);
@@ -134,18 +110,24 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     id='tab__dashboard__table__tiles'
                 >
                     {actions.map(action => {
-                        const { icon, title, description, callback, id, colorClass } = action;
+                        const { icon, title, description, pillText, pillColor, callback, id } = action;
                         return (
                             <div
                                 key={id}
-                                className={classNames('tab__dashboard__table__block', colorClass, {
+                                className={classNames('tab__dashboard__table__block', {
                                     'tab__dashboard__table__block--minimized': has_dashboard_strategies && is_mobile,
                                 })}
                                 onClick={callback}
                             >
-                                <div className='soft-icon-orb'>
-                                    {icon}
+                                <div className="dash-5-top-row">
+                                    <div className='soft-icon-orb'>
+                                        {icon}
+                                    </div>
+                                    <span className={classNames('dash-5-pill', pillColor)}>
+                                        {pillText}
+                                    </span>
                                 </div>
+
                                 <div className="soft-card-body">
                                     <Text color='prominent' size={is_mobile ? 'xxs' : 'xs'} className="soft-card-title">
                                         {title}
@@ -153,6 +135,11 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                                     {!is_mobile && (
                                         <span className="soft-card-desc">{description}</span>
                                     )}
+                                </div>
+
+                                <div className="dash-5-card-arrow">
+                                    <span>Launch</span>
+                                    <ArrowRight size={14} />
                                 </div>
                             </div>
                         );

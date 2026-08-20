@@ -2,7 +2,7 @@
 @use 'risk-disclaimer.scss';
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ SOFT UI DEEP PURPLE DASHBOARD — DUAL MODE (LIGHT & DARK)
+// ✦ DASHBOARD 5.0 EXECUTIVE COMMAND CENTER DESIGN
 // ═══════════════════════════════════════════════════════════════
 
 :root, .theme--light {
@@ -10,8 +10,8 @@
     --soft-db-bg-radial:      radial-gradient(circle at 50% 0%, #eae6f7 0%, #f3f2f8 100%);
     --soft-db-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
     --soft-db-card-border:    rgba(124, 58, 237, 0.16);
-    --soft-db-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
-    --soft-db-shadow-hover:   12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
+    --soft-db-shadow-raised:  10px 10px 24px #e0dcfa, -8px -8px 20px #ffffff;
+    --soft-db-shadow-hover:   14px 14px 32px #d6cef7, -10px -10px 24px #ffffff, 0 0 30px rgba(124, 58, 237, 0.25);
     --soft-db-text-main:      #1e1438;
     --soft-db-text-sub:       #584b7a;
     --soft-db-orb-bg:         linear-gradient(145deg, #eeeafd, #ffffff);
@@ -22,9 +22,9 @@ body.theme--dark, .theme--dark {
     --soft-db-bg:             #0b0a1a;
     --soft-db-bg-radial:      radial-gradient(circle at 50% 0%, #191238 0%, #0b0a1a 100%);
     --soft-db-card-bg:        linear-gradient(145deg, #161033, #100b27);
-    --soft-db-card-border:    rgba(168, 85, 247, 0.18);
-    --soft-db-shadow-raised:  12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
-    --soft-db-shadow-hover:   16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
+    --soft-db-card-border:    rgba(168, 85, 247, 0.2);
+    --soft-db-shadow-raised:  14px 14px 32px rgba(4, 2, 12, 0.8), -8px -8px 24px rgba(168, 85, 247, 0.06);
+    --soft-db-shadow-hover:   18px 18px 40px rgba(4, 2, 12, 0.9), -12px -12px 28px rgba(168, 85, 247, 0.1), 0 0 35px rgba(124, 58, 237, 0.35);
     --soft-db-text-main:      #ffffff;
     --soft-db-text-sub:       #e9d5ff;
     --soft-db-orb-bg:         linear-gradient(145deg, #110c28, #1c1444);
@@ -89,6 +89,121 @@ body.theme--dark, .theme--dark {
     }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ✦ 5.0 EXECUTIVE COMMAND CENTER HEADER & CARDS
+// ═══════════════════════════════════════════════════════════════
+.dash-5-header-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 30px 36px;
+    border-radius: 28px;
+    background: var(--soft-db-card-bg);
+    border: 1px solid var(--soft-db-card-border);
+    box-shadow: var(--soft-db-shadow-raised);
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+
+    .dash-5-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 650px;
+
+        .dash-5-pulse-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: linear-gradient(135deg, #7c3aed, #9333ea);
+            padding: 5px 16px;
+            border-radius: 9999px;
+            letter-spacing: 0.08em;
+            width: fit-content;
+            box-shadow: 0 4px 18px rgba(124, 58, 237, 0.45);
+
+            .dash-5-pulse-dot {
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: #ffffff;
+                box-shadow: 0 0 10px #ffffff;
+                animation: pulseDot 1.5s infinite ease-in-out;
+            }
+
+            .dash-5-icon { color: #ffffff; }
+        }
+
+        .dash-5-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--soft-db-text-main);
+            margin: 0;
+            letter-spacing: -0.01em;
+
+            .dash-5-name {
+                color: #7c3aed;
+            }
+        }
+
+        .dash-5-subtitle {
+            font-size: 0.88rem;
+            color: var(--soft-db-text-sub);
+            margin: 0;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+    }
+
+    .dash-5-header-telemetry {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+
+        .telemetry-pill {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            background: var(--soft-db-card-bg);
+            border: 1px solid var(--soft-db-card-border);
+            box-shadow: var(--soft-db-shadow-raised);
+
+            .telemetry-info {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+
+                .lbl {
+                    font-size: 0.65rem;
+                    font-weight: 800;
+                    color: var(--soft-db-text-sub);
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                }
+
+                .val {
+                    font-family: 'Space Grotesk', sans-serif;
+                    font-size: 0.84rem;
+                    font-weight: 800;
+
+                    &.text-green { color: #10b981; }
+                    &.text-amber { color: #f59e0b; }
+                }
+            }
+
+            .text-purple { color: #7c3aed; }
+            .text-amber { color: #f59e0b; }
+        }
+    }
+}
+
 .tab {
     &__dashboard {
         display: flex;
@@ -99,80 +214,6 @@ body.theme--dark, .theme--dark {
 
             @include mobile-or-tablet-screen {
                 width: 100%;
-            }
-        }
-
-        // Deep Purple Soft UI Header Banner
-        &__header {
-            background: var(--soft-db-card-bg);
-            border-radius: 28px;
-            padding: 3.2rem;
-            border: 1px solid var(--soft-db-card-border);
-            box-shadow: var(--soft-db-shadow-raised);
-            margin-bottom: 2.4rem;
-
-            &--listed {
-                margin-bottom: 2.4rem;
-            }
-
-            @include mobile-screen {
-                height: auto;
-                margin-top: 0;
-                padding: 2rem;
-            }
-
-            @include tablet-screen {
-                padding: 2.4rem;
-            }
-
-            .welcome-section {
-                text-align: center;
-                margin-bottom: 1.6rem;
-
-                .welcome-title {
-                    font-size: 2.6rem;
-                    font-weight: 800;
-                    color: var(--soft-db-text-main) !important;
-                    margin-bottom: 0.8rem;
-                }
-
-                .get-started-text {
-                    display: inline-block;
-                    font-size: 1.2rem;
-                    font-weight: 800;
-                    color: #ffffff !important;
-                    background: linear-gradient(135deg, #7c3aed, #9333ea);
-                    padding: 6px 20px;
-                    border-radius: 9999px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.12em;
-                    margin: 0;
-                    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.45);
-                }
-            }
-
-            .subtitle {
-                text-align: center;
-                margin-top: 1.6rem;
-                margin-bottom: 1rem;
-                color: var(--soft-db-text-sub) !important;
-                font-weight: 500;
-
-                &__has-list {
-                    text-align: center;
-                    margin-top: 0;
-
-                    @include mobile-or-tablet-screen {
-                        text-align: center;
-                        width: 100%;
-                    }
-
-                    @include tablet-screen {
-                        display: flex;
-                        justify-content: center;
-                        padding: 0.8rem 0;
-                    }
-                }
             }
         }
 
@@ -226,7 +267,7 @@ body.theme--dark, .theme--dark {
                 display: grid;
                 grid-template-columns: repeat(4, 1fr);
                 gap: 20px;
-                padding: 1rem 0 2.5rem;
+                padding: 0 0 2.5rem;
 
                 @include mobile-screen {
                     grid-template-columns: repeat(2, 1fr);
@@ -239,68 +280,106 @@ body.theme--dark, .theme--dark {
                 }
             }
 
-            // Dual Mode Neumorphism Action Cards
+            // 5.0 Executive Soft UI Action Cards
             &__block {
                 display: flex;
                 flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 26px 20px;
+                justify-content: space-between;
+                padding: 24px;
                 border-radius: 24px;
                 background: var(--soft-db-card-bg);
                 border: 1px solid var(--soft-db-card-border);
                 box-shadow: var(--soft-db-shadow-raised);
                 cursor: pointer;
                 transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-                text-align: center;
-                gap: 14px;
+                gap: 16px;
+                min-height: 180px;
 
                 &:hover {
                     transform: translateY(-6px);
                     border-color: rgba(124, 58, 237, 0.5);
                     box-shadow: var(--soft-db-shadow-hover);
+
+                    .dash-5-card-arrow {
+                        color: #7c3aed;
+                        transform: translateX(4px);
+                    }
                 }
 
-                .soft-icon-orb {
-                    width: 60px;
-                    height: 60px;
-                    border-radius: 20px;
-                    background: var(--soft-db-orb-bg);
-                    box-shadow: var(--soft-db-orb-shadow);
-                    border: 1px solid var(--soft-db-card-border);
-                    display: grid;
-                    place-items: center;
-                    transition: box-shadow 0.3s ease, transform 0.3s ease;
+                .dash-5-top-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    width: 100%;
 
-                    svg { stroke: #7c3aed; }
-                }
+                    .soft-icon-orb {
+                        width: 54px;
+                        height: 54px;
+                        border-radius: 18px;
+                        background: var(--soft-db-orb-bg);
+                        box-shadow: var(--soft-db-orb-shadow);
+                        border: 1px solid var(--soft-db-card-border);
+                        display: grid;
+                        place-items: center;
+                        transition: box-shadow 0.3s ease, transform 0.3s ease;
 
-                &:hover .soft-icon-orb {
-                    transform: scale(1.06);
-                    svg { stroke: #9333ea; }
+                        .text-cyan { color: #06b6d4; }
+                        .text-emerald { color: #10b981; }
+                        .text-purple { color: #7c3aed; }
+                        .text-amber { color: #f59e0b; }
+                    }
+
+                    .dash-5-pill {
+                        font-size: 0.65rem;
+                        font-weight: 800;
+                        padding: 4px 10px;
+                        border-radius: 9999px;
+                        letter-spacing: 0.06em;
+                        text-transform: uppercase;
+
+                        &.pill--cyan { background: rgba(6, 182, 212, 0.14); color: #06b6d4; border: 1px solid rgba(6, 182, 212, 0.3); }
+                        &.pill--emerald { background: rgba(16, 185, 129, 0.14); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+                        &.pill--purple { background: linear-gradient(135deg, #7c3aed, #9333ea); color: #ffffff; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35); }
+                        &.pill--amber { background: rgba(245, 158, 11, 0.14); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+                    }
                 }
 
                 .soft-card-body {
                     display: flex;
                     flex-direction: column;
                     gap: 4px;
+
+                    .soft-card-title {
+                        font-family: 'Space Grotesk', sans-serif;
+                        font-size: 1.05rem !important;
+                        font-weight: 800 !important;
+                        color: var(--soft-db-text-main) !important;
+                        margin: 0;
+                    }
+
+                    .soft-card-desc {
+                        font-size: 0.76rem;
+                        color: var(--soft-db-text-sub);
+                        font-weight: 500;
+                        line-height: 1.4;
+                    }
+                }
+
+                .dash-5-card-arrow {
+                    display: flex;
                     align-items: center;
-                }
-
-                .soft-card-title {
-                    font-family: 'Space Grotesk', sans-serif;
-                    font-size: 0.98rem !important;
-                    font-weight: 800 !important;
-                    color: var(--soft-db-text-main) !important;
-                    margin: 0;
-                }
-
-                .soft-card-desc {
+                    gap: 6px;
                     font-size: 0.74rem;
+                    font-weight: 800;
                     color: var(--soft-db-text-sub);
-                    font-weight: 500;
+                    transition: transform 0.2s ease, color 0.2s ease;
                 }
             }
         }
     }
+}
+
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
 }

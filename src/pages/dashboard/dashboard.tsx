@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
-import Text from '@/components/shared_ui/text';
 import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -10,6 +9,7 @@ import Announcements from './announcements';
 import Cards from './cards';
 import InfoPanel from './info-panel';
 import UltimateWelcomePage from './UltimateWelcomePage';
+import { Zap, ShieldCheck, Cpu } from 'lucide-react';
 
 type TMobileIconGuide = {
     handleTabChange: (active_number: number) => void;
@@ -21,6 +21,8 @@ const DashboardComponent = observer(({ handleTabChange }: TMobileIconGuide) => {
     const { active_tab, active_tour } = dashboard;
     const has_dashboard_strategies = !!dashboard_strategies?.length;
     const { isDesktop, isTablet } = useDevice();
+
+    const userName = client.account_settings?.first_name || (client.email ? client.email.split('@')[0] : 'Trader');
 
     return (
         <React.Fragment>
@@ -37,44 +39,43 @@ const DashboardComponent = observer(({ handleTabChange }: TMobileIconGuide) => {
                             <Announcements is_mobile={!isDesktop} is_tablet={isTablet} handleTabChange={handleTabChange} />
                         )}
                         <div className='quick-panel'>
-                            <div
-                                className={classNames('tab__dashboard__header', {
-                                    'tab__dashboard__header--listed': isDesktop && has_dashboard_strategies,
-                                })}
-                            >
-                                <div className='welcome-section'>
-                                    <Text
-                                        className='welcome-title'
-                                        as='h1'
-                                        color='prominent'
-                                        size={isDesktop ? 'lg' : 'md'}
-                                        lineHeight='xxl'
-                                        weight='bold'
-                                    >
-                                        {localize('Hello Trader, Welcome to Ultimate traders site')}
-                                    </Text>
-                                    <Text
-                                        className='get-started-text'
-                                        as='p'
-                                        color='prominent'
-                                        lineHeight='m'
-                                        size={isDesktop ? 'md' : 'sm'}
-                                    >
-                                        {localize('Get started')}
-                                    </Text>
+                            
+                            {/* 5.0 Executive Command Center Header */}
+                            <div className='dash-5-header-card'>
+                                <div className='dash-5-header-left'>
+                                    <div className='dash-5-pulse-pill'>
+                                        <span className='dash-5-pulse-dot' />
+                                        <Cpu size={12} className='dash-5-icon' />
+                                        <span>AI TRADING HUB 5.0</span>
+                                    </div>
+                                    <h1 className='dash-5-title'>
+                                        {localize('Welcome back,')} <span className='dash-5-name'>{userName} 👋</span>
+                                    </h1>
+                                    <p className='dash-5-subtitle'>
+                                        {localize(
+                                            'Launch ready automated trading algorithms, load local XML strategies, or connect directly to Google Drive.'
+                                        )}
+                                    </p>
                                 </div>
-                                <Text
-                                    as='p'
-                                    color='prominent'
-                                    lineHeight='s'
-                                    size={isDesktop ? 's' : 'xxs'}
-                                    className={classNames('subtitle', { 'subtitle__has-list': has_dashboard_strategies })}
-                                >
-                                    {localize(
-                                        'Import a bot from your computer or Google Drive, build it from scratch, or start with a quick strategy.'
-                                    )}
-                                </Text>
+
+                                <div className='dash-5-header-telemetry'>
+                                    <div className='telemetry-pill'>
+                                        <ShieldCheck size={14} className='text-purple' />
+                                        <div className='telemetry-info'>
+                                            <span className='lbl'>SYSTEM STATUS</span>
+                                            <span className='val text-green'>ONLINE & SECURE</span>
+                                        </div>
+                                    </div>
+                                    <div className='telemetry-pill'>
+                                        <Zap size={14} className='text-amber' />
+                                        <div className='telemetry-info'>
+                                            <span className='lbl'>LATENCY</span>
+                                            <span className='val text-amber'>0.8ms (WS Direct)</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+
                             <Cards has_dashboard_strategies={has_dashboard_strategies} is_mobile={!isDesktop} />
                         </div>
                     </div>
