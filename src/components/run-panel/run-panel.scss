@@ -14,11 +14,8 @@
         top: 10.4rem !important;
         bottom: 0 !important;
         width: 36.6rem !important;
-        right: 0;
         background: var(--general-main-2);
         overflow: visible;
-        visibility: visible !important;
-        opacity: 1 !important;
         z-index: 1000 !important;
 
         .dc-drawer__container {
@@ -47,10 +44,6 @@
         }
 
         &.dc-drawer--right {
-            left: auto !important;
-            right: 0 !important;
-            transform: none !important;
-
             .dc-drawer__toggle {
                 top: 50%;
                 transform: translateY(-50%) translateX(-50%);

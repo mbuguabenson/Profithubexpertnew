@@ -594,7 +594,7 @@ const AppWrapper = observer(() => {
                 <div
                     className={classNames('main__container', {
                         'main__container--active': active_tour && active_tab === DASHBOARD && !isDesktop,
-                        'main__container--drawer-open': isDesktop && is_drawer_open && (active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART),
+                        'main__container--drawer-open': isDesktop && is_drawer_open && active_tab === DBOT_TABS.BOT_BUILDER,
                     })}
                 >
                     <div style={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
