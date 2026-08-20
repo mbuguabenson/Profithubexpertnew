@@ -9,7 +9,7 @@ import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
 import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
 import { Globe, ShieldCheck, Server, RefreshCw, Cpu } from 'lucide-react';
-import './dtrader.scss';
+import { getActiveToken, getActiveLoginId, resolveValidDerivWSToken, getAccountsList } from '@/utils/token-bridge';
 
 // Safe token resolution helper
 const resolveActiveToken = (): string => {
@@ -74,17 +74,29 @@ export const DTraderPage: React.FC = observer(() => {
     const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
 
     useEffect(() => {
+        let isMounted = true;
         const savedServer = localStorage.getItem('dtrader_hub_server') as 'primary' | 'local' | 'backup';
         if (savedServer === 'primary' || savedServer === 'local' || savedServer === 'backup') {
             setHubServer(savedServer);
         }
 
-        const token = resolveActiveToken();
-        const loginId = client?.loginid || localStorage.getItem('active_loginid') || '';
+        const syncAuth = async () => {
+            const resolvedToken = (typeof client?.getToken === 'function' ? client.getToken() : null) || getActiveToken() || (await resolveValidDerivWSToken());
+            const loginId = client?.loginid || getActiveLoginId() || getClientId() || localStorage.getItem('active_loginid') || '';
 
-        setAuthToken(token);
-        setActiveLoginId(loginId);
-        setIsAuthReady(true);
+            if (isMounted) {
+                if (resolvedToken) {
+                    setAuthToken(resolvedToken);
+                }
+                if (loginId) {
+                    setActiveLoginId(loginId);
+                }
+                setIsAuthReady(true);
+            }
+        };
+
+        syncAuth();
+        return () => { isMounted = false; };
     }, [client]);
 
     const handleHubServerChange = (server: 'primary' | 'local' | 'backup') => {
