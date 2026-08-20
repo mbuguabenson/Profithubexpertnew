@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import ContractResultOverlay from '@/components/contract-result-overlay';
 import { DBOT_TABS } from '@/constants/bot-contents';
-import { contract_stages } from '@/constants/contract-stage';
+
 import { useStore } from '@/hooks/useStore';
 import {
     LabelPairedPauseLgFillIcon,
