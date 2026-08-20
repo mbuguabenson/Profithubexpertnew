@@ -21,8 +21,9 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Missing token. Pass Authorization: Bearer <token> or ?token=<token>' });
     }
 
-    const appId = req.headers['deriv-app-id'] || '121856';
-    const wsUrl = `wss://ws.derivws.com/websockets/v3?app_id=${appId}`;
+    const appId = req.headers['deriv-app-id'] || req.query.app_id || '1089';
+    // Use official standard Deriv binaryws.com / derivws.com WebSocket gateway
+    const wsUrl = `wss://ws.binaryws.com/websockets/v3?app_id=${encodeURIComponent(appId)}`;
 
     return new Promise((resolve) => {
         let ws;
@@ -32,7 +33,7 @@ module.exports = async function handler(req, res) {
             }
             res.status(504).json({ error: 'Deriv WebSocket Gateway Timeout' });
             resolve();
-        }, 5000);
+        }, 6000);
 
         try {
             ws = new WebSocket(wsUrl);

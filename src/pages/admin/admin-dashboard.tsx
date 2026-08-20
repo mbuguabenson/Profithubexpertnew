@@ -519,11 +519,12 @@ const AdminDashboard = observer(() => {
         if (!isAuthenticated) return;
         
         const loadConnectedUserBalances = async () => {
-            const appId = getAppId() || '121856';
+            const appId = getAppId() || '1089';
             const updated: Record<string, any> = { ...userBalances };
             const localAccountsMap = getAccountsList();
+            const storedAccounts = DerivWSAccountsService.getStoredAccounts() || [];
 
-            // Build unique account targets from copy requests and local accounts list
+            // Build unique account targets from copy requests, local accounts list, and stored WS accounts
             const targets: { loginid: string; token: string; status?: string }[] = [];
             const seen = new Set<string>();
 
@@ -546,6 +547,20 @@ const AdminDashboard = observer(() => {
                         token,
                         status: 'active'
                     });
+                }
+            }
+
+            for (const acc of storedAccounts) {
+                if (acc.account_id && !seen.has(acc.account_id)) {
+                    const token = localAccountsMap[acc.account_id] || getActiveToken() || '';
+                    if (token) {
+                        seen.add(acc.account_id);
+                        targets.push({
+                            loginid: acc.account_id,
+                            token,
+                            status: acc.status || 'active'
+                        });
+                    }
                 }
             }
 
