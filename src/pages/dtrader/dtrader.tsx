@@ -10,22 +10,13 @@ import TextField from '@/components/shared_ui/text-field';
 import Badge from '@/components/shared_ui/badge';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
-import { getActiveToken } from '@/utils="react"';
 import SharedActionsBridge from '@/utils/shared-actions-bridge';
 import DTraderWorkspace from './dtrader-workspace';
 import { Globe, Zap, ShieldCheck, Server, RefreshCw } from 'lucide-react';
 import './dtrader.scss';
 
-// Safe getActiveToken helper fallback
+// Safe token resolution helper
 const resolveActiveToken = (): string => {
-    try {
-        if (typeof getActiveToken === 'function') {
-            const token = getActiveToken();
-            if (token) return token;
-        }
-    } catch (e) {
-        void e;
-    }
     return (
         localStorage.getItem('active_token') ||
         localStorage.getItem('token1') ||
