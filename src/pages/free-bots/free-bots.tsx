@@ -18,14 +18,6 @@ interface BotData {
 
 const DEFAULT_FEATURES = ['Automated Execution', 'Smart Risk Guard', 'Loss Recovery Engine'];
 
-const CATEGORIES = [
-    { id: 'ALL', label: 'All Trading Bots', icon: '🤖' },
-    { id: 'OVER_UNDER', label: 'Over / Under', icon: '📈' },
-    { id: 'EVEN_ODD', label: 'Even / Odd', icon: '⚡' },
-    { id: 'PRO', label: 'Pro & Recovery', icon: '👑' },
-    { id: 'USER', label: 'Custom Uploads', icon: '📂' },
-];
-
 const BOT_ICONS: Record<string, string> = {
     OVER: '📈',
     UNDER: '📉',
@@ -96,7 +88,6 @@ const BotCard = ({
     const isLoaded = !!bot.xml;
     const winNumeric = parseInt(meta.win) || 75;
 
-    // Type badge variant color class
     const getTypeClass = (type: string) => {
         switch (type.toLowerCase()) {
             case 'aggressive': return 'type-tag--aggressive';
@@ -108,7 +99,6 @@ const BotCard = ({
 
     return (
         <div className={`pro-bot-card ${!isLoaded ? 'pro-bot-card--loading' : ''}`}>
-            {/* Ambient edge glow */}
             <div className="pro-bot-card__top-glow" />
 
             <div className="pro-bot-card__inner">
@@ -120,15 +110,15 @@ const BotCard = ({
 
                     <div className="pro-bot-card__badges">
                         <span className={`type-tag ${getTypeClass(meta.type)}`}>
-                            {meta.type === 'Aggressive' && <Flame size={12} />}
-                            {meta.type === 'Pro' && <Sparkles size={12} />}
-                            {meta.type === 'Speed' && <Zap size={12} />}
+                            {meta.type === 'Aggressive' && <Flame size={13} />}
+                            {meta.type === 'Pro' && <Sparkles size={13} />}
+                            {meta.type === 'Speed' && <Zap size={13} />}
                             {meta.type} Strategy
                         </span>
                     </div>
                 </div>
 
-                {/* Bot Title & Sub-tag */}
+                {/* Bot Title & Sub-tags */}
                 <div className="pro-bot-card__title-group">
                     <h3 className="pro-bot-card__name">{bot.name}</h3>
                     <div className="pro-bot-card__sub-tags">
@@ -145,7 +135,7 @@ const BotCard = ({
                 <div className="pro-bot-card__meter-box">
                     <div className="meter-label-row">
                         <span className="meter-title">
-                            <BarChart3 size={13} /> Target Win Rate
+                            <BarChart3 size={14} /> Target Win Rate
                         </span>
                         <span className="meter-val">{meta.win}</span>
                     </div>
@@ -190,7 +180,7 @@ const BotCard = ({
                     >
                         {isLoaded ? (
                             <>
-                                <Play size={14} className="btn-icon" /> Load Strategy ⚡
+                                <Play size={15} className="btn-icon" /> Load Strategy ⚡
                             </>
                         ) : (
                             'Preparing Bot…'
@@ -256,7 +246,7 @@ const BotPreviewModal = ({
                         <ul>
                             {DEFAULT_FEATURES.map((feat, idx) => (
                                 <li key={idx}>
-                                    <CheckCircle2 size={15} className="check-icon" />
+                                    <CheckCircle2 size={16} className="check-icon" />
                                     <span>{feat}</span>
                                 </li>
                             ))}
@@ -276,7 +266,7 @@ const BotPreviewModal = ({
                             onLoad(bot);
                         }}
                     >
-                        <Play size={15} /> Load into Bot Builder ⚡
+                        <Play size={16} /> Load into Bot Builder ⚡
                     </button>
                 </div>
             </div>
@@ -292,7 +282,6 @@ const FreeBots = observer(() => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('ALL');
     const [previewBot, setPreviewBot] = useState<BotData | null>(null);
 
     const loadBotIntoBuilder = async (bot: BotData) => {
@@ -312,7 +301,6 @@ const FreeBots = observer(() => {
                 return;
             }
 
-            // Render skeleton cards immediately
             const initialSkeleton: BotData[] = manifest.map(item => {
                 const botName = (item.name || item.file.replace('.xml', '')).replace(/[_-]/g, ' ');
                 return {
@@ -327,7 +315,6 @@ const FreeBots = observer(() => {
             setDefaultBots(initialSkeleton);
             setIsLoading(false);
 
-            // Progressively load XML content
             try {
                 const loadedBots: BotData[] = [];
                 for (let i = 0; i < manifest.length; i++) {
@@ -371,89 +358,32 @@ const FreeBots = observer(() => {
         return [...uploaded, ...defaultBots];
     }, [defaultBots]);
 
-    // Filter & Search Logic
+    // Search Logic
     const filteredBots = useMemo(() => {
+        if (!searchQuery.trim()) return combinedBots;
+        const query = searchQuery.toLowerCase();
         return combinedBots.filter(bot => {
-            // Category filter
-            if (selectedCategory === 'OVER_UNDER') {
-                if (!bot.name.toUpperCase().includes('OVER') && !bot.name.toUpperCase().includes('UNDER')) return false;
-            } else if (selectedCategory === 'EVEN_ODD') {
-                if (!bot.name.toUpperCase().includes('EVEN') && !bot.name.toUpperCase().includes('ODD')) return false;
-            } else if (selectedCategory === 'PRO') {
-                if (!bot.name.toUpperCase().includes('PRO') && !bot.name.toUpperCase().includes('DESTROYER')) return false;
-            } else if (selectedCategory === 'USER') {
-                if (bot.strategy !== 'User Uploaded') return false;
-            }
-
-            // Search query filter
-            if (searchQuery.trim()) {
-                const query = searchQuery.toLowerCase();
-                const matchName = bot.name.toLowerCase().includes(query);
-                const matchDesc = bot.description.toLowerCase().includes(query);
-                const matchStrat = bot.strategy.toLowerCase().includes(query);
-                if (!matchName && !matchDesc && !matchStrat) return false;
-            }
-
-            return true;
+            const matchName = bot.name.toLowerCase().includes(query);
+            const matchDesc = bot.description.toLowerCase().includes(query);
+            const matchStrat = bot.strategy.toLowerCase().includes(query);
+            return matchName || matchDesc || matchStrat;
         });
-    }, [combinedBots, selectedCategory, searchQuery]);
+    }, [combinedBots, searchQuery]);
 
     return (
         <div className="trading-bots-view">
             <div className="trading-bots-container">
 
-                {/* Top Banner / Hero Header */}
-                <div className="tb-hero-banner">
-                    <div className="tb-hero-content">
-                        <div className="tb-hero-tag">
-                            <Sparkles size={14} className="icon-sparkle" />
-                            <span>OFFICIAL STRATEGY REPOSITORY</span>
-                        </div>
-                        <h1 className="tb-hero-title">
-                            Automated <span className="title-gradient">Trading Bots</span>
-                        </h1>
-                        <p className="tb-hero-sub">
-                            Select a battle-tested strategy to load directly into the Bot Builder.
-                        </p>
-                    </div>
-
-                    {/* Quick Stats Pill Header */}
-                    <div className="tb-stats-group">
-                        <div className="stat-pill">
-                            <span className="stat-pill__num">{combinedBots.length}</span>
-                            <span className="stat-pill__lbl">Available Bots</span>
-                        </div>
-                        <div className="stat-pill">
-                            <span className="stat-pill__num text-emerald">82%</span>
-                            <span className="stat-pill__lbl">Max Win Rate</span>
-                        </div>
-                        <div className="stat-pill">
-                            <span className="stat-pill__num text-cyan">⚡ WS</span>
-                            <span className="stat-pill__lbl">Direct Execution</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Filter & Search Bar */}
+                {/* Clean Top Header & Search Bar */}
                 <div className="tb-controls-bar">
-                    {/* Category Filter Pills */}
-                    <div className="tb-category-pills">
-                        {CATEGORIES.map(cat => (
-                            <button
-                                key={cat.id}
-                                type="button"
-                                className={`pill-btn ${selectedCategory === cat.id ? 'pill-btn--active' : ''}`}
-                                onClick={() => setSelectedCategory(cat.id)}
-                            >
-                                <span className="pill-icon">{cat.icon}</span>
-                                <span className="pill-label">{cat.label}</span>
-                            </button>
-                        ))}
+                    <div className="tb-header-title-box">
+                        <h2 className="tb-page-title">Trading Bots</h2>
+                        <span className="tb-count-badge">{combinedBots.length} Strategies Available</span>
                     </div>
 
                     {/* Search Input Box */}
                     <div className="tb-search-box">
-                        <Search size={16} className="search-icon" />
+                        <Search size={18} className="search-icon" />
                         <input
                             type="text"
                             placeholder="Search strategy by name or market..."
@@ -463,7 +393,7 @@ const FreeBots = observer(() => {
                         />
                         {searchQuery && (
                             <button type="button" className="clear-search-btn" onClick={() => setSearchQuery('')}>
-                                <X size={14} />
+                                <X size={16} />
                             </button>
                         )}
                     </div>
@@ -484,15 +414,15 @@ const FreeBots = observer(() => {
                     </div>
                 ) : filteredBots.length === 0 ? (
                     <div className="tb-status-box tb-status-box--empty">
-                        <Filter size={32} className="empty-icon" />
-                        <h3>No Trading Bots Found</h3>
-                        <p>Try clearing your search query or selecting another category.</p>
+                        <Filter size={36} className="empty-icon" />
+                        <h3>No Trading Bots Match Your Search</h3>
+                        <p>Try clearing your search query to view all available strategies.</p>
                         <button
                             type="button"
-                            onClick={() => { setSelectedCategory('ALL'); setSearchQuery(''); }}
+                            onClick={() => setSearchQuery('')}
                             className="btn-reset-filter"
                         >
-                            Reset Filters
+                            Show All Bots
                         </button>
                     </div>
                 ) : (
