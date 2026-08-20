@@ -1,3 +1,6 @@
+@use 'components/shared/styles/constants' as *;
+@use 'components/shared/styles/mixins' as *;
+
 /* Global Scrollbar Suppression Rules */
 *, html, body, div, section, article, main {
     scrollbar-width: none !important;
