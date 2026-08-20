@@ -3,3 +3,4 @@ import './purchase';
 import './ask_price';
 import './payout';
 import './apollo_purchase';
+import './multiple_trades';
