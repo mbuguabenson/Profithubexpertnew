@@ -7,11 +7,13 @@ interface ChunkLoaderProps {
     isWelcome?: boolean;
 }
 
-export default function ChunkLoader({ message }: ChunkLoaderProps) {
+export default function ChunkLoader({ message = 'Loading workspace...', isWelcome = false }: ChunkLoaderProps) {
     const [progress, setProgress] = useState(25);
-    const [statusText, setStatusText] = useState(message || 'Initializing Deriv Bot account...');
+    const [statusText, setStatusText] = useState(message);
 
     useEffect(() => {
+        if (!isWelcome) return;
+
         const timer = setInterval(() => {
             setProgress(prev => {
                 if (prev >= 100) {
@@ -26,8 +28,34 @@ export default function ChunkLoader({ message }: ChunkLoaderProps) {
         }, 220);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [isWelcome]);
 
+    // Sleek Compact Spinner for Tab & Lazy Component Chunk Loading
+    if (!isWelcome) {
+        return (
+            <div className='chunk-loader-overlay clean'>
+                <div className='compact-loader-card'>
+                    <div className='compact-orbital-spinner'>
+                        <div className='orbit-ring orbit-ring--outer' />
+                        <div className='orbit-ring orbit-ring--inner' />
+                        <div className='orbit-core' />
+                    </div>
+                    {message && (
+                        <div className='compact-loader-text'>
+                            <span className='compact-loader-msg'>{message}</span>
+                            <span className='compact-loader-dots'>
+                                <span />
+                                <span />
+                                <span />
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // 360 Radial Radar Loading Screen for Welcome Screen Initialization
     return (
         <div className='hub-360-loading-overlay'>
             {/* Ambient Radial Orbs */}

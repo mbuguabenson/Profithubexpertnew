@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { getAppId } from '@/components/shared/utils/config/config';
+import { getAppId, getClientId } from '@/components/shared/utils/config/config';
 import Text from '@/components/shared_ui/text';
 import Button from '@/components/shared_ui/button';
 import Input from '@/components/shared_ui/input';
@@ -182,7 +182,10 @@ const DTraderPage: React.FC = observer(() => {
         }
     };
 
+    // Dynamically resolve active App ID and Client ID for current logged-in domain
     const appId = getAppId() || '121856';
+    const clientId = getClientId() || appId;
+
     const primaryHubUrl = 'https://dtraderhub-mu.vercel.app/';
     const backupHubUrl = 'https://deriv-dtrader.vercel.app/dtrader';
 
@@ -210,7 +213,9 @@ const DTraderPage: React.FC = observer(() => {
         queryParams.set('cur1', currency);
     }
 
+    // Set both app_id and client_id in iframe URL parameters
     queryParams.set('app_id', appId);
+    queryParams.set('client_id', clientId);
 
     const validToken = getValidAuthToken();
     if (validToken) {
@@ -252,6 +257,8 @@ const DTraderPage: React.FC = observer(() => {
                     type: 'DERIV_AUTH_PAYLOAD',
                     active_loginid: loginId,
                     token: authToken,
+                    app_id: appId,
+                    client_id: clientId,
                     accounts: accountsList,
                 };
                 SharedActionsBridge.dispatch('INITIALIZE_AUTH', payload);
@@ -275,7 +282,7 @@ const DTraderPage: React.FC = observer(() => {
 
         const timer = setTimeout(handleIframeAuthSync, 1500);
         return () => clearTimeout(timer);
-    }, [authToken, loginId]);
+    }, [authToken, loginId, appId, clientId]);
 
     if (!isAuthReady) {
         return <ChunkLoader message="Initializing DTrader Terminal..." />;
@@ -368,7 +375,7 @@ const DTraderPage: React.FC = observer(() => {
                             <div className='dtrader-auth-card'>
                                 <div className='auth-card-head'>
                                     <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>DTrader Hub 360</h3>
-                                    <Badge label='AUTH REQUIRED' />
+                                    <Badge type='contained' background_color='orange' label='AUTH REQUIRED' />
                                 </div>
 
                                 <Text size='xs'>

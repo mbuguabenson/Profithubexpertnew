@@ -650,7 +650,7 @@ const AppWrapper = observer(() => {
                 <div
                     className={classNames('main__container', {
                         'main__container--active': active_tour && active_tab === DASHBOARD && !isDesktop,
-                        'main__container--drawer-open': isDesktop && is_drawer_open && active_tab !== DBOT_TABS.DASHBOARD,
+                        'main__container--drawer-open': isDesktop && is_drawer_open && (active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART),
                     })}
                 >
                     <div style={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -666,8 +666,8 @@ const AppWrapper = observer(() => {
             </div>
             <DesktopWrapper>
                 <div className='main__run-strategy-wrapper'>
-                    {active_tab !== DBOT_TABS.TRADING_BOTS && active_tab !== DBOT_TABS.MANUAL_TRADING && active_tab !== DBOT_TABS.DASHBOARD && active_tab !== DBOT_TABS.DTRADER && active_tab !== DBOT_TABS.ACCOUNT_CENTER && <RunStrategy />}
-                    {active_tab !== DBOT_TABS.DASHBOARD && <RunPanel />}
+                    {(active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART) && <RunStrategy />}
+                    {(active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART) && <RunPanel />}
                 </div>
             </DesktopWrapper>
             <MobileWrapper>
