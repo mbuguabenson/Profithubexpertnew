@@ -1356,8 +1356,109 @@ Status: Systems functional. Replicator nodes ready.
                                 </div>
                             </div>
 
+                            {/* Site Analytics & Commission Insights Grid */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginTop: 24 }}>
+                                {/* Site Telemetry & Traffic Summary */}
+                                <div className='adm-card'>
+                                    <div className='adm-card__header' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 className='adm-card__title'>📊 Site Analytics & Traffic Insights</h3>
+                                        <span className='adm-tag adm-tag--accepted'>LIVE ENGAGEMENT</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                                        <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                                            <span style={{ fontSize: 11, color: 'var(--text-subtle)', fontWeight: 700 }}>ACTIVE USER HITS</span>
+                                            <h3 style={{ margin: '4px 0 0 0', color: 'var(--color-blue)' }}>{liveMetrics.activeUsersCount} Users ({liveMetrics.totalSessions} Sessions)</h3>
+                                        </div>
+                                        <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 8 }}>
+                                            <span style={{ fontSize: 11, color: 'var(--text-subtle)', fontWeight: 700 }}>TOTAL TRADE VOLUME</span>
+                                            <h3 style={{ margin: '4px 0 0 0', color: 'var(--color-green)' }}>${liveMetrics.totalTradeVolumeUSD.toLocaleString()}</h3>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 12px', background: 'rgba(255,255,255,0.01)', borderRadius: 6 }}>
+                                            <span>💻 Desktop Traffic: <strong>{liveMetrics.deviceBreakdown.desktop} hits</strong></span>
+                                            <span>📱 Mobile Traffic: <strong>{liveMetrics.deviceBreakdown.mobile} hits</strong></span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '8px 12px', background: 'rgba(255,255,255,0.01)', borderRadius: 6 }}>
+                                            <span>📟 Tablet Traffic: <strong>{liveMetrics.deviceBreakdown.tablet} hits</strong></span>
+                                            <span>📄 Total Page Views: <strong>{liveMetrics.pageViewsCount} views</strong></span>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        className='adm-act adm-act--blue' 
+                                        style={{ width: '100%', marginTop: 16 }}
+                                        onClick={() => navigate('/admin/analytics')}
+                                    >
+                                        View Full Detailed Analytics & Telemetry →
+                                    </button>
+                                </div>
+
+                                {/* Markup Commission Ledger Summary */}
+                                <div className='adm-card'>
+                                    <div className='adm-card__header' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 className='adm-card__title'>💰 Markup Commissions Overview</h3>
+                                        <span className='adm-tag adm-tag--accepted'>${totalCommissionsEarned.toFixed(2)} TOTAL</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+                                        <div style={{ padding: 12, background: 'rgba(16,185,129,0.08)', borderRadius: 8, border: '1px solid rgba(16,185,129,0.2)' }}>
+                                            <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>PAID COMMISSIONS</span>
+                                            <h4 style={{ margin: '4px 0 0 0', color: '#10b981' }}>
+                                                ${commissions.filter(c => c.status === 'paid').reduce((a, c) => a + c.amount, 0).toFixed(2)}
+                                            </h4>
+                                        </div>
+                                        <div style={{ padding: 12, background: 'rgba(245,158,11,0.08)', borderRadius: 8, border: '1px solid rgba(245,158,11,0.2)' }}>
+                                            <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>PENDING COMMISSIONS</span>
+                                            <h4 style={{ margin: '4px 0 0 0', color: '#f59e0b' }}>
+                                                ${commissions.filter(c => c.status === 'pending').reduce((a, c) => a + c.amount, 0).toFixed(2)}
+                                            </h4>
+                                        </div>
+                                        <div style={{ padding: 12, background: 'rgba(239,68,68,0.08)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)' }}>
+                                            <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>UNPAID COMMISSIONS</span>
+                                            <h4 style={{ margin: '4px 0 0 0', color: '#ef4444' }}>
+                                                ${commissions.filter(c => c.status === 'unpaid').reduce((a, c) => a + c.amount, 0).toFixed(2)}
+                                            </h4>
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Commission Table */}
+                                    <div className='adm-table-wrap' style={{ maxHeight: 180, overflowY: 'auto' }}>
+                                        <table className='adm-table' style={{ fontSize: 12 }}>
+                                            <thead>
+                                                <tr>
+                                                    <th>Client ID</th>
+                                                    <th>Volume</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {commissions.slice(0, 4).map(c => (
+                                                    <tr key={c.id}>
+                                                        <td><code className='adm-mono'>{c.clientId}</code></td>
+                                                        <td>${c.volume.toFixed(2)}</td>
+                                                        <td style={{ color: '#10b981', fontWeight: 700 }}>+${c.amount.toFixed(2)}</td>
+                                                        <td>
+                                                            <span className={`adm-tag adm-tag--${c.status === 'paid' ? 'accepted' : c.status === 'pending' ? 'stopped' : 'rejected'}`}>
+                                                                {c.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button 
+                                        className='adm-act adm-act--green' 
+                                        style={{ width: '100%', marginTop: 16 }}
+                                        onClick={() => navigate('/admin/commission')}
+                                    >
+                                        View Full Commission Ledger & Reports →
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Admin Trading Console Info summary */}
-                            <div className='adm-card adm-card--console'>
+                            <div className='adm-card adm-card--console' style={{ marginTop: 24 }}>
                                 <div className='adm-card__header'>
                                     <h3 className='adm-card__title'>⚡ Copy Replicator Status</h3>
                                     <span className='adm-authorized-tag'>● CLIENT_ID ACTIVE</span>
