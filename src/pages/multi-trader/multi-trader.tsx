@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '@/hooks/useStore';
 import { observer } from 'mobx-react-lite';
-import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
+import { getSocketURL } from '@/components/shared/utils/config/config';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import './multi-trader.scss';
 
@@ -202,10 +202,13 @@ const MultiTrader: React.FC = observer(() => {
         }
     }, [addLog]);
 
-    const connect = useCallback(async () => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) return;
-        const currentToken = client.getToken() || (await resolveValidDerivWSToken());
-        if (!currentToken) { addLog('Please log in first.', 'error'); return; }
+    const connect = useCallback(async (): Promise<boolean> => {
+        if (wsRef.current?.readyState === WebSocket.OPEN && status === 'connected') return true;
+        const currentToken = (typeof client?.getToken === 'function' ? client.getToken() : null) || (await resolveValidDerivWSToken());
+        if (!currentToken) {
+            addLog('Please log in or connect your Deriv account first.', 'error');
+            return false;
+        }
 
         setStatus('connecting');
 
@@ -213,25 +216,56 @@ const MultiTrader: React.FC = observer(() => {
             const wsUrl = await getSocketURL();
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
-            ws.onopen    = () => { addLog('Connected. Authorizing…', 'info'); ws.send(JSON.stringify({ authorize: currentToken })); };
-            ws.onmessage = handleMessage;
-            ws.onclose   = () => {
-                setStatus('disconnected');
-                if (runningRef.current) { runningRef.current = false; setRunning(false); addLog('Connection lost. Bot stopped.', 'error'); }
-            };
-            ws.onerror   = () => addLog('WebSocket error — check console.', 'error');
+
+            return await new Promise<boolean>((resolve) => {
+                ws.onopen = () => {
+                    addLog('Connected. Authorizing…', 'info');
+                    ws.send(JSON.stringify({ authorize: currentToken }));
+                };
+
+                ws.onmessage = (raw) => {
+                    handleMessage(raw);
+                    try {
+                        const data = JSON.parse(raw.data as string);
+                        if (data.msg_type === 'authorize') {
+                            if (!data.error) {
+                                resolve(true);
+                            } else {
+                                resolve(false);
+                            }
+                        }
+                    } catch (e) {
+                        void e;
+                    }
+                };
+
+                ws.onclose = () => {
+                    setStatus('disconnected');
+                    if (runningRef.current) {
+                        runningRef.current = false;
+                        setRunning(false);
+                        addLog('Connection lost. Bot stopped.', 'error');
+                    }
+                };
+
+                ws.onerror = () => {
+                    addLog('WebSocket connection error.', 'error');
+                    resolve(false);
+                };
+            });
         } catch (err: any) {
             setStatus('disconnected');
             addLog(`WebSocket connection error: ${err?.message || err}`, 'error');
+            return false;
         }
-    }, [client, handleMessage, addLog]);
+    }, [client, handleMessage, addLog, status]);
 
     // Auto-connect on mount
     useEffect(() => {
-        if (status === 'disconnected' && client.getToken()) {
+        if (status === 'disconnected') {
             connect();
         }
-    }, [client, connect, status]);
+    }, [connect, status]);
 
     // ── Strategy stakes init ──────────────────────────────────────────────────
 
@@ -258,154 +292,186 @@ const MultiTrader: React.FC = observer(() => {
                     const entry  = poc.entry_tick_display_value  || 'N/A';
                     const exit   = poc.exit_tick_display_value   || 'N/A';
                     resolve({
-                        profit,
                         strategyId,
+                        label,
                         stakeUsed,
-                        message: `[ID: ${req_id}] [${strategyId.toUpperCase()}] - ${label} | ${status}`,
+                        profit,
+                        message: `[${strategyId}] ${status} ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} USD`,
                         transaction: {
-                            id: req_id,
+                            id: contractId,
                             time: new Date().toLocaleTimeString(),
                             type: label,
                             entry,
                             exit,
                             buy_price: stakeUsed,
                             profit,
-                        }
-                    } as any);
+                        },
+                    });
                 },
                 reject,
             });
-            wsRef.current?.send(JSON.stringify({ proposal_open_contract: 1, contract_id: contractId, subscribe: 1, req_id }));
+            sendJSON({ proposal_open_contract: 1, contract_id: contractId, subscribe: 1 });
         });
-    }, []);
+    }, [sendJSON]);
 
-    // ── Core trading loop ─────────────────────────────────────────────────────
+    // ── Execution loop ────────────────────────────────────────────────────────
 
     const placeTrades = useCallback(async (
-        _market: string, _baseStake: number, _ticks: number,
-        _martingale: number, _takeProfit: number, _stopLoss: number,
-        _tradeTypes: TradeType[],
+        _market: string,
+        _baseStake: number,
+        _ticks: number,
+        _martingale: number,
+        _takeProfit: number,
+        _stopLoss: number,
+        _tradeTypes: TradeType[]
     ) => {
-        if (!runningRef.current || wsRef.current?.readyState !== WebSocket.OPEN) {
+        if (!runningRef.current) return;
+
+        // Check TP/SL
+        if (totalProfitRef.current >= _takeProfit) {
+            addLog(`🎯 Take Profit reached (+${totalProfitRef.current.toFixed(2)} USD). Stopping bot!`, 'success');
+            runningRef.current = false; setRunning(false); return;
+        }
+        if (totalProfitRef.current <= -_stopLoss) {
+            addLog(`🛑 Stop Loss hit (${totalProfitRef.current.toFixed(2)} USD). Stopping bot!`, 'error');
             runningRef.current = false; setRunning(false); return;
         }
 
-        try {
-            // TP / SL check
-            if (totalProfitRef.current >= _takeProfit) {
-                addLog(`TAKE PROFIT hit! Profit: ${totalProfitRef.current.toFixed(2)} USD`, 'success');
-                runningRef.current = false; setRunning(false); return;
-            }
-            if (totalProfitRef.current <= -Math.abs(_stopLoss)) {
-                addLog(`STOP LOSS hit! Loss: ${Math.abs(totalProfitRef.current).toFixed(2)} USD`, 'error');
-                runningRef.current = false; setRunning(false); return;
-            }
+        // Build configs for all active strategies
+        const allConfigs: TradeConfig[] = [];
+        _tradeTypes.forEach(t => {
+            const configs = getTradeConfigs(t, _baseStake, _ticks, { over: overPrediction, under: underPrediction });
+            allConfigs.push(...configs);
+        });
 
-            // Build all configs with current stakes
-            const allConfigs: (TradeConfig & { symbol: string })[] = [];
-            _tradeTypes.forEach(type => {
-                getTradeConfigs(type, _baseStake, _ticks, { over: overPrediction, under: underPrediction }).forEach(cfg => {
-                    const stake = strategyStakes.current[cfg.strategyId] ?? _baseStake;
-                    allConfigs.push({ ...cfg, amount: stake, symbol: _market });
-                });
-            });
-
-            if (allConfigs.length === 0) { addLog('No trade types selected.', 'warning'); runningRef.current = false; setRunning(false); return; }
-
-            addLog(`Round start — ${allConfigs.length} trades on ${_market}`, 'info');
-
-            // Propose
-            const proposalResults = await Promise.all(
-                allConfigs.map(({ label, strategyId, ...apiConfig }) => sendJSON({ ...apiConfig }))
-            );
-
-            // Buy
-            const buyPromises: Promise<any>[]  = [];
-            const buyMeta: { config: TradeConfig; idx: number }[] = [];
-            proposalResults.forEach((res, i) => {
-                if (res.error) { addLog(`[${allConfigs[i].strategyId}] Proposal failed: ${res.error.message}`, 'warning'); return; }
-                const id = res.proposal?.id;
-                if (id) {
-                    buyMeta.push({ config: allConfigs[i], idx: buyPromises.length });
-                    buyPromises.push(sendJSON({ buy: id, price: allConfigs[i].amount }));
-                }
-            });
-
-            if (buyPromises.length === 0) { addLog('All proposals failed. Waiting 5s…', 'error'); await new Promise(r => setTimeout(r, 5000)); if (runningRef.current) placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes); return; }
-
-            addLog(`Buying ${buyPromises.length} contracts…`);
-            const buyResults = await Promise.all(buyPromises);
-
-            // Track
-            const trackPromises: Promise<TradeResult>[] = [];
-            let bought = 0;
-            buyMeta.forEach(({ config, idx }) => {
-                const contractId = buyResults[idx]?.buy?.contract_id;
-                if (contractId) { trackPromises.push(trackContract(contractId, config.strategyId, config.label, config.amount)); bought++; }
-                else addLog(`[${config.strategyId}] Buy failed.`, 'error');
-            });
-
-            totalTradesRef.current += bought;
-            setTotalTrades(totalTradesRef.current);
-            addLog(`Tracking ${bought} contracts…`);
-
-            const results = await Promise.all(trackPromises);
-
-            // Process results
-            let roundProfit = 0;
-            let roundWon    = false;
-            results.forEach(r => {
-                const res = r as any;
-                roundProfit += res.profit;
-                addLog(res.message, res.profit >= 0 ? 'success' : 'error');
-                setTransactions(prev => [res.transaction, ...prev].slice(0, 50));
-
-                if (res.profit > 0) {
-                    strategyStakes.current[res.strategyId] = _baseStake;
-                    roundWon = true;
-                } else {
-                    const newStake = round2(res.stakeUsed * _martingale);
-                    strategyStakes.current[res.strategyId] = newStake;
-                }
-            });
-
-            totalProfitRef.current += roundProfit;
-            totalRoundsRef.current++;
-            if (roundWon) {
-                roundWinsRef.current++;
-            } else {
-                roundLossesRef.current++;
-            }
-            
-            const totalStakeInRound = results.reduce((acc, curr) => acc + curr.stakeUsed, 0);
-            const totalPayoutInRound = results.reduce((acc, curr) => acc + (curr.stakeUsed + curr.profit), 0);
-            
-            setTotalStakeUsed(prev => prev + totalStakeInRound);
-            setTotalPayout(prev => prev + totalPayoutInRound);
-            setTotalProfit(totalProfitRef.current);
-            setTotalRounds(totalRoundsRef.current);
-            setRoundWins(roundWinsRef.current);
-            setRoundLosses(roundLossesRef.current);
-
-            addLog(`Round P/L: ${roundProfit >= 0 ? '+' : ''}${roundProfit.toFixed(2)} | Total: ${totalProfitRef.current >= 0 ? '+' : ''}${totalProfitRef.current.toFixed(2)} USD`,
-                   roundProfit >= 0 ? 'success' : 'warning');
-
-            await new Promise(r => setTimeout(r, 1500));
-            if (runningRef.current) placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes);
-
-        } catch (err: any) {
-            const msg = String(err).replace('Error: ', '');
-            addLog(`CRITICAL ERROR: ${msg}. Resetting stakes, pausing 5s…`, 'error');
-            initStakes(_baseStake);
-            await new Promise(r => setTimeout(r, 5000));
-            if (runningRef.current) placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes);
+        if (allConfigs.length === 0) {
+            addLog('No strategies selected. Stopping.', 'error');
+            runningRef.current = false; setRunning(false); return;
         }
-    }, [sendJSON, trackContract, addLog, initStakes]);
 
-    // ── Start / Stop ──────────────────────────────────────────────────────────
+        addLog(`[Round ${totalRoundsRef.current + 1}] Requesting proposals for ${allConfigs.length} strategy variations…`);
 
-    const startBot = useCallback(() => {
-        if (wsRef.current?.readyState !== WebSocket.OPEN) { addLog('Not connected.', 'error'); return; }
+        // Fetch proposals concurrently
+        const proposalPromises = allConfigs.map(c => {
+            const currentStake = strategyStakes.current[c.strategyId] || _baseStake;
+            const payload: Record<string, any> = {
+                proposal: 1,
+                amount: currentStake,
+                basis: c.basis,
+                currency: c.currency,
+                duration: c.duration,
+                duration_unit: c.duration_unit,
+                symbol: _market,
+                contract_type: c.contract_type,
+            };
+            if (c.barrier !== undefined) payload.barrier = String(c.barrier);
+            if (c.prediction !== undefined) payload.prediction = c.prediction;
+            if (c.selected_tick !== undefined) payload.selected_tick = c.selected_tick;
+            return sendJSON(payload);
+        });
+
+        let proposalResults: any[] = [];
+        try {
+            proposalResults = await Promise.all(proposalPromises);
+        } catch (err: any) {
+            addLog(`Proposal error: ${err}`, 'error');
+            await new Promise(r => setTimeout(r, 3000));
+            if (runningRef.current) placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes);
+            return;
+        }
+
+        // Buy proposals concurrently
+        const buyPromises: Promise<any>[] = [];
+        const buyMeta: { config: TradeConfig; idx: number }[] = [];
+
+        proposalResults.forEach((res, i) => {
+            if (res?.proposal) {
+                const id = res.proposal.id;
+                buyMeta.push({ config: allConfigs[i], idx: buyPromises.length });
+                buyPromises.push(sendJSON({ buy: id, price: allConfigs[i].amount }));
+            }
+        });
+
+        if (buyPromises.length === 0) { addLog('All proposals failed. Waiting 5s…', 'error'); await new Promise(r => setTimeout(r, 5000)); if (runningRef.current) placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes); return; }
+
+        addLog(`Buying ${buyPromises.length} contracts…`);
+        const buyResults = await Promise.all(buyPromises);
+
+        // Track
+        const trackPromises: Promise<TradeResult>[] = [];
+        let bought = 0;
+        buyMeta.forEach(({ config, idx }) => {
+            const contractId = buyResults[idx]?.buy?.contract_id;
+            if (contractId) { trackPromises.push(trackContract(contractId, config.strategyId, config.label, config.amount)); bought++; }
+            else addLog(`[${config.strategyId}] Buy failed.`, 'error');
+        });
+
+        totalTradesRef.current += bought;
+        setTotalTrades(totalTradesRef.current);
+        addLog(`Tracking ${bought} contracts…`);
+
+        const results = await Promise.all(trackPromises);
+
+        // Process results
+        let roundProfit = 0;
+        let roundWon    = false;
+        results.forEach(r => {
+            const res = r as any;
+            roundProfit += res.profit;
+            addLog(res.message, res.profit >= 0 ? 'success' : 'error');
+            setTransactions(prev => [res.transaction, ...prev].slice(0, 50));
+
+            if (res.profit > 0) {
+                strategyStakes.current[res.strategyId] = _baseStake;
+                roundWon = true;
+            } else {
+                const newStake = round2(res.stakeUsed * _martingale);
+                strategyStakes.current[res.strategyId] = newStake;
+            }
+        });
+
+        totalProfitRef.current += roundProfit;
+        totalRoundsRef.current++;
+        if (roundWon) {
+            roundWinsRef.current++;
+        } else {
+            roundLossesRef.current++;
+        }
+        
+        const totalStakeInRound = results.reduce((acc, curr) => acc + curr.stakeUsed, 0);
+        const totalPayoutInRound = results.reduce((acc, curr) => acc + (curr.stakeUsed + curr.profit), 0);
+        
+        setTotalStakeUsed(prev => prev + totalStakeInRound);
+        setTotalPayout(prev => prev + totalPayoutInRound);
+        setTotalProfit(totalProfitRef.current);
+        setTotalRounds(totalRoundsRef.current);
+        setRoundWins(roundWinsRef.current);
+        setRoundLosses(roundLossesRef.current);
+
+        addLog(`Round P/L: ${roundProfit >= 0 ? '+' : ''}${roundProfit.toFixed(2)} | Total: ${totalProfitRef.current >= 0 ? '+' : ''}${totalProfitRef.current.toFixed(2)} USD`,
+            roundProfit >= 0 ? 'success' : 'error');
+
+        // Delay before next round
+        if (runningRef.current) {
+            await new Promise(r => setTimeout(r, 2500));
+            placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes);
+        }
+    }, [addLog, sendJSON, trackContract, overPrediction, underPrediction]);
+
+    // ── Controls ──────────────────────────────────────────────────────────────
+
+    const startBot = useCallback(async () => {
+        if (runningRef.current) return;
+
+        if (status !== 'connected') {
+            addLog('Connecting to Deriv WebSocket...', 'info');
+            const connected = await connect();
+            if (!connected) {
+                addLog('Failed to connect. Please log in or check your connection.', 'error');
+                return;
+            }
+        }
+
         const stake = round2(Math.max(0.5, baseStake));
         initStakes(stake);
         totalProfitRef.current = 0; totalRoundsRef.current = 0; roundWinsRef.current = 0; roundLossesRef.current = 0; totalTradesRef.current = 0;
