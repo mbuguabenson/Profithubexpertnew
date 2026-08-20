@@ -44,6 +44,13 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
   const [wins, setWins] = useState<number>(0);
   const [losses, setLosses] = useState<number>(0);
   const [netProfit, setNetProfit] = useState<number>(0);
+
+  void isExecuting; setIsExecuting;
+  void currentStake; void setCurrentStake;
+  void setTotalTrades;
+  void setWins;
+  void setLosses;
+  void setNetProfit;
   const [logs, setLogs] = useState<Array<{ id: string; time: string; msg: string; type: 'info' | 'win' | 'loss' | 'warn' }>>([]);
 
   const isRunningRef = useRef(isRunning);
