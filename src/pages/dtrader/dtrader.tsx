@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { getAppId } from '@/components/shared/utils/config/config';
 import Heading from '@/components/shared_ui/heading';
@@ -49,9 +48,9 @@ const IframeWrapper: React.FC<IframeWrapperProps> = ({ src, title }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     return (
-        <div className='iframe-container-relative' style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <div className='iframe-container-relative'>
             {isLoading && (
-                <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: '#0b0a1a' }}>
+                <div className='iframe-loader-overlay'>
                     <ChunkLoader message='Connecting to DTrader Hub...' />
                 </div>
             )}
@@ -59,7 +58,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = ({ src, title }) => {
                 src={src}
                 title={title}
                 className='dtrader-full-iframe'
-                style={{ width: '100%', height: '100%', border: 'none' }}
                 onLoad={() => setIsLoading(false)}
                 allow='camera; microphone; clipboard-read; clipboard-write; geolocation'
             />
@@ -79,7 +77,6 @@ const DTraderPage: React.FC = observer(() => {
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
 
-    // Initial auth resolution
     useEffect(() => {
         const savedMode = localStorage.getItem('dtrader_view_mode') as 'iframe' | 'native';
         if (savedMode === 'iframe' || savedMode === 'native') {
@@ -222,7 +219,6 @@ const DTraderPage: React.FC = observer(() => {
         queryParams.set('token1', validToken);
     }
 
-    // Populate all multi-account tokens
     try {
         const accountsList = getAccountsList();
         let index = 1;
@@ -344,58 +340,25 @@ const DTraderPage: React.FC = observer(() => {
 
             {/* Iframe View */}
             {viewMode === 'iframe' && (
-                <>
-                    <div style={{
-                        padding: '8px 16px',
-                        background: 'rgba(16, 185, 129, 0.12)',
-                        borderBottom: '1px solid rgba(16, 185, 129, 0.25)',
-                        fontSize: '12px',
-                        color: '#a7f3d0',
-                        display: 'flex',
-                        align-items: 'center',
-                        justify-content: 'space-between',
-                        gap: '8px',
-                        flexWrap: 'wrap'
-                    }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <ShieldCheck size={14} color="#10b981" />
+                <React.Fragment>
+                    <div className='dtrader-notice-banner'>
+                        <span className='notice-left'>
+                            <ShieldCheck size={14} className='icon-emerald' />
                             <strong>Active Target:</strong> {selectedHubUrl} (App ID: {appId}) • Kenya Bypass Active
                         </span>
 
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className='notice-right-btns'>
                             <button
                                 type='button'
                                 onClick={() => handleHubServerChange(hubServer === 'primary' ? 'backup' : 'primary')}
-                                style={{
-                                    background: 'rgba(255, 255, 255, 0.15)',
-                                    color: '#ffffff',
-                                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                                    padding: '4px 10px',
-                                    borderRadius: '6px',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    fontSize: '11px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px'
-                                }}
+                                className='banner-btn banner-btn--switch'
                             >
                                 <RefreshCw size={12} /> Switch to {hubServer === 'primary' ? 'Backup Hub' : 'Primary Hub 360'}
                             </button>
                             <button
                                 type='button'
                                 onClick={() => handleViewModeChange('native')}
-                                style={{
-                                    background: '#10b981',
-                                    color: '#0f172a',
-                                    border: 'none',
-                                    padding: '4px 12px',
-                                    borderRadius: '6px',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    fontSize: '11px',
-                                    whiteSpace: 'nowrap'
-                                }}
+                                className='banner-btn banner-btn--native'
                             >
                                 Switch to Native Workspace ⚡
                             </button>
@@ -403,20 +366,9 @@ const DTraderPage: React.FC = observer(() => {
                     </div>
 
                     {!authToken ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: 24 }}>
-                            <div style={{
-                                maxWidth: 540,
-                                width: '100%',
-                                background: '#0d111c',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
-                                borderRadius: 16,
-                                padding: 32,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 20,
-                                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
-                            }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div className='dtrader-auth-wrapper'>
+                            <div className='dtrader-auth-card'>
+                                <div className='auth-card-head'>
                                     <Heading.H3>DTrader Hub 360</Heading.H3>
                                     <Badge label='AUTH REQUIRED' size='sm' variant={'warning' as any} />
                                 </div>
@@ -425,14 +377,14 @@ const DTraderPage: React.FC = observer(() => {
                                     To open DTrader Hub in Kenya with full market access, connect your Deriv account or provide an API token.
                                 </Text>
 
-                                <form onSubmit={handleManualTokenSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <form onSubmit={handleManualTokenSubmit} className='auth-token-form'>
                                     <TextField
                                         placeholder="Enter Deriv API Token (e.g. a1-XYZ...)"
                                         value={manualToken}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualToken(e.target.value)}
                                     />
                                     {tokenError && (
-                                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '-4px' }}>
+                                        <div className='token-error-msg'>
                                             {tokenError}
                                         </div>
                                     )}
@@ -447,10 +399,10 @@ const DTraderPage: React.FC = observer(() => {
                                     </Button>
                                 </form>
 
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
-                                    <div style={{ flex: 1, height: 1, background: 'rgba(255, 255, 255, 0.08)' }} />
+                                <div className='auth-separator'>
+                                    <div className='sep-line' />
                                     <CaptionText size='sm' color='subtle'>OR LOG IN WITH DERIV</CaptionText>
-                                    <div style={{ flex: 1, height: 1, background: 'rgba(255, 255, 255, 0.08)' }} />
+                                    <div className='sep-line' />
                                 </div>
 
                                 <Button
@@ -468,7 +420,7 @@ const DTraderPage: React.FC = observer(() => {
                             <IframeWrapper src={embedUrl} title='DTrader Terminal Hub' />
                         </div>
                     )}
-                </>
+                </React.Fragment>
             )}
 
             {/* Native Workspace View */}

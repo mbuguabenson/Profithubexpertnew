@@ -101,48 +101,105 @@
         }
     }
 
-    .kenya-restriction-notice {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 20px;
-        background: linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.06) 100%);
-        border-bottom: 1px solid rgba(245, 158, 11, 0.25);
-        color: #fde68a;
+    // Top Notice Banner
+    .dtrader-notice-banner {
+        padding: 8px 16px;
+        background: rgba(16, 185, 129, 0.12);
+        border-bottom: 1px solid rgba(16, 185, 129, 0.25);
         font-size: 12px;
-        gap: 16px;
+        color: #a7f3d0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
         flex-wrap: wrap;
 
-        .notice-content {
+        .notice-left {
             display: flex;
             align-items: center;
-            gap: 10px;
-            line-height: 1.4;
-
-            strong {
-                color: #fbbf24;
-            }
+            gap: 6px;
+            .icon-emerald { color: #10b981; }
         }
 
-        .notice-switch-btn {
-            background: #d97706;
-            color: #ffffff;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 14px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+        .notice-right-btns {
+            display: flex;
+            gap: 8px;
 
-            &:hover {
-                background: #b45309;
-                transform: translateY(-1px);
+            .banner-btn {
+                padding: 4px 12px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+
+                &--switch {
+                    background: rgba(255, 255, 255, 0.15);
+                    color: #ffffff;
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                }
+
+                &--native {
+                    background: #10b981;
+                    color: #0f172a;
+                    border: none;
+                    white-space: nowrap;
+                }
+            }
+        }
+    }
+
+    // Auth Card
+    .dtrader-auth-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 75vh;
+        padding: 24px;
+
+        .dtrader-auth-card {
+            max-width: 540px;
+            width: 100%;
+            background: #0d111c;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+
+            .auth-card-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .auth-token-form {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+
+                .token-error-msg {
+                    color: #ef4444;
+                    font-size: 12px;
+                    margin-top: -4px;
+                }
+            }
+
+            .auth-separator {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin: 4px 0;
+
+                .sep-line {
+                    flex: 1;
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.08);
+                }
             }
         }
     }
@@ -150,546 +207,29 @@
     .dtrader-iframe-wrapper {
         flex: 1;
         width: 100%;
-        height: 100%;
+        height: calc(100vh - 120px);
+        min-height: 600px;
+        position: relative;
+        background: #0b0e14;
 
-        .dtrader-iframe {
+        .iframe-container-relative {
+            width: 100%;
+            height: 100%;
+            position: relative;
+
+            .iframe-loader-overlay {
+                position: absolute;
+                inset: 0;
+                z-index: 10;
+                background: #0b0a1a;
+            }
+        }
+
+        .dtrader-full-iframe {
             width: 100%;
             height: 100%;
             border: none;
-        }
-    }
-}
-
-.dtrader-workspace {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    background: #090d16;
-
-    .dtrader-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 20px;
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-
-        .asset-info {
-            .asset-badge {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                background: rgba(255, 255, 255, 0.05);
-                padding: 6px 14px;
-                border-radius: 100px;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-
-                .icon-pulse {
-                    color: #3b82f6;
-                    animation: pulse 2s infinite;
-                }
-
-                .symbol-name {
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #f8fafc;
-                }
-
-                .symbol-tag {
-                    font-size: 11px;
-                    background: #1e293b;
-                    color: #94a3b8;
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    font-weight: 600;
-                }
-            }
-        }
-
-        .account-balance-card {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(30, 41, 59, 0.6);
-            padding: 6px 14px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-
-            .balance-lbl {
-                font-size: 12px;
-                color: #94a3b8;
-            }
-
-            .balance-val {
-                font-size: 14px;
-                font-weight: 700;
-                color: #10b981;
-            }
-        }
-    }
-
-    .dtrader-body {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-        gap: 12px;
-        padding: 12px;
-
-        @media (max-width: 1024px) {
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .dtrader-main-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            min-width: 0;
-
-            .chart-container {
-                flex: 1;
-                min-height: 420px;
-                background: #0f172a;
-                border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                overflow: hidden;
-            }
-
-            .active-contracts-panel {
-                background: #0f172a;
-                border-radius: 12px;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                padding: 14px;
-
-                .panel-title {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #94a3b8;
-                    margin-bottom: 12px;
-                }
-
-                .contracts-table {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-
-                    .table-head {
-                        display: grid;
-                        grid-template-columns: 120px 1fr 120px 100px;
-                        padding: 6px 12px;
-                        font-size: 11px;
-                        color: #64748b;
-                        font-weight: 600;
-                    }
-
-                    .table-row {
-                        display: grid;
-                        grid-template-columns: 120px 1fr 120px 100px;
-                        align-items: center;
-                        padding: 8px 12px;
-                        background: rgba(255, 255, 255, 0.02);
-                        border-radius: 6px;
-                        font-size: 12px;
-
-                        .contract-id {
-                            font-weight: 600;
-                            color: #3b82f6;
-                        }
-
-                        .longcode {
-                            color: #cbd5e1;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
-
-                        .price {
-                            font-weight: 600;
-                            color: #10b981;
-                        }
-
-                        .status-badge {
-                            display: inline-block;
-                            padding: 2px 8px;
-                            border-radius: 100px;
-                            font-size: 10px;
-                            font-weight: 700;
-                            text-transform: uppercase;
-                            width: fit-content;
-
-                            &--active {
-                                background: rgba(16, 185, 129, 0.15);
-                                color: #10b981;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        .dtrader-sidebar {
-            width: 380px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            overflow-y: auto;
-
-            @media (max-width: 1024px) {
-                width: 100%;
-            }
-
-            .sidebar-card {
-                background: #0f172a;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 12px;
-                padding: 16px;
-
-                &__header {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 13px;
-                    font-weight: 700;
-                    color: #f8fafc;
-                    margin-bottom: 14px;
-                    padding-bottom: 10px;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                }
-            }
-        }
-    }
-}
-
-/* Trade Params Panel SCSS */
-.trade-params-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-
-    .panel-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-
-        .panel-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .label-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-            .basis-toggle {
-                display: flex;
-                background: #1e293b;
-                border-radius: 4px;
-                padding: 2px;
-
-                .basis-btn {
-                    padding: 2px 8px;
-                    border: none;
-                    background: transparent;
-                    color: #64748b;
-                    font-size: 10px;
-                    font-weight: 700;
-                    border-radius: 3px;
-                    cursor: pointer;
-
-                    &--active {
-                        background: #3b82f6;
-                        color: #ffffff;
-                    }
-                }
-            }
-        }
-
-        .panel-select,
-        .panel-input {
-            width: 100%;
-            background: #1e293b;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #f8fafc;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.2s ease;
-
-            &:focus {
-                border-color: #3b82f6;
-            }
-        }
-
-        .input-with-select {
-            display: flex;
-            gap: 6px;
-
-            .panel-input {
-                flex: 1;
-            }
-
-            .panel-select-sub {
-                background: #1e293b;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                color: #f8fafc;
-                padding: 8px;
-                border-radius: 8px;
-                font-size: 13px;
-                outline: none;
-            }
-        }
-
-        .input-with-currency {
-            position: relative;
-            display: flex;
-            align-items: center;
-
-            .currency-prefix {
-                position: absolute;
-                left: 12px;
-                color: #94a3b8;
-                font-size: 14px;
-                font-weight: 600;
-            }
-
-            .panel-input {
-                padding-left: 28px;
-                font-weight: 700;
-                font-size: 15px;
-                color: #10b981;
-            }
-        }
-
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-
-            .category-btn {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px 10px;
-                background: #1e293b;
-                border: 1px solid rgba(255, 255, 255, 0.06);
-                border-radius: 8px;
-                color: #94a3b8;
-                font-size: 12px;
-                font-weight: 600;
-                cursor: pointer;
-                text-align: left;
-                transition: all 0.2s ease;
-
-                &:hover {
-                    background: rgba(59, 130, 246, 0.1);
-                    color: #f8fafc;
-                }
-
-                &--active {
-                    background: rgba(59, 130, 246, 0.2);
-                    border-color: #3b82f6;
-                    color: #60a5fa;
-
-                    .cat-icon {
-                        color: #60a5fa;
-                    }
-                }
-            }
-        }
-
-        .digit-picker {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-
-            .digit-btn {
-                padding: 8px 0;
-                background: #1e293b;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 6px;
-                color: #f8fafc;
-                font-weight: 700;
-                font-size: 13px;
-                cursor: pointer;
-                transition: all 0.15s ease;
-
-                &:hover {
-                    border-color: #3b82f6;
-                }
-
-                &--active {
-                    background: #3b82f6;
-                    border-color: #3b82f6;
-                    color: #ffffff;
-                }
-            }
-        }
-
-        .button-group {
-            display: flex;
-            gap: 6px;
-
-            .pill-btn {
-                flex: 1;
-                padding: 6px 0;
-                background: #1e293b;
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 6px;
-                color: #cbd5e1;
-                font-size: 12px;
-                font-weight: 700;
-                cursor: pointer;
-
-                &--active {
-                    background: #3b82f6;
-                    color: #ffffff;
-                    border-color: #3b82f6;
-                }
-            }
-        }
-    }
-}
-
-/* Purchase Buttons SCSS */
-.purchase-button-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    .proposal-alert {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 600;
-
-        &--error {
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        &--success {
-            background: rgba(16, 185, 129, 0.15);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-    }
-
-    .purchase-buttons-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-
-        .purchase-card {
-            background: #1e293b;
-            border-radius: 10px;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-
-            &__header {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 13px;
-                font-weight: 700;
-                margin-bottom: 8px;
-
-                .icon-up { color: #10b981; }
-                .icon-down { color: #ef4444; }
-            }
-
-            &__body {
-                margin-bottom: 10px;
-
-                .pricing-info {
-                    display: flex;
-                    justify-content: space-between;
-                    background: rgba(0, 0, 0, 0.2);
-                    padding: 8px 10px;
-                    border-radius: 6px;
-
-                    .price-row {
-                        display: flex;
-                        flex-direction: column;
-
-                        .lbl {
-                            font-size: 10px;
-                            color: #94a3b8;
-                            text-transform: uppercase;
-                        }
-
-                        .val {
-                            font-size: 13px;
-                            font-weight: 700;
-
-                            &--highlight {
-                                color: #10b981;
-                            }
-                        }
-                    }
-                }
-
-                .loading-state {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 12px;
-                    color: #94a3b8;
-                }
-            }
-
-            .buy-btn {
-                width: 100%;
-                padding: 10px;
-                border: none;
-                border-radius: 8px;
-                font-weight: 700;
-                font-size: 13px;
-                color: #ffffff;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                transition: transform 0.1s ease, filter 0.2s ease;
-
-                &:hover:not(:disabled) {
-                    filter: brightness(1.1);
-                }
-
-                &:active:not(:disabled) {
-                    transform: scale(0.98);
-                }
-
-                &:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-
-                &--up {
-                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-                }
-
-                &--down {
-                    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-                }
-            }
+            display: block;
         }
     }
 }
