@@ -1,26 +1,42 @@
 // ═══════════════════════════════════════════════════════════════
-// ✦ SIGNALS TAB — DEEP PURPLE SOFT UI DESIGN
+// ✦ SIGNALS TAB — DUAL MODE (LIGHT & DARK)
 // ═══════════════════════════════════════════════════════════════
 
-$dp-sig-bg:           #0a0818;
-$dp-purple-main:      #7c3aed;
-$dp-purple-light:     #a855f7;
-$dp-purple-glow:      rgba(124, 58, 237, 0.4);
-$dp-emerald:          #10b981;
-$dp-cyan:             #06b6d4;
-$dp-amber:            #f59e0b;
+:root, .theme--light {
+    --sig-bg:             #f3f2f8;
+    --sig-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
+    --sig-card-border:    rgba(124, 58, 237, 0.16);
+    --sig-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
+    --sig-shadow-hover:   12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
+    --sig-shadow-inset:   inset 4px 4px 10px #e0dcfa, inset -3px -3px 8px #ffffff;
+    --sig-text-main:      #1e1438;
+    --sig-text-sub:       #584b7a;
+    --sig-select-bg:      #f7f6fc;
+}
+
+body.theme--dark, .theme--dark {
+    --sig-bg:             #0b0a1a;
+    --sig-card-bg:        linear-gradient(145deg, #161033, #100b27);
+    --sig-card-border:    rgba(168, 85, 247, 0.18);
+    --sig-shadow-raised:  12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
+    --sig-shadow-hover:   16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
+    --sig-shadow-inset:   inset 6px 6px 14px rgba(4, 2, 12, 0.8), inset -4px -4px 10px rgba(168, 85, 247, 0.06);
+    --sig-text-main:      #ffffff;
+    --sig-text-sub:       #e9d5ff;
+    --sig-select-bg:      linear-gradient(145deg, #110c28, #1c1444);
+}
 
 .signals-tab-wrapper {
     width: 100%;
     height: 100vh;
     padding: 24px 28px 100px;
-    background: $dp-sig-bg;
+    background: var(--sig-bg);
     overflow-y: auto;
     overflow-x: hidden;
     box-sizing: border-box;
     scroll-behavior: smooth;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    color: #ffffff;
+    color: var(--sig-text-main);
 
     .signals-main-container {
         max-width: 1440px;
@@ -41,11 +57,9 @@ $dp-amber:            #f59e0b;
     gap: 24px;
     padding: 26px 30px;
     border-radius: 28px;
-    background: linear-gradient(145deg, #161033, #100b27);
-    border: 1px solid rgba(168, 85, 247, 0.2);
-    box-shadow: 
-        14px 14px 32px rgba(4, 2, 12, 0.75),
-        -8px -8px 24px rgba(168, 85, 247, 0.06);
+    background: var(--sig-card-bg);
+    border: 1px solid var(--sig-card-border);
+    box-shadow: var(--sig-shadow-raised);
     flex-wrap: wrap;
 
     .header-brand-box {
@@ -81,18 +95,18 @@ $dp-amber:            #f59e0b;
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.65rem;
             font-weight: 800;
-            color: #ffffff;
+            color: var(--sig-text-main);
             margin: 0;
             letter-spacing: -0.01em;
 
             .title-highlight {
-                color: #c084fc;
+                color: #7c3aed;
             }
         }
 
         .header-sub {
             font-size: 0.86rem;
-            color: #e9d5ff;
+            color: var(--sig-text-sub);
             margin: 0;
             font-weight: 500;
         }
@@ -115,11 +129,11 @@ $dp-amber:            #f59e0b;
                 gap: 5px;
                 font-size: 0.72rem;
                 font-weight: 800;
-                color: #e9d5ff;
+                color: var(--sig-text-sub);
                 text-transform: uppercase;
                 letter-spacing: 0.06em;
 
-                .lbl-icon { color: #c084fc; }
+                .lbl-icon { color: #7c3aed; }
             }
 
             .select-input-wrap {
@@ -127,14 +141,12 @@ $dp-amber:            #f59e0b;
 
                 .soft-select {
                     appearance: none;
-                    background: linear-gradient(145deg, #110c28, #1c1444);
-                    box-shadow: 
-                        inset 4px 4px 10px rgba(4, 2, 12, 0.7),
-                        inset -3px -3px 8px rgba(168, 85, 247, 0.12);
-                    border: 1px solid rgba(168, 85, 247, 0.25);
+                    background: var(--sig-select-bg);
+                    box-shadow: var(--sig-shadow-inset);
+                    border: 1px solid var(--sig-card-border);
                     border-radius: 14px;
                     padding: 11px 40px 11px 16px;
-                    color: #ffffff;
+                    color: var(--sig-text-main);
                     font-size: 0.88rem;
                     font-weight: 700;
                     outline: none;
@@ -142,12 +154,12 @@ $dp-amber:            #f59e0b;
                     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
                     &:focus {
-                        border-color: rgba(168, 85, 247, 0.6);
+                        border-color: rgba(124, 58, 237, 0.6);
                         box-shadow: 0 0 20px rgba(124, 58, 237, 0.35);
                     }
 
                     option {
-                        background: #110c28;
+                        background: #161033;
                         color: #ffffff;
                     }
                 }
@@ -159,7 +171,7 @@ $dp-amber:            #f59e0b;
                     top: 50%;
                     transform: translateY(-50%);
                     font-size: 0.65rem;
-                    color: #c084fc;
+                    color: #7c3aed;
                     pointer-events: none;
                 }
             }
@@ -181,30 +193,26 @@ $dp-amber:            #f59e0b;
         gap: 14px;
         padding: 18px 20px;
         border-radius: 20px;
-        background: linear-gradient(145deg, #161033, #100b27);
-        border: 1px solid rgba(168, 85, 247, 0.16);
-        box-shadow: 
-            10px 10px 24px rgba(4, 2, 12, 0.7),
-            -6px -6px 16px rgba(168, 85, 247, 0.05);
+        background: var(--sig-card-bg);
+        border: 1px solid var(--sig-card-border);
+        box-shadow: var(--sig-shadow-raised);
 
         .metric-icon-orb {
             width: 46px;
             height: 46px;
             border-radius: 16px;
-            background: linear-gradient(145deg, #110c28, #1c1444);
-            box-shadow: 
-                inset 3px 3px 8px rgba(4, 2, 12, 0.7),
-                inset -2px -2px 6px rgba(168, 85, 247, 0.12);
-            border: 1px solid rgba(168, 85, 247, 0.2);
+            background: var(--sig-select-bg);
+            box-shadow: var(--sig-shadow-inset);
+            border: 1px solid var(--sig-card-border);
             display: grid;
             place-items: center;
             flex-shrink: 0;
 
-            &.text-cyan { color: $dp-cyan; }
-            &.text-green { color: $dp-emerald; }
+            &.text-cyan { color: #06b6d4; }
+            &.text-green { color: #10b981; }
             &.text-red { color: #ef4444; }
-            &.text-purple { color: #c084fc; }
-            &.text-amber { color: $dp-amber; }
+            &.text-purple { color: #7c3aed; }
+            &.text-amber { color: #f59e0b; }
         }
 
         .metric-body {
@@ -214,7 +222,7 @@ $dp-amber:            #f59e0b;
 
             .metric-lbl {
                 font-size: 0.68rem;
-                color: #e9d5ff;
+                color: var(--sig-text-sub);
                 text-transform: uppercase;
                 letter-spacing: 0.06em;
                 font-weight: 700;
@@ -224,12 +232,12 @@ $dp-amber:            #f59e0b;
                 font-family: 'Space Grotesk', sans-serif;
                 font-size: 1.25rem;
                 font-weight: 800;
-                color: #ffffff;
+                color: var(--sig-text-main);
 
-                &.text-green { color: $dp-emerald; }
+                &.text-green { color: #10b981; }
                 &.text-red { color: #ef4444; }
-                &.text-purple { color: #c084fc; }
-                &.text-amber { color: $dp-amber; }
+                &.text-purple { color: #7c3aed; }
+                &.text-amber { color: #f59e0b; }
             }
         }
     }
@@ -254,7 +262,7 @@ $dp-amber:            #f59e0b;
             align-items: center;
             justify-content: space-between;
             padding-bottom: 12px;
-            border-bottom: 1px solid rgba(168, 85, 247, 0.16);
+            border-bottom: 1px solid var(--sig-card-border);
 
             .banner-title-box {
                 display: flex;
@@ -265,13 +273,13 @@ $dp-amber:            #f59e0b;
                     font-family: 'Space Grotesk', sans-serif;
                     font-size: 1.2rem;
                     font-weight: 800;
-                    color: #ffffff;
+                    color: var(--sig-text-main);
                     margin: 0;
                 }
 
-                .text-purple { color: #c084fc; }
-                .text-cyan { color: $dp-cyan; }
-                .text-green { color: $dp-emerald; }
+                .text-purple { color: #7c3aed; }
+                .text-cyan { color: #06b6d4; }
+                .text-green { color: #10b981; }
             }
 
             .pill-badge {
@@ -290,13 +298,13 @@ $dp-amber:            #f59e0b;
 
                 &--pro {
                     background: rgba(6, 182, 212, 0.16);
-                    color: #67e8f9;
+                    color: #06b6d4;
                     border: 1px solid rgba(6, 182, 212, 0.4);
                 }
 
                 &--std {
                     background: rgba(16, 185, 129, 0.16);
-                    color: #6ee7b7;
+                    color: #10b981;
                     border: 1px solid rgba(16, 185, 129, 0.4);
                 }
             }
@@ -310,10 +318,10 @@ $dp-amber:            #f59e0b;
             .signals-empty-card {
                 padding: 40px 20px;
                 border-radius: 20px;
-                background: rgba(17, 12, 40, 0.5);
-                border: 1px dashed rgba(168, 85, 247, 0.2);
+                background: var(--sig-card-bg);
+                border: 1px dashed var(--sig-card-border);
                 text-align: center;
-                color: #e9d5ff;
+                color: var(--sig-text-sub);
                 font-size: 0.86rem;
                 font-weight: 600;
             }

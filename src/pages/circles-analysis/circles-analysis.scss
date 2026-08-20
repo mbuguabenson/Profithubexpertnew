@@ -1,25 +1,36 @@
 @use '@/components/shared/styles/mixins' as *;
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ CIRCLES ANALYSIS TAB — DEEP PURPLE SOFT UI DESIGN
+// ✦ CIRCLES ANALYSIS TAB — DUAL MODE (LIGHT & DARK)
 // ═══════════════════════════════════════════════════════════════
 
-$ca-bg:           #0b0a1a;
-$ca-card-bg:      linear-gradient(145deg, #161033, #100b27);
-$ca-purple:       #7c3aed;
-$ca-purple-light: #a855f7;
-$ca-cyan:         #06b6d4;
-$ca-emerald:      #10b981;
-$ca-amber:        #f59e0b;
+:root, .theme--light {
+    --ca-bg:             #f3f2f8;
+    --ca-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
+    --ca-card-border:    rgba(124, 58, 237, 0.16);
+    --ca-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
+    --ca-shadow-hover:   12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
+    --ca-text-main:      #1e1438;
+    --ca-text-sub:       #584b7a;
+    --ca-input-bg:       #f7f6fc;
+}
+
+body.theme--dark, .theme--dark {
+    --ca-bg:             #0b0a1a;
+    --ca-card-bg:        linear-gradient(145deg, #161033, #100b27);
+    --ca-card-border:    rgba(168, 85, 247, 0.18);
+    --ca-shadow-raised:  12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
+    --ca-shadow-hover:   16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
+    --ca-text-main:      #ffffff;
+    --ca-text-sub:       #e9d5ff;
+    --ca-input-bg:       linear-gradient(145deg, #110c28, #1c1444);
+}
 
 .circles-analysis-hud {
     min-height: 100%;
     padding: to-rem(20px);
-    background:
-        radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-        $ca-bg;
-    color: #ffffff;
+    background: var(--ca-bg);
+    color: var(--ca-text-main);
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
@@ -35,28 +46,24 @@ $ca-amber:        #f59e0b;
     }
 
     .glass-card {
-        background: $ca-card-bg;
-        border: 1px solid rgba(168, 85, 247, 0.18);
+        background: var(--ca-card-bg);
+        border: 1px solid var(--ca-card-border);
         border-radius: to-rem(24px);
         padding: to-rem(18px);
-        box-shadow: 
-            12px 12px 28px rgba(4, 2, 12, 0.75),
-            -8px -8px 20px rgba(168, 85, 247, 0.05);
+        box-shadow: var(--ca-shadow-raised);
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 
         &:hover {
             transform: translateY(-4px);
-            border-color: rgba(168, 85, 247, 0.45);
-            box-shadow: 
-                16px 16px 36px rgba(4, 2, 12, 0.85),
-                0 0 25px rgba(124, 58, 237, 0.25);
+            border-color: rgba(124, 58, 237, 0.45);
+            box-shadow: var(--ca-shadow-hover);
         }
     }
 
     // 1. Cyber HUD Header
     .cyber-hud-header {
-        background: linear-gradient(145deg, #161033, #100b27);
-        border: 1px solid rgba(168, 85, 247, 0.2);
+        background: var(--ca-card-bg);
+        border: 1px solid var(--ca-card-border);
         border-radius: to-rem(24px);
         padding: to-rem(18px) to-rem(24px);
         display: flex;
@@ -64,9 +71,7 @@ $ca-amber:        #f59e0b;
         align-items: center;
         flex-wrap: wrap;
         gap: to-rem(16px);
-        box-shadow: 
-            14px 14px 32px rgba(4, 2, 12, 0.75),
-            -8px -8px 24px rgba(168, 85, 247, 0.06);
+        box-shadow: var(--ca-shadow-raised);
 
         .header-left {
             display: flex;
@@ -83,8 +88,8 @@ $ca-amber:        #f59e0b;
                     width: 10px;
                     height: 10px;
                     border-radius: 50%;
-                    background: #a855f7;
-                    box-shadow: 0 0 12px #a855f7;
+                    background: #7c3aed;
+                    box-shadow: 0 0 12px #7c3aed;
                     animation: pulse 1.5s infinite;
                 }
 
@@ -93,7 +98,7 @@ $ca-amber:        #f59e0b;
                     font-size: to-rem(13px);
                     font-weight: 900;
                     letter-spacing: 1.5px;
-                    color: #c084fc;
+                    color: #7c3aed;
                     text-transform: uppercase;
                 }
             }
@@ -106,19 +111,16 @@ $ca-amber:        #f59e0b;
                 label {
                     font-size: to-rem(9px);
                     font-weight: 800;
-                    color: #e9d5ff;
+                    color: var(--ca-text-sub);
                     letter-spacing: 0.5px;
                     text-transform: uppercase;
                 }
 
                 .market-select {
-                    background: linear-gradient(145deg, #110c28, #1c1444);
-                    box-shadow: 
-                        inset 4px 4px 10px rgba(4, 2, 12, 0.7),
-                        inset -3px -3px 8px rgba(168, 85, 247, 0.12);
-                    border: 1px solid rgba(168, 85, 247, 0.25);
+                    background: var(--ca-input-bg);
+                    border: 1px solid var(--ca-card-border);
                     border-radius: to-rem(12px);
-                    color: #fff;
+                    color: var(--ca-text-main);
                     font-size: to-rem(12px);
                     font-weight: 800;
                     padding: to-rem(8px) to-rem(14px);
@@ -126,7 +128,7 @@ $ca-amber:        #f59e0b;
                     cursor: pointer;
 
                     &:focus {
-                        border-color: #a855f7;
+                        border-color: #7c3aed;
                     }
                 }
             }
@@ -139,8 +141,8 @@ $ca-amber:        #f59e0b;
             flex-wrap: wrap;
 
             .metric-card {
-                background: rgba(17, 12, 40, 0.7);
-                border: 1px solid rgba(168, 85, 247, 0.18);
+                background: var(--ca-input-bg);
+                border: 1px solid var(--ca-card-border);
                 border-radius: to-rem(14px);
                 padding: to-rem(8px) to-rem(14px);
                 display: flex;
@@ -150,7 +152,7 @@ $ca-amber:        #f59e0b;
                 label {
                     font-size: to-rem(8px);
                     font-weight: 800;
-                    color: #e9d5ff;
+                    color: var(--ca-text-sub);
                     letter-spacing: 0.5px;
                     text-transform: uppercase;
                 }
@@ -158,7 +160,7 @@ $ca-amber:        #f59e0b;
                 .depth-input {
                     background: transparent;
                     border: none;
-                    color: #fff;
+                    color: var(--ca-text-main);
                     font-size: to-rem(13px);
                     font-weight: 800;
                     width: to-rem(60px);
@@ -168,21 +170,20 @@ $ca-amber:        #f59e0b;
                 .price-val {
                     font-size: to-rem(13px);
                     font-weight: 800;
-                    color: #c084fc;
+                    color: #7c3aed;
                 }
 
                 &.live-digit-card {
-                    background: rgba(124, 58, 237, 0.16);
-                    border-color: rgba(168, 85, 247, 0.35);
+                    background: rgba(124, 58, 237, 0.14);
+                    border-color: rgba(124, 58, 237, 0.35);
 
                     .digit-beacon {
                         font-size: to-rem(16px);
                         font-weight: 900;
-                        color: #ffffff;
-                        text-align: center;
+                        color: var(--ca-text-main);
 
-                        &.even { color: #67e8f9; }
-                        &.odd { color: #fde047; }
+                        &.even { color: #06b6d4; }
+                        &.odd { color: #f59e0b; }
                     }
                 }
 
@@ -193,7 +194,7 @@ $ca-amber:        #f59e0b;
                         gap: to-rem(6px);
                         font-size: to-rem(11px);
                         font-weight: 800;
-                        color: #e9d5ff;
+                        color: var(--ca-text-sub);
 
                         .dot {
                             width: 6px;
@@ -203,7 +204,7 @@ $ca-amber:        #f59e0b;
                         }
 
                         &.online {
-                            color: #6ee7b7;
+                            color: #10b981;
 
                             .dot {
                                 background: #10b981;
@@ -212,7 +213,7 @@ $ca-amber:        #f59e0b;
                         }
 
                         .latency {
-                            color: #e9d5ff;
+                            color: var(--ca-text-sub);
                             font-size: to-rem(10px);
                         }
                     }
@@ -229,8 +230,8 @@ $ca-amber:        #f59e0b;
         padding-bottom: to-rem(4px);
 
         .strat-tab-btn {
-            background: linear-gradient(145deg, #161033, #100b27);
-            border: 1px solid rgba(168, 85, 247, 0.18);
+            background: var(--ca-card-bg);
+            border: 1px solid var(--ca-card-border);
             border-radius: to-rem(16px);
             padding: to-rem(12px) to-rem(22px);
             display: flex;
@@ -240,24 +241,22 @@ $ca-amber:        #f59e0b;
             cursor: pointer;
             transition: all 0.25s ease;
             white-space: nowrap;
-            box-shadow: 
-                8px 8px 18px rgba(4, 2, 12, 0.6),
-                -6px -6px 14px rgba(168, 85, 247, 0.04);
+            box-shadow: var(--ca-shadow-raised);
 
             .label {
                 font-size: to-rem(13px);
                 font-weight: 800;
-                color: #ffffff;
+                color: var(--ca-text-main);
             }
 
             .desc {
                 font-size: to-rem(9.5px);
-                color: #e9d5ff;
+                color: var(--ca-text-sub);
                 font-weight: 600;
             }
 
             &:hover {
-                border-color: rgba(168, 85, 247, 0.4);
+                border-color: rgba(124, 58, 237, 0.4);
                 transform: translateY(-2px);
             }
 

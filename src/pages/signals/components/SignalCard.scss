@@ -1,15 +1,37 @@
-// ─── Deep Purple Soft UI Signal Card Styles ────────────────────
+// ─── Dual Mode Soft Signal Card Component Styles ────────────────
+
+:root, .theme--light {
+    --sig-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
+    --sig-card-border:    rgba(124, 58, 237, 0.16);
+    --sig-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
+    --sig-shadow-hover:   12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
+    --sig-shadow-inset:   inset 4px 4px 10px #e0dcfa, inset -3px -3px 8px #ffffff;
+    --sig-text-main:      #1e1438;
+    --sig-text-sub:       #584b7a;
+    --sig-orb-bg:         linear-gradient(145deg, #eeeafd, #ffffff);
+    --sig-orb-shadow:     inset 4px 4px 8px #dcd5f7, inset -2px -2px 6px #ffffff;
+}
+
+body.theme--dark, .theme--dark {
+    --sig-card-bg:        linear-gradient(145deg, #161033, #100b27);
+    --sig-card-border:    rgba(168, 85, 247, 0.18);
+    --sig-shadow-raised:  12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
+    --sig-shadow-hover:   16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
+    --sig-shadow-inset:   inset 6px 6px 14px rgba(4, 2, 12, 0.8), inset -4px -4px 10px rgba(168, 85, 247, 0.06);
+    --sig-text-main:      #ffffff;
+    --sig-text-sub:       #e9d5ff;
+    --sig-orb-bg:         linear-gradient(145deg, #110c28, #1c1444);
+    --sig-orb-shadow:     inset 4px 4px 10px rgba(4, 2, 12, 0.7), inset -3px -3px 8px rgba(168, 85, 247, 0.12);
+}
 
 .soft-signal-card {
     position: relative;
     border-radius: 24px;
-    background: linear-gradient(145deg, #161033, #100b27);
-    border: 1px solid rgba(168, 85, 247, 0.18);
+    background: var(--sig-card-bg);
+    border: 1px solid var(--sig-card-border);
     padding: 24px;
-    color: #ffffff;
-    box-shadow: 
-        12px 12px 28px rgba(4, 2, 12, 0.75),
-        -8px -8px 20px rgba(168, 85, 247, 0.05);
+    color: var(--sig-text-main);
+    box-shadow: var(--sig-shadow-raised);
     display: flex;
     flex-direction: column;
     gap: 18px;
@@ -18,11 +40,8 @@
 
     &:hover {
         transform: translateY(-6px);
-        border-color: rgba(168, 85, 247, 0.5);
-        box-shadow: 
-            16px 16px 36px rgba(4, 2, 12, 0.85),
-            -10px -10px 24px rgba(168, 85, 247, 0.08),
-            0 0 30px rgba(124, 58, 237, 0.3);
+        border-color: rgba(124, 58, 237, 0.5);
+        box-shadow: var(--sig-shadow-hover);
 
         .soft-signal-card__top-glow {
             opacity: 1;
@@ -41,14 +60,12 @@
     }
 
     &--super {
-        background: linear-gradient(145deg, #221442, #160c2d);
-        border-color: rgba(168, 85, 247, 0.4);
+        background: var(--sig-card-bg);
+        border-color: rgba(124, 58, 237, 0.4);
 
         &:hover {
-            border-color: rgba(168, 85, 247, 0.7);
-            box-shadow: 
-                16px 16px 36px rgba(4, 2, 12, 0.85),
-                0 0 35px rgba(168, 85, 247, 0.35);
+            border-color: rgba(124, 58, 237, 0.7);
+            box-shadow: var(--sig-shadow-hover);
         }
     }
 
@@ -57,7 +74,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(168, 85, 247, 0.14);
+        border-bottom: 1px solid var(--sig-card-border);
         padding-bottom: 14px;
 
         .title-group {
@@ -71,7 +88,7 @@
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.12rem;
         font-weight: 800;
-        color: #ffffff;
+        color: var(--sig-text-main);
         margin: 0;
     }
 
@@ -80,9 +97,9 @@
         font-weight: 800;
         padding: 3px 9px;
         border-radius: 8px;
-        background: rgba(168, 85, 247, 0.18);
-        color: #e9d5ff;
-        border: 1px solid rgba(168, 85, 247, 0.35);
+        background: rgba(124, 58, 237, 0.18);
+        color: #7c3aed;
+        border: 1px solid rgba(124, 58, 237, 0.35);
         letter-spacing: 0.05em;
     }
 
@@ -105,14 +122,14 @@
 
         &.status-wait {
             background: rgba(245, 158, 11, 0.18);
-            color: #fde047;
+            color: #f59e0b;
             border: 1px solid rgba(245, 158, 11, 0.4);
         }
 
         &.status-neutral {
-            background: rgba(255, 255, 255, 0.08);
-            color: #e9d5ff;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(124, 58, 237, 0.08);
+            color: var(--sig-text-sub);
+            border: 1px solid var(--sig-card-border);
         }
     }
 
@@ -134,7 +151,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 0 24px rgba(4, 2, 12, 0.6);
+        box-shadow: 0 0 24px rgba(124, 58, 237, 0.2);
         transition: transform 0.3s ease;
 
         .soft-signal-card:hover & {
@@ -146,11 +163,9 @@
         width: 64px;
         height: 64px;
         border-radius: 50%;
-        background: linear-gradient(145deg, #110c28, #1c1444);
-        box-shadow: 
-            inset 4px 4px 8px rgba(4, 2, 12, 0.7),
-            inset -2px -2px 6px rgba(168, 85, 247, 0.12);
-        border: 1px solid rgba(168, 85, 247, 0.2);
+        background: var(--sig-orb-bg);
+        box-shadow: var(--sig-orb-shadow);
+        border: 1px solid var(--sig-card-border);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -160,14 +175,14 @@
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.08rem;
             font-weight: 800;
-            color: #ffffff;
+            color: var(--sig-text-main);
             line-height: 1;
         }
 
         .power-label {
             font-size: 0.55rem;
             font-weight: 800;
-            color: #e9d5ff;
+            color: var(--sig-text-sub);
             letter-spacing: 0.08em;
             margin-top: 2px;
         }
@@ -184,23 +199,23 @@
     &__recommendation {
         margin: 0;
         font-size: 0.88rem;
-        color: #ffffff;
+        color: var(--sig-text-main);
         line-height: 1.45;
         font-weight: 600;
     }
 
     &__entry-box {
         font-size: 0.78rem;
-        color: #e9d5ff;
+        color: var(--sig-text-sub);
         font-weight: 500;
-        background: rgba(17, 12, 40, 0.7);
+        background: var(--sig-card-bg);
         padding: 9px 13px;
         border-radius: 12px;
-        border-left: 3px solid #a855f7;
-        border: 1px solid rgba(168, 85, 247, 0.18);
+        border-left: 3px solid #7c3aed;
+        border: 1px solid var(--sig-card-border);
 
         .entry-label {
-            color: #c084fc;
+            color: #7c3aed;
             font-weight: 800;
             font-size: 0.68rem;
             letter-spacing: 0.06em;
@@ -213,7 +228,7 @@
         align-items: center;
         gap: 6px;
         font-size: 0.78rem;
-        color: #e9d5ff;
+        color: var(--sig-text-sub);
         font-weight: 600;
 
         .target-icon { color: #f59e0b; }
@@ -237,7 +252,7 @@
     &__footer {
         display: flex;
         justify-content: flex-end;
-        border-top: 1px solid rgba(168, 85, 247, 0.14);
+        border-top: 1px solid var(--sig-card-border);
         padding-top: 14px;
 
         .soft-signal-card__trade-btn {

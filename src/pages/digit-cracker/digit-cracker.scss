@@ -1,25 +1,36 @@
 @use '@/components/shared/styles/mixins' as *;
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ DIGIT CRACKER TAB — DEEP PURPLE SOFT UI DESIGN
+// ✦ DIGIT CRACKER TAB — DUAL MODE (LIGHT & DARK)
 // ═══════════════════════════════════════════════════════════════
 
-$dc-bg:           #0b0a1a;
-$dc-card-bg:      linear-gradient(145deg, #161033, #100b27);
-$dc-purple:       #7c3aed;
-$dc-purple-light: #a855f7;
-$dc-cyan:         #06b6d4;
-$dc-emerald:      #10b981;
-$dc-amber:        #f59e0b;
+:root, .theme--light {
+    --dc-bg:             #f3f2f8;
+    --dc-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
+    --dc-card-border:    rgba(124, 58, 237, 0.16);
+    --dc-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
+    --dc-shadow-hover:   12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
+    --dc-text-main:      #1e1438;
+    --dc-text-sub:       #584b7a;
+    --dc-input-bg:       #f7f6fc;
+}
+
+body.theme--dark, .theme--dark {
+    --dc-bg:             #0b0a1a;
+    --dc-card-bg:        linear-gradient(145deg, #161033, #100b27);
+    --dc-card-border:    rgba(168, 85, 247, 0.18);
+    --dc-shadow-raised:  12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
+    --dc-shadow-hover:   16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
+    --dc-text-main:      #ffffff;
+    --dc-text-sub:       #e9d5ff;
+    --dc-input-bg:       linear-gradient(145deg, #110c28, #1c1444);
+}
 
 .digit-cracker-hud-page {
     min-height: 100%;
     padding: to-rem(20px);
-    background:
-        radial-gradient(circle at 0% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-        $dc-bg;
-    color: #ffffff;
+    background: var(--dc-bg);
+    color: var(--dc-text-main);
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
@@ -36,8 +47,8 @@ $dc-amber:        #f59e0b;
 
     // 1. Header HUD
     .cracker-hud-header {
-        background: linear-gradient(145deg, #161033, #100b27);
-        border: 1px solid rgba(168, 85, 247, 0.2);
+        background: var(--dc-card-bg);
+        border: 1px solid var(--dc-card-border);
         border-radius: to-rem(24px);
         padding: to-rem(18px) to-rem(24px);
         display: flex;
@@ -45,9 +56,7 @@ $dc-amber:        #f59e0b;
         align-items: center;
         flex-wrap: wrap;
         gap: to-rem(16px);
-        box-shadow: 
-            14px 14px 32px rgba(4, 2, 12, 0.75),
-            -8px -8px 24px rgba(168, 85, 247, 0.06);
+        box-shadow: var(--dc-shadow-raised);
 
         .header-left-box {
             display: flex;
@@ -90,19 +99,16 @@ $dc-amber:        #f59e0b;
                 label {
                     font-size: to-rem(9px);
                     font-weight: 800;
-                    color: #e9d5ff;
+                    color: var(--dc-text-sub);
                     letter-spacing: 0.5px;
                     text-transform: uppercase;
                 }
 
                 .asset-select {
-                    background: linear-gradient(145deg, #110c28, #1c1444);
-                    box-shadow: 
-                        inset 4px 4px 10px rgba(4, 2, 12, 0.7),
-                        inset -3px -3px 8px rgba(168, 85, 247, 0.12);
-                    border: 1px solid rgba(168, 85, 247, 0.25);
+                    background: var(--dc-input-bg);
+                    border: 1px solid var(--dc-card-border);
                     border-radius: to-rem(12px);
-                    color: #fff;
+                    color: var(--dc-text-main);
                     font-size: to-rem(12px);
                     font-weight: 800;
                     padding: to-rem(8px) to-rem(14px);
@@ -110,7 +116,7 @@ $dc-amber:        #f59e0b;
                     cursor: pointer;
 
                     &:focus {
-                        border-color: #a855f7;
+                        border-color: #7c3aed;
                     }
                 }
             }
@@ -123,8 +129,8 @@ $dc-amber:        #f59e0b;
             flex-wrap: wrap;
 
             .metric-pill {
-                background: rgba(17, 12, 40, 0.7);
-                border: 1px solid rgba(168, 85, 247, 0.18);
+                background: var(--dc-input-bg);
+                border: 1px solid var(--dc-card-border);
                 border-radius: to-rem(14px);
                 padding: to-rem(8px) to-rem(14px);
                 display: flex;
@@ -134,7 +140,7 @@ $dc-amber:        #f59e0b;
                 label {
                     font-size: to-rem(8px);
                     font-weight: 800;
-                    color: #e9d5ff;
+                    color: var(--dc-text-sub);
                     letter-spacing: 0.5px;
                     text-transform: uppercase;
                 }
@@ -142,21 +148,21 @@ $dc-amber:        #f59e0b;
                 .val {
                     font-size: to-rem(13px);
                     font-weight: 800;
-                    color: #ffffff;
+                    color: var(--dc-text-main);
                 }
 
                 &.spot-card {
                     .val {
-                        color: #c084fc;
+                        color: #7c3aed;
                     }
                 }
 
                 &.live-digit-box {
-                    background: rgba(124, 58, 237, 0.16);
-                    border-color: rgba(168, 85, 247, 0.35);
+                    background: rgba(124, 58, 237, 0.14);
+                    border-color: rgba(124, 58, 237, 0.35);
 
                     .val {
-                        color: #fde047;
+                        color: #f59e0b;
                         font-weight: 900;
                     }
                 }
@@ -165,10 +171,10 @@ $dc-amber:        #f59e0b;
                     .status-chip {
                         font-size: to-rem(10px);
                         font-weight: 800;
-                        color: #e9d5ff;
+                        color: var(--dc-text-sub);
 
                         &.online {
-                            color: #6ee7b7;
+                            color: #10b981;
                         }
                     }
                 }
@@ -187,21 +193,19 @@ $dc-amber:        #f59e0b;
         }
 
         .telemetry-card {
-            background: linear-gradient(145deg, #161033, #100b27);
-            border: 1px solid rgba(168, 85, 247, 0.18);
+            background: var(--dc-card-bg);
+            border: 1px solid var(--dc-card-border);
             border-radius: to-rem(18px);
             padding: to-rem(14px) to-rem(18px);
             display: flex;
             flex-direction: column;
             gap: to-rem(4px);
-            box-shadow: 
-                10px 10px 24px rgba(4, 2, 12, 0.7),
-                -6px -6px 16px rgba(168, 85, 247, 0.05);
+            box-shadow: var(--dc-shadow-raised);
 
             .lbl {
                 font-size: to-rem(9px);
                 font-weight: 800;
-                color: #e9d5ff;
+                color: var(--dc-text-sub);
                 letter-spacing: 0.5px;
                 text-transform: uppercase;
             }
@@ -210,16 +214,14 @@ $dc-amber:        #f59e0b;
                 font-family: 'Space Grotesk', sans-serif;
                 font-size: to-rem(17px);
                 font-weight: 900;
-                color: #ffffff;
+                color: var(--dc-text-main);
 
                 &.win {
-                    color: #6ee7b7;
-                    text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+                    color: #10b981;
                 }
 
                 &.loss {
-                    color: #fca5a5;
-                    text-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+                    color: #ef4444;
                 }
             }
         }

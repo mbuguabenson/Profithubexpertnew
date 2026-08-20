@@ -1,28 +1,40 @@
 // ═══════════════════════════════════════════════════════════════
-// ✦ TRADING BOTS CARDS TAB STYLES — DEEP PURPLE SOFT UI DESIGN
+// ✦ TRADING BOTS CARDS TAB STYLES — DUAL MODE (LIGHT & DARK)
 // ═══════════════════════════════════════════════════════════════
 
-$tb-bg:           #0b0a1a;
-$tb-card-bg:      linear-gradient(145deg, #161033, #100b27);
-$tb-card-border:  rgba(168, 85, 247, 0.18);
-$tb-purple:       #7c3aed;
-$tb-purple-light: #a855f7;
-$tb-cyan:         #06b6d4;
-$tb-emerald:      #10b981;
-$tb-amber:        #f59e0b;
-$tb-red:          #ef4444;
+:root, .theme--light {
+    --tb-bg:             #f3f2f8;
+    --tb-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
+    --tb-card-border:    rgba(124, 58, 237, 0.16);
+    --tb-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
+    --tb-shadow-hover:   12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
+    --tb-text-main:      #1e1438;
+    --tb-text-sub:       #584b7a;
+    --tb-input-bg:       #f7f6fc;
+}
+
+body.theme--dark, .theme--dark {
+    --tb-bg:             #0b0a1a;
+    --tb-card-bg:        linear-gradient(145deg, #161033, #100b27);
+    --tb-card-border:    rgba(168, 85, 247, 0.18);
+    --tb-shadow-raised:  12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
+    --tb-shadow-hover:   16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
+    --tb-text-main:      #ffffff;
+    --tb-text-sub:       #e9d5ff;
+    --tb-input-bg:       linear-gradient(145deg, #110c28, #1c1444);
+}
 
 .trading-bots-view {
     width: 100%;
     height: 100vh;
     padding: 24px 28px 100px;
-    background: $tb-bg;
+    background: var(--tb-bg);
     overflow-y: auto;
     overflow-x: hidden;
     box-sizing: border-box;
     scroll-behavior: smooth;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    color: #ffffff;
+    color: var(--tb-text-main);
 
     .trading-bots-container {
         max-width: 1440px;
@@ -43,11 +55,9 @@ $tb-red:          #ef4444;
     gap: 16px;
     padding: 20px 26px;
     border-radius: 24px;
-    background: linear-gradient(145deg, #161033, #100b27);
-    border: 1px solid rgba(168, 85, 247, 0.2);
-    box-shadow: 
-        14px 14px 32px rgba(4, 2, 12, 0.75),
-        -8px -8px 24px rgba(168, 85, 247, 0.06);
+    background: var(--tb-card-bg);
+    border: 1px solid var(--tb-card-border);
+    box-shadow: var(--tb-shadow-raised);
     flex-wrap: wrap;
 
     .tb-header-title-box {
@@ -59,7 +69,7 @@ $tb-red:          #ef4444;
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.55rem;
             font-weight: 800;
-            color: #ffffff;
+            color: var(--tb-text-main);
             margin: 0;
             letter-spacing: -0.01em;
         }
@@ -86,7 +96,7 @@ $tb-red:          #ef4444;
         .search-icon {
             position: absolute;
             left: 14px;
-            color: #c084fc;
+            color: #7c3aed;
             pointer-events: none;
         }
 
@@ -94,24 +104,21 @@ $tb-red:          #ef4444;
             width: 100%;
             padding: 12px 38px 12px 42px;
             border-radius: 14px;
-            background: linear-gradient(145deg, #110c28, #1c1444);
-            box-shadow: 
-                inset 4px 4px 10px rgba(4, 2, 12, 0.7),
-                inset -3px -3px 8px rgba(168, 85, 247, 0.12);
-            border: 1px solid rgba(168, 85, 247, 0.25);
-            color: #ffffff;
+            background: var(--tb-input-bg);
+            border: 1px solid var(--tb-card-border);
+            color: var(--tb-text-main);
             font-size: 0.88rem;
             font-weight: 600;
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
             &::placeholder {
-                color: #e9d5ff;
+                color: var(--tb-text-sub);
                 font-weight: 500;
             }
 
             &:focus {
-                border-color: rgba(168, 85, 247, 0.6);
+                border-color: rgba(124, 58, 237, 0.6);
                 box-shadow: 0 0 20px rgba(124, 58, 237, 0.35);
             }
         }
@@ -121,13 +128,13 @@ $tb-red:          #ef4444;
             right: 12px;
             background: transparent;
             border: none;
-            color: #c084fc;
+            color: #7c3aed;
             cursor: pointer;
             padding: 2px;
             display: grid;
             place-items: center;
 
-            &:hover { color: #ffffff; }
+            &:hover { color: var(--tb-text-main); }
         }
     }
 }
@@ -145,23 +152,18 @@ $tb-red:          #ef4444;
 .pro-bot-card {
     position: relative;
     border-radius: 24px;
-    background: $tb-card-bg;
-    border: 1px solid $tb-card-border;
+    background: var(--tb-card-bg);
+    border: 1px solid var(--tb-card-border);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    box-shadow: 
-        12px 12px 28px rgba(4, 2, 12, 0.75),
-        -8px -8px 20px rgba(168, 85, 247, 0.05);
+    box-shadow: var(--tb-shadow-raised);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 
     &:hover {
         transform: translateY(-6px);
-        border-color: rgba(168, 85, 247, 0.5);
-        box-shadow: 
-            16px 16px 36px rgba(4, 2, 12, 0.85),
-            -10px -10px 24px rgba(168, 85, 247, 0.08),
-            0 0 30px rgba(124, 58, 237, 0.3);
+        border-color: rgba(124, 58, 237, 0.5);
+        box-shadow: var(--tb-shadow-hover);
 
         .pro-bot-card__top-glow {
             opacity: 1;
@@ -198,11 +200,8 @@ $tb-red:          #ef4444;
         width: 52px;
         height: 52px;
         border-radius: 16px;
-        background: linear-gradient(145deg, #110c28, #1c1444);
-        box-shadow: 
-            inset 3px 3px 8px rgba(4, 2, 12, 0.7),
-            inset -2px -2px 6px rgba(168, 85, 247, 0.12);
-        border: 1px solid rgba(168, 85, 247, 0.2);
+        background: var(--tb-input-bg);
+        border: 1px solid var(--tb-card-border);
         display: grid;
         place-items: center;
 
@@ -224,7 +223,7 @@ $tb-red:          #ef4444;
             &--aggressive {
                 background: rgba(239, 68, 68, 0.18);
                 border: 1px solid rgba(239, 68, 68, 0.4);
-                color: #fca5a5;
+                color: #ef4444;
             }
 
             &--pro {
@@ -236,13 +235,13 @@ $tb-red:          #ef4444;
             &--speed {
                 background: rgba(6, 182, 212, 0.18);
                 border: 1px solid rgba(6, 182, 212, 0.4);
-                color: #67e8f9;
+                color: #06b6d4;
             }
 
             &--standard {
                 background: rgba(16, 185, 129, 0.18);
                 border: 1px solid rgba(16, 185, 129, 0.4);
-                color: #6ee7b7;
+                color: #10b981;
             }
         }
     }
@@ -258,7 +257,7 @@ $tb-red:          #ef4444;
         font-family: 'Space Grotesk', sans-serif;
         font-size: 1.18rem;
         font-weight: 800;
-        color: #ffffff;
+        color: var(--tb-text-main);
         margin: 0;
         line-height: 1.25;
         letter-spacing: -0.01em;
@@ -272,9 +271,9 @@ $tb-red:          #ef4444;
         .sub-tag {
             font-size: 0.7rem;
             font-weight: 700;
-            color: #e9d5ff;
-            background: rgba(168, 85, 247, 0.14);
-            border: 1px solid rgba(168, 85, 247, 0.22);
+            color: #7c3aed;
+            background: rgba(124, 58, 237, 0.12);
+            border: 1px solid rgba(124, 58, 237, 0.22);
             padding: 3px 10px;
             border-radius: 8px;
         }
@@ -282,7 +281,7 @@ $tb-red:          #ef4444;
 
     &__desc {
         font-size: 0.85rem;
-        color: #e9d5ff;
+        color: var(--tb-text-sub);
         line-height: 1.55;
         font-weight: 500;
         margin: 0;
@@ -300,8 +299,8 @@ $tb-red:          #ef4444;
         gap: 8px;
         padding: 14px 16px;
         border-radius: 16px;
-        background: rgba(17, 12, 40, 0.7);
-        border: 1px solid rgba(168, 85, 247, 0.16);
+        background: var(--tb-input-bg);
+        border: 1px solid var(--tb-card-border);
 
         .meter-label-row {
             display: flex;
@@ -314,27 +313,27 @@ $tb-red:          #ef4444;
                 gap: 6px;
                 font-size: 0.76rem;
                 font-weight: 700;
-                color: #e9d5ff;
+                color: var(--tb-text-sub);
             }
 
             .meter-val {
                 font-family: 'Space Grotesk', sans-serif;
                 font-size: 0.98rem;
                 font-weight: 800;
-                color: $tb-emerald;
+                color: #10b981;
             }
         }
 
         .meter-track {
             height: 7px;
             border-radius: 9999px;
-            background: rgba(11, 8, 26, 0.9);
+            background: rgba(124, 58, 237, 0.12);
             overflow: hidden;
 
             .meter-fill {
                 height: 100%;
                 border-radius: 9999px;
-                background: linear-gradient(90deg, #7c3aed, $tb-emerald);
+                background: linear-gradient(90deg, #7c3aed, #10b981);
             }
         }
     }
@@ -354,7 +353,7 @@ $tb-red:          #ef4444;
 
             .spec-label {
                 font-size: 0.64rem;
-                color: #e9d5ff;
+                color: var(--tb-text-sub);
                 text-transform: uppercase;
                 letter-spacing: 0.06em;
                 font-weight: 700;
@@ -363,11 +362,11 @@ $tb-red:          #ef4444;
             .spec-val {
                 font-size: 0.8rem;
                 font-weight: 800;
-                color: #ffffff;
+                color: var(--tb-text-main);
 
-                &--risk { color: $tb-amber; }
-                &--ready { color: $tb-emerald; }
-                &--pending { color: $tb-amber; }
+                &--risk { color: #f59e0b; }
+                &--ready { color: #10b981; }
+                &--pending { color: #f59e0b; }
             }
         }
     }
@@ -381,17 +380,17 @@ $tb-red:          #ef4444;
         .btn-preview {
             padding: 11px 18px;
             border-radius: 14px;
-            background: rgba(168, 85, 247, 0.12);
-            border: 1px solid rgba(168, 85, 247, 0.22);
-            color: #ffffff;
+            background: rgba(124, 58, 237, 0.12);
+            border: 1px solid rgba(124, 58, 237, 0.22);
+            color: var(--tb-text-main);
             font-size: 0.82rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
 
             &:hover {
-                background: rgba(168, 85, 247, 0.22);
-                border-color: rgba(168, 85, 247, 0.4);
+                background: rgba(124, 58, 237, 0.22);
+                border-color: rgba(124, 58, 237, 0.4);
             }
         }
 
