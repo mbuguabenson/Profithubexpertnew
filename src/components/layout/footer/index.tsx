@@ -44,8 +44,6 @@ const Footer = () => {
     const enableLanguageSettings = brandConfig.platform.footer?.enable_language_settings ?? true;
     const enableThemeToggle = brandConfig.platform.footer?.enable_theme_toggle ?? true;
 
-    const { isDesktop } = useDevice();
-
     const openLanguageSettingModal = () => showModal('DesktopLanguagesModal');
 
     return (

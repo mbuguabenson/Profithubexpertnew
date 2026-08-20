@@ -344,7 +344,7 @@ const RunPanel = observer(() => {
         />
     );
 
-    const show_run_panel = active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART || !!active_tour;
+    const show_run_panel = true;
     if (!show_run_panel) return null;
 
     return (

@@ -596,12 +596,12 @@ const AppWrapper = observer(() => {
             </div>
             <DesktopWrapper>
                 <div className='main__run-strategy-wrapper'>
-                    {(active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART) && <RunStrategy />}
-                    {(active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART) && <RunPanel />}
+                    <RunStrategy />
+                    <RunPanel />
                 </div>
             </DesktopWrapper>
             <MobileWrapper>
-                {!is_open && active_tab === DBOT_TABS.BOT_BUILDER && <RunPanel />}
+                {!is_open && <RunPanel />}
             </MobileWrapper>
 
             <ChartModal />

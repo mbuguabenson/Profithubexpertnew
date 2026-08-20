@@ -37,7 +37,9 @@ const ACCOUNT_API_ENDPOINTS = [
         desc: 'Client holder name, nickname, country of residence & email settings.',
         testHandler: async () => {
             const info = await DerivAccountWalletService.getAccountNickname();
-            return `Holder Name: ${info.nickname || 'Client'}\nBrand: ProfitHub\nClient ID: ${info.client_id || 'Active'}`;
+            const nickname = typeof info === 'string' ? info : (info as any)?.nickname || 'Client';
+            const clientId = typeof info === 'object' ? (info as any)?.client_id || 'Active' : 'Active';
+            return `Holder Name: ${nickname}\nBrand: ProfitHub\nClient ID: ${clientId}`;
         }
     },
     {
@@ -49,7 +51,7 @@ const ACCOUNT_API_ENDPOINTS = [
         desc: 'Real-time account balance updates, currency, & connected accounts list.',
         testHandler: async () => {
             const bal = await DerivAccountWalletService.getAccountBalance();
-            return `Balance: $${bal.amount.toFixed(2)} ${bal.currency}`;
+            return `Balance: $${(bal.balance ?? 0).toFixed(2)} ${bal.currency || 'USD'}`;
         }
     },
     {
