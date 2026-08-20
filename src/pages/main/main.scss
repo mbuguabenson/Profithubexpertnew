@@ -1,5 +1,15 @@
-@use 'components/shared/styles/constants' as *;
-@use 'components/shared/styles/mixins' as *;
+/* Global Scrollbar Suppression Rules */
+*, html, body, div, section, article, main {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+
+    &::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+    }
+}
 
 .run-panel {
     // fix for the RTL issue on tab active line
