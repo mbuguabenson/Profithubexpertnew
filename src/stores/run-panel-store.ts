@@ -185,8 +185,13 @@ export default class RunPanelStore {
         const { summary_card } = this.root_store;
         const { client, ui } = this.core;
         const is_ios = mobileOSDetect() === 'iOS';
-        this.dbot.saveRecentWorkspace();
-        this.dbot.unHighlightAllBlocks();
+        // Run workspace save asynchronously so UI thread starts bot instantly
+        if (this.dbot?.saveRecentWorkspace) {
+            this.dbot.saveRecentWorkspace().catch(() => {});
+        }
+        if (this.dbot?.unHighlightAllBlocks) {
+            this.dbot.unHighlightAllBlocks();
+        }
         const hasAuth = client.is_logged_in || Boolean(localStorage.getItem('active_loginid') || localStorage.getItem('token') || localStorage.getItem('active_token') || localStorage.getItem('deriv_api_token'));
         if (!hasAuth) {
             this.showLoginDialog();
