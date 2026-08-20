@@ -126,7 +126,9 @@ export class TickSubscriber {
                     const msg = JSON.parse(event.data);
                     
                     if (msg.error) {
-                        console.warn('WebSocket error in TickSubscriber:', msg.error);
+                        if (msg.error.code !== 'AlreadySubscribed') {
+                            console.warn('WebSocket message notice in TickSubscriber:', msg.error.message || msg.error);
+                        }
                         return;
                     }
 
