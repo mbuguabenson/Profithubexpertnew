@@ -265,18 +265,35 @@ export class DerivAccountWalletService {
     }
 
     /**
+     * Resolves an active, connected Deriv WebSocket API instance.
+     * Automatically initializes connection if not yet established.
+     */
+    public static async getConnectedApi(): Promise<any> {
+        if (!api_base.api || api_base.api?.connection?.readyState !== 1) {
+            try {
+                await api_base.init();
+            } catch (err) {
+                console.warn('[DerivAccountWalletService] Failed to auto-init api_base connection:', err);
+            }
+        }
+        if (!api_base.api) {
+            throw new Error('Deriv API is not connected. Please check your internet connection or login session.');
+        }
+        return api_base.api;
+    }
+
+    /**
      * Get real-time account balance via WebSocket or API
      */
     public static async getAccountBalance(): Promise<{ balance: number; currency: string }> {
         try {
-            if (api_base.api) {
-                const res = (await api_base.api.send({ balance: 1 })) as any;
-                if (res?.balance) {
-                    return {
-                        balance: typeof res.balance.balance === 'number' ? res.balance.balance : parseFloat(res.balance.balance || '0'),
-                        currency: res.balance.currency || 'USD',
-                    };
-                }
+            const api = await this.getConnectedApi();
+            const res = (await api.send({ balance: 1 })) as any;
+            if (res?.balance) {
+                return {
+                    balance: typeof res.balance.balance === 'number' ? res.balance.balance : parseFloat(res.balance.balance || '0'),
+                    currency: res.balance.currency || 'USD',
+                };
             }
         } catch (e) {
             console.warn('[DerivAccountWalletService] getAccountBalance WS failed:', e);
@@ -291,20 +308,19 @@ export class DerivAccountWalletService {
      */
     public static async getPortfolio(): Promise<DerivPortfolioPosition[]> {
         try {
-            if (api_base.api) {
-                const res = (await api_base.api.send({ portfolio: 1 })) as any;
-                if (res?.portfolio?.contracts) {
-                    return res.portfolio.contracts.map((c: any) => ({
-                        contract_id: c.contract_id,
-                        symbol: c.symbol,
-                        contract_type: c.contract_type,
-                        buy_price: parseFloat(c.buy_price || '0'),
-                        payout: parseFloat(c.payout || '0'),
-                        purchase_time: c.purchase_time,
-                        expiry_time: c.expiry_time,
-                        longcode: c.longcode,
-                    }));
-                }
+            const api = await this.getConnectedApi();
+            const res = (await api.send({ portfolio: 1 })) as any;
+            if (res?.portfolio?.contracts) {
+                return res.portfolio.contracts.map((c: any) => ({
+                    contract_id: c.contract_id,
+                    symbol: c.symbol,
+                    contract_type: c.contract_type,
+                    buy_price: parseFloat(c.buy_price || '0'),
+                    payout: parseFloat(c.payout || '0'),
+                    purchase_time: c.purchase_time,
+                    expiry_time: c.expiry_time,
+                    longcode: c.longcode,
+                }));
             }
         } catch (err) {
             console.warn('[DerivAccountWalletService] getPortfolio error:', err);
@@ -318,22 +334,21 @@ export class DerivAccountWalletService {
      */
     public static async getProfitTable(limit = 50): Promise<DerivProfitTableEntry[]> {
         try {
-            if (api_base.api) {
-                const res = (await api_base.api.send({ profit_table: 1, description: 1, limit })) as any;
-                if (res?.profit_table?.transactions) {
-                    return res.profit_table.transactions.map((t: any) => ({
-                        contract_id: t.contract_id,
-                        app_id: t.app_id,
-                        buy_price: parseFloat(t.buy_price || '0'),
-                        sell_price: parseFloat(t.sell_price || '0'),
-                        profit_loss: parseFloat(t.sell_price || '0') - parseFloat(t.buy_price || '0'),
-                        sell_time: t.sell_time,
-                        purchase_time: t.purchase_time,
-                        transaction_id: t.transaction_id,
-                        shortcode: t.shortcode,
-                        longcode: t.longcode,
-                    }));
-                }
+            const api = await this.getConnectedApi();
+            const res = (await api.send({ profit_table: 1, description: 1, limit })) as any;
+            if (res?.profit_table?.transactions) {
+                return res.profit_table.transactions.map((t: any) => ({
+                    contract_id: t.contract_id,
+                    app_id: t.app_id,
+                    buy_price: parseFloat(t.buy_price || '0'),
+                    sell_price: parseFloat(t.sell_price || '0'),
+                    profit_loss: parseFloat(t.sell_price || '0') - parseFloat(t.buy_price || '0'),
+                    sell_time: t.sell_time,
+                    purchase_time: t.purchase_time,
+                    transaction_id: t.transaction_id,
+                    shortcode: t.shortcode,
+                    longcode: t.longcode,
+                }));
             }
         } catch (err) {
             console.warn('[DerivAccountWalletService] getProfitTable error:', err);
@@ -347,22 +362,21 @@ export class DerivAccountWalletService {
      */
     public static async getStatement(limit = 50): Promise<DerivStatementEntry[]> {
         try {
-            if (api_base.api) {
-                const res = (await api_base.api.send({ statement: 1, description: 1, limit })) as any;
-                if (res?.statement?.transactions) {
-                    return res.statement.transactions.map((s: any) => ({
-                        action_type: s.action_type,
-                        amount: parseFloat(s.amount || '0'),
-                        balance_after: parseFloat(s.balance_after || '0'),
-                        contract_id: s.contract_id,
-                        longcode: s.longcode,
-                        payout: s.payout ? parseFloat(s.payout) : undefined,
-                        purchase_time: s.purchase_time,
-                        reference_id: s.reference_id,
-                        transaction_id: s.transaction_id,
-                        transaction_time: s.transaction_time,
-                    }));
-                }
+            const api = await this.getConnectedApi();
+            const res = (await api.send({ statement: 1, description: 1, limit })) as any;
+            if (res?.statement?.transactions) {
+                return res.statement.transactions.map((s: any) => ({
+                    action_type: s.action_type,
+                    amount: parseFloat(s.amount || '0'),
+                    balance_after: parseFloat(s.balance_after || '0'),
+                    contract_id: s.contract_id,
+                    longcode: s.longcode,
+                    payout: s.payout ? parseFloat(s.payout) : undefined,
+                    purchase_time: s.purchase_time,
+                    reference_id: s.reference_id,
+                    transaction_id: s.transaction_id,
+                    transaction_time: s.transaction_time,
+                }));
             }
         } catch (err) {
             console.warn('[DerivAccountWalletService] getStatement error:', err);
