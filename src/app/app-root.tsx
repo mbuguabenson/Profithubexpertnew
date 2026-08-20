@@ -16,7 +16,7 @@ const brandLabel = getBrandLabel();
 const deploymentName = getBrandWebsiteName();
 
 const AppRootLoader = () => {
-    return <ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={true} />;
+    return <ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={false} />;
 };
 
 const ErrorComponentWrapper = observer(() => {
@@ -56,15 +56,14 @@ const ErrorComponentWrapper = observer(() => {
     );
 });
 
-const statusMessages = [
-    'Loading AI Models',
-    'Connecting to Deriv APIs',
+const INIT_STEPS = [
+    'Connecting to Deriv WebSocket',
+    'Loading AI Trading Models',
     'Authenticating Secure Session',
-    'Loading Market Scanner',
+    'Calibrating Market Scanner',
     'Initializing Trading Engine',
     'Syncing Live Markets',
     'Preparing Smart Signals',
-    'Optimizing Performance',
     'Finalizing Workspace',
 ];
 
@@ -82,43 +81,59 @@ const WelcomeScreen = ({
     loadingText: string;
 }) => {
     const [exiting, setExiting] = useState(false);
+    const [activeStep, setActiveStep] = useState(0);
+
+    useEffect(() => {
+        const stepTimer = window.setInterval(() => {
+            setActiveStep(prev => (prev + 1) % INIT_STEPS.length);
+        }, 1500);
+        return () => window.clearInterval(stepTimer);
+    }, []);
 
     useEffect(() => {
         if (!isComplete) return;
         const exitTimer = window.setTimeout(() => {
             setExiting(true);
-            window.setTimeout(onFinished, 800);
+            window.setTimeout(onFinished, 900);
         }, 120);
         return () => window.clearTimeout(exitTimer);
     }, [isComplete, onFinished]);
 
     return (
         <div className={`welcome-screen ${exiting ? 'welcome-screen--exit' : 'welcome-screen--visible'}`}>
-            <div
-                className='welcome-screen__background'
-                style={{ backgroundImage: "url('/assets/images/welcome-bg.jpg')" }}
-            />
-            <div className='welcome-screen__overlay' />
-            <div className='welcome-screen__vignette' />
-            <div className='welcome-screen__grid' aria-hidden='true' />
+            {/* Ambient neumorphism glow orbs */}
+            <div className='welcome-screen__glow welcome-screen__glow--blue' />
+            <div className='welcome-screen__glow welcome-screen__glow--green' />
+            <div className='welcome-screen__glow welcome-screen__glow--gold' />
+
+            {/* Floating particles */}
             <div className='welcome-screen__particles' aria-hidden='true'>
-                {Array.from({ length: 24 }).map((_, index) => (
+                {Array.from({ length: 18 }).map((_, i) => (
                     <span
-                        key={index}
+                        key={i}
                         className='ws-particle'
                         style={{
-                            left: `${(index * 4.2 + 3) % 100}%`,
-                            top: `${(index * 7.1 + 5) % 100}%`,
-                            width: `${(index % 4) + 3}px`,
-                            height: `${(index % 4) + 3}px`,
-                            animationDuration: `${16 + (index % 10)}s`,
-                            animationDelay: `${(index * 0.4) % 8}s`,
+                            left: `${(i * 5.5 + 4) % 100}%`,
+                            top: `${(i * 8.3 + 6) % 100}%`,
+                            width: `${(i % 3) + 3}px`,
+                            height: `${(i % 3) + 3}px`,
+                            animationDuration: `${14 + (i % 9)}s`,
+                            animationDelay: `${(i * 0.5) % 7}s`,
                         }}
                     />
                 ))}
             </div>
 
+            {/* ✦ Main neumorphism card */}
             <div className='welcome-screen__content'>
+
+                {/* Status badge */}
+                <div className='ws-status-badge'>
+                    <span className='ws-status-dot' />
+                    <span className='ws-status-label'>SYSTEM INITIALIZING</span>
+                </div>
+
+                {/* Neumorphism orbital logo */}
                 <div className='ws-orb-shell'>
                     <div className='ws-ring ws-ring--outer' />
                     <div className='ws-ring ws-ring--mid' />
@@ -127,35 +142,70 @@ const WelcomeScreen = ({
                         <img
                             src='/logo_icon.svg'
                             alt={brandLabel}
-                            style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 0 14px rgba(0, 242, 254, 0.6))' }}
+                            style={{
+                                width: '34px',
+                                height: '34px',
+                                objectFit: 'contain',
+                                display: 'block',
+                                filter: 'drop-shadow(0 0 10px rgba(79, 142, 247, 0.7))',
+                            }}
+                            onError={e => { e.currentTarget.style.display = 'none'; }}
                         />
                     </div>
                 </div>
 
+                {/* Hero text — inset neumorphism panel */}
                 <div className='ws-hero'>
                     <div className='ws-hero__label'>AI-Powered Trading Platform</div>
-                    <h1 className='ws-hero__title'>Welcome to <span className='ws-hero__brand'>{brandLabel}</span></h1>
+                    <h1 className='ws-hero__title'>
+                        Welcome to <span className='ws-hero__brand'>{brandLabel}</span>
+                    </h1>
                     <p className='ws-hero__subtitle'>Secure automated trading on {deploymentName}</p>
                 </div>
 
+                {/* Feature pills */}
                 <div className='ws-badges'>
                     <span className='ws-badge'>⚡ Lightning Fast</span>
                     <span className='ws-badge'>🔒 Bank-Grade Security</span>
                     <span className='ws-badge'>🤖 AI-Driven</span>
                 </div>
 
+                {/* Step dots */}
+                <div className='ws-step-dots' aria-hidden='true'>
+                    {INIT_STEPS.map((_, i) => (
+                        <span
+                            key={i}
+                            className={`ws-step-dot${i === activeStep ? ' ws-step-dot--active' : ''}`}
+                        />
+                    ))}
+                </div>
+
+                {/* Loading status */}
                 <div className='ws-loading-copy'>
                     <div className='ws-loading-text'>{loadingText}</div>
                     <div className='ws-status' role='status' aria-live='polite'>{statusMessage}</div>
                 </div>
 
+                {/* Progress bar — inset neumorphism track */}
                 <div className='ws-progress'>
                     <div className='ws-progress__track'>
                         <div className='ws-progress__fill' style={{ width: `${progress}%` }}>
                             <span className='ws-progress__shimmer' />
                         </div>
                     </div>
-                    <div className='ws-progress__label'>{Math.round(progress)}%</div>
+                    <div className='ws-progress__meta'>
+                        <span className='ws-progress__label'>{Math.round(progress)}%</span>
+                        <span className='ws-progress__step'>{INIT_STEPS[activeStep]}</span>
+                    </div>
+                </div>
+
+                {/* Footer strip */}
+                <div className='ws-footer'>
+                    <span>v3.2.0 Pro</span>
+                    <span className='ws-footer__sep'>•</span>
+                    <span>Deriv Engine Pipeline</span>
+                    <span className='ws-footer__sep'>•</span>
+                    <span>Secure • Fast • Intelligent</span>
                 </div>
             </div>
         </div>
@@ -172,7 +222,6 @@ const AppRoot = () => {
     // Proactively refresh OAuth token before expiry to prevent silent logouts
     useTokenRefresh();
     const [showWelcome, setShowWelcome] = useState(true);
-    const [backgroundLoaded, setBackgroundLoaded] = useState(false);
     const [progress, setProgress] = useState(0);
     const [statusIndex, setStatusIndex] = useState(0);
     const [dotPhase, setDotPhase] = useState(0);
@@ -196,21 +245,8 @@ const AppRoot = () => {
     }, []);
 
     useEffect(() => {
-        const image = new Image();
-        image.src = '/assets/images/welcome-bg.jpg';
-        image.onload = () => {
-            setBackgroundLoaded(true);
-            targetProgressRef.current = 12;
-        };
-        image.onerror = () => {
-            console.warn('Welcome background image failed to load, continuing without it.');
-            setBackgroundLoaded(true);
-        };
-    }, []);
-
-    useEffect(() => {
         statusIntervalRef.current = window.setInterval(() => {
-            setStatusIndex(prev => (prev + 1) % statusMessages.length);
+            setStatusIndex(prev => (prev + 1) % INIT_STEPS.length);
         }, 2000);
         return () => {
             if (statusIntervalRef.current) {
@@ -243,18 +279,15 @@ const AppRoot = () => {
         return () => window.cancelAnimationFrame(animationFrameId);
     }, [isReducedMotion]);
 
-    useEffect(() => {
-        if (!backgroundLoaded) return;
-        targetProgressRef.current = 50;
-    }, [backgroundLoaded]);
+
 
     useEffect(() => {
         if (is_api_initialized) {
             targetProgressRef.current = 100;
-        } else if (backgroundLoaded) {
-            targetProgressRef.current = 85;
+        } else {
+            targetProgressRef.current = 60;
         }
-    }, [is_api_initialized, backgroundLoaded]);
+    }, [is_api_initialized]);
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
@@ -308,7 +341,7 @@ const AppRoot = () => {
     }, []);
 
     const loadingText = `Initializing AI Trading Engine${'.'.repeat(dotPhase)}`;
-    const statusMessage = statusMessages[statusIndex];
+    const statusMessage = INIT_STEPS[statusIndex % INIT_STEPS.length];
     const welcomeComplete = (is_api_initialized && progress >= 95) || welcomeForceExit;
 
     if (showWelcome) {

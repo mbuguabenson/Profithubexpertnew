@@ -52,6 +52,14 @@ export default Engine =>
             const allBulkDone = !isBulk || this.bulk_sold_contract_ids.size >= this.bulk_contract_ids.size;
 
             if (allBulkDone) {
+                // ─── Bug 1 fix: Cancel any pending watchdog timers immediately ──────
+                // Watchdog timers only need to fire if the contract never settled via
+                // the normal subscription stream. Now that it HAS settled, clear them
+                // so they don't fire stale API calls and slow the engine over time.
+                if (typeof this._clearWatchdog === 'function') {
+                    this._clearWatchdog();
+                }
+
                 this.setContractFlags(contract);
                 this.data.contract = contract;
                 this.isSold = true;

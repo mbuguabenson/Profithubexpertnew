@@ -14,6 +14,7 @@ import { generateUrlWithRedirect } from '@/utils/url-redirect-utils';
 import { Buy, ProposalOpenContract } from '@deriv/api-types';
 import { localize } from '@deriv-com/translations';
 import RootStore from './root-store';
+import { proposalsReady as proposalsReadyAction } from '@/external/bot-skeleton/services/tradeEngine/trade/state/actions';
 
 type TStores = any;
 type TDbot = any;
@@ -280,7 +281,8 @@ export default class RunPanelStore {
         });
     };
 
-    // Resume from pause: clear the flag and tell the trade engine to trade again.
+    // Resume from pause: clear the flag and immediately advance the trade engine's
+    // state machine — no waiting for proposal API responses.
     onResumeFromPause = () => {
         runInAction(() => {
             this.is_paused = false;
@@ -288,14 +290,32 @@ export default class RunPanelStore {
                 (window as any).is_bot_paused = false;
             }
         });
+
         try {
             observer.emit('bot.resume');
-            
+
             const tradeEngine = this.dbot?.interpreter?.bot?.tradeEngine;
-            if (tradeEngine) {
-                // If trade engine is present, trigger start with saved options to resume loop
+            if (tradeEngine?.store) {
+                // ─── Bug 2 fix: Instant resume ─────────────────────────────────────
+                // The old code called tradeEngine.start() which re-triggers
+                // makeProposals() → waits for proposal stream responses = 5–7s delay.
+                //
+                // Instead, we dispatch proposalsReady() directly.  This advances the
+                // Redux state machine straight to BEFORE_PURCHASE so the engine picks
+                // up the next trade cycle immediately (< 1 second).
+                //
+                // We only fall back to start() if tradeOptions are genuinely absent,
+                // which would mean the engine was never properly initialised.
                 if (tradeEngine.tradeOptions) {
-                    tradeEngine.start(tradeEngine.tradeOptions);
+                    try {
+                        // Dispatch proposalsReady() directly — this advances the Redux
+                        // state machine to BEFORE_PURCHASE instantly, so the next trade
+                        // fires in < 1s instead of waiting 5-7s for proposal API responses.
+                        tradeEngine.store.dispatch(proposalsReadyAction());
+                    } catch {
+                        // Fallback: dispatch via start() if store dispatch fails
+                        tradeEngine.start(tradeEngine.tradeOptions);
+                    }
                     return;
                 }
                 return;
@@ -305,7 +325,8 @@ export default class RunPanelStore {
             if (this.dbot?.interpreter) {
                 return;
             }
-            // Fallback: re-run the bot if options or engine not present
+
+            // Fallback: re-run the bot if engine not present
             this.dbot.runBot();
         } catch (e) {
             console.error('[RunPanelStore] Failed to resume bot:', e);

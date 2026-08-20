@@ -16,7 +16,22 @@ export default Engine =>
             this.purchase_block_bulk_count = count;
             return this.purchase(contract_type);
         }
-        
+
+        // ─── Watchdog helpers ──────────────────────────────────────────────────────
+        // Store all active watchdog timers so they can be cleared when a contract
+        // is sold (normal path) and do not accumulate across hundreds of runs.
+        _clearWatchdog() {
+            if (this._watchdogTimer) {
+                clearTimeout(this._watchdogTimer);
+                this._watchdogTimer = null;
+            }
+            if (this._bulkWatchdogTimer) {
+                clearTimeout(this._bulkWatchdogTimer);
+                this._bulkWatchdogTimer = null;
+            }
+        }
+
+        // ─── Purchase (single trade) ───────────────────────────────────────────────
         async purchase(contract_type) {
             // Prevent calling purchase twice
             const speed = localStorage.getItem('bot_execution_speed') || '1';
@@ -65,11 +80,15 @@ export default Engine =>
                     } catch {}
                 }
 
-                // 🛡️ POC Watchdog Recovery Timer: Auto-poll contract completion if stream is delayed
+                // 🛡️ POC Watchdog Recovery Timer: Auto-poll contract completion if stream is delayed.
+                // Store on `this` so handleContractSold() can clear it immediately when the
+                // contract settles via the normal subscription path — preventing timer accumulation.
                 const purchasedContractId = buy.contract_id;
                 const watchdogDuration = (Number(this.tradeOptions?.duration || 5) * 1200) + 3500;
 
-                const watchdogTimer = setTimeout(async () => {
+                this._clearWatchdog();
+                this._watchdogTimer = setTimeout(async () => {
+                    this._watchdogTimer = null;
                     if (this.contractId === String(purchasedContractId) && !this.isSold) {
                         try {
                             const res = await api_base.api?.send({
@@ -89,7 +108,7 @@ export default Engine =>
                 if (isSpeedMode) {
                     const postDelay = speed === '3' ? 10 : 50;
                     setTimeout(() => {
-                        clearTimeout(watchdogTimer);
+                        this._clearWatchdog();
                         this.contractId = '';
                         if (this.afterPromise) {
                             this.afterPromise();
@@ -150,9 +169,22 @@ export default Engine =>
                     const validResponses = responses.filter(r => r && r.buy && !r.error);
 
                     if (validResponses.length === 0) {
+                        // ─── Bug 3 fix (bulk): Emit Error so the run-panel's onError ──────
+                        // fires, logs to Journal, and un-freezes the panel. Without this
+                        // emit the run-panel stays frozen in PURCHASE_SENT forever.
                         const errObj = responses.find(r => r && r.error);
                         const errMsg = errObj?.error?.message || errObj?.error || 'Bulk trade purchase failed';
+                        const errCode = errObj?.error?.code || errObj?.error?.error?.code || 'BulkPurchaseFailed';
+
                         log(LogTypes.ERROR, { message: `❌ [BULK TRADES FAILED] ${errMsg}` });
+
+                        // Notify run-panel — this causes it to show the error in Journal
+                        // and correctly update is_running / contract_stage state.
+                        globalObserver.emit('Error', {
+                            code: errCode,
+                            message: errMsg,
+                            name: errCode,
+                        });
 
                         this.store.dispatch(purchaseSuccessful());
                         if (this.afterPromise) {
@@ -205,10 +237,14 @@ export default Engine =>
                         this.renewProposalsOnPurchase();
                     }
 
-                    // 🛡️ Watchdog Recovery Timer across all contracts in the bulk batch
+                    // 🛡️ Watchdog Recovery Timer across all contracts in the bulk batch.
+                    // Stored on this._bulkWatchdogTimer so handleContractSold() clears
+                    // it when all contracts settle — preventing timer accumulation.
                     const watchdogDuration = (Number(this.tradeOptions?.duration || 5) * 1200) + 4000;
                     const contractIdsToCheck = new Set(this.bulk_contract_ids);
-                    setTimeout(async () => {
+                    this._clearWatchdog();
+                    this._bulkWatchdogTimer = setTimeout(async () => {
+                        this._bulkWatchdogTimer = null;
                         for (const cid of contractIdsToCheck) {
                             if (!this.bulk_sold_contract_ids.has(cid)) {
                                 try {
@@ -231,7 +267,18 @@ export default Engine =>
                     return validResponses[0];
                 }).catch(err => {
                     this.purchase_block_allow_bulk = 'no';
-                    log(LogTypes.ERROR, { message: `❌ [BULK TRADES ERROR] ${err?.message || err}` });
+                    const errMsg = err?.message || String(err);
+                    const errCode = err?.error?.code || err?.code || 'BulkPurchaseError';
+
+                    log(LogTypes.ERROR, { message: `❌ [BULK TRADES ERROR] ${errMsg}` });
+
+                    // ─── Bug 3 fix (bulk catch): Emit Error to unfreeze the panel ──
+                    globalObserver.emit('Error', {
+                        code: errCode,
+                        message: errMsg,
+                        name: errCode,
+                    });
+
                     this.store.dispatch(purchaseSuccessful());
                     if (this.afterPromise) {
                         this.afterPromise();
@@ -276,8 +323,18 @@ export default Engine =>
                     console.warn('[Purchase] Proposal purchase failed, retrying with parameters:', err);
                     const paramAction = () => api_base.api.send(trade_option);
                     return paramAction().then(onSuccess).catch(paramErr => {
+                        const errCode = paramErr?.error?.code || paramErr?.code || 'PurchaseFailed';
                         const errMsg = paramErr?.error?.message || paramErr?.message || 'Purchase failed';
+
                         log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
+
+                        // ─── Bug 3 fix: Emit Error to unfreeze panel ──────────────────
+                        globalObserver.emit('Error', {
+                            code: errCode,
+                            message: errMsg,
+                            name: errCode,
+                        });
+
                         this.store.dispatch(purchaseSuccessful());
                         if (this.afterPromise) {
                             this.afterPromise();
@@ -305,14 +362,27 @@ export default Engine =>
             });
 
             return action().then(onSuccess).catch(err => {
+                const errCode = err?.error?.code || err?.code || 'PurchaseFailed';
                 const errMsg = err?.error?.message || err?.message || 'Purchase failed';
+
                 log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
+
+                // ─── Bug 3 fix: Emit Error to unfreeze run-panel ─────────────────
+                // Without this, InsufficientBalance errors from the buy API never
+                // reach the run-panel's onError, leaving it frozen in PURCHASE_SENT.
+                globalObserver.emit('Error', {
+                    code: errCode,
+                    message: errMsg,
+                    name: errCode,
+                });
+
                 this.store.dispatch(purchaseSuccessful());
                 if (this.afterPromise) {
                     this.afterPromise();
                 }
             });
         }
+
         getPurchaseReference = () => purchase_reference;
         regeneratePurchaseReference = () => {
             purchase_reference = getUUID();

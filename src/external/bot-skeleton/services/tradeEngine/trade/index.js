@@ -111,7 +111,12 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
         this.accountInfo = api_base.account_info;
         this.token = api_base.token;
 
-        if (api_base.api) {
+        // ─── Bug 1 fix: Guard against duplicate subscriptions ─────────────────────
+        // Without this flag, every bot start re-registers a new transaction recovery
+        // listener on the WebSocket message stream. After many runs these accumulate,
+        // slow down message processing, and degrade trade cycle times.
+        if (!this._txRecoverySubscribed && api_base.api) {
+            this._txRecoverySubscribed = true;
             try {
                 const subscription = api_base.api.onMessage().subscribe(({ data }) => {
                     if (data?.msg_type === 'transaction' && data.transaction?.action === 'sell') {
@@ -129,6 +134,7 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
                 });
                 api_base.pushSubscription(subscription);
             } catch (err) {
+                this._txRecoverySubscribed = false;
                 console.warn('[TradeEngine] Failed to register transaction recovery subscription:', err);
             }
         }

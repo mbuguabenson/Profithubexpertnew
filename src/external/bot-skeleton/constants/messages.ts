@@ -1,5 +1,7 @@
 export const unrecoverable_errors = [
     'InsufficientBalance',
+    'NotEnoughMoney',            // Alternate Deriv API code for insufficient balance
+    'AccountBalanceExceeded',    // Raised on some account types for balance limit
     'CustomLimitsReached',
     'OfferingsValidationError',
     'InvalidCurrency',
