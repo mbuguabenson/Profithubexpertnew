@@ -1,655 +1,247 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@600;700;800;900&family=Share+Tech+Mono&display=swap');
+// ═══════════════════════════════════════════════════════════════
+// ✦ CHUNK LOADER STYLES — 360 TRADING HUB RADIAL DESIGN
+// ═══════════════════════════════════════════════════════════════
 
-// ═════════════════════════════════════════════════════════════════════════════
-// 🌟 ULTRA-PREMIUM FULL-PAGE WELCOME LOADING SCREEN
-// ═════════════════════════════════════════════════════════════════════════════
-
-.welcome-loader-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 999999;
+.hub-360-loading-overlay {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem;
-    box-sizing: border-box;
-    background-color: #030712;
-    background-image: 
-        radial-gradient(circle at 50% 15%, rgba(56, 189, 248, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 15% 85%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 85% 75%, rgba(245, 158, 11, 0.08) 0%, transparent 45%);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    color: #f8fafc;
+    background: radial-gradient(circle at 50% 50%, #111827 0%, #090d16 100%);
     overflow: hidden;
-    user-select: none;
+    padding: 40px 20px;
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #ffffff;
+    z-index: 9999;
 
-    // ─── Ambient Glow Orbs ──────────────────────────────────────────────────
-    .ambient-glow {
+    .ambient-orb {
         position: absolute;
+        width: 220px;
+        height: 220px;
         border-radius: 50%;
-        filter: blur(90px);
+        filter: blur(65px);
+        opacity: 0.45;
         pointer-events: none;
-        opacity: 0.6;
-        animation: floatGlow 10s ease-in-out infinite alternate;
 
         &--cyan {
-            width: 420px;
-            height: 420px;
-            background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%);
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 15%;
+            left: 15%;
+            background: #06b6d4;
         }
 
-        &--indigo {
-            width: 380px;
-            height: 380px;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
-            bottom: -80px;
-            left: 5%;
-            animation-duration: 12s;
-            animation-delay: -3s;
+        &--amber {
+            top: 18%;
+            right: 15%;
+            background: #f59e0b;
         }
 
-        &--gold {
-            width: 340px;
-            height: 340px;
-            background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, transparent 70%);
-            bottom: -50px;
-            right: 5%;
-            animation-duration: 14s;
-            animation-delay: -6s;
+        &--emerald {
+            bottom: 15%;
+            left: 20%;
+            background: #10b981;
         }
     }
 
-    // ─── Cyber Grid Overlay ─────────────────────────────────────────────────
-    .welcome-grid-overlay {
-        position: absolute;
-        inset: 0;
-        background-size: 40px 40px;
-        background-image: 
-            linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 80%);
-        pointer-events: none;
-    }
-
-    // ─── Center Container Card ──────────────────────────────────────────────
-    .welcome-loader-container {
+    .hub-360-container {
         position: relative;
         z-index: 10;
         display: flex;
         flex-direction: column;
         align-items: center;
-        width: 100%;
-        max-width: 540px;
-        padding: 2.5rem 2rem;
-        border-radius: 28px;
-        background: rgba(15, 23, 42, 0.72);
-        backdrop-filter: blur(28px);
-        -webkit-backdrop-filter: blur(28px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 
-            0 30px 60px -15px rgba(0, 0, 0, 0.85),
-            0 0 50px rgba(56, 189, 248, 0.08),
-            inset 0 1px 1px rgba(255, 255, 255, 0.15);
         text-align: center;
-        animation: containerEntry 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        gap: 24px;
+        max-width: 480px;
+        width: 100%;
     }
 
-    // ─── Status Badge ───────────────────────────────────────────────────────
-    .welcome-status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 5px 14px;
-        border-radius: 9999px;
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.25);
-        margin-bottom: 1.75rem;
-
-        .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background-color: #10b981;
-            box-shadow: 0 0 10px #10b981;
-            animation: pulseStatus 1.6s ease-in-out infinite;
-        }
-
-        .status-text {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            color: #34d399;
-            text-transform: uppercase;
-        }
-    }
-
-    // ─── Multi-Orbital Brand Core ───────────────────────────────────────────
-    .brand-core-wrapper {
+    .hub-360-radar-wrap {
         position: relative;
-        width: 110px;
-        height: 110px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1.5rem;
+        width: 140px;
+        height: 140px;
+        display: grid;
+        place-items: center;
 
-        .orbital-ring {
+        .radar-ring-outer {
             position: absolute;
+            inset: 0;
             border-radius: 50%;
-            pointer-events: none;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+        }
 
-            &--1 {
-                inset: 0;
-                border: 2px dashed rgba(56, 189, 248, 0.45);
-                animation: spinClockwise 10s linear infinite;
-                box-shadow: 0 0 18px rgba(56, 189, 248, 0.2);
+        .radar-ring-spin {
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: #06b6d4;
+            border-right-color: #10b981;
+            border-bottom-color: #f59e0b;
+            animation: spinRadar 2.2s linear infinite;
+        }
+
+        .radar-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+
+            &--amber {
+                top: 24px;
+                left: 32px;
+                background: #f59e0b;
+                box-shadow: 0 0 12px #f59e0b;
             }
 
-            &--2 {
-                inset: 8px;
-                border: 1.5px solid transparent;
-                border-top-color: #818cf8;
-                border-right-color: #818cf8;
-                animation: spinCounterClockwise 5s linear infinite;
+            &--cyan {
+                top: 28px;
+                right: 30px;
+                background: #ffffff;
+                box-shadow: 0 0 12px #ffffff;
             }
 
-            &--3 {
-                inset: 16px;
-                border: 1px solid rgba(245, 158, 11, 0.35);
-                border-bottom-color: #f59e0b;
-                animation: spinClockwise 3.5s linear infinite;
+            &--white {
+                bottom: 32px;
+                right: 34px;
+                background: #10b981;
+                box-shadow: 0 0 12px #10b981;
             }
         }
 
-        .brand-emblem {
+        .hub-360-center-badge {
             position: relative;
             z-index: 2;
-            width: 62px;
-            height: 62px;
+            width: 76px;
+            height: 76px;
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 
-                0 0 25px rgba(56, 189, 248, 0.35),
-                inset 0 0 15px rgba(56, 189, 248, 0.15);
-            animation: breatheLogo 3s ease-in-out infinite;
+            background: #0b0f19;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: grid;
+            place-items: center;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
 
-            .brand-logo-img {
-                width: 38px;
-                height: 38px;
-                object-fit: contain;
-                filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.5));
-            }
-
-            .brand-logo-fallback {
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            .num-360 {
+                font-family: 'Space Grotesk', sans-serif;
+                font-size: 1.65rem;
+                font-weight: 800;
+                color: #ffffff;
+                letter-spacing: -0.02em;
             }
         }
     }
 
-    // ─── Brand Title & Tagline ──────────────────────────────────────────────
-    .welcome-title-group {
-        margin-bottom: 1.75rem;
-
-        .welcome-brand-name {
-            font-family: 'Orbitron', 'Inter', sans-serif;
-            font-size: 1.75rem;
-            font-weight: 800;
-            letter-spacing: 0.03em;
-            margin: 0 0 0.4rem 0;
-            background: linear-gradient(135deg, #ffffff 15%, #bae6fd 60%, #38bdf8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
-
-            .highlight-pro {
-                background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                margin-left: 4px;
-            }
-        }
-
-        .welcome-tagline {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #94a3b8;
-            margin: 0;
-            line-height: 1.4;
-            max-width: 420px;
-        }
-    }
-
-    // ─── Dynamic Progress Card ──────────────────────────────────────────────
-    .welcome-progress-card {
-        width: 100%;
-        padding: 1.25rem 1.4rem;
-        border-radius: 16px;
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-        margin-bottom: 1.5rem;
-        box-sizing: border-box;
-
-        .progress-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 0.9rem;
-            text-align: left;
-
-            .step-info {
-                display: flex;
-                flex-direction: column;
-                gap: 2px;
-                min-height: 40px;
-
-                .step-title {
-                    font-size: 0.88rem;
-                    font-weight: 700;
-                    color: #f1f5f9;
-                    letter-spacing: 0.01em;
-                }
-
-                .step-desc {
-                    font-size: 0.76rem;
-                    color: #64748b;
-                    line-height: 1.3;
-                    font-family: 'Share Tech Mono', monospace;
-                }
-            }
-
-            .progress-percentage {
-                font-family: 'Share Tech Mono', monospace;
-                font-size: 1.15rem;
-                font-weight: 700;
-                color: #38bdf8;
-                text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
-                min-width: 44px;
-                text-align: right;
-            }
-        }
-
-        .progress-track {
-            position: relative;
-            width: 100%;
-            height: 8px;
-            border-radius: 9999px;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden;
-
-            .progress-bar-fill {
-                position: relative;
-                height: 100%;
-                border-radius: 9999px;
-                background: linear-gradient(90deg, #38bdf8 0%, #6366f1 50%, #f59e0b 85%, #38bdf8 100%);
-                background-size: 250% 100%;
-                box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
-                transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-                animation: gradientSweep 3s linear infinite;
-
-                .progress-shimmer {
-                    position: absolute;
-                    inset: 0;
-                    background: linear-gradient(
-                        90deg,
-                        transparent 0%,
-                        rgba(255, 255, 255, 0.6) 50%,
-                        transparent 100%
-                    );
-                    animation: shimmerMove 1.8s infinite;
-                }
-            }
-        }
-
-        .progress-custom-msg {
-            margin-top: 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #cbd5e1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-
-            .pulse-icon {
-                color: #f59e0b;
-                animation: pulseIcon 1.2s infinite;
-            }
-        }
-    }
-
-    // ─── Feature Dock Pills ─────────────────────────────────────────────────
-    .welcome-feature-dock {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-        width: 100%;
-        margin-bottom: 1.5rem;
-
-        .feature-pill {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 8px 6px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: #cbd5e1;
-            transition: all 0.2s ease;
-
-            .pill-icon {
-                font-size: 0.85rem;
-            }
-
-            &:hover {
-                background: rgba(56, 189, 248, 0.08);
-                border-color: rgba(56, 189, 248, 0.25);
-                color: #f8fafc;
-            }
-        }
-    }
-
-    // ─── Footer Watermark ───────────────────────────────────────────────────
-    .welcome-footer-info {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        font-size: 0.72rem;
-        color: #475569;
-        font-family: 'Share Tech Mono', monospace;
-
-        .footer-separator {
-            color: #334155;
-        }
-    }
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// 🌟 COMPACT / INLINE CHUNK LOADER (FOR PANELS, TABS & CHARTS)
-// ═════════════════════════════════════════════════════════════════════════════
-
-.chunk-loader-overlay {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    min-height: 240px;
-    padding: 1.5rem;
-    box-sizing: border-box;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-
-    &.clean {
-        background: transparent !important;
-        min-height: 160px;
-        padding: 1rem;
-    }
-
-    .compact-loader-card {
+    .hub-360-text-group {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        gap: 1.2rem;
-        padding: 1.75rem 2.25rem;
-        border-radius: 20px;
-        background: rgba(15, 23, 42, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 
-            0 20px 35px -10px rgba(0, 0, 0, 0.6),
-            0 0 30px rgba(56, 189, 248, 0.06);
-        animation: containerEntry 0.4s ease-out forwards;
-    }
+        gap: 8px;
 
-    // ─── Concentric Dual-Ring Orbital Spinner ───────────────────────────────
-    .compact-orbital-spinner {
-        position: relative;
-        width: 52px;
-        height: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        .orbit-ring {
-            position: absolute;
-            border-radius: 50%;
-
-            &--outer {
-                inset: 0;
-                border: 2.5px solid transparent;
-                border-top-color: #38bdf8;
-                border-left-color: #38bdf8;
-                animation: spinClockwise 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-                filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.5));
-            }
-
-            &--inner {
-                inset: 7px;
-                border: 2px solid transparent;
-                border-bottom-color: #f59e0b;
-                border-right-color: #f59e0b;
-                animation: spinCounterClockwise 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-                filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.5));
-            }
+        .powered-by-tag {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #f59e0b;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
         }
 
-        .orbit-core {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #38bdf8, #818cf8);
-            box-shadow: 0 0 10px #38bdf8;
-            animation: pulseStatus 1.5s ease-in-out infinite;
+        .hub-360-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.3rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+        }
+
+        .hub-360-sub {
+            font-size: 0.92rem;
+            color: #94a3b8;
+            margin: 0;
+            font-weight: 500;
         }
     }
 
-    .compact-loader-text {
+    .hub-360-pills-row {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 12px;
 
-        .compact-loader-msg {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #cbd5e1;
-            letter-spacing: 0.02em;
-        }
-
-        .compact-loader-dots {
-            display: inline-flex;
+        .hub-pill {
+            display: flex;
             align-items: center;
-            gap: 3px;
-
-            span {
-                width: 3.5px;
-                height: 3.5px;
-                border-radius: 50%;
-                background-color: #38bdf8;
-                animation: dotPulse 1.4s infinite ease-in-out;
-
-                &:nth-child(2) {
-                    animation-delay: 0.2s;
-                }
-
-                &:nth-child(3) {
-                    animation-delay: 0.4s;
-                }
-            }
-        }
-    }
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// 🌟 KEYFRAME ANIMATIONS
-// ═════════════════════════════════════════════════════════════════════════════
-
-@keyframes spinClockwise {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes spinCounterClockwise {
-    from {
-        transform: rotate(360deg);
-    }
-    to {
-        transform: rotate(0deg);
-    }
-}
-
-@keyframes floatGlow {
-    0% {
-        transform: translateY(0) scale(1);
-    }
-    100% {
-        transform: translateY(-25px) scale(1.1);
-    }
-}
-
-@keyframes pulseStatus {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.4;
-        transform: scale(0.85);
-    }
-}
-
-@keyframes breatheLogo {
-    0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 25px rgba(56, 189, 248, 0.35), inset 0 0 15px rgba(56, 189, 248, 0.15);
-    }
-    50% {
-        transform: scale(1.04);
-        box-shadow: 0 0 35px rgba(56, 189, 248, 0.55), inset 0 0 22px rgba(56, 189, 248, 0.3);
-    }
-}
-
-@keyframes gradientSweep {
-    0% {
-        background-position: 0% 50%;
-    }
-    100% {
-        background-position: 200% 50%;
-    }
-}
-
-@keyframes shimmerMove {
-    0% {
-        transform: translateX(-100%);
-    }
-    100% {
-        transform: translateX(200%);
-    }
-}
-
-@keyframes pulseIcon {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.2);
-        opacity: 0.7;
-    }
-}
-
-@keyframes dotPulse {
-    0%, 80%, 100% {
-        transform: scale(0.6);
-        opacity: 0.4;
-    }
-    40% {
-        transform: scale(1.2);
-        opacity: 1;
-    }
-}
-
-@keyframes containerEntry {
-    from {
-        opacity: 0;
-        transform: translateY(16px) scale(0.97);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// 📱 RESPONSIVE ADJUSTMENTS (MOBILE & TABLET)
-// ═════════════════════════════════════════════════════════════════════════════
-
-@media (max-width: 600px) {
-    .welcome-loader-screen {
-        padding: 1rem;
-
-        .welcome-loader-container {
-            padding: 2rem 1.25rem;
-            border-radius: 20px;
-        }
-
-        .brand-core-wrapper {
-            width: 90px;
-            height: 90px;
-            margin-bottom: 1.25rem;
-
-            .brand-emblem {
-                width: 52px;
-                height: 52px;
-
-                .brand-logo-img {
-                    width: 32px;
-                    height: 32px;
-                }
-            }
-        }
-
-        .welcome-title-group {
-            margin-bottom: 1.4rem;
-
-            .welcome-brand-name {
-                font-size: 1.45rem;
-            }
-
-            .welcome-tagline {
-                font-size: 0.78rem;
-            }
-        }
-
-        .welcome-feature-dock {
-            grid-template-columns: repeat(2, 1fr);
             gap: 6px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            padding: 7px 16px;
+            border-radius: 9999px;
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.12);
 
-            .feature-pill {
-                font-size: 0.7rem;
-                padding: 6px 4px;
+            .pill-icon {
+                &.text-cyan { color: #06b6d4; }
+                &.text-emerald { color: #10b981; }
+                &.text-purple { color: #a855f7; }
             }
         }
     }
+
+    .hub-360-progress-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        margin-top: 8px;
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+
+            .progress-fill {
+                height: 100%;
+                border-radius: 9999px;
+                background: linear-gradient(90deg, #06b6d4, #10b981);
+                transition: width 0.3s ease;
+            }
+        }
+
+        .deriv-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .deriv-d-logo {
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: #ff444f;
+                color: #fff;
+                font-weight: 900;
+                font-size: 12px;
+                display: grid;
+                place-items: center;
+                line-height: 1;
+            }
+
+            .deriv-brand-text {
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: #ffffff;
+            }
+        }
+    }
+}
+
+@keyframes spinRadar {
+    to { transform: rotate(360deg); }
 }
