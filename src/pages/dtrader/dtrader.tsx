@@ -381,7 +381,7 @@ const DTraderPage: React.FC = observer(() => {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <Heading.H3>Deriv DTrader Web App</Heading.H3>
-                                    <Badge label='AUTH REQUIRED' size='sm' variant='warning' />
+                                    <Badge label='AUTH REQUIRED' size='sm' variant={'warning' as any} />
                                 </div>
 
                                 <Text size='sm' color='subtle'>
@@ -393,9 +393,12 @@ const DTraderPage: React.FC = observer(() => {
                                         placeholder="Enter Deriv API Token (e.g. a1-XYZ...)"
                                         value={manualToken}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualToken(e.target.value)}
-                                        status={tokenError ? 'error' : undefined}
-                                        statusMessage={tokenError}
                                     />
+                                    {tokenError && (
+                                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '-4px' }}>
+                                            {tokenError}
+                                        </div>
+                                    )}
                                     <Button
                                         size='lg'
                                         variant='primary'
@@ -409,7 +412,7 @@ const DTraderPage: React.FC = observer(() => {
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
                                     <div style={{ flex: 1, height: 1, background: 'rgba(255, 255, 255, 0.08)' }} />
-                                    <CaptionText size='xs' color='subtle'>OR LOG IN WITH DERIV</CaptionText>
+                                    <CaptionText size='sm' color='subtle'>OR LOG IN WITH DERIV</CaptionText>
                                     <div style={{ flex: 1, height: 1, background: 'rgba(255, 255, 255, 0.08)' }} />
                                 </div>
 
