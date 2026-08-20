@@ -395,6 +395,10 @@ export const saveSiteConfig = (config: Partial<SiteConfig>): void => {
     const current = getSiteConfig();
     const merged = { ...current, ...config };
     localStorage.setItem(SITE_CONFIG_KEY, JSON.stringify(merged));
+    // Save to backend API asynchronously
+    import('./admin-api').then(({ saveSiteConfigApi }) => {
+        saveSiteConfigApi(merged);
+    }).catch(() => {/* ignore */});
     // Dispatch event so the main site picks it up in real-time
     window.dispatchEvent(new CustomEvent('profithub_config_changed', { detail: merged }));
 };

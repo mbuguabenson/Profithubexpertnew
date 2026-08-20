@@ -58,6 +58,12 @@ export default defineConfig({
         port: 8443,
         compress: true,
         historyApiFallback: true,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:4000',
+                changeOrigin: true,
+            },
+        },
     },
     dev: {
         hmr: true,
@@ -79,7 +85,6 @@ export default defineConfig({
     },
     tools: {
         rspack: {
-            parallelism: 1,
             plugins: [],
             resolve: {},
             module: {

@@ -20,6 +20,7 @@
         "prepare": "husky install",
         "build:analyze": "BUNDLE_ANALYZE=true rsbuild build",
         "generate:brand-css": "node scripts/generate-brand-css.js",
+        "start:backend": "node api/server.js",
         "type-check": "tsc --noEmit"
     },
     "dependencies": {
