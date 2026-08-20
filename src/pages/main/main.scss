@@ -126,11 +126,13 @@ html, body, #root, #app {
             }
 
             &__list {
-                background: #112340 !important;
+                background: rgba(16, 18, 20, 0.85) !important;
+                backdrop-filter: blur(16px) saturate(180%) !important;
+                -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
                 
                 :global(.theme--light) & {
-                    background: #f1f5f9 !important;
-                    border-color: rgba(59, 130, 246, 0.3) !important;
+                    background: rgba(16, 18, 20, 0.85) !important;
+                    border-color: rgba(255, 255, 255, 0.05) !important;
                 }
 
                 -webkit-backdrop-filter: none !important;
@@ -188,11 +190,11 @@ html, body, #root, #app {
 
             &__item {
                 background: transparent !important;
-                color: rgba(255, 255, 255, 0.85) !important;
+                color: rgba(255, 255, 255, 0.75) !important;
 
                 :global(.theme--light) & {
                     background: transparent !important;
-                    color: rgba(0, 0, 0, 0.7) !important;
+                    color: rgba(255, 255, 255, 0.75) !important;
                 }
                 width: auto !important;
                 height: 40px !important;
@@ -214,12 +216,12 @@ html, body, #root, #app {
 
                 svg {
                     fill: none;
-                    stroke: #38bdf8 !important;
-                    color: #38bdf8 !important;
+                    stroke: rgba(255, 255, 255, 0.75) !important;
+                    color: rgba(255, 255, 255, 0.75) !important;
                     
                     path, circle, rect {
-                        fill: #38bdf8 !important;
-                        stroke: #38bdf8 !important;
+                        fill: rgba(255, 255, 255, 0.75) !important;
+                        stroke: rgba(255, 255, 255, 0.75) !important;
                     }
                 }
 
@@ -233,12 +235,28 @@ html, body, #root, #app {
                 }
 
                 &.dc-tabs__active {
-                    background: #1e365b !important;
+                    background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%) !important;
                     color: #ffffff !important;
+
+                    svg {
+                        stroke: #ffffff !important;
+                        path, circle, rect {
+                            fill: #ffffff !important;
+                            stroke: #ffffff !important;
+                        }
+                    }
                     
                     :global(.theme--light) & {
-                        background: #dbeafe !important;
-                        box-shadow: none !important;
+                        background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%) !important;
+                        color: #ffffff !important;
+
+                        svg {
+                            stroke: #ffffff !important;
+                            path, circle, rect {
+                                fill: #ffffff !important;
+                                stroke: #ffffff !important;
+                            }
+                        }
                     }
 
                     border-radius: 4px !important;

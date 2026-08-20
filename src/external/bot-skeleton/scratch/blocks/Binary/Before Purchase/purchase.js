@@ -19,24 +19,6 @@ window.Blockly.Blocks.purchase = {
                     options: [['', '']],
                 },
             ],
-            message1: localize('Bulk Trade: %1 Runs: %2'),
-            args1: [
-                {
-                    type: 'field_dropdown',
-                    name: 'ALLOW_BULK',
-                    options: [
-                        [localize('No'), 'FALSE'],
-                        [localize('Yes'), 'TRUE'],
-                    ],
-                },
-                {
-                    type: 'field_number',
-                    name: 'BULK_COUNT',
-                    value: 2,
-                    min: 1,
-                    max: 100,
-                },
-            ],
             previousStatement: null,
             colour: window.Blockly.Colours.Special1.colour,
             colourSecondary: window.Blockly.Colours.Special1.colourSecondary,
@@ -103,14 +85,6 @@ window.Blockly.Blocks.purchase = {
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.purchase = block => {
     const purchaseList = block.getFieldValue('PURCHASE_LIST');
-    const allowBulk = block.getFieldValue('ALLOW_BULK') === 'TRUE';
-    const bulkCount = block.getFieldValue('BULK_COUNT') || 2;
-    
-    if (allowBulk) {
-        return `
-            Bot.bulkPurchase('${purchaseList}', ${bulkCount});
-        `;
-    }
     
     return `
         Bot.purchase('${purchaseList}');

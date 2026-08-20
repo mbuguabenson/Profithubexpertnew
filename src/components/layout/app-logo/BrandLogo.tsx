@@ -1,5 +1,4 @@
 import { observer } from 'mobx-react-lite';
-import useThemeSwitcher from '@/hooks/useThemeSwitcher';
 import { getSiteConfig } from '@/utils/supabase-copy';
 import { getBrandLabel } from '@/components/shared/utils/brand/brand';
 
@@ -12,7 +11,6 @@ type TBrandLogoProps = {
 };
 
 export const BrandLogo = observer(({ height = 34, className = '', showTagline = true }: TBrandLogoProps) => {
-    const { is_dark_mode_on } = useThemeSwitcher();
     const cfg = getSiteConfig();
     const customLogo = cfg?.logoBase64;
     const brandName = getBrandLabel() || 'ProfitHub';
@@ -35,7 +33,7 @@ export const BrandLogo = observer(({ height = 34, className = '', showTagline = 
                             width: `${height}px`,
                             display: 'block',
                             objectFit: 'contain',
-                            filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.45))',
+                            filter: 'drop-shadow(0 0 10px rgba(124, 58, 237, 0.45))',
                         }}
                     />
                 )}
@@ -51,7 +49,7 @@ export const BrandLogo = observer(({ height = 34, className = '', showTagline = 
                         <span style={{ 
                             fontSize: '1.25rem', 
                             fontWeight: 900, 
-                            background: 'linear-gradient(135deg, #00F2FE 0%, #3b82f6 100%)', 
+                            background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)', 
                             WebkitBackgroundClip: 'text', 
                             WebkitTextFillColor: 'transparent',
                             letterSpacing: '0.8px',

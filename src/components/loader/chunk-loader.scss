@@ -29,19 +29,19 @@
         &--cyan {
             top: 15%;
             left: 15%;
-            background: #06b6d4;
+            background: #7c3aed;
         }
 
         &--amber {
             top: 18%;
             right: 15%;
-            background: #f59e0b;
+            background: #a855f7;
         }
 
         &--emerald {
             bottom: 15%;
             left: 20%;
-            background: #10b981;
+            background: #6366f1;
         }
     }
 
@@ -79,9 +79,9 @@
             inset: 6px;
             border-radius: 50%;
             border: 2px solid transparent;
-            border-top-color: #06b6d4;
-            border-right-color: #10b981;
-            border-bottom-color: #f59e0b;
+            border-top-color: #7c3aed;
+            border-right-color: #a855f7;
+            border-bottom-color: #6366f1;
             animation: spinRadar 2.2s linear infinite;
         }
 
@@ -94,8 +94,8 @@
             &--amber {
                 top: 24px;
                 left: 32px;
-                background: #f59e0b;
-                box-shadow: 0 0 12px #f59e0b;
+                background: #a855f7;
+                box-shadow: 0 0 12px #a855f7;
             }
 
             &--cyan {
@@ -108,8 +108,8 @@
             &--white {
                 bottom: 32px;
                 right: 34px;
-                background: #10b981;
-                box-shadow: 0 0 12px #10b981;
+                background: #7c3aed;
+                box-shadow: 0 0 12px #7c3aed;
             }
         }
 
@@ -144,7 +144,7 @@
         .powered-by-tag {
             font-size: 0.72rem;
             font-weight: 800;
-            color: #f59e0b;
+            color: #a855f7;
             letter-spacing: 0.14em;
             text-transform: uppercase;
         }
@@ -185,9 +185,9 @@
             border: 1px solid rgba(255, 255, 255, 0.12);
 
             .pill-icon {
-                &.text-cyan { color: #06b6d4; }
-                &.text-emerald { color: #10b981; }
-                &.text-purple { color: #a855f7; }
+                &.text-cyan { color: #a855f7; }
+                &.text-emerald { color: #7c3aed; }
+                &.text-purple { color: #6366f1; }
             }
         }
     }
@@ -210,7 +210,7 @@
             .progress-fill {
                 height: 100%;
                 border-radius: 9999px;
-                background: linear-gradient(90deg, #06b6d4, #10b981);
+                background: linear-gradient(90deg, #7c3aed, #a855f7);
                 transition: width 0.3s ease;
             }
         }

@@ -9,8 +9,8 @@
 
     <!-- Glowing Vector Gradients -->
     <linearGradient id="neonCyanIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00F2FE" />
-      <stop offset="100%" stop-color="#4FACFE" />
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#7c3aed" />
     </linearGradient>
     
     <linearGradient id="neonEmeraldIcon" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -28,7 +28,7 @@
     </filter>
 
     <filter id="subtleShadowIcon" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#00F2FE" flood-opacity="0.4" />
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#7c3aed" flood-opacity="0.4" />
     </filter>
   </defs>
 
@@ -37,10 +37,10 @@
     <polygon points="50,4 92,27 92,73 50,96 8,73 8,27" fill="url(#hexGradIcon)" stroke="url(#neonCyanIcon)" stroke-width="2.5" stroke-linejoin="round" />
     
     <!-- Nodes -->
-    <circle cx="50" cy="4" r="3" fill="#00F2FE" />
-    <circle cx="92" cy="27" r="3" fill="#4FACFE" />
+    <circle cx="50" cy="4" r="3" fill="#a855f7" />
+    <circle cx="92" cy="27" r="3" fill="#7c3aed" />
     <circle cx="92" cy="73" r="3" fill="#10B981" />
-    <circle cx="50" cy="96" r="3" fill="#00F2FE" />
+    <circle cx="50" cy="96" r="3" fill="#a855f7" />
     <circle cx="8" cy="73" r="3" fill="#8B5CF6" />
     <circle cx="8" cy="27" r="3" fill="#3B82F6" />
 

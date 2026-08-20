@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import classNames from 'classnames';
 import { localize } from '@deriv-com/translations';
 import './smartanalysis-dashboard.scss';
@@ -24,6 +24,10 @@ const SmartanalysisDashboard = ({
     isModal = false,
     consecutiveLosses = 0,
 }: SmartanalysisDashboardProps) => {
+    void strategyType;
+    void isModal;
+    void consecutiveLosses;
+
     if (!market) {
         return (
             <div className="smart-dashboard__empty">
@@ -32,7 +36,7 @@ const SmartanalysisDashboard = ({
         );
     }
 
-    const { lastDigits, digitPercentages, lastQuote, confidenceScore } = market;
+    const { lastDigits, digitPercentages } = market;
 
     // 1. Last 7 Digits (distinct colors)
     const last7Digits = useMemo(() => {

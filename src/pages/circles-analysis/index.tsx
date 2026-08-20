@@ -1,18 +1,19 @@
 import { useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
-import { LabelList, Line, LineChart, ResponsiveContainer } from 'recharts';
 import { useStore } from '@/hooks/useStore';
 import TradingEngine from './components/trading-engine';
+import DigitDistribution from './components/DigitDistribution';
+import LastDigitsLineChart from './components/LastDigitsLineChart';
+import Last20DigitsGrid from './components/Last20DigitsGrid';
 import Hub360LoadingScreen from '@/components/loading/Hub360LoadingScreen';
 import './circles-analysis.scss';
 
 const CirclesAnalysis = observer(() => {
-    const { analysis, common, smart_auto } = useStore();
+    const { analysis, common } = useStore();
     const [view_strategy, setViewStrategy] = useState<'even_odd' | 'over_under' | 'differs' | 'matches' | 'rise_fall'>(
         'even_odd'
     );
-    const [selected_digit, setSelectedDigit] = useState<number>(0);
 
     const { is_socket_opened, latency } = common;
     const {
@@ -25,11 +26,13 @@ const CirclesAnalysis = observer(() => {
         percentages,
         even_odd_history,
         over_under_history,
-        differs_history,
-        matches_history,
-        rise_fall_history,
         markets,
     } = analysis;
+
+    // Safely retrieve extended history if available
+    const differs_history = (analysis as any).differs_history || [];
+    const matches_history = (analysis as any).matches_history || [];
+    const rise_fall_history = (analysis as any).rise_fall_history || [];
 
     // Highest probability calculations
     const highestEven = useMemo(() => {
@@ -109,7 +112,9 @@ const CirclesAnalysis = observer(() => {
         } else {
             const last2 = ticks.slice(-2);
             if (last2.length === 2) {
-                const diff = last2[1].quote - last2[0].quote;
+                const q1 = (last2[1] as any)?.quote ?? (last2[1] as any) ?? 0;
+                const q0 = (last2[0] as any)?.quote ?? (last2[0] as any) ?? 0;
+                const diff = q1 - q0;
                 prediction = diff >= 0 ? 'RISE' : 'FALL';
                 confidence = 70;
                 status = 'MOMENTUM';
@@ -120,15 +125,6 @@ const CirclesAnalysis = observer(() => {
         return { prediction, confidence, status, reason };
     }, [percentages, view_strategy, digit_stats, ticks]);
 
-    // 15-tick Line Chart Data
-    const chartData = useMemo(() => {
-        return ticks.slice(-15).map((t, idx) => ({
-            index: idx + 1,
-            value: t.digit,
-            quote: t.quote,
-        }));
-    }, [ticks]);
-
     // 60-Tick Pattern Strip Data
     const last60History = useMemo(() => {
         let historySource = even_odd_history;
@@ -137,7 +133,7 @@ const CirclesAnalysis = observer(() => {
         else if (view_strategy === 'matches') historySource = matches_history;
         else if (view_strategy === 'rise_fall') historySource = rise_fall_history;
 
-        return historySource.slice(-60).map(item => item.type);
+        return (historySource || []).slice(-60).map((item: any) => item?.type ?? item);
     }, [
         even_odd_history,
         over_under_history,
@@ -158,15 +154,6 @@ const CirclesAnalysis = observer(() => {
         }
         return { val: lastVal, count };
     }, [last60History]);
-
-    const handleSelectDigit = (digit: number) => {
-        setSelectedDigit(digit);
-        const configKey = `${view_strategy}_config` as keyof typeof smart_auto;
-        if (smart_auto[configKey]) {
-            smart_auto.updateConfig(view_strategy, 'prediction' as any, digit);
-            smart_auto.updateConfig(view_strategy, 'manual_prediction' as any, digit);
-        }
-    };
 
     if (!is_socket_opened && ticks.length === 0) {
         return (
@@ -327,68 +314,45 @@ const CirclesAnalysis = observer(() => {
                         </div>
                     </div>
 
-                    {/* Trajectory & 60-Tick Pattern Strip */}
-                    <div className='trajectory-panel-row'>
-                        <div className='glass-card velocity-chart-card'>
-                            <div className='card-header'>
-                                <h4>Tick Velocity (Last 15)</h4>
-                            </div>
-                            <div className='chart-wrapper'>
-                                <ResponsiveContainer width='100%' height={130}>
-                                    <LineChart data={chartData}>
-                                        <Line
-                                            type='monotone'
-                                            dataKey='value'
-                                            stroke='#38bdf8'
-                                            strokeWidth={3}
-                                            dot={{ r: 3, fill: '#38bdf8', stroke: '#fff' }}
-                                            animationDuration={300}
-                                        >
-                                            <LabelList
-                                                dataKey='value'
-                                                position='top'
-                                                offset={8}
-                                                className='num'
-                                                style={{ fill: '#e2e8f0', fontSize: '10px', fontWeight: 700 }}
-                                            />
-                                        </Line>
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
+                    {/* 60-Tick Pattern Strip */}
+                    <div className='glass-card pattern-strip-card'>
+                        <div className='card-header'>
+                            <h4>60-Tick Pattern Strip</h4>
+                            {currentStreak.count > 0 && (
+                                <span className='streak-badge num'>
+                                    {currentStreak.count}x {currentStreak.val}
+                                </span>
+                            )}
                         </div>
+                        <div className='strip-history-flow'>
+                            {last60History.map((code, i) => (
+                                <div
+                                    key={i}
+                                    className={classNames('flow-pill num', {
+                                        'is-even': code === 'E',
+                                        'is-odd': code === 'O',
+                                        'is-over': code === 'O',
+                                        'is-under': code === 'U',
+                                        'is-latest': i === last60History.length - 1,
+                                    })}
+                                >
+                                    {code}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-                        <div className='glass-card pattern-strip-card'>
-                            <div className='card-header'>
-                                <h4>60-Tick Pattern Strip</h4>
-                                {currentStreak.count > 0 && (
-                                    <span className='streak-badge num'>
-                                        {currentStreak.count}x {currentStreak.val}
-                                    </span>
-                                )}
-                            </div>
-                            <div className='strip-history-flow'>
-                                {last60History.map((code, i) => (
-                                    <div
-                                        key={i}
-                                        className={classNames('flow-pill num', {
-                                            'is-even': code === 'E',
-                                            'is-odd': code === 'O',
-                                            'is-over': code === 'O',
-                                            'is-under': code === 'U',
-                                            'is-latest': i === last60History.length - 1,
-                                        })}
-                                    >
-                                        {code}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                    {/* TRADING ENGINE CONSOLE */}
+                    <div className="engine-card-wrapper">
+                        <TradingEngine />
                     </div>
                 </div>
 
-                {/* RIGHT: TRADING ENGINE CONSOLE */}
-                <div className='engine-side'>
-                    <TradingEngine />
+                {/* RIGHT: DYNAMIC VISUALIZATIONS */}
+                <div className='visualizations-side'>
+                    <DigitDistribution digit_stats={digit_stats} last_digit={last_digit} />
+                    <LastDigitsLineChart ticks={ticks} />
+                    <Last20DigitsGrid ticks={ticks} />
                 </div>
             </div>
         </div>
