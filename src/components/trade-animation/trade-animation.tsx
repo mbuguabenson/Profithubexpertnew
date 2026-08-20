@@ -31,8 +31,8 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
     const { has_active_bot, has_saved_bots } = blockly_store;
     const { isMobile } = useDevice();
 
-    const { is_contract_completed, profit } = summary_card;
     const { contract_stage, is_stop_button_visible, is_stop_button_disabled, is_paused, onRunButtonClick, onStopBotClick } =
+        run_panel;
     const is_unavailable_for_payment_agent = false;
 
     // Get the load_modal store to monitor strategy deletions
@@ -66,6 +66,12 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
         prevDeleteModalOpen.current = is_delete_modal_open;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [is_delete_modal_open, is_stop_button_visible]);
+
+    const status_classes = ['', '', ''];
+
+    // Check if there are no active or saved bots
+    const has_no_bots = !has_active_bot && !has_saved_bots;
+    const is_bot_builder_tab = active_tab === DBOT_TABS.BOT_BUILDER;
 
     // Disable the RUN button if:
     // 1. There are no active or saved bots AND the user is not in the bot builder tab
@@ -203,7 +209,6 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
                         id={button_props.id}
                         icon={button_props.icon}
                         onClick={() => {
-                            setShouldDisable(true);
                             if (is_stop_button_visible) {
                                 onStopBotClick();
                                 return;

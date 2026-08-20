@@ -8,14 +8,15 @@
 
     &__container {
         box-sizing: border-box;
-        height: calc(100vh - 10.4rem) !important;
+        height: calc(100vh - 5rem - 3.6rem) !important;
+        max-height: calc(100vh - 5rem - 3.6rem) !important;
         min-height: 0 !important;
         position: fixed !important;
-        top: 10.4rem !important;
-        bottom: 0 !important;
+        top: 5rem !important;
+        bottom: 3.6rem !important;
         width: 36.6rem !important;
         background: var(--general-main-2);
-        overflow: visible;
+        overflow: hidden !important;
         z-index: 1000 !important;
 
         .dc-drawer__container {
