@@ -7,7 +7,7 @@ import { getActiveTabUrl } from '@/utils/getActiveTabUrl';
 import { FILTERED_LANGUAGES } from '@/utils/languages';
 import { isLoggedIn } from '@/utils/token-bridge';
 import { useTranslations } from '@deriv-com/translations';
-import { DesktopLanguagesModal, useDevice, Tooltip } from '@deriv-com/ui';
+import { DesktopLanguagesModal, Tooltip } from '@deriv-com/ui';
 import { LabelPairedUserMdRegularIcon } from '@deriv/quill-icons/LabelPaired';
 import ChangeTheme from './ChangeTheme';
 import FullScreen from './FullScreen';
