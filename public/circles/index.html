@@ -2,164 +2,220 @@
 <html lang="en" class="dark">
     <head>
         <meta charset="utf-8" />
-        <title>Xenon Tick Analyser</title>
+        <title>DCircles Radial Analysis | 360 Trading Engine</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
         <link rel="stylesheet" href="style.css" />
     </head>
-    <body>
-        <div class="box">
-            <h2 id="app-title"></h2>
-            <div class="market-top">
-                <div class="market-select">
-                    <div class="market-select-card">
-                        <label id="label-market" for="symbols">Select Market:</label>
-                        <select id="symbols"></select>
+    <body class="bg-slate-950 text-slate-100 font-sans antialiased">
+        <div class="circles-app-container">
+            {/* Header Title Banner */}
+            <div class="circles-header-card">
+                <div class="header-title-box">
+                    <div class="brand-badge-row">
+                        <span class="live-dot-pulse"></span>
+                        <span class="brand-tag">360 RADIAL ENGINE</span>
+                    </div>
+                    <h1 class="header-main-title">DCircles Digit & Tick Analysis</h1>
+                    <span id="app-title" class="hidden"></span>
+                </div>
+            </div>
+
+            {/* Top Config & Price Cards Grid (Trading Bots Style) */}
+            <div class="trading-cards-grid">
+                <div class="tb-card market-card">
+                    <div class="card-icon-orb orb-emerald">📈</div>
+                    <div class="card-content">
+                        <label id="label-market" for="symbols" class="card-label">Select Active Market</label>
+                        <select id="symbols" class="card-select-input"></select>
                     </div>
                 </div>
-                <div class="market-price">
-                    <div class="current-price-card">
-                        <span class="current-price-label">CURRENT PRICE</span>
-                        <div id="price" class="price">—</div>
+
+                <div class="tb-card price-card">
+                    <div class="card-icon-orb orb-blue">⚡</div>
+                    <div class="card-content">
+                        <span class="card-label">CURRENT SPOT PRICE</span>
+                        <div id="price" class="price-val">—</div>
+                    </div>
+                </div>
+
+                <div class="tb-card window-card">
+                    <div class="card-icon-orb orb-purple">⏱️</div>
+                    <div class="card-content">
+                        <label id="label-window" for="ticks-window" class="card-label">Tick Window (50-5000)</label>
+                        <div class="input-inline-row">
+                            <input id="ticks-window" type="number" min="50" max="5000" step="50" value="1000" class="card-number-input" />
+                            <span class="hint-text">Ticks</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="display visually-hidden">
+            {/* Hidden digit placeholder for script.js compatibility */}
+            <div class="display visually-hidden" style="display:none;">
                 <div id="digit" class="digit">—</div>
             </div>
 
-            <div class="controls">
-                <label id="label-window" for="ticks-window">NUMBER OF TICKS</label>
-                <input id="ticks-window" type="number" min="50" max="5000" step="50" value="1000" style="width: 90px" />
-                <span class="hint">(50–5000)</span>
-            </div>
+            {/* 10 Digits Distribution Section (0 - 9 Cards) */}
+            <div class="digits-section-card">
+                <div class="digits-card-header">
+                    <div class="header-left">
+                        <span class="section-icon">📊</span>
+                        <span id="digits-title" class="digits-title-text">Digit Distribution (0 - 9)</span>
+                    </div>
+                    <span id="samples-count" class="samples-pill">0/1000 Ticks</span>
+                </div>
 
-            <div class="digits-section">
-                <div class="digits-card">
-                    <div class="digits-header">
-                        <span id="digits-title">Last 1000 ticks digit distribution</span>
-                        <span id="samples-count" class="samples">0/1000</span>
-                    </div>
-                    <div id="digits" class="digits"></div>
-                    <div class="legend">
-                        <span id="legend-current" class="legend-item"
-                            ><span class="dot dot-current"></span> current digit / most</span
-                        >
-                        <span id="legend-least" class="legend-item"
-                            ><span class="dot dot-least"></span> least frequency</span
-                        >
-                    </div>
+                <div id="digits" class="digits-grid-container"></div>
+
+                <div class="legend-row">
+                    <span id="legend-current" class="legend-chip legend-current">
+                        <span class="dot dot-current"></span> Current Digit / Most Frequent
+                    </span>
+                    <span id="legend-least" class="legend-chip legend-least">
+                        <span class="dot dot-least"></span> Least Frequency Digit
+                    </span>
                 </div>
             </div>
 
-            <div class="separator"></div>
-
-            <!-- Even/Odd section moved to top -->
-            <div class="eo-section">
-                <div class="eo-header">
-                    <span>Odd/Even Analysis</span>
-                </div>
-
-                <!-- Recent E/O digits grid moved up -->
-                <div class="eo-seq">
-                    <div class="eo-seq-header">
-                        <span>Recent E/O</span>
-                        <!-- More button removed - showing all 50 by default -->
-                    </div>
-                    <div id="eo-seq-chips" class="eo-chips"></div>
-                </div>
-
-                <!-- Bars moved below the recent digits -->
-                <div class="eo-cards">
-                    <div class="eo-card eo-card-even">
-                        <div class="eo-card-value"><span id="eo-even-pct" class="muted">(0%)</span></div>
-                        <div class="eo-barline">
-                            <div id="eo-even-fill" class="eo-fill eo-fill-even" style="width: 0%"></div>
+            {/* Analysis Modules Grid */}
+            <div class="analysis-modules-grid">
+                {/* 1. Even / Odd Analysis Card */}
+                <div class="module-card eo-card-module">
+                    <div class="module-header">
+                        <div class="module-title-box">
+                            <span class="module-icon text-emerald">⚖️</span>
+                            <span class="module-title">Odd / Even Analysis</span>
                         </div>
                     </div>
-                    <div class="eo-card eo-card-odd">
-                        <div class="eo-card-value"><span id="eo-odd-pct" class="muted">(0%)</span></div>
-                        <div class="eo-barline">
-                            <div id="eo-odd-fill" class="eo-fill eo-fill-odd" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="separator"></div>
+                    <div class="eo-seq-box">
+                        <div class="seq-header">
+                            <span>Recent 50 E/O Digits</span>
+                            <button id="eo-more" type="button" class="hidden">More</button>
+                        </div>
+                        <div id="eo-seq-chips" class="chips-flex-wrap"></div>
+                    </div>
 
-            <!-- Over/Under section moved below Even/Odd -->
-            <div class="ou-section">
-                <div class="ou-header">
-                    <label id="label-ou" for="ou-threshold">Over/Under:</label>
-                    <select id="ou-threshold"></select>
-                </div>
-                <div class="ou-cards">
-                    <div class="ou-card ou-card-under">
-                        <div class="ou-card-title">Under</div>
-                        <div class="ou-card-value"><span id="ou-under-pct" class="muted">(0%)</span></div>
-                        <div class="ou-barline">
-                            <div id="ou-under-fill" class="ou-fill ou-fill-under" style="width: 0%"></div>
+                    <div class="bars-grid">
+                        <div class="bar-card bar-even">
+                            <div class="bar-meta">
+                                <span>EVEN DIGITS</span>
+                                <span id="eo-even-pct" class="bar-pct">(0%)</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="eo-even-fill" class="bar-fill fill-even" style="width: 0%"></div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="ou-card ou-card-equal">
-                        <div class="ou-card-title">Equal</div>
-                        <div class="ou-card-value"><span id="ou-equal-pct" class="muted">(0%)</span></div>
-                        <div class="ou-barline">
-                            <div id="ou-equal-fill" class="ou-fill ou-fill-equal" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="ou-card ou-card-over">
-                        <div class="ou-card-title">Over</div>
-                        <div class="ou-card-value"><span id="ou-over-pct" class="muted">(0%)</span></div>
-                        <div class="ou-barline">
-                            <div id="ou-over-fill" class="ou-fill ou-fill-over" style="width: 0%"></div>
+
+                        <div class="bar-card bar-odd">
+                            <div class="bar-meta">
+                                <span>ODD DIGITS</span>
+                                <span id="eo-odd-pct" class="bar-pct">(0%)</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="eo-odd-fill" class="bar-fill fill-odd" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="ou-seq">
-                    <div class="ou-seq-header">
-                        <span>Recent U/= /O</span>
-                        <button id="ou-more" type="button">More</button>
+                {/* 2. Over / Under Analysis Card */}
+                <div class="module-card ou-card-module">
+                    <div class="module-header">
+                        <div class="module-title-box">
+                            <span class="module-icon text-amber">🎯</span>
+                            <label id="label-ou" for="ou-threshold" class="module-title">Over / Under Target:</label>
+                        </div>
+                        <select id="ou-threshold" class="threshold-select"></select>
                     </div>
-                    <div id="ou-seq-chips" class="ou-chips"></div>
-                </div>
-            </div>
 
-            <div class="separator"></div>
+                    <div class="bars-grid-3">
+                        <div class="bar-card bar-under">
+                            <div class="bar-meta">
+                                <span>UNDER</span>
+                                <span id="ou-under-pct" class="bar-pct">(0%)</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="ou-under-fill" class="bar-fill fill-under" style="width: 0%"></div>
+                            </div>
+                        </div>
 
-            <div class="md-section">
-                <div class="md-header">
-                    <span>Matches/Differs</span>
-                </div>
-                <div class="md-cards">
-                    <div class="md-card md-card-match">
-                        <div class="md-card-title">Matches</div>
-                        <div class="md-card-value"><span id="md-match-pct" class="muted">(0%)</span></div>
-                        <div class="md-barline">
-                            <div id="md-match-fill" class="md-fill md-fill-match" style="width: 0%"></div>
+                        <div class="bar-card bar-equal">
+                            <div class="bar-meta">
+                                <span>EQUAL</span>
+                                <span id="ou-equal-pct" class="bar-pct">(0%)</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="ou-equal-fill" class="bar-fill fill-equal" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bar-card bar-over">
+                            <div class="bar-meta">
+                                <span>OVER</span>
+                                <span id="ou-over-pct" class="bar-pct">(0%)</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="ou-over-fill" class="bar-fill fill-over" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="md-card md-card-differ">
-                        <div class="md-card-title">Differs</div>
-                        <div class="md-card-value"><span id="md-differ-pct" class="muted">(0%)</span></div>
-                        <div class="md-barline">
-                            <div id="md-differ-fill" class="md-fill md-fill-differ" style="width: 0%"></div>
+
+                    <div class="ou-seq-box">
+                        <div class="seq-header">
+                            <span>Recent U / = / O Sequence</span>
+                            <button id="ou-more" type="button" class="more-btn">More</button>
                         </div>
+                        <div id="ou-seq-chips" class="chips-flex-wrap"></div>
                     </div>
                 </div>
-                <div class="md-seq">
-                    <div class="md-seq-header">
-                        <span>Recent M/D</span>
-                        <button id="md-more" type="button">More</button>
+
+                {/* 3. Matches / Differs Analysis Card */}
+                <div class="module-card md-card-module">
+                    <div class="module-header">
+                        <div class="module-title-box">
+                            <span class="module-icon text-purple">⚔️</span>
+                            <span class="module-title">Matches / Differs Analysis</span>
+                        </div>
                     </div>
-                    <div id="md-seq-chips" class="md-chips"></div>
+
+                    <div class="bars-grid">
+                        <div class="bar-card bar-match">
+                            <div class="bar-meta">
+                                <span>MATCHES</span>
+                                <span id="md-match-pct" class="bar-pct">(0%)</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="md-match-fill" class="bar-fill fill-match" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bar-card bar-differ">
+                            <div class="bar-meta">
+                                <span>DIFFERS</span>
+                                <span id="md-differ-pct" class="bar-pct">(0%)</span>
+                            </div>
+                            <div class="bar-track">
+                                <div id="md-differ-fill" class="bar-fill fill-differ" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md-seq-box">
+                        <div class="seq-header">
+                            <span>Recent M / D Sequence</span>
+                            <button id="md-more" type="button" class="more-btn">More</button>
+                        </div>
+                        <div id="md-seq-chips" class="chips-flex-wrap"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right spacer leaves space for host run panel when embedded -->
         <div class="right-spacer"></div>
 
         <script src="script.js"></script>
