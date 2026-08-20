@@ -360,7 +360,7 @@ const RunPanel = observer(() => {
                     footer={isDesktop ? footer : undefined}
                     is_open={is_drawer_open}
                     toggleDrawer={toggleDrawer}
-                    width={366}
+                    width={260}
                     zIndex={popover_zindex.RUN_PANEL}
                 >
 

@@ -13,7 +13,7 @@
         min-height: 0 !important;
         top: 5rem !important;
         bottom: 3.6rem !important;
-        width: 36.6rem !important;
+        width: 26rem !important;
         overflow: visible !important;
         z-index: 1000 !important;
 
@@ -45,42 +45,7 @@
             width: 100vw;
             z-index: 900;
         }
-
-        // Blue pull-tab pill — sits at the left edge of the drawer, protruding left into page
-        .dc-drawer__toggle {
-            position: absolute !important;
-            left: -28px !important;
-            right: auto !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-            width: 28px !important;
-            height: 80px !important;
-            background: var(--button-primary-default, #2563eb) !important;
-            border-radius: 8px 0 0 8px !important;
-            border: 1px solid rgba(255, 255, 255, 0.25) !important;
-            border-right: none !important;
-            z-index: 1001 !important;
-            cursor: pointer !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4) !important;
-            transition: width 0.2s ease, background 0.2s ease !important;
-
-            &:hover {
-                width: 36px !important;
-                left: -36px !important;
-                background: var(--button-primary-hover, #1d4ed8) !important;
-            }
-
-            svg {
-                fill: #fff !important;
-                width: 14px !important;
-                height: 14px !important;
-            }
-        }
     }
-
 
 
     &__tile {
