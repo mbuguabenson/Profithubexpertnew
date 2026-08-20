@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Lock, Wifi, CheckCircle2 } from 'lucide-react';
 import './chunk-loader.scss';
 
@@ -7,7 +7,7 @@ interface ChunkLoaderProps {
     isWelcome?: boolean;
 }
 
-export default function ChunkLoader({ message, isWelcome = false }: ChunkLoaderProps) {
+export default function ChunkLoader({ message }: ChunkLoaderProps) {
     const [progress, setProgress] = useState(25);
     const [statusText, setStatusText] = useState(message || 'Initializing Deriv Bot account...');
 
