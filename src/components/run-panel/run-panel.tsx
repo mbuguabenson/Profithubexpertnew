@@ -344,12 +344,12 @@ const RunPanel = observer(() => {
         />
     );
 
-    const show_run_panel = (isDesktop && active_tab !== DBOT_TABS.DASHBOARD) || active_tab === DBOT_TABS.BOT_BUILDER || active_tour;
+    const show_run_panel = active_tab === DBOT_TABS.BOT_BUILDER || active_tab === DBOT_TABS.CHART || !!active_tour;
     if (!show_run_panel) return null;
 
     return (
         <>
-            <div className={!isDesktop && is_drawer_open ? 'run-panel__container--mobile' : 'run-panel'}>
+            <div className={!isDesktop && is_drawer_open ? 'run-panel__container--mobile' : 'run-panel-wrapper'}>
                 <Drawer
                     anchor='right'
                     className={classNames('run-panel', {
