@@ -8,7 +8,7 @@ import Badge from '@/components/shared_ui/badge';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
 import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
-import { Globe, Zap, ShieldCheck, Server, RefreshCw, Cpu } from 'lucide-react';
+import { Globe, ShieldCheck, Server, RefreshCw, Cpu } from 'lucide-react';
 import './dtrader.scss';
 
 // Safe token resolution helper
