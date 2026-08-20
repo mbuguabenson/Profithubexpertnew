@@ -1,0 +1,255 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700;800&display=swap');
+
+// ═══════════════════════════════════════════════════════════════
+// ✦ 360 TRADING HUB LOADING SCREEN STYLES (MATCHES SCREENSHOT)
+// ═══════════════════════════════════════════════════════════════
+
+.hub-360-loading-overlay {
+    position: relative;
+    width: 100%;
+    min-height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 50%, #111827 0%, #090d16 100%);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    padding: 40px 20px;
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #ffffff;
+
+    // Ambient Orbs (from image)
+    .ambient-orb {
+        position: absolute;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        filter: blur(55px);
+        opacity: 0.4;
+        pointer-events: none;
+
+        &--cyan {
+            top: 15%;
+            left: 12%;
+            background: #06b6d4;
+        }
+
+        &--amber {
+            top: 18%;
+            right: 14%;
+            background: #f59e0b;
+        }
+
+        &--emerald {
+            bottom: 12%;
+            left: 15%;
+            background: #10b981;
+        }
+    }
+
+    .hub-360-container {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 22px;
+        max-width: 480px;
+        width: 100%;
+    }
+
+    // 360 Radial Radar Orb
+    .hub-360-radar-wrap {
+        position: relative;
+        width: 130px;
+        height: 130px;
+        display: grid;
+        place-items: center;
+
+        .radar-ring-outer {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .radar-ring-spin {
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: #06b6d4;
+            border-right-color: #10b981;
+            border-bottom-color: #f59e0b;
+            animation: spinRadar 2.2s linear infinite;
+        }
+
+        .radar-dot {
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+
+            &--amber {
+                top: 22px;
+                left: 30px;
+                background: #f59e0b;
+                box-shadow: 0 0 10px #f59e0b;
+            }
+
+            &--cyan {
+                top: 26px;
+                right: 28px;
+                background: #ffffff;
+                box-shadow: 0 0 10px #ffffff;
+            }
+
+            &--white {
+                bottom: 30px;
+                right: 32px;
+                background: #10b981;
+                box-shadow: 0 0 10px #10b981;
+            }
+        }
+
+        .hub-360-center-badge {
+            position: relative;
+            z-index: 2;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #0b0f19;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            display: grid;
+            place-items: center;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+
+            .num-360 {
+                font-family: 'Space Grotesk', sans-serif;
+                font-size: 1.55rem;
+                font-weight: 800;
+                color: #ffffff;
+                letter-spacing: -0.02em;
+            }
+        }
+    }
+
+    // Text Group
+    .hub-360-text-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+
+        .powered-by-tag {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: #f59e0b;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+
+        .hub-360-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+        }
+
+        .hub-360-sub {
+            font-size: 0.88rem;
+            color: #94a3b8;
+            margin: 0;
+            font-weight: 500;
+        }
+    }
+
+    // Status Pills
+    .hub-360-pills-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .hub-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+
+            .pill-icon {
+                &.text-cyan { color: #06b6d4; }
+                &.text-emerald { color: #10b981; }
+                &.text-purple { color: #a855f7; }
+            }
+        }
+    }
+
+    // Progress Bar & Deriv Branding
+    .hub-360-progress-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        margin-top: 6px;
+
+        .progress-track {
+            width: 100%;
+            height: 5px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+
+            .progress-fill {
+                height: 100%;
+                border-radius: 9999px;
+                background: linear-gradient(90deg, #06b6d4, #10b981);
+                transition: width 0.3s ease;
+            }
+        }
+
+        .deriv-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            .deriv-d-logo {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: #ff444f;
+                color: #fff;
+                font-weight: 900;
+                font-size: 11px;
+                display: grid;
+                place-items: center;
+                line-height: 1;
+            }
+
+            .deriv-brand-text {
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: #ffffff;
+            }
+        }
+    }
+}
+
+@keyframes spinRadar {
+    to { transform: rotate(360deg); }
+}

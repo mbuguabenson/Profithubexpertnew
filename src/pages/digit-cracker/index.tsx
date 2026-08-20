@@ -10,6 +10,7 @@ import DiffersCracker from './differs-cracker';
 import EvenOddCracker from './even-odd-cracker';
 import OverUnderCracker from './over-under-cracker';
 import MatchesCracker from './matches-cracker';
+import Hub360LoadingScreen from '@/components/loading/Hub360LoadingScreen';
 import './digit-cracker.scss';
 
 const DigitCracker = observer(() => {
@@ -22,7 +23,16 @@ const DigitCracker = observer(() => {
     const { symbol, digit_stats, is_connected, total_ticks, setTotalTicks, markets, trade_engine, last_digit } =
         digit_cracker;
 
-    if (!trade_engine) return null;
+    if (!trade_engine || !is_connected) {
+        return (
+            <div className='digit-cracker-hud-page'>
+                <Hub360LoadingScreen
+                    title="Digit Cracker 360"
+                    subtitle="Initializing algorithmic trade engine & security keys..."
+                />
+            </div>
+        );
+    }
 
     const { trade_status, is_executing, session_profit, total_profit, logs } = trade_engine;
 

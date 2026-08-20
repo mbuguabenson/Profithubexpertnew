@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { LabelList, Line, LineChart, ResponsiveContainer } from 'recharts';
 import { useStore } from '@/hooks/useStore';
-import DigitCircles from './components/digit-circles';
 import TradingEngine from './components/trading-engine';
+import Hub360LoadingScreen from '@/components/loading/Hub360LoadingScreen';
 import './circles-analysis.scss';
 
 const CirclesAnalysis = observer(() => {
@@ -23,110 +23,141 @@ const CirclesAnalysis = observer(() => {
         last_digit,
         setSymbol,
         percentages,
+        even_odd_history,
+        over_under_history,
+        differs_history,
+        matches_history,
+        rise_fall_history,
         markets,
-        total_ticks,
-        setTotalTicks,
     } = analysis;
 
-    // --- LOGIC: Frequency Ranks ---
-    const sortedStats = useMemo(() => [...digit_stats].sort((a, b) => b.count - a.count), [digit_stats]);
-    const statsMap = useMemo(() => {
-        const most = sortedStats[0]?.digit ?? 0;
-        const second = sortedStats[1]?.digit ?? 1;
-        const least = [...sortedStats].reverse().find(s => s.count > 0)?.digit ?? sortedStats[9]?.digit ?? 9;
-        return { most, second, least };
-    }, [sortedStats]);
+    // Highest probability calculations
+    const highestEven = useMemo(() => {
+        const evens = digit_stats.filter(s => s.digit % 2 === 0);
+        return evens.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), evens[0])?.digit ?? 0;
+    }, [digit_stats]);
 
-    // --- LOGIC: Highest Digits by Segment ---
-    const highestEven = useMemo(
-        () => [...digit_stats].filter(s => s.digit % 2 === 0).sort((a, b) => b.count - a.count)[0]?.digit ?? 0,
-        [digit_stats]
-    );
-    const highestOdd = useMemo(
-        () => [...digit_stats].filter(s => s.digit % 2 !== 0).sort((a, b) => b.count - a.count)[0]?.digit ?? 1,
-        [digit_stats]
-    );
-    const highestOver = useMemo(
-        () => [...digit_stats].filter(s => s.digit >= 5).sort((a, b) => b.count - a.count)[0]?.digit ?? 7,
-        [digit_stats]
-    );
-    const highestUnder = useMemo(
-        () => [...digit_stats].filter(s => s.digit < 5).sort((a, b) => b.count - a.count)[0]?.digit ?? 2,
-        [digit_stats]
-    );
+    const highestOdd = useMemo(() => {
+        const odds = digit_stats.filter(s => s.digit % 2 !== 0);
+        return odds.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), odds[0])?.digit ?? 1;
+    }, [digit_stats]);
 
-    // --- LOGIC: Signals & Predictions ---
+    const highestOver = useMemo(() => {
+        const overs = digit_stats.filter(s => s.digit > 4);
+        return overs.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), overs[0])?.digit ?? 9;
+    }, [digit_stats]);
+
+    const highestUnder = useMemo(() => {
+        const unders = digit_stats.filter(s => s.digit <= 4);
+        return unders.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), unders[0])?.digit ?? 0;
+    }, [digit_stats]);
+
+    // Live Signal Intelligence
     const signalData = useMemo(() => {
-        let prediction = '';
-        let confidence = 0;
-        let status = 'SCANNING';
+        const { even, odd, over, under } = percentages;
+        let prediction = 'EVEN';
+        let confidence = 50;
+        let status = 'SEARCHING';
         let reason = 'Analyzing real-time frequency distribution...';
 
         if (view_strategy === 'even_odd') {
-            const even = percentages.even;
-            const odd = percentages.odd;
-            prediction = even > odd ? 'EVEN' : 'ODD';
-            confidence = Math.abs(even - odd) + 50;
-            if (confidence > 62) status = 'STRONG SIGNAL';
-            else status = 'WAITING';
-            reason = `Even/Odd distribution deviating from 50/50 mean (${Math.max(even, odd).toFixed(1)}%).`;
+            if (even > 58) {
+                prediction = 'EVEN';
+                confidence = Math.min(even + 12, 94);
+                status = 'STRONG TRADE';
+                reason = `Even bias dominates at ${even.toFixed(1)}%. High statistical probability for Even.`;
+            } else if (odd > 58) {
+                prediction = 'ODD';
+                confidence = Math.min(odd + 12, 94);
+                status = 'STRONG TRADE';
+                reason = `Odd bias dominates at ${odd.toFixed(1)}%. High statistical probability for Odd.`;
+            } else {
+                prediction = even > odd ? 'EVEN' : 'ODD';
+                confidence = Math.max(even, odd);
+                status = 'WEAK BIAS';
+                reason = `Even/Odd distribution balanced (${Math.max(even, odd).toFixed(1)}%). Proceed with caution.`;
+            }
         } else if (view_strategy === 'over_under') {
-            const over = percentages.over;
-            const under = percentages.under;
-            prediction = over > under ? 'OVER' : 'UNDER';
-            confidence = Math.abs(over - under) + 50;
-            status = confidence > 62 ? 'STRONG SIGNAL' : 'WAITING';
-            reason = `Market depth leaning towards ${prediction} zone. Ratio: ${Math.max(over, under).toFixed(0)}%.`;
+            if (over > 58) {
+                prediction = 'OVER 4';
+                confidence = Math.min(over + 10, 92);
+                status = 'STRONG TRADE';
+                reason = `Over threshold density at ${over.toFixed(1)}%. Upper digits trending heavily.`;
+            } else if (under > 58) {
+                prediction = 'UNDER 5';
+                confidence = Math.min(under + 10, 92);
+                status = 'STRONG TRADE';
+                reason = `Under threshold density at ${under.toFixed(1)}%. Lower digits trending heavily.`;
+            } else {
+                prediction = over > under ? 'OVER 4' : 'UNDER 5';
+                confidence = Math.max(over, under);
+                status = 'WEAK BIAS';
+                reason = `Over/Under spectrum near equilibrium. Monitor trajectory.`;
+            }
         } else if (view_strategy === 'differs') {
-            prediction = `Digit ${statsMap.least}`;
-            confidence = 100 - (digit_stats[statsMap.least]?.percentage || 0);
-            status = 'SAFE ENTRY';
-            reason = `Digit ${statsMap.least} has lowest historical frequency (${(digit_stats[statsMap.least]?.percentage || 0).toFixed(1)}%).`;
+            const coldDigit = digit_stats.reduce((prev, curr) => (curr.count < prev.count ? curr : prev), digit_stats[0]);
+            prediction = `DIFFERS ${coldDigit?.digit ?? 0}`;
+            confidence = Math.min(100 - (coldDigit?.percentage ?? 10) + 15, 96);
+            status = 'HIGH CONFIDENCE';
+            reason = `Digit ${coldDigit?.digit} has lowest occurrence (${coldDigit?.percentage.toFixed(1)}%). Ideal Differs target.`;
         } else if (view_strategy === 'matches') {
-            prediction = `Digit ${statsMap.most}`;
-            confidence = (digit_stats[statsMap.most]?.percentage || 0) * 5;
-            status = 'SCANNING MATCH';
-            reason = `Targeting peak frequency Digit ${statsMap.most} for repetition cluster.`;
-        } else if (view_strategy === 'rise_fall') {
-            const rise = percentages.rise;
-            const fall = percentages.fall;
-            prediction = rise > fall ? 'RISE' : 'FALL';
-            confidence = Math.abs(rise - fall) + 50;
-            status = confidence > 60 ? 'MOMENTUM UP' : 'WAITING';
-            reason = `Tick velocity favoring ${prediction} trajectory.`;
+            const hotDigit = digit_stats.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), digit_stats[0]);
+            prediction = `MATCHES ${hotDigit?.digit ?? 0}`;
+            confidence = Math.min((hotDigit?.percentage ?? 10) * 3.2, 88);
+            status = 'SPECULATIVE';
+            reason = `Digit ${hotDigit?.digit} is highest frequency (${hotDigit?.percentage.toFixed(1)}%). Repetition potential.`;
+        } else {
+            const last2 = ticks.slice(-2);
+            if (last2.length === 2) {
+                const diff = last2[1].quote - last2[0].quote;
+                prediction = diff >= 0 ? 'RISE' : 'FALL';
+                confidence = 70;
+                status = 'MOMENTUM';
+                reason = `Recent tick delta is ${diff > 0 ? '+' : ''}${diff.toFixed(4)}. Follow short-term momentum.`;
+            }
         }
 
-        return { prediction, confidence: Math.min(confidence, 99), status, reason };
-    }, [percentages, digit_stats, statsMap, view_strategy]);
+        return { prediction, confidence, status, reason };
+    }, [percentages, view_strategy, digit_stats, ticks]);
 
-    // --- LOGIC: Chart Data & History ---
-    const chartData = useMemo(() => ticks.slice(-15).map((val, idx) => ({ id: idx, value: val })), [ticks]);
+    // 15-tick Line Chart Data
+    const chartData = useMemo(() => {
+        return ticks.slice(-15).map((t, idx) => ({
+            index: idx + 1,
+            value: t.digit,
+            quote: t.quote,
+        }));
+    }, [ticks]);
+
+    // 60-Tick Pattern Strip Data
     const last60History = useMemo(() => {
-        const lastTicks = ticks.slice(-60);
-        if (view_strategy === 'even_odd') return lastTicks.map(d => (d % 2 === 0 ? 'E' : 'O'));
-        if (view_strategy === 'over_under') return lastTicks.map(d => (d >= 5 ? 'O' : 'U'));
-        return lastTicks.map(d => String(d));
-    }, [ticks, view_strategy]);
+        let historySource = even_odd_history;
+        if (view_strategy === 'over_under') historySource = over_under_history;
+        else if (view_strategy === 'differs') historySource = differs_history;
+        else if (view_strategy === 'matches') historySource = matches_history;
+        else if (view_strategy === 'rise_fall') historySource = rise_fall_history;
 
+        return historySource.slice(-60).map(item => item.type);
+    }, [
+        even_odd_history,
+        over_under_history,
+        differs_history,
+        matches_history,
+        rise_fall_history,
+        view_strategy,
+    ]);
+
+    // Current Streak Tracker
     const currentStreak = useMemo(() => {
-        if (ticks.length === 0) return { count: 0, val: '' };
+        if (last60History.length === 0) return { val: '-', count: 0 };
+        const lastVal = last60History[last60History.length - 1];
         let count = 0;
-        let lastVal = '';
-        if (view_strategy === 'even_odd') {
-            lastVal = ticks[ticks.length - 1] % 2 === 0 ? 'EVEN' : 'ODD';
-            for (let i = ticks.length - 1; i >= 0; i--) {
-                if ((ticks[i] % 2 === 0 ? 'EVEN' : 'ODD') === lastVal) count++;
-                else break;
-            }
-        } else if (view_strategy === 'over_under') {
-            lastVal = ticks[ticks.length - 1] >= 5 ? 'OVER' : 'UNDER';
-            for (let i = ticks.length - 1; i >= 0; i--) {
-                if ((ticks[i] >= 5 ? 'OVER' : 'UNDER') === lastVal) count++;
-                else break;
-            }
+        for (let i = last60History.length - 1; i >= 0; i--) {
+            if (last60History[i] === lastVal) count++;
+            else break;
         }
-        return { count, val: lastVal };
-    }, [ticks, view_strategy]);
+        return { val: lastVal, count };
+    }, [last60History]);
 
     const handleSelectDigit = (digit: number) => {
         setSelectedDigit(digit);
@@ -136,6 +167,17 @@ const CirclesAnalysis = observer(() => {
             smart_auto.updateConfig(view_strategy, 'manual_prediction' as any, digit);
         }
     };
+
+    if (!is_socket_opened && ticks.length === 0) {
+        return (
+            <div className='circles-analysis-hud'>
+                <Hub360LoadingScreen
+                    title="Circles Analysis 360"
+                    subtitle="Connecting to Deriv WebSocket live tick stream..."
+                />
+            </div>
+        );
+    }
 
     return (
         <div className='circles-analysis-hud'>
@@ -164,17 +206,8 @@ const CirclesAnalysis = observer(() => {
 
                 <div className='header-metrics'>
                     <div className='metric-card'>
-                        <label>TICKS DEPTH</label>
-                        <input
-                            type='number'
-                            value={total_ticks}
-                            onChange={e => setTotalTicks(parseInt(e.target.value) || 1000)}
-                            className='depth-input num'
-                        />
-                    </div>
-                    <div className='metric-card'>
                         <label>SPOT PRICE</label>
-                        <div className='price-val num'>{current_price || '0.000'}</div>
+                        <span className='price-val num'>{current_price || '0.0000'}</span>
                     </div>
                     <div className='metric-card live-digit-card'>
                         <label>LIVE DIGIT</label>
@@ -218,12 +251,7 @@ const CirclesAnalysis = observer(() => {
                 ))}
             </div>
 
-            {/* 3. 10-DIGIT RADIAL SPECTRAL DECK */}
-            <div className='radial-spectrum-container'>
-                <DigitCircles onSelectDigit={handleSelectDigit} selectedDigit={selected_digit} />
-            </div>
-
-            {/* 4. MAIN WORKSPACE GRID */}
+            {/* 3. MAIN WORKSPACE GRID */}
             <div className='workspace-dual-grid'>
                 {/* LEFT: ANALYTICS & INSIGHTS */}
                 <div className='analytics-side'>
