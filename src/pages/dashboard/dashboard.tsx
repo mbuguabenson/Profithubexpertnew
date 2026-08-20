@@ -22,7 +22,8 @@ const DashboardComponent = observer(({ handleTabChange }: TMobileIconGuide) => {
     const has_dashboard_strategies = !!dashboard_strategies?.length;
     const { isDesktop, isTablet } = useDevice();
 
-    const userName = client.account_settings?.first_name || (client.email ? client.email.split('@')[0] : 'Trader');
+    const userName = (client as any)?.account_settings?.first_name || 
+                     ((client as any)?.email ? (client as any).email.split('@')[0] : client?.loginid || 'Trader');
 
     return (
         <React.Fragment>
