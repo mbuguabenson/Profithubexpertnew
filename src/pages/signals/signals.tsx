@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { tickSubscriber, SignalWithSymbol, EngineState } from './engine/TickSubscriber';
 import { SignalCard } from './components/SignalCard';
 import { AnalysisResult } from './engine/SignalEngine';
-import { Sparkles, Globe, SlidersHorizontal, Activity, Flame, Shield, Layers } from 'lucide-react';
+import { Sparkles, Globe, SlidersHorizontal, Activity, Flame, Shield, Layers, Zap } from 'lucide-react';
 import './signals.scss';
 
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
