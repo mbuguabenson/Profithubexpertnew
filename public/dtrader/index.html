@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DTrader Local Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #090d16;
+            color: #f8fafc;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header Navigation */
+        .header {
+            height: 52px;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #ffffff;
+        }
+        .brand-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .account-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .bal-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        /* Main Workspace Grid */
+        .workspace {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            height: calc(100vh - 52px);
+        }
+
+        /* Chart & Stream Area */
+        .chart-area {
+            display: flex;
+            flex-direction: column;
+            background: #0b0e14;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+        .market-selector-bar {
+            padding: 12px 20px;
+            background: #0f172a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .select-input {
+            background: #1e293b;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .live-price-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .price-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+        }
+        .price-up { color: #10b981; }
+        .price-down { color: #ef4444; }
+
+        .tick-display-canvas {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+        }
+        .last-digit-orb {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #2563eb, #1e3a8a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffffff;
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
+            transition: transform 0.15s ease;
+        }
+
+        /* Order Trade Form Panel */
+        .order-panel {
+            background: #0f172a;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .num-input {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            outline: none;
+        }
+        .btn-trade {
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .btn-rise {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+        .btn-fall {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+        .btn-trade:hover { transform: translateY(-2px); }
+
+        /* Trade Activity List */
+        .trades-log-box {
+            margin-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 12px;
+        }
+        .log-item {
+            font-size: 0.8rem;
+            padding: 6px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .log-win { color: #34d399; }
+        .log-loss { color: #f87171; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="brand">
+            <span>DTRADER LOCAL HUB</span>
+            <span class="brand-badge">PRO ENGINE</span>
+        </div>
+        <div class="account-bar">
+            <span id="account-id-label" style="font-size: 0.8rem; color: #94a3b8;">Guest Account</span>
+            <div className="bal-pill" id="balance-pill">$10,000.00 USD</div>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <div class="chart-area">
+            <div class="market-selector-bar">
+                <select id="market-select" class="select-input">
+                    <option value="1HZ100V">Volatility 100 (1s) Index</option>
+                    <option value="1HZ10V">Volatility 10 (1s) Index</option>
+                    <option value="R_100">Volatility 100 Index</option>
+                    <option value="R_50">Volatility 50 Index</option>
+                </select>
+
+                <div class="live-price-box">
+                    <span style="font-size: 0.75rem; color: #94a3b8;">SPOT PRICE:</span>
+                    <span id="spot-price-val" class="price-val price-up">0.00</span>
+                </div>
+            </div>
+
+            <div class="tick-display-canvas">
+                <div id="digit-orb" class="last-digit-orb">-</div>
+                <div style="margin-top: 20px; font-size: 0.85rem; color: #94a3b8;">
+                    Real-time WebSocket Streaming Feed Connected
+                </div>
+            </div>
+        </div>
+
+        <div class="order-panel">
+            <div class="form-group">
+                <label class="form-label">Trade Type</label>
+                <select id="trade-type-select" class="select-input">
+                    <option value="CALL/PUT">Rise / Fall</option>
+                    <option value="DIGITEVEN/DIGITODD">Even / Odd</option>
+                    <option value="DIGITOVER/DIGITUNDER">Over / Under</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Stake Amount (USD)</label>
+                <input type="number" id="stake-input" class="num-input" value="10" min="0.35" step="1">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Duration (Ticks)</label>
+                <input type="number" id="duration-input" class="num-input" value="5" min="1" max="10">
+            </div>
+
+            <button id="btn-trade-up" class="btn-trade btn-rise">
+                📈 RISE / HIGHER
+            </button>
+
+            <button id="btn-trade-down" class="btn-trade btn-fall">
+                📉 FALL / LOWER
+            </button>
+
+            <div class="trades-log-box">
+                <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; margin-bottom: 8px;">LIVE ORDER LOGS</div>
+                <div id="log-list">
+                    <div class="log-item"><span>Engine initialized</span><span>Ready</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const appId = urlParams.get('app_id') || '121856';
+        const token = urlParams.get('token1') || localStorage.getItem('active_token') || '';
+        const acct = urlParams.get('acct1') || localStorage.getItem('active_loginid') || 'CR100000';
+
+        document.getElementById('account-id-label').innerText = acct;
+
+        let ws = null;
+        let spotPrice = 0;
+
+        function initWS() {
+            ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
+
+            ws.onopen = () => {
+                if (token) {
+                    ws.send(JSON.stringify({ authorize: token }));
+                }
+                subscribeMarket();
+            };
+
+            ws.onmessage = (msg) => {
+                try {
+                    const data = JSON.parse(msg.data);
+                    if (data.msg_type === 'tick') {
+                        const quote = data.tick.quote;
+                        spotPrice = quote;
+                        const strQuote = quote.toString();
+                        const lastDigit = strQuote.charAt(strQuote.length - 1);
+                        
+                        document.getElementById('spot-price-val').innerText = quote.toFixed(2);
+                        document.getElementById('digit-orb').innerText = lastDigit;
+                    } else if (data.msg_type === 'authorize' && !data.error) {
+                        const bal = data.authorize.balance;
+                        document.getElementById('balance-pill').innerText = `$${parseFloat(bal).toFixed(2)} USD`;
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            };
+        }
+
+        function subscribeMarket() {
+            const symbol = document.getElementById('market-select').value;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ forget_all: 'ticks' }));
+                ws.send(JSON.stringify({ ticks: symbol }));
+            }
+        }
+
+        document.getElementById('market-select').addEventListener('change', subscribeMarket);
+
+        function logTrade(msg, isWin) {
+            const list = document.getElementById('log-list');
+            const item = document.createElement('div');
+            item.className = `log-item ${isWin ? 'log-win' : 'log-loss'}`;
+            item.innerHTML = `<span>${msg}</span><span>${new Date().toLocaleTimeString()}</span>`;
+            list.prepend(item);
+        }
+
+        document.getElementById('btn-trade-up').addEventListener('click', () => {
+            logTrade(`BUY CALL @ ${spotPrice.toFixed(2)}`, true);
+        });
+
+        document.getElementById('btn-trade-down').addEventListener('click', () => {
+            logTrade(`BUY PUT @ ${spotPrice.toFixed(2)}`, false);
+        });
+
+        initWS();
+    </script>
+</body>
+</html>

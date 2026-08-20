@@ -8,8 +8,7 @@ import Badge from '@/components/shared_ui/badge';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
 import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
-import DTraderWorkspace from './dtrader-workspace';
-import { Globe, Zap, ShieldCheck, Server, RefreshCw } from 'lucide-react';
+import { Globe, Zap, ShieldCheck, Server, RefreshCw, Cpu } from 'lucide-react';
 import './dtrader.scss';
 
 // Safe token resolution helper
@@ -49,7 +48,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = ({ src, title }) => {
         <div className='iframe-container-relative'>
             {isLoading && (
                 <div className='iframe-loader-overlay'>
-                    <ChunkLoader message='Connecting to DTrader Hub...' />
+                    <ChunkLoader message={`Connecting to ${title}...`} />
                 </div>
             )}
             <iframe
@@ -63,11 +62,10 @@ const IframeWrapper: React.FC<IframeWrapperProps> = ({ src, title }) => {
     );
 };
 
-const DTraderPage: React.FC = observer(() => {
+export const DTraderPage: React.FC = observer(() => {
     const { client } = useStore();
 
-    const [viewMode, setViewMode] = useState<'iframe' | 'native'>('iframe');
-    const [hubServer, setHubServer] = useState<'primary' | 'backup'>('primary');
+    const [hubServer, setHubServer] = useState<'primary' | 'local' | 'backup'>('primary');
     const [authToken, setAuthToken] = useState<string>('');
     const [activeLoginId, setActiveLoginId] = useState<string>('');
     const [manualToken, setManualToken] = useState<string>('');
@@ -76,13 +74,8 @@ const DTraderPage: React.FC = observer(() => {
     const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
 
     useEffect(() => {
-        const savedMode = localStorage.getItem('dtrader_view_mode') as 'iframe' | 'native';
-        if (savedMode === 'iframe' || savedMode === 'native') {
-            setViewMode(savedMode);
-        }
-
-        const savedServer = localStorage.getItem('dtrader_hub_server') as 'primary' | 'backup';
-        if (savedServer === 'primary' || savedServer === 'backup') {
+        const savedServer = localStorage.getItem('dtrader_hub_server') as 'primary' | 'local' | 'backup';
+        if (savedServer === 'primary' || savedServer === 'local' || savedServer === 'backup') {
             setHubServer(savedServer);
         }
 
@@ -94,12 +87,7 @@ const DTraderPage: React.FC = observer(() => {
         setIsAuthReady(true);
     }, [client]);
 
-    const handleViewModeChange = (mode: 'iframe' | 'native') => {
-        setViewMode(mode);
-        localStorage.setItem('dtrader_view_mode', mode);
-    };
-
-    const handleHubServerChange = (server: 'primary' | 'backup') => {
+    const handleHubServerChange = (server: 'primary' | 'local' | 'backup') => {
         setHubServer(server);
         localStorage.setItem('dtrader_hub_server', server);
     };
@@ -182,19 +170,16 @@ const DTraderPage: React.FC = observer(() => {
         }
     };
 
-    // Dynamically resolve active App ID and Client ID for current logged-in domain
     const appId = getAppId() || '121856';
     const clientId = getClientId() || appId;
 
     const primaryHubUrl = 'https://dtraderhub-mu.vercel.app/';
+    const localHubUrl = '/dtrader/index.html';
     const backupHubUrl = 'https://deriv-dtrader.vercel.app/dtrader';
 
-    const selectedHubUrl = hubServer === 'backup'
-        ? backupHubUrl
-        : (process.env.DTRADER_URL || primaryHubUrl);
-
-    const baseUrl = selectedHubUrl.replace(/\/+$/, '');
-    const embedBase = baseUrl.endsWith('/dtrader') ? baseUrl : baseUrl;
+    const selectedHubUrl = hubServer === 'local'
+        ? localHubUrl
+        : (hubServer === 'backup' ? backupHubUrl : primaryHubUrl);
 
     const loginId = activeLoginId || (client as any)?.loginid || localStorage.getItem('active_loginid') || '';
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
@@ -213,7 +198,6 @@ const DTraderPage: React.FC = observer(() => {
         queryParams.set('cur1', currency);
     }
 
-    // Set both app_id and client_id in iframe URL parameters
     queryParams.set('app_id', appId);
     queryParams.set('client_id', clientId);
 
@@ -247,7 +231,7 @@ const DTraderPage: React.FC = observer(() => {
     queryParams.set('account_type', isDemo ? 'demo' : 'real');
     queryParams.set('server', 'green');
 
-    const embedUrl = `${embedBase}?${queryParams.toString()}`;
+    const embedUrl = `${selectedHubUrl}?${queryParams.toString()}`;
 
     useEffect(() => {
         const handleIframeAuthSync = () => {
@@ -296,25 +280,16 @@ const DTraderPage: React.FC = observer(() => {
                     <span className='status-dot' />
                     <span className='mode-title'>DTrader Terminal</span>
 
-                    {viewMode === 'iframe' ? (
-                        <span className='mode-badge mode-badge--iframe'>
-                            <Globe size={13} /> {hubServer === 'primary' ? '🌐 DTrader Hub 360' : '🛰️ Backup Hub'} (App ID: {appId})
-                        </span>
-                    ) : (
-                        <span className='mode-badge mode-badge--native'>
-                            <Zap size={13} /> ⚡ Native Engine (Direct WebSocket)
-                        </span>
-                    )}
+                    <span className='mode-badge mode-badge--iframe'>
+                        <Globe size={13} /> {hubServer === 'primary' ? '🌐 DTrader Hub 360' : (hubServer === 'local' ? '⚡ Local Static App' : '🛰️ Backup Hub')} (App ID: {appId})
+                    </span>
                 </div>
 
                 <div className='mode-toggle'>
                     <button
                         type='button'
-                        className={`toggle-btn ${viewMode === 'iframe' && hubServer === 'primary' ? 'toggle-btn--active' : ''}`}
-                        onClick={() => {
-                            handleViewModeChange('iframe');
-                            handleHubServerChange('primary');
-                        }}
+                        className={`toggle-btn ${hubServer === 'primary' ? 'toggle-btn--active' : ''}`}
+                        onClick={() => handleHubServerChange('primary')}
                         title='Primary Deployed DTrader Hub (https://dtraderhub-mu.vercel.app/)'
                     >
                         <Globe size={14} /> DTrader Hub 360
@@ -322,111 +297,93 @@ const DTraderPage: React.FC = observer(() => {
 
                     <button
                         type='button'
-                        className={`toggle-btn ${viewMode === 'iframe' && hubServer === 'backup' ? 'toggle-btn--active' : ''}`}
-                        onClick={() => {
-                            handleViewModeChange('iframe');
-                            handleHubServerChange('backup');
-                        }}
-                        title='Backup Deployed DTrader Web App'
+                        className={`toggle-btn ${hubServer === 'local' ? 'toggle-btn--active' : ''}`}
+                        onClick={() => handleHubServerChange('local')}
+                        title='Fast Local Static DTrader App (/dtrader/index.html)'
                     >
-                        <Server size={14} /> Backup Hub
+                        <Cpu size={14} /> Local Static Engine
                     </button>
 
                     <button
                         type='button'
-                        className={`toggle-btn ${viewMode === 'native' ? 'toggle-btn--active' : ''}`}
-                        onClick={() => handleViewModeChange('native')}
-                        title='Fast native trading terminal'
+                        className={`toggle-btn ${hubServer === 'backup' ? 'toggle-btn--active' : ''}`}
+                        onClick={() => handleHubServerChange('backup')}
+                        title='Backup Deployed DTrader Web App'
                     >
-                        <Zap size={14} /> Native Workspace
+                        <Server size={14} /> Backup Hub
                     </button>
                 </div>
             </div>
 
-            {/* Iframe View */}
-            {viewMode === 'iframe' && (
-                <React.Fragment>
-                    <div className='dtrader-notice-banner'>
-                        <span className='notice-left'>
-                            <ShieldCheck size={14} className='icon-emerald' />
-                            <strong>Active Target:</strong> {selectedHubUrl} (App ID: {appId}) • Kenya Bypass Active
-                        </span>
+            {/* Banner Notice */}
+            <div className='dtrader-notice-banner'>
+                <span className='notice-left'>
+                    <ShieldCheck size={14} className='icon-emerald' />
+                    <strong>Active Target:</strong> {selectedHubUrl} (App ID: {appId}) • Live Market Stream
+                </span>
 
-                        <div className='notice-right-btns'>
-                            <button
-                                type='button'
-                                onClick={() => handleHubServerChange(hubServer === 'primary' ? 'backup' : 'primary')}
-                                className='banner-btn banner-btn--switch'
-                            >
-                                <RefreshCw size={12} /> Switch to {hubServer === 'primary' ? 'Backup Hub' : 'Primary Hub 360'}
-                            </button>
-                            <button
-                                type='button'
-                                onClick={() => handleViewModeChange('native')}
-                                className='banner-btn banner-btn--native'
-                            >
-                                Switch to Native Workspace ⚡
-                            </button>
+                <div className='notice-right-btns'>
+                    <button
+                        type='button'
+                        onClick={() => handleHubServerChange(hubServer === 'primary' ? 'local' : 'primary')}
+                        className='banner-btn banner-btn--switch'
+                    >
+                        <RefreshCw size={12} /> Switch to {hubServer === 'primary' ? 'Local Engine' : 'DTrader Hub 360'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Auth / Iframe View */}
+            {!authToken ? (
+                <div className='dtrader-auth-wrapper'>
+                    <div className='dtrader-auth-card'>
+                        <div className='auth-card-head'>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>DTrader Hub</h3>
+                            <Badge type='contained' background_color='orange' label='AUTH REQUIRED' />
                         </div>
+
+                        <Text size='xs'>
+                            To open DTrader Hub in Kenya with full market access, connect your Deriv account or provide an API token.
+                        </Text>
+
+                        <form onSubmit={handleManualTokenSubmit} className='auth-token-form'>
+                            <Input
+                                placeholder="Enter Deriv API Token (e.g. a1-XYZ...)"
+                                value={manualToken}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualToken(e.target.value)}
+                            />
+                            {tokenError && (
+                                <div className='token-error-msg'>
+                                    {tokenError}
+                                </div>
+                            )}
+                            <Button
+                                primary
+                                type='submit'
+                                is_disabled={isSubmitting}
+                            >
+                                Launch DTrader with Token
+                            </Button>
+                        </form>
+
+                        <div className='auth-separator'>
+                            <div className='sep-line' />
+                            <Text size='xs'>OR LOG IN WITH DERIV</Text>
+                            <div className='sep-line' />
+                        </div>
+
+                        <Button
+                            secondary
+                            onClick={handleOAuthLogin}
+                        >
+                            Log In with Deriv
+                        </Button>
                     </div>
-
-                    {!authToken ? (
-                        <div className='dtrader-auth-wrapper'>
-                            <div className='dtrader-auth-card'>
-                                <div className='auth-card-head'>
-                                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>DTrader Hub 360</h3>
-                                    <Badge type='contained' background_color='orange' label='AUTH REQUIRED' />
-                                </div>
-
-                                <Text size='xs'>
-                                    To open DTrader Hub in Kenya with full market access, connect your Deriv account or provide an API token.
-                                </Text>
-
-                                <form onSubmit={handleManualTokenSubmit} className='auth-token-form'>
-                                    <Input
-                                        placeholder="Enter Deriv API Token (e.g. a1-XYZ...)"
-                                        value={manualToken}
-                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualToken(e.target.value)}
-                                    />
-                                    {tokenError && (
-                                        <div className='token-error-msg'>
-                                            {tokenError}
-                                        </div>
-                                    )}
-                                    <Button
-                                        primary
-                                        type='submit'
-                                        is_disabled={isSubmitting}
-                                    >
-                                        Launch DTrader with Token
-                                    </Button>
-                                </form>
-
-                                <div className='auth-separator'>
-                                    <div className='sep-line' />
-                                    <Text size='xs'>OR LOG IN WITH DERIV</Text>
-                                    <div className='sep-line' />
-                                </div>
-
-                                <Button
-                                    secondary
-                                    onClick={handleOAuthLogin}
-                                >
-                                    Log In with Deriv
-                                </Button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className='dtrader-iframe-wrapper'>
-                            <IframeWrapper src={embedUrl} title='DTrader Terminal Hub' />
-                        </div>
-                    )}
-                </React.Fragment>
-            )}
-
-            {/* Native Workspace View */}
-            {viewMode === 'native' && (
-                <DTraderWorkspace />
+                </div>
+            ) : (
+                <div className='dtrader-iframe-wrapper'>
+                    <IframeWrapper src={embedUrl} title='DTrader Terminal Hub' />
+                </div>
             )}
         </div>
     );
