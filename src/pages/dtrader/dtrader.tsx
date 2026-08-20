@@ -68,11 +68,11 @@ const DTraderPage: React.FC = observer(() => {
     const [viewMode, setViewMode] = useState<'iframe' | 'native'>(() => {
         try {
             const saved = localStorage.getItem('dtrader_view_mode');
-            if (saved === 'iframe') return 'iframe';
+            if (saved === 'iframe' || saved === 'native') return saved;
         } catch (error) {
             void error;
         }
-        return 'iframe';
+        return 'native'; // Default to Native engine to avoid Kenya iframe geo-restriction
     });
 
     const handleViewModeChange = (mode: 'iframe' | 'native') => {
@@ -181,7 +181,7 @@ const DTraderPage: React.FC = observer(() => {
         }
     };
 
-    const appId = getAppId() || '121856'; // FIX #6: Enforce app ID 121856 to bypass Kenya restrictions
+    const appId = getAppId() || '121856'; // Enforce app ID 121856 to bypass Kenya restrictions
     const rawBaseUrl = process.env.DTRADER_URL || 'https://deriv-dtrader.vercel.app/dtrader';
     const baseUrl = rawBaseUrl.replace(/\/+$/, '');
     const embedBase = baseUrl.endsWith('/dtrader') ? baseUrl : `${baseUrl}/dtrader`;
@@ -190,27 +190,27 @@ const DTraderPage: React.FC = observer(() => {
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
     const isDemo = loginId.startsWith('VR') || loginId.startsWith('VRT') || loginId.startsWith('DOT');
 
-    // FIX #6: Better token fallback chain for Kenya access and regional restrictions
+    // Comprehensive token resolution for Kenya access and regional restrictions
     const getValidAuthToken = (): string => {
-        if (authToken.startsWith('a1-') && authToken !== 'a1-guest') {
+        if (authToken && authToken !== 'a1-guest' && authToken.length >= 6) {
             return authToken;
         }
-        
-        // Try to get token from multiple sources (FIX #6: comprehensive token resolution)
+
         const fallbackSources = [
             localStorage.getItem('active_token'),
             localStorage.getItem('token1'),
             localStorage.getItem('deriv_api_token'),
             localStorage.getItem('authToken'),
+            localStorage.getItem('token'),
             getActiveToken(),
         ];
-        
+
         for (const source of fallbackSources) {
-            if (source?.startsWith('a1-') && source !== 'a1-guest') {
+            if (source && source !== 'a1-guest' && source.length >= 6) {
                 return source;
             }
         }
-        
+
         return '';
     };
 
@@ -331,9 +331,40 @@ const DTraderPage: React.FC = observer(() => {
                 </div>
             </div>
 
-            {/* Iframe View (Default) */}
+            {/* Iframe View */}
             {viewMode === 'iframe' && (
                 <>
+                    <div style={{
+                        padding: '8px 16px',
+                        background: 'rgba(234, 179, 8, 0.1)',
+                        borderBottom: '1px solid rgba(234, 179, 8, 0.2)',
+                        fontSize: '12px',
+                        color: '#fef08a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                        flexWrap: 'wrap'
+                    }}>
+                        <span>💡 <strong>Kenya Access Note:</strong> If the web app iframe displays a regional restriction notice, log in or switch to <strong>⚡ Native Workspace</strong> for direct trading without geo-blocking.</span>
+                        <button
+                            type='button'
+                            onClick={() => handleViewModeChange('native')}
+                            style={{
+                                background: '#eab308',
+                                color: '#0f172a',
+                                border: 'none',
+                                padding: '4px 12px',
+                                borderRadius: '4px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            Switch to Native Workspace ⚡
+                        </button>
+                    </div>
                     {!authToken ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '75vh', padding: 24 }}>
                             <div style={{
