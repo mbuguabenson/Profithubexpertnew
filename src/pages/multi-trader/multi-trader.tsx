@@ -49,6 +49,7 @@ interface TradeResult {
     message: string;
     strategyId: string;
     stakeUsed: number;
+    label?: string;
     transaction: Transaction;
 }
 
@@ -306,7 +307,7 @@ const MultiTrader: React.FC = observer(() => {
                             buy_price: stakeUsed,
                             profit,
                         },
-                    });
+                    } as TradeResult);
                 },
                 reject,
             });

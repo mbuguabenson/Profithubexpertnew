@@ -9,7 +9,7 @@ import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import DashboardBotList from './bot-list/dashboard-bot-list';
-import { Smartphone, TrendingUp, Bot, Radio, MessageCircle } from 'lucide-react';
+import { Smartphone, TrendingUp, Bot, Radio, MessageCircle, ShieldCheck, Zap, BarChart3 } from 'lucide-react';
 
 type TCardProps = {
     has_dashboard_strategies: boolean;
@@ -41,7 +41,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
             title: 'Smart Trader',
             icon: <TrendingUp size={28} className="tile-icon text-emerald" />,
             orbBg: 'orb-emerald',
-            callback: () => setActiveTab(DBOT_TABS.DTRADER || DBOT_TABS.MANUAL_TRADING),
+            callback: () => setActiveTab(DBOT_TABS.MANUAL_TRADING),
         },
         {
             id: 'free-bots',
@@ -66,7 +66,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     'tab__dashboard__table--minimized': has_dashboard_strategies && is_mobile,
                 })}
             >
-                {/* 1. Account Creation Banner */}
+                {/* 1. Account Creation Gold Notice Banner */}
                 <div className="dash-gold-notice-card">
                     <div className="notice-left-text">
                         <strong className="text-amber">Dont have an Account?</strong> Use this link to create your account with Deriv.
@@ -81,10 +81,26 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     </a>
                 </div>
 
-                {/* 2. Floating Manual Trader Button */}
+                {/* 2. Quick Platform Metrics Bar */}
+                <div className="dash-quick-metrics-row">
+                    <div className="metric-pill">
+                        <Zap size={14} className="text-emerald" />
+                        <span><strong>24+</strong> Free Pre-loaded Bots</span>
+                    </div>
+                    <div className="metric-pill">
+                        <BarChart3 size={14} className="text-blue" />
+                        <span><strong>Live</strong> Market Scanner</span>
+                    </div>
+                    <div className="metric-pill">
+                        <ShieldCheck size={14} className="text-purple" />
+                        <span><strong>Encrypted</strong> Deriv API Node</span>
+                    </div>
+                </div>
+
+                {/* 3. Floating Manual Trader Action Row */}
                 <div className="dash-manual-trader-row">
                     <button
-                        onClick={() => setActiveTab(DBOT_TABS.DTRADER || DBOT_TABS.MANUAL_TRADING)}
+                        onClick={() => setActiveTab(DBOT_TABS.MANUAL_TRADING)}
                         className="dash-manual-trader-btn"
                     >
                         <TrendingUp size={18} />
@@ -92,7 +108,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     </button>
                 </div>
 
-                {/* 3. 4 Main Soft Action Tiles */}
+                {/* 4. 4 Main Soft Action Tiles */}
                 <div className="dash-action-tiles-grid">
                     {actionTiles.map(tile => (
                         <div
@@ -108,7 +124,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     ))}
                 </div>
 
-                {/* 4. Community WhatsApp Card */}
+                {/* 5. Community WhatsApp Group Card */}
                 <div className="dash-whatsapp-card">
                     <div className="whatsapp-info">
                         <div className="whatsapp-icon-circle">
@@ -128,7 +144,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     </a>
                 </div>
 
-                {/* 5. Google Drive Modal Dialog */}
+                {/* 6. Google Drive Modal Dialog */}
                 {!isDesktop ? (
                     <Dialog
                         title={dialog_options.title}
@@ -158,7 +174,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     </MobileFullPageModal>
                 )}
 
-                {/* 6. Your Bots Table List */}
+                {/* 7. Strategy Management & Bot List Table */}
                 <div className="dash-bot-list-wrapper">
                     <h3 className="dash-bot-list-title">Your bots:</h3>
                     <DashboardBotList />
