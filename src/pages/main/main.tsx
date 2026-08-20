@@ -194,6 +194,8 @@ const AppWrapper = observer(() => {
                 api_base.setIsRunning(false);
                 setWebSocketState(false);
             }
+        } else {
+            setWebSocketState(true);
         }
     }, [clear, connectionStatus, setWebSocketState, stopBot]);
 

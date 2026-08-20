@@ -11,9 +11,9 @@ import { standalone_routes } from './shared';
 
 const BotStopped = observer(() => {
     const { dashboard } = useStore();
-    const { is_web_socket_intialised } = dashboard;
+    const { is_web_socket_intialised, setWebSocketState } = dashboard;
     const onClickClose = () => {
-        reloadPage();
+        setWebSocketState(true);
     };
     return (
         <Dialog
@@ -22,8 +22,13 @@ const BotStopped = observer(() => {
             className={'dc-dialog bot-stopped-dialog'}
             cancel_button_text={localize('Go to Reports')}
             confirm_button_text={localize('Back to Bot')}
-            onCancel={() => navigateToUrl(generateUrlWithRedirect(standalone_routes.positions))}
-            onConfirm={reloadPage}
+            onCancel={() => {
+                setWebSocketState(true);
+                navigateToUrl(generateUrlWithRedirect(standalone_routes.positions));
+            }}
+            onConfirm={() => {
+                setWebSocketState(true);
+            }}
             login={() => {}} // Empty function as login is not needed for this dialog
         >
             <div className='dc-dialog__content__header'>
