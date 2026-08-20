@@ -318,10 +318,7 @@ class DBot {
             });
         } catch (error) {
             globalObserver.emit('Error', error);
-
-            if (this.interpreter) {
-                this.stopBot();
-            }
+            this.stopBot();
         }
     }
 
@@ -412,7 +409,11 @@ class DBot {
 
         api_base.setIsRunning(false);
 
-        await this.interpreter.stop();
+        if (this.interpreter) {
+            await this.interpreter.stop();
+        } else {
+            globalObserver.emit('bot.stop');
+        }
         this.is_bot_running = false;
         this.interpreter = null;
         this.interpreter = Interpreter();
