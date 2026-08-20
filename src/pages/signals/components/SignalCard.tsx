@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { SignalStatus } from '../engine/SignalEngine';
 import { SignalWithSymbol } from '../engine/TickSubscriber';
 import { useStore } from '@/hooks/useStore';
+import { Zap, Target, ArrowRight } from 'lucide-react';
 import './SignalCard.scss';
 
 interface SignalCardProps {
@@ -31,53 +32,63 @@ export const SignalCard: React.FC<SignalCardProps> = ({ signal, isSuper = false 
     const isTradeNow = signal.status === 'TRADE NOW' || signal.status === 'STRONG';
 
     return (
-        <div className={clsx('signal-card', isSuper && 'super-signal', getStatusClass(signal.status))}>
-            <div className="signal-card__glow" />
-            <div className="signal-card__header">
+        <div className={clsx('soft-signal-card', isSuper && 'soft-signal-card--super', getStatusClass(signal.status))}>
+            <div className="soft-signal-card__top-glow" />
+            
+            {/* Header: Title, Symbol Badge & Status Chip */}
+            <div className="soft-signal-card__header">
                 <div className="title-group">
-                    <h3 className="signal-card__title">{formatType(signal.type)}</h3>
+                    <h4 className="soft-signal-card__title">{formatType(signal.type)}</h4>
                     {signal.symbol && (
-                        <span className="signal-card__symbol-badge">
+                        <span className="soft-signal-card__symbol-badge">
                             {signal.symbol.toUpperCase()}
                         </span>
                     )}
                 </div>
-                <span className={clsx('signal-card__status-chip', getStatusClass(signal.status))}>
+                <span className={clsx('soft-signal-card__status-chip', getStatusClass(signal.status))}>
+                    {isTradeNow && <Zap size={12} className="chip-icon" />}
                     {signal.status}
                 </span>
             </div>
             
-            <div className="signal-card__body">
-                <div className="signal-card__probability-container">
+            {/* Body: Conic Power Orb & Details */}
+            <div className="soft-signal-card__body">
+                <div className="soft-signal-card__power-orb-wrap">
                     <div 
-                        className="signal-card__probability-circle"
+                        className="soft-signal-card__power-orb"
                         style={{
-                            background: `conic-gradient(from 0deg, ${isSuper ? '#8b5cf6' : isTradeNow ? '#10b981' : '#f59e0b'} ${probPct}%, rgba(255, 255, 255, 0.08) ${probPct}%)`
+                            background: `conic-gradient(from 0deg, ${isSuper ? '#a855f7' : isTradeNow ? '#10b981' : '#f59e0b'} ${probPct}%, rgba(15, 23, 42, 0.9) ${probPct}%)`
                         }}
                     >
-                        <div className="signal-card__probability-inner">
-                            <span className="signal-card__probability-text">{probPct.toFixed(0)}%</span>
-                            <span className="signal-card__probability-label">POWER</span>
+                        <div className="soft-signal-card__power-orb-inner">
+                            <span className="power-text">{probPct.toFixed(0)}%</span>
+                            <span className="power-label">POWER</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="signal-card__details">
-                    <p className="signal-card__recommendation">{signal.recommendation}</p>
-                    <div className="signal-card__entry-condition">
-                        <span className="entry-label">ENTRY TRIGGER:</span> {signal.entryCondition}
+                <div className="soft-signal-card__details">
+                    <p className="soft-signal-card__recommendation">{signal.recommendation}</p>
+                    
+                    <div className="soft-signal-card__entry-box">
+                        <span className="entry-label">TRIGGER:</span> {signal.entryCondition}
                     </div>
+
                     {signal.targetDigit !== undefined && (
-                        <div className="signal-card__target">
-                            Target Digit: <span className="signal-card__target-digit">{signal.targetDigit}</span>
+                        <div className="soft-signal-card__target">
+                            <Target size={14} className="target-icon" />
+                            <span>Target Digit:</span>
+                            <span className="target-digit-badge">{signal.targetDigit}</span>
                         </div>
                     )}
                 </div>
             </div>
 
-            <div className="signal-card__footer">
+            {/* Footer Action */}
+            <div className="soft-signal-card__footer">
                 <button
-                    className="signal-card__trade-btn"
+                    type="button"
+                    className="soft-signal-card__trade-btn"
                     onClick={() => {
                         if (scanner) {
                             void scanner.loadSignalStrategyToBuilder({
@@ -92,7 +103,8 @@ export const SignalCard: React.FC<SignalCardProps> = ({ signal, isSuper = false 
                         }
                     }}
                 >
-                    Trade Strategy ⚡
+                    <span>Trade Strategy ⚡</span>
+                    <ArrowRight size={14} />
                 </button>
             </div>
         </div>

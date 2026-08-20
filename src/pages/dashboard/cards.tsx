@@ -163,6 +163,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                             title={dialog_options.title}
                             is_visible={is_dialog_open}
                             onCancel={onCloseDialog}
+                            onConfirm={() => {}}
                             is_mobile_full_width
                             className='dc-dialog__wrapper--google-drive'
                             has_close_icon
