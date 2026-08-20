@@ -1,0 +1,383 @@
+import React, { useEffect, useState } from 'react';
+import { observer } from 'mobx-react-lite';
+import { getAppId, getClientId } from '@/components/shared/utils/config/config';
+import Text from '@/components/shared_ui/text';
+import Button from '@/components/shared_ui/button';
+import Input from '@/components/shared_ui/input';
+import Badge from '@/components/shared_ui/badge';
+import ChunkLoader from '@/components/loader/chunk-loader';
+import { useStore } from '@/hooks/useStore';
+import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
+import { Globe, ShieldCheck, RefreshCw, Zap, Cpu } from 'lucide-react';
+import './trader-pro.scss';
+
+// Safe token resolution helper
+const resolveActiveToken = (): string => {
+    return (
+        localStorage.getItem('active_token') ||
+        localStorage.getItem('token1') ||
+        localStorage.getItem('deriv_api_token') ||
+        localStorage.getItem('authToken') ||
+        localStorage.getItem('token') ||
+        ''
+    );
+};
+
+// Safe getAccountsList helper
+const getAccountsList = (): Record<string, string> => {
+    try {
+        const raw = localStorage.getItem('accountsList');
+        if (raw) {
+            return JSON.parse(raw);
+        }
+    } catch (e) {
+        void e;
+    }
+    return {};
+};
+
+interface IframeWrapperProps {
+    src: string;
+    title: string;
+}
+
+const IframeWrapper: React.FC<IframeWrapperProps> = ({ src, title }) => {
+    const [isLoading, setIsLoading] = useState(true);
+
+    return (
+        <div className='iframe-container-relative'>
+            {isLoading && (
+                <div className='iframe-loader-overlay'>
+                    <ChunkLoader message={`Connecting to ${title}...`} />
+                </div>
+            )}
+            <iframe
+                src={src}
+                title={title}
+                className='trader-pro-full-iframe'
+                onLoad={() => setIsLoading(false)}
+                allow='camera; microphone; clipboard-read; clipboard-write; geolocation'
+            />
+        </div>
+    );
+};
+
+export const TraderProPage: React.FC = observer(() => {
+    const { client } = useStore();
+
+    const [activeHub, setActiveHub] = useState<'digitflow' | 'xhub'>('digitflow');
+    const [authToken, setAuthToken] = useState<string>('');
+    const [activeLoginId, setActiveLoginId] = useState<string>('');
+    const [manualToken, setManualToken] = useState<string>('');
+    const [tokenError, setTokenError] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
+
+    useEffect(() => {
+        const savedHub = localStorage.getItem('trader_pro_active_hub') as 'digitflow' | 'xhub';
+        if (savedHub === 'digitflow' || savedHub === 'xhub') {
+            setActiveHub(savedHub);
+        }
+
+        const token = resolveActiveToken();
+        const loginId = client?.loginid || localStorage.getItem('active_loginid') || '';
+
+        setAuthToken(token);
+        setActiveLoginId(loginId);
+        setIsAuthReady(true);
+    }, [client]);
+
+    const handleHubChange = (hub: 'digitflow' | 'xhub') => {
+        setActiveHub(hub);
+        localStorage.setItem('trader_pro_active_hub', hub);
+    };
+
+    const handleOAuthLogin = () => {
+        const appId = getAppId() || '121856';
+        const oauthUrl = `https://oauth.deriv.com/oauth2/authorize?app_id=${appId}&l=EN&brand=deriv`;
+        window.location.href = oauthUrl;
+    };
+
+    const handleManualTokenSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setTokenError('');
+        const trimmed = manualToken.trim();
+
+        if (!trimmed) {
+            setTokenError('Please enter a valid Deriv API token.');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const appId = getAppId() || '121856';
+            const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${appId}`);
+
+            const authResult = await new Promise<{ authorize: any }>((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    ws.close();
+                    reject(new Error('Connection timed out. Please verify your token and network.'));
+                }, 10000);
+
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({ authorize: trimmed }));
+                };
+
+                ws.onmessage = (msg) => {
+                    try {
+                        const data = JSON.parse(msg.data);
+                        if (data.error) {
+                            clearTimeout(timeout);
+                            ws.close();
+                            reject(new Error(data.error.message || 'Invalid API token.'));
+                        } else if (data.msg_type === 'authorize') {
+                            clearTimeout(timeout);
+                            ws.close();
+                            resolve(data);
+                        }
+                    } catch (err) {
+                        clearTimeout(timeout);
+                        ws.close();
+                        reject(err);
+                    }
+                };
+
+                ws.onerror = () => {
+                    clearTimeout(timeout);
+                    ws.close();
+                    reject(new Error('WebSocket connection failed.'));
+                };
+            });
+
+            const userAuth = authResult.authorize;
+            const newLoginId = userAuth.loginid;
+
+            const accountsList = getAccountsList();
+            accountsList[newLoginId] = trimmed;
+
+            localStorage.setItem('accountsList', JSON.stringify(accountsList));
+            localStorage.setItem('active_loginid', newLoginId);
+            localStorage.setItem('active_token', trimmed);
+            localStorage.setItem('token1', trimmed);
+
+            setActiveLoginId(newLoginId);
+            setAuthToken(trimmed);
+        } catch (err: any) {
+            setTokenError(err?.message || 'Invalid Deriv API token. Please check and try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const appId = getAppId() || '121856';
+    const clientId = getClientId() || appId;
+
+    const digitflowUrl = 'https://digitflowhub.vercel.app/';
+    const xhubUrl = 'https://dtraderhub-mu.vercel.app/';
+
+    const selectedHubUrl = activeHub === 'digitflow' ? digitflowUrl : xhubUrl;
+    const selectedHubTitle = activeHub === 'digitflow' ? 'DigitFlow Hub' : 'XHub DTrader';
+
+    const baseUrl = selectedHubUrl.replace(/\/+$/, '');
+    const loginId = activeLoginId || (client as any)?.loginid || localStorage.getItem('active_loginid') || '';
+    const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
+    const isDemo = loginId.startsWith('VR') || loginId.startsWith('VRT') || loginId.startsWith('DOT');
+
+    const getValidAuthToken = (): string => {
+        if (authToken && authToken !== 'a1-guest' && authToken.length >= 6) {
+            return authToken;
+        }
+        return resolveActiveToken();
+    };
+
+    const queryParams = new URLSearchParams();
+    if (loginId) {
+        queryParams.set('acct1', loginId);
+        queryParams.set('cur1', currency);
+    }
+
+    queryParams.set('app_id', appId);
+    queryParams.set('client_id', clientId);
+
+    const validToken = getValidAuthToken();
+    if (validToken) {
+        queryParams.set('token1', validToken);
+    }
+
+    try {
+        const accountsList = getAccountsList();
+        let index = 1;
+        for (const accId in accountsList) {
+            const accToken = accountsList[accId];
+            if (accToken && accId !== loginId) {
+                index++;
+                queryParams.set(`acct${index}`, accId);
+                queryParams.set(`token${index}`, accToken);
+                queryParams.set(`cur${index}`, currency);
+            }
+        }
+    } catch (error) {
+        void error;
+    }
+
+    queryParams.set('lang', 'EN');
+    queryParams.set('theme', 'dark');
+    queryParams.set('symbol', '1HZ100V');
+    queryParams.set('trade_type', 'accumulator');
+    queryParams.set('hide_header_login', 'true');
+    queryParams.set('is_mobile_app', 'false');
+    queryParams.set('account_type', isDemo ? 'demo' : 'real');
+    queryParams.set('server', 'green');
+
+    const embedUrl = `${baseUrl}?${queryParams.toString()}`;
+
+    useEffect(() => {
+        const handleIframeAuthSync = () => {
+            if (authToken) {
+                const accountsList = getAccountsList();
+                const payload = {
+                    type: 'DERIV_AUTH_PAYLOAD',
+                    active_loginid: loginId,
+                    token: authToken,
+                    app_id: appId,
+                    client_id: clientId,
+                    accounts: accountsList,
+                };
+                SharedActionsBridge.dispatch('INITIALIZE_AUTH', payload);
+
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach((frame) => {
+                    try {
+                        frame.contentWindow?.postMessage(payload, '*');
+                    } catch (e) {
+                        void e;
+                    }
+                });
+            }
+        };
+
+        window.addEventListener('message', (e) => {
+            if (e.data?.type === 'REQUEST_DERIV_AUTH' || e.data?.action === 'REQUEST_DERIV_AUTH') {
+                handleIframeAuthSync();
+            }
+        });
+
+        const timer = setTimeout(handleIframeAuthSync, 1500);
+        return () => clearTimeout(timer);
+    }, [authToken, loginId, appId, clientId]);
+
+    if (!isAuthReady) {
+        return <ChunkLoader message="Initializing Trader Pro Terminal..." />;
+    }
+
+    return (
+        <div className='trader-pro-page-container'>
+            {/* Top View Mode Toolbar */}
+            <div className='view-mode-bar'>
+                <div className='view-mode-info'>
+                    <span className='status-dot' />
+                    <span className='mode-title'>Trader Pro</span>
+
+                    <span className={`mode-badge mode-badge--${activeHub}`}>
+                        {activeHub === 'digitflow' ? <Zap size={13} /> : <Cpu size={13} />}
+                        {selectedHubTitle} (App ID: {appId})
+                    </span>
+                </div>
+
+                <div className='mode-toggle'>
+                    <button
+                        type='button'
+                        className={`toggle-btn ${activeHub === 'digitflow' ? 'toggle-btn--active' : ''}`}
+                        onClick={() => handleHubChange('digitflow')}
+                        title='DigitFlow Hub (https://digitflowhub.vercel.app/)'
+                    >
+                        <Zap size={14} /> DigitFlow Hub
+                    </button>
+
+                    <button
+                        type='button'
+                        className={`toggle-btn ${activeHub === 'xhub' ? 'toggle-btn--active' : ''}`}
+                        onClick={() => handleHubChange('xhub')}
+                        title='XHub DTrader (https://dtraderhub-mu.vercel.app/)'
+                    >
+                        <Globe size={14} /> XHub DTrader
+                    </button>
+                </div>
+            </div>
+
+            {/* Banner Notice */}
+            <div className='trader-pro-notice-banner'>
+                <span className='notice-left'>
+                    <ShieldCheck size={14} className='icon-emerald' />
+                    <strong>Active Target:</strong> {selectedHubUrl} (App ID: {appId}) • Live Streaming
+                </span>
+
+                <div className='notice-right-btns'>
+                    <button
+                        type='button'
+                        onClick={() => handleHubChange(activeHub === 'digitflow' ? 'xhub' : 'digitflow')}
+                        className='banner-btn banner-btn--switch'
+                    >
+                        <RefreshCw size={12} /> Switch to {activeHub === 'digitflow' ? 'XHub DTrader' : 'DigitFlow Hub'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Auth / Terminal View */}
+            {!authToken ? (
+                <div className='trader-pro-auth-wrapper'>
+                    <div className='trader-pro-auth-card'>
+                        <div className='auth-card-head'>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{selectedHubTitle}</h3>
+                            <Badge type='contained' background_color='orange' label='AUTH REQUIRED' />
+                        </div>
+
+                        <Text size='xs'>
+                            To access {selectedHubTitle} with real-time trading feeds, connect your Deriv account or provide an API token.
+                        </Text>
+
+                        <form onSubmit={handleManualTokenSubmit} className='auth-token-form'>
+                            <Input
+                                placeholder="Enter Deriv API Token (e.g. a1-XYZ...)"
+                                value={manualToken}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualToken(e.target.value)}
+                            />
+                            {tokenError && (
+                                <div className='token-error-msg'>
+                                    {tokenError}
+                                </div>
+                            )}
+                            <Button
+                                primary
+                                type='submit'
+                                is_disabled={isSubmitting}
+                            >
+                                Launch {selectedHubTitle}
+                            </Button>
+                        </form>
+
+                        <div className='auth-separator'>
+                            <div className='sep-line' />
+                            <Text size='xs'>OR LOG IN WITH DERIV</Text>
+                            <div className='sep-line' />
+                        </div>
+
+                        <Button
+                            secondary
+                            onClick={handleOAuthLogin}
+                        >
+                            Log In with Deriv
+                        </Button>
+                    </div>
+                </div>
+            ) : (
+                <div className='trader-pro-iframe-wrapper'>
+                    <IframeWrapper src={embedUrl} title={selectedHubTitle} />
+                </div>
+            )}
+        </div>
+    );
+});
+
+export default TraderProPage;

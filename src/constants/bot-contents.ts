@@ -30,6 +30,7 @@ export const DBOT_TABS: TDashboardTabIndex = Object.freeze({
     MARKET_HUNTER_PRO: 15,
     AI_TRADING_ENGINE: 16,
     DCIRCLES: 17,
+    TRADER_PRO: 18,
 });
 
 export const MAX_STRATEGIES = 10;
@@ -53,4 +54,5 @@ export const TAB_IDS = [
     'id-market-hunter-pro',
     'id-ai-trading-engine',
     'id-dcircles',
+    'id-trader-pro',
 ];
