@@ -54,20 +54,18 @@ const Footer = () => {
             {(isAuthorized || isLoggedIn()) && <LogoutFooter />}
             <div className='app-footer__vertical-line' />
 
-            {/* Account Info Modal (Desktop) */}
-            {isDesktop && (isAuthorized || isLoggedIn()) && (
-                <>
-                    <Tooltip
-                        as='button'
-                        className='app-footer__icon'
-                        onClick={() => window.dispatchEvent(new Event('open_account_info'))}
-                        tooltipContent={localize('Account Info')}
-                    >
-                        <LabelPairedUserMdRegularIcon fill='var(--text-general)' width={16} height={16} />
-                    </Tooltip>
-                    <div className='app-footer__vertical-line' />
-                </>
-            )}
+            {/* Account Info & API Center */}
+            <Tooltip
+                as='button'
+                className='app-footer__icon'
+                onClick={() => window.dispatchEvent(new Event('open_account_info'))}
+                tooltipContent={localize('Deriv Account API Center')}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', padding: '0 6px' }}
+            >
+                <LabelPairedUserMdRegularIcon fill='#f5c542' width={16} height={16} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa' }}>Account API</span>
+            </Tooltip>
+            <div className='app-footer__vertical-line' />
 
             {/* WhatsApp contact link (migrated from header) */}
             <>
