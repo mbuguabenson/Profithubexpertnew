@@ -4,7 +4,7 @@ import { DBOT_TABS } from '@/constants/bot-contents';
 import { useStore } from '@/hooks/useStore';
 import { TBotsManifestItem, getXmlUploadsManifest, fetchXmlWithCache } from '@/utils/freebots-cache';
 import { getUploadedBots } from '@/utils/supabase-copy';
-import { Search, Sparkles, Zap, ShieldCheck, Flame, BarChart3, Filter, Play, CheckCircle2, X } from 'lucide-react';
+import { Search, Sparkles, Zap, Flame, BarChart3, Filter, Play, CheckCircle2, X } from 'lucide-react';
 import './free-bots.scss';
 
 interface BotData {
