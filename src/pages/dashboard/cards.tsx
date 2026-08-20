@@ -1,5 +1,3 @@
-// TODO: Complete MobX integration for popup functionality
-// Some code is kept commented out pending popup integration
 import React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
@@ -9,17 +7,8 @@ import MobileFullPageModal from '@/components/shared_ui/mobile-full-page-modal';
 import Text from '@/components/shared_ui/text';
 import { DBOT_TABS } from '@/constants/bot-contents';
 import { useStore } from '@/hooks/useStore';
-import {
-    DerivLightDepositIcon,
-    DerivLightIcCloudUploadIcon,
-    DerivLightUpgradeIcon,
-    DerivLightPromotionalToolsIcon,
-    DerivLightWalletIcon,
-} from '@deriv/quill-icons/Illustration';
 import { Localize, localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
-/* [AI] - Analytics event tracking removed - see migrate-docs/MONITORING_PACKAGES.md for re-implementation guide */
-/* [/AI] */
 import DashboardBotList from './bot-list/dashboard-bot-list';
 
 type TCardProps = {
@@ -30,8 +19,41 @@ type TCardProps = {
 type TCardArray = {
     id: string;
     icon: React.ReactElement;
-    content: React.ReactElement;
+    title: React.ReactElement;
+    description: string;
+    colorClass: string;
     callback: () => void;
+};
+
+const SoftIcons = {
+    computer: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <path d="M8 21h8" />
+            <path d="M12 17v4" />
+        </svg>
+    ),
+    drive: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+            <path d="M12 12v6" />
+            <path d="M9 15l3-3 3 3" />
+        </svg>
+    ),
+    builder: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="10" rx="2" />
+            <circle cx="12" cy="5" r="2" />
+            <path d="M12 7v4" />
+            <path d="M8 16h.01" />
+            <path d="M16 16h.01" />
+        </svg>
+    ),
+    lightning: (
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+    ),
 };
 
 const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => {
@@ -50,54 +72,50 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
     const openGoogleDriveDialog = () => {
         const google_drive_tab_index = isDesktop ? 2 : 1;
         toggleLoadModal();
-        setActiveTabIndex(google_drive_tab_index); // Google Drive tab index
+        setActiveTabIndex(google_drive_tab_index);
         setActiveTab(DBOT_TABS.BOT_BUILDER);
     };
 
     const actions: TCardArray[] = [
         {
             id: 'my-computer',
-            icon: is_mobile ? (
-                <DerivLightWalletIcon height='48px' width='48px' />
-            ) : (
-                <DerivLightDepositIcon height='48px' width='48px' />
-            ),
-            content: is_mobile ? <Localize i18n_default_text='Local' /> : <Localize i18n_default_text='My computer' />,
+            icon: SoftIcons.computer,
+            title: is_mobile ? <Localize i18n_default_text='Local' /> : <Localize i18n_default_text='My Computer' />,
+            description: 'Import local XML bots',
+            colorClass: 'soft-card--cyan',
             callback: () => {
                 openFileLoader();
-                /* [AI] - Analytics event tracking removed - see migrate-docs/MONITORING_PACKAGES.md for re-implementation guide */
-                /* [/AI] */
             },
         },
         {
             id: 'google-drive',
-            icon: <DerivLightIcCloudUploadIcon height='48px' width='48px' />,
-            content: <Localize i18n_default_text='Google Drive' />,
+            icon: SoftIcons.drive,
+            title: <Localize i18n_default_text='Google Drive' />,
+            description: 'Load from Google Drive',
+            colorClass: 'soft-card--emerald',
             callback: () => {
                 openGoogleDriveDialog();
-                /* [AI] - Analytics event tracking removed - see migrate-docs/MONITORING_PACKAGES.md for re-implementation guide */
-                /* [/AI] */
             },
         },
         {
             id: 'bot-builder',
-            icon: <DerivLightUpgradeIcon height='48px' width='48px' />,
-            content: <Localize i18n_default_text='Bot Builder' />,
+            icon: SoftIcons.builder,
+            title: <Localize i18n_default_text='Bot Builder' />,
+            description: 'Build strategy visual blocks',
+            colorClass: 'soft-card--purple',
             callback: () => {
                 setActiveTab(DBOT_TABS.BOT_BUILDER);
-                /* [AI] - Analytics event tracking removed - see migrate-docs/MONITORING_PACKAGES.md for re-implementation guide */
-                /* [/AI] */
             },
         },
         {
             id: 'quick-strategy',
-            icon: <DerivLightPromotionalToolsIcon height='48px' width='48px' />,
-            content: <Localize i18n_default_text='Quick strategy' />,
+            icon: SoftIcons.lightning,
+            title: <Localize i18n_default_text='Quick Strategy' />,
+            description: 'Launch ready-made algorithms',
+            colorClass: 'soft-card--amber',
             callback: () => {
                 setActiveTab(DBOT_TABS.BOT_BUILDER);
                 setFormVisibility(true);
-                /* [AI] - Analytics event tracking removed - see migrate-docs/MONITORING_PACKAGES.md for re-implementation guide */
-                /* [/AI] */
             },
         },
     ];
@@ -115,32 +133,27 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     })}
                     id='tab__dashboard__table__tiles'
                 >
-                    {actions.map(icons => {
-                        const { icon, content, callback, id } = icons;
+                    {actions.map(action => {
+                        const { icon, title, description, callback, id, colorClass } = action;
                         return (
                             <div
                                 key={id}
-                                className={classNames('tab__dashboard__table__block', {
+                                className={classNames('tab__dashboard__table__block', colorClass, {
                                     'tab__dashboard__table__block--minimized': has_dashboard_strategies && is_mobile,
                                 })}
+                                onClick={callback}
                             >
-                                <div
-                                    className={classNames('tab__dashboard__table__images', {
-                                        'tab__dashboard__table__images--minimized': has_dashboard_strategies,
-                                    })}
-                                    width='8rem'
-                                    height='8rem'
-                                    icon={icon}
-                                    id={id}
-                                    onClick={() => {
-                                        callback();
-                                    }}
-                                >
+                                <div className='soft-icon-orb'>
                                     {icon}
                                 </div>
-                                <Text color='prominent' size={is_mobile ? 'xxs' : 'xs'}>
-                                    {content}
-                                </Text>
+                                <div className="soft-card-body">
+                                    <Text color='prominent' size={is_mobile ? 'xxs' : 'xs'} className="soft-card-title">
+                                        {title}
+                                    </Text>
+                                    {!is_mobile && (
+                                        <span className="soft-card-desc">{description}</span>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}
