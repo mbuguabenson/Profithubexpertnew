@@ -1,4 +1,3 @@
-import React from 'react';
 import IframeWrapper from '@/components/iframe-wrapper';
 import './dcircles.scss';
 
