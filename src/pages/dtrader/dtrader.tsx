@@ -23,19 +23,6 @@ const resolveActiveToken = (): string => {
     );
 };
 
-// Safe getAccountsList helper
-const getAccountsList = (): Record<string, string> => {
-    try {
-        const raw = localStorage.getItem('accountsList');
-        if (raw) {
-            return JSON.parse(raw);
-        }
-    } catch (e) {
-        void e;
-    }
-    return {};
-};
-
 interface IframeWrapperProps {
     src: string;
     title: string;
