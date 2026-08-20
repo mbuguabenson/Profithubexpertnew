@@ -2,215 +2,238 @@
 <html lang="en" class="dark">
     <head>
         <meta charset="utf-8" />
-        <title>DCircles Radial Analysis | 360 Trading Engine</title>
+        <title>DCircles Radial Cyber Deck | 360 Analysis</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
         <link rel="stylesheet" href="style.css" />
     </head>
-    <body class="bg-slate-950 text-slate-100 font-sans antialiased">
+    <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-white">
+        {/* Background Animated Particle Overlay */}
+        <div class="cyber-bg-glow"></div>
+
         <div class="circles-app-container">
-            {/* Header Title Banner */}
-            <div class="circles-header-card">
-                <div class="header-title-box">
-                    <div class="brand-badge-row">
-                        <span class="live-dot-pulse"></span>
-                        <span class="brand-tag">360 RADIAL ENGINE</span>
+            {/* Top Futuristic Cyber Deck HUD Header */}
+            <div class="cyber-hud-header">
+                <div class="hud-left">
+                    <div class="live-status-pill">
+                        <span class="live-indicator-pulse"></span>
+                        <span class="hud-tag font-mono">LIVE MATRIX STREAM</span>
                     </div>
-                    <h1 class="header-main-title">DCircles Digit & Tick Analysis</h1>
+                    <h1 class="hud-main-title">DCIRCLES RADIAL CYBER DECK</h1>
                     <span id="app-title" class="hidden"></span>
+                </div>
+
+                <div class="hud-right-stats">
+                    <div class="hud-stat-box">
+                        <span class="hud-stat-label">PING</span>
+                        <span class="hud-stat-val text-emerald-400 font-mono">18ms</span>
+                    </div>
+                    <div class="hud-stat-box">
+                        <span class="hud-stat-label">ALGORITHM</span>
+                        <span class="hud-stat-val text-cyan-400 font-mono">RADIAL v5.0</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Top Config & Price Cards Grid (Trading Bots Style) */}
-            <div class="trading-cards-grid">
-                <div class="tb-card market-card">
-                    <div class="card-icon-orb orb-emerald">📈</div>
-                    <div class="card-content">
-                        <label id="label-market" for="symbols" class="card-label">Select Active Market</label>
-                        <select id="symbols" class="card-select-input"></select>
+            {/* Trading Cards Action Deck */}
+            <div class="cyber-trading-cards-grid">
+                {/* 1. Market Selection Card */}
+                <div class="tb-cyber-card market-cyber-card">
+                    <div class="cyber-orb orb-emerald">
+                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    </div>
+                    <div class="card-inner">
+                        <label id="label-market" for="symbols" class="cyber-label">ACTIVE MARKET SYMBOL</label>
+                        <select id="symbols" class="cyber-select"></select>
                     </div>
                 </div>
 
-                <div class="tb-card price-card">
-                    <div class="card-icon-orb orb-blue">⚡</div>
-                    <div class="card-content">
-                        <span class="card-label">CURRENT SPOT PRICE</span>
-                        <div id="price" class="price-val">—</div>
+                {/* 2. Spot Price Ticker Card */}
+                <div class="tb-cyber-card price-cyber-card">
+                    <div class="cyber-orb orb-cyan">
+                        <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="card-inner">
+                        <span class="cyber-label">LIVE SPOT TICK</span>
+                        <div id="price" class="cyber-price-display font-mono">—</div>
                     </div>
                 </div>
 
-                <div class="tb-card window-card">
-                    <div class="card-icon-orb orb-purple">⏱️</div>
-                    <div class="card-content">
-                        <label id="label-window" for="ticks-window" class="card-label">Tick Window (50-5000)</label>
-                        <div class="input-inline-row">
-                            <input id="ticks-window" type="number" min="50" max="5000" step="50" value="1000" class="card-number-input" />
-                            <span class="hint-text">Ticks</span>
+                {/* 3. Window Control Card */}
+                <div class="tb-cyber-card window-cyber-card">
+                    <div class="cyber-orb orb-purple">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="card-inner">
+                        <label id="label-window" for="ticks-window" class="cyber-label">TICK SAMPLE WINDOW</label>
+                        <div class="input-glow-group">
+                            <input id="ticks-window" type="number" min="50" max="5000" step="50" value="1000" class="cyber-num-input font-mono" />
+                            <span class="range-badge">50–5000 Ticks</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Hidden digit placeholder for script.js compatibility */}
+            {/* Hidden digit element for script.js compat */}
             <div class="display visually-hidden" style="display:none;">
                 <div id="digit" class="digit">—</div>
             </div>
 
-            {/* 10 Digits Distribution Section (0 - 9 Cards) */}
-            <div class="digits-section-card">
-                <div class="digits-card-header">
-                    <div class="header-left">
-                        <span class="section-icon">📊</span>
-                        <span id="digits-title" class="digits-title-text">Digit Distribution (0 - 9)</span>
+            {/* Radial 10-Digit Distribution Matrix (0 - 9 Cards) */}
+            <div class="cyber-matrix-container">
+                <div class="matrix-header">
+                    <div class="header-tag-title">
+                        <span class="matrix-symbol font-mono">⌘</span>
+                        <span id="digits-title" class="matrix-title-text">DIGIT FREQUENCY MATRIX (0 - 9)</span>
                     </div>
-                    <span id="samples-count" class="samples-pill">0/1000 Ticks</span>
+                    <span id="samples-count" class="cyber-sample-badge font-mono">0/1000 TICKS</span>
                 </div>
 
-                <div id="digits" class="digits-grid-container"></div>
+                <div id="digits" class="digits-ring-grid"></div>
 
-                <div class="legend-row">
-                    <span id="legend-current" class="legend-chip legend-current">
-                        <span class="dot dot-current"></span> Current Digit / Most Frequent
+                <div class="matrix-legend-bar">
+                    <span id="legend-current" class="legend-chip legend-active">
+                        <span class="pulse-dot dot-cyan"></span> CURRENT SPOT DIGIT
                     </span>
-                    <span id="legend-least" class="legend-chip legend-least">
-                        <span class="dot dot-least"></span> Least Frequency Digit
+                    <span id="legend-least" class="legend-chip legend-warning">
+                        <span class="pulse-dot dot-rose"></span> LEAST FREQUENT DIGIT
                     </span>
                 </div>
             </div>
 
-            {/* Analysis Modules Grid */}
-            <div class="analysis-modules-grid">
-                {/* 1. Even / Odd Analysis Card */}
-                <div class="module-card eo-card-module">
-                    <div class="module-header">
-                        <div class="module-title-box">
-                            <span class="module-icon text-emerald">⚖️</span>
-                            <span class="module-title">Odd / Even Analysis</span>
+            {/* 3-Column Cyber Modules Grid */}
+            <div class="cyber-modules-grid">
+                {/* 1. Even / Odd Module */}
+                <div class="module-cyber-card eo-module">
+                    <div class="module-top">
+                        <div class="module-title-wrap">
+                            <span class="icon-orb text-emerald-400">⚖️</span>
+                            <span class="module-heading">EVEN / ODD ANALYSIS</span>
                         </div>
                     </div>
 
-                    <div class="eo-seq-box">
-                        <div class="seq-header">
-                            <span>Recent 50 E/O Digits</span>
+                    <div class="sequence-tape-box">
+                        <div class="tape-header font-mono">
+                            <span>RECENT 50 DIGIT TAPE</span>
                             <button id="eo-more" type="button" class="hidden">More</button>
                         </div>
-                        <div id="eo-seq-chips" class="chips-flex-wrap"></div>
+                        <div id="eo-seq-chips" class="chips-tape-wrap"></div>
                     </div>
 
-                    <div class="bars-grid">
-                        <div class="bar-card bar-even">
-                            <div class="bar-meta">
-                                <span>EVEN DIGITS</span>
-                                <span id="eo-even-pct" class="bar-pct">(0%)</span>
+                    <div class="bars-dual-row">
+                        <div class="bar-cyber-box bar-even">
+                            <div class="bar-top-meta">
+                                <span class="meta-label">EVEN DIGITS</span>
+                                <span id="eo-even-pct" class="meta-val font-mono">(0%)</span>
                             </div>
-                            <div class="bar-track">
-                                <div id="eo-even-fill" class="bar-fill fill-even" style="width: 0%"></div>
-                            </div>
-                        </div>
-
-                        <div class="bar-card bar-odd">
-                            <div class="bar-meta">
-                                <span>ODD DIGITS</span>
-                                <span id="eo-odd-pct" class="bar-pct">(0%)</span>
-                            </div>
-                            <div class="bar-track">
-                                <div id="eo-odd-fill" class="bar-fill fill-odd" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 2. Over / Under Analysis Card */}
-                <div class="module-card ou-card-module">
-                    <div class="module-header">
-                        <div class="module-title-box">
-                            <span class="module-icon text-amber">🎯</span>
-                            <label id="label-ou" for="ou-threshold" class="module-title">Over / Under Target:</label>
-                        </div>
-                        <select id="ou-threshold" class="threshold-select"></select>
-                    </div>
-
-                    <div class="bars-grid-3">
-                        <div class="bar-card bar-under">
-                            <div class="bar-meta">
-                                <span>UNDER</span>
-                                <span id="ou-under-pct" class="bar-pct">(0%)</span>
-                            </div>
-                            <div class="bar-track">
-                                <div id="ou-under-fill" class="bar-fill fill-under" style="width: 0%"></div>
+                            <div class="meter-track">
+                                <div id="eo-even-fill" class="meter-fill fill-even" style="width: 0%"></div>
                             </div>
                         </div>
 
-                        <div class="bar-card bar-equal">
-                            <div class="bar-meta">
-                                <span>EQUAL</span>
-                                <span id="ou-equal-pct" class="bar-pct">(0%)</span>
+                        <div class="bar-cyber-box bar-odd">
+                            <div class="bar-top-meta">
+                                <span class="meta-label">ODD DIGITS</span>
+                                <span id="eo-odd-pct" class="meta-val font-mono">(0%)</span>
                             </div>
-                            <div class="bar-track">
-                                <div id="ou-equal-fill" class="bar-fill fill-equal" style="width: 0%"></div>
-                            </div>
-                        </div>
-
-                        <div class="bar-card bar-over">
-                            <div class="bar-meta">
-                                <span>OVER</span>
-                                <span id="ou-over-pct" class="bar-pct">(0%)</span>
-                            </div>
-                            <div class="bar-track">
-                                <div id="ou-over-fill" class="bar-fill fill-over" style="width: 0%"></div>
+                            <div class="meter-track">
+                                <div id="eo-odd-fill" class="meter-fill fill-odd" style="width: 0%"></div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="ou-seq-box">
-                        <div class="seq-header">
-                            <span>Recent U / = / O Sequence</span>
-                            <button id="ou-more" type="button" class="more-btn">More</button>
-                        </div>
-                        <div id="ou-seq-chips" class="chips-flex-wrap"></div>
                     </div>
                 </div>
 
-                {/* 3. Matches / Differs Analysis Card */}
-                <div class="module-card md-card-module">
-                    <div class="module-header">
-                        <div class="module-title-box">
-                            <span class="module-icon text-purple">⚔️</span>
-                            <span class="module-title">Matches / Differs Analysis</span>
+                {/* 2. Over / Under Module */}
+                <div class="module-cyber-card ou-module">
+                    <div class="module-top">
+                        <div class="module-title-wrap">
+                            <span class="icon-orb text-amber-400">🎯</span>
+                            <label id="label-ou" for="ou-threshold" class="module-heading">OVER / UNDER TARGET:</label>
+                        </div>
+                        <select id="ou-threshold" class="cyber-select-sm font-mono"></select>
+                    </div>
+
+                    <div class="bars-triple-row">
+                        <div class="bar-cyber-box bar-under">
+                            <div class="bar-top-meta">
+                                <span class="meta-label">UNDER</span>
+                                <span id="ou-under-pct" class="meta-val font-mono">(0%)</span>
+                            </div>
+                            <div class="meter-track">
+                                <div id="ou-under-fill" class="meter-fill fill-under" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bar-cyber-box bar-equal">
+                            <div class="bar-top-meta">
+                                <span class="meta-label">EQUAL</span>
+                                <span id="ou-equal-pct" class="meta-val font-mono">(0%)</span>
+                            </div>
+                            <div class="meter-track">
+                                <div id="ou-equal-fill" class="meter-fill fill-equal" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bar-cyber-box bar-over">
+                            <div class="bar-top-meta">
+                                <span class="meta-label">OVER</span>
+                                <span id="ou-over-pct" class="meta-val font-mono">(0%)</span>
+                            </div>
+                            <div class="meter-track">
+                                <div id="ou-over-fill" class="meter-fill fill-over" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="bars-grid">
-                        <div class="bar-card bar-match">
-                            <div class="bar-meta">
-                                <span>MATCHES</span>
-                                <span id="md-match-pct" class="bar-pct">(0%)</span>
+                    <div class="sequence-tape-box">
+                        <div class="tape-header font-mono">
+                            <span>RECENT U / = / O SEQUENCE</span>
+                            <button id="ou-more" type="button" class="more-cyber-btn">More</button>
+                        </div>
+                        <div id="ou-seq-chips" class="chips-tape-wrap"></div>
+                    </div>
+                </div>
+
+                {/* 3. Matches / Differs Module */}
+                <div class="module-cyber-card md-module">
+                    <div class="module-top">
+                        <div class="module-title-wrap">
+                            <span class="icon-orb text-purple-400">⚔️</span>
+                            <span class="module-heading">MATCHES / DIFFERS ANALYSIS</span>
+                        </div>
+                    </div>
+
+                    <div class="bars-dual-row">
+                        <div class="bar-cyber-box bar-match">
+                            <div class="bar-top-meta">
+                                <span class="meta-label">MATCHES</span>
+                                <span id="md-match-pct" class="meta-val font-mono">(0%)</span>
                             </div>
-                            <div class="bar-track">
-                                <div id="md-match-fill" class="bar-fill fill-match" style="width: 0%"></div>
+                            <div class="meter-track">
+                                <div id="md-match-fill" class="meter-fill fill-match" style="width: 0%"></div>
                             </div>
                         </div>
 
-                        <div class="bar-card bar-differ">
-                            <div class="bar-meta">
-                                <span>DIFFERS</span>
-                                <span id="md-differ-pct" class="bar-pct">(0%)</span>
+                        <div class="bar-cyber-box bar-differ">
+                            <div class="bar-top-meta">
+                                <span class="meta-label">DIFFERS</span>
+                                <span id="md-differ-pct" class="meta-val font-mono">(0%)</span>
                             </div>
-                            <div class="bar-track">
-                                <div id="md-differ-fill" class="bar-fill fill-differ" style="width: 0%"></div>
+                            <div class="meter-track">
+                                <div id="md-differ-fill" class="meter-fill fill-differ" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="md-seq-box">
-                        <div class="seq-header">
-                            <span>Recent M / D Sequence</span>
-                            <button id="md-more" type="button" class="more-btn">More</button>
+                    <div class="sequence-tape-box">
+                        <div class="tape-header font-mono">
+                            <span>RECENT M / D SEQUENCE</span>
+                            <button id="md-more" type="button" class="more-cyber-btn">More</button>
                         </div>
-                        <div id="md-seq-chips" class="chips-flex-wrap"></div>
+                        <div id="md-seq-chips" class="chips-tape-wrap"></div>
                     </div>
                 </div>
             </div>
