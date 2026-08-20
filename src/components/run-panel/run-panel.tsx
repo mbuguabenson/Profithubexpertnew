@@ -10,6 +10,7 @@ import Tabs from '@/components/shared_ui/tabs';
 import Text from '@/components/shared_ui/text';
 import Summary from '@/components/summary';
 import TradeAnimation from '@/components/trade-animation';
+import Transactions from '@/components/transactions';
 import { popover_zindex } from '@/constants/z-indexes';
 import { useStore } from '@/hooks/useStore';
 import { Localize, localize } from '@deriv-com/translations';
