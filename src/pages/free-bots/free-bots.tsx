@@ -4,6 +4,7 @@ import { DBOT_TABS } from '@/constants/bot-contents';
 import { useStore } from '@/hooks/useStore';
 import { TBotsManifestItem, getXmlUploadsManifest, fetchXmlWithCache } from '@/utils/freebots-cache';
 import { getUploadedBots } from '@/utils/supabase-copy';
+import { Search, Sparkles, Zap, ShieldCheck, Flame, BarChart3, Filter, Play, CheckCircle2, X } from 'lucide-react';
 import './free-bots.scss';
 
 interface BotData {
@@ -15,10 +16,16 @@ interface BotData {
     xml: string;
 }
 
+const DEFAULT_FEATURES = ['Automated Execution', 'Smart Risk Guard', 'Loss Recovery Engine'];
 
-const DEFAULT_FEATURES = ['Automated Trading', 'Risk Management', 'Profit Optimization'];
+const CATEGORIES = [
+    { id: 'ALL', label: 'All Trading Bots', icon: '🤖' },
+    { id: 'OVER_UNDER', label: 'Over / Under', icon: '📈' },
+    { id: 'EVEN_ODD', label: 'Even / Odd', icon: '⚡' },
+    { id: 'PRO', label: 'Pro & Recovery', icon: '👑' },
+    { id: 'USER', label: 'Custom Uploads', icon: '📂' },
+];
 
-// Icon mapping for each bot
 const BOT_ICONS: Record<string, string> = {
     OVER: '📈',
     UNDER: '📉',
@@ -34,13 +41,13 @@ const getBotIcon = (name: string): string => {
     return BOT_ICONS.DEFAULT;
 };
 
-const BOT_META: Record<string, { tags: string[]; win: string; type: string }> = {
-    'OVER DESTROYER': { tags: ['Over Market', 'R32'], win: '82%', type: 'Aggressive' },
-    'OVER DESTRYER 2 PRO BOT': { tags: ['Over Market', 'R43'], win: '78%', type: 'Pro' },
-    'EVEN ODD SPEEDY': { tags: ['Even/Odd', 'Speed'], win: '74%', type: 'Speed' },
-    'OVER UNDER PRO BOT': { tags: ['Over/Under', 'Blast'], win: '80%', type: 'Pro' },
-    'UNDER DESTROYER PRO BOT': { tags: ['Under Market', 'R56'], win: '77%', type: 'Pro' },
-    'UNDER DESTROYER': { tags: ['Under Market', 'R67'], win: '75%', type: 'Standard' },
+const BOT_META: Record<string, { tags: string[]; win: string; type: string; risk: string; speed: string }> = {
+    'OVER DESTROYER': { tags: ['Over Market', 'R32'], win: '82%', type: 'Aggressive', risk: 'Medium Risk', speed: 'Ultra Fast' },
+    'OVER DESTRYER 2 PRO BOT': { tags: ['Over Market', 'R43'], win: '78%', type: 'Pro', risk: 'Low Risk', speed: 'High Speed' },
+    'EVEN ODD SPEEDY': { tags: ['Even/Odd', 'Speed'], win: '74%', type: 'Speed', risk: 'Medium Risk', speed: '1-Tick Speedy' },
+    'OVER UNDER PRO BOT': { tags: ['Over/Under', 'Blast'], win: '80%', type: 'Pro', risk: 'Low Risk', speed: 'Instant' },
+    'UNDER DESTROYER PRO BOT': { tags: ['Under Market', 'R56'], win: '77%', type: 'Pro', risk: 'Low Risk', speed: 'High Speed' },
+    'UNDER DESTROYER': { tags: ['Under Market', 'R67'], win: '75%', type: 'Standard', risk: 'Low Risk', speed: 'Normal' },
 };
 
 const getBotMeta = (name: string) => {
@@ -48,7 +55,7 @@ const getBotMeta = (name: string) => {
     for (const key of Object.keys(BOT_META)) {
         if (name.includes(key)) return BOT_META[key];
     }
-    return { tags: ['Auto Trading', 'AI'], win: '73%', type: 'Standard' };
+    return { tags: ['Auto Trading', 'AI'], win: '76%', type: 'Standard', risk: 'Balanced Risk', speed: 'Standard' };
 };
 
 const getBotDescription = (botName: string): string => {
@@ -74,100 +81,219 @@ const getBotDescription = (botName: string): string => {
     return `Advanced trading bot: ${botName}. Features automated trading, risk management, and profit optimization.`;
 };
 
-// ─── Star Rating ──────────────────────────────────────────────────────────────
-const StarRating = ({ count = 5 }: { count?: number }) => (
-    <div className='free-bot-card__rating'>
-        {Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} className='star' style={{ opacity: i < count ? 1 : 0.2 }}>★</span>
-        ))}
-    </div>
-);
-
-// ─── Single Card ──────────────────────────────────────────────────────────────
+// ─── Single Bot Card Component ────────────────────────────────────────────────
 const BotCard = ({
     bot,
     onLoad,
+    onPreview,
 }: {
     bot: BotData;
     onLoad: (bot: BotData) => void;
+    onPreview: (bot: BotData) => void;
 }) => {
     const meta = getBotMeta(bot.name);
     const icon = getBotIcon(bot.name);
     const isLoaded = !!bot.xml;
+    const winNumeric = parseInt(meta.win) || 75;
+
+    // Type badge variant color class
+    const getTypeClass = (type: string) => {
+        switch (type.toLowerCase()) {
+            case 'aggressive': return 'type-tag--aggressive';
+            case 'pro': return 'type-tag--pro';
+            case 'speed': return 'type-tag--speed';
+            default: return 'type-tag--standard';
+        }
+    };
 
     return (
-        <div className={`free-bot-card${!isLoaded ? ' loading' : ''}`}>
-            {/* Gradient top bar */}
-            <div className='free-bot-card__glow-bar' />
+        <div className={`pro-bot-card ${!isLoaded ? 'pro-bot-card--loading' : ''}`}>
+            {/* Ambient edge glow */}
+            <div className="pro-bot-card__top-glow" />
 
-            <div className='free-bot-card__body'>
-                {/* Header row: icon + premium tag */}
-                <div className='free-bot-card__header'>
-                    <div className='free-bot-card__icon-wrap'>{icon}</div>
-                    <span className='free-bot-card__premium-tag'>★ Premium</span>
-                </div>
-
-                {/* Title + rating */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                    <h3 className='free-bot-card__title'>{bot.name}</h3>
-                    <StarRating count={5} />
-                </div>
-
-                {/* Meta tags */}
-                <div className='free-bot-card__meta'>
-                    {meta.tags.map((tag, i) => (
-                        <span key={i} className='free-bot-card__meta-tag'>{tag}</span>
-                    ))}
-                    <span className='free-bot-card__meta-tag' style={{ color: 'rgba(52,211,153,0.9)', borderColor: 'rgba(52,211,153,0.3)', background: 'rgba(16,185,129,0.1)' }}>
-                        {meta.type}
-                    </span>
-                </div>
-
-                {/* Description */}
-                <p className='free-bot-card__description'>{bot.description}</p>
-
-                <div className='free-bot-card__divider' />
-
-                {/* Footer stats */}
-                <div className='free-bot-card__footer'>
-                    <div className='free-bot-card__stat'>
-                        <span className='free-bot-card__stat-label'>Win Rate</span>
-                        <span className='free-bot-card__stat-value'>{meta.win}</span>
+            <div className="pro-bot-card__inner">
+                {/* Header: Icon + Category Badge */}
+                <div className="pro-bot-card__header">
+                    <div className="pro-bot-card__icon-box">
+                        <span className="icon-emoji">{icon}</span>
                     </div>
-                    <div className='free-bot-card__stat'>
-                        <span className='free-bot-card__stat-label'>Type</span>
-                        <span className='free-bot-card__stat-value' style={{ color: 'rgba(167,139,250,0.9)' }}>{meta.type}</span>
-                    </div>
-                    <div className='free-bot-card__stat'>
-                        <span className='free-bot-card__stat-label'>Status</span>
-                        <span className='free-bot-card__stat-value' style={{ color: isLoaded ? 'rgba(52,211,153,0.9)' : 'rgba(255,200,80,0.9)' }}>
-                            {isLoaded ? 'Ready' : 'Loading…'}
+
+                    <div className="pro-bot-card__badges">
+                        <span className={`type-tag ${getTypeClass(meta.type)}`}>
+                            {meta.type === 'Aggressive' && <Flame size={12} />}
+                            {meta.type === 'Pro' && <Sparkles size={12} />}
+                            {meta.type === 'Speed' && <Zap size={12} />}
+                            {meta.type} Strategy
                         </span>
                     </div>
                 </div>
 
-                {/* Load button */}
-                <button
-                    className='free-bot-card__load-btn'
-                    onClick={() => onLoad(bot)}
-                    disabled={!isLoaded}
-                    type='button'
-                    aria-label={`Load ${bot.name} into Bot Builder`}
-                >
-                    {isLoaded ? '⚡ LOAD PREMIUM BOT' : 'Preparing Bot…'}
-                </button>
+                {/* Bot Title & Sub-tag */}
+                <div className="pro-bot-card__title-group">
+                    <h3 className="pro-bot-card__name">{bot.name}</h3>
+                    <div className="pro-bot-card__sub-tags">
+                        {meta.tags.map((tag, idx) => (
+                            <span key={idx} className="sub-tag">{tag}</span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Description */}
+                <p className="pro-bot-card__desc">{bot.description}</p>
+
+                {/* Win Rate Performance Meter */}
+                <div className="pro-bot-card__meter-box">
+                    <div className="meter-label-row">
+                        <span className="meter-title">
+                            <BarChart3 size={13} /> Target Win Rate
+                        </span>
+                        <span className="meter-val">{meta.win}</span>
+                    </div>
+                    <div className="meter-track">
+                        <div className="meter-fill" style={{ width: `${winNumeric}%` }} />
+                    </div>
+                </div>
+
+                {/* Key Specs Row */}
+                <div className="pro-bot-card__specs-grid">
+                    <div className="spec-item">
+                        <span className="spec-label">Execution</span>
+                        <span className="spec-val">{meta.speed}</span>
+                    </div>
+                    <div className="spec-item">
+                        <span className="spec-label">Capital Risk</span>
+                        <span className="spec-val spec-val--risk">{meta.risk}</span>
+                    </div>
+                    <div className="spec-item">
+                        <span className="spec-label">Engine Status</span>
+                        <span className={`spec-val ${isLoaded ? 'spec-val--ready' : 'spec-val--pending'}`}>
+                            {isLoaded ? '● Ready' : '⏳ Syncing'}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pro-bot-card__actions">
+                    <button
+                        type="button"
+                        className="btn-preview"
+                        onClick={() => onPreview(bot)}
+                        title="View strategy breakdown"
+                    >
+                        Preview
+                    </button>
+                    <button
+                        type="button"
+                        className="btn-load-bot"
+                        onClick={() => onLoad(bot)}
+                        disabled={!isLoaded}
+                    >
+                        {isLoaded ? (
+                            <>
+                                <Play size={14} className="btn-icon" /> Load Strategy ⚡
+                            </>
+                        ) : (
+                            'Preparing Bot…'
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Preview Modal Component ──────────────────────────────────────────────────
+const BotPreviewModal = ({
+    bot,
+    onClose,
+    onLoad,
+}: {
+    bot: BotData;
+    onClose: () => void;
+    onLoad: (bot: BotData) => void;
+}) => {
+    const meta = getBotMeta(bot.name);
+    const icon = getBotIcon(bot.name);
+
+    return (
+        <div className="bot-preview-overlay" onClick={onClose}>
+            <div className="bot-preview-dialog" onClick={e => e.stopPropagation()}>
+                <button type="button" className="dialog-close-btn" onClick={onClose}>
+                    <X size={18} />
+                </button>
+
+                <div className="dialog-header">
+                    <div className="dialog-icon-wrap">{icon}</div>
+                    <div>
+                        <h3 className="dialog-title">{bot.name}</h3>
+                        <span className="dialog-type-badge">{meta.type} Strategy • {meta.win} Target Win</span>
+                    </div>
+                </div>
+
+                <div className="dialog-body">
+                    <div className="info-block">
+                        <h4>Strategy Overview</h4>
+                        <p>{bot.description}</p>
+                    </div>
+
+                    <div className="info-grid">
+                        <div className="info-card">
+                            <span className="info-card__lbl">Target Win Rate</span>
+                            <span className="info-card__val text-green">{meta.win}</span>
+                        </div>
+                        <div className="info-card">
+                            <span className="info-card__lbl">Risk Profile</span>
+                            <span className="info-card__val text-yellow">{meta.risk}</span>
+                        </div>
+                        <div className="info-card">
+                            <span className="info-card__lbl">Execution Speed</span>
+                            <span className="info-card__val text-cyan">{meta.speed}</span>
+                        </div>
+                    </div>
+
+                    <div className="features-list">
+                        <h4>Key Features Included</h4>
+                        <ul>
+                            {DEFAULT_FEATURES.map((feat, idx) => (
+                                <li key={idx}>
+                                    <CheckCircle2 size={15} className="check-icon" />
+                                    <span>{feat}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="dialog-footer">
+                    <button type="button" className="btn-cancel" onClick={onClose}>
+                        Close
+                    </button>
+                    <button
+                        type="button"
+                        className="btn-confirm-load"
+                        onClick={() => {
+                            onClose();
+                            onLoad(bot);
+                        }}
+                    >
+                        <Play size={15} /> Load into Bot Builder ⚡
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Main Trading Bots Tab View ───────────────────────────────────────────────
 const FreeBots = observer(() => {
     const { dashboard } = useStore();
     const { setActiveTab, setPendingFreeBot } = dashboard;
     const [defaultBots, setDefaultBots] = useState<BotData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('ALL');
+    const [previewBot, setPreviewBot] = useState<BotData | null>(null);
 
     const loadBotIntoBuilder = async (bot: BotData) => {
         if (!bot.xml) return;
@@ -179,7 +305,6 @@ const FreeBots = observer(() => {
         const loadBots = async () => {
             setError(null);
 
-            // Load exclusively from public/xml-uploads/bots.json
             const manifest: TBotsManifestItem[] = (await getXmlUploadsManifest()) || [];
 
             if (manifest.length === 0) {
@@ -232,7 +357,6 @@ const FreeBots = observer(() => {
         };
 
         loadBots();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const combinedBots = useMemo(() => {
@@ -247,39 +371,152 @@ const FreeBots = observer(() => {
         return [...uploaded, ...defaultBots];
     }, [defaultBots]);
 
+    // Filter & Search Logic
+    const filteredBots = useMemo(() => {
+        return combinedBots.filter(bot => {
+            // Category filter
+            if (selectedCategory === 'OVER_UNDER') {
+                if (!bot.name.toUpperCase().includes('OVER') && !bot.name.toUpperCase().includes('UNDER')) return false;
+            } else if (selectedCategory === 'EVEN_ODD') {
+                if (!bot.name.toUpperCase().includes('EVEN') && !bot.name.toUpperCase().includes('ODD')) return false;
+            } else if (selectedCategory === 'PRO') {
+                if (!bot.name.toUpperCase().includes('PRO') && !bot.name.toUpperCase().includes('DESTROYER')) return false;
+            } else if (selectedCategory === 'USER') {
+                if (bot.strategy !== 'User Uploaded') return false;
+            }
+
+            // Search query filter
+            if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase();
+                const matchName = bot.name.toLowerCase().includes(query);
+                const matchDesc = bot.description.toLowerCase().includes(query);
+                const matchStrat = bot.strategy.toLowerCase().includes(query);
+                if (!matchName && !matchDesc && !matchStrat) return false;
+            }
+
+            return true;
+        });
+    }, [combinedBots, selectedCategory, searchQuery]);
+
     return (
-        <div className='free-bots'>
-            <div className='free-bots__container'>
-                {/* Header */}
-                <div className='free-bots__header'>
-                    <h2 className='free-bots__header-title' style={{ marginBottom: 0 }}>
-                        Trading Bots
-                    </h2>
+        <div className="trading-bots-view">
+            <div className="trading-bots-container">
+
+                {/* Top Banner / Hero Header */}
+                <div className="tb-hero-banner">
+                    <div className="tb-hero-content">
+                        <div className="tb-hero-tag">
+                            <Sparkles size={14} className="icon-sparkle" />
+                            <span>OFFICIAL STRATEGY REPOSITORY</span>
+                        </div>
+                        <h1 className="tb-hero-title">
+                            Automated <span className="title-gradient">Trading Bots</span>
+                        </h1>
+                        <p className="tb-hero-sub">
+                            Select a battle-tested strategy to load directly into the Bot Builder.
+                        </p>
+                    </div>
+
+                    {/* Quick Stats Pill Header */}
+                    <div className="tb-stats-group">
+                        <div className="stat-pill">
+                            <span className="stat-pill__num">{combinedBots.length}</span>
+                            <span className="stat-pill__lbl">Available Bots</span>
+                        </div>
+                        <div className="stat-pill">
+                            <span className="stat-pill__num text-emerald">82%</span>
+                            <span className="stat-pill__lbl">Max Win Rate</span>
+                        </div>
+                        <div className="stat-pill">
+                            <span className="stat-pill__num text-cyan">⚡ WS</span>
+                            <span className="stat-pill__lbl">Direct Execution</span>
+                        </div>
+                    </div>
                 </div>
 
-                {/* States */}
+                {/* Filter & Search Bar */}
+                <div className="tb-controls-bar">
+                    {/* Category Filter Pills */}
+                    <div className="tb-category-pills">
+                        {CATEGORIES.map(cat => (
+                            <button
+                                key={cat.id}
+                                type="button"
+                                className={`pill-btn ${selectedCategory === cat.id ? 'pill-btn--active' : ''}`}
+                                onClick={() => setSelectedCategory(cat.id)}
+                            >
+                                <span className="pill-icon">{cat.icon}</span>
+                                <span className="pill-label">{cat.label}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Search Input Box */}
+                    <div className="tb-search-box">
+                        <Search size={16} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search strategy by name or market..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="search-input"
+                        />
+                        {searchQuery && (
+                            <button type="button" className="clear-search-btn" onClick={() => setSearchQuery('')}>
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Bot Cards Grid View */}
                 {isLoading ? (
-                    <div className='free-bots__loading'>
-                        <div className='free-bots__loading-spinner' />
-                        <span>Initializing bots…</span>
+                    <div className="tb-status-box">
+                        <div className="tb-spinner" />
+                        <span>Loading Trading Bots Library…</span>
                     </div>
                 ) : error ? (
-                    <div className='free-bots__error'>
-                        {error}
-                        <button onClick={() => window.location.reload()} style={{ marginTop: 16, padding: '10px 24px', borderRadius: 10, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>
-                            Retry
+                    <div className="tb-status-box tb-status-box--error">
+                        <p>{error}</p>
+                        <button type="button" onClick={() => window.location.reload()} className="btn-retry">
+                            Retry Loading
                         </button>
                     </div>
-                ) : combinedBots.length === 0 ? (
-                    <div className='free-bots__empty'>No bots available at the moment.</div>
+                ) : filteredBots.length === 0 ? (
+                    <div className="tb-status-box tb-status-box--empty">
+                        <Filter size={32} className="empty-icon" />
+                        <h3>No Trading Bots Found</h3>
+                        <p>Try clearing your search query or selecting another category.</p>
+                        <button
+                            type="button"
+                            onClick={() => { setSelectedCategory('ALL'); setSearchQuery(''); }}
+                            className="btn-reset-filter"
+                        >
+                            Reset Filters
+                        </button>
+                    </div>
                 ) : (
-                    <div className='free-bots__grid'>
-                        {combinedBots.map((bot, index) => (
-                            <BotCard key={index} bot={bot} onLoad={loadBotIntoBuilder} />
+                    <div className="tb-cards-grid">
+                        {filteredBots.map((bot, index) => (
+                            <BotCard
+                                key={index}
+                                bot={bot}
+                                onLoad={loadBotIntoBuilder}
+                                onPreview={b => setPreviewBot(b)}
+                            />
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Quick Strategy Preview Modal */}
+            {previewBot && (
+                <BotPreviewModal
+                    bot={previewBot}
+                    onClose={() => setPreviewBot(null)}
+                    onLoad={loadBotIntoBuilder}
+                />
+            )}
         </div>
     );
 });
