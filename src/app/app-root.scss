@@ -1,20 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ NEUMORPHISM WELCOME LOADING SCREEN — PROFITHUB EXPERT
+// ✦ PROFITHUB EXPERT PRO — MODERN FRIENDLY WELCOME SCREEN STYLES
 // ═══════════════════════════════════════════════════════════════
 
-// ─── Design Tokens ─────────────────────────────────────────────
-$neu-bg:    #1a1f2e;
-$neu-light: #242b3f;
-$neu-dark:  #111520;
-$neu-accent: #4f8ef7;
-$neu-green:  #22d3a5;
-$neu-gold:   #f59e0b;
-$neu-text:   #e2e8f0;
-$neu-muted:  #64748b;
+// Design System Tokens
+$bg-main:       #080c14;
+$card-bg:       rgba(15, 23, 42, 0.75);
+$card-border:   rgba(255, 255, 255, 0.08);
+$cyan-glow:     #06b6d4;
+$purple-glow:   #8b5cf6;
+$emerald-glow:  #10b981;
+$amber-glow:    #f59e0b;
+$text-bright:   #f8fafc;
+$text-sub:      #94a3b8;
+$text-muted:    #64748b;
 
-// ─── App Root ──────────────────────────────────────────────────
 .app-root {
     height: 100vh;
     width: 100vw;
@@ -26,516 +27,581 @@ $neu-muted:  #64748b;
     .load-message { margin-top: 6rem; }
 }
 
+// ─── Error Component Modal Wrapper ──────────────────────────────
+.error-wrapper-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    .error-wrapper-modal {
+        background: #111827;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 32px;
+        max-width: 440px;
+        width: 100%;
+        text-align: center;
+        color: #fff;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+
+        .error-wrapper-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #f8fafc;
+        }
+
+        .error-wrapper-msg {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .error-wrapper-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+
+            .btn-primary {
+                padding: 10px 20px;
+                border-radius: 10px;
+                background: linear-gradient(135deg, #2563eb, #3b82f6);
+                color: #fff;
+                font-weight: 600;
+                border: none;
+                cursor: pointer;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+                &:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+                }
+            }
+
+            .btn-secondary {
+                padding: 10px 20px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.08);
+                color: #94a3b8;
+                font-weight: 600;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                cursor: pointer;
+                transition: background 0.2s ease;
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.14);
+                    color: #fff;
+                }
+            }
+        }
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════
-// ✦ WELCOME SCREEN SHELL
+// ✦ MAIN WELCOME CONTAINER
 // ═══════════════════════════════════════════════════════════════
 .welcome-screen {
     position: fixed;
     inset: 0;
     z-index: 99999;
     overflow: hidden;
-    background: $neu-bg;
-    color: $neu-text;
+    background: $bg-main;
+    color: $text-bright;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    padding: 20px;
 }
 
 .welcome-screen--visible {
     opacity: 1;
     transform: scale(1);
-    transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1), transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .welcome-screen--exit {
     opacity: 0;
-    transform: scale(1.06);
-    filter: blur(12px);
+    transform: scale(1.05);
+    filter: blur(10px);
     pointer-events: none;
-    transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1), filter 0.9s ease, transform 0.9s ease;
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), filter 0.7s ease, transform 0.7s ease;
 }
 
-// ─── Ambient Background Glows ──────────────────────────────────
-.welcome-screen__glow {
+// ─── Ambient Glow Orbs ─────────────────────────────────────────
+.ws-bg-orb {
     position: absolute;
     border-radius: 50%;
     pointer-events: none;
-    filter: blur(110px);
+    filter: blur(120px);
 
-    &--blue {
-        width: 520px;
-        height: 520px;
-        background: radial-gradient(circle, rgba(79, 142, 247, 0.2) 0%, transparent 70%);
-        top: -130px;
+    &--cyan {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(6, 182, 212, 0.22) 0%, transparent 70%);
+        top: -120px;
         left: 50%;
         transform: translateX(-50%);
-        animation: glow-float 12s ease-in-out infinite alternate;
+        animation: orb-pulse 10s ease-in-out infinite alternate;
     }
 
-    &--green {
-        width: 420px;
-        height: 420px;
-        background: radial-gradient(circle, rgba(34, 211, 165, 0.13) 0%, transparent 70%);
-        bottom: -110px;
-        left: -90px;
-        animation: glow-float 15s ease-in-out infinite alternate-reverse;
+    &--purple {
+        width: 450px;
+        height: 450px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
+        bottom: -100px;
+        left: -80px;
+        animation: orb-pulse 13s ease-in-out infinite alternate-reverse;
     }
 
-    &--gold {
-        width: 380px;
-        height: 380px;
-        background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
-        bottom: -90px;
-        right: -70px;
-        animation: glow-float 18s ease-in-out infinite alternate;
+    &--emerald {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+        bottom: -80px;
+        right: -60px;
+        animation: orb-pulse 15s ease-in-out infinite alternate;
     }
 }
 
-@keyframes glow-float {
-    0%   { transform: translateY(0) scale(1); }
-    100% { transform: translateY(-30px) scale(1.12); }
+@keyframes orb-pulse {
+    0%   { transform: translateY(0) scale(1); opacity: 0.8; }
+    50%  { transform: translateY(-20px) scale(1.1); opacity: 1; }
+    100% { transform: translateY(10px) scale(0.95); opacity: 0.7; }
 }
 
-// ─── Particles ─────────────────────────────────────────────────
-.welcome-screen__particles {
+// ─── Grid Overlay ──────────────────────────────────────────────
+.ws-grid-overlay {
     position: absolute;
     inset: 0;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
     pointer-events: none;
 }
 
-.ws-particle {
-    position: absolute;
-    border-radius: 50%;
-    background: $neu-accent;
-    opacity: 0.06;
-    animation: ws-particle-drift linear infinite;
-}
-
-@keyframes ws-particle-drift {
-    0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0.05; }
-    33%  { transform: translateY(-22px) translateX(14px) scale(1.2); opacity: 0.12; }
-    66%  { transform: translateY(-10px) translateX(-10px) scale(0.85); opacity: 0.07; }
-    100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.05; }
-}
-
 // ═══════════════════════════════════════════════════════════════
-// ✦ MAIN CARD — NEUMORPHISM RAISED PANEL
+// ✦ WELCOME CARD (GLASSMORPHIC NEUMORPHISM HYBRID)
 // ═══════════════════════════════════════════════════════════════
-.welcome-screen__content {
+.welcome-screen__card {
     position: relative;
     z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: min(92%, 520px);
-    padding: 44px 36px 40px;
-    border-radius: 32px;
-    background: $neu-bg;
-    box-shadow:
-        10px 10px 28px $neu-dark,
-        -6px -6px 20px $neu-light;
-    gap: 28px;
+    width: min(100%, 540px);
+    padding: 36px 32px 28px;
+    border-radius: 28px;
+    background: $card-bg;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid $card-border;
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 40px rgba(6, 182, 212, 0.08);
+    gap: 22px;
     text-align: center;
-    animation: ws-card-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: card-appear 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes ws-card-enter {
-    from { opacity: 0; transform: translateY(32px) scale(0.96); }
+@keyframes card-appear {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-// ─── Status Badge ──────────────────────────────────────────────
-.ws-status-badge {
+// ─── Badge Header ──────────────────────────────────────────────
+.ws-badge-header {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 18px;
+    padding: 5px 14px;
     border-radius: 9999px;
-    background: $neu-bg;
-    box-shadow: 3px 3px 8px $neu-dark, -2px -2px 6px $neu-light;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(6, 182, 212, 0.25);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
 
-    .ws-status-dot {
-        width: 8px;
-        height: 8px;
+    .ws-badge-dot {
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
-        background: $neu-green;
-        box-shadow: 0 0 10px $neu-green, 0 0 20px rgba(34, 211, 165, 0.4);
-        animation: dot-pulse 1.6s ease-in-out infinite;
+        background: $emerald-glow;
+        box-shadow: 0 0 10px $emerald-glow;
+        animation: dot-glow 1.5s ease-in-out infinite alternate;
     }
 
-    .ws-status-label {
-        font-size: 0.68rem;
+    .ws-badge-text {
+        font-size: 0.65rem;
         font-weight: 700;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: $neu-green;
+        color: #e2e8f0;
+    }
+
+    .ws-badge-pill {
+        font-size: 0.6rem;
+        font-weight: 800;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: linear-gradient(135deg, $cyan-glow, $purple-glow);
+        color: #fff;
     }
 }
 
-@keyframes dot-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.45; transform: scale(0.78); }
+@keyframes dot-glow {
+    0%   { opacity: 0.5; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1.15); }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ✦ LOGO ORB — NEUMORPHISM CONCENTRIC RINGS
-// ═══════════════════════════════════════════════════════════════
-.ws-orb-shell {
+// ─── Brand & Logo Section ──────────────────────────────────────
+.ws-brand-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.ws-orb-container {
     position: relative;
-    width: 130px;
-    height: 130px;
+    width: 90px;
+    height: 90px;
     display: grid;
     place-items: center;
-    animation: ws-orb-levitate 5s ease-in-out infinite;
 }
 
-@keyframes ws-orb-levitate {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-10px); }
-}
-
-.ws-ring {
+.ws-glow-ring {
     position: absolute;
     border-radius: 50%;
-}
 
-.ws-ring--outer {
-    width: 128px;
-    height: 128px;
-    background: $neu-bg;
-    box-shadow:
-        5px 5px 12px $neu-dark,
-        -3px -3px 10px $neu-light;
-    animation: ring-spin-slow 22s linear infinite;
-}
-
-.ws-ring--mid {
-    width: 100px;
-    height: 100px;
-    background: $neu-bg;
-    box-shadow:
-        inset 3px 3px 8px $neu-dark,
-        inset -2px -2px 6px $neu-light;
-    animation: ring-spin-slow 14s linear infinite reverse;
-
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
+    &--outer {
+        inset: -6px;
         border: 2px solid transparent;
-        border-top-color: $neu-accent;
-        border-right-color: rgba(79, 142, 247, 0.35);
-        animation: ring-spin-slow 4s linear infinite;
+        border-top-color: $cyan-glow;
+        border-right-color: rgba(139, 92, 246, 0.4);
+        animation: spin-ring 6s linear infinite;
+    }
+
+    &--inner {
+        inset: -14px;
+        border: 1.5px dashed rgba(16, 185, 129, 0.35);
+        animation: spin-ring 12s linear infinite reverse;
     }
 }
 
-.ws-ring--inner {
-    width: 76px;
-    height: 76px;
-    background: $neu-bg;
-    box-shadow:
-        3px 3px 8px $neu-dark,
-        -2px -2px 6px $neu-light;
-    animation: ring-spin-slow 9s linear infinite;
-
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        border: 1.5px solid transparent;
-        border-bottom-color: $neu-green;
-        border-left-color: rgba(34, 211, 165, 0.35);
-        animation: ring-spin-slow 3s linear infinite reverse;
-    }
-}
-
-@keyframes ring-spin-slow {
+@keyframes spin-ring {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
 }
 
-.ws-logo-core {
-    position: relative;
-    z-index: 2;
-    width: 56px;
-    height: 56px;
+.ws-brand-core {
+    width: 74px;
+    height: 74px;
     border-radius: 50%;
+    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     display: grid;
     place-items: center;
-    background: $neu-bg;
-    box-shadow:
-        5px 5px 14px $neu-dark,
-        -4px -4px 12px $neu-light,
-        0 0 28px rgba(79, 142, 247, 0.22),
-        inset 0 0 10px rgba(79, 142, 247, 0.06);
-    animation: logo-breathe 3.5s ease-in-out infinite;
-}
+    box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(6, 182, 212, 0.25),
+        inset 0 0 15px rgba(255, 255, 255, 0.05);
 
-@keyframes logo-breathe {
-    0%, 100% {
-        box-shadow:
-            5px 5px 14px $neu-dark,
-            -4px -4px 12px $neu-light,
-            0 0 28px rgba(79, 142, 247, 0.22),
-            inset 0 0 10px rgba(79, 142, 247, 0.06);
+    .ws-brand-logo {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
     }
-    50% {
-        box-shadow:
-            5px 5px 14px $neu-dark,
-            -4px -4px 12px $neu-light,
-            0 0 50px rgba(79, 142, 247, 0.45),
-            inset 0 0 20px rgba(79, 142, 247, 0.14);
+
+    .ws-brand-icon-fallback {
+        font-size: 32px;
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ✦ HERO TEXT
-// ═══════════════════════════════════════════════════════════════
-.ws-hero {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
-    padding: 20px 24px;
-    border-radius: 20px;
-    background: $neu-bg;
-    box-shadow:
-        inset 4px 4px 10px $neu-dark,
-        inset -3px -3px 8px $neu-light;
-}
-
-.ws-hero__label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: $neu-accent;
-    padding: 4px 14px;
-    border-radius: 9999px;
-    background: $neu-bg;
-    box-shadow: 2px 2px 6px $neu-dark, -1px -1px 4px $neu-light;
-}
-
-.ws-hero__title {
-    font-family: 'Orbitron', 'Inter', sans-serif;
-    font-size: clamp(1.5rem, 4vw, 2.2rem);
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: $neu-text;
-    margin: 0;
-    line-height: 1.2;
-    text-shadow: 2px 4px 12px rgba(0, 0, 0, 0.6);
-}
-
-.ws-hero__brand {
-    background: linear-gradient(135deg, $neu-accent 0%, $neu-green 55%, $neu-gold 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    background-size: 200% 100%;
-    animation: gradient-shift 4s ease-in-out infinite;
-}
-
-@keyframes gradient-shift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-.ws-hero__subtitle {
-    font-size: 0.88rem;
-    color: $neu-muted;
-    margin: 0;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// ✦ FEATURE BADGES
-// ═══════════════════════════════════════════════════════════════
-.ws-badges {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.ws-badge {
-    font-size: 0.7rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: $neu-text;
-    padding: 7px 16px;
-    border-radius: 9999px;
-    background: $neu-bg;
-    box-shadow: 3px 3px 8px $neu-dark, -2px -2px 6px $neu-light;
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
-
-    &:hover {
-        box-shadow: inset 2px 2px 6px $neu-dark, inset -1px -1px 4px $neu-light;
-        transform: scale(0.97);
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// ✦ LOADING TEXT
-// ═══════════════════════════════════════════════════════════════
-.ws-loading-copy {
+.ws-title-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
     align-items: center;
 }
 
-.ws-loading-text {
+.ws-main-heading {
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(1.4rem, 3.8vw, 1.9rem);
+    font-weight: 700;
+    color: $text-bright;
+    margin: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.ws-brand-gradient {
+    background: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #34d399 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 100%;
+    animation: gradient-flow 4s ease infinite;
+}
+
+@keyframes gradient-flow {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.ws-sub-heading {
     font-size: 0.82rem;
-    font-weight: 600;
-    color: rgba(226, 232, 240, 0.9);
-    letter-spacing: 0.03em;
+    color: $text-sub;
+    margin: 0;
+    font-weight: 500;
 }
 
-.ws-status {
-    font-size: 0.72rem;
-    color: rgba(79, 142, 247, 0.8);
-    letter-spacing: 0.08em;
-    min-height: 1.2em;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// ✦ PROGRESS BAR — NEUMORPHISM INSET TRACK
-// ═══════════════════════════════════════════════════════════════
-.ws-progress {
+// ─── Feature Chips Grid ────────────────────────────────────────
+.ws-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
     width: 100%;
+}
+
+.ws-feature-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: left;
+    transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(6, 182, 212, 0.3);
+    }
+
+    .chip-icon {
+        font-size: 16px;
+    }
+
+    .chip-text {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        .chip-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: $text-bright;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chip-sub {
+            font-size: 0.58rem;
+            color: $text-muted;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    }
+}
+
+// ─── Progress Section ──────────────────────────────────────────
+.ws-progress-section {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.ws-progress__track {
+    gap: 8px;
     width: 100%;
-    height: 10px;
-    border-radius: 9999px;
-    background: $neu-bg;
-    box-shadow: inset 4px 4px 10px $neu-dark, inset -3px -3px 8px $neu-light;
-    overflow: hidden;
-    position: relative;
 }
 
-.ws-progress__fill {
-    height: 100%;
-    border-radius: 9999px;
-    background: linear-gradient(90deg, $neu-accent 0%, $neu-green 50%, $neu-gold 100%);
-    background-size: 250% 100%;
-    animation: progress-sweep 3s linear infinite;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 0 14px rgba(79, 142, 247, 0.55), 0 0 28px rgba(79, 142, 247, 0.22);
-}
-
-@keyframes progress-sweep {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-}
-
-.ws-progress__shimmer {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-    animation: progress-shimmer 1.8s ease-in-out infinite;
-}
-
-@keyframes progress-shimmer {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX(200%); }
-}
-
-.ws-progress__meta {
+.ws-progress-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 0 2px;
-}
 
-.ws-progress__label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: $neu-accent;
-    letter-spacing: 0.06em;
-    text-shadow: 0 0 12px rgba(79, 142, 247, 0.6);
-}
+    .ws-step-indicator {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: $text-bright;
 
-.ws-progress__step {
-    font-size: 0.68rem;
-    font-weight: 500;
-    color: $neu-muted;
-    letter-spacing: 0.04em;
-}
+        .step-icon {
+            font-size: 14px;
+        }
 
-// ═══════════════════════════════════════════════════════════════
-// ✦ STEP INDICATORS
-// ═══════════════════════════════════════════════════════════════
-.ws-step-dots {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
+        .step-label {
+            color: rgba(248, 250, 252, 0.9);
+        }
+    }
 
-.ws-step-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: $neu-bg;
-    box-shadow: 2px 2px 5px $neu-dark, -1px -1px 4px $neu-light;
-    transition: all 0.35s ease;
-
-    &--active {
-        background: $neu-accent;
-        box-shadow: 0 0 12px rgba(79, 142, 247, 0.7), 2px 2px 5px $neu-dark, -1px -1px 4px $neu-light;
-        transform: scale(1.3);
+    .ws-percent-text {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: $cyan-glow;
+        text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ✦ FOOTER
-// ═══════════════════════════════════════════════════════════════
-.ws-footer {
+.ws-progress-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.ws-progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, $cyan-glow 0%, $purple-glow 50%, $emerald-glow 100%);
+    background-size: 200% 100%;
+    animation: gradient-sweep 2.5s linear infinite;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+}
+
+@keyframes gradient-sweep {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+.ws-progress-glow-head {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 16px;
+    background: rgba(255, 255, 255, 0.8);
+    filter: blur(2px);
+    border-radius: 50%;
+}
+
+// ─── Step Dots Bar ─────────────────────────────────────────────
+.ws-dots-bar {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.ws-dot-item {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    transition: all 0.3s ease;
+
+    &--done {
+        background: $cyan-glow;
+        box-shadow: 0 0 6px rgba(6, 182, 212, 0.5);
+    }
+
+    &--active {
+        width: 18px;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, $cyan-glow, $purple-glow);
+        box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+    }
+}
+
+// ─── Friendly Tip Box ──────────────────────────────────────────
+.ws-tip-box {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+
+    .ws-tip-content {
+        font-size: 0.72rem;
+        color: rgba(226, 232, 240, 0.8);
+        line-height: 1.45;
+        display: block;
+        transition: opacity 0.3s ease;
+    }
+}
+
+// ─── Footer Bar ────────────────────────────────────────────────
+.ws-footer-bar {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    font-size: 0.68rem;
-    color: $neu-muted;
-    letter-spacing: 0.06em;
+    font-size: 0.65rem;
+    color: $text-muted;
+    font-weight: 500;
 
-    .ws-footer__sep { opacity: 0.35; }
+    .dot-sep {
+        opacity: 0.3;
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ RESPONSIVE
+// ✦ RESPONSIVE LAYOUT
 // ═══════════════════════════════════════════════════════════════
-@media (max-width: 600px) {
-    .welcome-screen__content {
-        width: min(95%, 440px);
-        padding: 32px 22px 28px;
-        gap: 22px;
-        border-radius: 24px;
+@media (max-width: 540px) {
+    .welcome-screen__card {
+        padding: 28px 20px 22px;
+        gap: 18px;
+        border-radius: 22px;
     }
 
-    .ws-orb-shell {
-        width: 106px;
-        height: 106px;
+    .ws-features-grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
     }
 
-    .ws-ring--outer { width: 104px; height: 104px; }
-    .ws-ring--mid   { width: 82px;  height: 82px;  }
-    .ws-ring--inner { width: 62px;  height: 62px;  }
-    .ws-logo-core   { width: 46px;  height: 46px;  }
+    .ws-feature-chip {
+        padding: 6px 12px;
 
-    .ws-hero { padding: 16px; }
-    .ws-badge { font-size: 0.65rem; padding: 6px 12px; }
+        .chip-text {
+            flex-direction: row;
+            gap: 6px;
+            align-items: center;
+
+            .chip-title { font-size: 0.7rem; }
+            .chip-sub { font-size: 0.65rem; opacity: 0.7; }
+        }
+    }
+
+    .ws-orb-container {
+        width: 76px;
+        height: 76px;
+    }
+
+    .ws-brand-core {
+        width: 62px;
+        height: 62px;
+
+        .ws-brand-logo {
+            width: 30px;
+            height: 30px;
+        }
+    }
+
+    .ws-main-heading {
+        font-size: 1.35rem;
+    }
 }

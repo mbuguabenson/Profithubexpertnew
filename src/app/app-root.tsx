@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import ErrorBoundary from '@/components/error-component/error-boundary';
-// import ErrorComponent from '@/components/error-component/error-component';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
@@ -29,25 +28,19 @@ const ErrorComponentWrapper = observer(() => {
     };
 
     return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '32px', maxWidth: '440px', width: '90%', textAlign: 'center', color: '#fff', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '12px', color: '#f8fafc' }}>
+        <div className="error-wrapper-backdrop">
+            <div className="error-wrapper-modal">
+                <h3 className="error-wrapper-title">
                     {common.error?.header || 'Notice'}
                 </h3>
-                <p style={{ fontSize: '14px', color: '#94a3b8', marginBottom: '24px', lineHeight: '1.5' }}>
+                <p className="error-wrapper-msg">
                     {common.error?.message || 'A temporary connection update occurred.'}
                 </p>
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <button
-                        onClick={handleClearError}
-                        style={{ padding: '10px 20px', borderRadius: '8px', background: '#3b82f6', color: '#fff', fontWeight: '600', border: 'none', cursor: 'pointer' }}
-                    >
+                <div className="error-wrapper-actions">
+                    <button onClick={handleClearError} className="btn-primary">
                         Continue to Trading
                     </button>
-                    <button
-                        onClick={() => window.location.reload()}
-                        style={{ padding: '10px 20px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: '#94a3b8', fontWeight: '600', border: 'none', cursor: 'pointer' }}
-                    >
+                    <button onClick={() => window.location.reload()} className="btn-secondary">
                         Refresh Page
                     </button>
                 </div>
@@ -57,14 +50,22 @@ const ErrorComponentWrapper = observer(() => {
 });
 
 const INIT_STEPS = [
-    'Connecting to Deriv WebSocket',
-    'Loading AI Trading Models',
-    'Authenticating Secure Session',
-    'Calibrating Market Scanner',
-    'Initializing Trading Engine',
-    'Syncing Live Markets',
-    'Preparing Smart Signals',
-    'Finalizing Workspace',
+    { label: 'Connecting to Deriv WebSocket', icon: '🔌' },
+    { label: 'Loading AI Trading Engine', icon: '🤖' },
+    { label: 'Authenticating Secure Session', icon: '🔒' },
+    { label: 'Calibrating Market Scanner', icon: '📊' },
+    { label: 'Initializing Execution Pipeline', icon: '⚡' },
+    { label: 'Syncing Live Ticks & Orderbook', icon: '📈' },
+    { label: 'Preparing Smart Signals', icon: '🎯' },
+    { label: 'Finalizing Trading Workspace', icon: '🚀' },
+];
+
+const FRIENDLY_TIPS = [
+    '💡 Tip: Set up your Risk Management rules to protect your profit targets automatically.',
+    '🚀 Tip: Bulk trading allows simultaneous contract placement for maximum strategy efficiency.',
+    '⚡ Tip: Your connection communicates directly with Deriv WebSockets for ultra-low latency.',
+    '🎯 Tip: Combine Digit & Over/Under strategies with active scanners for optimal entry points.',
+    '🛡️ Tip: You can pause trading anytime and your active contracts will complete safely.',
 ];
 
 const WelcomeScreen = ({
@@ -72,146 +73,165 @@ const WelcomeScreen = ({
     isComplete,
     progress,
     statusMessage,
-    loadingText,
 }: {
     onFinished: () => void;
     isComplete: boolean;
     progress: number;
     statusMessage: string;
-    loadingText: string;
 }) => {
     const [exiting, setExiting] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
+    const [tipIndex, setTipIndex] = useState(0);
 
+    // Cycle through initialization steps
     useEffect(() => {
         const stepTimer = window.setInterval(() => {
             setActiveStep(prev => (prev + 1) % INIT_STEPS.length);
-        }, 1500);
+        }, 1400);
         return () => window.clearInterval(stepTimer);
     }, []);
 
+    // Cycle friendly trading tips
+    useEffect(() => {
+        const tipTimer = window.setInterval(() => {
+            setTipIndex(prev => (prev + 1) % FRIENDLY_TIPS.length);
+        }, 3200);
+        return () => window.clearInterval(tipTimer);
+    }, []);
+
+    // Handle complete transition
     useEffect(() => {
         if (!isComplete) return;
         const exitTimer = window.setTimeout(() => {
             setExiting(true);
-            window.setTimeout(onFinished, 900);
-        }, 120);
+            window.setTimeout(onFinished, 700);
+        }, 100);
         return () => window.clearTimeout(exitTimer);
     }, [isComplete, onFinished]);
 
+    const currentStepObj = INIT_STEPS[activeStep] || INIT_STEPS[0];
+    const roundedProgress = Math.min(100, Math.round(progress));
+
     return (
         <div className={`welcome-screen ${exiting ? 'welcome-screen--exit' : 'welcome-screen--visible'}`}>
-            {/* Ambient neumorphism glow orbs */}
-            <div className='welcome-screen__glow welcome-screen__glow--blue' />
-            <div className='welcome-screen__glow welcome-screen__glow--green' />
-            <div className='welcome-screen__glow welcome-screen__glow--gold' />
+            {/* Ambient Animated Gradient Orbs */}
+            <div className="ws-bg-orb ws-bg-orb--cyan" />
+            <div className="ws-bg-orb ws-bg-orb--purple" />
+            <div className="ws-bg-orb ws-bg-orb--emerald" />
 
-            {/* Floating particles */}
-            <div className='welcome-screen__particles' aria-hidden='true'>
-                {Array.from({ length: 18 }).map((_, i) => (
-                    <span
-                        key={i}
-                        className='ws-particle'
-                        style={{
-                            left: `${(i * 5.5 + 4) % 100}%`,
-                            top: `${(i * 8.3 + 6) % 100}%`,
-                            width: `${(i % 3) + 3}px`,
-                            height: `${(i % 3) + 3}px`,
-                            animationDuration: `${14 + (i % 9)}s`,
-                            animationDelay: `${(i * 0.5) % 7}s`,
-                        }}
-                    />
-                ))}
-            </div>
+            {/* Subtle Grid Overlay */}
+            <div className="ws-grid-overlay" aria-hidden="true" />
 
-            {/* ✦ Main neumorphism card */}
-            <div className='welcome-screen__content'>
+            {/* Main Glassmorphic Neumorphism Container */}
+            <div className="welcome-screen__card">
 
-                {/* Status badge */}
-                <div className='ws-status-badge'>
-                    <span className='ws-status-dot' />
-                    <span className='ws-status-label'>SYSTEM INITIALIZING</span>
+                {/* Header Badge */}
+                <div className="ws-badge-header">
+                    <span className="ws-badge-dot" />
+                    <span className="ws-badge-text">PRO TRADING ENVIRONMENT</span>
+                    <span className="ws-badge-pill">v3.2 PRO</span>
                 </div>
 
-                {/* Neumorphism orbital logo */}
-                <div className='ws-orb-shell'>
-                    <div className='ws-ring ws-ring--outer' />
-                    <div className='ws-ring ws-ring--mid' />
-                    <div className='ws-ring ws-ring--inner' />
-                    <div className='ws-logo-core'>
-                        <img
-                            src='/logo_icon.svg'
-                            alt={brandLabel}
-                            style={{
-                                width: '34px',
-                                height: '34px',
-                                objectFit: 'contain',
-                                display: 'block',
-                                filter: 'drop-shadow(0 0 10px rgba(79, 142, 247, 0.7))',
-                            }}
-                            onError={e => { e.currentTarget.style.display = 'none'; }}
-                        />
-                    </div>
-                </div>
-
-                {/* Hero text — inset neumorphism panel */}
-                <div className='ws-hero'>
-                    <div className='ws-hero__label'>AI-Powered Trading Platform</div>
-                    <h1 className='ws-hero__title'>
-                        Welcome to <span className='ws-hero__brand'>{brandLabel}</span>
-                    </h1>
-                    <p className='ws-hero__subtitle'>Secure automated trading on {deploymentName}</p>
-                </div>
-
-                {/* Feature pills */}
-                <div className='ws-badges'>
-                    <span className='ws-badge'>⚡ Lightning Fast</span>
-                    <span className='ws-badge'>🔒 Bank-Grade Security</span>
-                    <span className='ws-badge'>🤖 AI-Driven</span>
-                </div>
-
-                {/* Step dots */}
-                <div className='ws-step-dots' aria-hidden='true'>
-                    {INIT_STEPS.map((_, i) => (
-                        <span
-                            key={i}
-                            className={`ws-step-dot${i === activeStep ? ' ws-step-dot--active' : ''}`}
-                        />
-                    ))}
-                </div>
-
-                {/* Loading status */}
-                <div className='ws-loading-copy'>
-                    <div className='ws-loading-text'>{loadingText}</div>
-                    <div className='ws-status' role='status' aria-live='polite'>{statusMessage}</div>
-                </div>
-
-                {/* Progress bar — inset neumorphism track */}
-                <div className='ws-progress'>
-                    <div className='ws-progress__track'>
-                        <div className='ws-progress__fill' style={{ width: `${progress}%` }}>
-                            <span className='ws-progress__shimmer' />
+                {/* Central Brand Orb */}
+                <div className="ws-brand-section">
+                    <div className="ws-orb-container">
+                        <div className="ws-glow-ring ws-glow-ring--outer" />
+                        <div className="ws-glow-ring ws-glow-ring--inner" />
+                        <div className="ws-brand-core">
+                            <img
+                                src="/logo_icon.svg"
+                                alt={brandLabel}
+                                className="ws-brand-logo"
+                                onError={e => { e.currentTarget.style.display = 'none'; }}
+                            />
+                            <span className="ws-brand-icon-fallback">⚡</span>
                         </div>
                     </div>
-                    <div className='ws-progress__meta'>
-                        <span className='ws-progress__label'>{Math.round(progress)}%</span>
-                        <span className='ws-progress__step'>{INIT_STEPS[activeStep]}</span>
+
+                    <div className="ws-title-group">
+                        <h1 className="ws-main-heading">
+                            Welcome to <span className="ws-brand-gradient">{brandLabel}</span>
+                        </h1>
+                        <p className="ws-sub-heading">
+                            High-Performance Automated Trading Platform • {deploymentName}
+                        </p>
                     </div>
                 </div>
 
-                {/* Footer strip */}
-                <div className='ws-footer'>
-                    <span>v3.2.0 Pro</span>
-                    <span className='ws-footer__sep'>•</span>
-                    <span>Deriv Engine Pipeline</span>
-                    <span className='ws-footer__sep'>•</span>
-                    <span>Secure • Fast • Intelligent</span>
+                {/* 3 High-Impact Feature Badges */}
+                <div className="ws-features-grid">
+                    <div className="ws-feature-chip">
+                        <span className="chip-icon">⚡</span>
+                        <div className="chip-text">
+                            <span className="chip-title">Ultra-Fast Engine</span>
+                            <span className="chip-sub">Direct WS API</span>
+                        </div>
+                    </div>
+                    <div className="ws-feature-chip">
+                        <span className="chip-icon">🛡️</span>
+                        <div className="chip-text">
+                            <span className="chip-title">Risk Guard</span>
+                            <span className="chip-sub">Smart Capital Control</span>
+                        </div>
+                    </div>
+                    <div className="ws-feature-chip">
+                        <span className="chip-icon">🤖</span>
+                        <div className="chip-text">
+                            <span className="chip-title">AI Automation</span>
+                            <span className="chip-sub">Real-Time Signals</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Progress Visualizer */}
+                <div className="ws-progress-section">
+                    <div className="ws-progress-header">
+                        <div className="ws-step-indicator">
+                            <span className="step-icon">{currentStepObj.icon}</span>
+                            <span className="step-label">{statusMessage || currentStepObj.label}</span>
+                        </div>
+                        <span className="ws-percent-text">{roundedProgress}%</span>
+                    </div>
+
+                    <div className="ws-progress-track">
+                        <div className="ws-progress-fill" style={{ width: `${roundedProgress}%` }}>
+                            <span className="ws-progress-glow-head" />
+                        </div>
+                    </div>
+
+                    {/* Step Dots */}
+                    <div className="ws-dots-bar">
+                        {INIT_STEPS.map((step, idx) => {
+                            const isPast = idx < activeStep;
+                            const isCurrent = idx === activeStep;
+                            return (
+                                <div
+                                    key={idx}
+                                    className={`ws-dot-item ${isCurrent ? 'ws-dot-item--active' : ''} ${isPast ? 'ws-dot-item--done' : ''}`}
+                                    title={step.label}
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Friendly Tip Box */}
+                <div className="ws-tip-box">
+                    <span className="ws-tip-content">{FRIENDLY_TIPS[tipIndex]}</span>
+                </div>
+
+                {/* Footer Info */}
+                <div className="ws-footer-bar">
+                    <span>🟢 WebSocket Active</span>
+                    <span className="dot-sep">•</span>
+                    <span>🔒 SSL Encrypted</span>
+                    <span className="dot-sep">•</span>
+                    <span>Ready for Trading</span>
                 </div>
             </div>
         </div>
     );
 };
-
 
 const AppRoot = () => {
     const store = useStore();
@@ -219,12 +239,10 @@ const AppRoot = () => {
     const api_base_initialization_started = useRef(false);
     const [is_api_initialized, setIsApiInitialized] = useState(false);
 
-    // Proactively refresh OAuth token before expiry to prevent silent logouts
     useTokenRefresh();
     const [showWelcome, setShowWelcome] = useState(true);
     const [progress, setProgress] = useState(0);
     const [statusIndex, setStatusIndex] = useState(0);
-    const [dotPhase, setDotPhase] = useState(0);
     const [isReducedMotion, setIsReducedMotion] = useState(false);
     const [welcomeForceExit, setWelcomeForceExit] = useState(false);
 
@@ -247,7 +265,7 @@ const AppRoot = () => {
     useEffect(() => {
         statusIntervalRef.current = window.setInterval(() => {
             setStatusIndex(prev => (prev + 1) % INIT_STEPS.length);
-        }, 2000);
+        }, 1800);
         return () => {
             if (statusIntervalRef.current) {
                 window.clearInterval(statusIntervalRef.current);
@@ -256,18 +274,11 @@ const AppRoot = () => {
     }, []);
 
     useEffect(() => {
-        const dotTimer = window.setInterval(() => {
-            setDotPhase(prev => (prev + 1) % 4);
-        }, 500);
-        return () => window.clearInterval(dotTimer);
-    }, []);
-
-    useEffect(() => {
         let animationFrameId: number;
         const step = () => {
             const current = progressRef.current;
             const target = targetProgressRef.current;
-            const increment = isReducedMotion ? 1.5 : Math.max(0.75, (target - current) * 0.12);
+            const increment = isReducedMotion ? 2 : Math.max(0.85, (target - current) * 0.14);
             const next = Math.min(100, current + increment);
             progressRef.current = next;
             setProgress(next);
@@ -279,13 +290,11 @@ const AppRoot = () => {
         return () => window.cancelAnimationFrame(animationFrameId);
     }, [isReducedMotion]);
 
-
-
     useEffect(() => {
         if (is_api_initialized) {
             targetProgressRef.current = 100;
         } else {
-            targetProgressRef.current = 60;
+            targetProgressRef.current = 65;
         }
     }, [is_api_initialized]);
 
@@ -302,7 +311,6 @@ const AppRoot = () => {
             if (api_base_initialization_started.current) return;
             api_base_initialization_started.current = true;
             try {
-                // Clean up any invalid bearer tokens left in localStorage from older flows
                 sanitizeAccountsList();
                 await api_base.init();
                 api_base_initialized.current = true;
@@ -323,12 +331,11 @@ const AppRoot = () => {
         welcomeTimeoutRef.current = window.setTimeout(() => {
             setWelcomeForceExit(true);
             setShowWelcome(false);
-        }, 2500);
+        }, 2600);
 
         welcomeHardExitRef.current = window.setTimeout(() => {
-            console.warn('Forced welcome exit after hard timeout.');
             setShowWelcome(false);
-        }, 3500);
+        }, 3600);
 
         return () => {
             if (welcomeTimeoutRef.current) {
@@ -340,8 +347,7 @@ const AppRoot = () => {
         };
     }, []);
 
-    const loadingText = `Initializing AI Trading Engine${'.'.repeat(dotPhase)}`;
-    const statusMessage = INIT_STEPS[statusIndex % INIT_STEPS.length];
+    const statusMessage = INIT_STEPS[statusIndex % INIT_STEPS.length]?.label || 'Preparing Workspace';
     const welcomeComplete = (is_api_initialized && progress >= 95) || welcomeForceExit;
 
     if (showWelcome) {
@@ -351,7 +357,6 @@ const AppRoot = () => {
                 isComplete={welcomeComplete}
                 progress={progress}
                 statusMessage={statusMessage}
-                loadingText={loadingText}
             />
         );
     }
