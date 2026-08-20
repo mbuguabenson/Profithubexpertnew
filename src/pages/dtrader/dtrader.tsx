@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { getAppId } from '@/components/shared/utils/config/config';
-import Heading from '@/components/shared_ui/heading';
 import Text from '@/components/shared_ui/text';
-import CaptionText from '@/components/shared_ui/caption-text';
 import Button from '@/components/shared_ui/button';
-import TextField from '@/components/shared_ui/text-field';
+import Input from '@/components/shared_ui/input';
 import Badge from '@/components/shared_ui/badge';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { useStore } from '@/hooks/useStore';
-import SharedActionsBridge from '@/utils/shared-actions-bridge';
+import { SharedActionsBridge } from '@/utils/shared-actions-bridge';
 import DTraderWorkspace from './dtrader-workspace';
 import { Globe, Zap, ShieldCheck, Server, RefreshCw } from 'lucide-react';
 import './dtrader.scss';
@@ -369,16 +367,16 @@ const DTraderPage: React.FC = observer(() => {
                         <div className='dtrader-auth-wrapper'>
                             <div className='dtrader-auth-card'>
                                 <div className='auth-card-head'>
-                                    <Heading.H3>DTrader Hub 360</Heading.H3>
-                                    <Badge label='AUTH REQUIRED' size='sm' variant={'warning' as any} />
+                                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>DTrader Hub 360</h3>
+                                    <Badge label='AUTH REQUIRED' />
                                 </div>
 
-                                <Text size='sm' color='subtle'>
+                                <Text size='xs'>
                                     To open DTrader Hub in Kenya with full market access, connect your Deriv account or provide an API token.
                                 </Text>
 
                                 <form onSubmit={handleManualTokenSubmit} className='auth-token-form'>
-                                    <TextField
+                                    <Input
                                         placeholder="Enter Deriv API Token (e.g. a1-XYZ...)"
                                         value={manualToken}
                                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setManualToken(e.target.value)}
@@ -389,11 +387,9 @@ const DTraderPage: React.FC = observer(() => {
                                         </div>
                                     )}
                                     <Button
-                                        size='lg'
-                                        variant='primary'
-                                        fullWidth
+                                        primary
                                         type='submit'
-                                        isLoading={isSubmitting}
+                                        is_disabled={isSubmitting}
                                     >
                                         Launch DTrader with Token
                                     </Button>
@@ -401,14 +397,12 @@ const DTraderPage: React.FC = observer(() => {
 
                                 <div className='auth-separator'>
                                     <div className='sep-line' />
-                                    <CaptionText size='sm' color='subtle'>OR LOG IN WITH DERIV</CaptionText>
+                                    <Text size='xs'>OR LOG IN WITH DERIV</Text>
                                     <div className='sep-line' />
                                 </div>
 
                                 <Button
-                                    size='md'
-                                    variant='secondary'
-                                    fullWidth
+                                    secondary
                                     onClick={handleOAuthLogin}
                                 >
                                     Log In with Deriv
