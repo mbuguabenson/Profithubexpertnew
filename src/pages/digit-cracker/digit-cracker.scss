@@ -1,14 +1,26 @@
 @use '@/components/shared/styles/mixins' as *;
 
+// ═══════════════════════════════════════════════════════════════
+// ✦ DIGIT CRACKER TAB — DEEP PURPLE SOFT UI DESIGN
+// ═══════════════════════════════════════════════════════════════
+
+$dc-bg:           #0b0a1a;
+$dc-card-bg:      linear-gradient(145deg, #161033, #100b27);
+$dc-purple:       #7c3aed;
+$dc-purple-light: #a855f7;
+$dc-cyan:         #06b6d4;
+$dc-emerald:      #10b981;
+$dc-amber:        #f59e0b;
+
 .digit-cracker-hud-page {
     min-height: 100%;
     padding: to-rem(20px);
     background:
-        radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-        #090d16;
-    color: #f1f5f9;
-    font-family: var(--font-body);
+        radial-gradient(circle at 0% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+        $dc-bg;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
     gap: to-rem(20px);
@@ -19,22 +31,23 @@
     }
 
     .num {
-        font-family: 'JetBrains Mono', monospace;
+        font-family: 'Space Grotesk', 'JetBrains Mono', monospace;
     }
 
     // 1. Header HUD
     .cracker-hud-header {
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: to-rem(20px);
-        padding: to-rem(16px) to-rem(20px);
+        background: linear-gradient(145deg, #161033, #100b27);
+        border: 1px solid rgba(168, 85, 247, 0.2);
+        border-radius: to-rem(24px);
+        padding: to-rem(18px) to-rem(24px);
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
         gap: to-rem(16px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        box-shadow: 
+            14px 14px 32px rgba(4, 2, 12, 0.75),
+            -8px -8px 24px rgba(168, 85, 247, 0.06);
 
         .header-left-box {
             display: flex;
@@ -46,17 +59,17 @@
                 display: flex;
                 align-items: center;
                 gap: to-rem(8px);
-                background: rgba(99, 102, 241, 0.12);
-                border: 1px solid rgba(99, 102, 241, 0.3);
-                padding: to-rem(6px) to-rem(12px);
-                border-radius: to-rem(20px);
+                background: linear-gradient(135deg, #7c3aed, #6d28d9);
+                padding: to-rem(6px) to-rem(14px);
+                border-radius: to-rem(9999px);
+                box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4);
 
                 .pulse-point {
                     width: 8px;
                     height: 8px;
                     border-radius: 50%;
-                    background: #818cf8;
-                    box-shadow: 0 0 8px #818cf8;
+                    background: #ffffff;
+                    box-shadow: 0 0 8px #ffffff;
                     animation: pulseDot 1.5s infinite;
                 }
 
@@ -64,7 +77,7 @@
                     font-size: to-rem(11px);
                     font-weight: 900;
                     letter-spacing: 1.2px;
-                    color: #a5b4fc;
+                    color: #ffffff;
                     text-transform: uppercase;
                 }
             }
@@ -72,28 +85,32 @@
             .asset-selector-group {
                 display: flex;
                 flex-direction: column;
-                gap: to-rem(2px);
+                gap: to-rem(3px);
 
                 label {
-                    font-size: to-rem(8px);
+                    font-size: to-rem(9px);
                     font-weight: 800;
-                    color: #64748b;
+                    color: #e9d5ff;
                     letter-spacing: 0.5px;
+                    text-transform: uppercase;
                 }
 
                 .asset-select {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: to-rem(10px);
+                    background: linear-gradient(145deg, #110c28, #1c1444);
+                    box-shadow: 
+                        inset 4px 4px 10px rgba(4, 2, 12, 0.7),
+                        inset -3px -3px 8px rgba(168, 85, 247, 0.12);
+                    border: 1px solid rgba(168, 85, 247, 0.25);
+                    border-radius: to-rem(12px);
                     color: #fff;
                     font-size: to-rem(12px);
-                    font-weight: 700;
-                    padding: to-rem(6px) to-rem(12px);
+                    font-weight: 800;
+                    padding: to-rem(8px) to-rem(14px);
                     outline: none;
                     cursor: pointer;
 
                     &:focus {
-                        border-color: #818cf8;
+                        border-color: #a855f7;
                     }
                 }
             }
@@ -106,10 +123,10 @@
             flex-wrap: wrap;
 
             .metric-pill {
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(255, 255, 255, 0.06);
-                border-radius: to-rem(12px);
-                padding: to-rem(6px) to-rem(12px);
+                background: rgba(17, 12, 40, 0.7);
+                border: 1px solid rgba(168, 85, 247, 0.18);
+                border-radius: to-rem(14px);
+                padding: to-rem(8px) to-rem(14px);
                 display: flex;
                 flex-direction: column;
                 gap: to-rem(2px);
@@ -117,28 +134,29 @@
                 label {
                     font-size: to-rem(8px);
                     font-weight: 800;
-                    color: #64748b;
+                    color: #e9d5ff;
                     letter-spacing: 0.5px;
+                    text-transform: uppercase;
                 }
 
                 .val {
                     font-size: to-rem(13px);
                     font-weight: 800;
-                    color: #f1f5f9;
+                    color: #ffffff;
                 }
 
                 &.spot-card {
                     .val {
-                        color: #38bdf8;
+                        color: #c084fc;
                     }
                 }
 
                 &.live-digit-box {
-                    background: rgba(245, 158, 11, 0.1);
-                    border-color: rgba(245, 158, 11, 0.3);
+                    background: rgba(124, 58, 237, 0.16);
+                    border-color: rgba(168, 85, 247, 0.35);
 
                     .val {
-                        color: #f59e0b;
+                        color: #fde047;
                         font-weight: 900;
                     }
                 }
@@ -147,10 +165,10 @@
                     .status-chip {
                         font-size: to-rem(10px);
                         font-weight: 800;
-                        color: #64748b;
+                        color: #e9d5ff;
 
                         &.online {
-                            color: #10b981;
+                            color: #6ee7b7;
                         }
                     }
                 }
@@ -162,519 +180,48 @@
     .stats-telemetry-strip {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: to-rem(12px);
+        gap: to-rem(14px);
 
         @include mobile-screen {
             grid-template-columns: repeat(2, 1fr);
         }
 
         .telemetry-card {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: to-rem(14px);
-            padding: to-rem(12px) to-rem(16px);
+            background: linear-gradient(145deg, #161033, #100b27);
+            border: 1px solid rgba(168, 85, 247, 0.18);
+            border-radius: to-rem(18px);
+            padding: to-rem(14px) to-rem(18px);
             display: flex;
             flex-direction: column;
             gap: to-rem(4px);
+            box-shadow: 
+                10px 10px 24px rgba(4, 2, 12, 0.7),
+                -6px -6px 16px rgba(168, 85, 247, 0.05);
 
             .lbl {
                 font-size: to-rem(9px);
                 font-weight: 800;
-                color: #64748b;
+                color: #e9d5ff;
                 letter-spacing: 0.5px;
+                text-transform: uppercase;
             }
 
             .val {
-                font-size: to-rem(16px);
+                font-family: 'Space Grotesk', sans-serif;
+                font-size: to-rem(17px);
                 font-weight: 900;
-                color: #f8fafc;
+                color: #ffffff;
 
                 &.win {
-                    color: #10b981;
-                    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+                    color: #6ee7b7;
+                    text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
                 }
 
                 &.loss {
-                    color: #f43f5e;
-                    text-shadow: 0 0 10px rgba(244, 63, 94, 0.3);
-                }
-
-                &.cyan {
-                    color: #38bdf8;
-                }
-
-                &.amber {
-                    color: #f59e0b;
-                    font-size: to-rem(13px);
+                    color: #fca5a5;
+                    text-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
                 }
             }
         }
     }
-
-    // 3. Digit Frequency Reactor Deck (0-9)
-    .reactor-section-deck {
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: to-rem(20px);
-        padding: to-rem(20px);
-        box-shadow: 0 14px 35px rgba(0, 0, 0, 0.35);
-
-        .deck-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: to-rem(16px);
-            flex-wrap: wrap;
-            gap: to-rem(8px);
-
-            .title-area {
-                display: flex;
-                align-items: center;
-                gap: to-rem(10px);
-
-                h3 {
-                    margin: 0;
-                    font-size: to-rem(14px);
-                    font-weight: 800;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    color: #f1f5f9;
-                }
-
-                .meta-tag {
-                    font-size: to-rem(10px);
-                    color: #64748b;
-                    font-weight: 700;
-                }
-            }
-
-            .hint-txt {
-                font-size: to-rem(10px);
-                color: #64748b;
-                font-weight: 600;
-            }
-        }
-
-        .digit-reactor-hud-deck {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            gap: to-rem(10px);
-
-            @media (max-width: 1200px) {
-                grid-template-columns: repeat(5, 1fr);
-            }
-
-            @include mobile-screen {
-                grid-template-columns: repeat(5, 1fr);
-                gap: to-rem(6px);
-            }
-
-            .reactor-core-card {
-                background: rgba(255, 255, 255, 0.02);
-                border: 1px solid rgba(255, 255, 255, 0.06);
-                border-radius: to-rem(16px);
-                padding: to-rem(12px) to-rem(6px);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: to-rem(8px);
-                cursor: pointer;
-                transition: all 0.25s ease;
-
-                &:hover {
-                    background: rgba(255, 255, 255, 0.05);
-                    border-color: rgba(99, 102, 241, 0.4);
-                    transform: translateY(-2px);
-                }
-
-                &.is-active {
-                    border-color: rgba(245, 158, 11, 0.6);
-                    background: rgba(245, 158, 11, 0.08);
-                    box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
-                }
-
-                .core-svg-wrap {
-                    position: relative;
-                    width: 92px;
-                    height: 92px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-
-                    @media (max-width: 1200px) {
-                        transform: scale(0.9);
-                    }
-
-                    .core-center-info {
-                        position: absolute;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-
-                        .digit-num {
-                            font-size: to-rem(22px);
-                            font-weight: 900;
-                            color: #fff;
-                            line-height: 1;
-                        }
-
-                        .digit-pct {
-                            font-size: to-rem(10px);
-                            font-weight: 700;
-                            color: #94a3b8;
-                            margin-top: to-rem(2px);
-                        }
-                    }
-
-                    .radar-ping-halo {
-                        position: absolute;
-                        inset: 0;
-                        border-radius: 50%;
-                        border: 2px solid #f59e0b;
-                        animation: radarPulse 1.8s infinite;
-                        pointer-events: none;
-                    }
-                }
-
-                .core-badges {
-                    display: flex;
-                    align-items: center;
-                    gap: to-rem(4px);
-
-                    .rank-tag {
-                        font-size: to-rem(9px);
-                        font-weight: 800;
-                        color: #94a3b8;
-                        background: rgba(255, 255, 255, 0.05);
-                        padding: to-rem(1px) to-rem(4px);
-                        border-radius: 4px;
-                    }
-
-                    .sample-n {
-                        font-size: to-rem(9px);
-                        color: #64748b;
-                        font-weight: 700;
-                    }
-                }
-            }
-        }
-    }
-
-    // 4. Cracker Workspace Grid
-    .cracker-workspace-grid {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr;
-        gap: to-rem(20px);
-
-        @media (max-width: 1100px) {
-            grid-template-columns: 1fr;
-        }
-
-        .strategy-column {
-            display: flex;
-            flex-direction: column;
-            gap: to-rem(16px);
-
-            .strategy-tabs-nav {
-                display: flex;
-                gap: to-rem(8px);
-                overflow-x: auto;
-                background: rgba(15, 23, 42, 0.6);
-                padding: to-rem(6px);
-                border-radius: to-rem(14px);
-                border: 1px solid rgba(255, 255, 255, 0.06);
-
-                .nav-tab-btn {
-                    padding: to-rem(8px) to-rem(16px);
-                    border-radius: to-rem(10px);
-                    font-size: to-rem(12px);
-                    font-weight: 800;
-                    background: transparent;
-                    border: none;
-                    color: #94a3b8;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    white-space: nowrap;
-
-                    &:hover {
-                        color: #fff;
-                        background: rgba(255, 255, 255, 0.04);
-                    }
-
-                    &.active {
-                        background: linear-gradient(135deg, #6366f1, #8b5cf6);
-                        color: #fff;
-                        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
-                    }
-                }
-            }
-
-            .quick-config-deck {
-                background: rgba(15, 23, 42, 0.75);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: to-rem(18px);
-                padding: to-rem(18px);
-                display: flex;
-                flex-direction: column;
-                gap: to-rem(14px);
-
-                .deck-head {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-
-                    h4 {
-                        margin: 0;
-                        font-size: to-rem(13px);
-                        font-weight: 800;
-                        text-transform: uppercase;
-                        color: #f1f5f9;
-                    }
-
-                    .cycle-badge {
-                        font-size: to-rem(10px);
-                        font-weight: 700;
-                        color: #94a3b8;
-                    }
-                }
-
-                .config-inputs-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-                    gap: to-rem(10px);
-
-                    .input-box {
-                        background: rgba(255, 255, 255, 0.02);
-                        border: 1px solid rgba(255, 255, 255, 0.06);
-                        border-radius: to-rem(12px);
-                        padding: to-rem(10px) to-rem(12px);
-                        display: flex;
-                        flex-direction: column;
-                        gap: to-rem(4px);
-
-                        label {
-                            font-size: to-rem(9px);
-                            font-weight: 800;
-                            color: #94a3b8;
-                            letter-spacing: 0.5px;
-                        }
-
-                        input {
-                            background: transparent;
-                            border: none;
-                            color: #fff;
-                            font-size: to-rem(14px);
-                            font-weight: 700;
-                            outline: none;
-
-                            &.bulk-highlight {
-                                color: #f59e0b;
-                                font-weight: 800;
-                            }
-                        }
-
-                        &.highlight-box {
-                            border-color: rgba(245, 158, 11, 0.3);
-                            background: rgba(245, 158, 11, 0.04);
-                        }
-                    }
-                }
-
-                .action-bar-dual {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: to-rem(10px);
-
-                    @include mobile-screen {
-                        grid-template-columns: 1fr;
-                    }
-
-                    button {
-                        padding: to-rem(14px);
-                        border-radius: to-rem(14px);
-                        font-size: to-rem(12px);
-                        font-weight: 800;
-                        cursor: pointer;
-                        border: none;
-                        transition: all 0.25s ease;
-                    }
-
-                    .btn-auto-launch {
-                        background: linear-gradient(135deg, #10b981, #059669);
-                        color: #fff;
-                        box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
-
-                        &.is-running {
-                            background: linear-gradient(135deg, #f43f5e, #e11d48);
-                            box-shadow: 0 4px 18px rgba(244, 63, 94, 0.35);
-                        }
-                    }
-
-                    .btn-manual-launch {
-                        background: rgba(255, 255, 255, 0.05);
-                        border: 1px solid rgba(255, 255, 255, 0.12);
-                        color: #fff;
-
-                        &:hover:not(:disabled) {
-                            background: rgba(255, 255, 255, 0.1);
-                            border-color: rgba(99, 102, 241, 0.4);
-                        }
-
-                        &:disabled {
-                            opacity: 0.4;
-                            cursor: not-allowed;
-                        }
-                    }
-                }
-            }
-        }
-
-        .telemetry-column {
-            .journal-card-deck {
-                background: rgba(15, 23, 42, 0.75);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: to-rem(20px);
-                padding: to-rem(18px);
-                display: flex;
-                flex-direction: column;
-                gap: to-rem(14px);
-                height: 100%;
-
-                .journal-tabs-row {
-                    display: flex;
-                    align-items: center;
-                    gap: to-rem(8px);
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                    padding-bottom: to-rem(10px);
-
-                    .j-tab {
-                        background: none;
-                        border: none;
-                        font-size: to-rem(11px);
-                        font-weight: 800;
-                        color: #64748b;
-                        cursor: pointer;
-                        padding: to-rem(4px) to-rem(8px);
-
-                        &.active {
-                            color: #818cf8;
-                            border-bottom: 2px solid #818cf8;
-                        }
-                    }
-
-                    .clear-j-btn {
-                        margin-left: auto;
-                        background: none;
-                        border: none;
-                        color: #64748b;
-                        font-size: to-rem(10px);
-                        font-weight: 700;
-                        cursor: pointer;
-
-                        &:hover {
-                            color: #cbd5e1;
-                        }
-                    }
-                }
-
-                .journal-viewport {
-                    flex: 1;
-                    min-height: to-rem(220px);
-                    max-height: to-rem(350px);
-                    overflow-y: auto;
-                    background: rgba(0, 0, 0, 0.35);
-                    border-radius: to-rem(12px);
-                    padding: to-rem(12px);
-                    display: flex;
-                    flex-direction: column;
-                    gap: to-rem(6px);
-
-                    .empty-journal {
-                        color: #475569;
-                        font-size: to-rem(11px);
-                        font-style: italic;
-                        padding: to-rem(10px) 0;
-                    }
-
-                    .journal-entry {
-                        font-size: to-rem(11px);
-                        display: flex;
-                        align-items: flex-start;
-                        gap: to-rem(6px);
-                        line-height: 1.4;
-
-                        .time {
-                            color: #64748b;
-                            flex-shrink: 0;
-                        }
-
-                        .msg {
-                            color: #cbd5e1;
-                            word-break: break-word;
-                        }
-
-                        &.success .msg { color: #34d399; }
-                        &.error .msg { color: #fb7185; }
-                        &.trade .msg { color: #38bdf8; }
-                    }
-
-                    .summary-metrics-list {
-                        display: flex;
-                        flex-direction: column;
-                        gap: to-rem(10px);
-                        padding: to-rem(8px) 0;
-
-                        .metric-line {
-                            display: flex;
-                            justify-content: space-between;
-                            font-size: to-rem(12px);
-                            color: #94a3b8;
-
-                            strong {
-                                color: #f1f5f9;
-
-                                &.win { color: #10b981; }
-                                &.loss { color: #f43f5e; }
-                                &.cyan { color: #38bdf8; }
-                            }
-                        }
-                    }
-                }
-
-                .journal-footer-action {
-                    .btn-reset-stats {
-                        width: 100%;
-                        background: none;
-                        border: 1px solid rgba(244, 63, 94, 0.3);
-                        color: #fb7185;
-                        padding: to-rem(10px);
-                        border-radius: to-rem(10px);
-                        font-size: to-rem(11px);
-                        font-weight: 800;
-                        cursor: pointer;
-                        transition: all 0.2s ease;
-
-                        &:hover {
-                            background: rgba(244, 63, 94, 0.1);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@keyframes pulseDot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.85); }
-}
-
-@keyframes radarPulse {
-    0% { transform: scale(0.9); opacity: 0.9; }
-    100% { transform: scale(1.3); opacity: 0; }
 }

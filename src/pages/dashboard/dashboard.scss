@@ -1,6 +1,19 @@
 @use 'components/shared/styles/mixins' as *;
 @use 'risk-disclaimer.scss';
 
+// ═══════════════════════════════════════════════════════════════
+// ✦ DASHBOARD TAB — DEEP PURPLE SOFT UI DESIGN
+// ═══════════════════════════════════════════════════════════════
+
+$dp-bg:          #0b0a1a;
+$dp-card-bg:     linear-gradient(145deg, #15112d, #0f0b22);
+$dp-purple-main: #7c3aed;
+$dp-purple-light:#a855f7;
+$dp-purple-glow: rgba(124, 58, 237, 0.35);
+$dp-text-bright: #ffffff;
+$dp-text-sub:    #e9d5ff;
+$dp-text-muted:  #a78bfa;
+
 .bot-dashboard {
     --translate-panel-rtl: -367px;
     --translate-panel-ltr: 367px;
@@ -108,9 +121,6 @@
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ✦ NEUMORPHISM SOFT UI DASHBOARD TAB
-// ═══════════════════════════════════════════════════════════════
 .tab {
     &__dashboard {
         display: flex;
@@ -124,14 +134,16 @@
             }
         }
 
+        // Deep Purple Soft UI Banner
         &__header {
-            background: linear-gradient(145deg, #131a29, #0e1320);
+            background: linear-gradient(145deg, #181236, #110c29);
             border-radius: 28px;
             padding: 3.2rem;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(168, 85, 247, 0.18);
             box-shadow: 
-                12px 12px 28px rgba(0, 0, 0, 0.65),
-                -8px -8px 20px rgba(255, 255, 255, 0.04);
+                14px 14px 32px rgba(5, 3, 15, 0.7),
+                -8px -8px 24px rgba(168, 85, 247, 0.06),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
             margin-bottom: 2.4rem;
 
             &--listed {
@@ -155,7 +167,7 @@
                 .welcome-title {
                     font-size: 2.6rem;
                     font-weight: 800;
-                    background: linear-gradient(135deg, #ffffff 30%, rgba(255, 255, 255, 0.8) 100%);
+                    background: linear-gradient(135deg, #ffffff 40%, #e9d5ff 100%);
                     -webkit-background-clip: text;
                     background-clip: text;
                     -webkit-text-fill-color: transparent;
@@ -163,13 +175,17 @@
                 }
 
                 .get-started-text {
-                    font-size: 1.3rem;
+                    display: inline-block;
+                    font-size: 1.2rem;
                     font-weight: 800;
-                    color: #06b6d4 !important;
+                    color: #ffffff !important;
+                    background: linear-gradient(135deg, #7c3aed, #9333ea);
+                    padding: 6px 20px;
+                    border-radius: 9999px;
                     text-transform: uppercase;
-                    letter-spacing: 0.1em;
+                    letter-spacing: 0.12em;
                     margin: 0;
-                    text-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+                    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.45);
                 }
             }
 
@@ -177,7 +193,7 @@
                 text-align: center;
                 margin-top: 1.6rem;
                 margin-bottom: 1rem;
-                color: #cbd5e1 !important;
+                color: #e9d5ff !important;
                 font-weight: 500;
 
                 &__has-list {
@@ -203,8 +219,8 @@
             align-items: flex-start;
             height: var(--tab-content-height);
             flex-grow: 1;
-            background-color: #080c14;
-            background-image: radial-gradient(circle at 50% 0%, #0d1527 0%, #080c14 100%);
+            background-color: #0b0a1a;
+            background-image: radial-gradient(circle at 50% 0%, #191238 0%, #0b0a1a 100%);
             overflow: hidden;
             position: relative;
 
@@ -261,137 +277,86 @@
                 }
             }
 
-            // ─── Neumorphism Soft UI Block ────────────────────────────
+            // Deep Purple Soft UI Action Cards
             &__block {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                padding: 24px 18px;
+                padding: 26px 20px;
                 border-radius: 24px;
-                background: linear-gradient(145deg, #121929, #0d1320);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: linear-gradient(145deg, #161033, #100b27);
+                border: 1px solid rgba(168, 85, 247, 0.16);
                 box-shadow: 
-                    10px 10px 24px rgba(0, 0, 0, 0.6),
-                    -8px -8px 18px rgba(255, 255, 255, 0.03);
+                    12px 12px 28px rgba(4, 2, 12, 0.75),
+                    -8px -8px 20px rgba(168, 85, 247, 0.05);
                 cursor: pointer;
                 transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
                 text-align: center;
-                gap: 12px;
+                gap: 14px;
 
                 &:hover {
-                    transform: translateY(-5px);
-                    border-color: rgba(6, 182, 212, 0.35);
+                    transform: translateY(-6px);
+                    border-color: rgba(168, 85, 247, 0.5);
                     box-shadow: 
-                        14px 14px 32px rgba(0, 0, 0, 0.7),
-                        -10px -10px 24px rgba(255, 255, 255, 0.05),
-                        0 0 25px rgba(6, 182, 212, 0.15);
+                        16px 16px 36px rgba(4, 2, 12, 0.85),
+                        -10px -10px 24px rgba(168, 85, 247, 0.08),
+                        0 0 30px rgba(124, 58, 237, 0.3);
                 }
 
                 &:active {
                     transform: translateY(0);
                     box-shadow: 
-                        inset 6px 6px 14px rgba(0, 0, 0, 0.6),
-                        inset -4px -4px 10px rgba(255, 255, 255, 0.04);
+                        inset 6px 6px 14px rgba(4, 2, 12, 0.8),
+                        inset -4px -4px 10px rgba(168, 85, 247, 0.06);
                 }
 
-                // Color themes
-                &.soft-card--cyan:hover .soft-icon-orb {
-                    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.08), 0 0 20px rgba(6, 182, 212, 0.4);
-                }
-                &.soft-card--emerald:hover .soft-icon-orb {
-                    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.08), 0 0 20px rgba(16, 185, 129, 0.4);
-                }
-                &.soft-card--purple:hover .soft-icon-orb {
-                    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.08), 0 0 20px rgba(168, 85, 247, 0.4);
-                }
-                &.soft-card--amber:hover .soft-icon-orb {
-                    box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.6), inset -2px -2px 6px rgba(255, 255, 255, 0.08), 0 0 20px rgba(245, 158, 11, 0.4);
-                }
-            }
+                .soft-icon-orb {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 20px;
+                    background: linear-gradient(145deg, #110c28, #1c1444);
+                    box-shadow: 
+                        inset 4px 4px 10px rgba(4, 2, 12, 0.7),
+                        inset -3px -3px 8px rgba(168, 85, 247, 0.12);
+                    border: 1px solid rgba(168, 85, 247, 0.2);
+                    display: grid;
+                    place-items: center;
+                    transition: box-shadow 0.3s ease, transform 0.3s ease;
 
-            // Soft 3D Icon Shell Orb
-            .soft-icon-orb {
-                width: 58px;
-                height: 58px;
-                border-radius: 18px;
-                background: linear-gradient(145deg, #0f1624, #141d30);
-                box-shadow: 
-                    inset 4px 4px 10px rgba(0, 0, 0, 0.6),
-                    inset -3px -3px 8px rgba(255, 255, 255, 0.06);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                display: grid;
-                place-items: center;
-                transition: box-shadow 0.3s ease, transform 0.3s ease;
-            }
+                    svg { stroke: #c084fc; }
+                }
 
-            .soft-card-body {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-                align-items: center;
-            }
+                &:hover .soft-icon-orb {
+                    box-shadow: 
+                        inset 2px 2px 6px rgba(4, 2, 12, 0.8),
+                        0 0 20px rgba(168, 85, 247, 0.5);
+                    transform: scale(1.06);
 
-            .soft-card-title {
-                font-family: 'Space Grotesk', sans-serif;
-                font-size: 0.95rem !important;
-                font-weight: 700 !important;
-                color: #ffffff !important;
-                margin: 0;
-            }
+                    svg { stroke: #ffffff; }
+                }
 
-            .soft-card-desc {
-                font-size: 0.72rem;
-                color: #94a3b8;
-                font-weight: 500;
+                .soft-card-body {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
+                    align-items: center;
+                }
+
+                .soft-card-title {
+                    font-family: 'Space Grotesk', sans-serif;
+                    font-size: 0.98rem !important;
+                    font-weight: 800 !important;
+                    color: #ffffff !important;
+                    margin: 0;
+                }
+
+                .soft-card-desc {
+                    font-size: 0.74rem;
+                    color: #e9d5ff;
+                    font-weight: 500;
+                }
             }
         }
-    }
-}
-
-.user-guide {
-    position: absolute;
-    inset-inline-end: 2.4rem;
-    top: 1.8rem;
-    z-index: 1;
-
-    @include mobile-or-tablet-screen {
-        inset-inline-end: 1.6rem;
-    }
-
-    &__button {
-        @include flex-center;
-
-        padding: 0.8rem 1.4rem;
-        border: none;
-        outline: none;
-        border-radius: 2.4rem;
-        background-color: var(--general-section-1);
-
-        @include mobile-or-tablet-screen {
-            height: 3.2rem;
-            width: 3.2rem;
-            line-height: 3.6rem;
-            text-align: center;
-            padding: 0;
-        }
-
-        &:hover {
-            cursor: pointer;
-        }
-    }
-
-    &__icon {
-        height: 24px;
-        width: 24px;
-
-        @include mobile-or-tablet-screen {
-            height: 16px;
-            width: 16px;
-        }
-    }
-
-    &__label {
-        margin-inline-start: 0.4rem;
     }
 }

@@ -1,14 +1,26 @@
 @use '@/components/shared/styles/mixins' as *;
 
+// ═══════════════════════════════════════════════════════════════
+// ✦ CIRCLES ANALYSIS TAB — DEEP PURPLE SOFT UI DESIGN
+// ═══════════════════════════════════════════════════════════════
+
+$ca-bg:           #0b0a1a;
+$ca-card-bg:      linear-gradient(145deg, #161033, #100b27);
+$ca-purple:       #7c3aed;
+$ca-purple-light: #a855f7;
+$ca-cyan:         #06b6d4;
+$ca-emerald:      #10b981;
+$ca-amber:        #f59e0b;
+
 .circles-analysis-hud {
     min-height: 100%;
     padding: to-rem(20px);
     background:
-        radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 0% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 40%),
-        #080c14;
-    color: #e2e8f0;
-    font-family: var(--font-body);
+        radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+        $ca-bg;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     display: flex;
     flex-direction: column;
     gap: to-rem(20px);
@@ -19,35 +31,42 @@
     }
 
     .num {
-        font-family: 'JetBrains Mono', monospace;
+        font-family: 'Space Grotesk', 'JetBrains Mono', monospace;
     }
 
     .glass-card {
-        background: rgba(15, 23, 42, 0.7);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: to-rem(18px);
-        padding: to-rem(16px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-        transition: all 0.25s ease;
+        background: $ca-card-bg;
+        border: 1px solid rgba(168, 85, 247, 0.18);
+        border-radius: to-rem(24px);
+        padding: to-rem(18px);
+        box-shadow: 
+            12px 12px 28px rgba(4, 2, 12, 0.75),
+            -8px -8px 20px rgba(168, 85, 247, 0.05);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 
         &:hover {
-            border-color: rgba(56, 189, 248, 0.2);
+            transform: translateY(-4px);
+            border-color: rgba(168, 85, 247, 0.45);
+            box-shadow: 
+                16px 16px 36px rgba(4, 2, 12, 0.85),
+                0 0 25px rgba(124, 58, 237, 0.25);
         }
     }
 
     // 1. Cyber HUD Header
     .cyber-hud-header {
-        background: rgba(13, 18, 30, 0.85);
-        backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: to-rem(20px);
-        padding: to-rem(16px) to-rem(20px);
+        background: linear-gradient(145deg, #161033, #100b27);
+        border: 1px solid rgba(168, 85, 247, 0.2);
+        border-radius: to-rem(24px);
+        padding: to-rem(18px) to-rem(24px);
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
         gap: to-rem(16px);
+        box-shadow: 
+            14px 14px 32px rgba(4, 2, 12, 0.75),
+            -8px -8px 24px rgba(168, 85, 247, 0.06);
 
         .header-left {
             display: flex;
@@ -64,16 +83,17 @@
                     width: 10px;
                     height: 10px;
                     border-radius: 50%;
-                    background: #38bdf8;
-                    box-shadow: 0 0 10px #38bdf8;
+                    background: #a855f7;
+                    box-shadow: 0 0 12px #a855f7;
                     animation: pulse 1.5s infinite;
                 }
 
                 .brand-text {
-                    font-size: to-rem(12px);
+                    font-family: 'Space Grotesk', sans-serif;
+                    font-size: to-rem(13px);
                     font-weight: 900;
                     letter-spacing: 1.5px;
-                    color: #38bdf8;
+                    color: #c084fc;
                     text-transform: uppercase;
                 }
             }
@@ -86,23 +106,27 @@
                 label {
                     font-size: to-rem(9px);
                     font-weight: 800;
-                    color: #64748b;
+                    color: #e9d5ff;
                     letter-spacing: 0.5px;
+                    text-transform: uppercase;
                 }
 
                 .market-select {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: to-rem(10px);
+                    background: linear-gradient(145deg, #110c28, #1c1444);
+                    box-shadow: 
+                        inset 4px 4px 10px rgba(4, 2, 12, 0.7),
+                        inset -3px -3px 8px rgba(168, 85, 247, 0.12);
+                    border: 1px solid rgba(168, 85, 247, 0.25);
+                    border-radius: to-rem(12px);
                     color: #fff;
                     font-size: to-rem(12px);
-                    font-weight: 700;
-                    padding: to-rem(6px) to-rem(12px);
+                    font-weight: 800;
+                    padding: to-rem(8px) to-rem(14px);
                     outline: none;
                     cursor: pointer;
 
                     &:focus {
-                        border-color: #38bdf8;
+                        border-color: #a855f7;
                     }
                 }
             }
@@ -115,10 +139,10 @@
             flex-wrap: wrap;
 
             .metric-card {
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(255, 255, 255, 0.06);
-                border-radius: to-rem(12px);
-                padding: to-rem(6px) to-rem(12px);
+                background: rgba(17, 12, 40, 0.7);
+                border: 1px solid rgba(168, 85, 247, 0.18);
+                border-radius: to-rem(14px);
+                padding: to-rem(8px) to-rem(14px);
                 display: flex;
                 flex-direction: column;
                 gap: to-rem(2px);
@@ -126,8 +150,9 @@
                 label {
                     font-size: to-rem(8px);
                     font-weight: 800;
-                    color: #64748b;
+                    color: #e9d5ff;
                     letter-spacing: 0.5px;
+                    text-transform: uppercase;
                 }
 
                 .depth-input {
@@ -135,7 +160,7 @@
                     border: none;
                     color: #fff;
                     font-size: to-rem(13px);
-                    font-weight: 700;
+                    font-weight: 800;
                     width: to-rem(60px);
                     outline: none;
                 }
@@ -143,26 +168,21 @@
                 .price-val {
                     font-size: to-rem(13px);
                     font-weight: 800;
-                    color: #38bdf8;
+                    color: #c084fc;
                 }
 
                 &.live-digit-card {
-                    background: rgba(245, 158, 11, 0.1);
-                    border-color: rgba(245, 158, 11, 0.3);
+                    background: rgba(124, 58, 237, 0.16);
+                    border-color: rgba(168, 85, 247, 0.35);
 
                     .digit-beacon {
                         font-size: to-rem(16px);
                         font-weight: 900;
-                        color: #f59e0b;
+                        color: #ffffff;
                         text-align: center;
 
-                        &.even {
-                            color: #06b6d4;
-                        }
-
-                        &.odd {
-                            color: #f59e0b;
-                        }
+                        &.even { color: #67e8f9; }
+                        &.odd { color: #fde047; }
                     }
                 }
 
@@ -173,7 +193,7 @@
                         gap: to-rem(6px);
                         font-size: to-rem(11px);
                         font-weight: 800;
-                        color: #94a3b8;
+                        color: #e9d5ff;
 
                         .dot {
                             width: 6px;
@@ -183,7 +203,7 @@
                         }
 
                         &.online {
-                            color: #10b981;
+                            color: #6ee7b7;
 
                             .dot {
                                 background: #10b981;
@@ -192,7 +212,7 @@
                         }
 
                         .latency {
-                            color: #64748b;
+                            color: #e9d5ff;
                             font-size: to-rem(10px);
                         }
                     }
@@ -201,507 +221,54 @@
         }
     }
 
-    // 2. Strategy Switcher Bar
+    // 2. Strategy Switcher Bar (Deep Purple Soft UI Pills)
     .strategy-switcher-bar {
         display: flex;
-        gap: to-rem(10px);
+        gap: to-rem(12px);
         overflow-x: auto;
-        padding-bottom: to-rem(2px);
+        padding-bottom: to-rem(4px);
 
         .strat-tab-btn {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: to-rem(14px);
-            padding: to-rem(10px) to-rem(18px);
+            background: linear-gradient(145deg, #161033, #100b27);
+            border: 1px solid rgba(168, 85, 247, 0.18);
+            border-radius: to-rem(16px);
+            padding: to-rem(12px) to-rem(22px);
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            gap: to-rem(2px);
+            gap: to-rem(3px);
             cursor: pointer;
             transition: all 0.25s ease;
             white-space: nowrap;
+            box-shadow: 
+                8px 8px 18px rgba(4, 2, 12, 0.6),
+                -6px -6px 14px rgba(168, 85, 247, 0.04);
 
             .label {
-                font-size: to-rem(12px);
+                font-size: to-rem(13px);
                 font-weight: 800;
-                color: #cbd5e1;
+                color: #ffffff;
             }
 
             .desc {
-                font-size: to-rem(9px);
-                color: #64748b;
+                font-size: to-rem(9.5px);
+                color: #e9d5ff;
                 font-weight: 600;
             }
 
             &:hover {
-                background: rgba(255, 255, 255, 0.05);
-                border-color: rgba(56, 189, 248, 0.3);
+                border-color: rgba(168, 85, 247, 0.4);
+                transform: translateY(-2px);
             }
 
             &.active {
-                background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
-                border-color: #38bdf8;
-                box-shadow: 0 4px 20px rgba(6, 182, 212, 0.25);
+                background: linear-gradient(135deg, #7c3aed, #9333ea);
+                border-color: rgba(255, 255, 255, 0.3);
+                box-shadow: 0 4px 20px rgba(124, 58, 237, 0.5);
 
-                .label {
-                    color: #38bdf8;
-                }
-
-                .desc {
-                    color: #93c5fd;
-                }
+                .label { color: #ffffff; }
+                .desc { color: rgba(255, 255, 255, 0.85); }
             }
         }
-    }
-
-    // 3. Radial Spectrum Deck
-    .radial-spectrum-container {
-        .digit-circles-hud {
-            background: rgba(13, 18, 30, 0.75);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: to-rem(20px);
-            padding: to-rem(20px);
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-
-            .hud-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: to-rem(16px);
-                flex-wrap: wrap;
-                gap: to-rem(8px);
-
-                .title-wrap {
-                    display: flex;
-                    align-items: center;
-                    gap: to-rem(8px);
-
-                    .live-dot-pulse {
-                        width: 8px;
-                        height: 8px;
-                        border-radius: 50%;
-                        background: #10b981;
-                        box-shadow: 0 0 8px #10b981;
-                    }
-
-                    .hud-title {
-                        font-size: to-rem(13px);
-                        font-weight: 800;
-                        letter-spacing: 0.5px;
-                        text-transform: uppercase;
-                        color: #f1f5f9;
-                    }
-                }
-
-                .hud-hint {
-                    font-size: to-rem(10px);
-                    color: #64748b;
-                    font-weight: 600;
-                }
-            }
-
-            .circles-flex-grid {
-                display: grid;
-                grid-template-columns: repeat(10, 1fr);
-                gap: to-rem(10px);
-
-                @media (max-width: 1200px) {
-                    grid-template-columns: repeat(5, 1fr);
-                }
-
-                @include mobile-screen {
-                    grid-template-columns: repeat(5, 1fr);
-                    gap: to-rem(6px);
-                }
-
-                .circle-node {
-                    background: rgba(255, 255, 255, 0.02);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                    border-radius: to-rem(16px);
-                    padding: to-rem(10px) to-rem(6px);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: to-rem(8px);
-                    cursor: pointer;
-                    transition: all 0.25s ease;
-
-                    &:hover {
-                        background: rgba(255, 255, 255, 0.05);
-                        border-color: rgba(56, 189, 248, 0.4);
-                        transform: translateY(-2px);
-                    }
-
-                    &.is-live {
-                        border-color: rgba(245, 158, 11, 0.5);
-                        background: rgba(245, 158, 11, 0.06);
-                        box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
-                    }
-
-                    &.is-selected {
-                        border-color: #38bdf8;
-                        background: rgba(6, 182, 212, 0.08);
-                    }
-
-                    .svg-wrap {
-                        position: relative;
-                        width: 84px;
-                        height: 84px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-
-                        @media (max-width: 1200px) {
-                            transform: scale(0.9);
-                        }
-
-                        .center-content {
-                            position: absolute;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
-                            justify-content: center;
-
-                            .digit-val {
-                                font-size: to-rem(20px);
-                                font-weight: 900;
-                                color: #fff;
-                                line-height: 1;
-                            }
-
-                            .pct-val {
-                                font-size: to-rem(10px);
-                                font-weight: 700;
-                                color: #94a3b8;
-                                margin-top: to-rem(2px);
-                            }
-                        }
-
-                        .active-radar-ping {
-                            position: absolute;
-                            inset: 0;
-                            border-radius: 50%;
-                            border: 2px solid #f59e0b;
-                            animation: radarPulse 1.8s infinite;
-                            pointer-events: none;
-                        }
-                    }
-
-                    .node-footer {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: to-rem(2px);
-
-                        .sample-count {
-                            font-size: to-rem(9px);
-                            color: #64748b;
-                            font-weight: 700;
-                        }
-
-                        .badge {
-                            font-size: to-rem(8px);
-                            font-weight: 900;
-                            padding: to-rem(2px) to-rem(6px);
-                            border-radius: to-rem(4px);
-                            letter-spacing: 0.5px;
-
-                            &.hot {
-                                background: rgba(16, 185, 129, 0.2);
-                                color: #34d399;
-                            }
-
-                            &.cold {
-                                background: rgba(244, 63, 94, 0.2);
-                                color: #fb7185;
-                            }
-
-                            &.now {
-                                background: rgba(245, 158, 11, 0.25);
-                                color: #fbbf24;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // 4. Workspace Dual Grid
-    .workspace-dual-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: to-rem(20px);
-
-        @media (max-width: 1100px) {
-            grid-template-columns: 1fr;
-        }
-
-        .analytics-side {
-            display: flex;
-            flex-direction: column;
-            gap: to-rem(16px);
-
-            .signal-radar-card {
-                .card-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: to-rem(14px);
-
-                    h4 {
-                        margin: 0;
-                        font-size: to-rem(13px);
-                        font-weight: 800;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        color: #f1f5f9;
-                    }
-
-                    .status-pill {
-                        font-size: to-rem(10px);
-                        font-weight: 800;
-                        padding: to-rem(4px) to-rem(10px);
-                        border-radius: to-rem(12px);
-                        background: rgba(6, 182, 212, 0.15);
-                        color: #38bdf8;
-                        border: 1px solid rgba(6, 182, 212, 0.3);
-                    }
-                }
-
-                .signal-body {
-                    display: grid;
-                    grid-template-columns: 1fr 1.5fr;
-                    gap: to-rem(16px);
-                    align-items: center;
-
-                    .prediction-display {
-                        display: flex;
-                        flex-direction: column;
-                        gap: to-rem(4px);
-
-                        .sub-label {
-                            font-size: to-rem(9px);
-                            font-weight: 800;
-                            color: #64748b;
-                        }
-
-                        .main-prediction {
-                            font-size: to-rem(20px);
-                            font-weight: 900;
-                            color: #38bdf8;
-                        }
-                    }
-
-                    .confidence-gauge {
-                        display: flex;
-                        flex-direction: column;
-                        gap: to-rem(6px);
-
-                        .gauge-label-row {
-                            display: flex;
-                            justify-content: space-between;
-                            font-size: to-rem(10px);
-                            font-weight: 800;
-                            color: #94a3b8;
-                        }
-
-                        .gauge-track {
-                            height: 8px;
-                            background: rgba(255, 255, 255, 0.05);
-                            border-radius: 4px;
-                            overflow: hidden;
-
-                            .gauge-fill {
-                                height: 100%;
-                                border-radius: 4px;
-                                transition: width 0.4s ease;
-                            }
-                        }
-                    }
-                }
-
-                .signal-rationale {
-                    margin-top: to-rem(12px);
-                    padding-top: to-rem(10px);
-                    border-top: 1px solid rgba(255, 255, 255, 0.05);
-                    font-size: to-rem(11px);
-                    color: #94a3b8;
-                    line-height: 1.4;
-
-                    .lbl {
-                        font-weight: 700;
-                        color: #cbd5e1;
-                    }
-                }
-            }
-
-            .analytics-deck-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: to-rem(12px);
-
-                @include mobile-screen {
-                    grid-template-columns: 1fr;
-                }
-
-                .mini-intel {
-                    display: flex;
-                    flex-direction: column;
-                    gap: to-rem(10px);
-
-                    label {
-                        font-size: to-rem(10px);
-                        font-weight: 800;
-                        color: #64748b;
-                        letter-spacing: 0.5px;
-                    }
-
-                    .split-bar {
-                        display: flex;
-                        height: 24px;
-                        border-radius: to-rem(8px);
-                        overflow: hidden;
-                        font-size: to-rem(10px);
-                        font-weight: 800;
-
-                        .segment {
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            transition: width 0.4s ease;
-
-                            &.even {
-                                background: #06b6d4;
-                                color: #fff;
-                            }
-
-                            &.odd {
-                                background: #f59e0b;
-                                color: #fff;
-                            }
-
-                            &.over {
-                                background: #10b981;
-                                color: #fff;
-                            }
-
-                            &.under {
-                                background: #6366f1;
-                                color: #fff;
-                            }
-                        }
-                    }
-
-                    .hot-tags {
-                        display: flex;
-                        justify-content: space-between;
-                        font-size: to-rem(10px);
-                        color: #94a3b8;
-
-                        strong {
-                            font-size: to-rem(12px);
-
-                            &.ev { color: #06b6d4; }
-                            &.od { color: #f59e0b; }
-                            &.ov { color: #10b981; }
-                            &.un { color: #6366f1; }
-                        }
-                    }
-                }
-            }
-
-            .trajectory-panel-row {
-                display: flex;
-                flex-direction: column;
-                gap: to-rem(12px);
-
-                .velocity-chart-card {
-                    .card-header {
-                        h4 {
-                            margin: 0 0 to-rem(8px);
-                            font-size: to-rem(12px);
-                            font-weight: 800;
-                            text-transform: uppercase;
-                            color: #94a3b8;
-                        }
-                    }
-
-                    .chart-wrapper {
-                        height: 130px;
-                    }
-                }
-
-                .pattern-strip-card {
-                    .card-header {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: to-rem(10px);
-
-                        h4 {
-                            margin: 0;
-                            font-size: to-rem(12px);
-                            font-weight: 800;
-                            text-transform: uppercase;
-                            color: #94a3b8;
-                        }
-
-                        .streak-badge {
-                            font-size: to-rem(10px);
-                            font-weight: 800;
-                            color: #f59e0b;
-                            background: rgba(245, 158, 11, 0.15);
-                            padding: to-rem(2px) to-rem(8px);
-                            border-radius: to-rem(6px);
-                        }
-                    }
-
-                    .strip-history-flow {
-                        display: flex;
-                        gap: to-rem(4px);
-                        overflow-x: auto;
-                        padding-bottom: to-rem(4px);
-
-                        .flow-pill {
-                            width: 24px;
-                            height: 24px;
-                            border-radius: 6px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: to-rem(10px);
-                            font-weight: 800;
-                            background: rgba(255, 255, 255, 0.04);
-                            color: #94a3b8;
-                            flex-shrink: 0;
-
-                            &.is-even { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
-                            &.is-odd { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-                            &.is-over { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-                            &.is-under { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
-                            &.is-latest { border: 1px solid #fff; }
-                        }
-                    }
-                }
-            }
-        }
-
-        .engine-side {
-            display: flex;
-            flex-direction: column;
-        }
-    }
-}
-
-@keyframes radarPulse {
-    0% {
-        transform: scale(0.9);
-        opacity: 0.9;
-    }
-    100% {
-        transform: scale(1.3);
-        opacity: 0;
     }
 }
