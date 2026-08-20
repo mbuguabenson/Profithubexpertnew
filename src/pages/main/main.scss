@@ -109,7 +109,7 @@ html, body, #root, #app {
 
         &--drawer-open {
             @include desktop-screen {
-                padding-inline-end: 27rem;
+                padding-inline-end: 38rem;
                 transition: padding 0.3s ease;
             }
         }

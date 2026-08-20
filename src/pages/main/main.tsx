@@ -595,10 +595,16 @@ const AppWrapper = observer(() => {
                 </div>
             </div>
             <DesktopWrapper>
-                <div className='main__run-strategy-wrapper'>
+                {/* Run/Stop button — floats above everything, never hidden by drawer */}
+                <div style={{
+                    position: 'fixed',
+                    top: '5.8rem',
+                    right: '4rem',
+                    zIndex: 1100,
+                }}>
                     <RunStrategy />
-                    <RunPanel />
                 </div>
+                <RunPanel />
             </DesktopWrapper>
             <MobileWrapper>
                 {!is_open && <RunPanel />}
