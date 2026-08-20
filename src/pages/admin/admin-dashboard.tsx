@@ -30,7 +30,7 @@ import { getGlobalCopyTradingManager } from '@/pages/copy-trading/copy-trading-m
 import { getAppId, getSocketURL, isProduction } from '@/components/shared/utils/config/config';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { getActiveToken } from '@/utils/token-bridge';
-import { isDemoAccount, isRealAccount } from '@/utils/account-helpers';
+import { isDemoAccount } from '@/utils/account-helpers';
 import { fetchSystemHealth, loginAdminApi, SystemHealthData } from '@/utils/admin-api';
 import './admin-dashboard.scss';
 
@@ -775,10 +775,6 @@ const AdminDashboard = observer(() => {
             fetchRequests();
         }
     };
-
-    const filteredRequests = useMemo(() =>
-        copyRequests.filter(r => r.requester_loginid.toLowerCase().includes(searchQuery.toLowerCase())),
-    [copyRequests, searchQuery]);
 
     // ─── Live Market Digits & Tick Monitor ───────────────────────────────────
     // ─── Real Market WebSocket Fetch Engine ─────────────────────────────────
