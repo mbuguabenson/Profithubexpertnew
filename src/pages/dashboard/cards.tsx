@@ -4,42 +4,23 @@ import { observer } from 'mobx-react-lite';
 import GoogleDrive from '@/components/load-modal/google-drive';
 import Dialog from '@/components/shared_ui/dialog';
 import MobileFullPageModal from '@/components/shared_ui/mobile-full-page-modal';
-import Text from '@/components/shared_ui/text';
 import { DBOT_TABS } from '@/constants/bot-contents';
 import { useStore } from '@/hooks/useStore';
-import { Localize, localize } from '@deriv-com/translations';
+import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import DashboardBotList from './bot-list/dashboard-bot-list';
-import { HardDrive, Cloud, Bot, Zap, ArrowRight } from 'lucide-react';
+import { Smartphone, TrendingUp, Bot, Radio, MessageCircle } from 'lucide-react';
 
 type TCardProps = {
     has_dashboard_strategies: boolean;
     is_mobile: boolean;
 };
 
-type TCardArray = {
-    id: string;
-    icon: React.ReactElement;
-    title: React.ReactElement;
-    description: string;
-    pillText: string;
-    pillColor: string;
-    callback: () => void;
-};
-
-const Soft5Icons = {
-    computer: <HardDrive size={28} className="soft-5-icon text-cyan" />,
-    drive: <Cloud size={28} className="soft-5-icon text-emerald" />,
-    builder: <Bot size={28} className="soft-5-icon text-purple" />,
-    lightning: <Zap size={28} className="soft-5-icon text-amber" />,
-};
-
 const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => {
-    const { dashboard, load_modal, quick_strategy } = useStore();
+    const { dashboard, load_modal } = useStore();
     const { toggleLoadModal, setActiveTabIndex } = load_modal;
     const { isDesktop } = useDevice();
     const { onCloseDialog, dialog_options, is_dialog_open, setActiveTab, setPreviewOnPopup } = dashboard;
-    const { setFormVisibility } = quick_strategy;
 
     const openFileLoader = () => {
         toggleLoadModal();
@@ -47,52 +28,34 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         setActiveTab(DBOT_TABS.BOT_BUILDER);
     };
 
-    const openGoogleDriveDialog = () => {
-        const google_drive_tab_index = isDesktop ? 2 : 1;
-        toggleLoadModal();
-        setActiveTabIndex(google_drive_tab_index);
-        setActiveTab(DBOT_TABS.BOT_BUILDER);
-    };
-
-    const actions: TCardArray[] = [
+    const actionTiles = [
         {
-            id: 'my-computer',
-            icon: Soft5Icons.computer,
-            title: is_mobile ? <Localize i18n_default_text='Local' /> : <Localize i18n_default_text='My Computer' />,
-            description: 'Import saved XML bots',
-            pillText: 'IMPORT XML',
-            pillColor: 'pill--cyan',
+            id: 'import',
+            title: 'Import',
+            icon: <Smartphone size={28} className="tile-icon text-purple" />,
+            orbBg: 'orb-purple',
             callback: () => openFileLoader(),
         },
         {
-            id: 'google-drive',
-            icon: Soft5Icons.drive,
-            title: <Localize i18n_default_text='Google Drive' />,
-            description: 'Cloud storage integration',
-            pillText: 'GOOGLE DRIVE',
-            pillColor: 'pill--emerald',
-            callback: () => openGoogleDriveDialog(),
+            id: 'smart-trader',
+            title: 'Smart Trader',
+            icon: <TrendingUp size={28} className="tile-icon text-emerald" />,
+            orbBg: 'orb-emerald',
+            callback: () => setActiveTab(DBOT_TABS.DTRADER || DBOT_TABS.MANUAL_TRADING),
         },
         {
-            id: 'bot-builder',
-            icon: Soft5Icons.builder,
-            title: <Localize i18n_default_text='Bot Builder' />,
-            description: 'Visual block programming',
-            pillText: 'VISUAL BUILDER',
-            pillColor: 'pill--purple',
-            callback: () => setActiveTab(DBOT_TABS.BOT_BUILDER),
+            id: 'free-bots',
+            title: 'Free Bots',
+            icon: <Bot size={28} className="tile-icon text-blue" />,
+            orbBg: 'orb-blue',
+            callback: () => setActiveTab(DBOT_TABS.TRADING_BOTS),
         },
         {
-            id: 'quick-strategy',
-            icon: Soft5Icons.lightning,
-            title: <Localize i18n_default_text='Quick Strategy' />,
-            description: 'Pre-built trading algorithms',
-            pillText: 'PRESET ALGOS',
-            pillColor: 'pill--amber',
-            callback: () => {
-                setActiveTab(DBOT_TABS.BOT_BUILDER);
-                setFormVisibility(true);
-            },
+            id: 'signal-tools',
+            title: 'Signal Tools',
+            icon: <Radio size={28} className="tile-icon text-amber" />,
+            orbBg: 'orb-amber',
+            callback: () => setActiveTab(DBOT_TABS.SIGNALS),
         },
     ];
 
@@ -103,78 +66,103 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     'tab__dashboard__table--minimized': has_dashboard_strategies && is_mobile,
                 })}
             >
-                <div
-                    className={classNames('tab__dashboard__table__tiles', {
-                        'tab__dashboard__table__tiles--minimized': has_dashboard_strategies && is_mobile,
-                    })}
-                    id='tab__dashboard__table__tiles'
-                >
-                    {actions.map(action => {
-                        const { icon, title, description, pillText, pillColor, callback, id } = action;
-                        return (
-                            <div
-                                key={id}
-                                className={classNames('tab__dashboard__table__block', {
-                                    'tab__dashboard__table__block--minimized': has_dashboard_strategies && is_mobile,
-                                })}
-                                onClick={callback}
-                            >
-                                <div className="dash-5-top-row">
-                                    <div className='soft-icon-orb'>
-                                        {icon}
-                                    </div>
-                                    <span className={classNames('dash-5-pill', pillColor)}>
-                                        {pillText}
-                                    </span>
-                                </div>
-
-                                <div className="soft-card-body">
-                                    <Text color='prominent' size={is_mobile ? 'xxs' : 'xs'} className="soft-card-title">
-                                        {title}
-                                    </Text>
-                                    {!is_mobile && (
-                                        <span className="soft-card-desc">{description}</span>
-                                    )}
-                                </div>
-
-                                <div className="dash-5-card-arrow">
-                                    <span>Launch</span>
-                                    <ArrowRight size={14} />
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {!isDesktop ? (
-                        <Dialog
-                            title={dialog_options.title}
-                            is_visible={is_dialog_open}
-                            onCancel={onCloseDialog}
-                            onConfirm={() => {}}
-                            is_mobile_full_width
-                            className='dc-dialog__wrapper--google-drive'
-                            has_close_icon
-                        >
-                            <GoogleDrive />
-                        </Dialog>
-                    ) : (
-                        <MobileFullPageModal
-                            is_modal_open={is_dialog_open}
-                            className='load-strategy__wrapper'
-                            header={localize('Load strategy')}
-                            onClickClose={() => {
-                                setPreviewOnPopup(false);
-                                onCloseDialog();
-                            }}
-                            height_offset='80px'
-                        >
-                            <div label='Google Drive' className='google-drive-label'>
-                                <GoogleDrive />
-                            </div>
-                        </MobileFullPageModal>
-                    )}
+                {/* 1. Account Creation Banner */}
+                <div className="dash-gold-notice-card">
+                    <div className="notice-left-text">
+                        <strong className="text-amber">Dont have an Account?</strong> Use this link to create your account with Deriv.
+                    </div>
+                    <a
+                        href="https://track.deriv.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="dash-gold-btn"
+                    >
+                        Open Account
+                    </a>
                 </div>
-                <DashboardBotList />
+
+                {/* 2. Floating Manual Trader Button */}
+                <div className="dash-manual-trader-row">
+                    <button
+                        onClick={() => setActiveTab(DBOT_TABS.DTRADER || DBOT_TABS.MANUAL_TRADING)}
+                        className="dash-manual-trader-btn"
+                    >
+                        <TrendingUp size={18} />
+                        <span>MANUAL TRADER</span>
+                    </button>
+                </div>
+
+                {/* 3. 4 Main Soft Action Tiles */}
+                <div className="dash-action-tiles-grid">
+                    {actionTiles.map(tile => (
+                        <div
+                            key={tile.id}
+                            className="dash-action-tile"
+                            onClick={tile.callback}
+                        >
+                            <div className={classNames('tile-icon-orb', tile.orbBg)}>
+                                {tile.icon}
+                            </div>
+                            <span className="tile-title">{tile.title}</span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* 4. Community WhatsApp Card */}
+                <div className="dash-whatsapp-card">
+                    <div className="whatsapp-info">
+                        <div className="whatsapp-icon-circle">
+                            <MessageCircle size={24} className="wa-icon" />
+                        </div>
+                        <p className="whatsapp-desc">
+                            Get daily insights by joining our thriving community of profitable traders.
+                        </p>
+                    </div>
+                    <a
+                        href="https://chat.whatsapp.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="dash-whatsapp-btn"
+                    >
+                        Join WhatsApp Group
+                    </a>
+                </div>
+
+                {/* 5. Google Drive Modal Dialog */}
+                {!isDesktop ? (
+                    <Dialog
+                        title={dialog_options.title}
+                        is_visible={is_dialog_open}
+                        onCancel={onCloseDialog}
+                        onConfirm={() => {}}
+                        is_mobile_full_width
+                        className='dc-dialog__wrapper--google-drive'
+                        has_close_icon
+                    >
+                        <GoogleDrive />
+                    </Dialog>
+                ) : (
+                    <MobileFullPageModal
+                        is_modal_open={is_dialog_open}
+                        className='load-strategy__wrapper'
+                        header={localize('Load strategy')}
+                        onClickClose={() => {
+                            setPreviewOnPopup(false);
+                            onCloseDialog();
+                        }}
+                        height_offset='80px'
+                    >
+                        <div label='Google Drive' className='google-drive-label'>
+                            <GoogleDrive />
+                        </div>
+                    </MobileFullPageModal>
+                )}
+
+                {/* 6. Your Bots Table List */}
+                <div className="dash-bot-list-wrapper">
+                    <h3 className="dash-bot-list-title">Your bots:</h3>
+                    <DashboardBotList />
+                </div>
             </div>
         ),
         // eslint-disable-next-line react-hooks/exhaustive-deps
