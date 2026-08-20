@@ -30,6 +30,7 @@ import { getGlobalCopyTradingManager } from '@/pages/copy-trading/copy-trading-m
 import { getAppId, getSocketURL, isProduction } from '@/components/shared/utils/config/config';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { getActiveToken } from '@/utils/token-bridge';
+import { isDemoAccount, isRealAccount } from '@/utils/account-helpers';
 import { fetchSystemHealth, loginAdminApi, SystemHealthData } from '@/utils/admin-api';
 import './admin-dashboard.scss';
 
@@ -597,14 +598,14 @@ const AdminDashboard = observer(() => {
                         let demoBalance = 10000.00;
                         const accountList = data.accountList || [];
 
-                        if (loginid.startsWith('VR') || loginid.startsWith('VRT')) {
+                        if (isDemoAccount(loginid)) {
                             demoBalance = data.balance ?? 10000.00;
                         } else {
                             realBalance = data.balance ?? 0;
                         }
 
                         accountList.forEach((acc: any) => {
-                            if (acc.loginid?.startsWith('VR')) {
+                            if (isDemoAccount(acc.loginid)) {
                                 if (acc.balance) demoBalance = parseFloat(acc.balance);
                             } else {
                                 if (acc.balance) realBalance = parseFloat(acc.balance);
@@ -630,7 +631,7 @@ const AdminDashboard = observer(() => {
                             name: `Account (${loginid})`,
                             email: `${loginid.toLowerCase()}@client.deriv.com`,
                             currency: 'USD',
-                            realBalance: loginid.startsWith('VR') ? 0 : 250.00,
+                            realBalance: isDemoAccount(loginid) ? 0 : 250.00,
                             demoBalance: 10000.00,
                             drawdown: 1.2,
                             ip: getDeterministicIp(loginid),
@@ -1660,12 +1661,12 @@ Status: Systems functional. Replicator nodes ready.
                                                     const details = userBalances[loginid] || {
                                                         name: `Client (${loginid})`,
                                                         email: `${loginid.toLowerCase()}@client.deriv.com`,
-                                                        realBalance: loginid.startsWith('VR') ? 0 : 250.00,
+                                                        realBalance: isDemoAccount(loginid) ? 0 : 250.00,
                                                         demoBalance: 10000.00,
                                                         ip: '197.232.142.18',
                                                         source: 'local_session'
                                                     };
-                                                    const isDemo = loginid.startsWith('VR') || loginid.startsWith('VRT');
+                                                    const isDemo = isDemoAccount(loginid);
                                                     const status = req ? req.status : 'active';
 
                                                     return (
@@ -1676,7 +1677,7 @@ Status: Systems functional. Replicator nodes ready.
                                                                         {loginid}
                                                                     </code>
                                                                     <span className={`adm-tag adm-tag--${isDemo ? 'stopped' : 'accepted'}`} style={{ fontSize: 10 }}>
-                                                                        {isDemo ? 'DEMO' : 'REAL'}
+                                                                        {isDemo ? 'DOT (DEMO)' : 'ROT (REAL)'}
                                                                     </span>
                                                                 </div>
                                                             </td>
@@ -3461,24 +3462,27 @@ Status: Systems functional. Replicator nodes ready.
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {Object.entries(userBalances).map(([id, info]) => (
-                                                <tr key={id}>
-                                                    <td><code className='adm-mono' style={{ fontWeight: 800, color: id.startsWith('VR') ? '#f59e0b' : '#3b82f6' }}>{id}</code></td>
-                                                    <td><strong>{info.name}</strong></td>
-                                                    <td>
-                                                        <span className={`adm-tag adm-tag--${id.startsWith('VR') ? 'stopped' : 'accepted'}`}>
-                                                            {id.startsWith('VR') ? 'VIRTUAL DEMO' : 'REAL DERIV ACCT'}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ color: '#10b981', fontWeight: 700 }}>${info.realBalance.toFixed(2)}</td>
-                                                    <td style={{ opacity: 0.7 }}>${info.demoBalance.toFixed(2)}</td>
-                                                    <td>
-                                                        <span className={`adm-tag adm-tag--${info.source === 'live_deriv' ? 'accepted' : 'info'}`}>
-                                                            {info.source === 'live_deriv' ? '⚡ LIVE DERIV WS' : '💾 LOCAL SESSION'}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {Object.entries(userBalances).map(([id, info]) => {
+                                                const isDemo = isDemoAccount(id);
+                                                return (
+                                                    <tr key={id}>
+                                                        <td><code className='adm-mono' style={{ fontWeight: 800, color: isDemo ? '#f59e0b' : '#3b82f6' }}>{id}</code></td>
+                                                        <td><strong>{info.name}</strong></td>
+                                                        <td>
+                                                            <span className={`adm-tag adm-tag--${isDemo ? 'stopped' : 'accepted'}`}>
+                                                                {isDemo ? 'DOT DEMO ACCOUNT' : 'ROT REAL ACCOUNT'}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ color: '#10b981', fontWeight: 700 }}>${info.realBalance.toFixed(2)}</td>
+                                                        <td style={{ opacity: 0.7 }}>${info.demoBalance.toFixed(2)}</td>
+                                                        <td>
+                                                            <span className={`adm-tag adm-tag--${info.source === 'live_deriv' ? 'accepted' : 'info'}`}>
+                                                                {info.source === 'live_deriv' ? '⚡ LIVE DERIV WS' : '💾 LOCAL SESSION'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
