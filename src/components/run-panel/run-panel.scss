@@ -13,13 +13,18 @@
         min-height: 0 !important;
         position: fixed !important;
         top: 5rem !important;
+        bottom: 3.6rem !important;
         right: 0 !important;
         left: auto !important;
-        bottom: 3.6rem !important;
         width: 36.6rem !important;
         background: var(--general-main-2);
-        overflow: visible !important; // allow the toggle tab to protrude
+        overflow: visible !important; // needed so toggle tab at left:-28px is visible
         z-index: 1000 !important;
+
+        // Override dc-drawer--right's default left:calc(100vw-16px) so panel sits at right edge
+        &.dc-drawer--right {
+            left: 0 !important;
+        }
 
         .dc-drawer__container {
             min-height: 0;
@@ -42,43 +47,45 @@
         }
 
         &--mobile {
-            position: fixed;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
             z-index: 900;
         }
 
-        // When drawer is closed, position the toggle tab at the right edge
-        &.dc-drawer--right {
-            // Closed state: drawer is off-screen, show only the toggle tab
-            .dc-drawer__toggle {
-                position: fixed !important;
-                right: 0 !important;
-                left: auto !important;
-                top: 50% !important;
-                transform: translateY(-50%) !important;
-                width: 28px !important;
-                height: 80px !important;
-                background: var(--button-primary-default, #2563eb) !important;
-                border-radius: 8px 0 0 8px !important;
-                border-left: 2px solid rgba(255,255,255,0.3) !important;
-                border-right: none !important;
-                z-index: 1001 !important;
-                cursor: pointer !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                box-shadow: -3px 0 12px rgba(0,0,0,0.4) !important;
-                transition: width 0.2s ease !important;
+        // Blue pull-tab toggle — protrudes left of the panel
+        .dc-drawer__toggle {
+            position: absolute !important;
+            left: -28px !important;
+            right: auto !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 28px !important;
+            height: 80px !important;
+            background: var(--button-primary-default, #2563eb) !important;
+            border-radius: 8px 0 0 8px !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            border-right: none !important;
+            z-index: 1001 !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.4) !important;
+            transition: width 0.2s ease, background 0.2s ease !important;
 
-                &:hover {
-                    width: 36px !important;
-                    background: var(--button-primary-hover, #1d4ed8) !important;
-                }
+            &:hover {
+                width: 36px !important;
+                left: -36px !important;
+                background: var(--button-primary-hover, #1d4ed8) !important;
+            }
 
-                svg {
-                    fill: #fff !important;
-                    width: 14px !important;
-                    height: 14px !important;
-                }
+            svg {
+                fill: #fff !important;
+                width: 14px !important;
+                height: 14px !important;
             }
         }
     }
