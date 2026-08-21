@@ -174,9 +174,23 @@ const AppWrapper = observer(() => {
         resetUrlParamProcessing();
     }, [location.search]);
 
+    const prevConnectionStatus = React.useRef(connectionStatus);
+
     React.useEffect(() => {
-        setWebSocketState(connectionStatus === CONNECTION_STATUS.OPENED);
-    }, [connectionStatus, setWebSocketState]);
+        const wasDisconnected = prevConnectionStatus.current === CONNECTION_STATUS.CLOSED;
+        const isConnectedNow = connectionStatus === CONNECTION_STATUS.OPENED;
+
+        if (wasDisconnected && isConnectedNow) {
+            if (run_panel.is_running) {
+                setWebSocketState(false);
+            }
+        } else if (connectionStatus !== CONNECTION_STATUS.OPENED) {
+            // Keep the dialog hidden while offline or in unknown states
+            setWebSocketState(true);
+        }
+
+        prevConnectionStatus.current = connectionStatus;
+    }, [connectionStatus, setWebSocketState, run_panel.is_running]);
 
     React.useEffect(() => {
         if (active_tab === BOT_BUILDER) {
