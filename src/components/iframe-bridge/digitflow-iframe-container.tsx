@@ -23,6 +23,7 @@ export const DigitFlowIframeContainer: React.FC<DigitFlowIframeContainerProps> =
     onLoad,
     hideHeader = true,
 }) => {
+    const { client } = useStore();
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [tokenData, setTokenData] = useState<{ token: string; loginid: string }>(() => {
@@ -30,7 +31,6 @@ export const DigitFlowIframeContainer: React.FC<DigitFlowIframeContainerProps> =
         const token = getActiveToken() || '';
         return { token, loginid };
     });
-    const { client } = useStore();
     const instanceIdRef = useRef<string | null>(null);
     if (!instanceIdRef.current) instanceIdRef.current = generateInstanceId();
     const logger = makeBridgeLogger(instanceIdRef.current);

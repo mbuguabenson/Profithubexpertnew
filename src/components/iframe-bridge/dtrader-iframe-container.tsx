@@ -23,6 +23,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     onLoad,
     hideHeader = true,
 }) => {
+    const { client } = useStore();
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [tokenData, setTokenData] = useState<{ token: string; loginid: string }>(() => {
@@ -30,7 +31,6 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         const token = getActiveToken() || '';
         return { token, loginid };
     });
-    const { client } = useStore();
     const instanceIdRef = useRef<string | null>(null);
     if (!instanceIdRef.current) instanceIdRef.current = generateInstanceId();
     const logger = makeBridgeLogger(instanceIdRef.current);
