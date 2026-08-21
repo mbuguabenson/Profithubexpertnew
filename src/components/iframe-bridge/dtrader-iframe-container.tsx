@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { ParentBridgeClient } from './parent-bridge';
 import { BridgeEvent, createMessage } from './protocol';
-import { resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { resolveValidDerivWSToken, getAccountsList } from '@/utils/token-bridge';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
 import IframeAuthService from './iframe-auth.service';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
@@ -25,7 +25,11 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [tokenData, setTokenData] = useState<{ token: string; loginid: string }>({ token: '', loginid: '' });
+    const [tokenData, setTokenData] = useState<{ token: string; loginid: string }>(() => {
+        const loginid = V2GetActiveClientId() || client?.loginid || localStorage.getItem('active_loginid') || '';
+        const token = getActiveToken() || '';
+        return { token, loginid };
+    });
     const { client } = useStore();
     const instanceIdRef = useRef<string | null>(null);
     if (!instanceIdRef.current) instanceIdRef.current = generateInstanceId();
@@ -144,13 +148,33 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     queryParams.set('lang', 'EN');
     queryParams.set('bt_secret', 'binarytool');
     queryParams.set('app_id', appId);
-    // Include api_version and account id in URL so the iframe can initialize faster
+    queryParams.set('client_id', appId);
     queryParams.set('api_version', 'v2');
-    if (loginId) queryParams.set('acct1', loginId);
-    queryParams.set('cur1', currency);
+    
+    const activeToken = tokenData.token || '';
+    if (loginId) {
+        queryParams.set('acct1', loginId);
+        queryParams.set('cur1', currency);
+        if (activeToken) {
+            queryParams.set('token1', activeToken);
+        }
+    }
 
-    // Do NOT include legacy account tokens in iframe URL query parameters.
-    // Authentication will be performed via postMessage using the "derivws_otp" authMode.
+    try {
+        const accountsList = getAccountsList();
+        let index = 1;
+        for (const accId in accountsList) {
+            const accToken = accountsList[accId];
+            if (accToken && accId !== loginId) {
+                index++;
+                queryParams.set(`acct${index}`, accId);
+                queryParams.set(`token${index}`, accToken);
+                queryParams.set(`cur${index}`, currency || 'USD');
+            }
+        }
+    } catch (error) {
+        // no-op
+    }
 
     const iframeSrc = `${targetBase}?${queryParams.toString()}`;
 

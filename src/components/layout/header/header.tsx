@@ -300,18 +300,6 @@ const AppHeader = observer(() => {
                             <>
                                 {isDesktop && (
                                     <>
-                                        <a 
-                                            href="/admin/dashboard"
-                                            className="app-header__admin-btn"
-                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-general)' }}
-                                            title="Master Admin Panel"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#00a76f' }}>
-                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                                            </svg>
-                                        </a>
                                         <button 
                                             className="app-header__admin-btn"
                                             style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
