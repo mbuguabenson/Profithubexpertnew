@@ -3,6 +3,7 @@ import CopyTradingManager, { DerivClient } from './copy-trading-manager';
 import { getToken } from '@/external/bot-skeleton/services/api/appId';
 import { isSpecialCRAccount, getDemoAccountIdForSpecialCR } from '@/utils/special-accounts-config';
 import DBot from '@/external/bot-skeleton/scratch/dbot';
+import { getAppId } from '@/components/shared/utils/config/config';
 
 // Simple duplicate guard by purchase_reference or timestamp
 const recentKeys = new Set<string>();
@@ -210,55 +211,113 @@ export function initReplicator(manager: CopyTradingManager) {
                 contract_parameters.amount = Number(amt.toFixed(2));
             }
 
-            // ── Execute trade purchases in parallel across all PAT copier accounts via WebSocket ──
-            const connectedClients = manager.getConnectedClients();
+            // ── Resolve account IDs (login ID) for all copier tokens ──
+            const accountsToPurchase: Array<{ token: string; account: string }> = [];
+
+            for (const token of copierTokens) {
+                const cleanTok = token.trim();
+                let loginId = manager.copiers.find(c => c.token === cleanTok)?.loginId;
+
+                if (!loginId) {
+                    try {
+                        const standalone = new DerivClient();
+                        const auth = await standalone.connectAndAuthorize(cleanTok);
+                        loginId = auth.loginid;
+                        const copier = manager.copiers.find(c => c.token === cleanTok);
+                        if (copier) {
+                            copier.loginId = loginId;
+                            copier.status = 'connected';
+                            copier.balance = standalone.balance;
+                            void manager.saveState();
+                        }
+                    } catch (err) {
+                        console.warn(`[Replicator] Could not retrieve login ID for token ${cleanTok.slice(0, 6)}...:`, err);
+                    }
+                }
+
+                if (loginId) {
+                    accountsToPurchase.push({ token: cleanTok, account: loginId });
+                }
+            }
+
+            if (accountsToPurchase.length === 0) {
+                updateReplicationStatus('error', 'Could not resolve login IDs for any copier tokens');
+                return;
+            }
+
+            // Partition accounts by type (real vs demo)
+            const realAccounts = accountsToPurchase.filter(a => !a.account.startsWith('VR'));
+            const demoAccounts = accountsToPurchase.filter(a => a.account.startsWith('VR'));
+
+            const appId = getAppId() || '121856';
             let successCount = 0;
             let failCount = 0;
 
-            const executionPromises = copierTokens.map(async (token) => {
-                const cleanTok = token.trim();
-                let targetClient = connectedClients.find(c => c.token === cleanTok)?.client;
-
+            const runBulkForType = async (type: 'real' | 'demo', list: typeof accountsToPurchase) => {
+                if (list.length === 0) return;
                 try {
-                    if (targetClient && targetClient.status === 'connected' && targetClient.ws?.readyState === WebSocket.OPEN) {
-                        const buyRes = await targetClient.buyContract(contract_parameters);
-                        successCount++;
-                        tradeLogs.push({
-                            id: `trade-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                            accountId: targetClient.loginId || 'PAT Account',
-                            payload: contract_parameters,
-                            time: Date.now(),
-                        });
-                        return buyRes;
-                    } else {
-                        // Connect standalone client for this PAT token
-                        const standalone = new DerivClient();
-                        await standalone.connectAndAuthorize(cleanTok);
-                        const buyRes = await standalone.buyContract(contract_parameters);
-                        successCount++;
-                        tradeLogs.push({
-                            id: `trade-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                            accountId: standalone.loginId || 'PAT Account',
-                            payload: contract_parameters,
-                            time: Date.now(),
-                        });
-                        return buyRes;
+                    const url = `https://api.derivws.com/trading/v1/options/contracts/bulk-purchase/${type}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Deriv-App-ID': appId,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            accounts: list,
+                            parameters: contract_parameters
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorJson = await response.json().catch(() => ({}));
+                        const errMsg = errorJson?.errors?.[0]?.message || `HTTP error ${response.status}`;
+                        throw new Error(errMsg);
                     }
-                } catch (tradeErr: any) {
-                    failCount++;
-                    const errorMsg = tradeErr?.message || 'Trade purchase failed';
-                    console.warn(`[Replicator] ⚠️ PAT Mirroring failed for token ${cleanTok.slice(0, 6)}...:`, errorMsg);
-                    tradeLogs.push({
-                        id: `err-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                        accountId: 'PAT Copier',
-                        payload: contract_parameters,
-                        time: Date.now(),
-                        error: errorMsg,
+
+                    const result = await response.json();
+                    const transactions = result?.transactions || [];
+
+                    transactions.forEach((tx: any) => {
+                        if (tx.error) {
+                            failCount++;
+                            const errorMsg = tx.error.message || 'Bulk trade purchase failed';
+                            tradeLogs.push({
+                                id: `err-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                                accountId: tx.account || 'PAT Copier',
+                                payload: contract_parameters,
+                                time: Date.now(),
+                                error: errorMsg,
+                            });
+                        } else if (tx.buy) {
+                            successCount++;
+                            tradeLogs.push({
+                                id: `trade-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                                accountId: tx.account || 'PAT Account',
+                                payload: contract_parameters,
+                                time: Date.now(),
+                            });
+                        }
+                    });
+                } catch (err: any) {
+                    failCount += list.length;
+                    const errMsg = err?.message || 'Bulk API call failed';
+                    list.forEach(a => {
+                        tradeLogs.push({
+                            id: `err-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                            accountId: a.account || 'PAT Copier',
+                            payload: contract_parameters,
+                            time: Date.now(),
+                            error: errMsg,
+                        });
                     });
                 }
-            });
+            };
 
-            await Promise.allSettled(executionPromises);
+            await Promise.all([
+                runBulkForType('real', realAccounts),
+                runBulkForType('demo', demoAccounts)
+            ]);
 
             if (successCount > 0) {
                 updateReplicationStatus('success', `Copied to ${successCount} PAT account(s) successfully${failCount > 0 ? ` (${failCount} failed)` : ''}`);

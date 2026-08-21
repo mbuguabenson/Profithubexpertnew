@@ -164,7 +164,7 @@ export default Engine =>
                 for (let index = 0; index < bulkCount; index += batchSize) {
                     const batch = Array.from(
                         { length: Math.min(batchSize, bulkCount - index) },
-                        () => api_base.api.send(trade_option).catch(err => ({ error: err }))
+                        () => api_base.api.send(JSON.parse(JSON.stringify(trade_option))).catch(err => ({ error: err }))
                     );
                     responses.push(...(await Promise.all(batch)));
                 }
