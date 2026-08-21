@@ -1248,13 +1248,9 @@ const ElitePro = observer(() => {
                                         </div>
 
                                         <div className="ep-side-market-card__stats">
-                                            <div className="ep-circular-progress-wrap" style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                                                <div className="ep-circular-progress" style={{ width: '40px', height: '40px', background: `conic-gradient(var(--ep-accent-green) ${m.pctUnder04}%, var(--ep-glass-bg) 0)` }}>
-                                                    <div className="value" style={{ fontSize: '0.65rem' }}>{m.pctUnder04.toFixed(0)}%</div>
-                                                </div>
-                                                <div className="ep-circular-progress" style={{ width: '40px', height: '40px', background: `conic-gradient(var(--ep-accent-red) ${m.pctOver59}%, var(--ep-glass-bg) 0)` }}>
-                                                    <div className="value" style={{ fontSize: '0.65rem' }}>{m.pctOver59.toFixed(0)}%</div>
-                                                </div>
+                                            <div className="ratio-mini-bar">
+                                                <div className="u-part" style={{ width: `${m.pctUnder04}%` }} />
+                                                <div className="o-part" style={{ width: `${m.pctOver59}%` }} />
                                             </div>
                                             <div className="stat-labels">
                                                 <span className="u-text">U (0-4): {m.pctUnder04.toFixed(0)}%</span>
@@ -1406,19 +1402,9 @@ const ElitePro = observer(() => {
                                         <strong>{analysis.over59} Ticks ({analysis.pctOver59.toFixed(1)}%)</strong>
                                     </div>
                                 </div>
-                                <div className="ep-circular-progress-wrap" style={{ display: 'flex', justifyContent: 'center', gap: '40px', margin: '20px 0' }}>
-                                    <div className="ep-circular-progress" style={{ background: `conic-gradient(var(--ep-accent-green) ${analysis.pctUnder04}%, var(--ep-glass-bg) 0)` }}>
-                                        <div className="value">
-                                            {analysis.pctUnder04.toFixed(1)}%<br/>
-                                            <small>Under</small>
-                                        </div>
-                                    </div>
-                                    <div className="ep-circular-progress" style={{ background: `conic-gradient(var(--ep-accent-red) ${analysis.pctOver59}%, var(--ep-glass-bg) 0)` }}>
-                                        <div className="value">
-                                            {analysis.pctOver59.toFixed(1)}%<br/>
-                                            <small>Over</small>
-                                        </div>
-                                    </div>
+                                <div className="ep-progress-track">
+                                    <div className="ep-progress-bar ep-progress-bar--under" style={{ width: `${analysis.pctUnder04}%` }} />
+                                    <div className="ep-progress-bar ep-progress-bar--over" style={{ width: `${analysis.pctOver59}%` }} />
                                 </div>
                                 <div className="ep-ratio-momentum">
                                     {analysis.underIncreasing && analysis.pctUnder04 > 55 && (
@@ -1446,19 +1432,9 @@ const ElitePro = observer(() => {
                                         <strong>{analysis.over49} Ticks ({analysis.pctOver49.toFixed(1)}%)</strong>
                                     </div>
                                 </div>
-                                <div className="ep-circular-progress-wrap" style={{ display: 'flex', justifyContent: 'center', gap: '40px', margin: '20px 0' }}>
-                                    <div className="ep-circular-progress" style={{ background: `conic-gradient(var(--ep-accent-green) ${analysis.pctUnder05}%, var(--ep-glass-bg) 0)` }}>
-                                        <div className="value">
-                                            {analysis.pctUnder05.toFixed(1)}%<br/>
-                                            <small>Under</small>
-                                        </div>
-                                    </div>
-                                    <div className="ep-circular-progress" style={{ background: `conic-gradient(var(--ep-accent-red) ${analysis.pctOver49}%, var(--ep-glass-bg) 0)` }}>
-                                        <div className="value">
-                                            {analysis.pctOver49.toFixed(1)}%<br/>
-                                            <small>Over</small>
-                                        </div>
-                                    </div>
+                                <div className="ep-progress-track">
+                                    <div className="ep-progress-bar ep-progress-bar--under" style={{ width: `${analysis.pctUnder05}%` }} />
+                                    <div className="ep-progress-bar ep-progress-bar--over" style={{ width: `${analysis.pctOver49}%` }} />
                                 </div>
                                 <div className="ep-market-tendency-note">
                                     {analysis.under05 >= 34 && analysis.over49 <= 25 ? (
