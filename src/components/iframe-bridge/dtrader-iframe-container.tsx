@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { ParentBridgeClient } from './parent-bridge';
 import { BridgeEvent, createMessage } from './protocol';
-import { resolveValidDerivWSToken, getAccountsList } from '@/utils/token-bridge';
+import { resolveValidDerivWSToken, getAccountsList, getActiveToken } from '@/utils/token-bridge';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
 import IframeAuthService from './iframe-auth.service';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
