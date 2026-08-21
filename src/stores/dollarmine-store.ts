@@ -3,7 +3,7 @@ import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import RootStore from './root-store';
 // import { localize } from '@deriv-com/translations';
 // import { serialize } from 'v8';
-import { normalizeTradeParameters } from '@/utils/trade-purchase';
+import { normalizeTradeParameters, buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
 
 export type TStrategy = 'OVER_UNDER' | 'EVEN_ODD' | 'DIFFERS';
 export type TPrediction = 'UNDER' | 'OVER' | 'EVEN' | 'ODD' | 'DIFFERS' | 'WAIT';
@@ -60,7 +60,7 @@ export default class DollarmineStore {
     @observable accessor diff_prediction: number | null = null;
     
     // Trade Log
-    @observable accessor trade_log: { time: string; strategy: string; market: string; contract: string; result: 'WIN' | 'LOSS'; profit: number }[] = [];
+    @observable accessor trade_log: { time: string; strategy: string; market: string; contract: string; result: 'WIN' | 'LOSS' | 'PENDING'; profit: number }[] = [];
 
     private _tick_subs: Map<string, any> = new Map();
     private _execution_lock: Map<TStrategy, boolean> = new Map();
@@ -375,67 +375,78 @@ export default class DollarmineStore {
     @action
     private async executeTrade(strategy: TStrategy, symbol: string, contract_type: string, barrier?: number) {
         this._execution_lock.set(strategy, true);
-        
-        try {
-            // 1. Get Proposal
-const proposalReq = normalizeTradeParameters({
-            proposal: 1,
-            amount: this.stake,
-            basis: 'stake',
-            contract_type,
-            currency: 'USD',
-            duration: 1,
-            duration_unit: 't',
-            symbol,
-            ...(barrier !== undefined ? { barrier: barrier.toString() } : {}),
+
+        const logEntry = {
+            time: new Date().toLocaleTimeString(),
+            strategy,
+            market: symbol,
+            contract: contract_type,
+            result: 'PENDING' as const,
+            profit: 0
+        };
+
+        runInAction(() => {
+            this.trade_log.unshift(logEntry);
+
+            // Update runs
+            if (strategy === 'OVER_UNDER') {
+                this.ou_runs++;
+                if (this.ou_runs >= this.max_runs) {
+                    this.ou_runs = 0;
+                    this.ou_cooldown_until = Date.now() + 60000; // 1 min cooldown
+                }
+            } else if (strategy === 'EVEN_ODD') {
+                this.eo_runs++;
+                if (this.eo_runs >= this.max_runs) {
+                    this.eo_runs = 0;
+                    this.eo_cooldown_until = Date.now() + 60000;
+                }
+            } else if (strategy === 'DIFFERS') {
+                this.diff_runs++;
+            }
         });
 
-            const proposalRes = await (api_base.api as any).send(proposalReq);
-            if (proposalRes.error || !proposalRes.proposal?.id) {
-                throw new Error(proposalRes.error?.message || 'Failed to get proposal');
-            }
+        try {
+            const params = {
+                amount: this.stake,
+                basis: 'stake',
+                contract_type,
+                currency: 'USD',
+                duration: 1,
+                duration_unit: 't',
+                symbol,
+                ...(barrier !== undefined ? { barrier: barrier.toString() } : {}),
+            };
 
-            // 2. Buy Contract
-            const buyRes = await (api_base.api as any).send({
-                buy: proposalRes.proposal.id,
-                price: this.stake
+            const buy = await buyContractForUi({
+                parameters: params,
+                price: this.stake,
+                source: `Dollarmine_${strategy}`
             });
 
-            if (buyRes.error) {
-                throw new Error(buyRes.error.message);
-            }
-
-            // We let the TransactionsStore handle the open contract tracking,
-            // but we add it to our log optimistically or wait for stream.
-            // For simplicity, we just add it to our own log as pending and update runs.
-            
-            runInAction(() => {
-                this.trade_log.unshift({
-                    time: new Date().toLocaleTimeString(),
-                    strategy,
-                    market: symbol,
-                    contract: contract_type,
-                    result: 'WIN', // Placeholder until evaluated
-                    profit: 0
+            if (buy?.contract_id) {
+                // Stream contract until settled
+                streamContractUntilSettled({
+                    contractId: buy.contract_id,
+                    source: `Dollarmine_${strategy}`,
+                    onUpdate: (snapshot) => {
+                        runInAction(() => {
+                            if (snapshot.is_sold) {
+                                const status = String(snapshot.status || '').toLowerCase();
+                                logEntry.result = status === 'won' ? ('WIN' as const) : ('LOSS' as const);
+                                logEntry.profit = Number(snapshot.profit || 0);
+                            }
+                        });
+                    }
+                }).catch((err) => {
+                    console.error('[Dollarmine] Stream error:', err);
+                    runInAction(() => {
+                        logEntry.result = 'LOSS' as const;
+                    });
                 });
-
-                // Update runs
-                if (strategy === 'OVER_UNDER') {
-                    this.ou_runs++;
-                    if (this.ou_runs >= this.max_runs) {
-                        this.ou_runs = 0;
-                        this.ou_cooldown_until = Date.now() + 60000; // 1 min cooldown
-                    }
-                } else if (strategy === 'EVEN_ODD') {
-                    this.eo_runs++;
-                    if (this.eo_runs >= this.max_runs) {
-                        this.eo_runs = 0;
-                        this.eo_cooldown_until = Date.now() + 60000;
-                    }
-                } else if (strategy === 'DIFFERS') {
-                    this.diff_runs++;
-                }
-            });
+            } else {
+                throw new Error('No contract_id received from buy');
+            }
 
             // Unlock after 3 seconds to avoid double entry on the same tick stream
             setTimeout(() => {
@@ -444,7 +455,10 @@ const proposalReq = normalizeTradeParameters({
 
         } catch (error) {
             console.error('[Dollarmine] Trade Execution Error:', error);
-            runInAction(() => this._execution_lock.set(strategy, false));
+            runInAction(() => {
+                logEntry.result = 'LOSS' as const;
+                this._execution_lock.set(strategy, false);
+            });
         }
     }
 }

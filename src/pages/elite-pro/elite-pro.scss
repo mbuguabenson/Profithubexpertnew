@@ -764,6 +764,82 @@
                 box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
             }
         }
+
+        .ep-execution-mode-selector {
+            display: flex;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+
+            .mode-btn {
+                flex: 1;
+                background: transparent;
+                border: none;
+                color: var(--ep-text-secondary);
+                padding: 10px 14px;
+                border-radius: 9px;
+                font-size: 0.8rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover:not(:disabled) {
+                    color: #ffffff;
+                    background: rgba(255, 255, 255, 0.03);
+                }
+
+                &.active {
+                    background: var(--ep-accent-green);
+                    color: #030712;
+                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            }
+        }
+
+        .ep-strategy-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+
+            &__label {
+                font-size: 0.64rem;
+                font-weight: 800;
+                color: var(--ep-text-secondary);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+            &__select {
+                width: 100%;
+                background: rgba(15, 23, 42, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                padding: 10px 12px;
+                color: #ffffff;
+                font-weight: 700;
+                font-size: 0.85rem;
+                outline: none;
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:focus {
+                    border-color: var(--ep-accent-green);
+                    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+                }
+
+                option {
+                    background: #0f172a;
+                    color: #ffffff;
+                }
+            }
+        }
     }
 
     /* Signal Requirements Checklist */

@@ -27,9 +27,22 @@ export const safeSubscribe = (
             if (onError) {
                 onError(error);
             } else {
+                let errorDetails = error;
+                if (error && typeof error === 'object') {
+                    const errObj = error as Record<string, any>;
+                    if (errObj.error && typeof errObj.error === 'object') {
+                        errorDetails = {
+                            code: errObj.error.code,
+                            message: errObj.error.message,
+                            echo_req: errObj.echo_req,
+                            msg_type: errObj.msg_type,
+                            req_id: errObj.req_id
+                        };
+                    }
+                }
                 console.error(
                     '[WebSocketHandler] Unhandled stream error:\n',
-                    error instanceof Error ? error.stack : error
+                    error instanceof Error ? error.stack : errorDetails
                 );
             }
         } catch (err) {

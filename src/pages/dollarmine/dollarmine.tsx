@@ -13,6 +13,13 @@ export const Dollarmine = observer(() => {
     
     return (
         <div className="dollarmine-container">
+            {/* Aurora Background Blobs */}
+            <div className="dm-background-blobs">
+                <div className="blob blob-1" />
+                <div className="blob blob-2" />
+                <div className="blob blob-3" />
+            </div>
+
             {/* Header Section */}
             <header className="dm-header">
                 <div className="dm-header__left">

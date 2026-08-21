@@ -245,62 +245,43 @@ export class DerivWSAccountsService {
         return data.data;
     }
 
-    /**
-     * Fetches a fresh, single-use authenticated WebSocket URL for an account.
-     */
     static async fetchOTPWebSocketURL(accessToken: string, accountId: string): Promise<string> {
         if (!accountId) {
             throw new Error('Deriv account id is required to request an authenticated WebSocket.');
         }
 
-        const cacheKey = `${accountId}`;
+        try {
+            const baseURL = this.getDerivWSBaseURL();
+            const optionsDir = brandConfig.platform.derivws.directories.options;
+            const endpoint = `${baseURL}${optionsDir}accounts/${encodeURIComponent(accountId)}/otp`;
 
-        if (this.otpFetchPromises.has(cacheKey)) {
-            return this.otpFetchPromises.get(cacheKey)!;
-        }
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: this.getAuthenticatedHeaders(accessToken),
+            });
 
-        const otpPromise = (async () => {
-            try {
-                const baseURL = this.getDerivWSBaseURL();
-                const optionsDir = brandConfig.platform.derivws.directories.options;
-                const endpoint = `${baseURL}${optionsDir}accounts/${encodeURIComponent(accountId)}/otp`;
-
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: this.getAuthenticatedHeaders(accessToken),
-                });
-
-                if (!response.ok) {
-                    let message = `Failed to fetch OTP: ${response.status} ${response.statusText}`;
-                    try {
-                        const data = await response.json();
-                        message = data?.errors?.[0]?.message || data?.error?.message || data?.message || message;
-                    } catch {
-                        // Keep the HTTP status message when the body is not JSON.
-                    }
-                    throw new Error(message);
+            if (!response.ok) {
+                let message = `Failed to fetch OTP: ${response.status} ${response.statusText}`;
+                try {
+                    const data = await response.json();
+                    message = data?.errors?.[0]?.message || data?.error?.message || data?.message || message;
+                } catch {
+                    // Keep the HTTP status message when the body is not JSON.
                 }
-
-                const otpResponse: OTPResponse = await response.json();
-                const websocketURL = otpResponse?.data?.url;
-
-                if (!websocketURL) {
-                    throw new Error('WebSocket URL not found in OTP response');
-                }
-                return websocketURL;
-            } catch (error) {
-                console.error('[DerivWS] Error fetching OTP:', error);
-                this.otpFetchPromises.delete(cacheKey);
-                throw error;
-            } finally {
-                setTimeout(() => {
-                    this.otpFetchPromises.delete(cacheKey);
-                }, 100);
+                throw new Error(message);
             }
-        })();
 
-        this.otpFetchPromises.set(cacheKey, otpPromise);
-        return otpPromise;
+            const otpResponse: OTPResponse = await response.json();
+            const websocketURL = otpResponse?.data?.url;
+
+            if (!websocketURL) {
+                throw new Error('WebSocket URL not found in OTP response');
+            }
+            return websocketURL;
+        } catch (error) {
+            console.error('[DerivWS] Error fetching OTP:', error);
+            throw error;
+        }
     }
 
     /**
