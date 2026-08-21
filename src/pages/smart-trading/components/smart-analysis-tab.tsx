@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
-import { CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import LastDigitsLineChart from '@/pages/circles-analysis/components/LastDigitsLineChart';
 import { useStore } from '@/hooks/useStore';
 import './smart-analysis-tab.scss';
 
@@ -61,8 +61,6 @@ const SmartAnalysisTab = observer(() => {
 
     const probs = calculateProbabilities();
     const last_20_ticks = ticks.slice(-20);
-
-    const chart_data = useMemo(() => ticks.slice(-15).map((val, idx) => ({ name: idx, value: val })), [ticks]);
 
     const max_count = Math.max(...digit_stats.map(s => s.count), 1);
 
@@ -125,33 +123,8 @@ const SmartAnalysisTab = observer(() => {
             <div className='middle-grid'>
                 <div className='glass-card'>
                     <h3>Real-time Digit Trend</h3>
-                    <div className='chart-container-premium'>
-                        <ResponsiveContainer width='100%' height='100%'>
-                            <LineChart data={chart_data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray='3 3' vertical={false} stroke='rgba(255,255,255,0.05)' />
-                                <XAxis dataKey='name' hide />
-                                <YAxis domain={[0, 9]} ticks={[0, 2, 4, 6, 8, 9]} hide />
-                                <Line
-                                    type='monotone'
-                                    dataKey='value'
-                                    stroke='#8b5cf6'
-                                    strokeWidth={4}
-                                    dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 6, stroke: '#fff' }}
-                                    activeDot={{ r: 8, strokeWidth: 0 }}
-                                    isAnimationActive={true}
-                                    animationDuration={1000}
-                                >
-                                    <LabelList
-                                        dataKey='value'
-                                        position='top'
-                                        offset={10}
-                                        fill='#fff'
-                                        fontSize={12}
-                                        fontWeight={700}
-                                    />
-                                </Line>
-                            </LineChart>
-                        </ResponsiveContainer>
+                    <div className='chart-container-premium' style={{ height: 'auto', minHeight: '120px' }}>
+                        <LastDigitsLineChart ticks={ticks} count={50} showCardWrapper={false} />
                     </div>
                 </div>
 

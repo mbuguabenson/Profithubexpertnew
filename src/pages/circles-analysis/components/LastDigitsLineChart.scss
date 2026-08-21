@@ -1,8 +1,8 @@
 @use 'components/shared/styles/constants' as *;
 
 .last-digits-line-chart-card {
-    padding: 16px;
-    background: rgba(15, 23, 42, 0.4);
+    padding: 14px 16px;
+    background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
@@ -12,11 +12,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
 
         h4 {
             margin: 0;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 700;
             color: #ffffff;
             text-transform: uppercase;
@@ -27,116 +27,67 @@
             font-size: 0.65rem;
             font-weight: 800;
             color: #ff7c00;
-            background: rgba(255, 124, 0, 0.1);
+            background: rgba(255, 124, 0, 0.12);
             padding: 2px 8px;
             border-radius: 9999px;
-            border: 1px solid rgba(255, 124, 0, 0.2);
+            border: 1px solid rgba(255, 124, 0, 0.25);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
     }
+}
 
-    .chart-svg-container {
-        width: 100%;
-        height: 120px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-    }
+.exact-line-chart-viewport {
+    width: 100%;
+    min-height: 120px;
+    background: #dbe2ea;
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 
     .no-data-placeholder {
         color: #64748b;
         font-size: 0.85rem;
-        font-weight: 500;
+        font-weight: 600;
+        letter-spacing: 0.3px;
     }
 
-    svg {
+    .exact-line-chart-svg {
+        width: 100%;
+        height: 110px;
         display: block;
         overflow: visible;
     }
 
-    .grid-line {
-        stroke: rgba(255, 255, 255, 0.05);
-        stroke-width: 1;
-        stroke-dasharray: 4, 4;
-    }
-
-    .chart-line {
-        fill: none;
-        stroke: #7c3aed;
-        stroke-width: 3;
+    .exact-chart-spline {
+        stroke: #7f6df2;
+        stroke-width: 2.2px;
         stroke-linecap: round;
         stroke-linejoin: round;
-        transition: d 0.3s ease;
+        transition: d 0.2s ease-out;
     }
 
-    .chart-area {
-        transition: d 0.3s ease;
+    .exact-point-group {
         pointer-events: none;
-    }
 
-    .point-group {
-        cursor: pointer;
-
-        .point-dot {
-            fill: #1e1b4b;
-            stroke: #7c3aed;
-            stroke-width: 2;
-            transition: all 0.3s ease;
-        }
-
-        .point-text {
-            fill: #ffffff;
-            font-size: 0.62rem;
-            font-weight: 800;
+        .exact-point-label {
+            fill: #7f6df2;
+            font-size: 11.5px;
+            font-weight: 700;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             text-anchor: middle;
-            pointer-events: none;
+            user-select: none;
         }
 
-        &:hover {
-            .point-dot {
-                fill: #7c3aed;
-                stroke: #ffffff;
-                r: 12;
-            }
-            .point-text {
-                font-size: 0.7rem;
-            }
+        .exact-point-marker {
+            fill: #ffffff;
+            stroke: #7f6df2;
+            stroke-width: 1.5px;
         }
-
-        &.is-latest {
-            .point-dot {
-                fill: #ff7c00;
-                stroke: #ffffff;
-                stroke-width: 2.5;
-                r: 11;
-                filter: drop-shadow(0 0 8px rgba(255, 124, 0, 0.8));
-            }
-
-            .point-text {
-                fill: #ffffff;
-                font-weight: 900;
-            }
-
-            .ripple-circle {
-                fill: none;
-                stroke: #ff7c00;
-                stroke-width: 1.5;
-                opacity: 0;
-                animation: pointRipple 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-            }
-        }
-    }
-}
-
-@keyframes pointRipple {
-    0% {
-        r: 10;
-        opacity: 0.8;
-    }
-    100% {
-        r: 24;
-        opacity: 0;
     }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
-import { CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import LastDigitsLineChart from '@/pages/circles-analysis/components/LastDigitsLineChart';
 import ToggleSwitch from '@/components/shared_ui/toggle-switch';
 import { useStore } from '@/hooks/useStore';
 import './vsense-turbo-tab.scss';
@@ -107,7 +107,6 @@ const VSenseTurboTab = observer(() => {
     };
 
     const probs = calculateProbabilities();
-    const chart_data = useMemo(() => ticks.slice(-15).map((val, idx) => ({ name: idx, value: val })), [ticks]);
 
     const max_count = Math.max(...digit_stats.map(s => s.count), 1);
     const getDigitColor = (digit: number) => `var(--digit-${digit % 10})`;
@@ -198,40 +197,12 @@ const VSenseTurboTab = observer(() => {
                                 </div>
                             ))}
                         </div>
-                    </div>
-
-                    <div className='card trend-card'>
+                     <div className='card trend-card'>
                         <h3>Real-time Digit Trend</h3>
-                        <div className='chart-container-premium'>
-                            <ResponsiveContainer width='100%' height={200}>
-                                <LineChart data={chart_data} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid
-                                        strokeDasharray='3 3'
-                                        vertical={false}
-                                        stroke='rgba(255,255,255,0.05)'
-                                    />
-                                    <XAxis dataKey='name' hide />
-                                    <YAxis domain={[0, 9]} ticks={[0, 2, 4, 6, 8, 9]} hide />
-                                    <Line
-                                        type='monotone'
-                                        dataKey='value'
-                                        stroke='#8b5cf6'
-                                        strokeWidth={3}
-                                        dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#fff' }}
-                                        isAnimationActive={true}
-                                    >
-                                        <LabelList
-                                            dataKey='value'
-                                            position='top'
-                                            offset={10}
-                                            fill='#fff'
-                                            fontSize={10}
-                                            fontWeight={700}
-                                        />
-                                    </Line>
-                                </LineChart>
-                            </ResponsiveContainer>
+                        <div className='chart-container-premium' style={{ height: 'auto', minHeight: '120px' }}>
+                            <LastDigitsLineChart ticks={ticks} count={50} showCardWrapper={false} />
                         </div>
+                    </div>
                     </div>
 
                     <div className='vsense-signals-dashboard'>

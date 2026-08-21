@@ -6,13 +6,7 @@ import {
     TrendingDown,
     Clock
 } from 'lucide-react';
-import { 
-    LineChart, 
-    Line, 
-    XAxis, 
-    YAxis, 
-    ResponsiveContainer
-} from 'recharts';
+import LastDigitsLineChart from '@/pages/circles-analysis/components/LastDigitsLineChart';
 import { useStore } from '@/hooks/useStore';
 import './over-under.scss';
 
@@ -233,20 +227,8 @@ const OverUnderTab = observer(() => {
                     {/* Charts Section */}
                     <section className='replica-card chart-section'>
                         <h4 className='card-title'>Market Trend Visualization</h4>
-                        <div className='chart-container-replica'>
-                            <ResponsiveContainer width='100%' height={180}>
-                                <LineChart data={chartData}>
-                                    <XAxis hide />
-                                    <YAxis domain={[0, 9]} hide />
-                                    <Line 
-                                        type='monotone' 
-                                        dataKey='value' 
-                                        stroke='#a78bfa' 
-                                        strokeWidth={4} 
-                                        dot={{ r: 4, fill: '#fff', stroke: '#a78bfa', strokeWidth: 2 }}
-                                    />
-                                </LineChart>
-                            </ResponsiveContainer>
+                        <div className='chart-container-replica' style={{ height: 'auto', minHeight: '120px' }}>
+                            <LastDigitsLineChart ticks={recent_digits} count={50} showCardWrapper={false} />
                         </div>
                     </section>
                 </div>
