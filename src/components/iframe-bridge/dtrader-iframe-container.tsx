@@ -130,8 +130,11 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const loginId = tokenData.loginid || client?.loginid || localStorage.getItem('active_loginid') || '';
 
     let targetBase = rawUrl.trim();
-    if (!targetBase.includes('/dtrader') && !targetBase.includes('localhost')) {
-        targetBase = `${targetBase.replace(/\/$/, '')}/dtrader`;
+    if (!targetBase.includes('/dtrader')) {
+        const isOfficialDerivDomain = targetBase.includes('deriv.app') || targetBase.includes('binary.sx') || targetBase.includes('deriv.com');
+        if (isOfficialDerivDomain) {
+            targetBase = `${targetBase.replace(/\/$/, '')}/dtrader`;
+        }
     }
 
     const queryParams = new URLSearchParams();

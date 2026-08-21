@@ -167,7 +167,7 @@ export class ParentBridgeClient {
                 timestamp: Date.now(),
                 authMode: authMode,
                 defaultSymbol: '1HZ100V',
-                embedBase: 'https://deriv-dtrader.vercel.app/dtrader',
+                embedBase: 'https://deriv-dtrader.vercel.app',
             };
 
             const payloadData = {
