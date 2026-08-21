@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { generateOAuthURL } from '@/components/shared';
 import { DBOT_TABS } from '@/constants/bot-contents';
 import { api_base } from '@/external/bot-skeleton';
-// @ts-expect-error Deriv auto strategy service
+
 import {
     autoListStrategies,
     autoPause,
@@ -394,6 +394,8 @@ const ElitePro = observer(() => {
             underIncreasing,
             overIncreasing,
             recentTrendFlip,
+            isUnderTrendFlipped: last7.filter(d => d >= 6).length >= 2,
+            isOverTrendFlipped: last7.filter(d => d <= 3).length >= 2,
             total,
         };
     }, []);
@@ -409,7 +411,7 @@ const ElitePro = observer(() => {
         const under50TicksMet = a.under05 >= 32 && a.over49 <= 27;
         const underRecentTicksMet = a.last10Under || a.last7Under;
 
-        if (underRatioMet && under50TicksMet && underRecentTicksMet) {
+        if (underRatioMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped) {
             if (currentLastDigit === a.highestUnderDigit) {
                 return {
                     direction: 'UNDER',
@@ -425,7 +427,7 @@ const ElitePro = observer(() => {
         const over50TicksMet = a.over49 >= 32 && a.under05 <= 27;
         const overRecentTicksMet = a.last10Over || a.last7Over;
 
-        if (overRatioMet && over50TicksMet && overRecentTicksMet) {
+        if (overRatioMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped) {
             if (currentLastDigit === a.highestOverDigit) {
                 return {
                     direction: 'OVER',
@@ -906,22 +908,6 @@ const ElitePro = observer(() => {
                         }
 
                         await new Promise(r => setTimeout(r, 800));
-                        continue;
-                    }
-
-                    const recentDigits = currentData.digits.slice(-7);
-                    const isUnderTrendFlipped = entrySignal.direction === 'UNDER' && recentDigits.filter(d => d >= 6).length >= 2;
-                    const isOverTrendFlipped = entrySignal.direction === 'OVER' && recentDigits.filter(d => d <= 3).length >= 2;
-
-                    if (isUnderTrendFlipped || isOverTrendFlipped) {
-                        addLogEntry(
-                            `AUTO-PAUSE [${entrySignal.direction}]`,
-                            currentData.label,
-                            'ABORTED',
-                            0,
-                            'Trend momentum flipped in last 7 ticks. Waiting for stabilization...',
-                        );
-                        await new Promise(r => setTimeout(r, 2000));
                         continue;
                     }
 
@@ -1509,6 +1495,9 @@ const ElitePro = observer(() => {
                                     <div className={`check-row ${analysis.last10Under || analysis.last7Under ? 'valid' : ''}`}>
                                         <span className="mark">✓</span> Last 10/7 Ticks Favoring Under ({analysis.last10UnderCount}/10 under)
                                     </div>
+                                    <div className={`check-row ${!analysis.isUnderTrendFlipped ? 'valid' : ''}`}>
+                                        <span className="mark">✓</span> Trend Stabilized (Max 1 Over digit in last 7)
+                                    </div>
                                     <div className={`check-row ${activeData?.lastDigit === analysis.highestUnderDigit ? 'valid' : ''}`}>
                                         <span className="mark">✓</span> Current Tick is Under Trigger Digit [{analysis.highestUnderDigit}] (Current: {activeData?.lastDigit})
                                     </div>
@@ -1524,6 +1513,9 @@ const ElitePro = observer(() => {
                                     </div>
                                     <div className={`check-row ${analysis.last10Over || analysis.last7Over ? 'valid' : ''}`}>
                                         <span className="mark">✓</span> Last 10/7 Ticks Favoring Over ({analysis.last10OverCount}/10 over)
+                                    </div>
+                                    <div className={`check-row ${!analysis.isOverTrendFlipped ? 'valid' : ''}`}>
+                                        <span className="mark">✓</span> Trend Stabilized (Max 1 Under digit in last 7)
                                     </div>
                                     <div className={`check-row ${activeData?.lastDigit === analysis.highestOverDigit ? 'valid' : ''}`}>
                                         <span className="mark">✓</span> Current Tick is Over Trigger Digit [{analysis.highestOverDigit}] (Current: {activeData?.lastDigit})

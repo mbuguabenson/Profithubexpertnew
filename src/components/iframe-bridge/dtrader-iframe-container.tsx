@@ -98,10 +98,8 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         );
 
         try {
-            // Compute explicit target origin to avoid wildcard '*'
-            const targetOrigin = (() => {
-                try { return new URL(iframe.src).origin; } catch { return '*'; }
-            })();
+            // Use '*' to prevent DOMException/console error when iframe is still on about:blank
+            const targetOrigin = '*';
 
             // Debug: log masked token/loginid when posting session to iframe
             try { logger.debug('SYNC_SESSION', { loginid: activeLoginId, tokenPresent: !!sessionPayload.token, targetOrigin }); } catch (e) {}

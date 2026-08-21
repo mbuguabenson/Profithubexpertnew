@@ -28,9 +28,11 @@ export const safeSubscribe = (
                 onError(error);
             } else {
                 let errorDetails = error;
+                let isAlreadySubscribed = false;
                 if (error && typeof error === 'object') {
                     const errObj = error as Record<string, any>;
                     if (errObj.error && typeof errObj.error === 'object') {
+                        isAlreadySubscribed = errObj.error.code === 'AlreadySubscribed';
                         errorDetails = {
                             code: errObj.error.code,
                             message: errObj.error.message,
@@ -38,8 +40,16 @@ export const safeSubscribe = (
                             msg_type: errObj.msg_type,
                             req_id: errObj.req_id
                         };
+                    } else if (errObj.code === 'AlreadySubscribed') {
+                        isAlreadySubscribed = true;
                     }
                 }
+                
+                if (isAlreadySubscribed) {
+                    // Ignore already subscribed errors
+                    return;
+                }
+
                 console.error(
                     '[WebSocketHandler] Unhandled stream error:\n',
                     error instanceof Error ? error.stack : errorDetails
