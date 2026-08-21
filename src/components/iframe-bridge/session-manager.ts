@@ -1,6 +1,6 @@
 import { SessionPayload } from './protocol';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
-import { getAppId } from '@/components/shared/utils/config/config';
+import { getClientId } from '@/components/shared/utils/config/config';
 import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 
 const isInvalidToken = (token: string | null | undefined): boolean =>
@@ -57,7 +57,7 @@ export class SessionManager {
             }
         }
 
-        const appId = getAppId() || '121856';
+        const appId = getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
 
         // Fallback loginid if empty
         if (!loginid && Object.keys(accountsList).length > 0) {

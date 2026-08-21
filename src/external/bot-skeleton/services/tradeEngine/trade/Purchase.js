@@ -33,6 +33,11 @@ export default Engine =>
 
         // ─── Purchase (single trade) ───────────────────────────────────────────────
         async purchase(contract_type) {
+            if (this.multiple_trades_count > 1) {
+                const count = this.multiple_trades_count;
+                this.multiple_trades_count = 0; // Reset flag for subsequent runs
+                return this.bulkPurchase(contract_type, count);
+            }
             // Prevent calling purchase twice
             const speed = localStorage.getItem('bot_execution_speed') || '1';
             const isSpeedMode = speed !== '1';

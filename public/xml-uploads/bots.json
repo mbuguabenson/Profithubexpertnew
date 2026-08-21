@@ -1,5 +1,12 @@
 [
   {
+    "name": "Auto Under 7 over 3 Pro ",
+    "file": "Auto Under 7 over 3 Pro .xml",
+    "description": "Advanced trading strategy: Auto Under 7 over 3 Pro . Optimized for consistent returns and automated execution.",
+    "difficulty": "Intermediate",
+    "strategy": "Multi-Strategy"
+  },
+  {
     "name": "AUTOTRADER",
     "file": "AUTOTRADER.xml",
     "description": "Fully automated trading bot with intelligent market analysis and auto-execution for hands-free trading.",
@@ -7,11 +14,18 @@
     "strategy": "Auto Trading"
   },
   {
-    "name": "Compounding Bot",
-    "file": "Compounding_Bot.xml",
-    "description": "Compound your profits automatically with smart stake management and progressive growth strategy.",
+    "name": "Differs Bulk",
+    "file": "Differs Bulk.xml",
+    "description": "Advanced trading strategy: Differs Bulk. Optimized for consistent returns and automated execution.",
     "difficulty": "Intermediate",
-    "strategy": "Compounding"
+    "strategy": "Multi-Strategy"
+  },
+  {
+    "name": "G3 Auto",
+    "file": "G3 Auto.xml",
+    "description": "Advanced trading strategy: G3 Auto. Optimized for consistent returns and automated execution.",
+    "difficulty": "Intermediate",
+    "strategy": "Multi-Strategy"
   },
   {
     "name": "HUNTER SPEED BOT",
@@ -28,6 +42,20 @@
     "strategy": "High Stakes"
   },
   {
+    "name": "Over 2 Rec Over 5 With Entry Point",
+    "file": "Over 2 Rec Over 5 With Entry Point.xml",
+    "description": "Advanced trading strategy: Over 2 Rec Over 5 With Entry Point. Optimized for consistent returns and automated execution.",
+    "difficulty": "Intermediate",
+    "strategy": "Multi-Strategy"
+  },
+  {
+    "name": "Over 2 Under 7",
+    "file": "Over 2 Under 7.xml",
+    "description": "Advanced trading strategy: Over 2 Under 7. Optimized for consistent returns and automated execution.",
+    "difficulty": "Intermediate",
+    "strategy": "Multi-Strategy"
+  },
+  {
     "name": "OVER UNDER AUTO SWITCHER",
     "file": "OVER UNDER AUTO SWITCHER.xml",
     "description": "Intelligent Over/Under bot that auto-switches between strategies based on market conditions.",
@@ -40,20 +68,6 @@
     "description": "Advanced automated Over/Under trading with optimized entry points and risk management.",
     "difficulty": "Intermediate",
     "strategy": "Over/Under"
-  },
-  {
-    "name": "Over Under Compounding",
-    "file": "Over_Under_Compounding.xml",
-    "description": "Over/Under strategy combined with compounding for accelerated growth and consistent returns.",
-    "difficulty": "Intermediate",
-    "strategy": "Over/Under"
-  },
-  {
-    "name": "PROFITHUB PREMIUM A.I",
-    "file": "PROFITHUB PREMIUM A.I.xml",
-    "description": "ProfitHub's flagship AI-powered bot with machine learning-enhanced market prediction and execution.",
-    "difficulty": "Advanced",
-    "strategy": "AI Premium"
   },
   {
     "name": "PROFITHUB RISE FALL AUTO",
@@ -70,18 +84,25 @@
     "strategy": "Multi-Strategy"
   },
   {
-    "name": "PROFITHUB UNDER 8 OVER 3 AUTO",
-    "file": "PROFITHUB UNDER 8 OVER 3 AUTO.xml",
-    "description": "Specialized digit bot targeting Under 8 and Over 3 with high win-rate auto-execution.",
-    "difficulty": "Intermediate",
-    "strategy": "Digits"
-  },
-  {
     "name": "RISE AND FALL AUTOMATIC X",
     "file": "RISE AND FALL AUTOMATIC X .xml",
     "description": "Fully automated Rise and Fall bot with enhanced signal detection and dynamic stake adjustment.",
     "difficulty": "Intermediate",
     "strategy": "Rise/Fall"
+  },
+  {
+    "name": "Sniper A.I",
+    "file": "Sniper A.I.xml",
+    "description": "Advanced trading strategy: Sniper A.I. Optimized for consistent returns and automated execution.",
+    "difficulty": "Intermediate",
+    "strategy": "Multi-Strategy"
+  },
+  {
+    "name": "Under 7 Bulk",
+    "file": "Under 7 Bulk.xml",
+    "description": "Advanced trading strategy: Under 7 Bulk. Optimized for consistent returns and automated execution.",
+    "difficulty": "Intermediate",
+    "strategy": "Multi-Strategy"
   },
   {
     "name": "🤑UNSTOPPABLE DIFFER BOT🤑",

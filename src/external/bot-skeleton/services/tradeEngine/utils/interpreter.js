@@ -140,6 +140,11 @@ const Interpreter = () => {
         );
         js_interpreter.setProperty(
             pseudo_bot_interface,
+            'setBulkPurchaseCount',
+            js_interpreter.nativeToPseudo(bot_interface.setBulkPurchaseCount)
+        );
+        js_interpreter.setProperty(
+            pseudo_bot_interface,
             'sellAtMarket',
             createAsync(js_interpreter, bot_interface.sellAtMarket)
         );

@@ -164,6 +164,13 @@ export const ToolboxItems = () =>
                 <Block type='before_purchase' />
                 <Block type='purchase' />
                 <Block type='apollo_purchase' />
+                <Block type='multiple_trades'>
+                    <Value name='TRADE_COUNT'>
+                        <Shadow type='math_number'>
+                            <Field name='NUM'>5</Field>
+                        </Shadow>
+                    </Value>
+                </Block>
             </Category>
             <Category id='sell_conditions' name={localize('Sell conditions (optional)')}>
                 <Block type='during_purchase' />
@@ -485,6 +492,13 @@ export const ToolboxItems = () =>
                     <Block type='notify'>
                         <Field name='NOTIFICATION_TYPE'>success</Field>
                         <Value name='MESSAGE'>
+                            <Shadow type='text'>
+                                <Field name='TEXT'>abc</Field>
+                            </Shadow>
+                        </Value>
+                    </Block>
+                    <Block type='money8gg_print'>
+                        <Value name='TEXT'>
                             <Shadow type='text'>
                                 <Field name='TEXT'>abc</Field>
                             </Shadow>
