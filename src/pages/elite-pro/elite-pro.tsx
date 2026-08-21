@@ -1,24 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { api_base } from '@/external/bot-skeleton';
-import { globalObserver } from '@/external/bot-skeleton/utils/observer';
-import { useStore } from '@/hooks/useStore';
-import { SUPPORTED_VOLATILITY_MARKETS } from '@/utils/digit-strategy';
-import { DBOT_TABS } from '@/constants/bot-contents';
-import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
-import { safeSubscribe } from '@/utils/websocket-handler';
-import { isLoggedIn } from '@/utils/token-bridge';
 import { generateOAuthURL } from '@/components/shared';
-
-// @ts-ignore
+import { DBOT_TABS } from '@/constants/bot-contents';
+import { api_base } from '@/external/bot-skeleton';
+// @ts-expect-error Deriv auto strategy service
 import {
     autoListStrategies,
-    autoStart,
     autoPause,
     autoResume,
+    autoStart,
     autoStop,
 } from '@/external/bot-skeleton/services/api/automation';
-
+import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
+import { useStore } from '@/hooks/useStore';
+import { SUPPORTED_VOLATILITY_MARKETS } from '@/utils/digit-strategy';
+import { isLoggedIn } from '@/utils/token-bridge';
+import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
+import { safeSubscribe } from '@/utils/websocket-handler';
 import './elite-pro.scss';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -44,6 +42,11 @@ type TradeLogEntry = {
 
 type AutoState = 'IDLE' | 'SCANNING' | 'WAITING_TRIGGER' | 'TRADING' | 'PAUSED';
 type ExecutionMode = 'local' | 'deriv_server';
+
+type StrategyOption = {
+    id: string;
+    name?: string;
+};
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -88,7 +91,7 @@ const getBezierPath = (points: { x: number; y: number }[]) => {
 
 // ─── SVG Spline Line Chart ─────────────────────────────────────────────────────
 
-const DigitLineChart = ({ digits }: { digits: number[] }) => {
+const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
     const slice = digits.slice(-CHART_DIGITS);
     if (slice.length < 2) {
         return (
@@ -180,7 +183,6 @@ const DigitLineChart = ({ digits }: { digits: number[] }) => {
                     const isUnder = p.d < 5;
                     return (
                         <g key={i} className={`ep-chart-point ${isLatest ? 'ep-chart-point--latest' : ''}`}>
-                            {/* Marker dot */}
                             <rect
                                 x={p.x - 3}
                                 y={p.y - 3}
@@ -191,7 +193,6 @@ const DigitLineChart = ({ digits }: { digits: number[] }) => {
                                 stroke="#8b5cf6"
                                 strokeWidth={1.5}
                             />
-                            {/* Purple bold digit text label above marker */}
                             <text
                                 x={p.x}
                                 y={p.y - 8}
@@ -223,14 +224,14 @@ const ElitePro = observer(() => {
 
     // ── Mode Toggle state ──
     const [executionMode, setExecutionMode] = useState<ExecutionMode>('local');
-    const [strategies, setStrategies] = useState<any[]>([]);
+    const [strategies, setStrategies] = useState<StrategyOption[]>([]);
     const [selectedStrategy, setSelectedStrategy] = useState('martingale');
     const [activeRunId, setActiveRunId] = useState<string | null>(null);
     const [serverRunStatus, setServerRunStatus] = useState<string>('idle');
 
     // ── Market state ──
     const [selectedSymbol, setSelectedSymbol] = useState(MARKETS[0].symbol);
-    const [scanAll, setScanAll] = useState(true); // Default to scanning all derived synthetic indices
+    const [scanAll, setScanAll] = useState(true);
     const [autoInputBestMarket, setAutoInputBestMarket] = useState(true);
     const [marketsSideExpanded, setMarketsSideExpanded] = useState(true);
     const marketsRef = useRef<Map<string, MarketDigitData>>(new Map());
@@ -245,7 +246,7 @@ const ElitePro = observer(() => {
     const [takeProfit, setTakeProfit] = useState('10');
     const [stopLoss, setStopLoss] = useState('5');
     const [martingale, setMartingale] = useState('2.6');
-    const [tickDuration, setTickDuration] = useState('1'); // Default to 1 tick
+    const [tickDuration, setTickDuration] = useState('1');
     const [tradeLog, setTradeLog] = useState<TradeLogEntry[]>([]);
     const [totalProfit, setTotalProfit] = useState(0);
     const [wins, setWins] = useState(0);
@@ -279,8 +280,7 @@ const ElitePro = observer(() => {
                     } else {
                         setStrategies([{ id: 'martingale', name: 'Martingale Strategy' }]);
                     }
-                } catch (err) {
-                    console.error('[ElitePro] Error loading strategies:', err);
+                } catch {
                     setStrategies([{ id: 'martingale', name: 'Martingale Strategy' }]);
                 }
             };
@@ -404,12 +404,7 @@ const ElitePro = observer(() => {
         const a = computeAnalysis(digits);
         const currentLastDigit = digits[digits.length - 1];
 
-        // ── 1. UNDER 6 Conditions ──
-        // (a) Under 0-4 vs Over 5-9 threshold is > 55% and increasing
-        // (b) On last 50 ticks: Under 0-5 >= 34 and Over 4-9 <= 25
-        // (c) In last 10 ticks: at least 7 are under 0-5 and 3 over
-        // (d) Last 7 ticks favor under
-        // (e) Wait for highest entry digit in under to appear
+        // 1. UNDER 6 Conditions
         const underRatioMet = a.pctUnder04 >= 53 && a.underIncreasing;
         const under50TicksMet = a.under05 >= 32 && a.over49 <= 27;
         const underRecentTicksMet = a.last10Under || a.last7Under;
@@ -425,12 +420,7 @@ const ElitePro = observer(() => {
             }
         }
 
-        // ── 2. OVER 3 Conditions ──
-        // (a) Over 5-9 vs Under 0-4 threshold is > 55% and increasing
-        // (b) On last 50 ticks: Over 4-9 >= 34 and Under 0-5 <= 25
-        // (c) In last 10 ticks: at least 7 are over 4-9 and 3 under
-        // (d) Last 7 ticks favor over
-        // (e) Wait for highest entry digit in over to appear
+        // 2. OVER 3 Conditions
         const overRatioMet = a.pctOver59 >= 53 && a.overIncreasing;
         const over50TicksMet = a.over49 >= 32 && a.under05 <= 27;
         const overRecentTicksMet = a.last10Over || a.last7Over;
@@ -463,20 +453,22 @@ const ElitePro = observer(() => {
     }, []);
 
     // ── Subscribe to real-time ticks for all / selected markets ──
+    const isBotIdle = autoState === 'IDLE';
     useEffect(() => {
         unmountedRef.current = false;
-        const shouldSubscribe = showElitePro || autoStateRef.current !== 'IDLE';
+        const shouldSubscribe = showElitePro || !isBotIdle;
+        const activeSubs = subscriptionsRef.current;
+
         if (!shouldSubscribe) {
-            subscriptionsRef.current.forEach(sub => {
-                try { sub.unsubscribe(); } catch {}
+            activeSubs.forEach(sub => {
+                try { sub.unsubscribe(); } catch { /* ignore */ }
             });
-            subscriptionsRef.current.clear();
+            activeSubs.clear();
             return;
         }
 
         const symbolsToSubscribe = scanAll ? MARKETS.map(m => m.symbol) : [selectedSymbol];
 
-        // Ensure all market data structures exist
         symbolsToSubscribe.forEach(sym => {
             if (!marketsRef.current.has(sym)) {
                 const label = MARKETS.find(m => m.symbol === sym)?.label || sym;
@@ -496,7 +488,6 @@ const ElitePro = observer(() => {
             if (!api_base.api) return;
 
             try {
-                // 1. Load initial tick history
                 const res = await api_base.api.send({
                     ticks_history: sym,
                     end: 'latest',
@@ -518,15 +509,15 @@ const ElitePro = observer(() => {
                     throttleRender();
                 }
 
-                // 2. Stream real-time ticks
                 const tickObservable = api_base.api.subscribe({ ticks: sym });
-                const sub = safeSubscribe(tickObservable, (data: any) => {
+                const sub = safeSubscribe(tickObservable, (data: Record<string, unknown>) => {
                     if (!isMounted || unmountedRef.current) return;
 
                     const activeMarket = marketsRef.current.get(sym);
                     if (!activeMarket) return;
 
-                    const quote = data?.tick?.quote;
+                    const tickData = data?.tick as { quote?: number | string } | undefined;
+                    const quote = tickData?.quote;
                     if (quote !== undefined && quote !== null) {
                         const digit = extractDigitFromPrice(quote);
                         activeMarket.digits.push(digit);
@@ -537,8 +528,8 @@ const ElitePro = observer(() => {
                     }
                 });
 
-                subscriptionsRef.current.get(sym)?.unsubscribe();
-                subscriptionsRef.current.set(sym, sub);
+                activeSubs.get(sym)?.unsubscribe();
+                activeSubs.set(sym, sub);
             } catch (err) {
                 console.error(`[ElitePro] Subscription error for ${sym}:`, err);
             }
@@ -557,11 +548,10 @@ const ElitePro = observer(() => {
 
         initSubscriptions();
 
-        // Clean up redundant subscriptions
-        subscriptionsRef.current.forEach((sub, sym) => {
+        activeSubs.forEach((sub, sym) => {
             if (!symbolsToSubscribe.includes(sym)) {
-                try { sub.unsubscribe(); } catch {}
-                subscriptionsRef.current.delete(sym);
+                try { sub.unsubscribe(); } catch { /* ignore */ }
+                activeSubs.delete(sym);
             }
         });
 
@@ -569,24 +559,24 @@ const ElitePro = observer(() => {
             isMounted = false;
             unmountedRef.current = true;
             if (retryTimeout) clearTimeout(retryTimeout);
-            subscriptionsRef.current.forEach(sub => {
-                try { sub.unsubscribe(); } catch {}
+            activeSubs.forEach(sub => {
+                try { sub.unsubscribe(); } catch { /* ignore */ }
             });
-            subscriptionsRef.current.clear();
+            activeSubs.clear();
         };
-    }, [selectedSymbol, scanAll, showElitePro, client?.loginid, autoState === 'IDLE', throttleRender]);
+    }, [selectedSymbol, scanAll, showElitePro, client?.loginid, isBotIdle, throttleRender]);
 
     // ── Active Market Data & Analysis ──
     const activeData = getActiveData();
     const analysis = useMemo(() => {
         if (!activeData || activeData.digits.length < 15) return null;
         return computeAnalysis(activeData.digits);
-    }, [activeData, activeData?.digits?.length, computeAnalysis]);
+    }, [activeData, computeAnalysis]);
 
     const activeSignal = useMemo(() => {
         if (!activeData || activeData.digits.length < 30) return null;
         return checkEntrySignal(activeData.digits);
-    }, [activeData, activeData?.digits?.length, checkEntrySignal]);
+    }, [activeData, checkEntrySignal]);
 
     // ── Multi-Market Comparative Overview ──
     const allMarketsData = useMemo(() => {
@@ -631,7 +621,6 @@ const ElitePro = observer(() => {
             });
         });
 
-        // Sort by signal readiness, then statistical dominance
         result.sort((a, b) => {
             if (a.hasSignal && !b.hasSignal) return -1;
             if (!a.hasSignal && b.hasSignal) return 1;
@@ -639,7 +628,7 @@ const ElitePro = observer(() => {
         });
 
         return result;
-    }, [computeAnalysis, checkEntrySignal, activeData?.digits?.length]);
+    }, [computeAnalysis, checkEntrySignal]);
 
     // Best Market identification
     const bestMarket = useMemo(() => {
@@ -655,7 +644,7 @@ const ElitePro = observer(() => {
     }, [autoInputBestMarket, bestMarket, selectedSymbol, autoState]);
 
     // ── Push trade updates to Transaction Drawer & Run Panel ──
-    const pushContract = useCallback((data: any) => {
+    const pushContract = useCallback((data: Record<string, unknown>) => {
         try {
             transactions.pushTransaction({ ...data, run_id: run_panel.run_id });
             run_panel.onBotContractEvent(data);
@@ -693,7 +682,7 @@ const ElitePro = observer(() => {
     ): Promise<number> => {
         const contractType = direction === 'UNDER' ? 'DIGITUNDER' : 'DIGITOVER';
         const dur = parseInt(tickDuration) || 1;
-        const params: Record<string, any> = {
+        const params: Record<string, unknown> = {
             amount: stakeAmount,
             basis: 'stake',
             contract_type: contractType,
@@ -755,13 +744,30 @@ const ElitePro = observer(() => {
         if (!api_base.api) return;
         try {
             const observable = api_base.api.subscribe({ auto_get: 1, run_id: runId });
-            const sub = safeSubscribe(observable, (data: any) => {
+            const sub = safeSubscribe(observable, (data: Record<string, unknown>) => {
                 if (unmountedRef.current) return;
 
-                const runDetails = data?.auto_get || data?.auto_start;
+                const runDetails = (data?.auto_get || data?.auto_start) as {
+                    status?: string;
+                    stop_reason?: string;
+                    total_stake?: number;
+                    total_payout?: number;
+                    contracts?: Array<{
+                        contract_id?: number;
+                        stake?: number;
+                        buy_price?: number;
+                        transaction_id?: number;
+                        start_time?: number;
+                        contract_type?: string;
+                        profit?: number;
+                        barrier?: string;
+                        status?: string;
+                    }>;
+                } | undefined;
+
                 if (!runDetails) return;
 
-                const status = runDetails.status;
+                const status = runDetails.status || 'idle';
                 setServerRunStatus(status);
 
                 if (status === 'stopped') {
@@ -785,7 +791,7 @@ const ElitePro = observer(() => {
                 let winsCount = 0;
                 let lossesCount = 0;
 
-                contracts.forEach((c: any) => {
+                contracts.forEach(c => {
                     const p = Number(c.profit || 0);
                     if (c.status === 'won' || p > 0) winsCount++;
                     else if (c.status === 'lost' || p < 0) lossesCount++;
@@ -836,7 +842,6 @@ const ElitePro = observer(() => {
     const startAutoTrading = useCallback(async () => {
         if (autoStateRef.current !== 'IDLE' && autoStateRef.current !== 'PAUSED') return;
 
-        // Reset counters on fresh start
         if (autoStateRef.current === 'IDLE') {
             setTotalProfit(0);
             totalProfitRef.current = 0;
@@ -852,7 +857,6 @@ const ElitePro = observer(() => {
         const baseStake = parseFloat(stake) || 0.35;
         currentStakeRef.current = baseStake;
 
-        // Local execution loop with trend recognition & safe auto-pause/auto-resume
         const startLocalEngineLoop = () => {
             setAutoState('SCANNING');
             autoAbortRef.current = new AbortController();
@@ -865,7 +869,6 @@ const ElitePro = observer(() => {
                         continue;
                     }
 
-                    // Check Take Profit / Stop Loss
                     if (totalProfitRef.current >= tp) {
                         addLogEntry('TARGET REACHED', 'Take Profit Target Hit 🎉', 'PENDING', 0);
                         setAutoState('IDLE');
@@ -877,7 +880,6 @@ const ElitePro = observer(() => {
                         break;
                     }
 
-                    // Get currently targeted market (dynamic switch if Auto-Input is on)
                     let targetSym = selectedSymbol;
                     if (autoInputBestMarket && bestMarket && bestMarket.symbol) {
                         targetSym = bestMarket.symbol;
@@ -891,10 +893,8 @@ const ElitePro = observer(() => {
                         continue;
                     }
 
-                    // 1. Evaluate Entry Signal
                     const entrySignal = checkEntrySignal(currentData.digits);
                     if (!entrySignal) {
-                        // Check if conditions are generally met but waiting for trigger digit
                         const a = computeAnalysis(currentData.digits);
                         const isUnderSetup = a.pctUnder04 >= 53 && a.under05 >= 32;
                         const isOverSetup = a.pctOver59 >= 53 && a.over49 >= 32;
@@ -909,7 +909,6 @@ const ElitePro = observer(() => {
                         continue;
                     }
 
-                    // 2. Pre-execution Safety Checklist
                     const recentDigits = currentData.digits.slice(-7);
                     const isUnderTrendFlipped = entrySignal.direction === 'UNDER' && recentDigits.filter(d => d >= 6).length >= 2;
                     const isOverTrendFlipped = entrySignal.direction === 'OVER' && recentDigits.filter(d => d <= 3).length >= 2;
@@ -926,7 +925,6 @@ const ElitePro = observer(() => {
                         continue;
                     }
 
-                    // 3. Execute Contract
                     setAutoState('TRADING');
                     try {
                         const stakeToUse = currentStakeRef.current;
@@ -969,7 +967,6 @@ const ElitePro = observer(() => {
                             currentStakeRef.current = Number((currentStakeRef.current * mgMultiplier).toFixed(2));
                         }
 
-                        // Inter-trade cooldown
                         setAutoState('SCANNING');
                         await new Promise(r => setTimeout(r, 1800));
                     } catch (err) {
@@ -985,7 +982,6 @@ const ElitePro = observer(() => {
             loop();
         };
 
-        // ── Deriv Server Automation Route ──
         if (executionMode === 'deriv_server') {
             const activeBias = analysis?.bias || 'under';
             const ct = activeBias === 'over' ? 'DIGITOVER' : 'DIGITUNDER';
@@ -1011,6 +1007,8 @@ const ElitePro = observer(() => {
                         take_profit: tp,
                     },
                     subscribe: 1,
+                    passthrough: undefined,
+                    req_id: undefined,
                 });
 
                 if (res?.error) throw new Error(res.error.message || 'Server start error');
@@ -1034,7 +1032,6 @@ const ElitePro = observer(() => {
             return;
         }
 
-        // ── Local Neural Engine Route ──
         startLocalEngineLoop();
     }, [
         executionMode,
@@ -1131,13 +1128,14 @@ const ElitePro = observer(() => {
 
     // Cleanup on unmount
     useEffect(() => {
+        const abortControllers = contractStreamAbortRef.current;
         return () => {
             if (executionMode === 'deriv_server') {
                 void stopAutoTrading();
             } else {
                 setAutoState('IDLE');
                 autoAbortRef.current?.abort();
-                contractStreamAbortRef.current.forEach(c => c.abort());
+                abortControllers.forEach(c => c.abort());
             }
         };
     }, [executionMode, stopAutoTrading]);
@@ -1317,6 +1315,7 @@ const ElitePro = observer(() => {
                                 {autoState === 'WAITING_TRIGGER' && '🎯 WAITING TRIGGER DIGIT'}
                                 {autoState === 'TRADING' && '🚀 EXECUTING TRADE'}
                                 {autoState === 'PAUSED' && '⏸ ENGINE PAUSED'}
+                                {executionMode === 'deriv_server' && serverRunStatus !== 'idle' && ` (Server: ${serverRunStatus})`}
                             </span>
                         </div>
                     </div>
@@ -1347,7 +1346,7 @@ const ElitePro = observer(() => {
                                 🎯 Trade Type: <strong>{currentTradeType}</strong>
                             </span>
                             <span className="meta-tag">
-                                🔮 Prediction Set: <strong>{currentTradeType === 'DIGITOVER' ? 'Over 3' : 'Under 6'}</strong>
+                                🔮 Prediction Set: <strong>{currentTradeType === 'DIGITOVER' ? `Over ${currentPrediction}` : `Under ${currentPrediction}`}</strong>
                             </span>
                         </div>
                     </div>
