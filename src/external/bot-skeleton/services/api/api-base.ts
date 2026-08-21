@@ -494,53 +494,74 @@ class APIBase {
     getActiveSymbols = async () => {
         let active_symbols: any[] = [];
 
-        // 1. Try to fetch active symbols via the new public WS
-        try {
-            active_symbols = await new Promise<any[]>((resolve, reject) => {
-                const environment = isProduction() ? 'production' : 'staging';
-                const wsURL = environment === 'production'
-                    ? 'wss://api.derivws.com/trading/v1/options/ws/public'
-                    : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
-                
-                const ws = new WebSocket(wsURL);
-                
-                ws.onopen = () => {
-                    ws.send(JSON.stringify({ active_symbols: 'brief' }));
-                };
-                
-                ws.onmessage = (event) => {
-                    try {
-                        const response = JSON.parse(event.data);
-                        if (response.active_symbols) {
-                            ws.close();
-                            resolve(response.active_symbols);
-                        } else if (response.error) {
-                            ws.close();
-                            reject(new Error(response.error.message || 'API error'));
-                        }
-                    } catch (e) {
-                        ws.close();
-                        reject(e);
-                    }
-                };
-                
-                ws.onerror = (err) => {
-                    ws.close();
-                    reject(err);
-                };
-                
-                setTimeout(() => {
-                    if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-                        ws.close();
-                        reject(new Error('Timeout'));
-                    }
-                }, 5000);
-            });
-        } catch (e) {
-            console.warn('[APIBase] Public WS active symbols fetch failed, will try main WebSocket:', e);
+        // 1. Try to fetch active symbols via the main WebSocket first if it is already open (much faster, <100ms)
+        if (this.api && this.api.connection?.readyState === 1) {
+            try {
+                const timeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Active symbols fetch timeout')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
+                );
+
+                const activeSymbolsPromise = doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], this);
+                const apiResult = await Promise.race([activeSymbolsPromise, timeout]);
+                const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
+
+                if (!error || Object.keys(error).length === 0) {
+                    active_symbols = ws_symbols;
+                }
+            } catch (error) {
+                console.warn('[APIBase] Main WebSocket active symbols fetch failed, will try public WS:', error);
+            }
         }
 
-        // 2. Fallback to WebSocket if REST failed or returned empty
+        // 2. Fallback to public WS if main connection was not open or failed
+        if (active_symbols.length === 0) {
+            try {
+                active_symbols = await new Promise<any[]>((resolve, reject) => {
+                    const environment = isProduction() ? 'production' : 'staging';
+                    const wsURL = environment === 'production'
+                        ? 'wss://api.derivws.com/trading/v1/options/ws/public'
+                        : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
+                    
+                    const ws = new WebSocket(wsURL);
+                    
+                    ws.onopen = () => {
+                        ws.send(JSON.stringify({ active_symbols: 'brief' }));
+                    };
+                    
+                    ws.onmessage = (event) => {
+                        try {
+                            const response = JSON.parse(event.data);
+                            if (response.active_symbols) {
+                                ws.close();
+                                resolve(response.active_symbols);
+                            } else if (response.error) {
+                                ws.close();
+                                reject(new Error(response.error.message || 'API error'));
+                            }
+                        } catch (e) {
+                            ws.close();
+                            reject(e);
+                        }
+                    };
+                    
+                    ws.onerror = (err) => {
+                        ws.close();
+                        reject(err);
+                    };
+                    
+                    setTimeout(() => {
+                        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                            ws.close();
+                            reject(new Error('Timeout'));
+                        }
+                    }, 5000);
+                });
+            } catch (e) {
+                console.warn('[APIBase] Public WS active symbols fetch failed, will try fallback methods:', e);
+            }
+        }
+
+        // 3. Last resort fallback if connection wasn't open initially but exists now
         if (active_symbols.length === 0) {
             if (!this.api) {
                 throw new Error('API connection not available for fetching active symbols');
