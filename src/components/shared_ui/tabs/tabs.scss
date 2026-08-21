@@ -2,10 +2,13 @@
 
 .dc-tabs {
     position: relative;
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--general-main-1);
 
     &--top {
-        grid-template-rows: auto 1fr;
+        flex-direction: column;
     }
 
     &--100vw {
@@ -14,12 +17,22 @@
 
     &__list {
         width: 100%;
-        line-height: 38px;
         display: flex;
         position: relative;
-
+        padding: 0.8rem 1.6rem;
+        gap: 0.8rem;
+        background: var(--general-section-1);
+        border-bottom: 1px solid var(--general-section-2);
+        align-items: center;
+        overflow-x: auto;
+        
+        &::-webkit-scrollbar {
+            display: none;
+        }
+        
         @include mobile-or-tablet-screen {
-            justify-content: center;
+            justify-content: flex-start;
+            padding: 0.8rem;
         }
 
         &--overflow-hidden {
@@ -27,144 +40,58 @@
             display: block;
         }
 
-        &--border-bottom {
-            border-bottom: 2px solid var(--general-section-1);
-        }
-
-        &--top {
-            order: 0;
-        }
-
-        &--bottom {
-            order: 1;
-            border-top: 2px solid var(--general-section-1);
-        }
-
         &--center {
             justify-content: center;
             width: fit-content;
             margin: auto;
-
-            .dc-tabs__item {
-                padding: 0 2.2rem;
-            }
-        }
-
-        &--fit-content {
-            @include mobile-or-tablet-screen {
-                width: fit-content;
-            }
-        }
-
-        &--header-fit-content {
-            width: fit-content;
-
-            @include mobile-or-tablet-screen {
-                display: flex;
-                justify-content: space-evenly;
-            }
-        }
-
-        &:not(&--header-fit-content) {
-            justify-content: center;
-        }
-
-        &--full-width {
-            width: 100vw;
         }
     }
 
     &__item {
         list-style: none;
-        font-size: 14px;
+        font-size: 1.4rem;
+        font-weight: 500;
         text-align: center;
         white-space: nowrap;
         color: var(--text-general);
+        padding: 0.8rem 1.6rem;
+        border-radius: 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         -webkit-touch-callout: none;
         -webkit-tap-highlight-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
 
-        &__counter {
-            margin-top: -2rem;
-            vertical-align: middle;
+        &:hover:not(.dc-tabs__active) {
+            background: var(--general-hover);
+            color: var(--text-prominent);
+            cursor: pointer;
+            transform: translateY(-1px);
         }
 
         &__icon {
-            padding-right: 0.7rem;
-
-            @include mobile-or-tablet-screen {
-                padding-right: 0;
-                padding-top: 0.5rem;
-            }
-        }
-
-        &--header-fit-content {
-            padding: 0 29px;
+            display: flex;
+            align-items: center;
         }
 
         &--is-hidden {
             display: none;
-        }
-
-        &--is-scrollable-and-active {
-            position: relative;
-
-            &:after {
-                border-bottom: 2px solid var(--brand-red-coral);
-                content: '';
-                position: absolute;
-                left: 0;
-                display: block;
-                width: 100%;
-            }
-        }
-
-        &:not(.dc-tabs__active) {
-            cursor: pointer;
-            color: var(--text-general);
-        }
-
-        &:not(&--header-fit-content) {
-            width: var(--tab-width);
         }
     }
 
     &__active {
-        font-weight: 700;
-        color: var(--text-prominent);
+        font-weight: 600;
+        color: var(--text-colored-background);
+        background: var(--brand-red-coral);
+        box-shadow: 0 4px 12px rgba(255, 68, 79, 0.3);
+        transform: translateY(-1px);
     }
 
+    /* We hide the old active line because we use the pill design */
     &__active-line {
-        display: block;
-        position: absolute;
-
-        /* rtl:begin:ignore */
-        left: 0;
-
-        /* rtl:end:ignore */
-        height: 2px;
-        background: var(--brand-red-coral);
-        transition: all ease-in-out 0.3s;
-
-        &--top {
-            bottom: -2px;
-        }
-
-        &--bottom {
-            top: -2px;
-        }
-
-        &--is-hidden {
-            display: none;
-        }
-
-        &--fit-content {
-            @include mobile-or-tablet-screen {
-                width: 120px;
-            }
-        }
-
-        &:not(&--header-fit-content) {
-            width: var(--tab-width);
-        }
+        display: none !important;
     }
 }
+

@@ -394,8 +394,8 @@ const ElitePro = observer(() => {
             underIncreasing,
             overIncreasing,
             recentTrendFlip,
-            isUnderTrendFlipped: last7.filter(d => d >= 6).length >= 2,
-            isOverTrendFlipped: last7.filter(d => d <= 3).length >= 2,
+            isUnderTrendFlipped: last7.filter(d => d >= 6).length >= 4,
+            isOverTrendFlipped: last7.filter(d => d <= 3).length >= 4,
             total,
         };
     }, []);
@@ -907,7 +907,9 @@ const ElitePro = observer(() => {
                             if (autoStateRef.current !== 'SCANNING') setAutoState('SCANNING');
                         }
 
-                        await new Promise(r => setTimeout(r, 800));
+                        // Poll faster when waiting for trigger to execute immediately
+                        const delay = autoStateRef.current === 'WAITING_TRIGGER' ? 50 : 800;
+                        await new Promise(r => setTimeout(r, delay));
                         continue;
                     }
 
@@ -1496,7 +1498,7 @@ const ElitePro = observer(() => {
                                         <span className="mark">✓</span> Last 10/7 Ticks Favoring Under ({analysis.last10UnderCount}/10 under)
                                     </div>
                                     <div className={`check-row ${!analysis.isUnderTrendFlipped ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Trend Stabilized (Max 1 Over digit in last 7)
+                                        <span className="mark">✓</span> Trend Stabilized (Max 3 Over digits in last 7)
                                     </div>
                                     <div className={`check-row ${activeData?.lastDigit === analysis.highestUnderDigit ? 'valid' : ''}`}>
                                         <span className="mark">✓</span> Current Tick is Under Trigger Digit [{analysis.highestUnderDigit}] (Current: {activeData?.lastDigit})
@@ -1515,7 +1517,7 @@ const ElitePro = observer(() => {
                                         <span className="mark">✓</span> Last 10/7 Ticks Favoring Over ({analysis.last10OverCount}/10 over)
                                     </div>
                                     <div className={`check-row ${!analysis.isOverTrendFlipped ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Trend Stabilized (Max 1 Under digit in last 7)
+                                        <span className="mark">✓</span> Trend Stabilized (Max 3 Under digits in last 7)
                                     </div>
                                     <div className={`check-row ${activeData?.lastDigit === analysis.highestOverDigit ? 'valid' : ''}`}>
                                         <span className="mark">✓</span> Current Tick is Over Trigger Digit [{analysis.highestOverDigit}] (Current: {activeData?.lastDigit})
