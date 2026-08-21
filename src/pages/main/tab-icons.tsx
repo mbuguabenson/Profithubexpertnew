@@ -157,6 +157,13 @@ export const TabIcon: React.FC<TTabIconProps> = ({ iconKey, label }) => {
                         <path d='M22 12h-4l-3 9L9 3l-3 9H2' />
                     </svg>
                 );
+            case 'digitflow':
+                return (
+                    <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+                        <path d='M3 3v18h18' />
+                        <path d='M18.7 8l-5.1 5.2-2.8-2.7L7 14.3' />
+                    </svg>
+                );
             case 'ai_trading_engine':
                 return (
                     <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>

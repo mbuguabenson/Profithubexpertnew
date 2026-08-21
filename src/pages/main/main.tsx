@@ -50,6 +50,7 @@ const TradingBots = lazy(() => import('../free-bots/trading-bots'));
 const EntryScanner = lazy(() => import('../entry-scanner/entry-scanner').then(m => ({ default: m.EntryScanner })));
 const DCirclesPage = lazy(() => import('../dcircles/dcircles'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
+const DigitFlowPage = lazy(() => import('../digitflow/digitflow'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -112,6 +113,7 @@ const AppWrapper = observer(() => {
         'ai_trading_engine',
         'dcircles',
         'dtrader',
+        'digitflow',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -539,6 +541,18 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
                         <DTraderPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'digitflow',
+            id: 'id-digitflow',
+            label: <TabIcon iconKey='digitflow' label='DigitFlow' />,
+            content: (
+                <TabErrorBoundary tabId='id-digitflow' tabName='DigitFlow'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DigitFlow...')} />}>
+                        <DigitFlowPage />
                     </Suspense>
                 </TabErrorBoundary>
             )
