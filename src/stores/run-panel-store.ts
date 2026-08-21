@@ -623,13 +623,12 @@ export default class RunPanelStore {
                 isRegisteredFlag = true;
                 disposeIsSocketOpenedListener = reaction(
                     () => client.loginid,
-                    loginid => {
-                        if (loginid && this.is_running) {
-                            // TODO: fix notifications
-                            // notifications.addNotificationMessage(switch_account_notification());
+                    (loginid, previousLoginid) => {
+                        if (this.is_running && previousLoginid && previousLoginid !== loginid) {
+                            this.dbot.terminateBot();
+                            this.unregisterBotListeners();
+                            this.setIsRunning(false);
                         }
-                        this.dbot.terminateBot();
-                        this.unregisterBotListeners();
                     }
                 );
             } else if (typeof disposeLogoutListener === 'function') {

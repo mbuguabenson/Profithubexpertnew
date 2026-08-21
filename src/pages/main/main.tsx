@@ -13,7 +13,7 @@ import TradingViewModal from '@/components/trading-view-chart/trading-view-modal
 import ProfihubModal from '@/components/profihub-analysis/profihub-modal';
 import ProToolAiModal from '@/components/protool-ai/protool-ai-modal';
 import { DBOT_TABS, TAB_IDS } from '@/constants/bot-contents';
-import { api_base, updateWorkspaceName } from '@/external/bot-skeleton';
+import { updateWorkspaceName } from '@/external/bot-skeleton';
 import { CONNECTION_STATUS } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
 import { isDbotRTL } from '@/external/bot-skeleton/utils/workspace';
 import { useApiBase } from '@/hooks/useApiBase';
@@ -61,7 +61,7 @@ const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
     const store = useStore();
 
-    const { dashboard, load_modal, run_panel, quick_strategy, summary_card, blockly_store } = store || {};
+    const { dashboard, load_modal, run_panel, quick_strategy, blockly_store } = store || {};
     const { is_loading = false } = blockly_store || {};
     const {
         active_tab = 0,
@@ -82,13 +82,12 @@ const AppWrapper = observer(() => {
         onCancelButtonClick,
         onCloseDialog,
         onOkButtonClick,
-        stopBot = () => {},
     } = run_panel || {};
     const { is_open = false } = quick_strategy || {};
     const { cancel_button_text = '', ok_button_text = '', title = '', message = '', dismissable = false, is_closed_on_cancel = false } = (dialog_options as {
         [key: string]: string;
     }) || {};
-    const { clear = () => {} } = summary_card || {};
+
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
     const pollTimeoutId = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -176,18 +175,8 @@ const AppWrapper = observer(() => {
     }, [location.search]);
 
     React.useEffect(() => {
-        if (connectionStatus !== CONNECTION_STATUS.OPENED) {
-            const is_bot_running = document.getElementById('db-animation__stop-button') !== null;
-            if (is_bot_running) {
-                clear();
-                stopBot();
-                api_base.setIsRunning(false);
-                setWebSocketState(false);
-            }
-        } else {
-            setWebSocketState(true);
-        }
-    }, [clear, connectionStatus, setWebSocketState, stopBot]);
+        setWebSocketState(connectionStatus === CONNECTION_STATUS.OPENED);
+    }, [connectionStatus, setWebSocketState]);
 
     React.useEffect(() => {
         if (active_tab === BOT_BUILDER) {
