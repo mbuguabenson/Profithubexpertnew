@@ -25,8 +25,6 @@ import {
     getSystemLogs, addSystemLog, clearSystemLogs, MpesaTransaction,
     MarkupCommission, SystemLogItem
 } from '@/utils/supabase-copy';
-import { getTradeLogs } from '@/pages/copy-trading/replicator';
-import { getGlobalCopyTradingManager } from '@/pages/copy-trading/copy-trading-manager-singleton';
 import { getAppId, getSocketURL, isProduction } from '@/components/shared/utils/config/config';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { getActiveToken } from '@/utils/token-bridge';
@@ -338,11 +336,9 @@ const AdminDashboard = observer(() => {
             }
 
             if (tradeBroadcastMode === 'bulk_all') {
-                const manager = getGlobalCopyTradingManager();
-                await manager.replicateTrade(params);
                 setTradeFeedback({
                     type: 'success',
-                    message: `🚀 Broadcast trade (${contractType} on ${tradeSymbol}) dispatched to Master + ${getCopyTokensArray().length} connected copier accounts!`,
+                    message: `🚀 Broadcast trade is disabled because copy trading was removed.`,
                 });
             } else {
                 const buyResult = await DerivAccountWalletService.executeTrade(params);
@@ -672,7 +668,7 @@ const AdminDashboard = observer(() => {
         if (!isAuthenticated) return;
 
         const pollRealData = () => {
-            const logs = getTradeLogs();
+            const logs: any[] = [];
             setTradeLogs(logs);
 
             // Compute PnL from replicator logs
@@ -736,16 +732,6 @@ const AdminDashboard = observer(() => {
                 arr.push(req.requester_token);
                 localStorage.setItem('copyTokensArray', JSON.stringify(arr));
             }
-            try {
-                const manager = getGlobalCopyTradingManager();
-                let copier = manager.copiers.find(c => c.token === req.requester_token);
-                if (!copier) copier = manager.addCopier(req.requester_token);
-                if (copier && copier.status !== 'connected') {
-                    void manager.connectCopier(copier.id);
-                }
-            } catch {
-                /* Ignore connection error */
-            }
             addSystemLog('info', `Approved & initialized live copy trading for client ${req.requester_loginid}`, 'Replicator Console');
             fetchRequests();
         }
@@ -764,13 +750,6 @@ const AdminDashboard = observer(() => {
         if (ok) {
             let arr = getCopyTokensArray().filter(t => t !== req.requester_token);
             localStorage.setItem('copyTokensArray', JSON.stringify(arr));
-            try {
-                const manager = getGlobalCopyTradingManager();
-                const copier = manager.copiers.find(c => c.token === req.requester_token);
-                if (copier) manager.removeCopier(copier.id);
-            } catch {
-                /* Ignore removal error */
-            }
             addSystemLog('info', `Stopped copy trading for client ${req.requester_loginid}`, 'Replicator Console');
             fetchRequests();
         }
