@@ -551,17 +551,19 @@ const ElitePro = observer(() => {
         };
 
         let retryTimeout: ReturnType<typeof setTimeout> | null = null;
-        const initSubscriptions = () => {
+        const initSubscriptions = async () => {
             if (!api_base.api) {
                 retryTimeout = setTimeout(initSubscriptions, 1000);
                 return;
             }
-            symbolsToSubscribe.forEach(sym => {
-                void startSubscription(sym);
-            });
+            for (const sym of symbolsToSubscribe) {
+                if (!isMounted || unmountedRef.current) break;
+                await startSubscription(sym);
+                await new Promise(r => setTimeout(r, 200)); // Throttle to prevent Deriv WS rate limiting
+            }
         };
 
-        initSubscriptions();
+        void initSubscriptions();
 
         activeSubs.forEach((sub, sym) => {
             if (!symbolsToSubscribe.includes(sym)) {
