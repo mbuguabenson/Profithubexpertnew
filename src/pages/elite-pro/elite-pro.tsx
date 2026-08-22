@@ -235,7 +235,7 @@ const ElitePro = observer(() => {
     const [autoInputBestMarket, setAutoInputBestMarket] = useState(true);
     const [marketsSideExpanded, setMarketsSideExpanded] = useState(true);
     const marketsRef = useRef<Map<string, MarketDigitData>>(new Map());
-    const [, forceRender] = useState(0);
+    const [renderTick, forceRender] = useState(0);
     const subscriptionsRef = useRef<Map<string, { unsubscribe: () => void }>>(new Map());
     const unmountedRef = useRef(false);
     const uiThrottleRef = useRef(0);
@@ -649,7 +649,7 @@ const ElitePro = observer(() => {
         });
 
         return result;
-    }, [computeAnalysis, checkEntrySignal]);
+    }, [computeAnalysis, checkEntrySignal, renderTick]);
 
     // Best Market identification
     const bestMarket = useMemo(() => {
