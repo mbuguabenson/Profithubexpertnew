@@ -433,7 +433,7 @@ const ElitePro = observer(() => {
     }, []);
 
     // ── Check entry signal based on exact user trading conditions ──
-    const checkEntrySignal = useCallback((digits: number[]): { direction: 'UNDER' | 'OVER'; prediction: number; triggerDigit: number; reason: string } | null => {
+    const checkEntrySignal = useCallback((digits: number[]): { direction: 'UNDER' | 'OVER'; prediction: number; triggerDigit: number; reason: string; status: 'WAITING' | 'TRIGGERED' } | null => {
         if (digits.length < 30) return null;
         const a = computeAnalysis(digits);
         const currentLastDigit = digits[digits.length - 1];
@@ -448,14 +448,13 @@ const ElitePro = observer(() => {
         const isUnderValid = underRatioMet && underIncreasingMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped && !a.recentTrendFlip;
 
         if (isUnderValid) {
-            if (currentLastDigit === a.highestUnderDigit) {
-                return {
-                    direction: 'UNDER',
-                    prediction: 6,
-                    triggerDigit: a.highestUnderDigit,
-                    reason: `Strict Under setup aligned (U0-5: ${a.under05}/50). Trigger: [${a.highestUnderDigit}]`,
-                };
-            }
+            return {
+                direction: 'UNDER',
+                prediction: 6,
+                triggerDigit: a.highestUnderDigit,
+                reason: `Strict Under setup aligned (U0-5: ${a.under05}/50). Trigger: [${a.highestUnderDigit}]`,
+                status: currentLastDigit === a.highestUnderDigit ? 'TRIGGERED' : 'WAITING',
+            };
         }
 
         // 2. OVER 3 Conditions (Digits 4-9)
@@ -468,14 +467,13 @@ const ElitePro = observer(() => {
         const isOverValid = overRatioMet && overIncreasingMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped && !a.recentTrendFlip;
 
         if (isOverValid) {
-            if (currentLastDigit === a.highestOverDigit) {
-                return {
-                    direction: 'OVER',
-                    prediction: 3,
-                    triggerDigit: a.highestOverDigit,
-                    reason: `Strict Over setup aligned (O4-9: ${a.over49}/50). Trigger: [${a.highestOverDigit}]`,
-                };
-            }
+            return {
+                direction: 'OVER',
+                prediction: 3,
+                triggerDigit: a.highestOverDigit,
+                reason: `Strict Over setup aligned (O4-9: ${a.over49}/50). Trigger: [${a.highestOverDigit}]`,
+                status: currentLastDigit === a.highestOverDigit ? 'TRIGGERED' : 'WAITING',
+            };
         }
 
         return null;
@@ -641,6 +639,7 @@ const ElitePro = observer(() => {
             highestOverDigit: number;
             hasSignal: boolean;
             signalDirection?: 'UNDER' | 'OVER';
+            radarStatus: 'green' | 'yellow' | 'red' | 'blue' | 'normal';
         }> = [];
 
         marketsRef.current.forEach((data, sym) => {
@@ -648,6 +647,18 @@ const ElitePro = observer(() => {
             const a = computeAnalysis(data.digits);
             const entrySignal = checkEntrySignal(data.digits);
             const strength = Math.max(a.pctUnder05, a.pctOver49);
+
+            let radarStatus: 'green' | 'yellow' | 'red' | 'blue' | 'normal' = 'normal';
+            if (entrySignal) {
+                if (entrySignal.status === 'TRIGGERED') radarStatus = 'green';
+                else radarStatus = 'yellow';
+            } else if (a.recentTrendFlip || a.isUnderTrendFlipped || a.isOverTrendFlipped || (a.pctUnder05 >= 45 && a.pctUnder05 <= 55 && a.pctOver49 >= 45 && a.pctOver49 <= 55)) {
+                radarStatus = 'blue';
+            } else if (strength < 58) {
+                radarStatus = 'red'; // Less than 58% strength is considered not safe enough for an imminent signal
+            } else {
+                radarStatus = 'normal';
+            }
 
             result.push({
                 symbol: sym,
@@ -666,6 +677,7 @@ const ElitePro = observer(() => {
                 highestOverDigit: a.highestOverDigit,
                 hasSignal: !!entrySignal,
                 signalDirection: entrySignal?.direction,
+                radarStatus,
             });
         });
 
@@ -1287,7 +1299,7 @@ const ElitePro = observer(() => {
                                 return (
                                     <div
                                         key={m.symbol}
-                                        className={`ep-side-market-card ${isSelected ? 'active' : ''} ${m.hasSignal ? 'signal-glowing' : ''}`}
+                                        className={`ep-side-market-card ${isSelected ? 'active' : ''} ${m.hasSignal ? 'signal-glowing' : ''} radar-${m.radarStatus}`}
                                         onClick={() => {
                                             handleManualMarketSelect(m.symbol);
                                         }}
