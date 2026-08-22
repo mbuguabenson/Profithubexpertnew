@@ -438,36 +438,42 @@ const ElitePro = observer(() => {
         const a = computeAnalysis(digits);
         const currentLastDigit = digits[digits.length - 1];
 
-        // 1. UNDER 6 Conditions (Digits 0-5, base probability 60%)
-        const underRatioMet = a.pctUnder05 >= 62 && a.underIncreasing; // 62% is ~31/50
-        const under50TicksMet = a.under05 >= 32; // Strong dominance
+        // 1. UNDER 6 Conditions (Digits 0-5)
+        const underRatioMet = a.pctUnder05 >= 62; // ~31/50
+        const underIncreasingMet = a.underIncreasing;
+        const under50TicksMet = a.under05 >= 32;
         const underRecentTicksMet = a.last15Under;
-        const underPowerOverride = a.pctUnder05 >= 66; // 33/50 ticks overrides recent checks
 
-        if (((underRatioMet && under50TicksMet && underRecentTicksMet) || underPowerOverride) && !a.isUnderTrendFlipped) {
+        // ALL conditions must align perfectly
+        const isUnderValid = underRatioMet && underIncreasingMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped && !a.recentTrendFlip;
+
+        if (isUnderValid) {
             if (currentLastDigit === a.highestUnderDigit) {
                 return {
                     direction: 'UNDER',
                     prediction: 6,
                     triggerDigit: a.highestUnderDigit,
-                    reason: `Under dominance (${underPowerOverride ? 'Power \u2265 66%' : `U0-5: ${a.under05} ticks`}) with Trigger Digit [${a.highestUnderDigit}]`,
+                    reason: `Strict Under setup aligned (U0-5: ${a.under05}/50). Trigger: [${a.highestUnderDigit}]`,
                 };
             }
         }
 
-        // 2. OVER 3 Conditions (Digits 4-9, base probability 60%)
-        const overRatioMet = a.pctOver49 >= 62 && a.overIncreasing;
+        // 2. OVER 3 Conditions (Digits 4-9)
+        const overRatioMet = a.pctOver49 >= 62; // ~31/50
+        const overIncreasingMet = a.overIncreasing;
         const over50TicksMet = a.over49 >= 32;
         const overRecentTicksMet = a.last15Over;
-        const overPowerOverride = a.pctOver49 >= 66;
 
-        if (((overRatioMet && over50TicksMet && overRecentTicksMet) || overPowerOverride) && !a.isOverTrendFlipped) {
+        // ALL conditions must align perfectly
+        const isOverValid = overRatioMet && overIncreasingMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped && !a.recentTrendFlip;
+
+        if (isOverValid) {
             if (currentLastDigit === a.highestOverDigit) {
                 return {
                     direction: 'OVER',
                     prediction: 3,
                     triggerDigit: a.highestOverDigit,
-                    reason: `Over dominance (${overPowerOverride ? 'Power > 60%' : `O4-9: ${a.over49} vs U0-5: ${a.under05}`}) with Trigger Digit [${a.highestOverDigit}]`,
+                    reason: `Strict Over setup aligned (O4-9: ${a.over49}/50). Trigger: [${a.highestOverDigit}]`,
                 };
             }
         }
