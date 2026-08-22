@@ -359,6 +359,13 @@ const ElitePro = observer(() => {
         const last10Under = last10.length === 10 && last10UnderCount >= 7;
         const last10Over = last10.length === 10 && last10OverCount >= 7;
 
+        // Last 15 ticks count
+        const last15 = slice.slice(-15);
+        const last15UnderCount = last15.filter(d => d <= 5).length;
+        const last15OverCount = last15.filter(d => d >= 4).length;
+        const last15Under = last15.length === 15 && last15UnderCount > 7;
+        const last15Over = last15.length === 15 && last15OverCount > 7;
+
         // Last 7 ticks check (strictly favoring direction)
         const last7 = slice.slice(-7);
         const last7Under = last7.length === 7 && last7.every(d => d < 6);
@@ -398,6 +405,8 @@ const ElitePro = observer(() => {
             recentTrendFlip,
             isUnderTrendFlipped: secondHalf.filter(d => d >= 6).length >= 10,
             isOverTrendFlipped: secondHalf.filter(d => d <= 3).length >= 10,
+            last15Under,
+            last15Over,
             total,
         };
     }, []);
@@ -411,7 +420,7 @@ const ElitePro = observer(() => {
         // 1. UNDER 6 Conditions
         const underRatioMet = a.pctUnder04 >= 55 && a.underIncreasing;
         const under50TicksMet = (a.under05 - a.over49) >= 7; // Difference of 7+
-        const underRecentTicksMet = a.last10Under || a.last7Under;
+        const underRecentTicksMet = a.last15Under;
 
         if (underRatioMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped) {
             if (currentLastDigit === a.highestUnderDigit) {
@@ -427,7 +436,7 @@ const ElitePro = observer(() => {
         // 2. OVER 3 Conditions
         const overRatioMet = a.pctOver59 >= 55 && a.overIncreasing;
         const over50TicksMet = (a.over49 - a.under05) >= 7; // Difference of 7+
-        const overRecentTicksMet = a.last10Over || a.last7Over;
+        const overRecentTicksMet = a.last15Over;
 
         if (overRatioMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped) {
             if (currentLastDigit === a.highestOverDigit) {
@@ -961,8 +970,9 @@ const ElitePro = observer(() => {
 
                         if (tradeRuns >= 7) {
                             tradeRuns = 0;
-                            setAutoState('PAUSED');
-                            addLogEntry('BOT PAUSED', selectedSymbol, 'PENDING', 0, 'Auto-paused after 7 trades');
+                            setAutoState('SCANNING');
+                            addLogEntry('BOT COOLDOWN', selectedSymbol, 'PENDING', 0, 'Auto-paused for re-analysis after 7 trades');
+                            await new Promise(r => setTimeout(r, 7000)); // 7 second forced cooldown to allow market settling
                         } else {
                             setAutoState('SCANNING');
                         }
