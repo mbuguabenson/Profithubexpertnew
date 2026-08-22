@@ -269,6 +269,27 @@ const ElitePro = observer(() => {
     useEffect(() => { winsRef.current = wins; }, [wins]);
     useEffect(() => { lossesRef.current = losses; }, [losses]);
 
+    // ── Handle manual market selection (Reset stats & pause bot) ──
+    const handleManualMarketSelect = useCallback((sym: string) => {
+        setSelectedSymbol(sym);
+        if (autoInputBestMarket) setAutoInputBestMarket(false);
+
+        // Reset Trade Logs and Stats
+        setTradeLog([]);
+        setTotalProfit(0);
+        setWins(0);
+        setLosses(0);
+        totalProfitRef.current = 0;
+        winsRef.current = 0;
+        lossesRef.current = 0;
+
+        // Pause bot if active
+        if (autoStateRef.current !== 'IDLE') {
+            setAutoState('IDLE');
+            autoStateRef.current = 'IDLE';
+        }
+    }, [autoInputBestMarket]);
+
     // ── Fetch Deriv Automation strategies if in server mode ──
     useEffect(() => {
         if (executionMode === 'deriv_server' && logged_in) {
@@ -1262,8 +1283,7 @@ const ElitePro = observer(() => {
                                         key={m.symbol}
                                         className={`ep-side-market-card ${isSelected ? 'active' : ''} ${m.hasSignal ? 'signal-glowing' : ''}`}
                                         onClick={() => {
-                                            setSelectedSymbol(m.symbol);
-                                            if (autoInputBestMarket) setAutoInputBestMarket(false);
+                                            handleManualMarketSelect(m.symbol);
                                         }}
                                     >
                                         <div className="ep-side-market-card__top">
@@ -1330,7 +1350,7 @@ const ElitePro = observer(() => {
                             {bestMarket && (
                                 <div
                                     className="ep-best-market-badge"
-                                    onClick={() => setSelectedSymbol(bestMarket.symbol)}
+                                    onClick={() => handleManualMarketSelect(bestMarket.symbol)}
                                     title="Click to focus best market"
                                 >
                                     🏆 Best Market: <strong>{bestMarket.label}</strong> ({bestMarket.bias.toUpperCase()})
@@ -1355,8 +1375,7 @@ const ElitePro = observer(() => {
                                 className="ep-market-select"
                                 value={selectedSymbol}
                                 onChange={e => {
-                                    setSelectedSymbol(e.target.value);
-                                    if (autoInputBestMarket) setAutoInputBestMarket(false);
+                                    handleManualMarketSelect(e.target.value);
                                 }}
                             >
                                 {MARKETS.map(m => (
