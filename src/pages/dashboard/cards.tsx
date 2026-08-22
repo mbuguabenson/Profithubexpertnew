@@ -59,6 +59,37 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         },
     ];
 
+    const [prompt, setPrompt] = React.useState('');
+    const [isGenerating, setIsGenerating] = React.useState(false);
+
+    const handleGenerateBot = async () => {
+        if (!prompt.trim() || isGenerating) return;
+        setIsGenerating(true);
+        try {
+            const { AIBotGeneratorService } = await import('@/services/ai-bot-generator.service');
+            const xmlStr = await AIBotGeneratorService.generateBotFromPrompt(prompt);
+            
+            // Switch to Bot Builder tab
+            setActiveTab(DBOT_TABS.BOT_BUILDER);
+            
+            // Load the generated bot into the workspace
+            setTimeout(() => {
+                const dom = window.Blockly.utils.xml.textToDom(xmlStr);
+                const derivWorkspace = window.Blockly.derivWorkspace;
+                if (derivWorkspace) {
+                    window.Blockly.Xml.clearWorkspaceAndLoadFromXml(dom, derivWorkspace);
+                    derivWorkspace.cleanUp();
+                    derivWorkspace.clearUndo();
+                }
+            }, 500); // give the tab time to mount
+        } catch (error) {
+            console.error('Failed to generate AI bot', error);
+        } finally {
+            setIsGenerating(false);
+            setPrompt('');
+        }
+    };
+
     return React.useMemo(
         () => (
             <div
@@ -66,6 +97,35 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     'tab__dashboard__table--minimized': has_dashboard_strategies && is_mobile,
                 })}
             >
+                {/* AI Bot Builder Card */}
+                <div className="dash-ai-builder-card">
+                    <div className="ai-builder-header">
+                        <Bot size={24} className="text-blue" />
+                        <h3 className="ai-builder-title">AI Bot Builder</h3>
+                    </div>
+                    <p className="ai-builder-desc">
+                        Describe your trading strategy and let our AI instantly generate the blocks for you.
+                    </p>
+                    <div className="ai-input-group">
+                        <input 
+                            type="text" 
+                            className="dash-ai-input" 
+                            placeholder="e.g., Buy Call when RSI is above 70 on Volatility 100"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleGenerateBot()}
+                            disabled={isGenerating}
+                        />
+                        <button 
+                            className={classNames('dash-ai-submit-btn', { 'is-loading': isGenerating })}
+                            onClick={handleGenerateBot}
+                            disabled={isGenerating || !prompt.trim()}
+                        >
+                            {isGenerating ? 'Generating...' : 'Generate with AI'}
+                        </button>
+                    </div>
+                </div>
+
                 {/* 1. Account Creation Gold Notice Banner */}
                 <div className="dash-gold-notice-card">
                     <div className="notice-left-text">

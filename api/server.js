@@ -14,6 +14,7 @@ const botsHandler = require('./admin/bots');
 const derivAccountsHandler = require('./deriv-accounts');
 const derivOtpHandler = require('./deriv-otp/[accountId]');
 const supabaseProxyHandler = require('./supabase-proxy');
+const botAiHandler = require('./admin/bot-ai');
 
 const PORT = process.env.PORT || 4000;
 
@@ -88,6 +89,7 @@ const server = http.createServer(async (req, res) => {
                     '/api/admin/logs',
                     '/api/admin/notifications',
                     '/api/admin/bots',
+                    '/api/admin/bot-ai',
                     '/api/deriv-accounts',
                     '/api/deriv-otp/{accountId}',
                     '/api/supabase/{table}'
@@ -129,6 +131,9 @@ const server = http.createServer(async (req, res) => {
         }
         if (pathname.startsWith('/api/supabase/')) {
             return await supabaseProxyHandler(req, res);
+        }
+        if (pathname === '/api/admin/bot-ai') {
+            return await botAiHandler(req, res);
         }
 
         res.status(404).json({
