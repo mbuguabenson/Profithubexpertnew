@@ -58,15 +58,11 @@ import { initNetworkInterceptor } from '@/services/network-interceptor';
 import { initWebSocketMonitor } from '@/services/websocket-monitor';
 
 import { useInvalidTokenHandler } from '@/hooks/useInvalidTokenHandler';
-import useThemeSwitcher from '@/hooks/useThemeSwitcher';
-import { MarketsSidebar } from '@/components/markets-sidebar/markets-sidebar';
-import { TicksDrawer } from '@/components/ticks-drawer/ticks-drawer';
 
 const AppWrapper = observer(() => {
     useInvalidTokenHandler(); // Initialize global token handler
     const { connectionStatus } = useApiBase();
     const store = useStore();
-    const { toggleTheme, is_dark_mode_on } = useThemeSwitcher();
 
     const { dashboard, load_modal, run_panel, quick_strategy, blockly_store } = store || {};
     const { is_loading = false } = blockly_store || {};
@@ -150,15 +146,6 @@ const AppWrapper = observer(() => {
     }, []);
 
     const [tradeTypeModalState, setTradeTypeModalState] = useState(getModalState());
-    
-    // Sidebar state
-    const [selectedSidebarMarket, setSelectedSidebarMarket] = useState<string | null>(null);
-    const [isTicksDrawerOpen, setIsTicksDrawerOpen] = useState(false);
-
-    const handleSelectMarket = (symbol: string) => {
-        setSelectedSidebarMarket(symbol);
-        setIsTicksDrawerOpen(true);
-    };
 
     const getTradeTypeModalProps = () => {
         const { tradeTypeData } = tradeTypeModalState;
@@ -640,31 +627,16 @@ const AppWrapper = observer(() => {
                         'main__container--active': active_tour && active_tab === DASHBOARD && !isDesktop,
                         'main__container--drawer-open': isDesktop && is_drawer_open,
                     })}
-                    style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' }}
                 >
-                    <div style={{ height: '100%', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <Tabs active_index={filteredActiveIndex} className='main__tabs' onTabItemClick={handleFilteredTabChange} history={window.history as any} top>
-                            {activeTabsList.map(tab => (
-                                <div key={tab.key} label={tab.label} id={tab.id} style={{ height: '100%', overflowY: 'auto' }}>
-                                    {tab.content}
-                                </div>
-                            ))}
-                        </Tabs>
-                    </div>
-                    {isDesktop && (
-                        <MarketsSidebar 
-                            onSelectMarket={handleSelectMarket} 
-                            selectedSymbol={selectedSidebarMarket} 
-                        />
-                    )}
+                    <Tabs active_index={filteredActiveIndex} className='main__tabs' onTabItemClick={handleFilteredTabChange} history={window.history as any} top>
+                        {activeTabsList.map(tab => (
+                            <div key={tab.key} label={tab.label} id={tab.id}>
+                                {tab.content}
+                            </div>
+                        ))}
+                    </Tabs>
                 </div>
             </div>
-            
-            <TicksDrawer 
-                symbol={selectedSidebarMarket} 
-                isOpen={isTicksDrawerOpen} 
-                onClose={() => setIsTicksDrawerOpen(false)} 
-            />
 
             <DesktopWrapper>
                 {/* Run/Stop button — same width as drawer, sits on top of it */}
@@ -681,27 +653,8 @@ const AppWrapper = observer(() => {
                     background: 'var(--general-main-2)',
                     borderBottom: '1px solid var(--general-section-1)',
                     padding: '0 1.6rem',
-                    gap: '1.2rem',
                 }}>
                     <RunStrategy />
-                    <button
-                        onClick={toggleTheme}
-                        style={{
-                            background: 'transparent',
-                            border: '1px solid var(--general-section-2)',
-                            borderRadius: '50%',
-                            width: '36px',
-                            height: '36px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'var(--text-general)'
-                        }}
-                        title="Toggle Light/Dark Theme"
-                    >
-                        {is_dark_mode_on ? '☀️' : '🌙'}
-                    </button>
                 </div>
                 <RunPanel />
             </DesktopWrapper>
