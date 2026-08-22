@@ -147,14 +147,14 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
                                 y1={y}
                                 x2={W}
                                 y2={y}
-                                stroke="rgba(255, 255, 255, 0.06)"
+                                stroke="var(--ep-svg-line-stroke)"
                                 strokeWidth="1"
                                 strokeDasharray={level === 3 || level === 6 ? '3 3' : undefined}
                             />
                             <text
                                 x="4"
                                 y={y - 3}
-                                fill="rgba(255, 255, 255, 0.25)"
+                                fill="var(--ep-svg-text-fill)"
                                 fontSize="9"
                                 fontFamily="monospace"
                             >
@@ -189,15 +189,15 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
                                 width={6}
                                 height={6}
                                 rx={1.5}
-                                fill={isLatest ? '#ffffff' : isUnder ? '#10b981' : '#f59e0b'}
-                                stroke="#8b5cf6"
+                                fill={isLatest ? 'var(--ep-svg-orb-fill)' : isUnder ? 'var(--ep-accent-green)' : 'var(--ep-accent-orange)'}
+                                stroke="var(--ep-accent-purple)"
                                 strokeWidth={1.5}
                             />
                             <text
                                 x={p.x}
                                 y={p.y - 8}
                                 textAnchor="middle"
-                                fill={isLatest ? '#38bdf8' : '#c084fc'}
+                                fill={isLatest ? 'var(--ep-svg-orb-text)' : 'var(--ep-svg-orb-text-muted)'}
                                 fontSize={isLatest ? 12 : 11}
                                 fontWeight={800}
                                 fontFamily="system-ui, -apple-system, sans-serif"
@@ -1264,7 +1264,7 @@ const ElitePro = observer(() => {
                                             if (autoInputBestMarket) setAutoInputBestMarket(false);
                                         }}
                                     >
-                                        <div className="ep-side-market-card__top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div className="ep-side-market-card__top">
                                             <div className="name-box" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 <span className="label" style={{ marginRight: '4px' }}>{m.label}</span>
                                                 {isBest && <span className="best-tag">TOP</span>}
@@ -1274,7 +1274,7 @@ const ElitePro = observer(() => {
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="price-box" style={{ fontWeight: 'bold', fontSize: '11px', color: '#fff', padding: '0 6px' }}>
+                                            <div className="price-box">
                                                 {m.currentPrice}
                                             </div>
                                             <div className="last-digit-badge" style={{ marginLeft: 'auto', flexShrink: 0 }}>
@@ -1734,16 +1734,7 @@ const ElitePro = observer(() => {
                             {tradeLog.length > 0 && (
                                 <button 
                                     onClick={() => setTradeLog([])}
-                                    style={{ 
-                                        background: 'rgba(239, 68, 68, 0.1)', 
-                                        color: '#ef4444', 
-                                        border: '1px solid rgba(239, 68, 68, 0.2)', 
-                                        padding: '4px 10px', 
-                                        borderRadius: '6px', 
-                                        fontSize: '11px', 
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s'
-                                    }}
+                                    className="ep-btn-clear-logs"
                                     title="Clear execution logs"
                                 >
                                     Clear Logs
