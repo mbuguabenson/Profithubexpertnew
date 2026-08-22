@@ -198,11 +198,6 @@ export const UltimateWelcomePage = observer(({ handleTabChange: _handleTabChange
 
     return (
         <div className='ultimate-landing'>
-            {/* Ambient Background */}
-            <div className='ultimate-landing__bg-mesh' />
-            <div className='ultimate-landing__bg-glow ultimate-landing__bg-glow--primary' />
-            <div className='ultimate-landing__bg-glow ultimate-landing__bg-glow--secondary' />
-
             {/* Subtle Grid */}
             <div className='ultimate-landing__grid-overlay'>
                 <svg width='100%' height='100%' xmlns='http://www.w3.org/2000/svg' className='ultimate-landing__grid-svg'>
