@@ -305,14 +305,16 @@ const ElitePro = observer(() => {
         const pctUnder05 = (under05 / total) * 100;
         const pctOver49 = (over49 / total) * 100;
 
-        // 3. Momentum & Trend Momentum calculation
-        const prevSlice = digits.slice(-(ANALYSIS_WINDOW + 10), -10);
-        const prevTotal = prevSlice.length || 1;
-        const prevUnder04 = prevSlice.length > 0 ? (countDigitsInRange(prevSlice, 0, 4) / prevTotal) * 100 : 50;
-        const prevOver59 = prevSlice.length > 0 ? (countDigitsInRange(prevSlice, 5, 9) / prevTotal) * 100 : 50;
+        // 3. Momentum & Trend Momentum calculation (using purely the 50-tick window)
+        const firstHalf = slice.slice(0, 25);
+        const secondHalf = slice.slice(25);
+        const firstHalfUnder = firstHalf.length > 0 ? (countDigitsInRange(firstHalf, 0, 4) / 25) * 100 : 50;
+        const firstHalfOver = firstHalf.length > 0 ? (countDigitsInRange(firstHalf, 5, 9) / 25) * 100 : 50;
+        const secondHalfUnder = secondHalf.length > 0 ? (countDigitsInRange(secondHalf, 0, 4) / 25) * 100 : 50;
+        const secondHalfOver = secondHalf.length > 0 ? (countDigitsInRange(secondHalf, 5, 9) / 25) * 100 : 50;
 
-        const underIncreasing = pctUnder04 >= prevUnder04;
-        const overIncreasing = pctOver59 >= prevOver59;
+        const underIncreasing = secondHalfUnder >= firstHalfUnder;
+        const overIncreasing = secondHalfOver >= firstHalfOver;
 
         // 4. Frequency distribution & Highest Digits
         const freq = new Array(10).fill(0);
@@ -394,8 +396,8 @@ const ElitePro = observer(() => {
             underIncreasing,
             overIncreasing,
             recentTrendFlip,
-            isUnderTrendFlipped: last7.filter(d => d >= 6).length >= 4,
-            isOverTrendFlipped: last7.filter(d => d <= 3).length >= 4,
+            isUnderTrendFlipped: secondHalf.filter(d => d >= 6).length >= 10,
+            isOverTrendFlipped: secondHalf.filter(d => d <= 3).length >= 10,
             total,
         };
     }, []);
@@ -407,8 +409,8 @@ const ElitePro = observer(() => {
         const currentLastDigit = digits[digits.length - 1];
 
         // 1. UNDER 6 Conditions
-        const underRatioMet = a.pctUnder04 >= 53 && a.underIncreasing;
-        const under50TicksMet = a.under05 >= 32 && a.over49 <= 27;
+        const underRatioMet = a.pctUnder04 >= 55 && a.underIncreasing;
+        const under50TicksMet = a.pctUnder05 >= 60; // At least 30/50 ticks are 0-5
         const underRecentTicksMet = a.last10Under || a.last7Under;
 
         if (underRatioMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped) {
@@ -417,14 +419,14 @@ const ElitePro = observer(() => {
                     direction: 'UNDER',
                     prediction: 6,
                     triggerDigit: a.highestUnderDigit,
-                    reason: `Under dominance (${a.under05} U0-5 vs ${a.over49} O4-9, U0-4: ${a.pctUnder04.toFixed(0)}%) with Trigger Digit [${a.highestUnderDigit}]`,
+                    reason: `Under dominance (${a.pctUnder05.toFixed(1)}% U0-5, U0-4: ${a.pctUnder04.toFixed(1)}%) with Trigger Digit [${a.highestUnderDigit}]`,
                 };
             }
         }
 
         // 2. OVER 3 Conditions
-        const overRatioMet = a.pctOver59 >= 53 && a.overIncreasing;
-        const over50TicksMet = a.over49 >= 32 && a.under05 <= 27;
+        const overRatioMet = a.pctOver59 >= 55 && a.overIncreasing;
+        const over50TicksMet = a.pctOver49 >= 60; // At least 30/50 ticks are 4-9
         const overRecentTicksMet = a.last10Over || a.last7Over;
 
         if (overRatioMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped) {
@@ -433,7 +435,7 @@ const ElitePro = observer(() => {
                     direction: 'OVER',
                     prediction: 3,
                     triggerDigit: a.highestOverDigit,
-                    reason: `Over dominance (${a.over49} O4-9 vs ${a.under05} U0-5, O5-9: ${a.pctOver59.toFixed(0)}%) with Trigger Digit [${a.highestOverDigit}]`,
+                    reason: `Over dominance (${a.pctOver49.toFixed(1)}% O4-9, O5-9: ${a.pctOver59.toFixed(1)}%) with Trigger Digit [${a.highestOverDigit}]`,
                 };
             }
         }
