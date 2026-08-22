@@ -762,7 +762,7 @@
     .ep-hero-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 18px;
+        gap: 12px;
 
         @media (max-width: 640px) {
             grid-template-columns: 1fr;
@@ -773,7 +773,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            padding: 16px;
             text-align: center;
 
             .ep-hero-label {
@@ -794,7 +794,7 @@
                 margin-bottom: 6px;
 
                 .ep-price-value {
-                    font-size: 2.2rem;
+                    font-size: 1.6rem;
                     font-weight: 900;
                     font-family: 'JetBrains Mono', monospace;
                     color: #ffffff;
@@ -840,13 +840,13 @@
                 }
 
                 .ep-digit-orb {
-                    width: 72px;
-                    height: 72px;
+                    width: 48px;
+                    height: 48px;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 2.2rem;
+                    font-size: 1.6rem;
                     font-weight: 900;
                     color: #030712;
                     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4);
