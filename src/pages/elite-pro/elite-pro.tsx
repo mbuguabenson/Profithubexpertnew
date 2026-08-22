@@ -874,6 +874,7 @@ const ElitePro = observer(() => {
 
         const startLocalEngineLoop = () => {
             setAutoState('SCANNING');
+            autoStateRef.current = 'SCANNING';
             autoAbortRef.current = new AbortController();
             const abortSignal = autoAbortRef.current.signal;
             let tradeRuns = 0;
@@ -904,7 +905,10 @@ const ElitePro = observer(() => {
 
                     const currentData = marketsRef.current.get(targetSym);
                     if (!currentData || currentData.digits.length < 30) {
-                        if (autoStateRef.current !== 'SCANNING') setAutoState('SCANNING');
+                        if (autoStateRef.current !== 'SCANNING') {
+                            setAutoState('SCANNING');
+                            autoStateRef.current = 'SCANNING';
+                        }
                         await new Promise(r => setTimeout(r, 1200));
                         continue;
                     }
@@ -916,9 +920,15 @@ const ElitePro = observer(() => {
                         const isOverSetup = a.pctOver59 >= 53 && a.over49 >= 32;
 
                         if (isUnderSetup || isOverSetup) {
-                            if (autoStateRef.current !== 'WAITING_TRIGGER') setAutoState('WAITING_TRIGGER');
+                            if (autoStateRef.current !== 'WAITING_TRIGGER') {
+                                setAutoState('WAITING_TRIGGER');
+                                autoStateRef.current = 'WAITING_TRIGGER';
+                            }
                         } else {
-                            if (autoStateRef.current !== 'SCANNING') setAutoState('SCANNING');
+                            if (autoStateRef.current !== 'SCANNING') {
+                                setAutoState('SCANNING');
+                                autoStateRef.current = 'SCANNING';
+                            }
                         }
 
                         // Poll faster when waiting for trigger to execute immediately
@@ -928,6 +938,7 @@ const ElitePro = observer(() => {
                     }
 
                     setAutoState('TRADING');
+                    autoStateRef.current = 'TRADING';
                     try {
                         const stakeToUse = currentStakeRef.current;
                         addLogEntry(
@@ -973,10 +984,12 @@ const ElitePro = observer(() => {
                         if (tradeRuns >= 7) {
                             tradeRuns = 0;
                             setAutoState('SCANNING');
+                            autoStateRef.current = 'SCANNING';
                             addLogEntry('BOT COOLDOWN', selectedSymbol, 'PENDING', 0, 'Auto-paused for re-analysis after 7 trades');
                             await new Promise(r => setTimeout(r, 7000)); // 7 second forced cooldown to allow market settling
                         } else {
                             setAutoState('SCANNING');
+                            autoStateRef.current = 'SCANNING';
                         }
                         await new Promise(r => setTimeout(r, 1800));
                     } catch (err) {
@@ -984,6 +997,7 @@ const ElitePro = observer(() => {
                         console.error('[ElitePro] Trade execution loop error:', msg);
                         addLogEntry('EXECUTION ERROR', currentData.label, 'LOSS', 0, msg);
                         setAutoState('SCANNING');
+                        autoStateRef.current = 'SCANNING';
                         await new Promise(r => setTimeout(r, 3000));
                     }
                 }

@@ -26,7 +26,6 @@ import MarketkillerStore from './marketkiller-store';
 import OverUnderStore from './over-under-store';
 import SmartAutoStore from './smart-auto-store';
 import SmartTradingStore from './smart-trading-store';
-import CopyTraderStore from './copy-trader-store';
 import FreeBotsStore from './free-bots-store';
 import DollarflipperStore from './dollarflipper-store';
 import DollarmineStore from './dollarmine-store';
@@ -64,7 +63,6 @@ export default class RootStore {
     public over_under: OverUnderStore;
     public smart_auto: SmartAutoStore;
     public smart_trading: SmartTradingStore;
-    public copy_trader: CopyTraderStore;
     public free_bots: FreeBotsStore;
     public dollarflipper: DollarflipperStore;
     public dollarmine: DollarmineStore;
@@ -122,7 +120,6 @@ export default class RootStore {
         this.over_under = new OverUnderStore(this);
         this.smart_auto = new SmartAutoStore(this);
         this.smart_trading = new SmartTradingStore(this);
-        this.copy_trader = new CopyTraderStore(this);
         this.free_bots = new FreeBotsStore(this);
 
         this.dashboard = new DashboardStore(this, this.core);

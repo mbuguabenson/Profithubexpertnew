@@ -37,7 +37,6 @@ const TradingView = lazy(() => import('../tradingview'));
 const AnalysisTools = lazy(() => import('../analysis-tool'));
 const Signals = lazy(() => import('../signals'));
 const ScannerPage = lazy(() => import('../scanner/scanner'));
-const CopyTrading = lazy(() => import('../copy-trading'));
 const AutoTrades = lazy(() => import('../auto-trades/auto-trades'));
 
 const ManualTrading = lazy(() => import('../manual-trading'));
@@ -100,7 +99,6 @@ const AppWrapper = observer(() => {
         'chart',
         'trading_bots',
         'analysis_tool',
-        'copy_trading',
         'tradingview',
         'signals',
         'auto_trades',
@@ -375,18 +373,6 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-analysis-tool' tabName='Analysis Tool'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Analysis Tool...')} />}>
                         <AnalysisTools />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'copy_trading',
-            id: 'id-copy-trading',
-            label: <TabIcon iconKey='copy_trading' label='Copy Trading' />,
-            content: (
-                <TabErrorBoundary tabId='id-copy-trading' tabName='Copy Trading'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Copy Trading...')} />}>
-                        <CopyTrading />
                     </Suspense>
                 </TabErrorBoundary>
             )
