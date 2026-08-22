@@ -981,50 +981,10 @@ export const getSocketURL = async (): Promise<string> => {
             }
         }
 
-        // Try default public WS first, but validate connectivity. If it's unreachable
-        // (for example, due to regional network restrictions), try the legacy
-        // `ws.derivws.com` v3 websocket endpoint as a fallback.
+        // Try default public WS first. We do not test it here to avoid 
+        // connection rate limits or slowing down the initial connect.
         const defaultUrl = getDefaultServerURL();
-        const legacyUrl = `wss://ws.derivws.com/websockets/v3?app_id=${encodeURIComponent(getAppId())}`;
-
-        const testWebSocket = (url: string, timeout = 3000): Promise<boolean> =>
-            new Promise(resolve => {
-                let settled = false;
-                try {
-                    const ws = new WebSocket(url);
-                    const clean = () => {
-                        try { ws.close(); } catch (e) {}
-                    };
-                    const finish = (ok: boolean) => {
-                        if (settled) return;
-                        settled = true;
-                        clean();
-                        resolve(ok);
-                    };
-                    ws.onopen = () => finish(true);
-                    ws.onerror = () => finish(false);
-                    setTimeout(() => finish(false), timeout);
-                } catch (e) {
-                    resolve(false);
-                }
-            });
-
-        try {
-            const ok = await testWebSocket(defaultUrl, 2500);
-            if (ok) return defaultUrl;
-        } catch (e) {
-            // ignore
-        }
-
-        // Fallback to legacy v3 endpoint
-        try {
-            const okLegacy = await testWebSocket(legacyUrl, 2500);
-            if (okLegacy) return legacyUrl;
-        } catch (e) {
-            // ignore
-        }
-
-        // If both fail, return default (will let higher-level logic handle errors)
+        
         return defaultUrl;
     } catch (error) {
         console.error('[DerivWS] Error in getSocketURL:', error);
