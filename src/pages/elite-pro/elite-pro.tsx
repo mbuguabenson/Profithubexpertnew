@@ -606,6 +606,8 @@ const ElitePro = observer(() => {
             pctOver59: number;
             under05: number;
             over49: number;
+            pctUnder05: number;
+            pctOver49: number;
             highestUnderDigit: number;
             highestOverDigit: number;
             hasSignal: boolean;
@@ -629,6 +631,8 @@ const ElitePro = observer(() => {
                 pctOver59: a.pctOver59,
                 under05: a.under05,
                 over49: a.over49,
+                pctUnder05: a.pctUnder05,
+                pctOver49: a.pctOver49,
                 highestUnderDigit: a.highestUnderDigit,
                 highestOverDigit: a.highestOverDigit,
                 hasSignal: !!entrySignal,
@@ -1260,37 +1264,34 @@ const ElitePro = observer(() => {
                                             if (autoInputBestMarket) setAutoInputBestMarket(false);
                                         }}
                                     >
-                                        <div className="ep-side-market-card__top">
-                                            <div className="name-box">
-                                                <span className="label">{m.label}</span>
+                                        <div className="ep-side-market-card__top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div className="name-box" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <span className="label" style={{ marginRight: '4px' }}>{m.label}</span>
                                                 {isBest && <span className="best-tag">TOP</span>}
                                                 {m.hasSignal && (
                                                     <span className={`signal-tag signal-tag--${m.signalDirection?.toLowerCase()}`}>
-                                                        {m.signalDirection} SIGNAL
+                                                        {m.signalDirection}
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="last-digit-badge">
-                                                <span>L:</span>
-                                                <strong className={m.lastDigit < 5 ? 'digit-under' : 'digit-over'}>
+                                            <div className="price-box" style={{ fontWeight: 'bold', fontSize: '11px', color: '#fff', padding: '0 6px' }}>
+                                                {m.currentPrice}
+                                            </div>
+                                            <div className="last-digit-badge" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                                                <strong className={m.lastDigit < 5 ? 'digit-under' : 'digit-over'} style={{ fontSize: '12px' }}>
                                                     {m.lastDigit}
                                                 </strong>
                                             </div>
                                         </div>
 
-                                        <div className="ep-side-market-card__price">
-                                            <span>Price:</span>
-                                            <strong>{m.currentPrice}</strong>
-                                        </div>
-
-                                        <div className="ep-side-market-card__stats">
+                                        <div className="ep-side-market-card__stats" style={{ marginTop: '6px' }}>
                                             <div className="ratio-mini-bar">
-                                                <div className="u-part" style={{ width: `${m.pctUnder04}%` }} />
-                                                <div className="o-part" style={{ width: `${m.pctOver59}%` }} />
+                                                <div className="u-part" style={{ width: `${m.pctUnder05}%` }} />
+                                                <div className="o-part" style={{ width: `${m.pctOver49}%` }} />
                                             </div>
                                             <div className="stat-labels">
-                                                <span className="u-text">U (0-4): {m.pctUnder04.toFixed(0)}%</span>
-                                                <span className="o-text">O (5-9): {m.pctOver59.toFixed(0)}%</span>
+                                                <span className="u-text">U (0-5): {m.pctUnder05.toFixed(0)}%</span>
+                                                <span className="o-text">O (4-9): {m.pctOver49.toFixed(0)}%</span>
                                             </div>
                                         </div>
 

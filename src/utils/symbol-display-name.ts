@@ -56,10 +56,7 @@ export const getSymbolDisplayNameSync = (underlying_symbol: string): string => {
         '1HZ75V': 'Volatility 75 (1s) Index',
         '1HZ90V': 'Volatility 90 (1s) Index',
         '1HZ100V': 'Volatility 100 (1s) Index',
-        '1HZ150V': 'Volatility 150 (1s) Index',
-        '1HZ200V': 'Volatility 200 (1s) Index',
         '1HZ250V': 'Volatility 250 (1s) Index',
-        '1HZ300V': 'Volatility 300 (1s) Index',
 
         // Daily Reset Indices
         RDBEAR: 'Bear Market Index',
