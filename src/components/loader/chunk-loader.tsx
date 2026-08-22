@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Lock, Wifi, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Zap, Activity } from 'lucide-react';
 import './chunk-loader.scss';
 
 interface ChunkLoaderProps {
@@ -20,93 +20,85 @@ export default function ChunkLoader({ message = 'Loading workspace...', isWelcom
                     clearInterval(timer);
                     return 100;
                 }
-                const next = prev + Math.floor(Math.random() * 20) + 12;
-                if (next > 45 && next < 75) setStatusText('Analyzing live market ticks & algorithmic signals...');
-                if (next >= 75) setStatusText('Connecting WebSocket streaming data feed...');
+                const next = prev + Math.floor(Math.random() * 15) + 8;
+                if (next > 45 && next < 75) setStatusText('Initializing Neural Network...');
+                if (next >= 75) setStatusText('Establishing Secure Data Feed...');
                 return Math.min(next, 100);
             });
-        }, 220);
+        }, 150);
 
         return () => clearInterval(timer);
     }, [isWelcome]);
 
-    // Sleek Compact Spinner for Tab & Lazy Component Chunk Loading
     if (!isWelcome) {
         return (
-            <div className='chunk-loader-overlay clean'>
-                <div className='compact-loader-card'>
-                    <div className='compact-orbital-spinner'>
-                        <div className='orbit-ring orbit-ring--outer' />
-                        <div className='orbit-ring orbit-ring--inner' />
-                        <div className='orbit-core' />
-                    </div>
-                    {message && (
-                        <div className='compact-loader-text'>
-                            <span className='compact-loader-msg'>{message}</span>
-                            <span className='compact-loader-dots'>
-                                <span />
-                                <span />
-                                <span />
-                            </span>
-                        </div>
-                    )}
+            <div className='ultimate-compact-loader'>
+                <div className='ucl-spinner'>
+                    <div className='ucl-ring ucl-ring-1' />
+                    <div className='ucl-ring ucl-ring-2' />
+                    <div className='ucl-core' />
                 </div>
+                {message && (
+                    <div className='ucl-text'>
+                        <span>{message}</span>
+                        <span className='ucl-dots'>...</span>
+                    </div>
+                )}
             </div>
         );
     }
 
-    // 360 Radial Radar Loading Screen for Welcome Screen Initialization
     return (
-        <div className='hub-360-loading-overlay'>
-            {/* Ambient Radial Orbs */}
-            <div className='ambient-orb ambient-orb--cyan' />
-            <div className='ambient-orb ambient-orb--amber' />
-            <div className='ambient-orb ambient-orb--emerald' />
+        <div className='ultimate-welcome-loader'>
+            {/* Ambient Background Lights */}
+            <div className='uwl-ambient uwl-ambient--1' />
+            <div className='uwl-ambient uwl-ambient--2' />
 
-            <div className='hub-360-container'>
-                {/* Central 360 Radial Radar */}
-                <div className='hub-360-radar-wrap'>
-                    <div className='radar-ring-outer' />
-                    <div className='radar-ring-spin' />
-                    <div className='radar-dot radar-dot--amber' />
-                    <div className='radar-dot radar-dot--cyan' />
-                    <div className='radar-dot radar-dot--white' />
-                    <div className='hub-360-center-badge'>
-                        <span className='num-360'>360</span>
+            <div className='uwl-container'>
+                {/* Central Cybernetic Core */}
+                <div className='uwl-core-wrapper'>
+                    <div className='uwl-hex-grid' />
+                    <div className='uwl-spin-ring uwl-spin-ring--outer' />
+                    <div className='uwl-spin-ring uwl-spin-ring--inner' />
+                    <div className='uwl-pulse-core' />
+                    <div className='uwl-center-logo'>
+                        <span>PRO</span>
                     </div>
                 </div>
 
-                {/* Title & Subtitle */}
-                <div className='hub-360-text-group'>
-                    <span className='powered-by-tag'>POWERED BY DERIV</span>
-                    <h2 className='hub-360-title'>360 Trading Hub</h2>
-                    <p className='hub-360-sub'>{statusText}</p>
+                {/* Typography */}
+                <div className='uwl-text-group'>
+                    <span className='uwl-eyebrow'>QUANTUM ENGINE</span>
+                    <h1 className='uwl-title'>Profit Hub</h1>
+                    <p className='uwl-subtitle'>{statusText}</p>
                 </div>
 
-                {/* Status Pills */}
-                <div className='hub-360-pills-row'>
-                    <div className='hub-pill'>
-                        <Lock size={12} className='pill-icon text-cyan' />
-                        <span>Encrypted</span>
+                {/* Status Indicators */}
+                <div className='uwl-status-row'>
+                    <div className='uwl-status-badge'>
+                        <ShieldCheck size={14} className='icon icon-shield' />
+                        <span>Secured</span>
                     </div>
-                    <div className='hub-pill'>
-                        <Wifi size={12} className='pill-icon text-emerald' />
+                    <div className='uwl-status-badge'>
+                        <Zap size={14} className='icon icon-zap' />
                         <span>Connected</span>
                     </div>
-                    <div className='hub-pill'>
-                        <CheckCircle2 size={12} className='pill-icon text-purple' />
-                        <span>Market Ready</span>
+                    <div className='uwl-status-badge'>
+                        <Activity size={14} className='icon icon-activity' />
+                        <span>Live Feed</span>
                     </div>
                 </div>
 
-                {/* Progress Bar & Deriv Branding */}
-                <div className='hub-360-progress-container'>
-                    <div className='progress-track'>
-                        <div className='progress-fill' style={{ width: `${progress}%` }} />
+                {/* Precision Progress Bar */}
+                <div className='uwl-progress-box'>
+                    <div className='uwl-progress-track'>
+                        <div className='uwl-progress-fill' style={{ width: `${progress}%` }}>
+                            <div className='uwl-progress-glow' />
+                        </div>
                     </div>
-                    <div className='deriv-badge-row'>
-                        <div className='deriv-d-logo'>d</div>
-                        <span className='deriv-brand-text'>Deriv</span>
+                    <div className='uwl-progress-meta'>
+                        <span className='meta-label'>System Boot</span>
+                        <span className='meta-value'>{progress}%</span>
                     </div>
                 </div>
             </div>

@@ -1,247 +1,333 @@
 // ═══════════════════════════════════════════════════════════════
-// ✦ CHUNK LOADER STYLES — 360 TRADING HUB RADIAL DESIGN
+// ✦ ULTIMATE PREMIUM CHUNK LOADER
 // ═══════════════════════════════════════════════════════════════
 
-.hub-360-loading-overlay {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
+/* ── COMPACT LOADER (NON-WELCOME) ── */
+.ultimate-compact-loader {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at 50% 50%, #111827 0%, #090d16 100%);
-    overflow: hidden;
-    padding: 40px 20px;
-    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.8);
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    color: #ffffff;
-    z-index: 9999;
+    gap: 16px;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #e2e8f0;
 
-    .ambient-orb {
-        position: absolute;
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        filter: blur(65px);
-        opacity: 0.45;
-        pointer-events: none;
-
-        &--cyan {
-            top: 15%;
-            left: 15%;
-            background: #7c3aed;
+    .ucl-spinner {
+        position: relative;
+        width: 50px;
+        height: 50px;
+        
+        .ucl-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid transparent;
         }
 
-        &--amber {
-            top: 18%;
-            right: 15%;
-            background: #a855f7;
+        .ucl-ring-1 {
+            border-top-color: #3b82f6;
+            border-right-color: #60a5fa;
+            animation: uclSpin 1s linear infinite;
+        }
+        
+        .ucl-ring-2 {
+            inset: 8px;
+            border-bottom-color: #8b5cf6;
+            border-left-color: #a78bfa;
+            animation: uclSpinReverse 1.5s linear infinite;
         }
 
-        &--emerald {
-            bottom: 15%;
-            left: 20%;
-            background: #6366f1;
+        .ucl-core {
+            position: absolute;
+            inset: 18px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffffff;
+            animation: uclPulse 1s ease-in-out infinite alternate;
         }
     }
 
-    .hub-360-container {
+    .ucl-text {
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        color: #94a3b8;
+    }
+}
+
+/* ── WELCOME LOADER (PREMIUM) ── */
+.ultimate-welcome-loader {
+    position: fixed;
+    inset: 0;
+    background: #030712;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+    .uwl-ambient {
+        position: absolute;
+        width: 40vw;
+        height: 40vw;
+        border-radius: 50%;
+        filter: blur(100px);
+        opacity: 0.15;
+        pointer-events: none;
+
+        &--1 {
+            top: -10%;
+            left: -10%;
+            background: #3b82f6;
+            animation: uwlDrift 10s ease-in-out infinite alternate;
+        }
+
+        &--2 {
+            bottom: -10%;
+            right: -10%;
+            background: #8b5cf6;
+            animation: uwlDriftReverse 12s ease-in-out infinite alternate;
+        }
+    }
+
+    .uwl-container {
         position: relative;
         z-index: 10;
         display: flex;
         flex-direction: column;
         align-items: center;
-        text-align: center;
-        gap: 24px;
-        max-width: 480px;
         width: 100%;
+        max-width: 500px;
+        padding: 40px 20px;
     }
 
-    .hub-360-radar-wrap {
+    .uwl-core-wrapper {
         position: relative;
-        width: 140px;
-        height: 140px;
+        width: 180px;
+        height: 180px;
         display: grid;
         place-items: center;
-
-        .radar-ring-outer {
+        margin-bottom: 40px;
+        
+        .uwl-hex-grid {
             position: absolute;
-            inset: 0;
+            inset: -40px;
+            background-image: radial-gradient(#3b82f6 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.1;
             border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(14px);
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+            mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 70%);
+            animation: uwlPulse 4s infinite alternate;
         }
 
-        .radar-ring-spin {
+        .uwl-spin-ring {
             position: absolute;
-            inset: 6px;
             border-radius: 50%;
-            border: 2px solid transparent;
-            border-top-color: #7c3aed;
-            border-right-color: #a855f7;
-            border-bottom-color: #6366f1;
-            animation: spinRadar 2.2s linear infinite;
-        }
+            border: 1px solid rgba(255, 255, 255, 0.05);
 
-        .radar-dot {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-
-            &--amber {
-                top: 24px;
-                left: 32px;
-                background: #a855f7;
-                box-shadow: 0 0 12px #a855f7;
+            &--outer {
+                inset: 0;
+                border-top: 2px solid #3b82f6;
+                border-left: 2px solid rgba(59, 130, 246, 0.3);
+                animation: uclSpin 3s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+                box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
             }
 
-            &--cyan {
-                top: 28px;
-                right: 30px;
-                background: #ffffff;
-                box-shadow: 0 0 12px #ffffff;
-            }
-
-            &--white {
-                bottom: 32px;
-                right: 34px;
-                background: #7c3aed;
-                box-shadow: 0 0 12px #7c3aed;
+            &--inner {
+                inset: 20px;
+                border-bottom: 2px solid #8b5cf6;
+                border-right: 2px solid rgba(139, 92, 246, 0.3);
+                animation: uclSpinReverse 2.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+                box-shadow: inset 0 0 20px rgba(139, 92, 246, 0.2);
             }
         }
 
-        .hub-360-center-badge {
+        .uwl-pulse-core {
+            position: absolute;
+            inset: 45px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+
+        .uwl-center-logo {
             position: relative;
-            z-index: 2;
-            width: 76px;
-            height: 76px;
-            border-radius: 50%;
-            background: #0b0f19;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            display: grid;
-            place-items: center;
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.8);
-
-            .num-360 {
+            z-index: 5;
+            
+            span {
                 font-family: 'Space Grotesk', sans-serif;
-                font-size: 1.65rem;
-                font-weight: 800;
-                color: #ffffff;
-                letter-spacing: -0.02em;
+                font-size: 1.8rem;
+                font-weight: 900;
+                background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                letter-spacing: 0.05em;
             }
         }
     }
 
-    .hub-360-text-group {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
+    .uwl-text-group {
+        text-align: center;
+        margin-bottom: 32px;
 
-        .powered-by-tag {
-            font-size: 0.72rem;
+        .uwl-eyebrow {
+            font-size: 0.7rem;
             font-weight: 800;
-            color: #a855f7;
-            letter-spacing: 0.14em;
+            color: #3b82f6;
+            letter-spacing: 0.25em;
             text-transform: uppercase;
+            margin-bottom: 12px;
+            display: block;
         }
 
-        .hub-360-title {
+        .uwl-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 2.3rem;
+            font-size: 3rem;
             font-weight: 800;
             color: #ffffff;
-            margin: 0;
-            letter-spacing: -0.02em;
-            line-height: 1.15;
+            margin: 0 0 8px 0;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
         }
 
-        .hub-360-sub {
-            font-size: 0.92rem;
+        .uwl-subtitle {
+            font-size: 1rem;
             color: #94a3b8;
             margin: 0;
             font-weight: 500;
         }
     }
 
-    .hub-360-pills-row {
+    .uwl-status-row {
         display: flex;
-        align-items: center;
-        gap: 12px;
+        gap: 16px;
+        margin-bottom: 48px;
 
-        .hub-pill {
+        .uwl-status-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.76rem;
-            font-weight: 700;
-            color: #cbd5e1;
-            padding: 7px 16px;
-            border-radius: 9999px;
-            background: rgba(30, 41, 59, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 100px;
+            backdrop-filter: blur(10px);
+            
+            span {
+                font-size: 0.8rem;
+                font-weight: 600;
+                color: #cbd5e1;
+            }
 
-            .pill-icon {
-                &.text-cyan { color: #a855f7; }
-                &.text-emerald { color: #7c3aed; }
-                &.text-purple { color: #6366f1; }
+            .icon {
+                &-shield { color: #3b82f6; }
+                &-zap { color: #eab308; }
+                &-activity { color: #10b981; }
             }
         }
     }
 
-    .hub-360-progress-container {
+    .uwl-progress-box {
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 14px;
-        margin-top: 8px;
-
-        .progress-track {
+        max-width: 360px;
+        
+        .uwl-progress-track {
             width: 100%;
-            height: 6px;
-            border-radius: 9999px;
-            background: rgba(255, 255, 255, 0.12);
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
             overflow: hidden;
+            margin-bottom: 12px;
+            position: relative;
 
-            .progress-fill {
+            .uwl-progress-fill {
                 height: 100%;
-                border-radius: 9999px;
-                background: linear-gradient(90deg, #7c3aed, #a855f7);
-                transition: width 0.3s ease;
+                background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+                background-size: 200% 100%;
+                border-radius: 10px;
+                transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                animation: gradientShift 2s linear infinite;
+
+                .uwl-progress-glow {
+                    position: absolute;
+                    right: 0;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 20px;
+                    height: 10px;
+                    background: #ffffff;
+                    filter: blur(6px);
+                    opacity: 0.8;
+                }
             }
         }
 
-        .deriv-badge-row {
+        .uwl-progress-meta {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
-
-            .deriv-d-logo {
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                background: #ff444f;
-                color: #fff;
-                font-weight: 900;
-                font-size: 12px;
-                display: grid;
-                place-items: center;
-                line-height: 1;
+            
+            .meta-label {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
             }
 
-            .deriv-brand-text {
+            .meta-value {
+                font-family: 'Space Grotesk', monospace;
                 font-size: 0.85rem;
                 font-weight: 700;
-                color: #ffffff;
+                color: #f8fafc;
             }
         }
     }
 }
 
-@keyframes spinRadar {
-    to { transform: rotate(360deg); }
+/* ── ANIMATIONS ── */
+@keyframes uclSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes uclSpinReverse {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes uclPulse {
+    0% { transform: scale(0.85); opacity: 0.5; }
+    100% { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes uwlDrift {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(50px, 30px) scale(1.1); }
+}
+
+@keyframes uwlDriftReverse {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-50px, -30px) scale(1.1); }
+}
+
+@keyframes uwlPulse {
+    0% { opacity: 0.05; }
+    100% { opacity: 0.15; }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
 }

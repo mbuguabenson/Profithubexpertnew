@@ -421,14 +421,15 @@ const ElitePro = observer(() => {
         const underRatioMet = a.pctUnder04 >= 55 && a.underIncreasing;
         const under50TicksMet = (a.under05 - a.over49) >= 7; // Difference of 7+
         const underRecentTicksMet = a.last15Under;
+        const underPowerOverride = a.pctUnder04 >= 60;
 
-        if (underRatioMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped) {
+        if (((underRatioMet && under50TicksMet && underRecentTicksMet) || underPowerOverride) && !a.isUnderTrendFlipped) {
             if (currentLastDigit === a.highestUnderDigit) {
                 return {
                     direction: 'UNDER',
                     prediction: 6,
                     triggerDigit: a.highestUnderDigit,
-                    reason: `Under dominance (U0-5: ${a.under05} vs O4-9: ${a.over49}) with Trigger Digit [${a.highestUnderDigit}]`,
+                    reason: `Under dominance (${underPowerOverride ? 'Power > 60%' : `U0-5: ${a.under05} vs O4-9: ${a.over49}`}) with Trigger Digit [${a.highestUnderDigit}]`,
                 };
             }
         }
@@ -437,14 +438,15 @@ const ElitePro = observer(() => {
         const overRatioMet = a.pctOver59 >= 55 && a.overIncreasing;
         const over50TicksMet = (a.over49 - a.under05) >= 7; // Difference of 7+
         const overRecentTicksMet = a.last15Over;
+        const overPowerOverride = a.pctOver59 >= 60;
 
-        if (overRatioMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped) {
+        if (((overRatioMet && over50TicksMet && overRecentTicksMet) || overPowerOverride) && !a.isOverTrendFlipped) {
             if (currentLastDigit === a.highestOverDigit) {
                 return {
                     direction: 'OVER',
                     prediction: 3,
                     triggerDigit: a.highestOverDigit,
-                    reason: `Over dominance (O4-9: ${a.over49} vs U0-5: ${a.under05}) with Trigger Digit [${a.highestOverDigit}]`,
+                    reason: `Over dominance (${overPowerOverride ? 'Power > 60%' : `O4-9: ${a.over49} vs U0-5: ${a.under05}`}) with Trigger Digit [${a.highestOverDigit}]`,
                 };
             }
         }
