@@ -308,10 +308,10 @@ const ElitePro = observer(() => {
         // 3. Momentum & Trend Momentum calculation (using purely the 50-tick window)
         const firstHalf = slice.slice(0, 25);
         const secondHalf = slice.slice(25);
-        const firstHalfUnder = firstHalf.length > 0 ? (countDigitsInRange(firstHalf, 0, 4) / 25) * 100 : 50;
-        const firstHalfOver = firstHalf.length > 0 ? (countDigitsInRange(firstHalf, 5, 9) / 25) * 100 : 50;
-        const secondHalfUnder = secondHalf.length > 0 ? (countDigitsInRange(secondHalf, 0, 4) / 25) * 100 : 50;
-        const secondHalfOver = secondHalf.length > 0 ? (countDigitsInRange(secondHalf, 5, 9) / 25) * 100 : 50;
+        const firstHalfUnder = firstHalf.length > 0 ? (countDigitsInRange(firstHalf, 0, 5) / 25) * 100 : 50;
+        const firstHalfOver = firstHalf.length > 0 ? (countDigitsInRange(firstHalf, 4, 9) / 25) * 100 : 50;
+        const secondHalfUnder = secondHalf.length > 0 ? (countDigitsInRange(secondHalf, 0, 5) / 25) * 100 : 50;
+        const secondHalfOver = secondHalf.length > 0 ? (countDigitsInRange(secondHalf, 4, 9) / 25) * 100 : 50;
 
         const underIncreasing = secondHalfUnder >= firstHalfUnder;
         const overIncreasing = secondHalfOver >= firstHalfOver;
@@ -346,9 +346,9 @@ const ElitePro = observer(() => {
 
         // Overall dominant side & market bias
         let bias: 'under' | 'over' | 'neutral' = 'neutral';
-        if (pctUnder04 > 55 || (under05 >= 30 && under05 > over49)) {
+        if (pctUnder05 > 55 || (under05 >= 30 && under05 > over49)) {
             bias = 'under';
-        } else if (pctOver59 > 55 || (over49 >= 30 && over49 > under05)) {
+        } else if (pctOver49 > 55 || (over49 >= 30 && over49 > under05)) {
             bias = 'over';
         }
 
@@ -417,11 +417,11 @@ const ElitePro = observer(() => {
         const a = computeAnalysis(digits);
         const currentLastDigit = digits[digits.length - 1];
 
-        // 1. UNDER 6 Conditions
-        const underRatioMet = a.pctUnder04 >= 55 && a.underIncreasing;
-        const under50TicksMet = (a.under05 - a.over49) >= 7; // Difference of 7+
+        // 1. UNDER 6 Conditions (Digits 0-5, base probability 60%)
+        const underRatioMet = a.pctUnder05 >= 62 && a.underIncreasing; // 62% is ~31/50
+        const under50TicksMet = a.under05 >= 32; // Strong dominance
         const underRecentTicksMet = a.last15Under;
-        const underPowerOverride = a.pctUnder04 >= 60;
+        const underPowerOverride = a.pctUnder05 >= 66; // 33/50 ticks overrides recent checks
 
         if (((underRatioMet && under50TicksMet && underRecentTicksMet) || underPowerOverride) && !a.isUnderTrendFlipped) {
             if (currentLastDigit === a.highestUnderDigit) {
@@ -429,16 +429,16 @@ const ElitePro = observer(() => {
                     direction: 'UNDER',
                     prediction: 6,
                     triggerDigit: a.highestUnderDigit,
-                    reason: `Under dominance (${underPowerOverride ? 'Power > 60%' : `U0-5: ${a.under05} vs O4-9: ${a.over49}`}) with Trigger Digit [${a.highestUnderDigit}]`,
+                    reason: `Under dominance (${underPowerOverride ? 'Power \u2265 66%' : `U0-5: ${a.under05} ticks`}) with Trigger Digit [${a.highestUnderDigit}]`,
                 };
             }
         }
 
-        // 2. OVER 3 Conditions
-        const overRatioMet = a.pctOver59 >= 55 && a.overIncreasing;
-        const over50TicksMet = (a.over49 - a.under05) >= 7; // Difference of 7+
+        // 2. OVER 3 Conditions (Digits 4-9, base probability 60%)
+        const overRatioMet = a.pctOver49 >= 62 && a.overIncreasing;
+        const over50TicksMet = a.over49 >= 32;
         const overRecentTicksMet = a.last15Over;
-        const overPowerOverride = a.pctOver59 >= 60;
+        const overPowerOverride = a.pctOver49 >= 66;
 
         if (((overRatioMet && over50TicksMet && overRecentTicksMet) || overPowerOverride) && !a.isOverTrendFlipped) {
             if (currentLastDigit === a.highestOverDigit) {
@@ -620,7 +620,7 @@ const ElitePro = observer(() => {
             if (data.digits.length < 10) return;
             const a = computeAnalysis(data.digits);
             const entrySignal = checkEntrySignal(data.digits);
-            const strength = Math.max(a.pctUnder04, a.pctOver59);
+            const strength = Math.max(a.pctUnder05, a.pctOver49);
 
             result.push({
                 symbol: sym,
@@ -629,8 +629,8 @@ const ElitePro = observer(() => {
                 lastDigit: data.lastDigit,
                 bias: a.bias,
                 strength,
-                pctUnder04: a.pctUnder04,
-                pctOver59: a.pctOver59,
+                pctUnder05: a.pctUnder05,
+                pctOver49: a.pctOver49,
                 under05: a.under05,
                 over49: a.over49,
                 pctUnder05: a.pctUnder05,
@@ -922,8 +922,8 @@ const ElitePro = observer(() => {
                     const entrySignal = checkEntrySignal(currentData.digits);
                     if (!entrySignal) {
                         const a = computeAnalysis(currentData.digits);
-                        const isUnderSetup = a.pctUnder04 >= 53 && a.under05 >= 32;
-                        const isOverSetup = a.pctOver59 >= 53 && a.over49 >= 32;
+                        const isUnderSetup = a.pctUnder05 >= 60 && a.under05 >= 30;
+                        const isOverSetup = a.pctOver49 >= 60 && a.over49 >= 30;
 
                         if (isUnderSetup || isOverSetup) {
                             if (autoStateRef.current !== 'WAITING_TRIGGER') {
