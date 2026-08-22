@@ -377,15 +377,15 @@ const ElitePro = observer(() => {
         const last10 = slice.slice(-10);
         const last10UnderCount = last10.filter(d => d <= 5).length;
         const last10OverCount = last10.filter(d => d >= 4).length;
-        const last10Under = last10.length === 10 && last10UnderCount >= 7;
-        const last10Over = last10.length === 10 && last10OverCount >= 7;
+        const last10Under = last10.length === 10 && last10UnderCount >= 8;
+        const last10Over = last10.length === 10 && last10OverCount >= 8;
 
         // Last 15 ticks count
         const last15 = slice.slice(-15);
         const last15UnderCount = last15.filter(d => d <= 5).length;
         const last15OverCount = last15.filter(d => d >= 4).length;
-        const last15Under = last15.length === 15 && last15UnderCount > 7;
-        const last15Over = last15.length === 15 && last15OverCount > 7;
+        const last15Under = last15.length === 15 && last15UnderCount >= 11;
+        const last15Over = last15.length === 15 && last15OverCount >= 11;
 
         // Last 7 ticks check (strictly favoring direction)
         const last7 = slice.slice(-7);
@@ -442,7 +442,7 @@ const ElitePro = observer(() => {
         const underRatioMet = a.pctUnder05 >= 62; // ~31/50
         const underIncreasingMet = a.underIncreasing;
         const under50TicksMet = a.under05 >= 32;
-        const underRecentTicksMet = a.last15Under;
+        const underRecentTicksMet = a.last15Under && a.last10Under && a.last7Under;
 
         // ALL conditions must align perfectly
         const isUnderValid = underRatioMet && underIncreasingMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped && !a.recentTrendFlip;
@@ -461,7 +461,7 @@ const ElitePro = observer(() => {
         const overRatioMet = a.pctOver49 >= 62; // ~31/50
         const overIncreasingMet = a.overIncreasing;
         const over50TicksMet = a.over49 >= 32;
-        const overRecentTicksMet = a.last15Over;
+        const overRecentTicksMet = a.last15Over && a.last10Over && a.last7Over;
 
         // ALL conditions must align perfectly
         const isOverValid = overRatioMet && overIncreasingMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped && !a.recentTrendFlip;
@@ -667,12 +667,12 @@ const ElitePro = observer(() => {
                 lastDigit: data.lastDigit,
                 bias: a.bias,
                 strength,
+                pctUnder04: a.pctUnder04,
+                pctOver59: a.pctOver59,
                 pctUnder05: a.pctUnder05,
                 pctOver49: a.pctOver49,
                 under05: a.under05,
                 over49: a.over49,
-                pctUnder05: a.pctUnder05,
-                pctOver49: a.pctOver49,
                 highestUnderDigit: a.highestUnderDigit,
                 highestOverDigit: a.highestOverDigit,
                 hasSignal: !!entrySignal,
@@ -959,20 +959,27 @@ const ElitePro = observer(() => {
                     }
 
                     const entrySignal = checkEntrySignal(currentData.digits);
-                    if (!entrySignal) {
-                        const a = computeAnalysis(currentData.digits);
-                        const isUnderSetup = a.pctUnder05 >= 60 && a.under05 >= 30;
-                        const isOverSetup = a.pctOver49 >= 60 && a.over49 >= 30;
-
-                        if (isUnderSetup || isOverSetup) {
+                    if (!entrySignal || entrySignal.status === 'WAITING') {
+                        if (entrySignal && entrySignal.status === 'WAITING') {
                             if (autoStateRef.current !== 'WAITING_TRIGGER') {
                                 setAutoState('WAITING_TRIGGER');
                                 autoStateRef.current = 'WAITING_TRIGGER';
                             }
                         } else {
-                            if (autoStateRef.current !== 'SCANNING') {
-                                setAutoState('SCANNING');
-                                autoStateRef.current = 'SCANNING';
+                            const a = computeAnalysis(currentData.digits);
+                            const isUnderSetup = a.pctUnder05 >= 60 && a.under05 >= 30;
+                            const isOverSetup = a.pctOver49 >= 60 && a.over49 >= 30;
+
+                            if (isUnderSetup || isOverSetup) {
+                                if (autoStateRef.current !== 'WAITING_TRIGGER') {
+                                    setAutoState('WAITING_TRIGGER');
+                                    autoStateRef.current = 'WAITING_TRIGGER';
+                                }
+                            } else {
+                                if (autoStateRef.current !== 'SCANNING') {
+                                    setAutoState('SCANNING');
+                                    autoStateRef.current = 'SCANNING';
+                                }
                             }
                         }
 
@@ -1353,7 +1360,7 @@ const ElitePro = observer(() => {
                 {/* ══════════════════════════════════════════════════════════════════
                     MAIN WORKSPACE CONTENT
                     ══════════════════════════════════════════════════════════════════ */}
-                <main className="ep-main-content">
+                <main className={`ep-main-content ${activeData ? `radar-${allMarketsData.find(m => m.symbol === activeData.symbol)?.radarStatus || 'normal'}` : ''}`}>
                     {/* ── Top Header ── */}
                     <div className="ep-glass ep-header">
                         <div className="ep-header__title">

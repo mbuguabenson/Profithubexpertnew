@@ -7,7 +7,7 @@ import { resolveValidDerivWSToken, getAccountsList, getActiveToken } from '@/uti
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
 import IframeAuthService from './iframe-auth.service';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
-import { getClientId } from '@/components/shared/utils/config/config';
+import { getClientId, getAppId } from '@/components/shared/utils/config/config';
 import { Loader2 } from 'lucide-react';
 
 interface DTraderIframeContainerProps {
@@ -58,7 +58,8 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 
         const activeLoginId = tokenData.loginid || V2GetActiveClientId() || client?.loginid || localStorage.getItem('active_loginid') || '';
         const token = tokenData.token || await resolveValidDerivWSToken(activeLoginId);
-        const appId = getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
+        const appId = getAppId() || '121856';
+        const clientId = getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
         const currency = client?.currency || 'USD';
         const maskedToken = token ? `${token.slice(0, 4)}...${token.slice(-4)}` : 'none';
 
@@ -126,8 +127,9 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         }
     }, [tokenData, client?.currency, hideHeader]);
 
-    // Construct full DTrader route URL with all accounts & tokens as query parameters
-    const appId = getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
+    // Construct full DTrader route URL with settings in query params and tokens in hash
+    const appId = getAppId() || '121856';
+    const clientId = getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
     const currency = client?.currency || 'USD';
     const loginId = tokenData.loginid || client?.loginid || localStorage.getItem('active_loginid') || '';
 
@@ -146,15 +148,17 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     queryParams.set('lang', 'EN');
     queryParams.set('bt_secret', 'binarytool');
     queryParams.set('app_id', appId);
-    queryParams.set('client_id', appId);
+    queryParams.set('client_id', clientId);
     queryParams.set('api_version', 'v2');
+    
+    const hashParams = new URLSearchParams();
     
     const activeToken = tokenData.token || '';
     if (loginId) {
-        queryParams.set('acct1', loginId);
-        queryParams.set('cur1', currency);
+        hashParams.set('acct1', loginId);
+        hashParams.set('cur1', currency);
         if (activeToken) {
-            queryParams.set('token1', activeToken);
+            hashParams.set('token1', activeToken);
         }
     }
 
@@ -165,16 +169,16 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             const accToken = accountsList[accId];
             if (accToken && accId !== loginId) {
                 index++;
-                queryParams.set(`acct${index}`, accId);
-                queryParams.set(`token${index}`, accToken);
-                queryParams.set(`cur${index}`, currency || 'USD');
+                hashParams.set(`acct${index}`, accId);
+                hashParams.set(`token${index}`, accToken);
+                hashParams.set(`cur${index}`, currency || 'USD');
             }
         }
     } catch (error) {
         // no-op
     }
 
-    const iframeSrc = `${targetBase}?${queryParams.toString()}`;
+    const iframeSrc = `${targetBase}?${queryParams.toString()}#${hashParams.toString()}`;
 
     useEffect(() => {
         const iframe = iframeRef.current;
