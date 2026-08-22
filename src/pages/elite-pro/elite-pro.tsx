@@ -1726,9 +1726,29 @@ const ElitePro = observer(() => {
 
                     {/* ── Engine Execution Logs ── */}
                     <div className="ep-glass ep-logs-card">
-                        <div className="ep-logs-card__header">
-                            <span className="title">📋 Live Engine Execution Logs</span>
-                            <span className="sync-note">Synced to Global Transaction Drawer</span>
+                        <div className="ep-logs-card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span className="title">📋 Live Engine Execution Logs</span>
+                                <span className="sync-note">Synced to Global Transaction Drawer</span>
+                            </div>
+                            {tradeLog.length > 0 && (
+                                <button 
+                                    onClick={() => setTradeLog([])}
+                                    style={{ 
+                                        background: 'rgba(239, 68, 68, 0.1)', 
+                                        color: '#ef4444', 
+                                        border: '1px solid rgba(239, 68, 68, 0.2)', 
+                                        padding: '4px 10px', 
+                                        borderRadius: '6px', 
+                                        fontSize: '11px', 
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    title="Clear execution logs"
+                                >
+                                    Clear Logs
+                                </button>
+                            )}
                         </div>
 
                         {tradeLog.length === 0 ? (
