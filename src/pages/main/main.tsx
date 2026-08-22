@@ -638,29 +638,29 @@ const AppWrapper = observer(() => {
                 </div>
             </div>
 
-            <DesktopWrapper>
-                {/* Run/Stop button — same width as drawer, sits on top of it */}
-                <div style={{
-                    position: 'fixed',
-                    top: '5rem',
-                    right: 0,
-                    width: '35rem',
-                    height: '5rem',
-                    zIndex: 1100,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'var(--general-main-2)',
-                    borderBottom: '1px solid var(--general-section-1)',
-                    padding: '0 1.6rem',
-                }}>
-                    <RunStrategy />
-                </div>
-                <RunPanel />
-            </DesktopWrapper>
-            <MobileWrapper>
-                {!is_open && <RunPanel />}
-            </MobileWrapper>
+            {isDesktop ? (
+                <>
+                    <div style={{
+                        position: 'fixed',
+                        top: '5rem',
+                        right: 0,
+                        width: '35rem',
+                        height: '5rem',
+                        zIndex: 1100,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'var(--general-main-2)',
+                        borderBottom: '1px solid var(--general-section-1)',
+                        padding: '0 1.6rem',
+                    }}>
+                        <RunStrategy />
+                    </div>
+                    <RunPanel />
+                </>
+            ) : (
+                !is_open && <RunPanel />
+            )}
 
             <ChartModal />
             <TradingViewModal />

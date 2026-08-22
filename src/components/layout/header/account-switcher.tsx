@@ -61,7 +61,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     const [wallets, setWallets] = useState<DerivWallet[]>([]);
     const [userNickname, setUserNickname] = useState<string>('');
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const { accountList, activeLoginid } = useApiBase();
+    const { accountList, activeLoginid, authData } = useApiBase();
     const { client, run_panel } = useStore() ?? {};
 
     const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'KES'>(() => {
@@ -144,10 +144,26 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     const handleAccountSelect = useCallback(
         (loginid: string) => {
             localStorage.setItem('active_loginid', loginid);
+            
+            // Optimistic update for UI instant switch
+            if (authData && accountList) {
+                const targetAccount = accountList.find(a => a.loginid === loginid);
+                if (targetAccount) {
+                    const newAuthData = { ...authData, loginid };
+                    newAuthData.balance = targetAccount.balance ? Number(targetAccount.balance) : 0;
+                    newAuthData.currency = targetAccount.currency;
+                    newAuthData.is_virtual = targetAccount.is_virtual || (loginid.startsWith('VR') ? 1 : 0);
+                    // Use a dynamic import for setAuthData since it might not be exported from useApiBase
+                    import('@/external/bot-skeleton/services/api/observables/connection-status-stream').then(module => {
+                        module.setAuthData(newAuthData);
+                    });
+                }
+            }
+
             client?.checkAndRegenerateWebSocket();
             setIsOpen(false);
         },
-        [client]
+        [client, authData, accountList]
     );
 
     // Reset demo balance handler

@@ -187,7 +187,9 @@ export default class RunPanelStore {
         const is_ios = mobileOSDetect() === 'iOS';
         // Run workspace save asynchronously so UI thread starts bot instantly
         if (this.dbot?.saveRecentWorkspace) {
-            this.dbot.saveRecentWorkspace().catch(() => {});
+            setTimeout(() => {
+                this.dbot.saveRecentWorkspace().catch(() => {});
+            }, 0);
         }
         if (this.dbot?.unHighlightAllBlocks) {
             this.dbot.unHighlightAllBlocks();
@@ -240,7 +242,11 @@ export default class RunPanelStore {
     onResumeButtonClick = async () => {
         const { client, ui } = this.core;
         const is_ios = mobileOSDetect() === 'iOS';
-        this.dbot.saveRecentWorkspace();
+        if (this.dbot?.saveRecentWorkspace) {
+            setTimeout(() => {
+                this.dbot.saveRecentWorkspace().catch(() => {});
+            }, 0);
+        }
         this.dbot.unHighlightAllBlocks();
         if (!client.is_logged_in) {
             this.showLoginDialog();

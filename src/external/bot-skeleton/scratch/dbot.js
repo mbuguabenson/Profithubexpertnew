@@ -301,13 +301,16 @@ class DBot {
      * Runs the bot. Does a sanity check before attempting to generate the
      * JavaScript code that's fed to the interpreter.
      */
-    runBot() {
+    async runBot() {
         if (api_base.is_stopping) return;
 
         try {
             api_base.is_stopping = false;
             const code = this.generateCode();
-            if (!this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) this.interpreter = Interpreter();
+            if (!this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) {
+                this.interpreter = Interpreter();
+                await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
+            }
 
             this.is_bot_running = true;
 
