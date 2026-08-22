@@ -232,7 +232,7 @@ const ElitePro = observer(() => {
     // ── Market state ──
     const [selectedSymbol, setSelectedSymbol] = useState(MARKETS[0].symbol);
     const [scanAll, setScanAll] = useState(true);
-    const [autoInputBestMarket, setAutoInputBestMarket] = useState(true);
+    const [autoInputBestMarket, setAutoInputBestMarket] = useState(false);
     const [marketsSideExpanded, setMarketsSideExpanded] = useState(true);
     const marketsRef = useRef<Map<string, MarketDigitData>>(new Map());
     const [renderTick, forceRender] = useState(0);
