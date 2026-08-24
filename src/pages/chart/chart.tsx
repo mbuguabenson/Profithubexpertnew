@@ -148,8 +148,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 isConnectionOpened={is_connection_opened}
                 getMarketsOrder={getMarketsOrder}
                 isLive
-                leftMargin={isDesktop ? 80 : 20}
-                yAxisMargin={is_drawer_open && isDesktop ? { top: 50, bottom: 0 } : { top: 0, bottom: 0 }}
+                leftMargin={isDesktop ? 20 : 10}
+                yAxisMargin={{ top: 0, bottom: 0 }}
                 drawingToolFloatingMenuPosition={isMobile ? { x: 100, y: 100 } : { x: 200, y: 200 }}
             />
         </div>
