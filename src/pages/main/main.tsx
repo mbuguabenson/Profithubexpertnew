@@ -5,9 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getSiteConfig } from '@/utils/supabase-copy';
 import ChunkLoader from '@/components/loader/chunk-loader';
 import { generateOAuthURL } from '@/components/shared';
-import DesktopWrapper from '@/components/shared_ui/desktop-wrapper';
 import Dialog from '@/components/shared_ui/dialog';
-import MobileWrapper from '@/components/shared_ui/mobile-wrapper';
 import Tabs from '@/components/shared_ui/tabs/tabs';
 import TradingViewModal from '@/components/trading-view-chart/trading-view-modal';
 import ProfihubModal from '@/components/profihub-analysis/profihub-modal';
@@ -37,7 +35,6 @@ const TradingView = lazy(() => import('../tradingview'));
 const AnalysisTools = lazy(() => import('../analysis-tool'));
 const Signals = lazy(() => import('../signals'));
 const ScannerPage = lazy(() => import('../scanner/scanner'));
-const AutoTrades = lazy(() => import('../auto-trades/auto-trades'));
 
 const ManualTrading = lazy(() => import('../manual-trading'));
 const EasyTool = lazy(() => import('../easy-tool'));
@@ -102,7 +99,6 @@ const AppWrapper = observer(() => {
         'analysis_tool',
         'tradingview',
         'signals',
-        'auto_trades',
         'scanner',
         'manual_trading',
         'easy_tool',
@@ -399,18 +395,6 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-signals' tabName='Signals'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signals...')} />}>
                         <Signals />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'auto_trades',
-            id: 'id-auto-trades',
-            label: <TabIcon iconKey='auto_trades' label='Auto Trades' />,
-            content: (
-                <TabErrorBoundary tabId='id-auto-trades' tabName='Auto Trades'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Auto Trades...')} />}>
-                        <AutoTrades />
                     </Suspense>
                 </TabErrorBoundary>
             )
