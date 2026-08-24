@@ -79,6 +79,8 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             isDemo: activeLoginId.startsWith('VR'),
             appId,
             app_id: appId,
+            clientId,
+            client_id: clientId,
             theme: 'dark',
             standalone: true,
             hideHeader,
