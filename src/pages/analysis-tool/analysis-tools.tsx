@@ -5,7 +5,6 @@ import Signals from '../signals';
 import TickAnalyser from './tick-analyser';
 import CirclesAnalysis from '../circles-analysis';
 import DigitCracker from '../digit-cracker';
-import DCirclesPage from '../dcircles/dcircles';
 import DpTools from '../dp-tools/dp-tools';
 import { useStore } from '@/hooks/useStore';
 import { ApiHelpers } from '@/external/bot-skeleton';
@@ -18,7 +17,6 @@ type AnalysisToolSubTab =
     | 'tick-analyser'
     | 'circles-analysis'
     | 'digit-cracker'
-    | 'dcircles'
     | 'xenon-tool';
 
 const AnalysisTools: React.FC = () => {
@@ -666,8 +664,6 @@ const AnalysisTools: React.FC = () => {
                 return <CirclesAnalysis />;
             case 'digit-cracker':
                 return <DigitCracker />;
-            case 'dcircles':
-                return <DCirclesPage />;
             case 'xenon-tool':
                 return <DpTools />;
             default:
@@ -733,14 +729,6 @@ const AnalysisTools: React.FC = () => {
                     >
                         <div className='analysis-tools__card-content'>
                             <span className='analysis-tools__card-label'>Xenon Tool</span>
-                        </div>
-                    </div>
-                    <div
-                        className={`analysis-tools__card analysis-tools__card--light ${active_tool === 'dcircles' ? 'analysis-tools__card--active' : ''}`}
-                        onClick={() => handleCardClick('dcircles')}
-                    >
-                        <div className='analysis-tools__card-content'>
-                            <span className='analysis-tools__card-label'>DCircles</span>
                         </div>
                     </div>
                 </div>

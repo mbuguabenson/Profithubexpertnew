@@ -44,7 +44,6 @@ const Marketkiller = lazy(() => import('../marketkiller'));
 const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
 const TradingBots = lazy(() => import('../free-bots/trading-bots'));
 const EntryScanner = lazy(() => import('../entry-scanner/entry-scanner').then(m => ({ default: m.EntryScanner })));
-const DCirclesPage = lazy(() => import('../dcircles/dcircles'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
 const DigitFlowPage = lazy(() => import('../digitflow/digitflow'));
 const EliteProPage = lazy(() => import('../elite-pro/elite-pro'));
@@ -107,7 +106,6 @@ const AppWrapper = observer(() => {
         'multi_trader',
         'market_hunter_pro',
         'ai_trading_engine',
-        'dcircles',
         'dtrader',
         'digitflow',
         'elite_pro',
@@ -491,18 +489,6 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-ai-trading-engine' tabName='AI Trading Engine'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AI Trading Engine...')} />}>
                         <EntryScanner />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'dcircles',
-            id: 'id-dcircles',
-            label: <TabIcon iconKey='dcircles' label='DCircles' />,
-            content: (
-                <TabErrorBoundary tabId='id-dcircles' tabName='DCircles'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DCircles...')} />}>
-                        <DCirclesPage />
                     </Suspense>
                 </TabErrorBoundary>
             )
