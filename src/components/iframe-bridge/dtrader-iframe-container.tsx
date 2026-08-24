@@ -152,14 +152,17 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     queryParams.set('api_version', 'v2');
     
     const hashParams = new URLSearchParams();
-    
     const activeToken = tokenData.token || '';
-    if (loginId) {
+
+    if (loginId && activeToken) {
+        // Pass to both queryParams AND hashParams so every Deriv DTrader variant detects auth immediately on boot
+        queryParams.set('acct1', loginId);
+        queryParams.set('cur1', currency);
+        queryParams.set('token1', activeToken);
+
         hashParams.set('acct1', loginId);
         hashParams.set('cur1', currency);
-        if (activeToken) {
-            hashParams.set('token1', activeToken);
-        }
+        hashParams.set('token1', activeToken);
     }
 
     try {
@@ -169,6 +172,10 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             const accToken = accountsList[accId];
             if (accToken && accId !== loginId) {
                 index++;
+                queryParams.set(`acct${index}`, accId);
+                queryParams.set(`token${index}`, accToken);
+                queryParams.set(`cur${index}`, currency || 'USD');
+
                 hashParams.set(`acct${index}`, accId);
                 hashParams.set(`token${index}`, accToken);
                 hashParams.set(`cur${index}`, currency || 'USD');
@@ -222,6 +229,82 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             authService.stop();
         };
     }, [syncSession, onLoad, iframeSrc]);
+
+    if (!loginId || !activeToken) {
+        return (
+            <div style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'radial-gradient(circle at center, #121c30 0%, #080c16 100%)',
+                color: '#e2e8f0',
+                padding: '20px'
+            }}>
+                <div style={{
+                    maxWidth: '480px',
+                    width: '100%',
+                    background: 'rgba(20, 30, 50, 0.85)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1.5px solid rgba(0, 242, 254, 0.35)',
+                    borderRadius: '20px',
+                    padding: '36px',
+                    textAlign: 'center',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '16px'
+                }}>
+                    <div style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(124, 58, 237, 0.2))',
+                        border: '1.5px solid #00f2fe',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#00f2fe',
+                        boxShadow: '0 0 24px rgba(0, 242, 254, 0.3)'
+                    }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                    </div>
+                    <h2 style={{ fontSize: '22px', fontWeight: 900, color: '#f8fafc', margin: 0, letterSpacing: '-0.3px' }}>
+                        DTrader Terminal Authentication
+                    </h2>
+                    <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                        To access live market trading and authorize your account connection, please log in with your Deriv account.
+                    </p>
+                    <button
+                        onClick={async () => {
+                            const { generateOAuthURL } = await import('@/components/shared');
+                            const url = await generateOAuthURL();
+                            if (url) window.location.replace(url);
+                        }}
+                        style={{
+                            marginTop: '8px',
+                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '12px',
+                            padding: '12px 32px',
+                            fontSize: '15px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        Log in with Deriv
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`dtrader-standalone-container ${className}`} style={{ width: '100%', height: '100%', position: 'relative' }}>
