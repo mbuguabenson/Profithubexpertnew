@@ -1,0 +1,352 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// DTRADER NATIVE PRO TERMINAL — CYBERNETIC GLASSMORPHIC DESIGN
+// ══════════════════════════════════════════════════════════════════════════════
+
+.dtrader-native {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: radial-gradient(circle at 10% 20%, rgba(18, 28, 48, 0.95) 0%, rgba(8, 12, 22, 1) 100%);
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    padding: clamp(0.6rem, 1.5vw, 1.2rem);
+    box-sizing: border-box;
+    gap: 1rem;
+
+    // ── Header Bar ──
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        background: linear-gradient(135deg, rgba(22, 33, 56, 0.75), rgba(13, 20, 36, 0.85));
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(0, 242, 254, 0.2);
+        border-radius: 14px;
+        padding: 0.8rem 1.2rem;
+
+        .dtrader-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+
+            .dtrader-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(124, 58, 237, 0.2));
+                border: 1px solid #00f2fe;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #00f2fe;
+                box-shadow: 0 0 14px rgba(0, 242, 254, 0.35);
+            }
+
+            .dtrader-title {
+                display: flex;
+                flex-direction: column;
+
+                h2 {
+                    margin: 0;
+                    font-size: 1.35rem;
+                    font-weight: 900;
+                    background: linear-gradient(90deg, #00f2fe, #38bdf8, #a855f7);
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+
+                span {
+                    font-size: 0.85rem;
+                    color: #94a3b8;
+                    font-weight: 600;
+                }
+            }
+        }
+
+        .dtrader-account-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+
+            .balance-text {
+                font-size: 1.15rem;
+                font-weight: 800;
+                color: #10b981;
+                font-family: 'JetBrains Mono', monospace;
+            }
+
+            .account-id {
+                font-size: 0.85rem;
+                color: #94a3b8;
+                font-weight: 700;
+            }
+        }
+    }
+
+    // ── Main Trading Floor Layout ──
+    &__layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1rem;
+        flex: 1;
+        min-height: 0;
+
+        @media (max-width: 1024px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    // Left Chart Deck
+    &__chart-pane {
+        display: flex;
+        flex-direction: column;
+        background: rgba(20, 30, 50, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        overflow: hidden;
+        min-height: 480px;
+        position: relative;
+    }
+
+    // Right Parameters & Trade Action Deck
+    &__action-pane {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        background: rgba(20, 30, 50, 0.75);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 1.2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    // Category Tabs Grid
+    .dtrader-category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.4rem;
+
+        .cat-btn {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 0.55rem 0.6rem;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(51, 65, 85, 0.9);
+                color: #fff;
+            }
+
+            &--active {
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(124, 58, 237, 0.2));
+                border-color: #00f2fe;
+                color: #00f2fe;
+                box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+            }
+        }
+    }
+
+    // Form Field Groups
+    .dtrader-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input, select {
+            background: rgba(30, 41, 59, 0.85);
+            color: #f8fafc;
+            border: 1.5px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 0.65rem 0.9rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            outline: none;
+            flex: 1;
+            transition: all 0.2s ease;
+
+            &:focus {
+                border-color: #00f2fe;
+                box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+            }
+        }
+    }
+
+    // Quick Stake Chips
+    .quick-stake-chips {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+
+        .stake-chip {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 0.25rem 0.65rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+
+            &:hover {
+                color: #f5c542;
+                border-color: #f5c542;
+            }
+        }
+    }
+
+    // Dual Proposal Action Cards
+    .dtrader-proposals-cluster {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-top: 0.4rem;
+
+        .proposal-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            &--buy-top {
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: #fff;
+                box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+
+                &:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 22px rgba(16, 185, 129, 0.55);
+                }
+            }
+
+            &--buy-bottom {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: #fff;
+                box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+
+                &:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.55);
+                }
+            }
+
+            .proposal-info {
+                display: flex;
+                flex-direction: column;
+                gap: 0.2rem;
+
+                .name {
+                    font-size: 1.25rem;
+                    font-weight: 900;
+                    text-transform: uppercase;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .payout {
+                    font-size: 0.95rem;
+                    opacity: 0.9;
+                    font-weight: 600;
+                }
+            }
+
+            .proposal-stake {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+
+                .stake-val {
+                    font-size: 1.35rem;
+                    font-weight: 900;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+
+                .return-pct {
+                    font-size: 0.85rem;
+                    font-weight: 800;
+                    background: rgba(0, 0, 0, 0.25);
+                    padding: 0.15rem 0.45rem;
+                    border-radius: 4px;
+                }
+            }
+        }
+    }
+
+    // Active Positions Drawer
+    &__positions {
+        background: rgba(15, 23, 42, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 0.8rem 1.2rem;
+
+        .pos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #cbd5e1;
+            margin-bottom: 0.6rem;
+        }
+
+        .pos-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-size: 1rem;
+
+            .pos-profit {
+                font-weight: 800;
+                font-family: 'JetBrains Mono', monospace;
+
+                &--win { color: #10b981; }
+                &--loss { color: #ef4444; }
+            }
+        }
+    }
+}
