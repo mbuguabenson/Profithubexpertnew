@@ -233,12 +233,28 @@ const ElitePro = observer(() => {
     const [selectedSymbol, setSelectedSymbol] = useState(MARKETS[0].symbol);
     const [scanAll, setScanAll] = useState(true);
     const [autoInputBestMarket, setAutoInputBestMarket] = useState(false);
+    const [autoSwitchMarkets, setAutoSwitchMarkets] = useState(true);
+    const [maxRunsBeforeSwitch, setMaxRunsBeforeSwitch] = useState('7');
     const [marketsSideExpanded, setMarketsSideExpanded] = useState(true);
     const marketsRef = useRef<Map<string, MarketDigitData>>(new Map());
     const [renderTick, forceRender] = useState(0);
     const subscriptionsRef = useRef<Map<string, { unsubscribe: () => void }>>(new Map());
     const unmountedRef = useRef(false);
     const uiThrottleRef = useRef(0);
+    const selectedSymbolRef = useRef(MARKETS[0].symbol);
+
+    // Component lifecycle
+    useEffect(() => {
+        unmountedRef.current = false;
+        return () => {
+            unmountedRef.current = true;
+        };
+    }, []);
+
+    // Keep selectedSymbolRef in sync
+    useEffect(() => {
+        selectedSymbolRef.current = selectedSymbol;
+    }, [selectedSymbol]);
 
     // ── Autotrading parameters ──
     const [autoState, setAutoState] = useState<AutoState>('IDLE');
@@ -269,24 +285,23 @@ const ElitePro = observer(() => {
     useEffect(() => { winsRef.current = wins; }, [wins]);
     useEffect(() => { lossesRef.current = losses; }, [losses]);
 
-    // ── Handle manual market selection (Reset stats & pause bot) ──
+    // ── Handle manual market selection (Seamless market transition without stopping bot) ──
     const handleManualMarketSelect = useCallback((sym: string) => {
         setSelectedSymbol(sym);
+        selectedSymbolRef.current = sym;
         if (autoInputBestMarket) setAutoInputBestMarket(false);
 
-        // Reset Trade Logs and Stats
-        setTradeLog([]);
-        setTotalProfit(0);
-        setWins(0);
-        setLosses(0);
-        totalProfitRef.current = 0;
-        winsRef.current = 0;
-        lossesRef.current = 0;
-
-        // Pause bot if active
         if (autoStateRef.current !== 'IDLE') {
-            setAutoState('IDLE');
-            autoStateRef.current = 'IDLE';
+            const label = MARKETS.find(m => m.symbol === sym)?.label || sym;
+            setTradeLog(prev => [{
+                id: `EP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                time: new Date().toLocaleTimeString(),
+                type: 'MARKET SWITCHED',
+                market: label,
+                result: 'PENDING' as const,
+                profit: 0,
+                details: `Focused trading on ${label}`,
+            }, ...prev].slice(0, 100));
         }
     }, [autoInputBestMarket]);
 
@@ -495,7 +510,6 @@ const ElitePro = observer(() => {
     // ── Subscribe to real-time ticks for all / selected markets ──
     const isBotIdle = autoState === 'IDLE';
     useEffect(() => {
-        unmountedRef.current = false;
         const shouldSubscribe = showElitePro || !isBotIdle;
         const activeSubs = subscriptionsRef.current;
 
@@ -522,10 +536,10 @@ const ElitePro = observer(() => {
             }
         });
 
-        let isMounted = true;
+        let isEffectActive = true;
 
         const startSubscription = async (sym: string) => {
-            if (!api_base.api) return;
+            if (!api_base.api || unmountedRef.current) return;
 
             try {
                 const res = await api_base.api.send({
@@ -534,7 +548,7 @@ const ElitePro = observer(() => {
                     count: MAX_DIGITS,
                     style: 'ticks',
                 });
-                if (!isMounted || unmountedRef.current) return;
+                if (!isEffectActive || unmountedRef.current) return;
 
                 const market = marketsRef.current.get(sym);
                 if (market && res?.history?.prices) {
@@ -551,7 +565,7 @@ const ElitePro = observer(() => {
 
                 const tickObservable = api_base.api.subscribe({ ticks: sym });
                 const sub = safeSubscribe(tickObservable, (data: Record<string, unknown>) => {
-                    if (!isMounted || unmountedRef.current) return;
+                    if (unmountedRef.current) return;
 
                     const activeMarket = marketsRef.current.get(sym);
                     if (!activeMarket) return;
@@ -582,9 +596,15 @@ const ElitePro = observer(() => {
                 return;
             }
             for (const sym of symbolsToSubscribe) {
-                if (!isMounted || unmountedRef.current) break;
+                if (!isEffectActive || unmountedRef.current) break;
+                // If already subscribed and has data, skip re-fetching history
+                const existing = activeSubs.get(sym);
+                const market = marketsRef.current.get(sym);
+                if (existing && market && market.digits.length > 20) {
+                    continue;
+                }
                 await startSubscription(sym);
-                await new Promise(r => setTimeout(r, 200)); // Throttle to prevent Deriv WS rate limiting
+                await new Promise(r => setTimeout(r, 180)); // Throttle to prevent Deriv WS rate limiting
             }
         };
 
@@ -598,13 +618,8 @@ const ElitePro = observer(() => {
         });
 
         return () => {
-            isMounted = false;
-            unmountedRef.current = true;
+            isEffectActive = false;
             if (retryTimeout) clearTimeout(retryTimeout);
-            activeSubs.forEach(sub => {
-                try { sub.unsubscribe(); } catch { /* ignore */ }
-            });
-            activeSubs.clear();
         };
     }, [selectedSymbol, scanAll, showElitePro, client?.loginid, isBotIdle, throttleRender]);
 
@@ -923,6 +938,7 @@ const ElitePro = observer(() => {
             autoAbortRef.current = new AbortController();
             const abortSignal = autoAbortRef.current.signal;
             let tradeRuns = 0;
+            let scanningCycles = 0;
 
             const loop = async () => {
                 while (!abortSignal.aborted && autoStateRef.current !== 'IDLE') {
@@ -942,10 +958,13 @@ const ElitePro = observer(() => {
                         break;
                     }
 
-                    let targetSym = selectedSymbol;
+                    let targetSym = selectedSymbolRef.current;
                     if (autoInputBestMarket && bestMarket && bestMarket.symbol) {
                         targetSym = bestMarket.symbol;
-                        if (targetSym !== selectedSymbol) setSelectedSymbol(targetSym);
+                        if (targetSym !== selectedSymbolRef.current) {
+                            setSelectedSymbol(targetSym);
+                            selectedSymbolRef.current = targetSym;
+                        }
                     }
 
                     const currentData = marketsRef.current.get(targetSym);
@@ -954,12 +973,33 @@ const ElitePro = observer(() => {
                             setAutoState('SCANNING');
                             autoStateRef.current = 'SCANNING';
                         }
-                        await new Promise(r => setTimeout(r, 1200));
+                        await new Promise(r => setTimeout(r, 1000));
                         continue;
                     }
 
                     const entrySignal = checkEntrySignal(currentData.digits);
                     if (!entrySignal || entrySignal.status === 'WAITING') {
+                        scanningCycles++;
+
+                        // Smart Auto-Switch if current market has no signal for a while and another market has a signal
+                        if (scanningCycles > 18 && autoSwitchMarkets) {
+                            const candidateWithSignal = allMarketsData.find(m => m.symbol !== targetSym && m.hasSignal);
+                            if (candidateWithSignal) {
+                                setSelectedSymbol(candidateWithSignal.symbol);
+                                selectedSymbolRef.current = candidateWithSignal.symbol;
+                                addLogEntry(
+                                    'SMART SWITCH',
+                                    candidateWithSignal.label,
+                                    'PENDING',
+                                    0,
+                                    `Auto-switched to market with active ${candidateWithSignal.signalDirection} signal`,
+                                );
+                                scanningCycles = 0;
+                                await new Promise(r => setTimeout(r, 800));
+                                continue;
+                            }
+                        }
+
                         if (entrySignal && entrySignal.status === 'WAITING') {
                             if (autoStateRef.current !== 'WAITING_TRIGGER') {
                                 setAutoState('WAITING_TRIGGER');
@@ -989,6 +1029,7 @@ const ElitePro = observer(() => {
                         continue;
                     }
 
+                    scanningCycles = 0;
                     setAutoState('TRADING');
                     autoStateRef.current = 'TRADING';
                     try {
@@ -1033,17 +1074,26 @@ const ElitePro = observer(() => {
                             currentStakeRef.current = Number((currentStakeRef.current * mgMultiplier).toFixed(2));
                         }
 
-                        if (tradeRuns >= 7) {
+                        const maxRuns = parseInt(maxRunsBeforeSwitch, 10) || 7;
+                        if (tradeRuns >= maxRuns) {
                             tradeRuns = 0;
+                            if (autoSwitchMarkets) {
+                                const nextBest = allMarketsData.find(m => m.symbol !== targetSym && (m.hasSignal || m.strength >= 55));
+                                if (nextBest) {
+                                    setSelectedSymbol(nextBest.symbol);
+                                    selectedSymbolRef.current = nextBest.symbol;
+                                    addLogEntry('SMART SWITCH', nextBest.label, 'PENDING', 0, `Auto-switched market to ${nextBest.label} after ${maxRuns} runs`);
+                                }
+                            }
                             setAutoState('SCANNING');
                             autoStateRef.current = 'SCANNING';
-                            addLogEntry('BOT COOLDOWN', selectedSymbol, 'PENDING', 0, 'Auto-paused for re-analysis after 7 trades');
-                            await new Promise(r => setTimeout(r, 7000)); // 7 second forced cooldown to allow market settling
+                            addLogEntry('RE-ANALYZING', selectedSymbolRef.current, 'PENDING', 0, `Re-evaluating signals after ${maxRuns} runs...`);
+                            await new Promise(r => setTimeout(r, 2500)); // Brief settling cooldown
                         } else {
                             setAutoState('SCANNING');
                             autoStateRef.current = 'SCANNING';
                         }
-                        await new Promise(r => setTimeout(r, 1800));
+                        await new Promise(r => setTimeout(r, 1500));
                     } catch (err) {
                         const msg = err instanceof Error ? err.message : String(err);
                         console.error('[ElitePro] Trade execution loop error:', msg);
@@ -1709,6 +1759,30 @@ const ElitePro = observer(() => {
                                 >
                                     <option value="1">1 Tick (Recommended)</option>
                                     <option value="2">2 Ticks</option>
+                                </select>
+                            </div>
+
+                            <div className="ep-input-card">
+                                <span className="label">Auto-Switch Market Runs</span>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="50"
+                                    value={maxRunsBeforeSwitch}
+                                    onChange={e => setMaxRunsBeforeSwitch(e.target.value)}
+                                    disabled={autoState !== 'IDLE'}
+                                />
+                            </div>
+
+                            <div className="ep-input-card">
+                                <span className="label">Smart Market Switch</span>
+                                <select
+                                    value={autoSwitchMarkets ? 'true' : 'false'}
+                                    onChange={e => setAutoSwitchMarkets(e.target.value === 'true')}
+                                    disabled={autoState !== 'IDLE'}
+                                >
+                                    <option value="true">Enabled (Auto-Hunt)</option>
+                                    <option value="false">Disabled (Single Market)</option>
                                 </select>
                             </div>
                         </div>
