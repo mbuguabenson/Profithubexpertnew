@@ -2,7 +2,7 @@
 @use 'components/shared/styles/mixins' as *;
 
 /* Global Scrollbar Suppression & Viewport Lock Rules */
-html, body, #root, #app {
+html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
     height: 100% !important;
     height: 100vh !important;
     max-height: 100vh !important;
@@ -13,6 +13,7 @@ html, body, #root, #app {
     margin: 0 !important;
     padding: 0 !important;
     overscroll-behavior: none !important;
+    overscroll-behavior-y: none !important;
 }
 
 *, html, body, div, section, article, main {

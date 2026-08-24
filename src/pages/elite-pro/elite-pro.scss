@@ -56,8 +56,9 @@
 .elite-pro {
     position: relative;
     width: 100%;
-    min-height: 100vh;
-    padding: 20px 20px 100px;
+    height: 100%;
+    max-height: 100%;
+    padding: 20px 20px 60px;
     background-color: var(--ep-cyber-bg);
     color: var(--ep-text-primary);
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
