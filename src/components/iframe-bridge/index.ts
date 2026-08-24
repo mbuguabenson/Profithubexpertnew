@@ -3,5 +3,4 @@ export * from './session-manager';
 export * from './bridge-state-machine';
 export * from './parent-bridge';
 export * from './diagnostics-panel';
-export * from './dtrader-iframe-container';
 export * from './digitflow-iframe-container';
