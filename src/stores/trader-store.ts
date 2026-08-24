@@ -317,4 +317,19 @@ export default class TraderStore {
             });
         }
     }
+
+    @action
+    async purchaseContract(contractType?: string) {
+        let targetProposal = this.proposal_1;
+        if (contractType && this.proposal_2 && this.proposal_2.contract_type === contractType) {
+            targetProposal = this.proposal_2;
+        } else if (contractType && this.proposal_1 && this.proposal_1.contract_type === contractType) {
+            targetProposal = this.proposal_1;
+        }
+        if (!targetProposal?.proposal_id) {
+            this.purchase_error = 'No valid proposal available for execution. Please wait for proposal stream.';
+            return;
+        }
+        await this.buyContract(targetProposal.proposal_id, targetProposal.ask_price || this.amount);
+    }
 }

@@ -45,7 +45,6 @@ const DTraderPage: React.FC = observer(() => {
 
     const {
         symbol,
-        symbol_display_name,
         category,
         amount,
         duration,
