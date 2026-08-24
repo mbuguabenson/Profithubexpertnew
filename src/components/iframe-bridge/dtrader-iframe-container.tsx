@@ -9,6 +9,8 @@ import IframeAuthService from './iframe-auth.service';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
 import { getClientId, getAppId } from '@/components/shared/utils/config/config';
 import { Loader2 } from 'lucide-react';
+import Cookies from 'js-cookie';
+import { getCookieDomain } from '@/utils/cookie-domain';
 
 interface DTraderIframeContainerProps {
     standaloneUrl?: string;
@@ -66,6 +68,28 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         logger.debug('SYNC_SESSION_PREPARE', { loginid: activeLoginId, tokenMasked: maskedToken });
 
         if (!activeLoginId) return;
+
+        // Synchronize cookies for Deriv DTrader iframe authentication
+        try {
+            const cookieDomain = getCookieDomain();
+            if (activeLoginId && token) {
+                const accountsObj = {
+                    [activeLoginId]: {
+                        token,
+                        currency,
+                        residence: 'id',
+                    }
+                };
+                const cookieOpts: any = { path: '/', sameSite: 'none', secure: true };
+                if (cookieDomain) cookieOpts.domain = cookieDomain;
+
+                Cookies.set('client.accounts', JSON.stringify(accountsObj), cookieOpts);
+                Cookies.set('user_token', token, cookieOpts);
+                Cookies.set('loginid', activeLoginId, cookieOpts);
+            }
+        } catch (e) {
+            // ignore
+        }
 
         initializationCount.current += 0; // no-op here, keep count changes explicit elsewhere
 

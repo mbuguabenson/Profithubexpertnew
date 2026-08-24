@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { useSmartChartAdaptor } from '@/hooks/useSmartChartAdaptor';
@@ -6,6 +6,7 @@ import { useDevice } from '@deriv-com/ui';
 import { SmartChart, ChartTitle, TGranularity, TStateChangeListener } from '@deriv-com/smartcharts-champion';
 import chart_api from '@/external/bot-skeleton/services/api/chart-api';
 import { TTradeCategory } from '@/stores/trader-store';
+import DTraderIframeContainer from '@/components/iframe-bridge/dtrader-iframe-container';
 import '@deriv-com/smartcharts-champion/dist/smartcharts.css';
 import './dtrader.scss';
 
@@ -42,6 +43,7 @@ const DTraderPage: React.FC = observer(() => {
     const { trader, client, common, ui, chart_store } = useStore();
     const { isDesktop, isMobile } = useDevice();
     const { chartData, getQuotes, subscribeQuotes, unsubscribeQuotes } = useSmartChartAdaptor();
+    const [viewMode, setViewMode] = useState<'native' | 'iframe'>('native');
 
     const {
         symbol,
@@ -222,14 +224,59 @@ const DTraderPage: React.FC = observer(() => {
                     </div>
                 </div>
 
-                <div className='dtrader-account-pill'>
-                    <span className='account-id'>{loginid}</span>
-                    <span className='balance-text'>{currency} {Number(balance).toFixed(2)}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'inline-flex', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '10px', padding: '3px' }}>
+                        <button
+                            type='button'
+                            onClick={() => setViewMode('native')}
+                            style={{
+                                background: viewMode === 'native' ? 'linear-gradient(135deg, #00f2fe, #38bdf8)' : 'transparent',
+                                color: viewMode === 'native' ? '#0f172a' : '#94a3b8',
+                                fontWeight: 800,
+                                fontSize: '12px',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px 12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            ⚡ Native Pro Terminal
+                        </button>
+                        <button
+                            type='button'
+                            onClick={() => setViewMode('iframe')}
+                            style={{
+                                background: viewMode === 'iframe' ? 'linear-gradient(135deg, #00f2fe, #38bdf8)' : 'transparent',
+                                color: viewMode === 'iframe' ? '#0f172a' : '#94a3b8',
+                                fontWeight: 800,
+                                fontSize: '12px',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '6px 12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            🌐 Web Frame
+                        </button>
+                    </div>
+
+                    <div className='dtrader-account-pill'>
+                        <span className='account-id'>{loginid}</span>
+                        <span className='balance-text'>{currency} {Number(balance).toFixed(2)}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Main Trading Floor Grid */}
-            <div className='dtrader-native__layout'>
+            {/* View Mode Switching */}
+            {viewMode === 'iframe' ? (
+                <div style={{ width: '100%', flex: 1, minHeight: '520px', borderRadius: '16px', overflow: 'hidden' }}>
+                    <DTraderIframeContainer />
+                </div>
+            ) : (
+                /* Main Trading Floor Grid */
+                <div className='dtrader-native__layout'>
                 {/* Left Live Interactive Chart */}
                 <div className='dtrader-native__chart-pane'>
                     <SmartChart
@@ -476,6 +523,7 @@ const DTraderPage: React.FC = observer(() => {
                     )}
                 </div>
             </div>
+            )}
         </div>
     );
 });
