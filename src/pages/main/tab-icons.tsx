@@ -225,6 +225,18 @@ export const TabIcon: React.FC<TTabIconProps> = ({ iconKey, label }) => {
                         <circle cx='12' cy='12' r='3' />
                     </svg>
                 );
+            case 'poverty_hunter':
+                return (
+                    <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+                        <circle cx='12' cy='12' r='10' />
+                        <line x1='22' y1='12' x2='18' y2='12' />
+                        <line x1='6' y1='12' x2='2' y2='12' />
+                        <line x1='12' y1='6' x2='12' y2='2' />
+                        <line x1='12' y1='22' x2='12' y2='18' />
+                        <circle cx='12' cy='12' r='3' />
+                        <path d='M12 9a3 3 0 0 0-3 3' stroke='currentColor' strokeWidth='1.5' />
+                    </svg>
+                );
             default:
                 return (
                     <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>

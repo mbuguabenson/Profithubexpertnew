@@ -319,10 +319,11 @@ export const getDefaultTabConfig = (): TabConfigItem[] => [
     { key: 'system_center', label: 'System Center', enabled: true, order: 21 },
     { key: 'pro_journal', label: 'Pro Journal', enabled: true, order: 22 },
     { key: 'elite_pro', label: 'Elite Pro 💎', enabled: true, order: 23 },
+    { key: 'poverty_hunter', label: 'Poverty Hunter 🎯', enabled: true, order: 24 },
 ];
 
 // Bump this when new tabs are added to force clients to pick up new defaults
-const TAB_CONFIG_VERSION = 14;
+const TAB_CONFIG_VERSION = 15;
 
 export const getSiteConfig = (): SiteConfig => {
     try {

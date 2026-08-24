@@ -51,6 +51,7 @@ const DCirclesPage = lazy(() => import('../dcircles/dcircles'));
 const DTraderPage = lazy(() => import('../dtrader/dtrader'));
 const DigitFlowPage = lazy(() => import('../digitflow/digitflow'));
 const EliteProPage = lazy(() => import('../elite-pro/elite-pro'));
+const PovertyHunterPage = lazy(() => import('../poverty-hunter'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -114,6 +115,7 @@ const AppWrapper = observer(() => {
         'dtrader',
         'digitflow',
         'elite_pro',
+        'poverty_hunter',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -553,6 +555,18 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-elite-pro' tabName='Elite Pro'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Elite Pro...')} />}>
                         <EliteProPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
+        {
+            key: 'poverty_hunter',
+            id: 'id-poverty-hunter',
+            label: <TabIcon iconKey='poverty_hunter' label='Poverty Hunter' />,
+            content: (
+                <TabErrorBoundary tabId='id-poverty-hunter' tabName='Poverty Hunter'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Poverty Hunter...')} />}>
+                        <PovertyHunterPage />
                     </Suspense>
                 </TabErrorBoundary>
             )
