@@ -1,18 +1,22 @@
-// Poverty Hunter Scss Styling - Cyber Glassmorphism & High-Precision Trading UI
+// ══════════════════════════════════════════════════════════════════════════════
+// POVERTY HUNTER — LUXE CYBER GLASSMORPHISM & RESPONSIVE TRADING SUITE
+// ══════════════════════════════════════════════════════════════════════════════
 
 .poverty-hunter {
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-height: calc(100vh - 120px);
-    background: radial-gradient(circle at 10% 20%, rgba(18, 24, 38, 0.98) 0%, rgba(10, 14, 22, 1) 100%);
+    min-height: calc(100vh - 110px);
+    background: radial-gradient(circle at 12% 18%, rgba(18, 28, 48, 0.95) 0%, rgba(8, 12, 22, 1) 100%),
+                radial-gradient(circle at 88% 80%, rgba(245, 197, 66, 0.04) 0%, transparent 60%);
     color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    padding: 1.6rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    padding: clamp(0.8rem, 2vw, 1.8rem);
     box-sizing: border-box;
-    gap: 1.6rem;
+    gap: clamp(1rem, 2vw, 1.6rem);
+    overflow-x: hidden;
 
-    // Scrollbar custom style
+    // Smooth Scrollbar
     *::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -22,199 +26,278 @@
         border-radius: 4px;
     }
     *::-webkit-scrollbar-thumb {
-        background: rgba(245, 197, 66, 0.35);
+        background: rgba(245, 197, 66, 0.4);
         border-radius: 4px;
         &:hover {
-            background: rgba(245, 197, 66, 0.6);
+            background: rgba(245, 197, 66, 0.7);
         }
     }
 
-    // Top Header / Control Ribbon
+    // ── 1. Top Hero Header ──
     &__header {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
         gap: 1.2rem;
-        background: rgba(20, 29, 47, 0.7);
-        backdrop-filter: blur(14px);
-        border: 1px solid rgba(245, 197, 66, 0.2);
-        border-radius: 14px;
-        padding: 1.2rem 1.6rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36);
+        background: linear-gradient(135deg, rgba(22, 33, 56, 0.75), rgba(13, 20, 36, 0.85));
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(245, 197, 66, 0.22);
+        border-radius: 18px;
+        padding: clamp(1rem, 2vw, 1.5rem);
+        box-shadow: 0 10px 36px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 
         &-title-box {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.2rem;
 
             .ph-icon-badge {
-                width: 44px;
-                height: 44px;
+                width: 48px;
+                height: 48px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                background: linear-gradient(135deg, rgba(245, 197, 66, 0.25), rgba(220, 38, 38, 0.25));
-                border: 1px solid rgba(245, 197, 66, 0.5);
-                border-radius: 12px;
+                background: radial-gradient(circle, rgba(245, 197, 66, 0.28), rgba(220, 38, 38, 0.25));
+                border: 1.5px solid #f5c542;
+                border-radius: 14px;
                 color: #f5c542;
-                box-shadow: 0 0 16px rgba(245, 197, 66, 0.3);
+                box-shadow: 0 0 20px rgba(245, 197, 66, 0.35);
+                flex-shrink: 0;
+                animation: pulseIcon 3s infinite ease-in-out;
             }
 
             .ph-title-text {
                 display: flex;
                 flex-direction: column;
-                
+                gap: 0.2rem;
+
                 h1 {
-                    font-size: 1.8rem;
-                    font-weight: 800;
+                    font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+                    font-weight: 900;
                     margin: 0;
                     background: linear-gradient(90deg, #f5c542, #ff8c42, #f43f5e);
                     -webkit-background-clip: text;
                     background-clip: text;
                     -webkit-text-fill-color: transparent;
                     letter-spacing: -0.5px;
+                    line-height: 1.1;
                 }
 
                 span {
-                    font-size: 1.1rem;
+                    font-size: clamp(0.95rem, 1.4vw, 1.15rem);
                     color: #94a3b8;
                     font-weight: 500;
+                }
+
+                .ph-status-chip {
+                    font-size: 0.85rem;
+                    font-weight: 800;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 999px;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                    display: inline-flex;
+                    align-items: center;
+                    width: fit-content;
+
+                    &--hunting {
+                        background: rgba(16, 185, 129, 0.18);
+                        color: #10b981;
+                        border: 1px solid rgba(16, 185, 129, 0.5);
+                        box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+                    }
+                    &--recovery {
+                        background: rgba(244, 63, 94, 0.2);
+                        color: #f43f5e;
+                        border: 1px solid #f43f5e;
+                        box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+                        animation: pulseChip 1.4s infinite;
+                    }
+                    &--paused {
+                        background: rgba(245, 158, 11, 0.18);
+                        color: #f59e0b;
+                        border: 1px solid #f59e0b;
+                    }
+                    &--idle {
+                        background: rgba(100, 116, 139, 0.18);
+                        color: #cbd5e1;
+                        border: 1px solid rgba(255, 255, 255, 0.12);
+                    }
                 }
             }
         }
 
         &-actions {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
             align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
+            gap: 0.8rem;
+            width: 100%;
+            max-width: 600px;
+
+            @media (min-width: 1100px) {
+                display: flex;
+                width: auto;
+                max-width: none;
+            }
         }
     }
 
-    // Top Header Metric Badges
+    // Top Header Metric Cards
     .ph-metric-pill {
         display: flex;
         flex-direction: column;
-        background: rgba(15, 23, 42, 0.7);
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.75);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 0.6rem 1.2rem;
-        min-width: 100px;
+        border-radius: 12px;
+        padding: 0.7rem 1.2rem;
+        min-width: 105px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        transition: all 0.2s ease;
+
+        &:hover {
+            border-color: rgba(245, 197, 66, 0.35);
+            transform: translateY(-2px);
+        }
 
         &__label {
-            font-size: 1rem;
-            color: #64748b;
+            font-size: 0.85rem;
+            color: #94a3b8;
             text-transform: uppercase;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
+            margin-bottom: 0.2rem;
         }
 
         &__val {
-            font-size: 1.4rem;
-            font-weight: 700;
+            font-size: clamp(1.2rem, 2vw, 1.55rem);
+            font-weight: 800;
             color: #f8fafc;
+            font-family: 'JetBrains Mono', monospace;
 
-            &--profit { color: #10b981; }
-            &--loss { color: #ef4444; }
-            &--highlight { color: #f5c542; }
+            &--profit {
+                color: #10b981;
+                text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+            }
+            &--loss {
+                color: #ef4444;
+                text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+            }
+            &--highlight {
+                color: #f5c542;
+                text-shadow: 0 0 10px rgba(245, 197, 66, 0.4);
+            }
         }
     }
 
-    // Market Switcher Bar
+    // ── 2. Market Switcher & Options Ribbon ──
     &__market-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 1.2rem;
-        background: rgba(15, 23, 42, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        padding: 1rem 1.4rem;
+        gap: 1rem;
+        background: rgba(18, 27, 44, 0.7);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 0.9rem 1.4rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 
         .ph-select-group {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.8rem;
             flex-wrap: wrap;
 
             label {
-                font-size: 1.2rem;
-                font-weight: 600;
+                font-size: 1.15rem;
+                font-weight: 700;
                 color: #cbd5e1;
             }
 
             select {
-                background: rgba(30, 41, 59, 0.8);
+                background: rgba(30, 41, 59, 0.9);
                 color: #f8fafc;
-                border: 1px solid rgba(245, 197, 66, 0.4);
-                padding: 0.7rem 1.4rem;
-                border-radius: 8px;
-                font-size: 1.3rem;
-                font-weight: 600;
+                border: 1.5px solid rgba(245, 197, 66, 0.4);
+                padding: 0.65rem 1.3rem;
+                border-radius: 10px;
+                font-size: 1.25rem;
+                font-weight: 700;
                 outline: none;
                 cursor: pointer;
                 transition: all 0.2s ease;
 
                 &:focus {
                     border-color: #f5c542;
-                    box-shadow: 0 0 10px rgba(245, 197, 66, 0.3);
+                    box-shadow: 0 0 14px rgba(245, 197, 66, 0.4);
                 }
             }
+        }
+
+        .ph-actions-cluster {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
         }
 
         .ph-toggle-button {
             display: inline-flex;
             align-items: center;
-            gap: 0.6rem;
-            background: rgba(30, 41, 59, 0.6);
+            gap: 0.5rem;
+            background: rgba(30, 41, 59, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.12);
             color: #cbd5e1;
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: 600;
+            padding: 0.6rem 1.1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
 
             &:hover {
-                background: rgba(51, 65, 85, 0.8);
+                background: rgba(51, 65, 85, 0.9);
                 color: #fff;
+                transform: translateY(-1px);
             }
 
             &--active {
-                background: rgba(245, 197, 66, 0.2);
+                background: linear-gradient(135deg, rgba(245, 197, 66, 0.25), rgba(245, 197, 66, 0.1));
                 border-color: #f5c542;
                 color: #f5c542;
+                box-shadow: 0 0 12px rgba(245, 197, 66, 0.25);
             }
         }
     }
 
-    // Wide View Dropdown Grid
+    // ── 3. Expandable Wide View Matrix ──
     &__wide-view {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 1rem;
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid rgba(245, 197, 66, 0.3);
-        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(245, 197, 66, 0.35);
+        border-radius: 16px;
         padding: 1.4rem;
         animation: fadeInDown 0.3s ease-out;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
 
         .ph-wide-card {
             background: rgba(30, 41, 59, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 1.1rem;
             cursor: pointer;
             transition: all 0.2s ease;
 
             &:hover, &--selected {
                 border-color: #f5c542;
                 transform: translateY(-2px);
-                background: rgba(40, 53, 75, 0.9);
-                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+                background: rgba(40, 53, 75, 0.95);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             }
 
             &__header {
@@ -224,29 +307,38 @@
                 margin-bottom: 0.6rem;
 
                 .name {
-                    font-weight: 700;
-                    font-size: 1.2rem;
+                    font-weight: 800;
+                    font-size: 1.25rem;
                     color: #f8fafc;
                 }
 
                 .digit-badge {
-                    width: 26px;
-                    height: 26px;
-                    border-radius: 6px;
-                    background: #f5c542;
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 8px;
                     color: #0f172a;
-                    font-weight: 800;
+                    font-weight: 900;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 1.2rem;
+                    font-size: 1.25rem;
+
+                    &--under {
+                        background: #10b981;
+                        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+                    }
+                    &--over {
+                        background: #60a5fa;
+                        box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+                    }
                 }
             }
 
             &__price {
                 font-size: 1.3rem;
-                font-weight: 600;
+                font-weight: 700;
                 color: #94a3b8;
+                font-family: monospace;
                 margin-bottom: 0.6rem;
             }
 
@@ -254,21 +346,27 @@
                 display: flex;
                 justify-content: space-between;
                 font-size: 1.1rem;
+                font-weight: 600;
                 color: #cbd5e1;
-                border-top: 1px solid rgba(255, 255, 255, 0.06);
-                padding-top: 0.6rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                padding-top: 0.7rem;
             }
         }
     }
 
-    // Main Layout: Sidebar + Workspace
+    // ── 4. Main Body: Responsive Grid (Sidebar + Workspace) ──
     &__body {
         display: grid;
         grid-template-columns: 290px 1fr;
-        gap: 1.6rem;
+        gap: clamp(1rem, 2vw, 1.6rem);
         width: 100%;
+        transition: grid-template-columns 0.3s ease;
 
         @media (max-width: 1100px) {
+            grid-template-columns: 1fr;
+        }
+
+        &--collapsed {
             grid-template-columns: 1fr;
         }
     }
@@ -278,12 +376,12 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
-        background: rgba(20, 29, 47, 0.6);
-        backdrop-filter: blur(10px);
+        background: rgba(18, 27, 44, 0.65);
+        backdrop-filter: blur(14px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
+        border-radius: 16px;
         padding: 1.2rem;
-        max-height: calc(100vh - 260px);
+        max-height: calc(100vh - 280px);
         overflow-y: auto;
 
         &-header {
@@ -295,8 +393,8 @@
 
             h3 {
                 margin: 0;
-                font-size: 1.3rem;
-                font-weight: 700;
+                font-size: 1.25rem;
+                font-weight: 800;
                 color: #f5c542;
                 letter-spacing: 0.5px;
             }
@@ -304,10 +402,11 @@
             .badge {
                 background: rgba(245, 197, 66, 0.15);
                 color: #f5c542;
-                border-radius: 4px;
+                border: 1px solid rgba(245, 197, 66, 0.3);
+                border-radius: 6px;
                 padding: 0.2rem 0.6rem;
-                font-size: 1rem;
-                font-weight: 700;
+                font-size: 0.95rem;
+                font-weight: 800;
             }
         }
 
@@ -322,7 +421,7 @@
             flex-direction: column;
             background: rgba(30, 41, 59, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 1rem;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -330,13 +429,13 @@
             &:hover {
                 background: rgba(40, 53, 75, 0.85);
                 border-color: rgba(245, 197, 66, 0.4);
-                transform: translateX(3px);
+                transform: translateX(4px);
             }
 
             &--active {
-                background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(245, 197, 66, 0.12));
-                border: 1px solid #f5c542;
-                box-shadow: 0 0 12px rgba(245, 197, 66, 0.2);
+                background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(245, 197, 66, 0.15));
+                border: 1.5px solid #f5c542;
+                box-shadow: 0 0 16px rgba(245, 197, 66, 0.25);
             }
 
             &__top {
@@ -345,7 +444,7 @@
                 justify-content: space-between;
 
                 .symbol-name {
-                    font-weight: 700;
+                    font-weight: 800;
                     font-size: 1.25rem;
                     color: #f8fafc;
                 }
@@ -353,15 +452,22 @@
                 .digit-pill {
                     width: 28px;
                     height: 28px;
-                    border-radius: 6px;
-                    background: #f5c542;
+                    border-radius: 8px;
                     color: #0f172a;
-                    font-weight: 800;
+                    font-weight: 900;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 1.3rem;
-                    box-shadow: 0 0 8px rgba(245, 197, 66, 0.4);
+                    font-size: 1.25rem;
+
+                    &--under {
+                        background: #10b981;
+                        box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+                    }
+                    &--over {
+                        background: #60a5fa;
+                        box-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+                    }
                 }
             }
 
@@ -369,31 +475,31 @@
                 display: flex;
                 align-items: baseline;
                 justify-content: space-between;
-                margin-top: 0.4rem;
+                margin-top: 0.5rem;
 
                 .price {
                     font-size: 1.25rem;
-                    font-weight: 600;
+                    font-weight: 700;
                     color: #cbd5e1;
                     font-family: monospace;
                 }
 
                 .bias {
                     font-size: 1rem;
-                    font-weight: 700;
-                    padding: 0.15rem 0.5rem;
-                    border-radius: 4px;
+                    font-weight: 800;
+                    padding: 0.2rem 0.55rem;
+                    border-radius: 6px;
 
                     &--under {
-                        background: rgba(16, 185, 129, 0.15);
+                        background: rgba(16, 185, 129, 0.18);
                         color: #10b981;
-                        border: 1px solid rgba(16, 185, 129, 0.3);
+                        border: 1px solid rgba(16, 185, 129, 0.4);
                     }
 
                     &--over {
-                        background: rgba(59, 130, 246, 0.15);
+                        background: rgba(59, 130, 246, 0.18);
                         color: #60a5fa;
-                        border: 1px solid rgba(59, 130, 246, 0.3);
+                        border: 1px solid rgba(59, 130, 246, 0.4);
                     }
                 }
             }
@@ -404,33 +510,35 @@
                 justify-content: space-between;
                 margin-top: 0.6rem;
                 padding-top: 0.6rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.05);
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
                 font-size: 1rem;
                 color: #94a3b8;
+                font-weight: 600;
 
                 .rec-differ {
                     color: #f5c542;
-                    font-weight: 700;
+                    font-weight: 800;
                 }
             }
         }
     }
 
-    // Right/Main Workspace Content
+    // ── 5. Main Workspace Content Deck ──
     &__workspace {
         display: flex;
         flex-direction: column;
-        gap: 1.6rem;
+        gap: clamp(1rem, 2vw, 1.6rem);
+        min-width: 0; // Prevent flex overflow
     }
 
-    // Top Live Analytics Banner (Current Price, Last Digit, Chart)
+    // Top Live Analytics Banner (Price, Last Digit Orb, Live Spline Chart)
     &__chart-card {
-        background: rgba(20, 29, 47, 0.7);
-        backdrop-filter: blur(12px);
+        background: rgba(20, 30, 50, 0.75);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 1.6rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border-radius: 18px;
+        padding: clamp(1rem, 2vw, 1.6rem);
+        box-shadow: 0 10px 36px rgba(0, 0, 0, 0.35);
         display: flex;
         flex-direction: column;
         gap: 1.2rem;
@@ -440,56 +548,98 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 1.2rem;
 
             .ph-price-badge-group {
                 display: flex;
                 align-items: center;
-                gap: 1.6rem;
+                gap: clamp(1rem, 2vw, 2rem);
+                flex-wrap: wrap;
 
                 .ph-current-price-box {
                     display: flex;
                     flex-direction: column;
 
                     .label {
-                        font-size: 1.1rem;
+                        font-size: 0.95rem;
                         color: #94a3b8;
                         text-transform: uppercase;
-                        font-weight: 600;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
                     }
 
-                    .price {
-                        font-size: 2.4rem;
-                        font-weight: 800;
-                        color: #f8fafc;
-                        font-family: monospace;
-                        letter-spacing: -0.5px;
+                    .price-row {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.8rem;
+
+                        .price {
+                            font-size: clamp(2rem, 3.5vw, 2.7rem);
+                            font-weight: 900;
+                            color: #f8fafc;
+                            font-family: 'JetBrains Mono', monospace;
+                            letter-spacing: -0.5px;
+                            line-height: 1.1;
+                        }
+
+                        .live-dot {
+                            width: 12px;
+                            height: 12px;
+                            border-radius: 50%;
+                            background: #10b981;
+                            box-shadow: 0 0 12px #10b981;
+                            animation: pulseGlow 1.8s infinite;
+                        }
                     }
                 }
 
+                // 3D Laser Last Digit Orb
                 .ph-last-digit-big {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    background: linear-gradient(135deg, rgba(245, 197, 66, 0.25), rgba(245, 197, 66, 0.05));
-                    border: 2px solid #f5c542;
-                    border-radius: 14px;
+                    justify-content: center;
+                    border-radius: 16px;
                     padding: 0.6rem 1.6rem;
-                    box-shadow: 0 0 24px rgba(245, 197, 66, 0.35);
-                    animation: pulseGlow 2s infinite ease-in-out;
+                    min-width: 110px;
+                    transition: all 0.3s ease;
 
                     .digit-label {
-                        font-size: 1rem;
-                        font-weight: 700;
-                        color: #f5c542;
+                        font-size: 0.85rem;
+                        font-weight: 800;
                         text-transform: uppercase;
+                        letter-spacing: 0.6px;
                     }
 
                     .digit-val {
-                        font-size: 3.2rem;
+                        font-size: clamp(2.8rem, 4vw, 3.6rem);
                         font-weight: 900;
-                        color: #fff;
                         line-height: 1;
+                        font-family: 'JetBrains Mono', monospace;
+                    }
+
+                    .digit-sub {
+                        font-size: 0.85rem;
+                        font-weight: 700;
+                        margin-top: 0.2rem;
+                    }
+
+                    &--under {
+                        background: radial-gradient(circle, rgba(16, 185, 129, 0.25), rgba(15, 23, 42, 0.8));
+                        border: 2px solid #10b981;
+                        box-shadow: 0 0 28px rgba(16, 185, 129, 0.35);
+
+                        .digit-label, .digit-sub { color: #10b981; }
+                        .digit-val { color: #fff; text-shadow: 0 0 16px #10b981; }
+                    }
+
+                    &--over {
+                        background: radial-gradient(circle, rgba(96, 165, 250, 0.25), rgba(15, 23, 42, 0.8));
+                        border: 2px solid #60a5fa;
+                        box-shadow: 0 0 28px rgba(96, 165, 250, 0.35);
+
+                        .digit-label, .digit-sub { color: #60a5fa; }
+                        .digit-val { color: #fff; text-shadow: 0 0 16px #60a5fa; }
                     }
                 }
             }
@@ -498,8 +648,10 @@
                 display: flex;
                 align-items: center;
                 gap: 1.2rem;
-                font-size: 1.1rem;
+                font-size: 1.05rem;
+                font-weight: 600;
                 color: #cbd5e1;
+                flex-wrap: wrap;
 
                 .legend-item {
                     display: flex;
@@ -512,7 +664,9 @@
                         border-radius: 50%;
 
                         &--curve { background: #f5c542; }
-                        &--curr { background: #10b981; box-shadow: 0 0 8px #10b981; }
+                        &--under { background: #10b981; }
+                        &--over { background: #60a5fa; }
+                        &--curr { background: #f5c542; box-shadow: 0 0 10px #f5c542; }
                     }
                 }
             }
@@ -521,32 +675,32 @@
         // SVG Chart Container
         .ph-svg-chart-container {
             width: 100%;
-            height: 190px;
+            height: 200px;
             position: relative;
-            background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.95), rgba(10, 15, 26, 0.98));
-            border-radius: 14px;
-            border: 1px solid rgba(245, 197, 66, 0.15);
+            background: radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.95), rgba(8, 12, 22, 0.98));
+            border-radius: 16px;
+            border: 1px solid rgba(245, 197, 66, 0.18);
             padding: 0.8rem 1rem;
             box-sizing: border-box;
             overflow-x: auto;
             overflow-y: hidden;
-            box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.5);
+            box-shadow: inset 0 2px 16px rgba(0, 0, 0, 0.6);
 
             svg {
                 width: 100%;
-                min-width: 760px;
+                min-width: 740px;
                 height: 100%;
                 overflow: visible;
                 display: block;
             }
 
             .ph-chart-grid-line {
-                stroke: rgba(255, 255, 255, 0.07);
+                stroke: rgba(255, 255, 255, 0.08);
                 stroke-dasharray: 4 4;
             }
 
             .ph-chart-split-line {
-                stroke: rgba(245, 197, 66, 0.25);
+                stroke: rgba(245, 197, 66, 0.35);
                 stroke-dasharray: 6 6;
                 stroke-width: 1.5;
             }
@@ -554,15 +708,10 @@
             .ph-chart-curve {
                 fill: none;
                 stroke: url(#ph-chart-grad);
-                stroke-width: 2.8;
+                stroke-width: 3.2;
                 stroke-linecap: round;
                 stroke-linejoin: round;
-                filter: drop-shadow(0 2px 10px rgba(245, 197, 66, 0.5));
-            }
-
-            .ph-chart-point-bg {
-                fill: #0f172a;
-                stroke-width: 2;
+                filter: drop-shadow(0 3px 12px rgba(245, 197, 66, 0.6));
             }
 
             .ph-chart-point {
@@ -570,31 +719,33 @@
                 cursor: pointer;
 
                 &:hover {
-                    r: 6;
-                    filter: drop-shadow(0 0 8px #fff);
+                    r: 6.5;
+                    filter: drop-shadow(0 0 10px #fff);
                 }
 
                 &--under {
                     fill: #10b981;
-                    stroke: #0f172a;
+                    stroke: #080c16;
+                    stroke-width: 1.5;
                 }
 
                 &--over {
                     fill: #60a5fa;
-                    stroke: #0f172a;
+                    stroke: #080c16;
+                    stroke-width: 1.5;
                 }
 
                 &--active {
                     fill: #f5c542;
                     stroke: #fff;
-                    stroke-width: 2;
-                    filter: drop-shadow(0 0 12px #f5c542);
+                    stroke-width: 2.5;
+                    filter: drop-shadow(0 0 14px #f5c542);
                 }
             }
 
             .ph-chart-digit-text {
                 font-size: 11px;
-                font-weight: 800;
+                font-weight: 900;
                 font-family: 'JetBrains Mono', 'Fira Code', monospace;
                 text-anchor: middle;
                 user-select: none;
@@ -612,8 +763,7 @@
                 &--active {
                     fill: #f5c542;
                     font-size: 13px;
-                    font-weight: 900;
-                    filter: drop-shadow(0 0 6px rgba(245, 197, 66, 0.9));
+                    filter: drop-shadow(0 0 8px rgba(245, 197, 66, 0.9));
                 }
             }
 
@@ -632,31 +782,19 @@
         }
     }
 
-    @keyframes chartHalo {
-        0% {
-            r: 6;
-            opacity: 0.9;
-        }
-        50% {
-            r: 16;
-            opacity: 0.3;
-        }
-        100% {
-            r: 22;
-            opacity: 0;
-        }
-    }
-
-    // Digit Distribution (0-9) Stats Row
+    // ── 6. Digit Distribution (0–9) Spectrum Grid ──
     &__digits-grid {
         display: grid;
         grid-template-columns: repeat(10, 1fr);
-        gap: 0.8rem;
+        gap: clamp(0.5rem, 1vw, 0.9rem);
 
         @media (max-width: 1200px) {
             grid-template-columns: repeat(5, 1fr);
         }
         @media (max-width: 600px) {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        @media (max-width: 420px) {
             grid-template-columns: repeat(2, 1fr);
         }
 
@@ -664,56 +802,59 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: rgba(20, 29, 47, 0.7);
+            background: rgba(22, 33, 56, 0.75);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 1rem 0.6rem;
             position: relative;
             transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 
             &:hover {
-                transform: translateY(-2px);
+                transform: translateY(-3px);
                 border-color: rgba(245, 197, 66, 0.4);
             }
 
             // Excluded Edge Digits (0, 1, 8, 9)
             &--excluded {
-                opacity: 0.38;
+                opacity: 0.35;
                 border-style: dashed;
                 background: rgba(15, 23, 42, 0.4);
 
                 .ph-excluded-badge {
-                    font-size: 0.85rem;
+                    font-size: 0.8rem;
                     color: #ef4444;
-                    font-weight: 700;
+                    font-weight: 800;
                     margin-top: 0.3rem;
                 }
             }
 
-            // Highlighting Best Differ Candidate (Digits 2-7)
+            // Differ Pick Target
             &--differ-pick {
                 border: 2px solid #10b981;
-                background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 29, 47, 0.8));
-                box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
-                transform: scale(1.03);
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(20, 30, 50, 0.85));
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+                transform: scale(1.04);
             }
 
             .digit-num {
-                font-size: 1.8rem;
+                font-size: 2rem;
                 font-weight: 900;
                 color: #f8fafc;
+                font-family: 'JetBrains Mono', monospace;
             }
 
             .digit-pct {
-                font-size: 1.2rem;
-                font-weight: 700;
+                font-size: 1.25rem;
+                font-weight: 800;
                 color: #f5c542;
                 margin-top: 0.2rem;
             }
 
             .digit-count {
-                font-size: 1rem;
+                font-size: 0.95rem;
                 color: #94a3b8;
+                font-weight: 600;
             }
 
             .digit-power-bar {
@@ -732,29 +873,29 @@
             }
 
             .rank-tag {
-                font-size: 0.95rem;
-                font-weight: 700;
+                font-size: 0.9rem;
+                font-weight: 800;
                 margin-top: 0.4rem;
                 color: #cbd5e1;
 
-                &--most { color: #f43f5e; font-weight: 800; }
-                &--second { color: #f59e0b; font-weight: 800; }
-                &--least { color: #38bdf8; font-weight: 800; }
+                &--most { color: #f43f5e; font-weight: 900; }
+                &--second { color: #f59e0b; font-weight: 900; }
+                &--least { color: #38bdf8; font-weight: 900; }
             }
         }
     }
 
-    // Rankings & Edge Digit Notice Strip
+    // ── 7. Rankings Strip & Excluded Notice ──
     &__ranks-strip {
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 1.2rem;
-        background: rgba(15, 23, 42, 0.65);
+        gap: 1rem;
+        background: rgba(18, 27, 44, 0.7);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 1.2rem 1.6rem;
+        border-radius: 14px;
+        padding: 1rem 1.4rem;
 
         .ph-rank-item {
             display: flex;
@@ -762,10 +903,10 @@
             gap: 0.8rem;
 
             .rank-pill {
-                font-size: 1rem;
+                font-size: 0.95rem;
                 font-weight: 800;
                 padding: 0.3rem 0.8rem;
-                border-radius: 6px;
+                border-radius: 8px;
                 text-transform: uppercase;
 
                 &--most { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid #f43f5e; }
@@ -777,6 +918,7 @@
                 font-size: 1.8rem;
                 font-weight: 900;
                 color: #fff;
+                font-family: 'JetBrains Mono', monospace;
             }
         }
 
@@ -784,7 +926,7 @@
             display: flex;
             align-items: center;
             gap: 0.6rem;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             color: #94a3b8;
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
@@ -797,28 +939,27 @@
         }
     }
 
-    // Two Columns: Differs Strategy Engine & Over/Under Analytics Card
+    // ── 8. Dual Strategy Matrix (Differs & Over/Under) ──
     &__strategy-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1.6rem;
+        gap: clamp(1rem, 2vw, 1.6rem);
 
-        @media (max-width: 1000px) {
+        @media (max-width: 950px) {
             grid-template-columns: 1fr;
         }
     }
 
-    // Strategy Box Container
     .ph-card-box {
-        background: rgba(20, 29, 47, 0.7);
-        backdrop-filter: blur(12px);
+        background: rgba(20, 30, 50, 0.75);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 1.6rem;
+        border-radius: 18px;
+        padding: clamp(1.2rem, 2vw, 1.6rem);
         display: flex;
         flex-direction: column;
-        gap: 1.4rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+        gap: 1.2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 
         &__header {
             display: flex;
@@ -829,8 +970,8 @@
 
             h3 {
                 margin: 0;
-                font-size: 1.5rem;
-                font-weight: 800;
+                font-size: clamp(1.3rem, 2vw, 1.55rem);
+                font-weight: 900;
                 color: #f8fafc;
                 display: flex;
                 align-items: center;
@@ -838,10 +979,10 @@
             }
 
             .badge {
-                font-size: 1.1rem;
-                font-weight: 700;
-                padding: 0.3rem 0.8rem;
-                border-radius: 6px;
+                font-size: 1.05rem;
+                font-weight: 800;
+                padding: 0.35rem 0.85rem;
+                border-radius: 8px;
 
                 &--differs { background: rgba(245, 197, 66, 0.2); color: #f5c542; border: 1px solid #f5c542; }
                 &--recovery { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
@@ -849,7 +990,7 @@
         }
     }
 
-    // Differs Engine Inner Details
+    // Differs Engine Inner Content
     .ph-differ-details {
         display: flex;
         flex-direction: column;
@@ -859,25 +1000,27 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(245, 197, 66, 0.1));
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(245, 197, 66, 0.12));
             border: 1.5px solid #10b981;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 1.2rem 1.6rem;
 
             .label-group {
                 display: flex;
                 flex-direction: column;
+                gap: 0.2rem;
 
                 .subtitle {
-                    font-size: 1.1rem;
+                    font-size: 0.95rem;
                     color: #94a3b8;
-                    font-weight: 600;
+                    font-weight: 700;
                 }
 
                 .title {
-                    font-size: 1.6rem;
-                    font-weight: 800;
+                    font-size: 1.55rem;
+                    font-weight: 900;
                     color: #10b981;
+                    letter-spacing: -0.3px;
                 }
             }
 
@@ -892,7 +1035,8 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+                box-shadow: 0 0 24px rgba(16, 185, 129, 0.65);
+                font-family: 'JetBrains Mono', monospace;
             }
         }
 
@@ -905,13 +1049,14 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                background: rgba(15, 23, 42, 0.5);
-                border-radius: 8px;
-                padding: 0.6rem 1rem;
+                background: rgba(15, 23, 42, 0.6);
+                border-radius: 10px;
+                padding: 0.75rem 1rem;
                 font-size: 1.15rem;
+                font-weight: 600;
 
                 .status {
-                    font-weight: 700;
+                    font-weight: 800;
                     &--met { color: #10b981; }
                     &--waiting { color: #f59e0b; }
                 }
@@ -919,7 +1064,7 @@
         }
     }
 
-    // Over / Under Statistics & Glowing Entry Card
+    // Over / Under Recovery Details
     .ph-ou-details {
         display: flex;
         flex-direction: column;
@@ -929,15 +1074,15 @@
             display: flex;
             flex-direction: column;
             gap: 0.6rem;
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
             padding: 1rem;
 
             .ph-split-header {
                 display: flex;
                 justify-content: space-between;
-                font-size: 1.2rem;
-                font-weight: 700;
+                font-size: 1.15rem;
+                font-weight: 800;
 
                 .under-side { color: #10b981; }
                 .over-side { color: #60a5fa; }
@@ -964,7 +1109,7 @@
             }
         }
 
-        // Glowing Entry Digit Card (Highest Entry Digit)
+        // Glowing Entry Digit Cards
         .ph-glowing-entry-card {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -975,47 +1120,49 @@
                 flex-direction: column;
                 align-items: center;
                 padding: 1.2rem;
-                border-radius: 12px;
+                border-radius: 14px;
                 text-align: center;
 
                 &--under {
-                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(15, 23, 42, 0.8));
+                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(15, 23, 42, 0.85));
                     border: 1.5px solid #10b981;
-                    box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+                    box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
 
                     .digit-glowing {
                         color: #10b981;
-                        text-shadow: 0 0 12px rgba(16, 185, 129, 0.8);
+                        text-shadow: 0 0 14px rgba(16, 185, 129, 0.8);
                     }
                 }
 
                 &--over {
-                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(15, 23, 42, 0.8));
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(15, 23, 42, 0.85));
                     border: 1.5px solid #3b82f6;
-                    box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
+                    box-shadow: 0 0 20px rgba(59, 130, 246, 0.35);
 
                     .digit-glowing {
                         color: #60a5fa;
-                        text-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
+                        text-shadow: 0 0 14px rgba(59, 130, 246, 0.8);
                     }
                 }
 
                 .tag {
-                    font-size: 1rem;
-                    font-weight: 700;
+                    font-size: 0.95rem;
+                    font-weight: 800;
                     text-transform: uppercase;
                     color: #cbd5e1;
                     margin-bottom: 0.4rem;
                 }
 
                 .digit-glowing {
-                    font-size: 2.8rem;
+                    font-size: 3rem;
                     font-weight: 900;
                     line-height: 1;
+                    font-family: 'JetBrains Mono', monospace;
                 }
 
                 .desc {
                     font-size: 1.05rem;
+                    font-weight: 700;
                     color: #94a3b8;
                     margin-top: 0.4rem;
                 }
@@ -1023,16 +1170,20 @@
         }
     }
 
-    // Trading Controls & Parameters
+    // ── 9. Controls & Risk Management Input Deck ──
     &__controls-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 1.2rem;
-        background: rgba(20, 29, 47, 0.7);
-        backdrop-filter: blur(12px);
+        background: rgba(20, 30, 50, 0.75);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 1.6rem;
+        border-radius: 18px;
+        padding: clamp(1.2rem, 2vw, 1.6rem);
+
+        @media (max-width: 600px) {
+            grid-template-columns: 1fr 1fr;
+        }
 
         .ph-input-group {
             display: flex;
@@ -1040,46 +1191,47 @@
             gap: 0.5rem;
 
             label {
-                font-size: 1.15rem;
+                font-size: 1.1rem;
                 font-weight: 700;
                 color: #cbd5e1;
             }
 
-            input {
-                background: rgba(30, 41, 59, 0.8);
+            input, select {
+                background: rgba(30, 41, 59, 0.85);
                 color: #f8fafc;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                border-radius: 8px;
-                padding: 0.8rem 1rem;
-                font-size: 1.3rem;
+                border: 1.5px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                padding: 0.75rem 1rem;
+                font-size: 1.25rem;
                 font-weight: 700;
                 outline: none;
                 transition: all 0.2s ease;
 
                 &:focus {
                     border-color: #f5c542;
-                    box-shadow: 0 0 10px rgba(245, 197, 66, 0.3);
+                    box-shadow: 0 0 12px rgba(245, 197, 66, 0.35);
                 }
             }
         }
     }
 
-    // Action Execution Buttons Row
+    // ── 10. Execution Buttons & Status Bar ──
     &__actions-bar {
         display: flex;
         align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 1.2rem;
-        background: rgba(15, 23, 42, 0.8);
+        background: rgba(15, 23, 42, 0.85);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
-        padding: 1.4rem 1.8rem;
+        border-radius: 16px;
+        padding: 1.2rem 1.6rem;
 
         .ph-status-indicator {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 0.9rem;
 
             .pulse-dot {
                 width: 14px;
@@ -1087,13 +1239,13 @@
                 border-radius: 50%;
 
                 &--idle { background: #64748b; }
-                &--running { background: #10b981; box-shadow: 0 0 12px #10b981; animation: pulseGlow 1.5s infinite; }
-                &--paused { background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
+                &--running { background: #10b981; box-shadow: 0 0 14px #10b981; animation: pulseGlow 1.5s infinite; }
+                &--paused { background: #f59e0b; box-shadow: 0 0 14px #f59e0b; }
             }
 
             .status-text {
-                font-size: 1.3rem;
-                font-weight: 700;
+                font-size: 1.25rem;
+                font-weight: 800;
                 color: #f8fafc;
             }
         }
@@ -1101,38 +1253,48 @@
         .ph-buttons-cluster {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.9rem;
             flex-wrap: wrap;
+            width: 100%;
+
+            @media (min-width: 800px) {
+                width: auto;
+            }
 
             .ph-btn {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.8rem;
-                padding: 1rem 2rem;
-                border-radius: 10px;
-                font-size: 1.3rem;
+                gap: 0.7rem;
+                padding: 0.9rem 1.8rem;
+                border-radius: 12px;
+                font-size: 1.25rem;
                 font-weight: 800;
                 border: none;
                 cursor: pointer;
                 transition: all 0.2s ease;
+                flex: 1;
+
+                @media (min-width: 800px) {
+                    flex: none;
+                }
 
                 &--start {
                     background: linear-gradient(135deg, #10b981, #059669);
                     color: #fff;
-                    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+                    box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
 
                     &:hover {
                         background: linear-gradient(135deg, #059669, #047857);
                         transform: translateY(-2px);
-                        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+                        box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
                     }
                 }
 
                 &--stop {
                     background: linear-gradient(135deg, #ef4444, #dc2626);
                     color: #fff;
-                    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+                    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.4);
 
                     &:hover {
                         background: linear-gradient(135deg, #dc2626, #b91c1c);
@@ -1143,7 +1305,7 @@
                 &--pause {
                     background: linear-gradient(135deg, #f59e0b, #d97706);
                     color: #0f172a;
-                    font-weight: 800;
+                    font-weight: 900;
 
                     &:hover {
                         transform: translateY(-2px);
@@ -1153,7 +1315,7 @@
                 &--bulk {
                     background: linear-gradient(135deg, #f5c542, #d97706);
                     color: #0f172a;
-                    box-shadow: 0 4px 16px rgba(245, 197, 66, 0.4);
+                    box-shadow: 0 4px 18px rgba(245, 197, 66, 0.4);
 
                     &:hover {
                         transform: translateY(-2px);
@@ -1161,25 +1323,25 @@
                 }
 
                 &--secondary {
-                    background: rgba(51, 65, 85, 0.7);
+                    background: rgba(51, 65, 85, 0.8);
                     color: #e2e8f0;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
 
                     &:hover {
-                        background: rgba(71, 85, 105, 0.9);
+                        background: rgba(71, 85, 105, 0.95);
                     }
                 }
             }
         }
     }
 
-    // Trade Log Table & Telemetry
+    // ── 11. Real-Time Trade Journal ──
     &__logs-card {
-        background: rgba(20, 29, 47, 0.7);
-        backdrop-filter: blur(12px);
+        background: rgba(20, 30, 50, 0.75);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 16px;
-        padding: 1.6rem;
+        border-radius: 18px;
+        padding: clamp(1.2rem, 2vw, 1.6rem);
         display: flex;
         flex-direction: column;
         gap: 1rem;
@@ -1191,73 +1353,98 @@
 
             h3 {
                 margin: 0;
-                font-size: 1.4rem;
-                font-weight: 800;
+                font-size: 1.35rem;
+                font-weight: 900;
                 color: #f8fafc;
             }
 
             .clear-btn {
                 background: none;
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.12);
                 color: #94a3b8;
-                padding: 0.4rem 0.8rem;
-                border-radius: 6px;
-                font-size: 1.1rem;
+                padding: 0.4rem 0.9rem;
+                border-radius: 8px;
+                font-size: 1.05rem;
+                font-weight: 700;
                 cursor: pointer;
 
                 &:hover {
                     color: #fff;
-                    border-color: rgba(255, 255, 255, 0.3);
+                    border-color: rgba(255, 255, 255, 0.35);
                 }
             }
         }
 
         .ph-log-table-wrap {
-            max-height: 240px;
+            max-height: 260px;
             overflow-y: auto;
+            overflow-x: auto;
 
             table {
                 width: 100%;
+                min-width: 680px;
                 border-collapse: collapse;
                 font-size: 1.15rem;
 
                 th {
                     text-align: left;
-                    padding: 0.8rem;
+                    padding: 0.85rem;
                     color: #64748b;
                     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-                    font-weight: 700;
+                    font-weight: 800;
                     text-transform: uppercase;
+                    letter-spacing: 0.5px;
                 }
 
                 td {
-                    padding: 0.8rem;
+                    padding: 0.85rem;
                     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
                     color: #cbd5e1;
+                    font-weight: 600;
                 }
 
                 .status-badge {
                     font-weight: 800;
-                    padding: 0.2rem 0.6rem;
-                    border-radius: 4px;
-                    font-size: 1rem;
+                    padding: 0.25rem 0.7rem;
+                    border-radius: 6px;
+                    font-size: 0.95rem;
 
-                    &--win { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-                    &--loss { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-                    &--pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+                    &--win { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+                    &--loss { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+                    &--pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
                 }
             }
         }
     }
 }
 
-// Animations
+// Keyframes
 @keyframes pulseGlow {
     0%, 100% {
         box-shadow: 0 0 16px rgba(245, 197, 66, 0.3);
     }
     50% {
-        box-shadow: 0 0 28px rgba(245, 197, 66, 0.65);
+        box-shadow: 0 0 28px rgba(245, 197, 66, 0.7);
+    }
+}
+
+@keyframes pulseIcon {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 16px rgba(245, 197, 66, 0.35);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 26px rgba(245, 197, 66, 0.7);
+    }
+}
+
+@keyframes pulseChip {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.04);
     }
 }
 

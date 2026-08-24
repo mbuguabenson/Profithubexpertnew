@@ -93,6 +93,7 @@ const PovertyHunter: React.FC = observer(() => {
     const [showWideView, setShowWideView] = useState<boolean>(false);
     const [autoSwitchMarkets, setAutoSwitchMarkets] = useState<boolean>(true);
     const [maxRunsBeforeCheck, setMaxRunsBeforeCheck] = useState<number>(7);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
 
     // ── Strategy Configuration & Inputs ──
     const [initialStake, setInitialStake] = useState<string>('0.50');
@@ -728,13 +729,16 @@ const PovertyHunter: React.FC = observer(() => {
         return { chartPoints: pts, splinePath: spline, chartWidth: width };
     }, [currentMarket.digits]);
 
+    const totalTrades = winsCount + lossesCount;
+    const winRate = totalTrades > 0 ? ((winsCount / totalTrades) * 100).toFixed(1) : '0.0';
+
     return (
         <div className="poverty-hunter">
-            {/* ── Top Header ── */}
+            {/* ── Top Hero Header ── */}
             <div className="poverty-hunter__header">
                 <div className="poverty-hunter__header-title-box">
                     <div className="ph-icon-badge">
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                             <circle cx="12" cy="12" r="10" />
                             <line x1="22" y1="12" x2="18" y2="12" />
                             <line x1="6" y1="12" x2="2" y2="12" />
@@ -744,8 +748,13 @@ const PovertyHunter: React.FC = observer(() => {
                         </svg>
                     </div>
                     <div className="ph-title-text">
-                        <h1>POVERTY HUNTER</h1>
-                        <span>AI Multi-Market Synthetic Hunter & Differs / Over-Under Engine</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
+                            <h1>POVERTY HUNTER</h1>
+                            <span className={`ph-status-chip ph-status-chip--${botState === 'TRADING' ? (isInRecovery ? 'recovery' : 'hunting') : botState.toLowerCase()}`}>
+                                {botState === 'TRADING' ? (isInRecovery ? '⚡ RECOVERY ACTIVE' : '🎯 HUNTING LIVE') : botState === 'PAUSED' ? '⏸ PAUSED' : '● SYSTEM READY'}
+                            </span>
+                        </div>
+                        <span>High-Precision Synthetic Multi-Scanner &amp; Automated Differs / Over-Under Engine</span>
                     </div>
                 </div>
 
@@ -754,6 +763,12 @@ const PovertyHunter: React.FC = observer(() => {
                         <span className="ph-metric-pill__label">Session P/L</span>
                         <span className={`ph-metric-pill__val ${sessionProfit > 0 ? 'ph-metric-pill__val--profit' : sessionProfit < 0 ? 'ph-metric-pill__val--loss' : ''}`}>
                             {sessionProfit >= 0 ? `+${sessionProfit.toFixed(2)}` : sessionProfit.toFixed(2)} {currency}
+                        </span>
+                    </div>
+                    <div className="ph-metric-pill">
+                        <span className="ph-metric-pill__label">Win Rate</span>
+                        <span className="ph-metric-pill__val" style={{ color: Number(winRate) >= 60 ? '#10b981' : Number(winRate) > 0 ? '#f59e0b' : '#94a3b8' }}>
+                            {winRate}%
                         </span>
                     </div>
                     <div className="ph-metric-pill">
@@ -774,7 +789,7 @@ const PovertyHunter: React.FC = observer(() => {
             {/* ── Market Selector & Wide View Ribbon ── */}
             <div className="poverty-hunter__market-bar">
                 <div className="ph-select-group">
-                    <label>Selected Market:</label>
+                    <label>Active Market:</label>
                     <select value={selectedSymbol} onChange={e => setSelectedSymbol(e.target.value)}>
                         {MARKETS.map(m => (
                             <option key={m.symbol} value={m.symbol}>
@@ -784,20 +799,28 @@ const PovertyHunter: React.FC = observer(() => {
                     </select>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+                <div className="ph-actions-cluster">
+                    <button
+                        className={`ph-toggle-button ${!sidebarCollapsed ? 'ph-toggle-button--active' : ''}`}
+                        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        title="Toggle market list sidebar"
+                    >
+                        📋 {sidebarCollapsed ? 'Show Markets Sidebar' : 'Hide Sidebar'}
+                    </button>
+
                     <button
                         className={`ph-toggle-button ${scanAllMarkets ? 'ph-toggle-button--active' : ''}`}
                         onClick={() => setScanAllMarkets(!scanAllMarkets)}
                         title="Scan all derived synthetic indices simultaneously"
                     >
-                        ⚡ Scan All Synthetics ({scanAllMarkets ? 'ON' : 'OFF'})
+                        ⚡ Scan All ({scanAllMarkets ? 'ON' : 'OFF'})
                     </button>
 
                     <button
                         className={`ph-toggle-button ${showWideView ? 'ph-toggle-button--active' : ''}`}
                         onClick={() => setShowWideView(!showWideView)}
                     >
-                        📊 {showWideView ? 'Collapse View' : 'Wide Market Stats View'}
+                        📊 {showWideView ? 'Collapse Matrix' : 'Wide Market Matrix'}
                     </button>
 
                     <button
@@ -805,7 +828,7 @@ const PovertyHunter: React.FC = observer(() => {
                         onClick={() => setAutoSwitchMarkets(!autoSwitchMarkets)}
                         title="Automatically switch to best performing market after runs"
                     >
-                        🔄 Auto-Switch Markets ({autoSwitchMarkets ? 'ON' : 'OFF'})
+                        🔄 Auto-Switch ({autoSwitchMarkets ? 'ON' : 'OFF'})
                     </button>
                 </div>
             </div>
@@ -832,13 +855,15 @@ const PovertyHunter: React.FC = observer(() => {
                             >
                                 <div className="ph-wide-card__header">
                                     <span className="name">{m.label}</span>
-                                    <span className="digit-badge">{mState?.lastDigit ?? '—'}</span>
+                                    <span className={`digit-badge digit-badge--${(mState?.lastDigit ?? 0) < 5 ? 'under' : 'over'}`}>
+                                        {mState?.lastDigit ?? '—'}
+                                    </span>
                                 </div>
                                 <div className="ph-wide-card__price">Price: {mState?.currentPrice ?? '0.00'}</div>
                                 <div className="ph-wide-card__stats-row">
                                     <span style={{ color: '#10b981' }}>Under (0-4): {u}</span>
                                     <span style={{ color: '#60a5fa' }}>Over (5-9): {o}</span>
-                                    <span style={{ color: '#f5c542' }}>Best: {u > o ? 'UNDER' : 'OVER'}</span>
+                                    <span style={{ color: '#f5c542' }}>Best: {u >= o ? 'UNDER' : 'OVER'}</span>
                                 </div>
                             </div>
                         );
@@ -847,47 +872,52 @@ const PovertyHunter: React.FC = observer(() => {
             )}
 
             {/* ── Main Body: Left Sidebar Ribbon + Center Workspace ── */}
-            <div className="poverty-hunter__body">
+            <div className={`poverty-hunter__body ${sidebarCollapsed ? 'poverty-hunter__body--collapsed' : ''}`}>
                 {/* Left Sidebar / Markets List */}
-                <div className="poverty-hunter__sidebar">
-                    <div className="poverty-hunter__sidebar-header">
-                        <h3>DERIVED MARKETS</h3>
-                        <span className="badge">LIVE FEED</span>
-                    </div>
-                    <div className="poverty-hunter__sidebar-list">
-                        {MARKETS.map(m => {
-                            const mState = marketsDataRef.current.get(m.symbol);
-                            const digits = mState?.digits || [];
-                            const last50 = digits.slice(-50);
-                            const u = last50.filter(d => d <= 4).length;
-                            const o = last50.filter(d => d >= 5).length;
-                            const isSelected = m.symbol === selectedSymbol;
+                {!sidebarCollapsed && (
+                    <div className="poverty-hunter__sidebar">
+                        <div className="poverty-hunter__sidebar-header">
+                            <h3>DERIVED MARKETS</h3>
+                            <span className="badge">LIVE FEED</span>
+                        </div>
+                        <div className="poverty-hunter__sidebar-list">
+                            {MARKETS.map(m => {
+                                const mState = marketsDataRef.current.get(m.symbol);
+                                const digits = mState?.digits || [];
+                                const last50 = digits.slice(-50);
+                                const u = last50.filter(d => d <= 4).length;
+                                const o = last50.filter(d => d >= 5).length;
+                                const isSelected = m.symbol === selectedSymbol;
+                                const lastDigit = mState?.lastDigit ?? 0;
 
-                            return (
-                                <div
-                                    key={m.symbol}
-                                    className={`ph-market-card ${isSelected ? 'ph-market-card--active' : ''}`}
-                                    onClick={() => setSelectedSymbol(m.symbol)}
-                                >
-                                    <div className="ph-market-card__top">
-                                        <span className="symbol-name">{m.label}</span>
-                                        <span className="digit-pill">{mState?.lastDigit ?? 0}</span>
+                                return (
+                                    <div
+                                        key={m.symbol}
+                                        className={`ph-market-card ${isSelected ? 'ph-market-card--active' : ''}`}
+                                        onClick={() => setSelectedSymbol(m.symbol)}
+                                    >
+                                        <div className="ph-market-card__top">
+                                            <span className="symbol-name">{m.label}</span>
+                                            <span className={`digit-pill digit-pill--${lastDigit < 5 ? 'under' : 'over'}`}>
+                                                {lastDigit}
+                                            </span>
+                                        </div>
+                                        <div className="ph-market-card__mid">
+                                            <span className="price">{mState?.currentPrice ?? '0.00'}</span>
+                                            <span className={`bias ${u >= o ? 'bias--under' : 'bias--over'}`}>
+                                                {u >= o ? `Under ${u}` : `Over ${o}`}
+                                            </span>
+                                        </div>
+                                        <div className="ph-market-card__bot">
+                                            <span>Differs Pick:</span>
+                                            <span className="rec-differ">Digit {((mState?.lastDigit ?? 3) + 4) % 6 + 2}</span>
+                                        </div>
                                     </div>
-                                    <div className="ph-market-card__mid">
-                                        <span className="price">{mState?.currentPrice ?? '0.00'}</span>
-                                        <span className={`bias ${u > o ? 'bias--under' : 'bias--over'}`}>
-                                            {u >= o ? `Under ${u}` : `Over ${o}`}
-                                        </span>
-                                    </div>
-                                    <div className="ph-market-card__bot">
-                                        <span>Differs Match:</span>
-                                        <span className="rec-differ">Digit {((mState?.lastDigit ?? 3) + 4) % 6 + 2}</span>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Right Workspace */}
                 <div className="poverty-hunter__workspace">
@@ -896,23 +926,37 @@ const PovertyHunter: React.FC = observer(() => {
                         <div className="ph-chart-top">
                             <div className="ph-price-badge-group">
                                 <div className="ph-current-price-box">
-                                    <span className="label">Current Price ({currentMarket.symbol})</span>
-                                    <span className="price">{currentMarket.currentPrice}</span>
+                                    <span className="label">LIVE QUOTE ({currentMarket.symbol})</span>
+                                    <div className="price-row">
+                                        <span className="price">{currentMarket.currentPrice}</span>
+                                        <span className="live-dot" />
+                                    </div>
                                 </div>
-                                <div className="ph-last-digit-big">
+                                <div className={`ph-last-digit-big ph-last-digit-big--${currentMarket.lastDigit < 5 ? 'under' : 'over'}`}>
                                     <span className="digit-label">LAST DIGIT</span>
                                     <span className="digit-val">{currentMarket.lastDigit}</span>
+                                    <span className="digit-sub">
+                                        {currentMarket.lastDigit < 5 ? 'Under (0–4)' : 'Over (5–9)'}
+                                    </span>
                                 </div>
                             </div>
 
                             <div className="ph-chart-legend">
                                 <div className="legend-item">
                                     <span className="dot dot--curve" />
-                                    <span>50 Last Digits Trend</span>
+                                    <span>50-Ticks Spline</span>
+                                </div>
+                                <div className="legend-item">
+                                    <span className="dot dot--under" />
+                                    <span>Under 0–4</span>
+                                </div>
+                                <div className="legend-item">
+                                    <span className="dot dot--over" />
+                                    <span>Over 5–9</span>
                                 </div>
                                 <div className="legend-item">
                                     <span className="dot dot--curr" />
-                                    <span>Current Spot (Live)</span>
+                                    <span>Active Spot</span>
                                 </div>
                             </div>
                         </div>
