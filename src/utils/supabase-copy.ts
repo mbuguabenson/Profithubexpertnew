@@ -303,27 +303,21 @@ export const getDefaultTabConfig = (): TabConfigItem[] => [
     { key: 'copy_trading', label: 'Copy Trading', enabled: true, order: 5 },
     { key: 'tradingview', label: 'TradingView', enabled: true, order: 6 },
     { key: 'signals', label: 'Signals', enabled: true, order: 7 },
-    { key: 'auto_trades', label: 'Auto Trades', enabled: true, order: 8 },
-    { key: 'scanner', label: 'AI Strategy Scanner', enabled: true, order: 9 },
-    { key: 'manual_trading', label: 'Manual Trading', enabled: true, order: 10 },
-    { key: 'easy_tool', label: 'Easy Tool', enabled: true, order: 11 },
-    { key: 'signal_centre', label: 'Signal Centre', enabled: true, order: 12 },
-    { key: 'marketkiller', label: 'MarketKiller', enabled: true, order: 13 },
-    { key: 'multi_trader', label: 'Multi Trader', enabled: true, order: 14 },
-    { key: 'market_hunter_pro', label: 'Market Hunter Pro', enabled: true, order: 15 },
-    { key: 'ai_compounding_engine', label: 'AI Compounding Engine', enabled: true, order: 16 },
-    { key: 'dtrader', label: 'DTrader', enabled: true, order: 17 },
-    { key: 'ai_trading_engine', label: 'AI Trading Engine 🤖', enabled: true, order: 18 },
-    { key: 'dcircles', label: 'DCircles', enabled: true, order: 19 },
-    { key: 'account_center', label: 'Account Center', enabled: true, order: 20 },
-    { key: 'system_center', label: 'System Center', enabled: true, order: 21 },
-    { key: 'pro_journal', label: 'Pro Journal', enabled: true, order: 22 },
-    { key: 'elite_pro', label: 'Elite Pro 💎', enabled: true, order: 23 },
-    { key: 'poverty_hunter', label: 'Poverty Hunter 🎯', enabled: true, order: 24 },
+    { key: 'scanner', label: 'AI Strategy Scanner', enabled: true, order: 8 },
+    { key: 'manual_trading', label: 'Manual Trading', enabled: true, order: 9 },
+    { key: 'easy_tool', label: 'Easy Tool', enabled: true, order: 10 },
+    { key: 'signal_centre', label: 'Signal Centre', enabled: true, order: 11 },
+    { key: 'marketkiller', label: 'MarketKiller', enabled: true, order: 12 },
+    { key: 'multi_trader', label: 'Multi Trader', enabled: true, order: 13 },
+    { key: 'market_hunter_pro', label: 'Market Hunter Pro', enabled: true, order: 14 },
+    { key: 'ai_trading_engine', label: 'AI Trading Engine 🤖', enabled: true, order: 15 },
+    { key: 'digitflow', label: 'DigitFlow 📊', enabled: true, order: 16 },
+    { key: 'elite_pro', label: 'Elite Pro 💎', enabled: true, order: 17 },
+    { key: 'poverty_hunter', label: 'Poverty Hunter 🎯', enabled: true, order: 18 },
 ];
 
 // Bump this when new tabs are added to force clients to pick up new defaults
-const TAB_CONFIG_VERSION = 15;
+const TAB_CONFIG_VERSION = 16;
 
 export const getSiteConfig = (): SiteConfig => {
     try {
