@@ -108,6 +108,7 @@ const AppWrapper = observer(() => {
         'digitflow',
         'elite_pro',
         'poverty_hunter',
+        'auto_x_eo',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();

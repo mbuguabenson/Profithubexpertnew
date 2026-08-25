@@ -565,9 +565,9 @@ const AutoXEo: React.FC = observer(() => {
     // ── Log and Drawer Contract Emitter ──
     const pushContractToDrawer = useCallback((contractSnapshot: Record<string, unknown>) => {
         try {
-            transactions.pushTransaction({ ...contractSnapshot, run_id: run_panel.run_id });
-            run_panel.onBotContractEvent(contractSnapshot);
-            summary_card.onBotContractEvent(contractSnapshot);
+            transactions?.pushTransaction?.({ ...contractSnapshot, run_id: run_panel?.run_id });
+            run_panel?.onBotContractEvent?.(contractSnapshot);
+            summary_card?.onBotContractEvent?.(contractSnapshot);
         } catch {
             // Ignore if core stores aren't initialized
         }
