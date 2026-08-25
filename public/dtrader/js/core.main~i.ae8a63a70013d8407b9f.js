@@ -4183,11 +4183,12 @@ module.exports = webpackAsyncContext;
 /******/ 		__webpack_require__.hmd = (module) => {
 /******/ 			module = Object.create(module);
 /******/ 			if (!module.children) module.children = [];
+/******/ 			let _exports = module.exports || {};
 /******/ 			Object.defineProperty(module, 'exports', {
 /******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
+/******/ 				configurable: true,
+/******/ 				get: () => _exports,
+/******/ 				set: (val) => { _exports = val; }
 /******/ 			});
 /******/ 			return module;
 /******/ 		};
