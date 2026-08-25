@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { generateOAuthURL } from '@/components/shared';
-import { DBOT_TABS } from '@/constants/bot-contents';
 import { api_base } from '@/external/bot-skeleton';
 
 import {
@@ -216,8 +215,7 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
 
 const ElitePro = observer(() => {
     const store = useStore();
-    const { client, dashboard, run_panel, summary_card, transactions } = store;
-    const { active_tab } = dashboard;
+    const { client, run_panel, summary_card, transactions } = store;
     const showElitePro = true;
     const currency = client?.currency || 'USD';
     const logged_in = client?.is_logged_in ?? isLoggedIn();
@@ -916,7 +914,7 @@ const ElitePro = observer(() => {
     // ── Launch Full Auto-Trading Engine ──
     const startAutoTrading = useCallback(async () => {
         if (!logged_in) {
-            window.location.href = generateOAuthURL();
+            window.location.href = await generateOAuthURL();
             return;
         }
 
