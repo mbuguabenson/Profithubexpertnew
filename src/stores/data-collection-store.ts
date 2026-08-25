@@ -75,6 +75,7 @@ export default class DataCollectionStore {
     }
 
     async trackTransaction(contracts: any[]) {
+        // @ts-ignore
         const pako: any = await import(/* webpackChunkName: "dbot-collection" */ 'pako');
         const contract = contracts?.[0]; // Most recent contract.
 

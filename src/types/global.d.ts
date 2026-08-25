@@ -32,4 +32,13 @@ declare module '*.svg' {
     export default src;
 }
 
+declare module 'pako' {
+    const pako: any;
+    export default pako;
+    export function gzip(data: any, options?: any): any;
+    export function ungzip(data: any, options?: any): any;
+    export function deflate(data: any, options?: any): any;
+    export function inflate(data: any, options?: any): any;
+}
+
 export {};
