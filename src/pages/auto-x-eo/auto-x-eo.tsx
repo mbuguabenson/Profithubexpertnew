@@ -7,24 +7,17 @@ import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purc
 import { safeSubscribe } from '@/utils/websocket-handler';
 import {
     Activity,
-    AlertCircle,
-    ArrowDownRight,
     ArrowUpRight,
-    BarChart3,
     CheckCircle2,
-    ChevronDown,
     ChevronLeft,
     ChevronRight,
-    Flame,
     Gauge,
     Grid,
     Minus,
     Pause,
     Play,
-    RefreshCw,
     Shield,
     Square,
-    TrendingUp,
     Zap,
 } from 'lucide-react';
 import './auto-x-eo.scss';
@@ -245,27 +238,25 @@ const AutoXEo: React.FC = observer(() => {
                     throttleRender();
                 }
 
-                // Subscribe to real-time live ticks
-                const sub = await safeSubscribe(
-                    api_base.api,
-                    { ticks: sym },
-                    (tickRes: any) => {
-                        if (!isMountedRef.current) return;
-                        if (tickRes?.tick?.symbol === sym && tickRes?.tick?.quote !== undefined) {
-                            const quote = Number(tickRes.tick.quote);
-                            const lastD = extractLastDigit(quote, pip);
-                            const item = marketsDataRef.current.get(sym);
-                            if (item) {
-                                item.currentPrice = quote.toFixed(pip);
-                                item.lastDigit = lastD;
-                                item.digits = [...item.digits, lastD].slice(-MAX_TICKS_STORED);
-                                throttleRender();
-                            }
+                // Subscribe to real-time live ticks via observable
+                const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+                const sub = safeSubscribe(tickObservable, (tickRes: any) => {
+                    if (!isMountedRef.current) return;
+                    if (tickRes?.tick?.symbol === sym && tickRes?.tick?.quote !== undefined) {
+                        const quote = Number(tickRes.tick.quote);
+                        const lastD = extractLastDigit(quote, pip);
+                        const item = marketsDataRef.current.get(sym);
+                        if (item) {
+                            item.currentPrice = quote.toFixed(pip);
+                            item.lastDigit = lastD;
+                            item.digits = [...item.digits, lastD].slice(-MAX_TICKS_STORED);
+                            throttleRender();
                         }
                     }
-                );
+                });
 
                 if (isMountedRef.current) {
+                    activeSubs.get(sym)?.unsubscribe?.();
                     activeSubs.set(sym, sub);
                 }
             } catch (err) {
@@ -293,7 +284,7 @@ const AutoXEo: React.FC = observer(() => {
         }
 
         return () => {
-            // Keep active streams alive for smooth switching
+            // Keep active streams alive
         };
     }, [scanAllMarkets, selectedSymbol, throttleRender]);
 
@@ -643,64 +634,67 @@ const AutoXEo: React.FC = observer(() => {
             }
 
             const contractId = buyResult.contract_id;
-            pushContractToDrawer({
+            const initSnapshot = {
                 contract_id: contractId,
                 underlying: market,
                 contract_type: contractType,
                 buy_price: stake,
                 status: 'open',
-            });
+                currency,
+            };
+            pushContractToDrawer(initSnapshot);
 
             // Stream until settled
-            await streamContractUntilSettled({
-                contract_id: contractId,
+            const settledSnapshot = await streamContractUntilSettled({
+                contractId,
+                fallback: initSnapshot,
                 onUpdate: snapshot => {
                     pushContractToDrawer(snapshot);
                 },
-                onSettled: settledSnapshot => {
-                    pushContractToDrawer(settledSnapshot);
-                    const profitVal = Number(settledSnapshot.profit || 0);
-                    const isWin = profitVal > 0;
-
-                    if (isWin) {
-                        playSoundCue('win');
-                        updateLogResult(logId, 'WIN', profitVal);
-                        setWinsCount(w => w + 1);
-                        setSessionProfit(p => p + profitVal);
-
-                        if (isInRecovery) {
-                            // Recovered! Reset back to initial stake and exit recovery
-                            setIsInRecovery(false);
-                            setAccumulatedLoss(0);
-                            setCurrentStake(parseFloat(initialStake) || 0.50);
-                        } else {
-                            // Normal win -> reset stake
-                            setCurrentStake(parseFloat(initialStake) || 0.50);
-                        }
-                    } else {
-                        playSoundCue('loss');
-                        updateLogResult(logId, 'LOSS', profitVal);
-                        setLossesCount(l => l + 1);
-                        setSessionProfit(p => p + profitVal);
-
-                        if (autoRecoveryMode) {
-                            setIsInRecovery(true);
-                            const martMult = parseFloat(martingale) || 2.6;
-                            const nextStake = Math.round(stake * martMult * 100) / 100;
-                            setCurrentStake(nextStake);
-                            setAccumulatedLoss(prev => prev + Math.abs(profitVal));
-                        } else {
-                            // Standard martingale
-                            const martMult = parseFloat(martingale) || 2.0;
-                            const nextStake = Math.round(stake * martMult * 100) / 100;
-                            setCurrentStake(nextStake);
-                        }
-                    }
-
-                    setConsecutiveRuns(r => r + 1);
-                    executionLockRef.current = false;
-                },
+                source: 'AUTO X E/O',
             });
+
+            pushContractToDrawer(settledSnapshot);
+            const profitVal = Number(settledSnapshot?.profit || 0);
+            const isWin = profitVal > 0;
+
+            if (isWin) {
+                playSoundCue('win');
+                updateLogResult(logId, 'WIN', profitVal);
+                setWinsCount(w => w + 1);
+                setSessionProfit(p => p + profitVal);
+
+                if (isInRecovery) {
+                    // Recovered! Reset back to initial stake and exit recovery
+                    setIsInRecovery(false);
+                    setAccumulatedLoss(0);
+                    setCurrentStake(parseFloat(initialStake) || 0.50);
+                } else {
+                    // Normal win -> reset stake
+                    setCurrentStake(parseFloat(initialStake) || 0.50);
+                }
+            } else {
+                playSoundCue('loss');
+                updateLogResult(logId, 'LOSS', profitVal);
+                setLossesCount(l => l + 1);
+                setSessionProfit(p => p + profitVal);
+
+                if (autoRecoveryMode) {
+                    setIsInRecovery(true);
+                    const martMult = parseFloat(martingale) || 2.6;
+                    const nextStake = Math.round(stake * martMult * 100) / 100;
+                    setCurrentStake(nextStake);
+                    setAccumulatedLoss(prev => prev + Math.abs(profitVal));
+                } else {
+                    // Standard martingale
+                    const martMult = parseFloat(martingale) || 2.0;
+                    const nextStake = Math.round(stake * martMult * 100) / 100;
+                    setCurrentStake(nextStake);
+                }
+            }
+
+            setConsecutiveRuns(r => r + 1);
+            executionLockRef.current = false;
         } catch (err: any) {
             console.error('AUTO X E/O Trade execution failed:', err);
             updateLogResult(logId, 'LOSS', -stake);
@@ -752,18 +746,17 @@ const AutoXEo: React.FC = observer(() => {
         if (isInRecovery) {
             // Evaluate Over/Under recovery conditions
             const bias = ouAnalysis.bias;
-            const currentLastD = currentMarket.lastDigit;
 
             if (bias === 'UNDER') {
                 const barrier = recoveryType === 'OVER_2_UNDER_8' ? 8 : 6;
-                // Wait for high entry digit in Under to appear (or last 7 ticks favor Under)
-                if (currentMarket.digits.slice(-7).filter(d => d <= 4).length >= 5) {
+                // Wait for high entry digit in Under to appear or last 7 ticks favor Under
+                if (currentMarket.digits.slice(-7).filter(d => d <= 4).length >= 5 || currentMarket.lastDigit === ouAnalysis.highestUnderEntryDigit) {
                     executeTradeOrder(selectedSymbol, 'RECOVERY_UNDER', 'DIGITUNDER', barrier, currentStake);
                 }
             } else if (bias === 'OVER') {
                 const barrier = recoveryType === 'OVER_2_UNDER_8' ? 2 : 3;
-                // Wait for high entry digit in Over to appear (or last 7 ticks favor Over)
-                if (currentMarket.digits.slice(-7).filter(d => d >= 5).length >= 5) {
+                // Wait for high entry digit in Over to appear or last 7 ticks favor Over
+                if (currentMarket.digits.slice(-7).filter(d => d >= 5).length >= 5 || currentMarket.lastDigit === ouAnalysis.highestOverEntryDigit) {
                     executeTradeOrder(selectedSymbol, 'RECOVERY_OVER', 'DIGITOVER', barrier, currentStake);
                 }
             } else {
@@ -865,7 +858,7 @@ const AutoXEo: React.FC = observer(() => {
                     </div>
                     <div className="brand-text">
                         <h1>AUTO X E/O</h1>
-                        <span>Smart AI Parity & Recovery Suite</span>
+                        <span>Smart AI Parity &amp; Recovery Suite</span>
                     </div>
                 </div>
 
@@ -1059,7 +1052,6 @@ const AutoXEo: React.FC = observer(() => {
                             const last60 = state.digits.slice(-60);
                             const total = last60.length || 1;
                             const evens = last60.filter(d => d % 2 === 0).length;
-                            const odds = last60.filter(d => d % 2 !== 0).length;
                             const evenPct = Math.round((evens / total) * 100);
                             const isSelected = m.symbol === selectedSymbol;
 
@@ -1267,7 +1259,7 @@ const AutoXEo: React.FC = observer(() => {
                                     <Shield size={18} /> Over / Under Recovery Suite
                                 </h3>
                                 <span className={`badge-indicator ${ouAnalysis.bias !== 'NEUTRAL' ? 'ready' : 'waiting'}`}>
-                                    BIAS: {ouAnalysis.bias}
+                                    {isInRecovery ? `IN RECOVERY: -${accumulatedLoss.toFixed(2)} ${currency}` : `BIAS: ${ouAnalysis.bias}`}
                                 </span>
                             </div>
 
@@ -1370,6 +1362,20 @@ const AutoXEo: React.FC = observer(() => {
                         </div>
 
                         <div className="control-field">
+                            <label>Min Target Probability</label>
+                            <div className="input-box">
+                                <input
+                                    type="number"
+                                    min="50"
+                                    max="85"
+                                    value={targetProbabilityThreshold}
+                                    onChange={e => setTargetProbabilityThreshold(parseInt(e.target.value, 10) || 58)}
+                                />
+                                <span className="unit">%</span>
+                            </div>
+                        </div>
+
+                        <div className="control-field">
                             <label>Tick Duration</label>
                             <div className="input-box">
                                 <select
@@ -1393,6 +1399,19 @@ const AutoXEo: React.FC = observer(() => {
                                     onChange={e => setBulkCount(e.target.value)}
                                 />
                                 <span className="unit">trades</span>
+                            </div>
+                        </div>
+
+                        <div className="control-field">
+                            <label>Auto Recovery Mode</label>
+                            <div className="input-box">
+                                <select
+                                    value={autoRecoveryMode ? 'ENABLED' : 'DISABLED'}
+                                    onChange={e => setAutoRecoveryMode(e.target.value === 'ENABLED')}
+                                >
+                                    <option value="ENABLED">Enabled (2.6x O/U)</option>
+                                    <option value="DISABLED">Disabled (Standard)</option>
+                                </select>
                             </div>
                         </div>
 
