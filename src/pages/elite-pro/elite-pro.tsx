@@ -1189,12 +1189,14 @@ const ElitePro = observer(() => {
                 await autoPause(activeRunId);
                 setServerRunStatus('paused');
                 setAutoState('PAUSED');
+                autoStateRef.current = 'PAUSED';
                 addLogEntry('SERVER PAUSED', 'Server Run Paused', 'PENDING', 0);
             } catch (err) {
                 console.error('[ElitePro] Server pause error:', err);
             }
         } else {
             setAutoState('PAUSED');
+            autoStateRef.current = 'PAUSED';
             addLogEntry('BOT PAUSED', selectedSymbol, 'PENDING', 0, 'Auto-trading paused by user');
         }
     }, [executionMode, activeRunId, selectedSymbol, addLogEntry]);
@@ -1205,6 +1207,7 @@ const ElitePro = observer(() => {
                 await autoResume(activeRunId);
                 setServerRunStatus('running');
                 setAutoState('TRADING');
+                autoStateRef.current = 'TRADING';
                 addLogEntry('SERVER RESUMED', 'Server Run Resumed', 'PENDING', 0);
             } catch (err) {
                 console.error('[ElitePro] Server resume error:', err);
@@ -1212,6 +1215,7 @@ const ElitePro = observer(() => {
         } else {
             if (autoStateRef.current === 'PAUSED') {
                 setAutoState('SCANNING');
+                autoStateRef.current = 'SCANNING';
                 addLogEntry('BOT RESUMED', selectedSymbol, 'PENDING', 0, 'Auto-trading resumed');
             }
         }
@@ -1232,8 +1236,10 @@ const ElitePro = observer(() => {
             setActiveRunId(null);
             setServerRunStatus('stopped');
             setAutoState('IDLE');
+            autoStateRef.current = 'IDLE';
         } else {
             setAutoState('IDLE');
+            autoStateRef.current = 'IDLE';
             autoAbortRef.current?.abort();
             autoAbortRef.current = null;
             contractStreamAbortRef.current.forEach(c => c.abort());
