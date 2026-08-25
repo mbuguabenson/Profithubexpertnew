@@ -28,25 +28,27 @@ import Scanner from '../bot-builder/scanner/scanner';
 import { TabIcon } from './tab-icons';
 import './main.scss';
 
-const ChartWrapper = lazy(() => import('../chart/chart-wrapper'));
+import { lazyRetry } from '@/utils/lazy-retry';
 
-const TradingView = lazy(() => import('../tradingview'));
-const AnalysisTools = lazy(() => import('../analysis-tool'));
-const Signals = lazy(() => import('../signals'));
-const ScannerPage = lazy(() => import('../scanner/scanner'));
+const ChartWrapper = lazyRetry(() => import('../chart/chart-wrapper'), 'charts');
 
-const ManualTrading = lazy(() => import('../manual-trading'));
-const EasyTool = lazy(() => import('../easy-tool'));
-const MultiTrader = lazy(() => import('../multi-trader'));
-const SignalCentrePage = lazy(() => import('../smart-trading/components/signal-centre-tab'));
-const Marketkiller = lazy(() => import('../marketkiller'));
-const MarketHunterPro = lazy(() => import('../market-hunter-pro'));
-const TradingBots = lazy(() => import('../free-bots/trading-bots'));
-const EntryScanner = lazy(() => import('../entry-scanner/entry-scanner').then(m => ({ default: m.EntryScanner })));
-const DigitFlowPage = lazy(() => import('../digitflow/digitflow'));
-const EliteProPage = lazy(() => import('../elite-pro/elite-pro'));
-const PovertyHunterPage = lazy(() => import('../poverty-hunter'));
-const AutoXEoPage = lazy(() => import('../auto-x-eo'));
+const TradingView = lazyRetry(() => import('../tradingview'), 'tradingview');
+const AnalysisTools = lazyRetry(() => import('../analysis-tool'), 'analysis_tool');
+const Signals = lazyRetry(() => import('../signals'), 'signals');
+const ScannerPage = lazyRetry(() => import('../scanner/scanner'), 'scanner');
+
+const ManualTrading = lazyRetry(() => import('../manual-trading'), 'manual_trading');
+const EasyTool = lazyRetry(() => import('../easy-tool'), 'easy_tool');
+const MultiTrader = lazyRetry(() => import('../multi-trader'), 'multi_trader');
+const SignalCentrePage = lazyRetry(() => import('../smart-trading/components/signal-centre-tab'), 'signal_centre');
+const Marketkiller = lazyRetry(() => import('../marketkiller'), 'marketkiller');
+const MarketHunterPro = lazyRetry(() => import('../market-hunter-pro'), 'market_hunter_pro');
+const TradingBots = lazyRetry(() => import('../free-bots/trading-bots'), 'trading_bots');
+const EntryScanner = lazyRetry(() => import('../entry-scanner/entry-scanner').then(m => ({ default: m.EntryScanner })), 'entry_scanner');
+const DigitFlowPage = lazyRetry(() => import('../digitflow/digitflow'), 'digitflow');
+const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pro');
+const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
+const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';

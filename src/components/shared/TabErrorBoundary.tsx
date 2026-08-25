@@ -35,6 +35,15 @@ export class TabErrorBoundary extends React.Component<Props, State> {
     }
 
     handleRestart = () => {
+        const isChunkError =
+            /loading chunk/i.test(this.state.error?.message || '') ||
+            /failed to fetch dynamically imported module/i.test(this.state.error?.message || '');
+
+        if (isChunkError) {
+            window.location.reload();
+            return;
+        }
+
         this.setState({ hasError: false, error: null });
         systemCenterStore.updateTabStatus(this.props.tabId, 'Refreshing');
         // Give UI a tick to show refreshing state before attempting remount
@@ -45,6 +54,10 @@ export class TabErrorBoundary extends React.Component<Props, State> {
 
     render() {
         if (this.state.hasError) {
+            const isChunkError =
+                /loading chunk/i.test(this.state.error?.message || '') ||
+                /failed to fetch dynamically imported module/i.test(this.state.error?.message || '');
+
             return (
                 <div style={{
                     display: 'flex',
@@ -59,29 +72,58 @@ export class TabErrorBoundary extends React.Component<Props, State> {
                     border: '1px solid rgba(255,0,0,0.2)'
                 }}>
                     <h2 style={{ color: '#ff4d4f', marginBottom: '1rem' }}>
-                        Module Crashed: {this.props.tabName}
+                        {isChunkError ? 'New Update Available' : `Module Crashed: ${this.props.tabName}`}
                     </h2>
-                    <p style={{ color: 'var(--text-general)', marginBottom: '2rem', textAlign: 'center' }}>
-                        The System Operations Center isolated a critical failure in this module to prevent the entire application from crashing.
-                        <br />
-                        <br />
-                        <strong>Error:</strong> {this.state.error?.message}
+                    <p style={{ color: 'var(--text-general)', marginBottom: '2rem', textAlign: 'center', maxWidth: '600px' }}>
+                        {isChunkError ? (
+                            <>
+                                A new platform update was recently deployed. Your browser was loading an older cached version of this module.
+                                <br />
+                                Please reload to load the latest release.
+                            </>
+                        ) : (
+                            <>
+                                The System Operations Center isolated a critical failure in this module to prevent the entire application from crashing.
+                                <br />
+                                <br />
+                                <strong>Error:</strong> {this.state.error?.message}
+                            </>
+                        )}
                     </p>
-                    <button 
-                        onClick={this.handleRestart}
-                        style={{
-                            padding: '10px 24px',
-                            background: '#1e3a8a',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            boxShadow: '0 4px 12px rgba(30, 58, 138, 0.4)'
-                        }}
-                    >
-                        Restart Module
-                    </button>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button 
+                            onClick={this.handleRestart}
+                            style={{
+                                padding: '10px 24px',
+                                background: '#1e3a8a',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                boxShadow: '0 4px 12px rgba(30, 58, 138, 0.4)'
+                            }}
+                        >
+                            {isChunkError ? 'Reload Page to Update' : 'Restart Module'}
+                        </button>
+                        {isChunkError && (
+                            <button 
+                                onClick={() => window.location.reload()}
+                                style={{
+                                    padding: '10px 24px',
+                                    background: '#10b981',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)'
+                                }}
+                            >
+                                Force Refresh
+                            </button>
+                        )}
+                    </div>
                 </div>
             );
         }
