@@ -1135,17 +1135,40 @@ const AutoXEo: React.FC = observer(() => {
                                         strokeLinecap="round"
                                     />
 
-                                    {/* Digit Nodes */}
-                                    {chartPoints.map((pt, idx) => (
-                                        <g key={idx} transform={`translate(${pt.x}, ${pt.y})`}>
-                                            <circle
-                                                r={idx === chartPoints.length - 1 ? 7 : 4.5}
-                                                fill={pt.isEven ? '#00d2ff' : '#a855f7'}
-                                                stroke="#0f172a"
-                                                strokeWidth="1.5"
-                                            />
-                                        </g>
-                                    ))}
+                                    {/* Digit Nodes with numbers */}
+                                    {chartPoints.map((pt, idx) => {
+                                        const isLatest = idx === chartPoints.length - 1;
+                                        const nodeRadius = isLatest ? 9 : 6.5;
+
+                                        return (
+                                            <g key={idx} transform={`translate(${pt.x}, ${pt.y})`}>
+                                                {isLatest && (
+                                                    <circle
+                                                        r={16}
+                                                        fill="none"
+                                                        stroke={pt.isEven ? '#00d2ff' : '#a855f7'}
+                                                        strokeWidth="1.5"
+                                                        opacity="0.6"
+                                                    />
+                                                )}
+                                                <circle
+                                                    r={nodeRadius}
+                                                    fill={isLatest ? '#f5c542' : pt.isEven ? '#00d2ff' : '#a855f7'}
+                                                    stroke="#0f172a"
+                                                    strokeWidth={isLatest ? 2 : 1.5}
+                                                />
+                                                <text
+                                                    textAnchor="middle"
+                                                    dy={isLatest ? 3.5 : 2.5}
+                                                    fontSize={isLatest ? '9.5' : '7'}
+                                                    fontWeight="800"
+                                                    fill={isLatest ? '#0f172a' : '#ffffff'}
+                                                >
+                                                    {pt.digit}
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
                                 </svg>
                             ) : (
                                 <div className="chart-empty">Waiting for tick stream...</div>
