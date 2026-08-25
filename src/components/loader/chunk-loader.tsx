@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Activity, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { Activity, Sparkles, Zap } from 'lucide-react';
 import './chunk-loader.scss';
 
 interface ChunkLoaderProps {
