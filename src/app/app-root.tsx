@@ -6,14 +6,13 @@ import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import { sanitizeAccountsList } from '@/utils/token-bridge';
-import { getBrandLabel, getBrandWebsiteName } from '@/components/shared/utils/brand/brand';
+import { getBrandLabel } from '@/components/shared/utils/brand/brand';
 import { BarChart3, Bot, Copy, Loader2 } from 'lucide-react';
 import './app-root.scss';
 
 const AppContent = lazy(() => import('./app-content'));
 
 const brandLabel = getBrandLabel();
-const deploymentName = getBrandWebsiteName();
 
 const AppRootLoader = () => {
     return <ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={false} />;
