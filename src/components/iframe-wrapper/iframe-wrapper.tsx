@@ -3,8 +3,7 @@ import { observer } from 'mobx-react-lite';
 import './iframe-wrapper.scss';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
-import { ParentBridgeClient, DiagnosticsPanel } from '../iframe-bridge';
-import TokenDebugPanel from '@/components/Debug/TokenDebugPanel';
+import { ParentBridgeClient } from '../iframe-bridge';
 
 interface IframeWrapperProps {
     src: string;
@@ -270,8 +269,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                 }}
                 onLoad={() => setIsLoading(false)}
             />
-            {title === 'DTrader Terminal' && <DiagnosticsPanel bridge={bridgeClient} />}
-            {title === 'DTrader Terminal' && <TokenDebugPanel />}
         </div>
     );
 });

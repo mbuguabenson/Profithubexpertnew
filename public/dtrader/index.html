@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en" dir="auto">
+    <head>
+        <!-- Set skeleton theme color properties -->
+        <style>
+            :root {
+                --color-surface-primary: #fff;
+                --color-text-primary: #000;
+                --initial-loader-display: flex;
+            }
+
+            #platform_name:after {
+                content: var(--app-shell-platform-name);
+                margin-left: 8px;
+            }
+
+            .derivatives-trader > .header__loading {
+                background-color: var(--color-surface-primary);
+                border-bottom: var(--color-surface-primary);
+            }
+
+            .derivatives-trader > .app-contents__loading {
+                background-color: var(--color-surface-primary);
+            }
+
+            .derivatives-trader > .footer__loading {
+                background-color: var(--color-surface-primary);
+                border-bottom: var(--color-surface-primary);
+            }
+
+            .initial-loader {
+                display: var(--initial-loader-display) !important;
+            }
+        </style>
+        <!-- Start theme styles and mobile app loader control -->
+        <script type="text/javascript">
+            var l = window.location;
+
+            // Check URL parameter first (takes priority)
+            var urlParams = new URLSearchParams(l.search);
+            var themeParam = urlParams.get('theme');
+
+            var ui_store = localStorage.getItem('ui_store');
+            var is_dark_theme = false;
+
+            if (themeParam === 'dark') {
+                is_dark_theme = true;
+            } else if (themeParam === 'light') {
+                is_dark_theme = false;
+            } else if (ui_store && ui_store.length > 0) {
+                // Fallback to localStorage if no URL parameter
+                is_dark_theme = JSON.parse(ui_store).is_dark_mode_on || false;
+            }
+
+            if (is_dark_theme) {
+                // Add dark class to HTML element before React loads
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+                // if dark theme, change the property colors for dark theme
+                document.documentElement.style.setProperty('--color-surface-primary', '#181c25');
+                document.documentElement.style.setProperty('--color-text-primary', '#fff');
+            } else {
+                // Add light class for light theme
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            }
+
+            // Hide web app loader when inside native mobile app to prevent double loaders
+            var isMobileApp = urlParams.get('is_mobile_app') === 'true';
+            if (isMobileApp) {
+                document.documentElement.style.setProperty('--initial-loader-display', 'none');
+            }
+        </script>
+        <!-- End theme styles and mobile app loader control -->
+        <!-- Start Anti-Clickjack (Permits same-origin parent embedding) -->
+        <script type="text/javascript">
+            try {
+                var antiClickjack = document.getElementById('antiClickjack');
+                if (antiClickjack && antiClickjack.parentNode) {
+                    antiClickjack.parentNode.removeChild(antiClickjack);
+                }
+            } catch (e) {}
+        </script>
+        <!-- End Anti-Clickjack -->
+
+        <!-- Start Parent Auth Token Synchronization Adapter -->
+        <script type="text/javascript">
+            try {
+                if (window.parent && window.parent !== window) {
+                    var pStorage = window.parent.localStorage;
+                    if (pStorage) {
+                        var keysToSync = [
+                            'client.accounts',
+                            'clientAccounts',
+                            'accountsList',
+                            'active_loginid',
+                            'active_token',
+                            'authToken',
+                            'token',
+                            'token1',
+                            'client.loginid',
+                            'account_type',
+                            'config.server_url',
+                            'config.app_id',
+                            'ui_store'
+                        ];
+                        keysToSync.forEach(function(k) {
+                            var val = pStorage.getItem(k);
+                            if (val !== null && val !== undefined) {
+                                localStorage.setItem(k, val);
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.warn('[DTrader Auth Adapter] Parent storage sync error:', e);
+            }
+        </script>
+        <!-- End Parent Auth Token Synchronization Adapter -->
+
+        <noscript>Your browser does not support JavaScript!</noscript>
+
+        <!-- Start URL Handler -->
+        <script type="text/javascript">
+            (function (l) {
+                if (l.search) {
+                    // Create object without prototype to prevent pollution
+                    var q = Object.create(null);
+
+                    l.search
+                        .slice(1)
+                        .split('&')
+                        .forEach(function (v) {
+                            var a = v.split('=');
+                            var key = a[0];
+
+                            // Security checks
+                            if (!key || key.length === 0) return;
+                            if (key.includes('__proto__')) return;
+                            if (key.includes('constructor')) return;
+                            if (key.includes('prototype')) return;
+
+                            var value = a.slice(1).join('=').replace(/~and~/g, '&');
+                            q[key] = value;
+                        });
+
+                    // Use hasOwnProperty equivalent for prototype-less object
+                    if (Object.prototype.hasOwnProperty.call(q, 'p')) {
+                        window.history.replaceState(
+                            null,
+                            null,
+                            l.pathname.slice(0, -1) +
+                                (q.p || '') +
+                                (Object.prototype.hasOwnProperty.call(q, 'q') ? '?' + q.q : '') +
+                                l.hash
+                        );
+                    }
+                }
+            })(window.location);
+        </script>
+        <!-- End URL Handler -->
+
+        <meta name="description" content="<%= htmlWebpackPlugin.options.templateParameters.platform_description %>" />
+        <meta
+            name="keywords"
+            content=" digital options, forex, forex trading, online trading, financial trading, binary trading, index trading, trading indices, forex trades, trading commodities, digital options strategy, binary broker, binary bet, digital options trading platform, binary strategy, finance, stocks, investment, trading"
+        />
+        <meta name="author" content="<%= htmlWebpackPlugin.options.templateParameters.brand_name %>" />
+        <!-- TODO: iOS zoom bug for input elements means we'll get a lower user accessibility score since we're not allowing dtrader.deriv.com to be scalable on mobile -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+        <meta name="theme-color" content="<%= htmlWebpackPlugin.options.templateParameters.theme_color %>" />
+        <meta name="dcterms.rightsHolder" content="<%= htmlWebpackPlugin.options.templateParameters.brand_name %>" />
+        <meta name="dcterms.rights" content="<%= htmlWebpackPlugin.options.templateParameters.brand_name %>" />
+        <meta
+            property="og:description"
+            content="<%= htmlWebpackPlugin.options.templateParameters.platform_description %>"
+        />
+        <meta property="og:title" content="<%= htmlWebpackPlugin.options.templateParameters.platform_name %>" />
+        <meta property="og:type" content="website" />
+        <meta name="google" content="notranslate" />
+        <meta name="referrer" content="origin" />
+
+        <!-- Preconnect for critical resources (establishes early connections) -->
+        <link rel="preconnect" href="<%= htmlWebpackPlugin.options.templateParameters.api_core_url %>" />
+        <link rel="preconnect" href="<%= htmlWebpackPlugin.options.templateParameters.api_url %>" />
+        <link rel="preconnect" href="<%= htmlWebpackPlugin.options.templateParameters.auth_url %>" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <!-- Load all fonts in single request with all required weights and language subsets -->
+        <!-- Includes weights: 300,400,500,700 | Subsets: Latin, Cyrillic (Russian), Vietnamese -->
+        <link
+            rel="preload"
+            as="style"
+            href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+            onload="
+                this.onload = null;
+                this.rel = 'stylesheet';
+            "
+        />
+
+        <!-- Noscript fallback for users with JavaScript disabled -->
+        <noscript>
+            <link
+                rel="stylesheet"
+                href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@700&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+            />
+        </noscript>
+
+        <link rel="alternate" hreflang="en" href="<%= htmlWebpackPlugin.options.templateParameters.canonical_url %>" />
+        <link rel="canonical" href="<%= htmlWebpackPlugin.options.templateParameters.canonical_url %>" />
+
+        <title>
+            <%= htmlWebpackPlugin.options.templateParameters.platform_name %> | <%=
+            htmlWebpackPlugin.options.templateParameters.brand_name %>
+        </title>
+        <meta charset="UTF-8" />
+    <script defer src="/js/core.framework-vendor~node_modules_m.c935c4e01d7b917598ca.js"></script><script defer src="/js/core.framework-vendor~node_modules_react-dom_cjs_react-dom_development_js_98c2df3e.5ddc93737526fcd57d11.js"></script><script defer src="/js/core.deriv-vendor.65d39ac9eb34ac786603.js"></script><script defer src="/js/core.datetime-vendor.3d0361662346c0f0ac8d.js"></script><script defer src="/js/core.vendors-node_modules_cloudflare_stream-react_dist_stream-react_esm_js-node_modules_deriv_deri-4652b4.866dbab928e23d7d14b4.js"></script><script defer src="/js/core.vendors-node_modules_deriv_quill-icons_dist_esm_react_Flags_FlagArabLeagueIcon_js-node_module-f37875.f9a318b21528d43ad9a1.js"></script><script defer src="/js/core.vendors-node_modules_extend_index_js-node_modules_formik_dist_formik_esm_js-node_modules_html-d1cf98.ca4eb938c40a2c7b1c3c.js"></script><script defer src="/js/core.vendors-node_modules_path-to-regexp_index_js-node_modules_react-content-loader_dist_react-con-519cfe.e132780b426759bdd9b6.js"></script><script defer src="/js/core.main~A.f3f000ad5ccf319ed8e3.js"></script><script defer src="/js/core.main~i.ae8a63a70013d8407b9f.js"></script><link href="/manifest.json" rel="manifest" crossorigin="use-credentials"><link href="/favicon.ico" rel="icon"><link href="/public/images/favicons/favicon-16.png" rel="icon" sizes="16x16"><link href="/public/images/favicons/favicon-32.png" rel="icon" sizes="32x32"><link href="/public/images/favicons/favicon-96.png" rel="icon" sizes="96x96"><link href="/public/images/favicons/favicon-160.png" rel="icon" sizes="160x160"><link href="/public/images/favicons/favicon-192.png" rel="icon" sizes="192x192"><link href="/public/images/favicons/apple-touch-icon-57.png" rel="apple-touch-icon" sizes="57x57"><link href="/public/images/favicons/apple-touch-icon-60.png" rel="apple-touch-icon" sizes="60x60"><link href="/public/images/favicons/apple-touch-icon-72.png" rel="apple-touch-icon" sizes="72x72"><link href="/public/images/favicons/apple-touch-icon-76.png" rel="apple-touch-icon" sizes="76x76"><link href="/public/images/favicons/apple-touch-icon-114.png" rel="apple-touch-icon" sizes="114x114"><link href="/public/images/favicons/apple-touch-icon-120.png" rel="apple-touch-icon" sizes="120x120"><link href="/public/images/favicons/apple-touch-icon-144.png" rel="apple-touch-icon" sizes="144x144"><link href="/public/images/favicons/apple-touch-icon-152.png" rel="apple-touch-icon" sizes="152x152"><link href="/public/images/favicons/apple-touch-icon-180.png" rel="apple-touch-icon" sizes="180x180"><link href="/css/core.vendor~A.c530796d400c90c814b2.main.css" rel="stylesheet"><link href="/css/core.vendor~node_modules_deriv-com_quill-ui_dist_assets_base2.c20f87f01f998be4bd75.main.css" rel="stylesheet"><link href="/css/core.vendor~node_modules_deriv-com_quill-ui_dist_assets_b.4fcc4439719e065f5e11.main.css" rel="stylesheet"><link href="/css/core.vendor~node_modules_deriv-com_quill-ui_dist_assets_p.521e8278c9cd78d3adef.main.css" rel="stylesheet"><link href="/css/core.vendor~n.40fd2d86314aef907f0a.main.css" rel="stylesheet"><link href="/css/core.vendor~sass_app_scss_97170cb9.f6740806b5a84a5d3ad5.main.css" rel="stylesheet"><link as="style" href="/css/core.vendor~A.c530796d400c90c814b2.main.css" rel="preload"><link as="style" href="/css/core.vendor~n.40fd2d86314aef907f0a.main.css" rel="preload"><link as="style" href="/css/core.vendor~node_modules_deriv-com_quill-ui_dist_assets_b.4fcc4439719e065f5e11.main.css" rel="preload"><link as="style" href="/css/core.vendor~node_modules_deriv-com_quill-ui_dist_assets_base2.c20f87f01f998be4bd75.main.css" rel="preload"><link as="style" href="/css/core.vendor~node_modules_deriv-com_quill-ui_dist_assets_p.521e8278c9cd78d3adef.main.css" rel="preload"><link as="style" href="/css/core.vendor~sass_app_scss_97170cb9.f6740806b5a84a5d3ad5.main.css" rel="preload"></head>
+
+    <body class="body theme">
+        <div id="derivatives_trader" class="derivatives-trader">
+            <div class="sidebar"></div>
+            <div class="header"></div>
+            <div class="app-contents">
+                <div class="initial-loader">
+                    <div class="initial-loader__barspinner barspinner barspinner-light">
+                        <div class="initial-loader__barspinner--rect barspinner__rect barspinner__rect--1 rect1"></div>
+                        <div class="initial-loader__barspinner--rect barspinner__rect barspinner__rect--2 rect2"></div>
+                        <div class="initial-loader__barspinner--rect barspinner__rect barspinner__rect--3 rect3"></div>
+                        <div class="initial-loader__barspinner--rect barspinner__rect barspinner__rect--4 rect4"></div>
+                        <div class="initial-loader__barspinner--rect barspinner__rect barspinner__rect--5 rect5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="modal_root" class="modal-root"></div>
+        <!-- modal_root has background color. So, it cannot be used for toast messages. For those cases popup_root is used -->
+        <div id="popup_root" class="popup-root"></div>
+    </body>
+</html>

@@ -35,10 +35,11 @@ if (!fs.existsSync(distDir)) {
 }
 copySmartCharts(distDir);
 
-// 3. Copy public/ to dist/
+// 3. Copy public/ (including dtrader static suite) to dist/
 if (fs.existsSync(publicDir)) {
     fs.cpSync(publicDir, distDir, { recursive: true });
 }
 
-console.log('✅ Static assets and smartcharts copied successfully to public/ and dist/');
+console.log('✅ Static assets, dtrader suite, and smartcharts copied successfully to public/ and dist/');
+
 
