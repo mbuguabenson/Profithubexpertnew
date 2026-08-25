@@ -237,7 +237,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         const accountsList = getAccountsList();
                         const demoToken = currentLoginId ? accountsList[currentLoginId] : null;
                         if (demoToken && !demoToken.startsWith('ory_at_')) {
-                            const wsUrl = getSocketURL();
+                            const wsUrl = await getSocketURL();
                             const ws = new WebSocket(wsUrl);
                             await new Promise<void>((resolve, reject) => {
                                 const timeout = setTimeout(() => {
