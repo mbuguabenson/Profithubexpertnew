@@ -9,7 +9,7 @@ import { MarketIcon } from '../market/market-icon';
 import { convertDateFormat } from '../shared';
 import Popover from '../shared_ui/popover';
 import { TradeTypeIcon } from '../trade-type/trade-type-icon';
-import { convertCurrencyAmount, useDisplayCurrency } from '@/utils/currency-converter';
+import { useDisplayCurrency } from '@/utils/currency-converter';
 import { TColumn, TDesktopTransactionTable, TTableCell } from './transaction-details.types';
 
 const PARENT_CLASS = 'transaction-details-modal-desktop';
@@ -76,7 +76,7 @@ export default function DesktopTransactionTable({
                 )}
             >
                 <TableHeader columns={transaction_columns} />
-                {transactions?.map(transaction => {
+                {transactions?.map((transaction, index) => {
                     const { data, type } = transaction;
                     if (type === transaction_elements.CONTRACT) {
                         const buyPriceConv = convert(data?.buy_price, data?.currency || 'USD');

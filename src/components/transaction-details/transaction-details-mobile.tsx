@@ -33,7 +33,7 @@ const TransactionDetailsMobile = observer(() => {
             <div className='transaction-details-modal-mobile__wrapper' data-testid='transaction_details_cards'>
                 {transaction_list?.map(({ data, type }, index) => {
                     if (type === transaction_elements.CONTRACT)
-                        return <MobileTransactionCards transaction={data} key={data?.transaction_ids?.buy || data?.contract_id || `card_${index}`} />;
+                        return <MobileTransactionCards transaction={data as any} key={(data as any)?.transaction_ids?.buy || (data as any)?.contract_id || `card_${index}`} />;
                     return (
                         <div
                             className='transaction-details-modal-mobile__divider'

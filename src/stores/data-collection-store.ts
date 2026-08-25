@@ -2,13 +2,12 @@ import crc32 from 'crc-32/crc32';
 import { action, makeObservable, observable, reaction } from 'mobx';
 import { cloneObject, isProduction } from '@/components/shared';
 import { convertStrategyToIsDbot, DBot } from '@/external/bot-skeleton';
-import { TStores } from '@deriv/stores/types';
 import RootStore from './root-store';
 
 export default class DataCollectionStore {
     root_store: RootStore;
-    core: TStores;
-    constructor(root_store: RootStore, core: TStores) {
+    core: any;
+    constructor(root_store: RootStore, core: any) {
         makeObservable(this, {
             IS_PENDING: observable,
             IS_PROCESSED: observable,
@@ -75,23 +74,15 @@ export default class DataCollectionStore {
         } catch { /* Blockly workspace optional */ }
     }
 
-    async trackTransaction(
-        contracts: {
-            data: {
-                transaction_ids: {
-                    buy: number;
-                };
-            };
-        }[]
-    ) {
-        const pako = await import(/* webpackChunkName: "dbot-collection" */ 'pako');
-        const contract = contracts[0]; // Most recent contract.
+    async trackTransaction(contracts: any[]) {
+        const pako: any = await import(/* webpackChunkName: "dbot-collection" */ 'pako');
+        const contract = contracts?.[0]; // Most recent contract.
 
         if (!contract) {
             return;
         }
 
-        const transaction_id = contract.data?.transaction_ids?.buy || contract.data?.contract_id;
+        const transaction_id = contract.data?.transaction_ids?.buy || contract.data?.contract_id || contract.data?.id;
         if (!transaction_id) {
             return;
         }
@@ -144,15 +135,17 @@ export default class DataCollectionStore {
         this.strategy_content = strategy_content;
     }
 
-    cleanXmlDom = (xml_dom: XMLDocument) => {
+    cleanXmlDom = (xml_dom: any) => {
         const useless_attributes = ['x', 'y', 'id'];
         const updated_dom = cloneObject(xml_dom);
         const removeAttributesRecursively = (element: Element) => {
-            useless_attributes.forEach(useless_attribute => element.removeAttribute(useless_attribute));
-            Array.from(element.children).forEach(child => removeAttributesRecursively(child));
+            useless_attributes.forEach(useless_attribute => element?.removeAttribute?.(useless_attribute));
+            Array.from(element?.children || []).forEach(child => removeAttributesRecursively(child));
         };
 
-        removeAttributesRecursively(updated_dom);
+        if (updated_dom) {
+            removeAttributesRecursively(updated_dom);
+        }
         return updated_dom;
     };
 
