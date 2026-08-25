@@ -9,7 +9,6 @@ import Dialog from '@/components/shared_ui/dialog';
 import Tabs from '@/components/shared_ui/tabs/tabs';
 import TradingViewModal from '@/components/trading-view-chart/trading-view-modal';
 import ProfihubModal from '@/components/profihub-analysis/profihub-modal';
-import ProToolAiModal from '@/components/protool-ai/protool-ai-modal';
 import { DBOT_TABS, TAB_IDS } from '@/constants/bot-contents';
 import { updateWorkspaceName } from '@/external/bot-skeleton';
 import { CONNECTION_STATUS } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
@@ -47,6 +46,7 @@ const EntryScanner = lazy(() => import('../entry-scanner/entry-scanner').then(m 
 const DigitFlowPage = lazy(() => import('../digitflow/digitflow'));
 const EliteProPage = lazy(() => import('../elite-pro/elite-pro'));
 const PovertyHunterPage = lazy(() => import('../poverty-hunter'));
+const AutoXEoPage = lazy(() => import('../auto-x-eo'));
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -527,6 +527,18 @@ const AppWrapper = observer(() => {
                 </TabErrorBoundary>
             )
         },
+        {
+            key: 'auto_x_eo',
+            id: 'id-auto-x-eo',
+            label: <TabIcon iconKey='auto_x_eo' label='AUTO X E/O' />,
+            content: (
+                <TabErrorBoundary tabId='id-auto-x-eo' tabName='AUTO X E/O'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AUTO X E/O...')} />}>
+                        <AutoXEoPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
     ], [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]);
 
     const activeTabsList = useMemo(() => {
@@ -621,7 +633,6 @@ const AppWrapper = observer(() => {
             <ChartModal />
             <TradingViewModal />
             <ProfihubModal />
-            <ProToolAiModal />
 
             <Dialog
                 cancel_button_text={cancel_button_text || localize('Cancel')}

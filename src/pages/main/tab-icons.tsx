@@ -223,6 +223,12 @@ export const TabIcon: React.FC<TTabIconProps> = ({ iconKey, label }) => {
                         <path d='M12 9a3 3 0 0 0-3 3' stroke='currentColor' strokeWidth='1.5' />
                     </svg>
                 );
+            case 'auto_x_eo':
+                return (
+                    <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+                        <polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2' />
+                    </svg>
+                );
             default:
                 return (
                     <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>

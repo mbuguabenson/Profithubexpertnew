@@ -142,6 +142,12 @@
       "label": "Pro Journal",
       "enabled": true,
       "order": 22
+    },
+    {
+      "key": "auto_x_eo",
+      "label": "AUTO X E/O ⚡",
+      "enabled": true,
+      "order": 23
     }
   ],
   "disabledTabs": [],

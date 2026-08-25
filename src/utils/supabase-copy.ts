@@ -314,10 +314,11 @@ export const getDefaultTabConfig = (): TabConfigItem[] => [
     { key: 'digitflow', label: 'DigitFlow 📊', enabled: true, order: 16 },
     { key: 'elite_pro', label: 'Elite Pro 💎', enabled: true, order: 17 },
     { key: 'poverty_hunter', label: 'Poverty Hunter 🎯', enabled: true, order: 18 },
+    { key: 'auto_x_eo', label: 'AUTO X E/O ⚡', enabled: true, order: 19 },
 ];
 
 // Bump this when new tabs are added to force clients to pick up new defaults
-const TAB_CONFIG_VERSION = 16;
+const TAB_CONFIG_VERSION = 17;
 
 export const getSiteConfig = (): SiteConfig => {
     try {
