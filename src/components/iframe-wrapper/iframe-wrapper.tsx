@@ -24,7 +24,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [bridgeClient, setBridgeClient] = useState<ParentBridgeClient | null>(null);
     const { transactions, run_panel, client } = useStore();
 
     useEffect(() => {
@@ -51,7 +50,6 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         // For DTrader Terminal, attach ParentBridgeClient which handles all auth handshakes
         if (title === 'DTrader Terminal') {
             const bridge = new ParentBridgeClient();
-            setBridgeClient(bridge);
             bridge.attach(iframe, iframeOrigin);
 
             const handleLoad = () => {
