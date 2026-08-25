@@ -1,19 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ PROFITHUB EXPERT PRO — FUTURISTIC WELCOME LOADING SCREEN
+// ✦ PROFITHUB EXPERT PRO — REFERENCE WELCOME SCREEN STYLES
 // ═══════════════════════════════════════════════════════════════
 
-$bg-space:      #050811;
-$card-glass:    rgba(15, 23, 42, 0.82);
-$card-border:   rgba(255, 255, 255, 0.1);
-$gold-neon:     #f5c542;
-$cyan-neon:     #00d2ff;
-$purple-neon:   #a855f7;
-$emerald-neon:  #10b981;
-$blue-neon:     #38bdf8;
-$text-light:    #f8fafc;
-$text-sub:      #94a3b8;
+$bg-dark:       #060911;
+$card-bg:       rgba(12, 19, 35, 0.88);
+$card-border:   rgba(0, 210, 255, 0.16);
+$cyan-glow:     #00d2ff;
+$coral-glow:    #ff3366;
+$emerald-glow:  #00e676;
+$teal-glow:     #00f2fe;
+$text-white:    #f8fafc;
+$text-gray:     #94a3b8;
 $text-muted:    #64748b;
 
 .app-root {
@@ -32,7 +31,7 @@ $text-muted:    #64748b;
     position: fixed;
     inset: 0;
     z-index: 99999;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.82);
     backdrop-filter: blur(14px);
     display: flex;
     align-items: center;
@@ -105,15 +104,15 @@ $text-muted:    #64748b;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ MAIN WELCOME CONTAINER
+// ✦ MAIN WELCOME CONTAINER & BACKGROUND CANDLESTICKS
 // ═══════════════════════════════════════════════════════════════
 .welcome-screen {
     position: fixed;
     inset: 0;
     z-index: 99999;
     overflow: hidden;
-    background: $bg-space;
-    color: $text-light;
+    background: radial-gradient(circle at center, #0a1122 0%, $bg-dark 100%);
+    color: $text-white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -129,68 +128,74 @@ $text-muted:    #64748b;
 
 .welcome-screen--exit {
     opacity: 0;
-    transform: scale(1.08) translateY(-10px);
-    filter: blur(16px);
+    transform: scale(1.06) translateY(-8px);
+    filter: blur(14px);
     pointer-events: none;
     transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1), filter 0.65s ease, transform 0.65s ease;
 }
 
-// ─── Cyber Grid Overlay ─────────────────────────────────────────
-.ws-grid-overlay {
+// ─── Candlestick Background Pattern ─────────────────────────────
+.ws-candlesticks-bg {
     position: absolute;
     inset: 0;
-    background-image: 
-        linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px);
-    background-size: 48px 48px;
-    mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4vw;
     pointer-events: none;
+    opacity: 0.38;
+    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 30%, rgba(0, 0, 0, 0.95) 80%);
+
+    .candle-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 32px;
+        transition: transform 0.3s ease;
+
+        @media (max-width: 768px) {
+            width: 18px;
+        }
+
+        .candle-wick {
+            width: 2px;
+            flex-shrink: 0;
+        }
+
+        .candle-body {
+            width: 100%;
+            flex-grow: 1;
+            border-radius: 4px;
+        }
+
+        &.candle--bull {
+            .candle-wick { background: rgba(0, 230, 118, 0.7); }
+            .candle-body {
+                background: rgba(0, 230, 118, 0.65);
+                box-shadow: 0 0 16px rgba(0, 230, 118, 0.45);
+            }
+        }
+
+        &.candle--bear {
+            .candle-wick { background: rgba(255, 51, 102, 0.7); }
+            .candle-body {
+                background: rgba(255, 51, 102, 0.65);
+                box-shadow: 0 0 16px rgba(255, 51, 102, 0.45);
+            }
+        }
+    }
 }
 
-// ─── Ambient Glow Aurora Orbs ──────────────────────────────────
-.ws-bg-orb {
+.ws-vignette-overlay {
     position: absolute;
-    border-radius: 50%;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 40%, rgba(5, 8, 17, 0.7) 100%);
     pointer-events: none;
-    filter: blur(130px);
-
-    &--gold {
-        width: 550px;
-        height: 550px;
-        background: radial-gradient(circle, rgba(245, 197, 66, 0.16) 0%, transparent 70%);
-        top: -120px;
-        left: 50%;
-        transform: translateX(-50%);
-        animation: aurora-float 9s ease-in-out infinite alternate;
-    }
-
-    &--cyan {
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, rgba(0, 210, 255, 0.18) 0%, transparent 70%);
-        bottom: -100px;
-        left: -100px;
-        animation: aurora-float 12s ease-in-out infinite alternate-reverse;
-    }
-
-    &--purple {
-        width: 480px;
-        height: 480px;
-        background: radial-gradient(circle, rgba(168, 85, 247, 0.16) 0%, transparent 70%);
-        bottom: -80px;
-        right: -80px;
-        animation: aurora-float 14s ease-in-out infinite alternate;
-    }
-}
-
-@keyframes aurora-float {
-    0%   { transform: translateY(0) scale(1); opacity: 0.7; }
-    50%  { transform: translateY(-30px) scale(1.12); opacity: 1; }
-    100% { transform: translateY(20px) scale(0.92); opacity: 0.65; }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ HOLOGRAPHIC WELCOME CARD
+// ✦ CENTER MODAL CARD
 // ═══════════════════════════════════════════════════════════════
 .welcome-screen__card {
     position: relative;
@@ -198,441 +203,346 @@ $text-muted:    #64748b;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: min(100%, 540px);
-    padding: 36px 34px 28px;
-    border-radius: 28px;
-    background: $card-glass;
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    width: min(100%, 560px);
+    padding: 34px 38px 28px;
+    border-radius: 24px;
+    background: $card-bg;
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
     border: 1px solid $card-border;
     box-shadow: 
         0 25px 60px rgba(0, 0, 0, 0.75),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        0 0 50px rgba(0, 210, 255, 0.1);
-    gap: 20px;
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 40px rgba(0, 210, 255, 0.08);
+    gap: 16px;
     text-align: center;
-    animation: card-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: card-pop 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    @media (max-width: 540px) {
+        padding: 26px 20px 22px;
+        gap: 14px;
+        border-radius: 20px;
+    }
 }
 
-@keyframes card-reveal {
-    from { opacity: 0; transform: translateY(28px) scale(0.95); }
+@keyframes card-pop {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-// ─── Top Status HUD Bar ─────────────────────────────────────────
-.ws-hud-bar {
+// ─── 1. Glowing Dual-Tone Brand Logo Header ────────────────────
+.ws-brand-header {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 6px 14px;
-    border-radius: 9999px;
-    background: rgba(10, 15, 29, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 4px;
 
-    .hud-status {
+    .ws-brand-title {
+        font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+        font-size: 2.35rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
 
-        .hud-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: $emerald-neon;
-            box-shadow: 0 0 10px $emerald-neon;
-            animation: dot-pulse 1.5s infinite;
+        @media (max-width: 540px) {
+            font-size: 1.85rem;
         }
 
-        .hud-text {
-            font-size: 0.65rem;
+        .brand-left {
+            color: $cyan-glow;
+            text-shadow: 0 0 18px rgba(0, 210, 255, 0.75), 0 0 35px rgba(0, 210, 255, 0.35);
+        }
+
+        .brand-right {
+            color: $coral-glow;
+            text-shadow: 0 0 18px rgba(255, 51, 102, 0.75), 0 0 35px rgba(255, 51, 102, 0.35);
+        }
+    }
+
+    .ws-hub-sub {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+
+        .hub-text {
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: $text-gray;
+        }
+
+        .hub-live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: rgba(0, 230, 118, 0.12);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            color: $emerald-glow;
+            font-size: 0.62rem;
             font-weight: 800;
             letter-spacing: 0.8px;
-            color: #e2e8f0;
-            font-family: 'JetBrains Mono', monospace;
-        }
-    }
 
-    .hud-version {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.65rem;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-        color: $gold-neon;
+            .dot-live {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: $emerald-glow;
+                box-shadow: 0 0 8px $emerald-glow;
+                animation: pulse-dot 1.5s infinite;
+            }
+        }
     }
 }
 
-@keyframes dot-pulse {
+@keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.2); }
+    50% { opacity: 0.4; transform: scale(1.3); }
 }
 
-// ─── Central Gyro Holographic Core ──────────────────────────────
-.ws-brand-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
+.ws-card-divider {
     width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    margin: 2px 0;
 }
 
-.ws-gyro-orb {
-    position: relative;
-    width: 96px;
-    height: 96px;
-    display: grid;
-    place-items: center;
-
-    .gyro-ring {
-        position: absolute;
-        border-radius: 50%;
-
-        &--1 {
-            inset: -4px;
-            border: 2px solid transparent;
-            border-top-color: $cyan-neon;
-            border-right-color: rgba(0, 210, 255, 0.2);
-            animation: gyro-spin 5s linear infinite;
-        }
-
-        &--2 {
-            inset: -12px;
-            border: 1.5px dashed rgba(245, 197, 66, 0.4);
-            animation: gyro-spin 10s linear infinite reverse;
-        }
-
-        &--3 {
-            inset: -20px;
-            border: 1px solid transparent;
-            border-bottom-color: $purple-neon;
-            border-left-color: rgba(168, 85, 247, 0.2);
-            animation: gyro-spin 14s linear infinite;
-        }
-    }
-
-    .gyro-core {
-        width: 78px;
-        height: 78px;
-        border-radius: 50%;
-        background: radial-gradient(circle, #1e293b 20%, #0a0f1d 100%);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        display: grid;
-        place-items: center;
-        box-shadow: 
-            0 10px 30px rgba(0, 0, 0, 0.6),
-            0 0 35px rgba(245, 197, 66, 0.25),
-            inset 0 0 15px rgba(255, 255, 255, 0.08);
-
-        .core-icon {
-            filter: drop-shadow(0 0 12px rgba(245, 197, 66, 0.7));
-            animation: core-breathe 2s ease-in-out infinite alternate;
-        }
-    }
-}
-
-@keyframes gyro-spin {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-}
-
-@keyframes core-breathe {
-    0% { transform: scale(0.92); opacity: 0.85; }
-    100% { transform: scale(1.08); opacity: 1; }
-}
-
-.ws-title-group {
+// ─── 2. Greetings Section ──────────────────────────────────────
+.ws-greetings {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    align-items: center;
+    gap: 3px;
 
-    .ws-main-heading {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: clamp(1.45rem, 3.8vw, 1.95rem);
+    .greeting-title {
+        font-size: 1.18rem;
         font-weight: 800;
-        color: $text-light;
+        color: $text-white;
         margin: 0;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
     }
 
-    .ws-brand-gradient {
-        background: linear-gradient(135deg, #ffffff 20%, #f5c542 60%, #00d2ff 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-size: 200% 100%;
-        animation: text-shine 4s ease infinite;
-    }
-
-    .ws-sub-heading {
+    .greeting-sub {
         font-size: 0.82rem;
-        color: $text-sub;
+        color: $text-gray;
         margin: 0;
         font-weight: 500;
     }
 }
 
-@keyframes text-shine {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-// ─── Architecture Feature Chips ────────────────────────────────
-.ws-features-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+// ─── 3. Progress Bar & Spinner ─────────────────────────────────
+.ws-progress-block {
     width: 100%;
-}
-
-.ws-feature-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 12px;
-    background: rgba(30, 41, 59, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    text-align: left;
-    transition: all 0.25s ease;
-
-    &:hover {
-        transform: translateY(-2px);
-        background: rgba(30, 41, 59, 0.8);
-        border-color: rgba(0, 210, 255, 0.3);
-    }
-
-    .chip-text {
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-
-        .chip-title {
-            font-size: 0.72rem;
-            font-weight: 800;
-            color: $text-light;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chip-sub {
-            font-size: 0.6rem;
-            color: $text-muted;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    }
-}
-
-// ─── Progress Telemetry Section ────────────────────────────────
-.ws-progress-section {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    width: 100%;
-}
+    margin-top: 4px;
 
-.ws-progress-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-
-    .ws-step-indicator {
+    .progress-row {
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: $text-light;
+        gap: 12px;
+        width: 100%;
 
-        .step-icon-wrap {
-            display: flex;
-            align-items: center;
+        .ws-progress-track {
+            flex-grow: 1;
+            height: 7px;
+            border-radius: 9999px;
+            background: #090e1a;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+            position: relative;
         }
 
-        .step-label {
-            color: rgba(248, 250, 252, 0.95);
+        .ws-progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #00d2ff 0%, #00f2fe 50%, #ff3366 100%);
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.6);
+            transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ws-progress-pct {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            min-width: 32px;
+            text-align: right;
         }
     }
 
-    .ws-percent-text {
-        font-family: 'JetBrains Mono', 'Space Grotesk', monospace;
-        font-size: 0.95rem;
-        font-weight: 800;
-        color: $cyan-neon;
-        text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    .ws-status-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.76rem;
+        color: $text-gray;
+
+        .status-spinner {
+            color: $cyan-glow;
+            animation: spin-icon 1s linear infinite;
+        }
+
+        .status-text {
+            color: rgba(226, 232, 240, 0.85);
+            font-weight: 500;
+        }
     }
 }
 
-.ws-progress-track {
-    width: 100%;
-    height: 8px;
-    border-radius: 9999px;
-    background: rgba(10, 15, 29, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+@keyframes spin-icon {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
 }
 
-.ws-progress-fill {
-    height: 100%;
-    border-radius: 9999px;
-    background: linear-gradient(90deg, #00d2ff 0%, #a855f7 50%, #f5c542 100%);
-    background-size: 200% 100%;
-    animation: progress-flow 2.5s linear infinite;
-    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    box-shadow: 0 0 14px rgba(0, 210, 255, 0.6);
-}
-
-@keyframes progress-flow {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-}
-
-.ws-progress-glow-head {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 16px;
-    background: rgba(255, 255, 255, 0.9);
-    filter: blur(2px);
-    border-radius: 50%;
-}
-
-// ─── Step Progression Nodes ────────────────────────────────────
-.ws-dots-bar {
+// ─── 4. Carousel Dot Pills ─────────────────────────────────────
+.ws-dots-row {
     display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 6px;
-    justify-content: center;
-    align-items: center;
-    margin-top: 4px;
-}
+    margin: 4px 0;
 
-.ws-dot-item {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
+    .dot-pill {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #334155;
+        transition: all 0.3s ease;
 
-    &--done {
-        background: rgba(16, 185, 129, 0.3);
-        border: 1px solid $emerald-neon;
-        color: $emerald-neon;
-        box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
-    }
-
-    &--active {
-        width: 22px;
-        border-radius: 9999px;
-        background: linear-gradient(90deg, $cyan-neon, $purple-neon);
-        box-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
-    }
-
-    .dot-check-icon {
-        color: $emerald-neon;
+        &--active {
+            width: 22px;
+            border-radius: 9999px;
+            background: $cyan-glow;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.7);
+        }
     }
 }
 
-// ─── Wisdom Tip Box ────────────────────────────────────────────
-.ws-tip-box {
+// ─── 5. 3 Feature Orbs ─────────────────────────────────────────
+.ws-orbs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
     width: 100%;
-    padding: 10px 14px;
-    border-radius: 12px;
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px dashed rgba(255, 255, 255, 0.08);
+    margin-top: 4px;
 
-    .ws-tip-content {
-        font-size: 0.75rem;
-        color: rgba(226, 232, 240, 0.85);
-        line-height: 1.45;
-        display: block;
-        transition: opacity 0.3s ease;
+    .feature-orb-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+
+        .orb-circle {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s ease;
+
+            &.orb-blue {
+                background: radial-gradient(circle, rgba(0, 210, 255, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%);
+                border-color: rgba(0, 210, 255, 0.3);
+                box-shadow: 0 0 15px rgba(0, 210, 255, 0.15);
+            }
+
+            &.orb-red {
+                background: radial-gradient(circle, rgba(255, 51, 102, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%);
+                border-color: rgba(255, 51, 102, 0.3);
+                box-shadow: 0 0 15px rgba(255, 51, 102, 0.15);
+            }
+
+            &.orb-teal {
+                background: radial-gradient(circle, rgba(0, 242, 254, 0.15) 0%, rgba(15, 23, 42, 0.9) 100%);
+                border-color: rgba(0, 242, 254, 0.3);
+                box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+            }
+
+            .orb-icon {
+                &.text-cyan { color: $cyan-glow; }
+                &.text-coral { color: $coral-glow; }
+                &.text-teal { color: $teal-glow; }
+            }
+        }
+
+        .orb-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: $text-gray;
+        }
     }
 }
 
-// ─── Footer Protocol Bar ───────────────────────────────────────
-.ws-footer-bar {
+// ─── 6. Footer Caption ─────────────────────────────────────────
+.ws-card-footer-caption {
+    margin-top: 4px;
+    font-size: 0.74rem;
+    color: $text-muted;
+    font-weight: 500;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ✦ BOTTOM REAL-TIME MARKET TICKER BAR
+// ═══════════════════════════════════════════════════════════════
+.ws-bottom-ticker-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: rgba(6, 9, 17, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.68rem;
-    color: $text-muted;
-    font-weight: 600;
-    flex-wrap: wrap;
+    overflow: hidden;
+    z-index: 100;
 
-    .footer-item {
+    .ticker-track {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        white-space: nowrap;
+        animation: marquee-scroll 35s linear infinite;
+        padding-left: 20px;
+
+        &:hover {
+            animation-play-state: paused;
+        }
+    }
+
+    .ticker-item {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
 
-        .dot-green {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: $emerald-neon;
-            box-shadow: 0 0 6px $emerald-neon;
+        .ticker-symbol {
+            color: #94a3b8;
+            font-weight: 700;
         }
-    }
 
-    .dot-sep {
-        opacity: 0.3;
+        .ticker-price {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .ticker-change {
+            font-weight: 700;
+
+            &.change-up { color: $emerald-glow; }
+            &.change-down { color: $coral-glow; }
+        }
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ✦ MOBILE RESPONSIVE
-// ═══════════════════════════════════════════════════════════════
-@media (max-width: 540px) {
-    .welcome-screen__card {
-        padding: 26px 18px 20px;
-        gap: 16px;
-        border-radius: 22px;
-    }
-
-    .ws-features-grid {
-        grid-template-columns: 1fr;
-        gap: 6px;
-    }
-
-    .ws-feature-chip {
-        padding: 6px 12px;
-
-        .chip-text {
-            flex-direction: row;
-            gap: 8px;
-            align-items: center;
-
-            .chip-title { font-size: 0.72rem; }
-            .chip-sub { font-size: 0.65rem; opacity: 0.7; }
-        }
-    }
-
-    .ws-gyro-orb {
-        width: 80px;
-        height: 80px;
-
-        .gyro-core {
-            width: 66px;
-            height: 66px;
-        }
-    }
-
-    .ws-title-group .ws-main-heading {
-        font-size: 1.35rem;
-    }
+@keyframes marquee-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }

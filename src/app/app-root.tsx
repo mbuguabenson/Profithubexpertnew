@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import ErrorBoundary from '@/components/error-component/error-boundary';
 import ChunkLoader from '@/components/loader/chunk-loader';
@@ -7,16 +7,7 @@ import { useStore } from '@/hooks/useStore';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import { sanitizeAccountsList } from '@/utils/token-bridge';
 import { getBrandLabel, getBrandWebsiteName } from '@/components/shared/utils/brand/brand';
-import {
-    Activity,
-    CheckCircle2,
-    Cpu,
-    Lock,
-    Radio,
-    ShieldCheck,
-    Sparkles,
-    Zap,
-} from 'lucide-react';
+import { BarChart3, Bot, Copy, Loader2 } from 'lucide-react';
 import './app-root.scss';
 
 const AppContent = lazy(() => import('./app-content'));
@@ -60,22 +51,48 @@ const ErrorComponentWrapper = observer(() => {
 });
 
 const INIT_STEPS = [
-    { label: 'Connecting to Deriv WebSocket Gateway', icon: <Radio size={16} className="text-cyan" /> },
-    { label: 'Loading AI Trading & Parity Engines', icon: <Zap size={16} className="text-gold" /> },
-    { label: 'Authenticating Secure Client Session', icon: <Lock size={16} className="text-emerald" /> },
-    { label: 'Calibrating Multi-Synthetic Market Scanner', icon: <Activity size={16} className="text-purple" /> },
-    { label: 'Initializing Neural Execution Pipeline', icon: <Cpu size={16} className="text-blue" /> },
-    { label: 'Syncing Real-Time Ticks & Orderbook', icon: <Sparkles size={16} className="text-cyan" /> },
-    { label: 'Finalizing Trading Workspace Environment', icon: <ShieldCheck size={16} className="text-emerald" /> },
+    'Connecting to Volatility Markets...',
+    'Loading AI Trading Models...',
+    'Authenticating Deriv Gateway...',
+    'Calibrating Multi-Market Scanner...',
+    'Synchronizing Live Orderbook...',
+    'Finalizing Trading Environment...',
 ];
 
-const FRIENDLY_TIPS = [
-    '💡 Tip: Set up your Risk Management rules to protect your profit targets automatically.',
-    '🚀 Tip: AUTO X E/O continuously scans synthetic indices for the highest probability parity setups.',
-    '⚡ Tip: Your connection communicates directly with Deriv WebSockets for sub-10ms latency.',
-    '🎯 Tip: Combine Digit & Over/Under strategies with active scanners for optimal entry points.',
-    '🛡️ Tip: You can pause automated trading anytime and your active contracts will complete safely.',
-    '📊 Tip: Check the Live Digit Wave Stream to observe real-time tick velocity and trends.',
+const TICKER_ITEMS = [
+    { symbol: 'ETH/USD', price: '2,450.20', change: '+0.1%', isUp: true },
+    { symbol: 'EUR/USD', price: '1.0874', change: '-0.1%', isUp: false },
+    { symbol: 'GBP/USD', price: '1.2854', change: '+0.4%', isUp: true },
+    { symbol: 'GOLD', price: '2,345.80', change: '+0.6%', isUp: true },
+    { symbol: 'XRP/USD', price: '0.6234', change: '+1.2%', isUp: true },
+    { symbol: 'V10 (1s)', price: '1,284.50', change: '+0.1%', isUp: true },
+    { symbol: 'V25 (1s)', price: '2,861.35', change: '-0.7%', isUp: false },
+    { symbol: 'V75 (1s)', price: '84,320.10', change: '+1.2%', isUp: true },
+    { symbol: 'SOL/USD', price: '178.34', change: '+0.8%', isUp: true },
+    { symbol: 'OIL/USD', price: '82.47', change: '-1.4%', isUp: false },
+    { symbol: 'BTC/USD', price: '67,234.50', change: '+2.1%', isUp: true },
+    { symbol: '1HZ100V', price: '1,450.20', change: '+1.5%', isUp: true },
+];
+
+const CANDLESTICKS = [
+    { isBull: true, height: 65, wickTop: 15, wickBottom: 12 },
+    { isBull: false, height: 45, wickTop: 8, wickBottom: 20 },
+    { isBull: false, height: 80, wickTop: 18, wickBottom: 15 },
+    { isBull: true, height: 95, wickTop: 22, wickBottom: 10 },
+    { isBull: false, height: 110, wickTop: 25, wickBottom: 18 },
+    { isBull: true, height: 70, wickTop: 14, wickBottom: 16 },
+    { isBull: true, height: 85, wickTop: 10, wickBottom: 25 },
+    { isBull: false, height: 50, wickTop: 12, wickBottom: 8 },
+    { isBull: false, height: 90, wickTop: 20, wickBottom: 22 },
+    { isBull: true, height: 120, wickTop: 28, wickBottom: 14 },
+    { isBull: false, height: 75, wickTop: 16, wickBottom: 18 },
+    { isBull: true, height: 60, wickTop: 12, wickBottom: 10 },
+    { isBull: true, height: 105, wickTop: 24, wickBottom: 16 },
+    { isBull: false, height: 85, wickTop: 15, wickBottom: 22 },
+    { isBull: false, height: 55, wickTop: 10, wickBottom: 12 },
+    { isBull: true, height: 90, wickTop: 18, wickBottom: 14 },
+    { isBull: true, height: 115, wickTop: 26, wickBottom: 20 },
+    { isBull: false, height: 70, wickTop: 14, wickBottom: 16 },
 ];
 
 const WelcomeScreen = ({
@@ -91,22 +108,13 @@ const WelcomeScreen = ({
 }) => {
     const [exiting, setExiting] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
-    const [tipIndex, setTipIndex] = useState(0);
 
-    // Cycle through initialization steps
+    // Cycle through steps
     useEffect(() => {
         const stepTimer = window.setInterval(() => {
             setActiveStep(prev => (prev + 1) % INIT_STEPS.length);
-        }, 1300);
+        }, 1200);
         return () => window.clearInterval(stepTimer);
-    }, []);
-
-    // Cycle friendly trading tips
-    useEffect(() => {
-        const tipTimer = window.setInterval(() => {
-            setTipIndex(prev => (prev + 1) % FRIENDLY_TIPS.length);
-        }, 3000);
-        return () => window.clearInterval(tipTimer);
     }, []);
 
     // Handle complete transition
@@ -119,128 +127,133 @@ const WelcomeScreen = ({
         return () => window.clearTimeout(exitTimer);
     }, [isComplete, onFinished]);
 
-    const currentStepObj = INIT_STEPS[activeStep] || INIT_STEPS[0];
     const roundedProgress = Math.min(100, Math.round(progress));
+
+    // Dynamic brand split (e.g. PROFIT + HUB or DB + TRADERS)
+    const { leftBrand, rightBrand } = useMemo(() => {
+        const full = (brandLabel || 'PROFIT HUB').trim();
+        const parts = full.split(' ');
+        if (parts.length >= 2) {
+            return { leftBrand: parts[0], rightBrand: parts.slice(1).join(' ') };
+        }
+        const mid = Math.ceil(full.length / 2);
+        return { leftBrand: full.slice(0, mid), rightBrand: full.slice(mid) };
+    }, []);
 
     return (
         <div className={`welcome-screen ${exiting ? 'welcome-screen--exit' : 'welcome-screen--visible'}`}>
-            {/* Ambient Background Aurora Orbs */}
-            <div className="ws-bg-orb ws-bg-orb--gold" />
-            <div className="ws-bg-orb ws-bg-orb--cyan" />
-            <div className="ws-bg-orb ws-bg-orb--purple" />
+            {/* Background Candlestick Atmosphere */}
+            <div className="ws-candlesticks-bg" aria-hidden="true">
+                {CANDLESTICKS.map((candle, idx) => (
+                    <div
+                        key={idx}
+                        className={`candle-item ${candle.isBull ? 'candle--bull' : 'candle--bear'}`}
+                        style={{ height: `${candle.height}px` }}
+                    >
+                        <div className="candle-wick candle-wick--top" style={{ height: `${candle.wickTop}px` }} />
+                        <div className="candle-body" />
+                        <div className="candle-wick candle-wick--bottom" style={{ height: `${candle.wickBottom}px` }} />
+                    </div>
+                ))}
+            </div>
 
-            {/* High-Tech Grid Pattern Overlay */}
-            <div className="ws-grid-overlay" aria-hidden="true" />
+            {/* Subtle Vignette Overlay */}
+            <div className="ws-vignette-overlay" aria-hidden="true" />
 
-            {/* Main Holographic Glassmorphic Card */}
+            {/* Exact Reference Center Modal Card */}
             <div className="welcome-screen__card">
 
-                {/* Top Status HUD Bar */}
-                <div className="ws-hud-bar">
-                    <div className="hud-status">
-                        <span className="hud-dot" />
-                        <span className="hud-text">QUANTUM NODE ACTIVE</span>
+                {/* 1. Glowing Dual-Tone Brand Logo */}
+                <div className="ws-brand-header">
+                    <div className="ws-brand-title">
+                        <span className="brand-left">{leftBrand}</span>
+                        <span className="brand-right">{rightBrand}</span>
                     </div>
-                    <div className="hud-version">
-                        <Sparkles size={12} className="text-gold" />
-                        <span>v3.5 PRO SUITE</span>
-                    </div>
-                </div>
-
-                {/* Central Holographic Gyro-Core & Brand */}
-                <div className="ws-brand-section">
-                    <div className="ws-gyro-orb">
-                        <div className="gyro-ring gyro-ring--1" />
-                        <div className="gyro-ring gyro-ring--2" />
-                        <div className="gyro-ring gyro-ring--3" />
-                        <div className="gyro-core">
-                            <Zap size={32} className="core-icon text-gold" />
-                        </div>
-                    </div>
-
-                    <div className="ws-title-group">
-                        <h1 className="ws-main-heading">
-                            Welcome to <span className="ws-brand-gradient">{brandLabel}</span>
-                        </h1>
-                        <p className="ws-sub-heading">
-                            Institutional Algorithmic Trading Platform • {deploymentName}
-                        </p>
+                    <div className="ws-hub-sub">
+                        <span className="hub-text">TRADING HUB</span>
+                        <span className="hub-live-badge">
+                            <span className="dot-live" />
+                            <span>LIVE</span>
+                        </span>
                     </div>
                 </div>
 
-                {/* High-Performance Architecture Badges */}
-                <div className="ws-features-grid">
-                    <div className="ws-feature-chip">
-                        <Zap size={16} className="text-gold" />
-                        <div className="chip-text">
-                            <span className="chip-title">&lt; 10ms Latency</span>
-                            <span className="chip-sub">Direct WS Gateway</span>
+                <div className="ws-card-divider" />
+
+                {/* 2. Welcome Subtitle */}
+                <div className="ws-greetings">
+                    <h2 className="greeting-title">Welcome to {brandLabel}</h2>
+                    <p className="greeting-sub">Empowering your financial journey.</p>
+                </div>
+
+                {/* 3. Sleek Progress Bar with Percentage */}
+                <div className="ws-progress-block">
+                    <div className="progress-row">
+                        <div className="ws-progress-track">
+                            <div className="ws-progress-fill" style={{ width: `${roundedProgress}%` }} />
                         </div>
+                        <span className="ws-progress-pct">{roundedProgress}%</span>
                     </div>
-                    <div className="ws-feature-chip">
-                        <ShieldCheck size={16} className="text-emerald" />
-                        <div className="chip-text">
-                            <span className="chip-title">Risk Control</span>
-                            <span className="chip-sub">Automated Guardrails</span>
-                        </div>
-                    </div>
-                    <div className="ws-feature-chip">
-                        <Cpu size={16} className="text-cyan" />
-                        <div className="chip-text">
-                            <span className="chip-title">Neural Engine</span>
-                            <span className="chip-sub">Real-Time Signals</span>
-                        </div>
+
+                    {/* Step Status with Animated Spinner */}
+                    <div className="ws-status-row">
+                        <Loader2 size={13} className="status-spinner" />
+                        <span className="status-text">{statusMessage || INIT_STEPS[activeStep]}</span>
                     </div>
                 </div>
 
-                {/* Dynamic Progress Telemetry Section */}
-                <div className="ws-progress-section">
-                    <div className="ws-progress-header">
-                        <div className="ws-step-indicator">
-                            <span className="step-icon-wrap">{currentStepObj.icon}</span>
-                            <span className="step-label">{statusMessage || currentStepObj.label}</span>
+                {/* 4. Dots / Step Carousel Indicators */}
+                <div className="ws-dots-row">
+                    {INIT_STEPS.map((_, idx) => (
+                        <span
+                            key={idx}
+                            className={`dot-pill ${idx === activeStep ? 'dot-pill--active' : ''}`}
+                        />
+                    ))}
+                </div>
+
+                {/* 5. 3 Feature Icon Orbs with Labels */}
+                <div className="ws-orbs-grid">
+                    <div className="feature-orb-item">
+                        <div className="orb-circle orb-blue">
+                            <BarChart3 size={20} className="orb-icon text-cyan" />
                         </div>
-                        <span className="ws-percent-text">{roundedProgress}%</span>
+                        <span className="orb-label">Advanced Charts</span>
                     </div>
 
-                    <div className="ws-progress-track">
-                        <div className="ws-progress-fill" style={{ width: `${roundedProgress}%` }}>
-                            <span className="ws-progress-glow-head" />
+                    <div className="feature-orb-item">
+                        <div className="orb-circle orb-red">
+                            <Bot size={20} className="orb-icon text-coral" />
                         </div>
+                        <span className="orb-label">Trading Bots</span>
                     </div>
 
-                    {/* Step Progression Nodes */}
-                    <div className="ws-dots-bar">
-                        {INIT_STEPS.map((step, idx) => {
-                            const isPast = idx < activeStep;
-                            const isCurrent = idx === activeStep;
-                            return (
-                                <div
-                                    key={idx}
-                                    className={`ws-dot-item ${isCurrent ? 'ws-dot-item--active' : ''} ${isPast ? 'ws-dot-item--done' : ''}`}
-                                    title={step.label}
-                                >
-                                    {isPast && <CheckCircle2 size={8} className="dot-check-icon" />}
-                                </div>
-                            );
-                        })}
+                    <div className="feature-orb-item">
+                        <div className="orb-circle orb-teal">
+                            <Copy size={20} className="orb-icon text-teal" />
+                        </div>
+                        <span className="orb-label">Copy Trading</span>
                     </div>
                 </div>
 
-                {/* Pro Trader Wisdom Tip Box */}
-                <div className="ws-tip-box">
-                    <span className="ws-tip-content">{FRIENDLY_TIPS[tipIndex]}</span>
+                {/* 6. Footer Caption inside Card */}
+                <div className="ws-card-footer-caption">
+                    <span>Preparing a seamless trading experience for you</span>
                 </div>
+            </div>
 
-                {/* Futuristic Protocol Footer */}
-                <div className="ws-footer-bar">
-                    <span className="footer-item">
-                        <span className="dot-green" /> WebSocket Active
-                    </span>
-                    <span className="dot-sep">•</span>
-                    <span className="footer-item">🔒 256-Bit SSL Encrypted</span>
-                    <span className="dot-sep">•</span>
-                    <span className="footer-item">⚡ Deriv Node Connected</span>
+            {/* Bottom Real-Time Market Ticker Bar */}
+            <div className="ws-bottom-ticker-bar">
+                <div className="ticker-track">
+                    {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
+                        <div key={idx} className="ticker-item">
+                            <span className="ticker-symbol">{item.symbol}</span>
+                            <span className="ticker-price">{item.price}</span>
+                            <span className={`ticker-change ${item.isUp ? 'change-up' : 'change-down'}`}>
+                                {item.change}
+                            </span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
@@ -279,7 +292,7 @@ const AppRoot = () => {
     useEffect(() => {
         statusIntervalRef.current = window.setInterval(() => {
             setStatusIndex(prev => (prev + 1) % INIT_STEPS.length);
-        }, 1600);
+        }, 1400);
         return () => {
             if (statusIntervalRef.current) {
                 window.clearInterval(statusIntervalRef.current);
@@ -292,7 +305,7 @@ const AppRoot = () => {
         const step = () => {
             const current = progressRef.current;
             const target = targetProgressRef.current;
-            const increment = isReducedMotion ? 2 : Math.max(0.9, (target - current) * 0.15);
+            const increment = isReducedMotion ? 2 : Math.max(0.85, (target - current) * 0.14);
             const next = Math.min(100, current + increment);
             progressRef.current = next;
             setProgress(next);
@@ -361,7 +374,7 @@ const AppRoot = () => {
         };
     }, []);
 
-    const statusMessage = INIT_STEPS[statusIndex % INIT_STEPS.length]?.label || 'Preparing Workspace';
+    const statusMessage = INIT_STEPS[statusIndex % INIT_STEPS.length] || 'Connecting to Volatility Markets...';
     const welcomeComplete = (is_api_initialized && progress >= 95) || welcomeForceExit;
 
     if (showWelcome) {
