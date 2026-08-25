@@ -4,7 +4,6 @@ import { useStore } from '@/hooks/useStore';
 import { api_base } from '@/external/bot-skeleton';
 import { safeSubscribe } from '@/utils/websocket-handler';
 import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
-import { SUPPORTED_VOLATILITY_MARKETS } from '@/constants/bot-contents';
 import {
     Activity,
     ArrowUpRight,
@@ -12,11 +11,8 @@ import {
     Clock,
     Cpu,
     DollarSign,
-    Flame,
     Grid,
-    Info,
     Layers,
-    Lock,
     Minus,
     Pause,
     Percent,
@@ -36,6 +32,25 @@ import {
 import './auto-x-eo.scss';
 
 // ─── Types & Interfaces ────────────────────────────────────────────────────────
+
+export interface MarketItem {
+    symbol: string;
+    label: string;
+    pip: number;
+}
+
+export const MARKETS: MarketItem[] = [
+    { symbol: '1HZ100V', label: 'Vol 100 (1s)', pip: 2 },
+    { symbol: '1HZ75V', label: 'Vol 75 (1s)', pip: 2 },
+    { symbol: '1HZ50V', label: 'Vol 50 (1s)', pip: 2 },
+    { symbol: '1HZ25V', label: 'Vol 25 (1s)', pip: 2 },
+    { symbol: '1HZ10V', label: 'Vol 10 (1s)', pip: 2 },
+    { symbol: 'R_100', label: 'Vol 100', pip: 2 },
+    { symbol: 'R_75', label: 'Vol 75', pip: 4 },
+    { symbol: 'R_50', label: 'Vol 50', pip: 4 },
+    { symbol: 'R_25', label: 'Vol 25', pip: 3 },
+    { symbol: 'R_10', label: 'Vol 10', pip: 3 },
+];
 
 interface MarketDataState {
     digits: number[];
@@ -57,12 +72,6 @@ interface TradeLogEntry {
 }
 
 type AutoRunState = 'IDLE' | 'SCANNING' | 'WAITING_SIGNAL' | 'WAITING_TRIGGER' | 'TRADING' | 'PAUSED';
-
-const MARKETS = SUPPORTED_VOLATILITY_MARKETS.map(m => ({
-    symbol: m.symbol,
-    label: m.label.replace('Volatility ', 'Vol ').replace(' Index', ''),
-    pip: m.pip || 2,
-}));
 
 const MAX_TICKS_STORED = 100;
 const CHART_TICKS = 50;
@@ -131,7 +140,7 @@ export const AutoXEo: React.FC = observer(() => {
     const currency = client?.currency || 'USD';
 
     // ─── Settings & Trading State ───
-    const [selectedSymbol, setSelectedSymbol] = useState<string>('R_100');
+    const [selectedSymbol, setSelectedSymbol] = useState<string>('1HZ100V');
     const [scanAllMarkets, setScanAllMarkets] = useState<boolean>(true);
     const [autoSwitchMarkets, setAutoSwitchMarkets] = useState<boolean>(true);
     const [switchRunThreshold, setSwitchRunThreshold] = useState<number>(5);
@@ -169,7 +178,7 @@ export const AutoXEo: React.FC = observer(() => {
     const [activeTicks, setActiveTicks] = useState<{ [symbol: string]: MarketDataState }>({});
     const [showWideView, setShowWideView] = useState<boolean>(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
-    const [bestMarketCandidate, setBestMarketCandidate] = useState<string>('R_100');
+    const [bestMarketCandidate, setBestMarketCandidate] = useState<string>('1HZ100V');
 
     // ─── References for Persistent Streaming & Execution ───
     const subscriptionsRef = useRef<{ [symbol: string]: { unsubscribe?: () => void } }>({});
@@ -235,7 +244,7 @@ export const AutoXEo: React.FC = observer(() => {
             const quoteNum = Number(tick.quote);
             if (isNaN(quoteNum)) return;
 
-            const marketConf = MARKETS.find(m => m.symbol === symbol);
+            const marketConf = MARKETS.find((m: MarketItem) => m.symbol === symbol);
             const pip = marketConf ? marketConf.pip : 2;
             const priceStr = quoteNum.toFixed(pip);
             const lastDigitChar = priceStr.slice(-1);
@@ -270,10 +279,10 @@ export const AutoXEo: React.FC = observer(() => {
 
     // Manage WebSocket subscriptions
     useEffect(() => {
-        const symbolsToSubscribe = scanAllMarkets ? MARKETS.map(m => m.symbol) : [selectedSymbol];
+        const symbolsToSubscribe: string[] = scanAllMarkets ? MARKETS.map((m: MarketItem) => m.symbol) : [selectedSymbol];
 
         // Clean up unneeded subscriptions
-        Object.keys(subscriptionsRef.current).forEach(sym => {
+        Object.keys(subscriptionsRef.current).forEach((sym: string) => {
             if (!symbolsToSubscribe.includes(sym)) {
                 try {
                     subscriptionsRef.current[sym]?.unsubscribe?.();
@@ -283,7 +292,7 @@ export const AutoXEo: React.FC = observer(() => {
         });
 
         // Add new subscriptions
-        symbolsToSubscribe.forEach(sym => {
+        symbolsToSubscribe.forEach((sym: string) => {
             if (!subscriptionsRef.current[sym]) {
                 try {
                     const sub = safeSubscribe(
@@ -514,7 +523,7 @@ export const AutoXEo: React.FC = observer(() => {
         let bestSym = selectedSymbol;
         let highestScore = -1;
 
-        MARKETS.forEach(m => {
+        MARKETS.forEach((m: MarketItem) => {
             const state = marketsDataRef.current.get(m.symbol);
             if (!state || state.digits.length < 30) return;
 
@@ -619,7 +628,7 @@ export const AutoXEo: React.FC = observer(() => {
                 const contractId = buyResult.contract_id;
                 const transactionId = buyResult.transaction_id || contractId;
                 const startTime = Math.floor(Date.now() / 1000);
-                const marketLabel = MARKETS.find(m => m.symbol === market)?.label || market;
+                const marketLabel = MARKETS.find((m: MarketItem) => m.symbol === market)?.label || market;
 
                 const initSnapshot = {
                     contract_id: contractId,
@@ -904,6 +913,12 @@ export const AutoXEo: React.FC = observer(() => {
                         </span>
                     </div>
                     <div className="metric-pill">
+                        <span className="label">Runs / Switch</span>
+                        <span className="val cyan">
+                            {runsOnCurrentMarket} / {switchRunThreshold}
+                        </span>
+                    </div>
+                    <div className="metric-pill">
                         <span className="label">Current Stake</span>
                         <span className="val gold">{currentStake.toFixed(2)} {currency}</span>
                     </div>
@@ -955,7 +970,7 @@ export const AutoXEo: React.FC = observer(() => {
                                 setRunsOnCurrentMarket(0);
                             }}
                         >
-                            {MARKETS.map(m => (
+                            {MARKETS.map((m: MarketItem) => (
                                 <option key={m.symbol} value={m.symbol}>
                                     {m.label} ({m.symbol})
                                 </option>
@@ -985,7 +1000,7 @@ export const AutoXEo: React.FC = observer(() => {
                             onClick={() => setSelectedSymbol(bestMarketCandidate)}
                             title="Click to switch to highest probability market"
                         >
-                            <Sparkles size={14} /> Best: {MARKETS.find(m => m.symbol === bestMarketCandidate)?.label}
+                            <Sparkles size={14} /> Best: {MARKETS.find((m: MarketItem) => m.symbol === bestMarketCandidate)?.label}
                         </div>
                     )}
                 </div>
@@ -1035,7 +1050,7 @@ export const AutoXEo: React.FC = observer(() => {
                     </div>
 
                     <div className="wide-grid">
-                        {MARKETS.map(m => {
+                        {MARKETS.map((m: MarketItem) => {
                             const state = marketsDataRef.current.get(m.symbol) || {
                                 digits: [],
                                 currentPrice: '0.00',
@@ -1111,7 +1126,7 @@ export const AutoXEo: React.FC = observer(() => {
                     </div>
 
                     <div className="auto-x-eo__sidebar-list">
-                        {MARKETS.map(m => {
+                        {MARKETS.map((m: MarketItem) => {
                             const state = marketsDataRef.current.get(m.symbol) || {
                                 digits: [],
                                 currentPrice: '0.00',
@@ -1283,7 +1298,7 @@ export const AutoXEo: React.FC = observer(() => {
                                     />
 
                                     {/* Dynamic In-Node Digit Circles & Numbers */}
-                                    {chartPoints.map((pt, idx) => {
+                                    {chartPoints.map((pt, idx: number) => {
                                         const isLatest = idx === chartPoints.length - 1;
                                         const nodeRadius = isLatest ? 12 : 8;
 
