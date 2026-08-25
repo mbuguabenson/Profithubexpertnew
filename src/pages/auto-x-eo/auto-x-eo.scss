@@ -94,6 +94,7 @@
                         margin: 0;
                         background: linear-gradient(135deg, #ffffff 40%, #f5c542 100%);
                         -webkit-background-clip: text;
+                        background-clip: text;
                         -webkit-text-fill-color: transparent;
                     }
 
@@ -895,6 +896,7 @@
                         letter-spacing: 0.5px;
                         background: linear-gradient(135deg, #ffffff, #00d2ff);
                         -webkit-background-clip: text;
+                        background-clip: text;
                         -webkit-text-fill-color: transparent;
                     }
                 }
