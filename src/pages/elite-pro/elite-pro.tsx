@@ -218,7 +218,7 @@ const ElitePro = observer(() => {
     const store = useStore();
     const { client, dashboard, run_panel, summary_card, transactions } = store;
     const { active_tab } = dashboard;
-    const showElitePro = active_tab === DBOT_TABS.ELITE_PRO;
+    const showElitePro = true;
     const currency = client?.currency || 'USD';
     const logged_in = client?.is_logged_in ?? isLoggedIn();
 
@@ -915,6 +915,11 @@ const ElitePro = observer(() => {
 
     // ── Launch Full Auto-Trading Engine ──
     const startAutoTrading = useCallback(async () => {
+        if (!logged_in) {
+            window.location.href = generateOAuthURL();
+            return;
+        }
+
         if (autoStateRef.current !== 'IDLE' && autoStateRef.current !== 'PAUSED') return;
 
         if (autoStateRef.current === 'IDLE') {
@@ -968,12 +973,12 @@ const ElitePro = observer(() => {
                     }
 
                     const currentData = marketsRef.current.get(targetSym);
-                    if (!currentData || currentData.digits.length < 30) {
+                    if (!currentData || currentData.digits.length < 15) {
                         if (autoStateRef.current !== 'SCANNING') {
                             setAutoState('SCANNING');
                             autoStateRef.current = 'SCANNING';
                         }
-                        await new Promise(r => setTimeout(r, 1000));
+                        await new Promise(r => setTimeout(r, 600));
                         continue;
                     }
 
@@ -1790,7 +1795,7 @@ const ElitePro = observer(() => {
                         {/* Execution Action Buttons */}
                         <div className="ep-actions-row">
                             {autoState === 'IDLE' && (
-                                <button className="ep-action-btn ep-action-btn--start" onClick={startAutoTrading} disabled={!logged_in}>
+                                <button className="ep-action-btn ep-action-btn--start" onClick={startAutoTrading}>
                                     ▶ Start Automated Bot
                                 </button>
                             )}
