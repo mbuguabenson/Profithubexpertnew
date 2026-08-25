@@ -634,13 +634,23 @@ const AutoXEo: React.FC = observer(() => {
             }
 
             const contractId = buyResult.contract_id;
+            const transactionId = buyResult.transaction_id || contractId;
+            const startTime = Math.floor(Date.now() / 1000);
+            const marketLabel = MARKETS.find(m => m.symbol === market)?.label || market;
+
             const initSnapshot = {
                 contract_id: contractId,
-                underlying: market,
-                contract_type: contractType,
+                transaction_ids: { buy: transactionId },
                 buy_price: stake,
+                underlying: market,
+                underlying_symbol: market,
+                display_name: marketLabel,
+                shortcode: `AUTO_X_${contractType}`,
+                contract_type: contractType,
+                currency: currency || 'USD',
+                date_start: startTime,
                 status: 'open',
-                currency,
+                ...(barrier !== undefined ? { barrier: String(barrier) } : {}),
             };
             pushContractToDrawer(initSnapshot);
 

@@ -83,7 +83,7 @@ export default function DesktopTransactionTable({
                         const profitConv = convert(data?.profit, data?.currency || 'USD');
 
                         return (
-                            <div className={`${PARENT_CLASS}__table-row`} key={data?.transaction_ids?.buy}>
+                            <div className={`${PARENT_CLASS}__table-row`} key={data?.transaction_ids?.buy || data?.contract_id || `txn_${index}`}>
                                 <TableCell
                                     label={
                                         data?.date_start &&
