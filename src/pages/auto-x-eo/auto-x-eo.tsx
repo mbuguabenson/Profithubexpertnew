@@ -1,51 +1,52 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { observer } from 'mobx-react-lite';
-import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
-import { SUPPORTED_VOLATILITY_MARKETS } from '@/utils/digit-strategy';
-import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
+import { api_base } from '@/external/bot-skeleton';
 import { safeSubscribe } from '@/utils/websocket-handler';
+import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
+import { SUPPORTED_VOLATILITY_MARKETS } from '@/constants/bot-contents';
 import {
     Activity,
     ArrowUpRight,
     CheckCircle2,
-    ChevronLeft,
-    ChevronRight,
-    Gauge,
+    Clock,
+    Cpu,
+    DollarSign,
+    Flame,
     Grid,
+    Info,
+    Layers,
+    Lock,
     Minus,
     Pause,
+    Percent,
     Play,
+    Radio,
+    RefreshCw,
     Shield,
+    ShieldAlert,
+    ShieldCheck,
+    Sliders,
+    Sparkles,
     Square,
+    TrendingDown,
+    TrendingUp,
     Zap,
 } from 'lucide-react';
 import './auto-x-eo.scss';
 
-// ─── Interfaces & Types ────────────────────────────────────────────────────────
+// ─── Types & Interfaces ────────────────────────────────────────────────────────
 
-export interface MarketDigitState {
-    symbol: string;
-    label: string;
+interface MarketDataState {
     digits: number[];
     currentPrice: string;
     lastDigit: number;
-    pip: number;
+    lastTickTime: number;
 }
 
-export interface DigitStat {
-    digit: number;
-    count: number;
-    percentage: number;
-    rank: number;
-    power: number;
-    isIncreasing: boolean;
-    isEven: boolean;
-}
-
-export interface TradeLogItem {
+interface TradeLogEntry {
     id: string;
-    time: string;
+    timestamp: string;
     market: string;
     strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER';
     contractType: string;
@@ -123,706 +124,722 @@ const getBezierSplinePath = (points: { x: number; y: number }[]) => {
     return d;
 };
 
-// ─── Digit Extraction Helper ───────────────────────────────────────────────────
-
-const extractLastDigit = (quote: number | string, pip = 2): number => {
-    const p = Number(quote);
-    if (isNaN(p)) return 0;
-    const fixed = p.toFixed(pip);
-    const lastChar = fixed[fixed.length - 1];
-    const digit = parseInt(lastChar, 10);
-    return isNaN(digit) ? 0 : digit;
-};
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-const AutoXEo: React.FC = observer(() => {
-    const store = useStore();
-    const { run_panel, summary_card, transactions, client } = store;
+export const AutoXEo: React.FC = observer(() => {
+    const { client, transactions, run_panel, summary_card } = useStore();
     const currency = client?.currency || 'USD';
 
-    // ── UI States ──
-    const [selectedSymbol, setSelectedSymbol] = useState<string>('1HZ100V');
+    // ─── Settings & Trading State ───
+    const [selectedSymbol, setSelectedSymbol] = useState<string>('R_100');
     const [scanAllMarkets, setScanAllMarkets] = useState<boolean>(true);
-    const [showWideView, setShowWideView] = useState<boolean>(false);
     const [autoSwitchMarkets, setAutoSwitchMarkets] = useState<boolean>(true);
-    const [maxRunsBeforeCheck, setMaxRunsBeforeCheck] = useState<number>(6);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
-
-    // ── Strategy Configuration & Inputs ──
-    const [initialStake, setInitialStake] = useState<string>('0.50');
-    const [currentStake, setCurrentStake] = useState<number>(0.50);
-    const [martingale, setMartingale] = useState<string>('2.6');
-    const [takeProfit, setTakeProfit] = useState<string>('10.00');
-    const [stopLoss, setStopLoss] = useState<string>('25.00');
-    const [tickDuration, setTickDuration] = useState<string>('1');
-    const [bulkCount, setBulkCount] = useState<string>('6');
-    const [autoRecoveryMode, setAutoRecoveryMode] = useState<boolean>(true);
-    const [recoveryType, setRecoveryType] = useState<'OVER_2_UNDER_8' | 'OVER_3_UNDER_6'>('OVER_2_UNDER_8');
+    const [switchRunThreshold, setSwitchRunThreshold] = useState<number>(5);
     const [targetProbabilityThreshold, setTargetProbabilityThreshold] = useState<number>(58);
+    const [initialStake, setInitialStake] = useState<string>('0.50');
+    const [takeProfit, setTakeProfit] = useState<string>('10.00');
+    const [stopLoss, setStopLoss] = useState<string>('50.00');
+    const [martingaleMultiplier, setMartingaleMultiplier] = useState<string>('2.6');
+    const [tickDuration, setTickDuration] = useState<number>(1);
+    const [autoRecoveryMode, setAutoRecoveryMode] = useState<boolean>(true);
 
-    // ── Bot Running State ──
+    // ─── Live Bot Engine State ───
     const [botState, setBotState] = useState<AutoRunState>('IDLE');
+    const [currentStake, setCurrentStake] = useState<number>(parseFloat(initialStake) || 0.50);
     const [sessionProfit, setSessionProfit] = useState<number>(0);
     const [winsCount, setWinsCount] = useState<number>(0);
     const [lossesCount, setLossesCount] = useState<number>(0);
-    const [consecutiveRuns, setConsecutiveRuns] = useState<number>(0);
+    const [runsOnCurrentMarket, setRunsOnCurrentMarket] = useState<number>(0);
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [accumulatedLoss, setAccumulatedLoss] = useState<number>(0);
-    const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
+    const [tradeLogs, setTradeLogs] = useState<TradeLogEntry[]>([]);
+    const [patternTriggerState, setPatternTriggerState] = useState<{
+        targetParity: 'EVEN' | 'ODD';
+        oppositeStreak: number;
+        requiredOpposite: number;
+        statusText: string;
+    }>({
+        targetParity: 'EVEN',
+        oppositeStreak: 0,
+        requiredOpposite: 2,
+        statusText: 'Waiting for pattern setup',
+    });
 
-    // ── Active Market Data Map & Subscriptions ──
-    const marketsDataRef = useRef<Map<string, MarketDigitState>>(new Map());
-    const subscriptionsRef = useRef<Map<string, any>>(new Map());
-    const [renderTrigger, setRenderTrigger] = useState<number>(0);
-    const isMountedRef = useRef<boolean>(true);
-    const executionLockRef = useRef<boolean>(false);
+    // ─── Market & Tick Stream State ───
+    const [activeTicks, setActiveTicks] = useState<{ [symbol: string]: MarketDataState }>({});
+    const [showWideView, setShowWideView] = useState<boolean>(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+    const [bestMarketCandidate, setBestMarketCandidate] = useState<string>('R_100');
 
-    // Initialize market entries
+    // ─── References for Persistent Streaming & Execution ───
+    const subscriptionsRef = useRef<{ [symbol: string]: { unsubscribe?: () => void } }>({});
+    const isBotRunningRef = useRef<boolean>(false);
+    const botStateRef = useRef<AutoRunState>('IDLE');
+    const marketsDataRef = useRef<Map<string, MarketDataState>>(new Map());
+    const isProcessingTradeRef = useRef<boolean>(false);
+
+    // Keep refs synchronized
     useEffect(() => {
-        MARKETS.forEach(m => {
-            if (!marketsDataRef.current.has(m.symbol)) {
-                marketsDataRef.current.set(m.symbol, {
-                    symbol: m.symbol,
-                    label: m.label,
-                    digits: [],
-                    currentPrice: '0.00',
-                    lastDigit: 0,
-                    pip: m.pip,
-                });
+        botStateRef.current = botState;
+        isBotRunningRef.current = botState !== 'IDLE' && botState !== 'PAUSED';
+    }, [botState]);
+
+    // Update initial stake when input changes and not actively running
+    useEffect(() => {
+        if (botState === 'IDLE') {
+            const parsed = parseFloat(initialStake);
+            if (!isNaN(parsed) && parsed > 0) {
+                setCurrentStake(parsed);
             }
-        });
-    }, []);
-
-    // Throttle UI re-renders
-    const lastRenderTime = useRef<number>(0);
-    const throttleRender = useCallback(() => {
-        const now = Date.now();
-        if (now - lastRenderTime.current > 100) {
-            lastRenderTime.current = now;
-            setRenderTrigger(t => t + 1);
         }
-    }, []);
+    }, [initialStake, botState]);
 
-    // ── Manage Subscriptions for All Synthetic Markets ──
-    useEffect(() => {
-        isMountedRef.current = true;
-        const activeSubs = subscriptionsRef.current;
-        const symbolsToStream = scanAllMarkets ? MARKETS.map(m => m.symbol) : [selectedSymbol];
-
-        const subscribeSymbol = async (sym: string) => {
-            if (!api_base.api) return;
-            const pip = MARKETS.find(m => m.symbol === sym)?.pip || 2;
-
+    // ─── Drawer Transaction Dispatcher ───
+    const pushContractToDrawer = useCallback(
+        (contract: any) => {
             try {
-                // Fetch initial tick history
-                const res = await api_base.api.send({
-                    ticks_history: sym,
-                    end: 'latest',
-                    count: MAX_TICKS_STORED,
-                    style: 'ticks',
-                });
-
-                if (!isMountedRef.current) return;
-
-                const mData = marketsDataRef.current.get(sym);
-                if (mData && res?.history?.prices) {
-                    const prices: number[] = res.history.prices || [];
-                    const digits = prices.map(p => extractLastDigit(p, pip));
-                    mData.digits = digits;
-                    if (prices.length > 0) {
-                        const lastP = prices[prices.length - 1];
-                        mData.currentPrice = Number(lastP).toFixed(pip);
-                        mData.lastDigit = digits[digits.length - 1];
-                    }
-                    throttleRender();
-                }
-
-                // Subscribe to real-time live ticks via observable
-                const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
-                const sub = safeSubscribe(tickObservable, (tickRes: any) => {
-                    if (!isMountedRef.current) return;
-                    if (tickRes?.tick?.symbol === sym && tickRes?.tick?.quote !== undefined) {
-                        const quote = Number(tickRes.tick.quote);
-                        const lastD = extractLastDigit(quote, pip);
-                        const item = marketsDataRef.current.get(sym);
-                        if (item) {
-                            item.currentPrice = quote.toFixed(pip);
-                            item.lastDigit = lastD;
-                            item.digits = [...item.digits, lastD].slice(-MAX_TICKS_STORED);
-                            throttleRender();
-                        }
-                    }
-                });
-
-                if (isMountedRef.current) {
-                    activeSubs.get(sym)?.unsubscribe?.();
-                    activeSubs.set(sym, sub);
+                if (contract) {
+                    transactions?.pushTransaction?.(contract);
+                    run_panel?.onBotContractEvent?.(contract);
+                    summary_card?.onBotContractEvent?.(contract);
                 }
             } catch (err) {
-                console.error(`AUTO X E/O: Error subscribing to ${sym}:`, err);
+                console.error('[AUTO X E/O] Drawer dispatch error:', err);
             }
-        };
+        },
+        [transactions, run_panel, summary_card]
+    );
 
-        // Subscribe missing
-        symbolsToStream.forEach(sym => {
-            if (!activeSubs.has(sym)) {
-                subscribeSymbol(sym);
+    // ─── Log Appender & Updater ───
+    const addTradeLog = useCallback((entry: Omit<TradeLogEntry, 'id' | 'timestamp'>): string => {
+        const id = `trade_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        const newEntry: TradeLogEntry = {
+            ...entry,
+            id,
+            timestamp: new Date().toLocaleTimeString(),
+        };
+        setTradeLogs(prev => [newEntry, ...prev.slice(0, 49)]);
+        return id;
+    }, []);
+
+    const updateLogResult = useCallback((id: string, result: 'WIN' | 'LOSS', profit: number) => {
+        setTradeLogs(prev =>
+            prev.map(item => (item.id === id ? { ...item, result, profit } : item))
+        );
+    }, []);
+
+    // ─── Tick Stream Subscription Manager ───
+    const handleTickUpdate = useCallback(
+        (symbol: string, tick: any) => {
+            if (!tick || tick.quote === undefined) return;
+            const quoteNum = Number(tick.quote);
+            if (isNaN(quoteNum)) return;
+
+            const marketConf = MARKETS.find(m => m.symbol === symbol);
+            const pip = marketConf ? marketConf.pip : 2;
+            const priceStr = quoteNum.toFixed(pip);
+            const lastDigitChar = priceStr.slice(-1);
+            const digit = parseInt(lastDigitChar, 10);
+            if (isNaN(digit)) return;
+
+            const existing = marketsDataRef.current.get(symbol) || {
+                digits: [],
+                currentPrice: priceStr,
+                lastDigit: digit,
+                lastTickTime: Date.now(),
+            };
+
+            const updatedDigits = [...existing.digits, digit].slice(-MAX_TICKS_STORED);
+            const updatedState: MarketDataState = {
+                digits: updatedDigits,
+                currentPrice: priceStr,
+                lastDigit: digit,
+                lastTickTime: Date.now(),
+            };
+
+            marketsDataRef.current.set(symbol, updatedState);
+
+            // Throttle state update for UI reactivity
+            setActiveTicks(prev => ({
+                ...prev,
+                [symbol]: updatedState,
+            }));
+        },
+        []
+    );
+
+    // Manage WebSocket subscriptions
+    useEffect(() => {
+        const symbolsToSubscribe = scanAllMarkets ? MARKETS.map(m => m.symbol) : [selectedSymbol];
+
+        // Clean up unneeded subscriptions
+        Object.keys(subscriptionsRef.current).forEach(sym => {
+            if (!symbolsToSubscribe.includes(sym)) {
+                try {
+                    subscriptionsRef.current[sym]?.unsubscribe?.();
+                } catch { /* ignore */ }
+                delete subscriptionsRef.current[sym];
             }
         });
 
-        // Unsubscribe removed if single market mode
-        if (!scanAllMarkets) {
-            activeSubs.forEach((sub, sym) => {
-                if (sym !== selectedSymbol) {
-                    try {
-                        sub?.unsubscribe?.();
-                    } catch { /* ignore */ }
-                    activeSubs.delete(sym);
+        // Add new subscriptions
+        symbolsToSubscribe.forEach(sym => {
+            if (!subscriptionsRef.current[sym]) {
+                try {
+                    const sub = safeSubscribe(
+                        (api_base.api as any)?.subscribe?.({ ticks: sym }),
+                        (data: any) => {
+                            if (data?.tick) {
+                                handleTickUpdate(sym, data.tick);
+                            }
+                        },
+                        (err: any) => {
+                            console.warn(`[AUTO X E/O] Stream error on ${sym}:`, err);
+                        }
+                    );
+                    subscriptionsRef.current[sym] = sub;
+                } catch (err) {
+                    console.error(`[AUTO X E/O] Failed to subscribe to ${sym}:`, err);
                 }
-            });
-        }
+            }
+        });
 
         return () => {
-            // Keep active streams alive
-        };
-    }, [scanAllMarkets, selectedSymbol, throttleRender]);
-
-    // Cleanup on component unmount
-    useEffect(() => {
-        return () => {
-            isMountedRef.current = false;
-            subscriptionsRef.current.forEach(sub => {
+            // Unsubscribe on unmount
+            Object.values(subscriptionsRef.current).forEach(sub => {
                 try {
                     sub?.unsubscribe?.();
                 } catch { /* ignore */ }
             });
-            subscriptionsRef.current.clear();
+            subscriptionsRef.current = {};
         };
-    }, []);
+    }, [scanAllMarkets, selectedSymbol, handleTickUpdate]);
 
-    // ── Current Active Market State ──
+    // ─── Current Market State & Calculations ───
     const currentMarket = useMemo(() => {
-        const m = marketsDataRef.current.get(selectedSymbol);
-        if (m) return m;
-        return {
-            symbol: selectedSymbol,
-            label: MARKETS.find(x => x.symbol === selectedSymbol)?.label || selectedSymbol,
+        const state = activeTicks[selectedSymbol] || {
             digits: [],
             currentPrice: '0.00',
             lastDigit: 0,
-            pip: 2,
+            lastTickTime: 0,
         };
-    }, [selectedSymbol, renderTrigger]);
+        return state;
+    }, [activeTicks, selectedSymbol]);
 
-    // ── Digit Distribution Analysis (0-9 in Last 60 Ticks) ──
-    const digitStats: DigitStat[] = useMemo(() => {
-        const recent60 = currentMarket.digits.slice(-60);
-        const total = recent60.length || 1;
-        const counts = new Array(10).fill(0);
-
-        recent60.forEach(d => {
+    // Digit Distribution (0 to 9) in last 60 ticks
+    const digitStats = useMemo(() => {
+        const last60 = currentMarket.digits.slice(-60);
+        const total = last60.length || 1;
+        const counts = Array(10).fill(0);
+        last60.forEach(d => {
             if (d >= 0 && d <= 9) counts[d]++;
         });
 
-        // Calculate trend (last 15 vs previous 15)
-        const last15 = currentMarket.digits.slice(-15);
-        const prev15 = currentMarket.digits.slice(-30, -15);
+        // Trend calculation (last 20 vs previous 20)
+        const last20 = currentMarket.digits.slice(-20);
+        const prev20 = currentMarket.digits.slice(-40, -20);
+        const countLast20 = Array(10).fill(0);
+        const countPrev20 = Array(10).fill(0);
+        last20.forEach(d => countLast20[d]++);
+        prev20.forEach(d => countPrev20[d]++);
 
-        const stats: DigitStat[] = counts.map((count, digit) => {
-            const percentage = Math.round((count / total) * 1000) / 10;
-            const c15 = last15.filter(d => d === digit).length;
-            const p15 = prev15.filter(d => d === digit).length;
-            const isIncreasing = c15 > p15;
+        const maxCount = Math.max(...counts, 1);
+
+        return counts.map((count, digit) => {
+            const percentage = parseFloat(((count / total) * 100).toFixed(1));
             const isEven = digit % 2 === 0;
+            const power = Math.min(Math.round((count / maxCount) * 100), 100);
+            const isIncreasing = countLast20[digit] > countPrev20[digit];
 
             return {
                 digit,
                 count,
                 percentage,
-                rank: 0,
-                power: Math.min(100, Math.round((percentage / 20) * 100)),
-                isIncreasing,
                 isEven,
+                power,
+                isIncreasing,
             };
         });
-
-        // Assign ranks
-        const sorted = [...stats].sort((a, b) => b.count - a.count);
-        sorted.forEach((item, index) => {
-            const original = stats.find(s => s.digit === item.digit);
-            if (original) original.rank = index + 1;
-        });
-
-        return stats;
     }, [currentMarket.digits]);
 
-    // ── Summary Rankings (Most, 2nd Highest, Least) ──
-    const mostAppearing = useMemo(() => {
+    // Rankings: Most, 2nd Highest, Least
+    const { mostAppearing, secondHighest, leastAppearing } = useMemo(() => {
         const sorted = [...digitStats].sort((a, b) => b.count - a.count);
-        return sorted[0]?.digit ?? null;
+        return {
+            mostAppearing: sorted[0]?.digit ?? null,
+            secondHighest: sorted[1]?.digit ?? null,
+            leastAppearing: sorted[sorted.length - 1]?.digit ?? null,
+        };
     }, [digitStats]);
 
-    const secondHighest = useMemo(() => {
-        const sorted = [...digitStats].sort((a, b) => b.count - a.count);
-        return sorted[1]?.digit ?? null;
-    }, [digitStats]);
-
-    const leastAppearing = useMemo(() => {
-        const sorted = [...digitStats].sort((a, b) => a.count - b.count);
-        return sorted[0]?.digit ?? null;
-    }, [digitStats]);
-
-    // ── Even vs Odd Statistical Analysis (Last 60 Ticks) ──
+    // Even vs Odd Analysis (Last 60 Ticks & Last 15 Ticks)
     const eoAnalysis = useMemo(() => {
         const last60 = currentMarket.digits.slice(-60);
-        const total = last60.length || 1;
+        const total60 = last60.length || 1;
+        const evens60 = last60.filter(d => d % 2 === 0).length;
+        const odds60 = last60.filter(d => d % 2 !== 0).length;
 
-        const evenCount = last60.filter(d => d % 2 === 0).length;
-        const oddCount = last60.filter(d => d % 2 !== 0).length;
+        const evenPct = Math.round((evens60 / total60) * 100);
+        const oddPct = Math.round((odds60 / total60) * 100);
 
-        const evenPct = Math.round((evenCount / total) * 100);
-        const oddPct = Math.round((oddCount / total) * 100);
+        // Trend (Increasing power in last 20 ticks)
+        const last20 = currentMarket.digits.slice(-20);
+        const evens20 = last20.filter(d => d % 2 === 0).length;
+        const odds20 = last20.filter(d => d % 2 !== 0).length;
+        const isEvenIncreasing = evens20 / (last20.length || 1) >= evenPct / 100;
+        const isOddIncreasing = odds20 / (last20.length || 1) >= oddPct / 100;
 
-        // Trend calculation (last 15 vs prev 15)
+        // Last 15 ticks check (>= 10 matches)
         const last15 = currentMarket.digits.slice(-15);
-        const prev15 = currentMarket.digits.slice(-30, -15);
-        const last15Even = last15.filter(d => d % 2 === 0).length;
-        const prev15Even = prev15.filter(d => d % 2 === 0).length;
-        const last15Odd = last15.filter(d => d % 2 !== 0).length;
-        const prev15Odd = prev15.filter(d => d % 2 !== 0).length;
+        const evens15 = last15.filter(d => d % 2 === 0).length;
+        const odds15 = last15.filter(d => d % 2 !== 0).length;
+        const last15EvenPassed = evens15 >= 10;
+        const last15OddPassed = odds15 >= 10;
 
-        const isEvenIncreasing = last15Even >= prev15Even;
-        const isOddIncreasing = last15Odd >= prev15Odd;
+        // Target digits >= 3 with > 10.5% in last 60 ticks
+        const evenDigitsAboveThreshold = [0, 2, 4, 6, 8].filter(d => digitStats[d]?.percentage >= 10.5).length;
+        const oddDigitsAboveThreshold = [1, 3, 5, 7, 9].filter(d => digitStats[d]?.percentage >= 10.5).length;
 
-        // Check if at least 3 digits of Even have probability > 10.5%
-        const evenDigitsAbove10_5 = digitStats.filter(s => s.isEven && s.percentage >= 10.5).length;
-        const oddDigitsAbove10_5 = digitStats.filter(s => !s.isEven && s.percentage >= 10.5).length;
-
-        // Check if Most/2nd highest are Even
-        const mostIsEven = mostAppearing !== null && mostAppearing % 2 === 0;
-        const secondIsEven = secondHighest !== null && secondHighest % 2 === 0;
-        const leastIsOdd = leastAppearing !== null && leastAppearing % 2 !== 0;
-
-        const mostIsOdd = mostAppearing !== null && mostAppearing % 2 !== 0;
-        const secondIsOdd = secondHighest !== null && secondHighest % 2 !== 0;
-        const leastIsEven = leastAppearing !== null && leastAppearing % 2 === 0;
-
-        // Check last 15 ticks >= 10 matches
-        const last15EvenPassed = last15Even >= 10;
-        const last15OddPassed = last15Odd >= 10;
-
-        // Consecutive pattern check: Wait for 2+ consecutive odd then 1 even (for Even signal)
-        const last3Digits = currentMarket.digits.slice(-3);
-        let evenPatternTriggered = false;
-        let oddPatternTriggered = false;
-
-        if (last3Digits.length >= 3) {
-            // [odd, odd, even]
-            if (last3Digits[0] % 2 !== 0 && last3Digits[1] % 2 !== 0 && last3Digits[2] % 2 === 0) {
-                evenPatternTriggered = true;
-            }
-            // [even, even, odd]
-            if (last3Digits[0] % 2 === 0 && last3Digits[1] % 2 === 0 && last3Digits[2] % 2 !== 0) {
-                oddPatternTriggered = true;
-            }
-        }
-
-        // Final Even signal readiness
+        // Pattern trigger readiness
         const evenSignalReady =
             evenPct >= targetProbabilityThreshold &&
             isEvenIncreasing &&
-            (mostIsEven || secondIsEven) &&
-            leastIsOdd &&
             last15EvenPassed &&
-            evenDigitsAbove10_5 >= 3;
+            evenDigitsAboveThreshold >= 3;
 
-        // Final Odd signal readiness
         const oddSignalReady =
             oddPct >= targetProbabilityThreshold &&
             isOddIncreasing &&
-            (mostIsOdd || secondIsOdd) &&
-            leastIsEven &&
             last15OddPassed &&
-            oddDigitsAbove10_5 >= 3;
+            oddDigitsAboveThreshold >= 3;
 
         let activeSignal: 'EVEN' | 'ODD' | 'NONE' = 'NONE';
         if (evenSignalReady) activeSignal = 'EVEN';
         else if (oddSignalReady) activeSignal = 'ODD';
 
         return {
-            evenCount,
-            oddCount,
             evenPct,
             oddPct,
+            evenCount: evens60,
+            oddCount: odds60,
             isEvenIncreasing,
             isOddIncreasing,
-            evenDigitsAbove10_5,
-            oddDigitsAbove10_5,
-            last15Even,
-            last15Odd,
             last15EvenPassed,
             last15OddPassed,
-            evenPatternTriggered,
-            oddPatternTriggered,
-            evenSignalReady,
-            oddSignalReady,
+            evenDigitsAboveThreshold,
+            oddDigitsAboveThreshold,
             activeSignal,
         };
-    }, [currentMarket.digits, digitStats, mostAppearing, secondHighest, leastAppearing, targetProbabilityThreshold]);
+    }, [currentMarket.digits, digitStats, targetProbabilityThreshold]);
 
-    // ── Over/Under Statistics (Last 50 Ticks) ──
+    // Over vs Under Recovery Analysis
     const ouAnalysis = useMemo(() => {
-        const last50 = currentMarket.digits.slice(-50);
-        const total = last50.length || 1;
+        const last60 = currentMarket.digits.slice(-60);
+        const total = last60.length || 1;
 
-        // Split 1: Under 0-4 vs Over 5-9
-        const under04 = last50.filter(d => d <= 4).length;
-        const over59 = last50.filter(d => d >= 5).length;
-        const under04Pct = Math.round((under04 / total) * 100);
-        const over59Pct = Math.round((over59 / total) * 100);
+        // Under 0-4 vs Over 5-9
+        const count0to4 = last60.filter(d => d <= 4).length;
+        const count5to9 = last60.filter(d => d >= 5).length;
+        const pct0to4 = Math.round((count0to4 / total) * 100);
+        const pct5to9 = Math.round((count5to9 / total) * 100);
 
-        // Split 2: Under 0-5 vs Over 4-9
-        const under05 = last50.filter(d => d <= 5).length;
-        const over49 = last50.filter(d => d >= 4).length;
-        const under05Pct = Math.round((under05 / total) * 100);
-        const over49Pct = Math.round((over49 / total) * 100);
+        // Under 0-5 vs Over 4-9
+        const count0to5 = last60.filter(d => d <= 5).length;
+        const count4to9 = last60.filter(d => d >= 4).length;
+        const pct0to5 = Math.round((count0to5 / total) * 100);
+        const pct4to9 = Math.round((count4to9 / total) * 100);
 
-        // Highest Entry Digit in Under (0-4) and Over (5-9)
-        const underDigits = digitStats.filter(s => s.digit <= 4).sort((a, b) => b.count - a.count);
-        const overDigits = digitStats.filter(s => s.digit >= 5).sort((a, b) => b.count - a.count);
-        const highestUnderEntryDigit = underDigits[0]?.digit ?? 2;
-        const highestOverEntryDigit = overDigits[0]?.digit ?? 7;
-
-        // Last 10 and 7 Ticks direction check
+        // Last 10 ticks bias
         const last10 = currentMarket.digits.slice(-10);
-        const last10Under = last10.filter(d => d <= 4).length;
-        const last10Over = last10.filter(d => d >= 5).length;
+        const under10Count = last10.filter(d => d <= 4).length;
+        const over10Count = last10.filter(d => d >= 5).length;
 
-        const last7 = currentMarket.digits.slice(-7);
-        const last7Under = last7.filter(d => d <= 4).length;
-        const last7Over = last7.filter(d => d >= 5).length;
+        // Pick highest appearing in Under and Over
+        const underDigits = [0, 1, 2, 3, 4].map(d => ({ digit: d, count: digitStats[d]?.count || 0 }));
+        const overDigits = [5, 6, 7, 8, 9].map(d => ({ digit: d, count: digitStats[d]?.count || 0 }));
+        const bestUnderDigit = underDigits.sort((a, b) => b.count - a.count)[0]?.digit ?? 2;
+        const bestOverDigit = overDigits.sort((a, b) => b.count - a.count)[0]?.digit ?? 7;
 
-        // Bias calculation
-        let bias: 'UNDER' | 'OVER' | 'NEUTRAL' = 'NEUTRAL';
-        if (under04Pct >= 55 && under05 > over49 && last10Under >= 7 && last7Under >= 5) {
-            bias = 'UNDER';
-        } else if (over59Pct >= 55 && over49 > under05 && last10Over >= 7 && last7Over >= 5) {
-            bias = 'OVER';
+        // Recommended Recovery Trade
+        let recommendedStrategy: 'UNDER_8' | 'OVER_2' | 'UNDER_6' | 'OVER_3' | 'NEUTRAL' = 'NEUTRAL';
+        let contractType: 'DIGITUNDER' | 'DIGITOVER' = 'DIGITUNDER';
+        let barrier = 8;
+
+        if (pct0to4 > 55 && under10Count >= 7) {
+            recommendedStrategy = 'UNDER_8';
+            contractType = 'DIGITUNDER';
+            barrier = 8;
+        } else if (pct5to9 > 55 && over10Count >= 7) {
+            recommendedStrategy = 'OVER_2';
+            contractType = 'DIGITOVER';
+            barrier = 2;
+        } else if (pct0to5 > 55 && under10Count >= 6) {
+            recommendedStrategy = 'UNDER_6';
+            contractType = 'DIGITUNDER';
+            barrier = 6;
+        } else if (pct4to9 > 55 && over10Count >= 6) {
+            recommendedStrategy = 'OVER_3';
+            contractType = 'DIGITOVER';
+            barrier = 3;
+        } else {
+            // Default safe recovery: UNDER 8 or OVER 2 based on bias
+            if (pct0to4 >= pct5to9) {
+                recommendedStrategy = 'UNDER_8';
+                contractType = 'DIGITUNDER';
+                barrier = 8;
+            } else {
+                recommendedStrategy = 'OVER_2';
+                contractType = 'DIGITOVER';
+                barrier = 2;
+            }
         }
 
         return {
-            under04,
-            over59,
-            under04Pct,
-            over59Pct,
-            under05,
-            over49,
-            under05Pct,
-            over49Pct,
-            highestUnderEntryDigit,
-            highestOverEntryDigit,
-            last10Under,
-            last10Over,
-            last7Under,
-            last7Over,
-            bias,
+            pct0to4,
+            pct5to9,
+            pct0to5,
+            pct4to9,
+            under10Count,
+            over10Count,
+            bestUnderDigit,
+            bestOverDigit,
+            recommendedStrategy,
+            contractType,
+            barrier,
         };
     }, [currentMarket.digits, digitStats]);
 
-    // ── Best Market Candidate for Auto-Switching ──
-    const bestMarketCandidate = useMemo(() => {
+    // ─── Best Market Evaluation for Auto-Switching ───
+    useEffect(() => {
         let bestSym = selectedSymbol;
-        let bestScore = -1;
+        let highestScore = -1;
 
-        marketsDataRef.current.forEach((mState, sym) => {
-            if (mState.digits.length < 30) return;
-            const last60 = mState.digits.slice(-60);
-            const total = last60.length || 1;
-            const eCount = last60.filter(d => d % 2 === 0).length;
-            const oCount = last60.filter(d => d % 2 !== 0).length;
-            const maxEO = Math.max(eCount, oCount);
-            const score = Math.round((maxEO / total) * 100);
+        MARKETS.forEach(m => {
+            const state = marketsDataRef.current.get(m.symbol);
+            if (!state || state.digits.length < 30) return;
 
-            if (score > bestScore) {
-                bestScore = score;
-                bestSym = sym;
+            const digits = state.digits.slice(-60);
+            const total = digits.length || 1;
+            const evens = digits.filter(d => d % 2 === 0).length;
+            const odds = digits.filter(d => d % 2 !== 0).length;
+            const maxParityPct = Math.max(evens / total, odds / total) * 100;
+
+            if (maxParityPct > highestScore) {
+                highestScore = maxParityPct;
+                bestSym = m.symbol;
             }
         });
 
-        return bestSym;
-    }, [selectedSymbol, renderTrigger]);
+        setBestMarketCandidate(bestSym);
+    }, [activeTicks, selectedSymbol]);
 
-    // ── Log and Drawer Contract Emitter ──
-    const pushContractToDrawer = useCallback((contractSnapshot: Record<string, unknown>) => {
-        try {
-            transactions?.pushTransaction?.({ ...contractSnapshot, run_id: run_panel?.run_id });
-            run_panel?.onBotContractEvent?.(contractSnapshot);
-            summary_card?.onBotContractEvent?.(contractSnapshot);
-        } catch {
-            // Ignore if core stores aren't initialized
+    // ─── 50-Digit Spline Chart Coordinates with In-Node Digits ───
+    const { chartPoints, chartPath, chartAreaPath } = useMemo(() => {
+        const last50 = currentMarket.digits.slice(-CHART_TICKS);
+        if (last50.length < 2) {
+            return { chartPoints: [], chartPath: '', chartAreaPath: '' };
         }
-    }, [run_panel, summary_card, transactions]);
 
-    const addLogEntry = useCallback((
-        market: string,
-        strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
-        contractType: string,
-        prediction: number | undefined,
-        stake: number,
-        result: 'WIN' | 'LOSS' | 'PENDING',
-        profit: number
-    ) => {
-        const item: TradeLogItem = {
-            id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-            time: new Date().toLocaleTimeString(),
-            market,
-            strategy,
-            contractType,
-            prediction,
-            stake,
-            result,
-            profit,
-        };
-        setTradeLog(prev => [item, ...prev.slice(0, 49)]);
-        return item.id;
-    }, []);
+        const width = 1000;
+        const height = 220;
+        const padX = 35;
+        const padY = 28;
+        const usableWidth = width - padX * 2;
+        const usableHeight = height - padY * 2;
 
-    const updateLogResult = useCallback((id: string, result: 'WIN' | 'LOSS', profit: number) => {
-        setTradeLog(prev => prev.map(item => (item.id === id ? { ...item, result, profit } : item)));
-    }, []);
+        const points = last50.map((digit, index) => {
+            const x = padX + (index / (last50.length - 1)) * usableWidth;
+            // Digits 0-9 mapped to Y (0 at bottom, 9 at top)
+            const y = padY + ((9 - digit) / 9) * usableHeight;
+            const isEven = digit % 2 === 0;
+            return { x, y, digit, isEven, index };
+        });
 
-    // ── Execute Trade Order ──
-    const executeTradeOrder = useCallback(async (
-        market: string,
-        strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
-        contractType: 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER',
-        barrier: number | undefined,
-        stake: number
-    ) => {
-        if (executionLockRef.current) return;
-        executionLockRef.current = true;
-        setBotState('TRADING');
-        playSoundCue('signal');
+        const path = getBezierSplinePath(points);
+        const lastPt = points[points.length - 1];
+        const firstPt = points[0];
+        const areaPath = `${path} L ${lastPt.x.toFixed(1)},${(height - 10).toFixed(1)} L ${firstPt.x.toFixed(1)},${(height - 10).toFixed(1)} Z`;
 
-        const logId = addLogEntry(market, strategy, contractType, barrier, stake, 'PENDING', 0);
+        return { chartPoints: points, chartPath: path, chartAreaPath: areaPath };
+    }, [currentMarket.digits]);
 
-        try {
-            const duration = parseInt(tickDuration, 10) || 1;
-            const params: Record<string, any> = {
-                amount: stake,
-                basis: 'stake',
-                contract_type: contractType,
-                currency,
-                duration,
-                duration_unit: 't',
-                symbol: market,
-            };
+    // ─── Trade Execution Handler ───
+    const executeTrade = useCallback(
+        async (
+            market: string,
+            contractType: string,
+            stake: number,
+            strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
+            barrier?: number
+        ) => {
+            if (isProcessingTradeRef.current) return;
+            isProcessingTradeRef.current = true;
+            setBotState('TRADING');
 
-            if (barrier !== undefined && (contractType === 'DIGITOVER' || contractType === 'DIGITUNDER')) {
-                params.barrier = String(barrier);
-            }
-
-            const buyResult = await buyContractForUi({
-                parameters: params,
-                price: stake,
-                source: 'AUTO X E/O',
+            const logId = addTradeLog({
+                market,
+                strategy,
+                contractType,
+                prediction: barrier,
+                stake,
+                result: 'PENDING',
+                profit: 0,
             });
 
-            if (!buyResult?.contract_id) {
-                throw new Error('No contract ID returned');
-            }
+            playSoundCue('signal');
 
-            const contractId = buyResult.contract_id;
-            const transactionId = buyResult.transaction_id || contractId;
-            const startTime = Math.floor(Date.now() / 1000);
-            const marketLabel = MARKETS.find(m => m.symbol === market)?.label || market;
+            try {
+                const parameters: any = {
+                    amount: stake,
+                    basis: 'stake',
+                    contract_type: contractType,
+                    currency,
+                    duration: tickDuration,
+                    duration_unit: 't',
+                    symbol: market,
+                    ...(barrier !== undefined ? { barrier: String(barrier) } : {}),
+                };
 
-            const initSnapshot = {
-                contract_id: contractId,
-                transaction_ids: { buy: transactionId },
-                buy_price: stake,
-                underlying: market,
-                underlying_symbol: market,
-                display_name: marketLabel,
-                shortcode: `AUTO_X_${contractType}`,
-                contract_type: contractType,
-                currency: currency || 'USD',
-                date_start: startTime,
-                status: 'open',
-                ...(barrier !== undefined ? { barrier: String(barrier) } : {}),
-            };
-            pushContractToDrawer(initSnapshot);
+                const buyResult = await buyContractForUi({
+                    parameters,
+                    price: stake,
+                    source: 'AUTO X E/O',
+                });
 
-            // Stream until settled
-            const settledSnapshot = await streamContractUntilSettled({
-                contractId,
-                fallback: initSnapshot,
-                onUpdate: snapshot => {
-                    pushContractToDrawer(snapshot);
-                },
-                source: 'AUTO X E/O',
-            });
-
-            pushContractToDrawer(settledSnapshot);
-            const profitVal = Number(settledSnapshot?.profit || 0);
-            const isWin = profitVal > 0;
-
-            if (isWin) {
-                playSoundCue('win');
-                updateLogResult(logId, 'WIN', profitVal);
-                setWinsCount(w => w + 1);
-                setSessionProfit(p => p + profitVal);
-
-                if (isInRecovery) {
-                    // Recovered! Reset back to initial stake and exit recovery
-                    setIsInRecovery(false);
-                    setAccumulatedLoss(0);
-                    setCurrentStake(parseFloat(initialStake) || 0.50);
-                } else {
-                    // Normal win -> reset stake
-                    setCurrentStake(parseFloat(initialStake) || 0.50);
+                if (!buyResult || !buyResult.contract_id) {
+                    console.error('[AUTO X E/O] Purchase failed or was rejected:', buyResult);
+                    updateLogResult(logId, 'LOSS', -stake);
+                    setLossesCount(l => l + 1);
+                    setSessionProfit(p => p - stake);
+                    isProcessingTradeRef.current = false;
+                    setBotState(isBotRunningRef.current ? 'SCANNING' : 'IDLE');
+                    return;
                 }
-            } else {
-                playSoundCue('loss');
-                updateLogResult(logId, 'LOSS', profitVal);
-                setLossesCount(l => l + 1);
-                setSessionProfit(p => p + profitVal);
 
-                if (autoRecoveryMode) {
-                    setIsInRecovery(true);
-                    const martMult = parseFloat(martingale) || 2.6;
-                    const nextStake = Math.round(stake * martMult * 100) / 100;
-                    setCurrentStake(nextStake);
-                    setAccumulatedLoss(prev => prev + Math.abs(profitVal));
+                const contractId = buyResult.contract_id;
+                const transactionId = buyResult.transaction_id || contractId;
+                const startTime = Math.floor(Date.now() / 1000);
+                const marketLabel = MARKETS.find(m => m.symbol === market)?.label || market;
+
+                const initSnapshot = {
+                    contract_id: contractId,
+                    transaction_ids: { buy: transactionId },
+                    buy_price: stake,
+                    underlying: market,
+                    underlying_symbol: market,
+                    display_name: marketLabel,
+                    shortcode: `AUTO_X_${contractType}`,
+                    contract_type: contractType,
+                    currency: currency || 'USD',
+                    date_start: startTime,
+                    status: 'open',
+                    ...(barrier !== undefined ? { barrier: String(barrier) } : {}),
+                };
+                pushContractToDrawer(initSnapshot);
+
+                // Stream until settled
+                const settledSnapshot = await streamContractUntilSettled({
+                    contractId,
+                    fallback: initSnapshot,
+                    onUpdate: snapshot => {
+                        pushContractToDrawer(snapshot);
+                    },
+                    source: 'AUTO X E/O',
+                });
+
+                pushContractToDrawer(settledSnapshot);
+                const profitVal = Number(settledSnapshot?.profit || 0);
+                const isWin = profitVal > 0;
+
+                if (isWin) {
+                    playSoundCue('win');
+                    updateLogResult(logId, 'WIN', profitVal);
+                    setWinsCount(w => w + 1);
+                    setSessionProfit(p => p + profitVal);
+
+                    if (isInRecovery) {
+                        // Recovered! Reset back to initial stake and exit recovery
+                        setIsInRecovery(false);
+                        setAccumulatedLoss(0);
+                        setCurrentStake(parseFloat(initialStake) || 0.50);
+                    } else {
+                        // Normal win -> reset stake
+                        setCurrentStake(parseFloat(initialStake) || 0.50);
+                    }
                 } else {
-                    // Standard martingale
-                    const martMult = parseFloat(martingale) || 2.0;
-                    const nextStake = Math.round(stake * martMult * 100) / 100;
-                    setCurrentStake(nextStake);
+                    playSoundCue('loss');
+                    updateLogResult(logId, 'LOSS', profitVal);
+                    setLossesCount(l => l + 1);
+                    setSessionProfit(p => p + profitVal);
+
+                    const mult = parseFloat(martingaleMultiplier) || 2.6;
+                    const nextStake = parseFloat((stake * mult).toFixed(2));
+
+                    if (autoRecoveryMode) {
+                        setIsInRecovery(true);
+                        setAccumulatedLoss(prev => prev + Math.abs(profitVal || stake));
+                        setCurrentStake(nextStake);
+                    } else {
+                        setCurrentStake(nextStake);
+                    }
+                }
+
+                // Manage Run count & Auto-Switching
+                setRunsOnCurrentMarket(prev => {
+                    const newRuns = prev + 1;
+                    if (autoSwitchMarkets && newRuns >= switchRunThreshold && !isInRecovery) {
+                        if (bestMarketCandidate && bestMarketCandidate !== selectedSymbol) {
+                            setSelectedSymbol(bestMarketCandidate);
+                            return 0;
+                        }
+                    }
+                    return newRuns;
+                });
+            } catch (error) {
+                console.error('[AUTO X E/O] Trade cycle error:', error);
+                updateLogResult(logId, 'LOSS', -stake);
+            } finally {
+                isProcessingTradeRef.current = false;
+                if (isBotRunningRef.current) {
+                    setBotState('SCANNING');
+                } else {
+                    setBotState('IDLE');
                 }
             }
+        },
+        [
+            currency,
+            tickDuration,
+            addTradeLog,
+            updateLogResult,
+            pushContractToDrawer,
+            isInRecovery,
+            initialStake,
+            martingaleMultiplier,
+            autoRecoveryMode,
+            autoSwitchMarkets,
+            switchRunThreshold,
+            bestMarketCandidate,
+            selectedSymbol,
+        ]
+    );
 
-            setConsecutiveRuns(r => r + 1);
-            executionLockRef.current = false;
-        } catch (err: any) {
-            console.error('AUTO X E/O Trade execution failed:', err);
-            updateLogResult(logId, 'LOSS', -stake);
-            executionLockRef.current = false;
-            setBotState('SCANNING');
-        }
-    }, [
-        addLogEntry,
-        updateLogResult,
-        tickDuration,
-        currency,
-        pushContractToDrawer,
-        isInRecovery,
-        initialStake,
-        autoRecoveryMode,
-        martingale,
-    ]);
-
-    // ── Main Automated AI Loop ──
+    // ─── Automated AI Strategy & Trigger Scanner Loop ───
     useEffect(() => {
-        if (botState === 'IDLE' || botState === 'PAUSED' || executionLockRef.current) return;
+        if (!isBotRunningRef.current || isProcessingTradeRef.current) return;
 
         // Check TP / SL Limits
-        const tpVal = parseFloat(takeProfit) || 10;
-        const slVal = parseFloat(stopLoss) || 25;
-
-        if (sessionProfit >= tpVal) {
+        const tpNum = parseFloat(takeProfit);
+        const slNum = parseFloat(stopLoss);
+        if (!isNaN(tpNum) && sessionProfit >= tpNum) {
             setBotState('IDLE');
-            alert(`🎉 Take Profit Reached! Session Profit: +${sessionProfit.toFixed(2)} ${currency}`);
+            alert(`Take Profit reached! Profit: +${sessionProfit.toFixed(2)} ${currency}`);
             return;
         }
-        if (sessionProfit <= -slVal) {
+        if (!isNaN(slNum) && sessionProfit <= -slNum) {
             setBotState('IDLE');
-            alert(`🛑 Stop Loss Triggered! Session Loss: ${sessionProfit.toFixed(2)} ${currency}`);
+            alert(`Stop Loss reached! Loss: ${sessionProfit.toFixed(2)} ${currency}`);
             return;
         }
 
-        // Market Auto-Switch Check after max consecutive runs
-        if (autoSwitchMarkets && consecutiveRuns >= maxRunsBeforeCheck) {
-            if (bestMarketCandidate && bestMarketCandidate !== selectedSymbol) {
-                setSelectedSymbol(bestMarketCandidate);
-                setConsecutiveRuns(0);
-                return;
-            }
-            setConsecutiveRuns(0);
-        }
-
-        // Recovery Mode Branch
+        // ── 1. Recovery Mode Execution ──
         if (isInRecovery) {
-            // Evaluate Over/Under recovery conditions
-            const bias = ouAnalysis.bias;
+            setBotState('WAITING_SIGNAL');
+            const { contractType, barrier, recommendedStrategy } = ouAnalysis;
+            const stratType =
+                contractType === 'DIGITOVER' ? 'RECOVERY_OVER' : 'RECOVERY_UNDER';
 
-            if (bias === 'UNDER') {
-                const barrier = recoveryType === 'OVER_2_UNDER_8' ? 8 : 6;
-                // Wait for high entry digit in Under to appear or last 7 ticks favor Under
-                if (currentMarket.digits.slice(-7).filter(d => d <= 4).length >= 5 || currentMarket.lastDigit === ouAnalysis.highestUnderEntryDigit) {
-                    executeTradeOrder(selectedSymbol, 'RECOVERY_UNDER', 'DIGITUNDER', barrier, currentStake);
-                }
-            } else if (bias === 'OVER') {
-                const barrier = recoveryType === 'OVER_2_UNDER_8' ? 2 : 3;
-                // Wait for high entry digit in Over to appear or last 7 ticks favor Over
-                if (currentMarket.digits.slice(-7).filter(d => d >= 5).length >= 5 || currentMarket.lastDigit === ouAnalysis.highestOverEntryDigit) {
-                    executeTradeOrder(selectedSymbol, 'RECOVERY_OVER', 'DIGITOVER', barrier, currentStake);
-                }
-            } else {
-                // Neutral fallback -> use safe Under 8
-                executeTradeOrder(selectedSymbol, 'RECOVERY_UNDER', 'DIGITUNDER', 8, currentStake);
-            }
+            setPatternTriggerState({
+                targetParity: 'EVEN',
+                oppositeStreak: 0,
+                requiredOpposite: 0,
+                statusText: `Single Loss Recovery Active: ${recommendedStrategy} (Barrier: ${barrier})`,
+            });
+
+            // Execute recovery trade
+            executeTrade(selectedSymbol, contractType, currentStake, stratType, barrier);
             return;
         }
 
-        // Base Even / Odd Strategy Branch
-        if (eoAnalysis.evenSignalReady) {
-            // Signal matches! Now wait for Consecutive reversal pattern: 2+ consecutive odds followed by 1 even
-            if (eoAnalysis.evenPatternTriggered) {
-                executeTradeOrder(selectedSymbol, 'EVEN_ODD', 'DIGITEVEN', undefined, currentStake);
-            } else {
-                setBotState('WAITING_TRIGGER');
-            }
-        } else if (eoAnalysis.oddSignalReady) {
-            // Odd Signal matches! Wait for 2+ consecutive evens followed by 1 odd
-            if (eoAnalysis.oddPatternTriggered) {
-                executeTradeOrder(selectedSymbol, 'EVEN_ODD', 'DIGITODD', undefined, currentStake);
-            } else {
-                setBotState('WAITING_TRIGGER');
-            }
-        } else {
+        // ── 2. Standard Even / Odd AI Mode ──
+        const targetSignal = eoAnalysis.activeSignal;
+        if (targetSignal === 'NONE') {
             setBotState('SCANNING');
+            setPatternTriggerState(prev => ({
+                ...prev,
+                statusText: `Scanning ${selectedSymbol}: Even ${eoAnalysis.evenPct}% / Odd ${eoAnalysis.oddPct}% (Requires &ge; ${targetProbabilityThreshold}%)`,
+            }));
+            return;
+        }
 
-            // If auto-switch is on and active market is weak, auto switch to best candidate
-            if (autoSwitchMarkets && bestMarketCandidate !== selectedSymbol) {
-                setSelectedSymbol(bestMarketCandidate);
-            }
+        // Target signal is active (e.g. 'EVEN' or 'ODD')
+        const targetParity = targetSignal;
+        const oppositeParity = targetParity === 'EVEN' ? 'ODD' : 'EVEN';
+
+        // Check last 3 ticks for pattern trigger: 2+ opposite ticks followed by 1 matching tick
+        const digits = currentMarket.digits;
+        if (digits.length < 3) return;
+
+        const last1 = digits[digits.length - 1];
+        const last2 = digits[digits.length - 2];
+        const last3 = digits[digits.length - 3];
+
+        const last1Parity = last1 % 2 === 0 ? 'EVEN' : 'ODD';
+        const last2Parity = last2 % 2 === 0 ? 'EVEN' : 'ODD';
+        const last3Parity = last3 % 2 === 0 ? 'EVEN' : 'ODD';
+
+        const isTriggerHit =
+            last3Parity === oppositeParity &&
+            last2Parity === oppositeParity &&
+            last1Parity === targetParity;
+
+        if (isTriggerHit) {
+            setBotState('WAITING_TRIGGER');
+            setPatternTriggerState({
+                targetParity,
+                oppositeStreak: 2,
+                requiredOpposite: 2,
+                statusText: `Trigger Confirmed: [${oppositeParity}] -> [${oppositeParity}] -> [${targetParity}]. Executing Trade!`,
+            });
+
+            const contractType = targetParity === 'EVEN' ? 'DIGITEVEN' : 'DIGITODD';
+            executeTrade(selectedSymbol, contractType, currentStake, 'EVEN_ODD');
+        } else {
+            setBotState('WAITING_TRIGGER');
+            const oppCount =
+                (last1Parity === oppositeParity ? 1 : 0) + (last2Parity === oppositeParity ? 1 : 0);
+            setPatternTriggerState({
+                targetParity,
+                oppositeStreak: oppCount,
+                requiredOpposite: 2,
+                statusText: `Waiting for 2 consecutive [${oppositeParity}] ticks followed by 1 [${targetParity}] tick (Current: [${last2Parity}] -> [${last1Parity}])`,
+            });
         }
     }, [
-        botState,
+        currentMarket.digits,
+        eoAnalysis,
+        ouAnalysis,
+        isInRecovery,
+        selectedSymbol,
+        currentStake,
         sessionProfit,
         takeProfit,
         stopLoss,
         currency,
-        autoSwitchMarkets,
-        consecutiveRuns,
-        maxRunsBeforeCheck,
-        bestMarketCandidate,
-        selectedSymbol,
-        isInRecovery,
-        ouAnalysis,
-        currentMarket,
-        recoveryType,
-        currentStake,
-        executeTradeOrder,
-        eoAnalysis,
+        targetProbabilityThreshold,
+        executeTrade,
     ]);
 
-    // ── Bot Start / Pause / Stop Handlers ──
+    // ─── Control Handlers ───
     const handleStartBot = () => {
-        setCurrentStake(parseFloat(initialStake) || 0.50);
+        const parsedStake = parseFloat(initialStake);
+        if (isNaN(parsedStake) || parsedStake <= 0) {
+            alert('Please enter a valid initial stake');
+            return;
+        }
+        setCurrentStake(parsedStake);
         setBotState('SCANNING');
+        playSoundCue('signal');
     };
 
     const handlePauseBot = () => {
@@ -831,58 +848,59 @@ const AutoXEo: React.FC = observer(() => {
 
     const handleStopBot = () => {
         setBotState('IDLE');
-        executionLockRef.current = false;
+        setIsInRecovery(false);
+        setAccumulatedLoss(0);
+        setCurrentStake(parseFloat(initialStake) || 0.50);
     };
 
-    // ── 50 Ticks Wave Spline Line Chart Calculations ──
-    const chartPoints = useMemo(() => {
-        const last50 = currentMarket.digits.slice(-CHART_TICKS);
-        if (last50.length === 0) return [];
+    const handleResetStats = () => {
+        setSessionProfit(0);
+        setWinsCount(0);
+        setLossesCount(0);
+        setRunsOnCurrentMarket(0);
+        setTradeLogs([]);
+    };
 
-        const width = 800;
-        const height = 150;
-        const paddingX = 20;
-        const paddingY = 25;
-        const innerWidth = width - paddingX * 2;
-        const innerHeight = height - paddingY * 2;
-
-        const stepX = last50.length > 1 ? innerWidth / (last50.length - 1) : 0;
-
-        return last50.map((digit, index) => {
-            const x = paddingX + index * stepX;
-            // Digits 0 to 9 inverted on Y axis (9 at top, 0 at bottom)
-            const y = paddingY + innerHeight - (digit / 9) * innerHeight;
-            return { x, y, digit, isEven: digit % 2 === 0 };
-        });
-    }, [currentMarket.digits]);
-
-    const chartPath = useMemo(() => getBezierSplinePath(chartPoints), [chartPoints]);
+    // ─── Render ────────────────────────────────────────────────────────────────
 
     return (
         <div className="auto-x-eo">
-            {/* 1. Header Bar */}
+            {/* 1. Classical Luxury Glassmorphic Header */}
             <div className="auto-x-eo__header">
                 <div className="auto-x-eo__header-brand">
                     <div className="brand-icon">
                         <Zap size={24} />
                     </div>
                     <div className="brand-text">
-                        <h1>AUTO X E/O</h1>
-                        <span>Smart AI Parity &amp; Recovery Suite</span>
+                        <div className="brand-title-wrap">
+                            <h1>AUTO X E/O</h1>
+                            <span className="badge-luxury">PRO SUITE</span>
+                        </div>
+                        <span>Continuous Synthetic Wave Scanner &amp; AI Parity Engine</span>
                     </div>
                 </div>
 
                 <div className="auto-x-eo__header-metrics">
                     <div className="metric-pill">
                         <span className="label">Session P/L</span>
-                        <span className={`val ${sessionProfit >= 0 ? 'profit-pos' : 'profit-neg'}`}>
+                        <span className={`val ${sessionProfit >= 0 ? 'profit' : 'loss'}`}>
                             {sessionProfit >= 0 ? `+${sessionProfit.toFixed(2)}` : sessionProfit.toFixed(2)} {currency}
                         </span>
                     </div>
                     <div className="metric-pill">
                         <span className="label">Win / Loss</span>
                         <span className="val">
-                            <span style={{ color: '#10b981' }}>{winsCount}W</span> / <span style={{ color: '#ef4444' }}>{lossesCount}L</span>
+                            <span className="win-text">{winsCount}W</span>
+                            <span className="divider">/</span>
+                            <span className="loss-text">{lossesCount}L</span>
+                        </span>
+                    </div>
+                    <div className="metric-pill">
+                        <span className="label">Win Rate</span>
+                        <span className="val gold">
+                            {winsCount + lossesCount > 0
+                                ? `${Math.round((winsCount / (winsCount + lossesCount)) * 100)}%`
+                                : '0%'}
                         </span>
                     </div>
                     <div className="metric-pill">
@@ -890,12 +908,12 @@ const AutoXEo: React.FC = observer(() => {
                         <span className="val gold">{currentStake.toFixed(2)} {currency}</span>
                     </div>
                     <div className="metric-pill">
-                        <span className="label">Bot Status</span>
-                        <span className="val cyan" style={{ fontSize: '0.85rem' }}>
+                        <span className="label">Engine State</span>
+                        <span className={`val badge-state ${botState.toLowerCase()}`}>
                             {botState === 'IDLE' && '⏹ IDLE'}
                             {botState === 'SCANNING' && '🔍 SCANNING'}
-                            {botState === 'WAITING_SIGNAL' && '⏳ WAITING SIGNAL'}
-                            {botState === 'WAITING_TRIGGER' && '⚡ PATTERN TRIGGER'}
+                            {botState === 'WAITING_SIGNAL' && '⏳ SIGNAL DETECTED'}
+                            {botState === 'WAITING_TRIGGER' && '⚡ TRIGGER SETUP'}
                             {botState === 'TRADING' && '🚀 TRADING'}
                             {botState === 'PAUSED' && '⏸ PAUSED'}
                         </span>
@@ -918,32 +936,58 @@ const AutoXEo: React.FC = observer(() => {
                             </button>
                         </>
                     )}
+                    <button className="btn-reset" onClick={handleResetStats} title="Reset Stats & Logs">
+                        <RefreshCw size={15} />
+                    </button>
                 </div>
             </div>
 
-            {/* 2. Market Toolbar */}
+            {/* 2. Market Control Toolbar */}
             <div className="auto-x-eo__market-toolbar">
                 <div className="market-select-group">
-                    <select
-                        className="custom-select"
-                        value={selectedSymbol}
-                        onChange={e => setSelectedSymbol(e.target.value)}
-                    >
-                        {MARKETS.map(m => (
-                            <option key={m.symbol} value={m.symbol}>
-                                {m.label} ({m.symbol})
-                            </option>
-                        ))}
-                    </select>
+                    <div className="select-wrapper">
+                        <Activity size={16} className="select-icon" />
+                        <select
+                            className="custom-select"
+                            value={selectedSymbol}
+                            onChange={e => {
+                                setSelectedSymbol(e.target.value);
+                                setRunsOnCurrentMarket(0);
+                            }}
+                        >
+                            {MARKETS.map(m => (
+                                <option key={m.symbol} value={m.symbol}>
+                                    {m.label} ({m.symbol})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div className="badge-live-price">
                         <span className="dot-pulse" />
-                        <span>PRICE: {currentMarket.currentPrice}</span>
+                        <span className="price-label">PRICE:</span>
+                        <span className="price-value">{currentMarket.currentPrice}</span>
                     </div>
 
-                    <div className="badge-digit-glow" title="Current Last Digit">
-                        {currentMarket.lastDigit}
+                    <div
+                        className={`badge-digit-glow ${currentMarket.lastDigit % 2 === 0 ? 'even' : 'odd'}`}
+                        title="Current Live Last Digit"
+                    >
+                        <span className="digit-glow-val">{currentMarket.lastDigit}</span>
+                        <span className="digit-glow-tag">
+                            {currentMarket.lastDigit % 2 === 0 ? 'EVEN' : 'ODD'}
+                        </span>
                     </div>
+
+                    {bestMarketCandidate && bestMarketCandidate !== selectedSymbol && (
+                        <div
+                            className="badge-best-candidate"
+                            onClick={() => setSelectedSymbol(bestMarketCandidate)}
+                            title="Click to switch to highest probability market"
+                        >
+                            <Sparkles size={14} /> Best: {MARKETS.find(m => m.symbol === bestMarketCandidate)?.label}
+                        </div>
+                    )}
                 </div>
 
                 <div className="market-toggles">
@@ -953,7 +997,8 @@ const AutoXEo: React.FC = observer(() => {
                             checked={scanAllMarkets}
                             onChange={e => setScanAllMarkets(e.target.checked)}
                         />
-                        <span>Scan All Synthetics</span>
+                        <Radio size={14} />
+                        <span>Continuous Market Scan</span>
                     </label>
 
                     <label className={`toggle-chip ${autoSwitchMarkets ? 'active' : ''}`}>
@@ -962,26 +1007,28 @@ const AutoXEo: React.FC = observer(() => {
                             checked={autoSwitchMarkets}
                             onChange={e => setAutoSwitchMarkets(e.target.checked)}
                         />
-                        <span>Auto-Switch Market</span>
+                        <Cpu size={14} />
+                        <span>Auto-Switch Market ({switchRunThreshold} Runs)</span>
                     </label>
 
                     <button
-                        className="btn-view-toggle"
+                        className={`btn-view-toggle ${showWideView ? 'active' : ''}`}
                         onClick={() => setShowWideView(prev => !prev)}
                     >
                         <Grid size={15} />
-                        {showWideView ? 'Hide Grid View' : 'Wide Market Stats'}
+                        {showWideView ? 'Collapse Matrix' : 'Wide Market Explorer'}
                     </button>
                 </div>
             </div>
 
-            {/* 3. Wide View Modal Grid (Expandable) */}
+            {/* 3. Wide View Market Explorer Grid (Expandable) */}
             {showWideView && (
                 <div className="auto-x-eo__wide-view">
                     <div className="wide-view-header">
-                        <h3>
-                            <Activity size={18} /> All Synthetic Indices Live Scanner
-                        </h3>
+                        <div className="wide-view-title">
+                            <Layers size={18} />
+                            <h3>Synthetic Indices Live Statistics Matrix</h3>
+                        </div>
                         <button className="close-btn" onClick={() => setShowWideView(false)}>
                             ✕
                         </button>
@@ -1009,21 +1056,29 @@ const AutoXEo: React.FC = observer(() => {
                                     className={`wide-card ${isSelected ? 'selected' : ''} ${isBest ? 'recommended' : ''}`}
                                     onClick={() => {
                                         setSelectedSymbol(m.symbol);
+                                        setRunsOnCurrentMarket(0);
                                         setShowWideView(false);
                                     }}
                                 >
                                     <div className="card-top">
-                                        <span className="market-name">{m.label}</span>
-                                        <span className="last-digit">{state.lastDigit}</span>
+                                        <div className="card-market-info">
+                                            <span className="market-name">{m.label}</span>
+                                            {isBest && <span className="badge-best-tag">TOP SCAN</span>}
+                                        </div>
+                                        <div className={`last-digit-badge ${state.lastDigit % 2 === 0 ? 'even' : 'odd'}`}>
+                                            {state.lastDigit}
+                                        </div>
                                     </div>
                                     <div className="card-stats">
                                         <div className="stat-row">
-                                            <span>Price</span>
-                                            <span>{state.currentPrice}</span>
+                                            <span className="stat-lbl">Price</span>
+                                            <span className="stat-val">{state.currentPrice}</span>
                                         </div>
                                         <div className="stat-row">
-                                            <span>Even / Odd</span>
-                                            <span>{evenPct}% / {oddPct}%</span>
+                                            <span className="stat-lbl">Even / Odd</span>
+                                            <span className="stat-val">
+                                                <span className="cyan">{evenPct}%</span> / <span className="purple">{oddPct}%</span>
+                                            </span>
                                         </div>
                                         <div className="mini-bar">
                                             <div className="bar-even" style={{ width: `${evenPct}%` }} />
@@ -1037,18 +1092,21 @@ const AutoXEo: React.FC = observer(() => {
                 </div>
             )}
 
-            {/* 4. Main Body: Sidebar + Workspace */}
+            {/* 4. Main Trading Floor (Sidebar + Analytics Board) */}
             <div className={`auto-x-eo__body ${sidebarCollapsed ? 'auto-x-eo__body--collapsed' : ''}`}>
-                {/* Left Markets Sidebar */}
+                {/* Left Derived Markets Sidebar */}
                 <div className="auto-x-eo__sidebar">
                     <div className="auto-x-eo__sidebar-header">
-                        <span>Derived Markets</span>
+                        <div className="sidebar-title">
+                            <Activity size={16} />
+                            <span>Live Synthetics</span>
+                        </div>
                         <button
                             className="collapse-btn"
                             onClick={() => setSidebarCollapsed(prev => !prev)}
-                            title={sidebarCollapsed ? 'Expand' : 'Collapse'}
+                            title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
                         >
-                            {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                            {sidebarCollapsed ? '▶' : '◀'}
                         </button>
                     </div>
 
@@ -1063,29 +1121,34 @@ const AutoXEo: React.FC = observer(() => {
                             const total = last60.length || 1;
                             const evens = last60.filter(d => d % 2 === 0).length;
                             const evenPct = Math.round((evens / total) * 100);
+                            const oddPct = 100 - evenPct;
                             const isSelected = m.symbol === selectedSymbol;
+                            const isBest = m.symbol === bestMarketCandidate;
 
                             return (
                                 <div
                                     key={m.symbol}
-                                    className={`sidebar-market-item ${isSelected ? 'active' : ''}`}
-                                    onClick={() => setSelectedSymbol(m.symbol)}
+                                    className={`market-item ${isSelected ? 'active' : ''} ${isBest ? 'best' : ''}`}
+                                    onClick={() => {
+                                        setSelectedSymbol(m.symbol);
+                                        setRunsOnCurrentMarket(0);
+                                    }}
                                 >
-                                    <div className="item-left">
-                                        <div className={`digit-badge ${state.lastDigit % 2 === 0 ? 'even' : 'odd'}`}>
+                                    <div className="item-row-top">
+                                        <span className="item-name">{m.label}</span>
+                                        <span className={`item-digit ${state.lastDigit % 2 === 0 ? 'even' : 'odd'}`}>
                                             {state.lastDigit}
-                                        </div>
-                                        <div className="item-details">
-                                            <span className="title">{m.label}</span>
-                                            <span className="price">{state.currentPrice}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="item-stats">
-                                        <span className={`stat-tag ${evenPct >= 50 ? 'even-fav' : 'odd-fav'}`}>
-                                            {evenPct >= 50 ? `E: ${evenPct}%` : `O: ${100 - evenPct}%`}
                                         </span>
-                                        <span className="stat-sub">{state.digits.length} ticks</span>
+                                    </div>
+                                    <div className="item-row-bottom">
+                                        <span className="item-price">{state.currentPrice}</span>
+                                        <span className="item-eo-pill">
+                                            E:{evenPct}% O:{oddPct}%
+                                        </span>
+                                    </div>
+                                    <div className="item-bar">
+                                        <div className="bar-even" style={{ width: `${evenPct}%` }} />
+                                        <div className="bar-odd" style={{ width: `${oddPct}%` }} />
                                     </div>
                                 </div>
                             );
@@ -1093,86 +1156,242 @@ const AutoXEo: React.FC = observer(() => {
                     </div>
                 </div>
 
-                {/* Right Workspace */}
+                {/* Right Analytics & Trading Control Board */}
                 <div className="auto-x-eo__workspace">
-                    {/* Live 50 Ticks Wave Spline Line Chart */}
+                    {/* Live Pattern Setup Alert Bar */}
+                    <div className={`auto-x-eo__pattern-bar ${patternTriggerState.targetParity.toLowerCase()}`}>
+                        <div className="pattern-icon">
+                            <Zap size={18} />
+                        </div>
+                        <div className="pattern-info">
+                            <span className="pattern-label">Smart AI Strategy State:</span>
+                            <span className="pattern-desc">{patternTriggerState.statusText}</span>
+                        </div>
+                        {isInRecovery && (
+                            <div className="badge-recovery-active">
+                                <ShieldAlert size={14} /> RECOVERY 2.6x ACTIVE
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ─── LIVE DIGIT WAVE STREAM WITH IN-NODE NUMBERS & CALLOUT ─── */}
                     <div className="auto-x-eo__chart-card">
                         <div className="chart-header">
                             <div className="chart-title-box">
-                                <h2>Live Digit Wave Stream</h2>
-                                <span className="pill-ticks">Last 50 Ticks</span>
+                                <div className="title-row">
+                                    <Activity size={18} className="icon-pulse" />
+                                    <h2>Live Digit Wave Stream</h2>
+                                </div>
+                                <span className="pill-ticks">Real-Time Last 50 Ticks</span>
                             </div>
 
                             <div className="chart-legend">
                                 <div className="legend-item">
                                     <span className="dot even" />
-                                    <span>Even (0,2,4,6,8)</span>
+                                    <span>Even (0, 2, 4, 6, 8)</span>
                                 </div>
                                 <div className="legend-item">
                                     <span className="dot odd" />
-                                    <span>Odd (1,3,5,7,9)</span>
+                                    <span>Odd (1, 3, 5, 7, 9)</span>
+                                </div>
+                                <div className="legend-item">
+                                    <span className="dot zone-under" />
+                                    <span>Under Zone (0–4)</span>
+                                </div>
+                                <div className="legend-item">
+                                    <span className="dot zone-over" />
+                                    <span>Over Zone (5–9)</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="chart-container">
                             {chartPoints.length > 1 ? (
-                                <svg viewBox="0 0 800 150" preserveAspectRatio="none">
+                                <svg viewBox="0 0 1000 220" preserveAspectRatio="none" className="wave-svg">
                                     <defs>
                                         <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                                             <stop offset="0%" stopColor="#00d2ff" />
                                             <stop offset="50%" stopColor="#f5c542" />
                                             <stop offset="100%" stopColor="#a855f7" />
                                         </linearGradient>
+
+                                        <linearGradient id="waveAreaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                            <stop offset="0%" stopColor="rgba(0, 210, 255, 0.18)" />
+                                            <stop offset="60%" stopColor="rgba(245, 197, 66, 0.06)" />
+                                            <stop offset="100%" stopColor="rgba(168, 85, 247, 0.0)" />
+                                        </linearGradient>
+
+                                        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                            <feGaussianBlur stdDeviation="3" result="blur" />
+                                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                        </filter>
                                     </defs>
 
-                                    {/* Spline Path */}
+                                    {/* Background Zone Indicators (Under 0-4 vs Over 5-9) */}
+                                    <rect x="0" y="28" width="1000" height="85" fill="rgba(168, 85, 247, 0.035)" />
+                                    <rect x="0" y="113" width="1000" height="85" fill="rgba(16, 185, 129, 0.035)" />
+
+                                    {/* Horizontal Digit Gridlines 0 through 9 */}
+                                    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(d => {
+                                        const yPos = 28 + ((9 - d) / 9) * 164;
+                                        return (
+                                            <g key={`grid_${d}`}>
+                                                <line
+                                                    x1="35"
+                                                    y1={yPos}
+                                                    x2="965"
+                                                    y2={yPos}
+                                                    stroke={d === 4.5 ? 'rgba(245, 197, 66, 0.3)' : 'rgba(255, 255, 255, 0.06)'}
+                                                    strokeWidth={d === 4.5 ? 1.5 : 1}
+                                                    strokeDasharray={d === 4.5 ? '4 4' : '2 4'}
+                                                />
+                                                <text
+                                                    x="18"
+                                                    y={yPos + 3.5}
+                                                    fontSize="10"
+                                                    fontWeight="600"
+                                                    fill="rgba(255, 255, 255, 0.35)"
+                                                    textAnchor="middle"
+                                                >
+                                                    {d}
+                                                </text>
+                                                <text
+                                                    x="982"
+                                                    y={yPos + 3.5}
+                                                    fontSize="10"
+                                                    fontWeight="600"
+                                                    fill="rgba(255, 255, 255, 0.35)"
+                                                    textAnchor="middle"
+                                                >
+                                                    {d}
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
+
+                                    {/* Wave Area Fill */}
+                                    <path d={chartAreaPath} fill="url(#waveAreaGrad)" />
+
+                                    {/* Smooth Spline Curve */}
                                     <path
                                         d={chartPath}
                                         fill="none"
                                         stroke="url(#lineGrad)"
-                                        strokeWidth="3.5"
+                                        strokeWidth="3"
                                         strokeLinecap="round"
+                                        filter="url(#glow)"
                                     />
 
-                                    {/* Digit Nodes */}
-                                    {chartPoints.map((pt, idx) => (
-                                        <g key={idx} transform={`translate(${pt.x}, ${pt.y})`}>
-                                            <circle
-                                                r={idx === chartPoints.length - 1 ? 7 : 4.5}
-                                                fill={pt.isEven ? '#00d2ff' : '#a855f7'}
-                                                stroke="#0f172a"
-                                                strokeWidth="1.5"
-                                            />
-                                        </g>
-                                    ))}
+                                    {/* Dynamic In-Node Digit Circles & Numbers */}
+                                    {chartPoints.map((pt, idx) => {
+                                        const isLatest = idx === chartPoints.length - 1;
+                                        const nodeRadius = isLatest ? 12 : 8;
+
+                                        return (
+                                            <g key={idx} transform={`translate(${pt.x}, ${pt.y})`}>
+                                                {/* Pulsing Radar Ring for Latest Digit */}
+                                                {isLatest && (
+                                                    <>
+                                                        <circle
+                                                            r={20}
+                                                            fill="none"
+                                                            stroke={pt.isEven ? '#00d2ff' : '#a855f7'}
+                                                            strokeWidth="1.5"
+                                                            opacity="0.6"
+                                                            className="radar-pulse-fast"
+                                                        />
+                                                        <circle
+                                                            r={28}
+                                                            fill="none"
+                                                            stroke="#f5c542"
+                                                            strokeWidth="1"
+                                                            opacity="0.35"
+                                                            className="radar-pulse-slow"
+                                                        />
+                                                    </>
+                                                )}
+
+                                                {/* Node Background Circle */}
+                                                <circle
+                                                    r={nodeRadius}
+                                                    fill={isLatest ? '#f5c542' : pt.isEven ? '#00d2ff' : '#a855f7'}
+                                                    stroke="#080c14"
+                                                    strokeWidth={isLatest ? 2.5 : 1.5}
+                                                    filter={isLatest ? 'url(#glow)' : undefined}
+                                                />
+
+                                                {/* Digit Value inside the node */}
+                                                <text
+                                                    textAnchor="middle"
+                                                    dy={isLatest ? 4 : 3}
+                                                    fontSize={isLatest ? '11' : '8.5'}
+                                                    fontWeight="800"
+                                                    fill={isLatest ? '#080c14' : '#ffffff'}
+                                                >
+                                                    {pt.digit}
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
                                 </svg>
                             ) : (
-                                <div className="chart-empty">Waiting for tick stream...</div>
+                                <div className="chart-empty">
+                                    <RefreshCw className="spin" size={24} />
+                                    <span>Connecting to Synthetic Tick Stream...</span>
+                                </div>
+                            )}
+
+                            {/* Floating Callout for Current Last Digit */}
+                            {chartPoints.length > 0 && (
+                                <div className="chart-live-callout">
+                                    <div className="callout-header">
+                                        <span className="callout-dot" />
+                                        <span className="callout-title">LATEST TICK</span>
+                                    </div>
+                                    <div className="callout-body">
+                                        <span className="callout-digit">{currentMarket.lastDigit}</span>
+                                        <div className="callout-meta">
+                                            <span className={`callout-parity ${currentMarket.lastDigit % 2 === 0 ? 'even' : 'odd'}`}>
+                                                {currentMarket.lastDigit % 2 === 0 ? 'EVEN' : 'ODD'}
+                                            </span>
+                                            <span className="callout-price">{currentMarket.currentPrice}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Digit 0-9 Statistical Grid */}
+                    {/* ─── DIGITS 0–9 STATISTICAL GRID ─── */}
                     <div className="auto-x-eo__digits-grid">
                         {digitStats.map(stat => {
                             const isTarget =
                                 (eoAnalysis.activeSignal === 'EVEN' && stat.isEven) ||
                                 (eoAnalysis.activeSignal === 'ODD' && !stat.isEven);
+                            const isCurrent = currentMarket.lastDigit === stat.digit;
 
                             return (
                                 <div
                                     key={stat.digit}
-                                    className={`digit-stat-card ${stat.isEven ? 'is-even' : 'is-odd'} ${isTarget ? 'is-target' : ''}`}
+                                    className={`digit-stat-card ${stat.isEven ? 'is-even' : 'is-odd'} ${isTarget ? 'is-target' : ''} ${isCurrent ? 'is-current' : ''}`}
                                 >
-                                    <span className="digit-num">{stat.digit}</span>
-                                    <span className={`digit-pct ${stat.percentage >= 10.5 ? 'highlight' : ''}`}>
-                                        {stat.percentage}%
-                                    </span>
-                                    <span className="digit-count">{stat.count} hits</span>
+                                    <div className="card-digit-header">
+                                        <span className="digit-num">{stat.digit}</span>
+                                        <span className="digit-tag">{stat.isEven ? 'EVEN' : 'ODD'}</span>
+                                    </div>
+
+                                    <div className="digit-pct-box">
+                                        <span className={`digit-pct ${stat.percentage >= 10.5 ? 'highlight' : ''}`}>
+                                            {stat.percentage}%
+                                        </span>
+                                        <span className="digit-count">{stat.count} hits</span>
+                                    </div>
 
                                     <div className="power-bar-wrap">
-                                        <div className="power-bar-fill" style={{ width: `${stat.power}%` }} />
+                                        <div
+                                            className={`power-bar-fill ${stat.isEven ? 'even-fill' : 'odd-fill'}`}
+                                            style={{ width: `${stat.power}%` }}
+                                        />
                                     </div>
 
                                     <div className={`trend-indicator ${stat.isIncreasing ? 'up' : 'steady'}`}>
@@ -1182,7 +1401,7 @@ const AutoXEo: React.FC = observer(() => {
                                             </>
                                         ) : (
                                             <>
-                                                <Minus size={12} /> Normal
+                                                <Minus size={12} /> Neutral
                                             </>
                                         )}
                                     </div>
@@ -1191,50 +1410,70 @@ const AutoXEo: React.FC = observer(() => {
                         })}
                     </div>
 
-                    {/* Key Rankings Strip */}
+                    {/* ─── KEY RANKINGS STRIP (PODIUM) ─── */}
                     <div className="auto-x-eo__ranks-strip">
-                        <div className="rank-card">
-                            <div className="rank-info">
-                                <span className="title">Most Appearing Digit</span>
-                                <span className="sub">Rank #1 Frequency</span>
+                        <div className="rank-card rank-gold">
+                            <div className="rank-badge">🥇 #1 MOST FREQUENT</div>
+                            <div className="rank-content">
+                                <div className="rank-digit">{mostAppearing ?? '-'}</div>
+                                <div className="rank-details">
+                                    <span className="rank-title">Leader Digit</span>
+                                    <span className="rank-stat">
+                                        {mostAppearing !== null ? `${digitStats[mostAppearing]?.percentage}% (${digitStats[mostAppearing]?.count} hits)` : '--'}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="rank-digit gold">{mostAppearing ?? '-'}</div>
                         </div>
 
-                        <div className="rank-card">
-                            <div className="rank-info">
-                                <span className="title">2nd Highest Appearing</span>
-                                <span className="sub">Rank #2 Frequency</span>
+                        <div className="rank-card rank-silver">
+                            <div className="rank-badge">🥈 #2 RUNNER UP</div>
+                            <div className="rank-content">
+                                <div className="rank-digit">{secondHighest ?? '-'}</div>
+                                <div className="rank-details">
+                                    <span className="rank-title">2nd Highest Digit</span>
+                                    <span className="rank-stat">
+                                        {secondHighest !== null ? `${digitStats[secondHighest]?.percentage}% (${digitStats[secondHighest]?.count} hits)` : '--'}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="rank-digit silver">{secondHighest ?? '-'}</div>
                         </div>
 
-                        <div className="rank-card">
-                            <div className="rank-info">
-                                <span className="title">Least Appearing Digit</span>
-                                <span className="sub">Coldest Digit</span>
+                        <div className="rank-card rank-cold">
+                            <div className="rank-badge">❄️ LEAST APPEARING</div>
+                            <div className="rank-content">
+                                <div className="rank-digit">{leastAppearing ?? '-'}</div>
+                                <div className="rank-details">
+                                    <span className="rank-title">Coldest Digit</span>
+                                    <span className="rank-stat">
+                                        {leastAppearing !== null ? `${digitStats[leastAppearing]?.percentage}% (${digitStats[leastAppearing]?.count} hits)` : '--'}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="rank-digit cold">{leastAppearing ?? '-'}</div>
                         </div>
                     </div>
 
-                    {/* Dual Strategy Breakdown: Even/Odd & Over/Under */}
+                    {/* ─── DUAL STRATEGY SUITE: EVEN/ODD + OVER/UNDER RECOVERY ─── */}
                     <div className="auto-x-eo__strategy-grid">
-                        {/* Even / Odd Smart AI Engine */}
-                        <div className="strategy-card">
+                        {/* Even / Odd AI Engine Card */}
+                        <div className="strategy-card eo-card">
                             <div className="card-head">
-                                <h3>
-                                    <Gauge size={18} /> Even / Odd Smart AI Engine
-                                </h3>
+                                <div className="head-title">
+                                    <Zap size={18} />
+                                    <h3>Even / Odd Smart AI Engine</h3>
+                                </div>
                                 <span className={`badge-indicator ${eoAnalysis.activeSignal !== 'NONE' ? 'ready' : 'waiting'}`}>
-                                    {eoAnalysis.activeSignal !== 'NONE' ? `SIGNAL: ${eoAnalysis.activeSignal}` : 'SCANNING MARKET'}
+                                    {eoAnalysis.activeSignal !== 'NONE' ? `SIGNAL: ${eoAnalysis.activeSignal}` : 'SCANNING'}
                                 </span>
                             </div>
 
                             <div className="eo-progress-section">
                                 <div className="eo-stats-row">
-                                    <span className="even-text">Even: {eoAnalysis.evenPct}% ({eoAnalysis.evenCount} hits)</span>
-                                    <span className="odd-text">Odd: {eoAnalysis.oddPct}% ({eoAnalysis.oddCount} hits)</span>
+                                    <span className="even-text">
+                                        Even: <strong>{eoAnalysis.evenPct}%</strong> ({eoAnalysis.evenCount} hits)
+                                    </span>
+                                    <span className="odd-text">
+                                        Odd: <strong>{eoAnalysis.oddPct}%</strong> ({eoAnalysis.oddCount} hits)
+                                    </span>
                                 </div>
                                 <div className="eo-progress-bar">
                                     <div className="fill-even" style={{ width: `${eoAnalysis.evenPct}%` }} />
@@ -1243,261 +1482,278 @@ const AutoXEo: React.FC = observer(() => {
                             </div>
 
                             <div className="conditions-list">
-                                <div className={`condition-item ${eoAnalysis.evenPct >= targetProbabilityThreshold || eoAnalysis.oddPct >= targetProbabilityThreshold ? 'passed' : 'pending'}`}>
+                                <div
+                                    className={`condition-item ${
+                                        eoAnalysis.evenPct >= targetProbabilityThreshold || eoAnalysis.oddPct >= targetProbabilityThreshold
+                                            ? 'passed'
+                                            : 'pending'
+                                    }`}
+                                >
                                     <CheckCircle2 size={14} />
-                                    <span>Target Probability &ge; {targetProbabilityThreshold}% &amp; Gaining Power</span>
+                                    <span>Target Probability &ge; {targetProbabilityThreshold}% &amp; Power Trending Up</span>
                                 </div>
-                                <div className={`condition-item ${eoAnalysis.last15EvenPassed || eoAnalysis.last15OddPassed ? 'passed' : 'pending'}`}>
+                                <div
+                                    className={`condition-item ${
+                                        eoAnalysis.last15EvenPassed || eoAnalysis.last15OddPassed ? 'passed' : 'pending'
+                                    }`}
+                                >
                                     <CheckCircle2 size={14} />
-                                    <span>Last 15 Ticks: &ge; 10 Digits Matching Direction</span>
+                                    <span>Last 15 Ticks Filter (&ge; 10 matches on signal side)</span>
                                 </div>
-                                <div className={`condition-item ${eoAnalysis.evenDigitsAbove10_5 >= 3 || eoAnalysis.oddDigitsAbove10_5 >= 3 ? 'passed' : 'pending'}`}>
+                                <div
+                                    className={`condition-item ${
+                                        eoAnalysis.evenDigitsAboveThreshold >= 3 || eoAnalysis.oddDigitsAboveThreshold >= 3
+                                            ? 'passed'
+                                            : 'pending'
+                                    }`}
+                                >
                                     <CheckCircle2 size={14} />
-                                    <span>&ge; 3 Target Digits &gt; 10.5% in Last 60 Ticks</span>
+                                    <span>Multi-Digit Strength (&ge; 3 digits &gt; 10.5% in last 60 ticks)</span>
                                 </div>
-                                <div className={`condition-item ${eoAnalysis.evenPatternTriggered || eoAnalysis.oddPatternTriggered ? 'passed' : 'pending'}`}>
+                                <div
+                                    className={`condition-item ${
+                                        botState === 'WAITING_TRIGGER' || botState === 'TRADING' ? 'passed' : 'pending'
+                                    }`}
+                                >
                                     <CheckCircle2 size={14} />
-                                    <span>Reversal Trigger: 2+ Opposite then 1 Target Tick</span>
+                                    <span>Consecutive Reversal Pattern (2+ Opposite Ticks &rarr; 1 Matching Tick)</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Over / Under Recovery Engine */}
-                        <div className="strategy-card">
+                        {/* Over / Under Recovery Suite Card */}
+                        <div className="strategy-card ou-card">
                             <div className="card-head">
-                                <h3>
-                                    <Shield size={18} /> Over / Under Recovery Suite
-                                </h3>
-                                <span className={`badge-indicator ${ouAnalysis.bias !== 'NEUTRAL' ? 'ready' : 'waiting'}`}>
-                                    {isInRecovery ? `IN RECOVERY: -${accumulatedLoss.toFixed(2)} ${currency}` : `BIAS: ${ouAnalysis.bias}`}
+                                <div className="head-title">
+                                    <ShieldCheck size={18} />
+                                    <h3>Single-Loss Over/Under Recovery Suite</h3>
+                                </div>
+                                <span className="badge-recovery-label">
+                                    {autoRecoveryMode ? '2.6x MARTINGALE ON' : 'MANUAL'}
                                 </span>
                             </div>
 
-                            <div className="ou-splits">
-                                <div className="split-row">
-                                    <div className="split-labels">
-                                        <span>Under 0-4: {ouAnalysis.under04Pct}% ({ouAnalysis.under04})</span>
-                                        <span>Over 5-9: {ouAnalysis.over59Pct}% ({ouAnalysis.over59})</span>
+                            <div className="recovery-metrics">
+                                <div className="ou-row">
+                                    <div className="ou-label">
+                                        <span>Under (0–4): <strong>{ouAnalysis.pct0to4}%</strong></span>
+                                        <span>Over (5–9): <strong>{ouAnalysis.pct5to9}%</strong></span>
                                     </div>
-                                    <div className="split-bar">
-                                        <div className="under-part" style={{ width: `${ouAnalysis.under04Pct}%` }} />
-                                        <div className="over-part" style={{ width: `${ouAnalysis.over59Pct}%` }} />
+                                    <div className="ou-bar">
+                                        <div className="bar-under" style={{ width: `${ouAnalysis.pct0to4}%` }} />
+                                        <div className="bar-over" style={{ width: `${ouAnalysis.pct5to9}%` }} />
                                     </div>
                                 </div>
 
-                                <div className="split-row">
-                                    <div className="split-labels">
-                                        <span>Under 0-5: {ouAnalysis.under05Pct}% ({ouAnalysis.under05})</span>
-                                        <span>Over 4-9: {ouAnalysis.over49Pct}% ({ouAnalysis.over49})</span>
+                                <div className="ou-row">
+                                    <div className="ou-label">
+                                        <span>Under (0–5): <strong>{ouAnalysis.pct0to5}%</strong></span>
+                                        <span>Over (4–9): <strong>{ouAnalysis.pct4to9}%</strong></span>
                                     </div>
-                                    <div className="split-bar">
-                                        <div className="under-part" style={{ width: `${ouAnalysis.under05Pct}%` }} />
-                                        <div className="over-part" style={{ width: `${ouAnalysis.over49Pct}%` }} />
+                                    <div className="ou-bar">
+                                        <div className="bar-under" style={{ width: `${ouAnalysis.pct0to5}%` }} />
+                                        <div className="bar-over" style={{ width: `${ouAnalysis.pct4to9}%` }} />
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="entry-digits-row">
-                                <div className="entry-digit-card glowing-under">
-                                    <div className="info">
-                                        <span>Under Entry Digit</span>
-                                        <span>Highest Under (0-4)</span>
+                                <div className="recovery-recommendation">
+                                    <div className="rec-box">
+                                        <span className="rec-label">Recommended Recovery:</span>
+                                        <span className="rec-val gold">{ouAnalysis.recommendedStrategy}</span>
                                     </div>
-                                    <div className="val-pill green">{ouAnalysis.highestUnderEntryDigit}</div>
-                                </div>
-
-                                <div className="entry-digit-card glowing-over">
-                                    <div className="info">
-                                        <span>Over Entry Digit</span>
-                                        <span>Highest Over (5-9)</span>
+                                    <div className="rec-box">
+                                        <span className="rec-label">Accumulated Loss:</span>
+                                        <span className="rec-val loss">
+                                            {accumulatedLoss > 0 ? `-${accumulatedLoss.toFixed(2)} ${currency}` : `0.00 ${currency}`}
+                                        </span>
                                     </div>
-                                    <div className="val-pill amber">{ouAnalysis.highestOverEntryDigit}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Controls & Configuration Panel */}
-                    <div className="auto-x-eo__controls-grid">
-                        <div className="control-field">
-                            <label>Initial Stake</label>
-                            <div className="input-box">
+                    {/* ─── TRADING PARAMETERS & RISK CONTROLS ─── */}
+                    <div className="auto-x-eo__controls-card">
+                        <div className="controls-header">
+                            <Sliders size={18} />
+                            <h3>Trading Parameters &amp; Risk Management</h3>
+                        </div>
+
+                        <div className="controls-grid">
+                            <div className="input-group">
+                                <label>
+                                    <DollarSign size={14} /> Initial Stake ({currency})
+                                </label>
                                 <input
                                     type="number"
-                                    step="0.1"
+                                    step="0.10"
+                                    min="0.35"
                                     value={initialStake}
+                                    disabled={botState !== 'IDLE'}
                                     onChange={e => setInitialStake(e.target.value)}
                                 />
-                                <span className="unit">{currency}</span>
                             </div>
-                        </div>
 
-                        <div className="control-field">
-                            <label>Take Profit</label>
-                            <div className="input-box">
-                                <input
-                                    type="number"
-                                    step="1"
-                                    value={takeProfit}
-                                    onChange={e => setTakeProfit(e.target.value)}
-                                />
-                                <span className="unit">{currency}</span>
-                            </div>
-                        </div>
-
-                        <div className="control-field">
-                            <label>Stop Loss</label>
-                            <div className="input-box">
-                                <input
-                                    type="number"
-                                    step="1"
-                                    value={stopLoss}
-                                    onChange={e => setStopLoss(e.target.value)}
-                                />
-                                <span className="unit">{currency}</span>
-                            </div>
-                        </div>
-
-                        <div className="control-field">
-                            <label>Martingale Multiplier</label>
-                            <div className="input-box">
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={martingale}
-                                    onChange={e => setMartingale(e.target.value)}
-                                />
-                                <span className="unit">x</span>
-                            </div>
-                        </div>
-
-                        <div className="control-field">
-                            <label>Min Target Probability</label>
-                            <div className="input-box">
+                            <div className="input-group">
+                                <label>
+                                    <Percent size={14} /> Min Probability Threshold (%)
+                                </label>
                                 <input
                                     type="number"
                                     min="50"
-                                    max="85"
+                                    max="80"
                                     value={targetProbabilityThreshold}
+                                    disabled={botState !== 'IDLE'}
                                     onChange={e => setTargetProbabilityThreshold(parseInt(e.target.value, 10) || 58)}
                                 />
-                                <span className="unit">%</span>
                             </div>
-                        </div>
 
-                        <div className="control-field">
-                            <label>Tick Duration</label>
-                            <div className="input-box">
-                                <select
-                                    value={tickDuration}
-                                    onChange={e => setTickDuration(e.target.value)}
-                                >
-                                    <option value="1">1 Tick</option>
-                                    <option value="2">2 Ticks</option>
-                                </select>
+                            <div className="input-group">
+                                <label>
+                                    <TrendingUp size={14} /> Take Profit ({currency})
+                                </label>
+                                <input
+                                    type="number"
+                                    step="1.00"
+                                    min="1.00"
+                                    value={takeProfit}
+                                    disabled={botState !== 'IDLE'}
+                                    onChange={e => setTakeProfit(e.target.value)}
+                                />
                             </div>
-                        </div>
 
-                        <div className="control-field">
-                            <label>Bulk Purchase Count</label>
-                            <div className="input-box">
+                            <div className="input-group">
+                                <label>
+                                    <TrendingDown size={14} /> Stop Loss ({currency})
+                                </label>
+                                <input
+                                    type="number"
+                                    step="5.00"
+                                    min="1.00"
+                                    value={stopLoss}
+                                    disabled={botState !== 'IDLE'}
+                                    onChange={e => setStopLoss(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="input-group">
+                                <label>
+                                    <Shield size={14} /> Martingale Multiplier
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    min="1.0"
+                                    value={martingaleMultiplier}
+                                    disabled={botState !== 'IDLE'}
+                                    onChange={e => setMartingaleMultiplier(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="input-group">
+                                <label>
+                                    <Clock size={14} /> Tick Duration
+                                </label>
                                 <input
                                     type="number"
                                     min="1"
-                                    max="6"
-                                    value={bulkCount}
-                                    onChange={e => setBulkCount(e.target.value)}
+                                    max="10"
+                                    value={tickDuration}
+                                    disabled={botState !== 'IDLE'}
+                                    onChange={e => setTickDuration(parseInt(e.target.value, 10) || 1)}
                                 />
-                                <span className="unit">trades</span>
                             </div>
-                        </div>
 
-                        <div className="control-field">
-                            <label>Auto Recovery Mode</label>
-                            <div className="input-box">
-                                <select
-                                    value={autoRecoveryMode ? 'ENABLED' : 'DISABLED'}
-                                    onChange={e => setAutoRecoveryMode(e.target.value === 'ENABLED')}
-                                >
-                                    <option value="ENABLED">Enabled (2.6x O/U)</option>
-                                    <option value="DISABLED">Disabled (Standard)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="control-field">
-                            <label>Recovery Strategy</label>
-                            <div className="input-box">
-                                <select
-                                    value={recoveryType}
-                                    onChange={e => setRecoveryType(e.target.value as any)}
-                                >
-                                    <option value="OVER_2_UNDER_8">Over 2 / Under 8</option>
-                                    <option value="OVER_3_UNDER_6">Over 3 / Under 6</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="control-field">
-                            <label>Auto-Switch Threshold</label>
-                            <div className="input-box">
+                            <div className="input-group">
+                                <label>
+                                    <Cpu size={14} /> Auto-Switch Threshold (Runs)
+                                </label>
                                 <input
                                     type="number"
-                                    min="3"
+                                    min="1"
                                     max="20"
-                                    value={maxRunsBeforeCheck}
-                                    onChange={e => setMaxRunsBeforeCheck(parseInt(e.target.value, 10) || 6)}
+                                    value={switchRunThreshold}
+                                    disabled={botState !== 'IDLE'}
+                                    onChange={e => setSwitchRunThreshold(parseInt(e.target.value, 10) || 5)}
                                 />
-                                <span className="unit">runs</span>
+                            </div>
+
+                            <div className="input-group checkbox-group">
+                                <label className="chk-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoRecoveryMode}
+                                        onChange={e => setAutoRecoveryMode(e.target.checked)}
+                                    />
+                                    <span>Enable Single-Loss Over/Under Recovery</span>
+                                </label>
                             </div>
                         </div>
                     </div>
 
-                    {/* Live Trade Logs */}
+                    {/* ─── LIVE TRADE LOGS TABLE ─── */}
                     <div className="auto-x-eo__logs-card">
                         <div className="logs-header">
-                            <h3>Real-Time Trade Stream</h3>
-                            <span className="badge-count">{tradeLog.length} Records</span>
+                            <Activity size={18} />
+                            <h3>Session Trade Activity &amp; Settlement Log</h3>
+                            <span className="logs-count">{tradeLogs.length} Records</span>
                         </div>
 
-                        <div className="logs-table-wrap">
-                            {tradeLog.length > 0 ? (
-                                <table>
+                        <div className="logs-table-wrapper">
+                            {tradeLogs.length > 0 ? (
+                                <table className="logs-table">
                                     <thead>
                                         <tr>
-                                            <th>Time</th>
-                                            <th>Market</th>
-                                            <th>Strategy</th>
-                                            <th>Contract</th>
-                                            <th>Barrier</th>
-                                            <th>Stake</th>
-                                            <th>Result</th>
-                                            <th>Profit</th>
+                                            <th>TIME</th>
+                                            <th>MARKET</th>
+                                            <th>STRATEGY</th>
+                                            <th>CONTRACT</th>
+                                            <th>BARRIER</th>
+                                            <th>STAKE</th>
+                                            <th>STATUS</th>
+                                            <th>PROFIT</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {tradeLog.map(item => (
-                                            <tr key={item.id}>
-                                                <td>{item.time}</td>
-                                                <td>{item.market}</td>
-                                                <td>{item.strategy}</td>
-                                                <td>{item.contractType}</td>
-                                                <td>{item.prediction !== undefined ? item.prediction : '-'}</td>
-                                                <td>{item.stake.toFixed(2)} {currency}</td>
+                                        {tradeLogs.map(log => (
+                                            <tr key={log.id}>
+                                                <td>{log.timestamp}</td>
                                                 <td>
-                                                    <span className={`badge-${item.result.toLowerCase()}`}>
-                                                        {item.result}
+                                                    <strong>{log.market}</strong>
+                                                </td>
+                                                <td>
+                                                    <span className="pill-strategy">{log.strategy}</span>
+                                                </td>
+                                                <td>
+                                                    <span className={`pill-type ${log.contractType.toLowerCase()}`}>
+                                                        {log.contractType}
                                                     </span>
                                                 </td>
-                                                <td style={{ color: item.profit >= 0 ? '#10b981' : '#ef4444', fontWeight: 700 }}>
-                                                    {item.profit !== 0 ? `${item.profit > 0 ? '+' : ''}${item.profit.toFixed(2)} ${currency}` : '-'}
+                                                <td>{log.prediction !== undefined ? log.prediction : '-'}</td>
+                                                <td>
+                                                    {log.stake.toFixed(2)} {currency}
+                                                </td>
+                                                <td>
+                                                    <span className={`pill-result ${log.result.toLowerCase()}`}>
+                                                        {log.result}
+                                                    </span>
+                                                </td>
+                                                <td className={log.profit >= 0 ? 'profit' : 'loss'}>
+                                                    {log.result === 'PENDING'
+                                                        ? 'Pending...'
+                                                        : log.profit >= 0
+                                                        ? `+${log.profit.toFixed(2)} ${currency}`
+                                                        : `${log.profit.toFixed(2)} ${currency}`}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             ) : (
-                                <div className="no-logs">No trades executed yet. Click &quot;START AUTO TRADER&quot; to begin.</div>
+                                <div className="logs-empty">
+                                    <Clock size={20} />
+                                    <span>No trades executed in this session yet. Click START to begin.</span>
+                                </div>
                             )}
                         </div>
                     </div>
