@@ -1,4 +1,4 @@
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 import { api_base } from '@/external/bot-skeleton';
 import RootStore from './root-store';
 import { getLastDigitFromQuote } from '@/utils/market-data';
@@ -273,9 +273,11 @@ export default class ScannerStore implements IScannerStore {
 
     // Subscribe to WebSocket Connection Status
     connectionStatus$.subscribe((status) => {
-      if (status === 'opened') this.connection_status = 'connected';
-      else if (status === 'closed') this.connection_status = 'disconnected';
-      else this.connection_status = 'connecting';
+      runInAction(() => {
+        if (status === 'opened') this.connection_status = 'connected';
+        else if (status === 'closed') this.connection_status = 'disconnected';
+        else this.connection_status = 'connecting';
+      });
     });
 
     this.setupAutomationListeners();

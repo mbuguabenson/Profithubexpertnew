@@ -8,6 +8,8 @@ import { useStore } from '@/hooks/useStore';
 import { isDemoAccount } from '@/utils/account-helpers';
 import { Localize, localize } from '@deriv-com/translations';
 import { DerivAccountWalletService, DerivWallet } from '@/services/deriv-account-wallet.service';
+import { getSocketURL } from '@/components/shared/utils/config/config';
+import { getAccountsList } from '@/utils/token-bridge';
 import { TAccountSwitcher } from './common/types';
 import AccountInfoWrapper from './account-info-wrapper';
 const realAccountImg = '/real-account.jpg';
@@ -235,31 +237,48 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         const accountsList = getAccountsList();
                         const demoToken = currentLoginId ? accountsList[currentLoginId] : null;
                         if (demoToken && !demoToken.startsWith('ory_at_')) {
-                            const { DerivClient } = await import('@/pages/copy-trading/copy-trading-manager');
-                            const standalone = new DerivClient();
-                            await standalone.connectAndAuthorize(demoToken);
-                            if (standalone.ws && standalone.ws.readyState === WebSocket.OPEN) {
-                                await new Promise<void>((resolve, reject) => {
-                                    const handler = (event: MessageEvent) => {
-                                        try {
-                                            const data = JSON.parse(event.data);
-                                            if (data.msg_type === 'topup_virtual') {
-                                                standalone.ws?.removeEventListener('message', handler);
-                                                if (data.error) {
-                                                    reject(new Error(data.error.message));
-                                                } else {
-                                                    resolve();
-                                                }
+                            const wsUrl = getSocketURL();
+                            const ws = new WebSocket(wsUrl);
+                            await new Promise<void>((resolve, reject) => {
+                                const timeout = setTimeout(() => {
+                                    ws.close();
+                                    reject(new Error('Topup timeout'));
+                                }, 8000);
+
+                                ws.onopen = () => {
+                                    ws.send(JSON.stringify({ authorize: demoToken }));
+                                };
+
+                                ws.onmessage = (event) => {
+                                    try {
+                                        const data = JSON.parse(event.data);
+                                        if (data.msg_type === 'authorize') {
+                                            if (data.error) {
+                                                clearTimeout(timeout);
+                                                ws.close();
+                                                reject(new Error(data.error.message));
+                                            } else {
+                                                ws.send(JSON.stringify({ topup_virtual: 1 }));
                                             }
-                                        } catch {}
-                                    };
-                                    standalone.ws?.addEventListener('message', handler);
-                                    standalone.ws?.send(JSON.stringify({ topup_virtual: 1 }));
-                                    setTimeout(() => reject(new Error('Topup timeout')), 8000);
-                                });
-                                standalone.disconnect();
-                                success = true;
-                            }
+                                        } else if (data.msg_type === 'topup_virtual') {
+                                            clearTimeout(timeout);
+                                            ws.close();
+                                            if (data.error) {
+                                                reject(new Error(data.error.message));
+                                            } else {
+                                                resolve();
+                                            }
+                                        }
+                                    } catch {}
+                                };
+
+                                ws.onerror = (err) => {
+                                    clearTimeout(timeout);
+                                    ws.close();
+                                    reject(err);
+                                };
+                            });
+                            success = true;
                         }
                     } catch (standaloneErr: any) {
                         if (!errorMessage) errorMessage = standaloneErr?.message;
