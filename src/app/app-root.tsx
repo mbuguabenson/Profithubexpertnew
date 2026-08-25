@@ -7,6 +7,16 @@ import { useStore } from '@/hooks/useStore';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import { sanitizeAccountsList } from '@/utils/token-bridge';
 import { getBrandLabel, getBrandWebsiteName } from '@/components/shared/utils/brand/brand';
+import {
+    Activity,
+    CheckCircle2,
+    Cpu,
+    Lock,
+    Radio,
+    ShieldCheck,
+    Sparkles,
+    Zap,
+} from 'lucide-react';
 import './app-root.scss';
 
 const AppContent = lazy(() => import('./app-content'));
@@ -50,22 +60,22 @@ const ErrorComponentWrapper = observer(() => {
 });
 
 const INIT_STEPS = [
-    { label: 'Connecting to Deriv WebSocket', icon: '🔌' },
-    { label: 'Loading AI Trading Engine', icon: '🤖' },
-    { label: 'Authenticating Secure Session', icon: '🔒' },
-    { label: 'Calibrating Market Scanner', icon: '📊' },
-    { label: 'Initializing Execution Pipeline', icon: '⚡' },
-    { label: 'Syncing Live Ticks & Orderbook', icon: '📈' },
-    { label: 'Preparing Smart Signals', icon: '🎯' },
-    { label: 'Finalizing Trading Workspace', icon: '🚀' },
+    { label: 'Connecting to Deriv WebSocket Gateway', icon: <Radio size={16} className="text-cyan" /> },
+    { label: 'Loading AI Trading & Parity Engines', icon: <Zap size={16} className="text-gold" /> },
+    { label: 'Authenticating Secure Client Session', icon: <Lock size={16} className="text-emerald" /> },
+    { label: 'Calibrating Multi-Synthetic Market Scanner', icon: <Activity size={16} className="text-purple" /> },
+    { label: 'Initializing Neural Execution Pipeline', icon: <Cpu size={16} className="text-blue" /> },
+    { label: 'Syncing Real-Time Ticks & Orderbook', icon: <Sparkles size={16} className="text-cyan" /> },
+    { label: 'Finalizing Trading Workspace Environment', icon: <ShieldCheck size={16} className="text-emerald" /> },
 ];
 
 const FRIENDLY_TIPS = [
     '💡 Tip: Set up your Risk Management rules to protect your profit targets automatically.',
-    '🚀 Tip: Bulk trading allows simultaneous contract placement for maximum strategy efficiency.',
-    '⚡ Tip: Your connection communicates directly with Deriv WebSockets for ultra-low latency.',
+    '🚀 Tip: AUTO X E/O continuously scans synthetic indices for the highest probability parity setups.',
+    '⚡ Tip: Your connection communicates directly with Deriv WebSockets for sub-10ms latency.',
     '🎯 Tip: Combine Digit & Over/Under strategies with active scanners for optimal entry points.',
-    '🛡️ Tip: You can pause trading anytime and your active contracts will complete safely.',
+    '🛡️ Tip: You can pause automated trading anytime and your active contracts will complete safely.',
+    '📊 Tip: Check the Live Digit Wave Stream to observe real-time tick velocity and trends.',
 ];
 
 const WelcomeScreen = ({
@@ -87,7 +97,7 @@ const WelcomeScreen = ({
     useEffect(() => {
         const stepTimer = window.setInterval(() => {
             setActiveStep(prev => (prev + 1) % INIT_STEPS.length);
-        }, 1400);
+        }, 1300);
         return () => window.clearInterval(stepTimer);
     }, []);
 
@@ -95,7 +105,7 @@ const WelcomeScreen = ({
     useEffect(() => {
         const tipTimer = window.setInterval(() => {
             setTipIndex(prev => (prev + 1) % FRIENDLY_TIPS.length);
-        }, 3200);
+        }, 3000);
         return () => window.clearInterval(tipTimer);
     }, []);
 
@@ -104,8 +114,8 @@ const WelcomeScreen = ({
         if (!isComplete) return;
         const exitTimer = window.setTimeout(() => {
             setExiting(true);
-            window.setTimeout(onFinished, 700);
-        }, 100);
+            window.setTimeout(onFinished, 650);
+        }, 120);
         return () => window.clearTimeout(exitTimer);
     }, [isComplete, onFinished]);
 
@@ -114,37 +124,37 @@ const WelcomeScreen = ({
 
     return (
         <div className={`welcome-screen ${exiting ? 'welcome-screen--exit' : 'welcome-screen--visible'}`}>
-            {/* Ambient Animated Gradient Orbs */}
+            {/* Ambient Background Aurora Orbs */}
+            <div className="ws-bg-orb ws-bg-orb--gold" />
             <div className="ws-bg-orb ws-bg-orb--cyan" />
             <div className="ws-bg-orb ws-bg-orb--purple" />
-            <div className="ws-bg-orb ws-bg-orb--emerald" />
 
-            {/* Subtle Grid Overlay */}
+            {/* High-Tech Grid Pattern Overlay */}
             <div className="ws-grid-overlay" aria-hidden="true" />
 
-            {/* Main Glassmorphic Neumorphism Container */}
+            {/* Main Holographic Glassmorphic Card */}
             <div className="welcome-screen__card">
 
-                {/* Header Badge */}
-                <div className="ws-badge-header">
-                    <span className="ws-badge-dot" />
-                    <span className="ws-badge-text">PRO TRADING ENVIRONMENT</span>
-                    <span className="ws-badge-pill">v3.2 PRO</span>
+                {/* Top Status HUD Bar */}
+                <div className="ws-hud-bar">
+                    <div className="hud-status">
+                        <span className="hud-dot" />
+                        <span className="hud-text">QUANTUM NODE ACTIVE</span>
+                    </div>
+                    <div className="hud-version">
+                        <Sparkles size={12} className="text-gold" />
+                        <span>v3.5 PRO SUITE</span>
+                    </div>
                 </div>
 
-                {/* Central Brand Orb */}
+                {/* Central Holographic Gyro-Core & Brand */}
                 <div className="ws-brand-section">
-                    <div className="ws-orb-container">
-                        <div className="ws-glow-ring ws-glow-ring--outer" />
-                        <div className="ws-glow-ring ws-glow-ring--inner" />
-                        <div className="ws-brand-core">
-                            <img
-                                src="/logo_icon.svg"
-                                alt={brandLabel}
-                                className="ws-brand-logo"
-                                onError={e => { e.currentTarget.style.display = 'none'; }}
-                            />
-                            <span className="ws-brand-icon-fallback">⚡</span>
+                    <div className="ws-gyro-orb">
+                        <div className="gyro-ring gyro-ring--1" />
+                        <div className="gyro-ring gyro-ring--2" />
+                        <div className="gyro-ring gyro-ring--3" />
+                        <div className="gyro-core">
+                            <Zap size={32} className="core-icon text-gold" />
                         </div>
                     </div>
 
@@ -153,41 +163,41 @@ const WelcomeScreen = ({
                             Welcome to <span className="ws-brand-gradient">{brandLabel}</span>
                         </h1>
                         <p className="ws-sub-heading">
-                            High-Performance Automated Trading Platform • {deploymentName}
+                            Institutional Algorithmic Trading Platform • {deploymentName}
                         </p>
                     </div>
                 </div>
 
-                {/* 3 High-Impact Feature Badges */}
+                {/* High-Performance Architecture Badges */}
                 <div className="ws-features-grid">
                     <div className="ws-feature-chip">
-                        <span className="chip-icon">⚡</span>
+                        <Zap size={16} className="text-gold" />
                         <div className="chip-text">
-                            <span className="chip-title">Ultra-Fast Engine</span>
-                            <span className="chip-sub">Direct WS API</span>
+                            <span className="chip-title">&lt; 10ms Latency</span>
+                            <span className="chip-sub">Direct WS Gateway</span>
                         </div>
                     </div>
                     <div className="ws-feature-chip">
-                        <span className="chip-icon">🛡️</span>
+                        <ShieldCheck size={16} className="text-emerald" />
                         <div className="chip-text">
-                            <span className="chip-title">Risk Guard</span>
-                            <span className="chip-sub">Smart Capital Control</span>
+                            <span className="chip-title">Risk Control</span>
+                            <span className="chip-sub">Automated Guardrails</span>
                         </div>
                     </div>
                     <div className="ws-feature-chip">
-                        <span className="chip-icon">🤖</span>
+                        <Cpu size={16} className="text-cyan" />
                         <div className="chip-text">
-                            <span className="chip-title">AI Automation</span>
+                            <span className="chip-title">Neural Engine</span>
                             <span className="chip-sub">Real-Time Signals</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Progress Visualizer */}
+                {/* Dynamic Progress Telemetry Section */}
                 <div className="ws-progress-section">
                     <div className="ws-progress-header">
                         <div className="ws-step-indicator">
-                            <span className="step-icon">{currentStepObj.icon}</span>
+                            <span className="step-icon-wrap">{currentStepObj.icon}</span>
                             <span className="step-label">{statusMessage || currentStepObj.label}</span>
                         </div>
                         <span className="ws-percent-text">{roundedProgress}%</span>
@@ -199,7 +209,7 @@ const WelcomeScreen = ({
                         </div>
                     </div>
 
-                    {/* Step Dots */}
+                    {/* Step Progression Nodes */}
                     <div className="ws-dots-bar">
                         {INIT_STEPS.map((step, idx) => {
                             const isPast = idx < activeStep;
@@ -209,24 +219,28 @@ const WelcomeScreen = ({
                                     key={idx}
                                     className={`ws-dot-item ${isCurrent ? 'ws-dot-item--active' : ''} ${isPast ? 'ws-dot-item--done' : ''}`}
                                     title={step.label}
-                                />
+                                >
+                                    {isPast && <CheckCircle2 size={8} className="dot-check-icon" />}
+                                </div>
                             );
                         })}
                     </div>
                 </div>
 
-                {/* Friendly Tip Box */}
+                {/* Pro Trader Wisdom Tip Box */}
                 <div className="ws-tip-box">
                     <span className="ws-tip-content">{FRIENDLY_TIPS[tipIndex]}</span>
                 </div>
 
-                {/* Footer Info */}
+                {/* Futuristic Protocol Footer */}
                 <div className="ws-footer-bar">
-                    <span>🟢 WebSocket Active</span>
+                    <span className="footer-item">
+                        <span className="dot-green" /> WebSocket Active
+                    </span>
                     <span className="dot-sep">•</span>
-                    <span>🔒 SSL Encrypted</span>
+                    <span className="footer-item">🔒 256-Bit SSL Encrypted</span>
                     <span className="dot-sep">•</span>
-                    <span>Ready for Trading</span>
+                    <span className="footer-item">⚡ Deriv Node Connected</span>
                 </div>
             </div>
         </div>
@@ -265,7 +279,7 @@ const AppRoot = () => {
     useEffect(() => {
         statusIntervalRef.current = window.setInterval(() => {
             setStatusIndex(prev => (prev + 1) % INIT_STEPS.length);
-        }, 1800);
+        }, 1600);
         return () => {
             if (statusIntervalRef.current) {
                 window.clearInterval(statusIntervalRef.current);
@@ -278,7 +292,7 @@ const AppRoot = () => {
         const step = () => {
             const current = progressRef.current;
             const target = targetProgressRef.current;
-            const increment = isReducedMotion ? 2 : Math.max(0.85, (target - current) * 0.14);
+            const increment = isReducedMotion ? 2 : Math.max(0.9, (target - current) * 0.15);
             const next = Math.min(100, current + increment);
             progressRef.current = next;
             setProgress(next);
@@ -294,7 +308,7 @@ const AppRoot = () => {
         if (is_api_initialized) {
             targetProgressRef.current = 100;
         } else {
-            targetProgressRef.current = 65;
+            targetProgressRef.current = 70;
         }
     }, [is_api_initialized]);
 

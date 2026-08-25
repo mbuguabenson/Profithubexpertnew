@@ -1,18 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ PROFITHUB EXPERT PRO — MODERN FRIENDLY WELCOME SCREEN STYLES
+// ✦ PROFITHUB EXPERT PRO — FUTURISTIC WELCOME LOADING SCREEN
 // ═══════════════════════════════════════════════════════════════
 
-// Design System Tokens
-$bg-main:       #080c14;
-$card-bg:       rgba(15, 23, 42, 0.75);
-$card-border:   rgba(255, 255, 255, 0.08);
-$cyan-glow:     #06b6d4;
-$purple-glow:   #8b5cf6;
-$emerald-glow:  #10b981;
-$amber-glow:    #f59e0b;
-$text-bright:   #f8fafc;
+$bg-space:      #050811;
+$card-glass:    rgba(15, 23, 42, 0.82);
+$card-border:   rgba(255, 255, 255, 0.1);
+$gold-neon:     #f5c542;
+$cyan-neon:     #00d2ff;
+$purple-neon:   #a855f7;
+$emerald-neon:  #10b981;
+$blue-neon:     #38bdf8;
+$text-light:    #f8fafc;
 $text-sub:      #94a3b8;
 $text-muted:    #64748b;
 
@@ -32,33 +32,33 @@ $text-muted:    #64748b;
     position: fixed;
     inset: 0;
     z-index: 99999;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(14px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
 
     .error-wrapper-modal {
-        background: #111827;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #0f172a;
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 20px;
         padding: 32px;
         max-width: 440px;
         width: 100%;
         text-align: center;
         color: #fff;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 
         .error-wrapper-title {
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 1.25rem;
+            font-weight: 800;
             margin-bottom: 12px;
             color: #f8fafc;
         }
 
         .error-wrapper-msg {
-            font-size: 14px;
+            font-size: 0.9rem;
             color: #94a3b8;
             margin-bottom: 24px;
             line-height: 1.6;
@@ -72,16 +72,16 @@ $text-muted:    #64748b;
             .btn-primary {
                 padding: 10px 20px;
                 border-radius: 10px;
-                background: linear-gradient(135deg, #2563eb, #3b82f6);
-                color: #fff;
-                font-weight: 600;
+                background: linear-gradient(135deg, #00d2ff, #0284c7);
+                color: #0f172a;
+                font-weight: 800;
                 border: none;
                 cursor: pointer;
                 transition: transform 0.2s ease, box-shadow 0.2s ease;
 
                 &:hover {
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
                 }
             }
 
@@ -90,13 +90,13 @@ $text-muted:    #64748b;
                 border-radius: 10px;
                 background: rgba(255, 255, 255, 0.08);
                 color: #94a3b8;
-                font-weight: 600;
+                font-weight: 700;
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 cursor: pointer;
-                transition: background 0.2s ease;
+                transition: all 0.2s ease;
 
                 &:hover {
-                    background: rgba(255, 255, 255, 0.14);
+                    background: rgba(255, 255, 255, 0.15);
                     color: #fff;
                 }
             }
@@ -112,84 +112,85 @@ $text-muted:    #64748b;
     inset: 0;
     z-index: 99999;
     overflow: hidden;
-    background: $bg-main;
-    color: $text-bright;
+    background: $bg-space;
+    color: $text-light;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     padding: 20px;
 }
 
 .welcome-screen--visible {
     opacity: 1;
     transform: scale(1);
-    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .welcome-screen--exit {
     opacity: 0;
-    transform: scale(1.05);
-    filter: blur(10px);
+    transform: scale(1.08) translateY(-10px);
+    filter: blur(16px);
     pointer-events: none;
-    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), filter 0.7s ease, transform 0.7s ease;
+    transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1), filter 0.65s ease, transform 0.65s ease;
 }
 
-// ─── Ambient Glow Orbs ─────────────────────────────────────────
-.ws-bg-orb {
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    filter: blur(120px);
-
-    &--cyan {
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, rgba(6, 182, 212, 0.22) 0%, transparent 70%);
-        top: -120px;
-        left: 50%;
-        transform: translateX(-50%);
-        animation: orb-pulse 10s ease-in-out infinite alternate;
-    }
-
-    &--purple {
-        width: 450px;
-        height: 450px;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.18) 0%, transparent 70%);
-        bottom: -100px;
-        left: -80px;
-        animation: orb-pulse 13s ease-in-out infinite alternate-reverse;
-    }
-
-    &--emerald {
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
-        bottom: -80px;
-        right: -60px;
-        animation: orb-pulse 15s ease-in-out infinite alternate;
-    }
-}
-
-@keyframes orb-pulse {
-    0%   { transform: translateY(0) scale(1); opacity: 0.8; }
-    50%  { transform: translateY(-20px) scale(1.1); opacity: 1; }
-    100% { transform: translateY(10px) scale(0.95); opacity: 0.7; }
-}
-
-// ─── Grid Overlay ──────────────────────────────────────────────
+// ─── Cyber Grid Overlay ─────────────────────────────────────────
 .ws-grid-overlay {
     position: absolute;
     inset: 0;
     background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
+        linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
     pointer-events: none;
 }
 
+// ─── Ambient Glow Aurora Orbs ──────────────────────────────────
+.ws-bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(130px);
+
+    &--gold {
+        width: 550px;
+        height: 550px;
+        background: radial-gradient(circle, rgba(245, 197, 66, 0.16) 0%, transparent 70%);
+        top: -120px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: aurora-float 9s ease-in-out infinite alternate;
+    }
+
+    &--cyan {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(0, 210, 255, 0.18) 0%, transparent 70%);
+        bottom: -100px;
+        left: -100px;
+        animation: aurora-float 12s ease-in-out infinite alternate-reverse;
+    }
+
+    &--purple {
+        width: 480px;
+        height: 480px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.16) 0%, transparent 70%);
+        bottom: -80px;
+        right: -80px;
+        animation: aurora-float 14s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes aurora-float {
+    0%   { transform: translateY(0) scale(1); opacity: 0.7; }
+    50%  { transform: translateY(-30px) scale(1.12); opacity: 1; }
+    100% { transform: translateY(20px) scale(0.92); opacity: 0.65; }
+}
+
 // ═══════════════════════════════════════════════════════════════
-// ✦ WELCOME CARD (GLASSMORPHIC NEUMORPHISM HYBRID)
+// ✦ HOLOGRAPHIC WELCOME CARD
 // ═══════════════════════════════════════════════════════════════
 .welcome-screen__card {
     position: relative;
@@ -198,175 +199,189 @@ $text-muted:    #64748b;
     flex-direction: column;
     align-items: center;
     width: min(100%, 540px);
-    padding: 36px 32px 28px;
+    padding: 36px 34px 28px;
     border-radius: 28px;
-    background: $card-bg;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: $card-glass;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border: 1px solid $card-border;
     box-shadow: 
-        0 20px 50px rgba(0, 0, 0, 0.6),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-        0 0 40px rgba(6, 182, 212, 0.08);
-    gap: 22px;
+        0 25px 60px rgba(0, 0, 0, 0.75),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 0 50px rgba(0, 210, 255, 0.1);
+    gap: 20px;
     text-align: center;
-    animation: card-appear 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: card-reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes card-appear {
-    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+@keyframes card-reveal {
+    from { opacity: 0; transform: translateY(28px) scale(0.95); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-// ─── Badge Header ──────────────────────────────────────────────
-.ws-badge-header {
-    display: inline-flex;
+// ─── Top Status HUD Bar ─────────────────────────────────────────
+.ws-hud-bar {
+    display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 5px 14px;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 14px;
     border-radius: 9999px;
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(6, 182, 212, 0.25);
-    box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+    background: rgba(10, 15, 29, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
-    .ws-badge-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: $emerald-glow;
-        box-shadow: 0 0 10px $emerald-glow;
-        animation: dot-glow 1.5s ease-in-out infinite alternate;
+    .hud-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .hud-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: $emerald-neon;
+            box-shadow: 0 0 10px $emerald-neon;
+            animation: dot-pulse 1.5s infinite;
+        }
+
+        .hud-text {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            color: #e2e8f0;
+            font-family: 'JetBrains Mono', monospace;
+        }
     }
 
-    .ws-badge-text {
+    .hud-version {
+        display: flex;
+        align-items: center;
+        gap: 5px;
         font-size: 0.65rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: #e2e8f0;
-    }
-
-    .ws-badge-pill {
-        font-size: 0.6rem;
         font-weight: 800;
-        padding: 2px 6px;
-        border-radius: 4px;
-        background: linear-gradient(135deg, $cyan-glow, $purple-glow);
-        color: #fff;
+        letter-spacing: 0.5px;
+        color: $gold-neon;
     }
 }
 
-@keyframes dot-glow {
-    0%   { opacity: 0.5; transform: scale(0.85); }
-    100% { opacity: 1; transform: scale(1.15); }
+@keyframes dot-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.2); }
 }
 
-// ─── Brand & Logo Section ──────────────────────────────────────
+// ─── Central Gyro Holographic Core ──────────────────────────────
 .ws-brand-section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
     width: 100%;
 }
 
-.ws-orb-container {
+.ws-gyro-orb {
     position: relative;
-    width: 90px;
-    height: 90px;
+    width: 96px;
+    height: 96px;
     display: grid;
     place-items: center;
-}
 
-.ws-glow-ring {
-    position: absolute;
-    border-radius: 50%;
+    .gyro-ring {
+        position: absolute;
+        border-radius: 50%;
 
-    &--outer {
-        inset: -6px;
-        border: 2px solid transparent;
-        border-top-color: $cyan-glow;
-        border-right-color: rgba(139, 92, 246, 0.4);
-        animation: spin-ring 6s linear infinite;
+        &--1 {
+            inset: -4px;
+            border: 2px solid transparent;
+            border-top-color: $cyan-neon;
+            border-right-color: rgba(0, 210, 255, 0.2);
+            animation: gyro-spin 5s linear infinite;
+        }
+
+        &--2 {
+            inset: -12px;
+            border: 1.5px dashed rgba(245, 197, 66, 0.4);
+            animation: gyro-spin 10s linear infinite reverse;
+        }
+
+        &--3 {
+            inset: -20px;
+            border: 1px solid transparent;
+            border-bottom-color: $purple-neon;
+            border-left-color: rgba(168, 85, 247, 0.2);
+            animation: gyro-spin 14s linear infinite;
+        }
     }
 
-    &--inner {
-        inset: -14px;
-        border: 1.5px dashed rgba(16, 185, 129, 0.35);
-        animation: spin-ring 12s linear infinite reverse;
+    .gyro-core {
+        width: 78px;
+        height: 78px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #1e293b 20%, #0a0f1d 100%);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: grid;
+        place-items: center;
+        box-shadow: 
+            0 10px 30px rgba(0, 0, 0, 0.6),
+            0 0 35px rgba(245, 197, 66, 0.25),
+            inset 0 0 15px rgba(255, 255, 255, 0.08);
+
+        .core-icon {
+            filter: drop-shadow(0 0 12px rgba(245, 197, 66, 0.7));
+            animation: core-breathe 2s ease-in-out infinite alternate;
+        }
     }
 }
 
-@keyframes spin-ring {
+@keyframes gyro-spin {
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
 }
 
-.ws-brand-core {
-    width: 74px;
-    height: 74px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    display: grid;
-    place-items: center;
-    box-shadow: 
-        0 10px 25px rgba(0, 0, 0, 0.5),
-        0 0 30px rgba(6, 182, 212, 0.25),
-        inset 0 0 15px rgba(255, 255, 255, 0.05);
-
-    .ws-brand-logo {
-        width: 36px;
-        height: 36px;
-        object-fit: contain;
-        filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
-    }
-
-    .ws-brand-icon-fallback {
-        font-size: 32px;
-    }
+@keyframes core-breathe {
+    0% { transform: scale(0.92); opacity: 0.85; }
+    100% { transform: scale(1.08); opacity: 1; }
 }
 
 .ws-title-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
+
+    .ws-main-heading {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: clamp(1.45rem, 3.8vw, 1.95rem);
+        font-weight: 800;
+        color: $text-light;
+        margin: 0;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+    }
+
+    .ws-brand-gradient {
+        background: linear-gradient(135deg, #ffffff 20%, #f5c542 60%, #00d2ff 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-size: 200% 100%;
+        animation: text-shine 4s ease infinite;
+    }
+
+    .ws-sub-heading {
+        font-size: 0.82rem;
+        color: $text-sub;
+        margin: 0;
+        font-weight: 500;
+    }
 }
 
-.ws-main-heading {
-    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-    font-size: clamp(1.4rem, 3.8vw, 1.9rem);
-    font-weight: 700;
-    color: $text-bright;
-    margin: 0;
-    letter-spacing: -0.02em;
-    line-height: 1.25;
-}
-
-.ws-brand-gradient {
-    background: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #34d399 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    background-size: 200% 100%;
-    animation: gradient-flow 4s ease infinite;
-}
-
-@keyframes gradient-flow {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
+@keyframes text-shine {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-.ws-sub-heading {
-    font-size: 0.82rem;
-    color: $text-sub;
-    margin: 0;
-    font-weight: 500;
-}
-
-// ─── Feature Chips Grid ────────────────────────────────────────
+// ─── Architecture Feature Chips ────────────────────────────────
 .ws-features-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -378,21 +393,17 @@ $text-muted:    #64748b;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     border-radius: 12px;
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     text-align: left;
-    transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    transition: all 0.25s ease;
 
     &:hover {
         transform: translateY(-2px);
         background: rgba(30, 41, 59, 0.8);
-        border-color: rgba(6, 182, 212, 0.3);
-    }
-
-    .chip-icon {
-        font-size: 16px;
+        border-color: rgba(0, 210, 255, 0.3);
     }
 
     .chip-text {
@@ -401,16 +412,16 @@ $text-muted:    #64748b;
         overflow: hidden;
 
         .chip-title {
-            font-size: 0.68rem;
-            font-weight: 700;
-            color: $text-bright;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: $text-light;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .chip-sub {
-            font-size: 0.58rem;
+            font-size: 0.6rem;
             color: $text-muted;
             white-space: nowrap;
             overflow: hidden;
@@ -419,7 +430,7 @@ $text-muted:    #64748b;
     }
 }
 
-// ─── Progress Section ──────────────────────────────────────────
+// ─── Progress Telemetry Section ────────────────────────────────
 .ws-progress-section {
     display: flex;
     flex-direction: column;
@@ -436,26 +447,27 @@ $text-muted:    #64748b;
     .ws-step-indicator {
         display: flex;
         align-items: center;
-        gap: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: $text-bright;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: $text-light;
 
-        .step-icon {
-            font-size: 14px;
+        .step-icon-wrap {
+            display: flex;
+            align-items: center;
         }
 
         .step-label {
-            color: rgba(248, 250, 252, 0.9);
+            color: rgba(248, 250, 252, 0.95);
         }
     }
 
     .ws-percent-text {
-        font-family: 'Space Grotesk', sans-serif;
+        font-family: 'JetBrains Mono', 'Space Grotesk', monospace;
         font-size: 0.95rem;
-        font-weight: 700;
-        color: $cyan-glow;
-        text-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+        font-weight: 800;
+        color: $cyan-neon;
+        text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
     }
 }
 
@@ -463,25 +475,25 @@ $text-muted:    #64748b;
     width: 100%;
     height: 8px;
     border-radius: 9999px;
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(10, 15, 29, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     overflow: hidden;
     position: relative;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .ws-progress-fill {
     height: 100%;
     border-radius: 9999px;
-    background: linear-gradient(90deg, $cyan-glow 0%, $purple-glow 50%, $emerald-glow 100%);
+    background: linear-gradient(90deg, #00d2ff 0%, #a855f7 50%, #f5c542 100%);
     background-size: 200% 100%;
-    animation: gradient-sweep 2.5s linear infinite;
+    animation: progress-flow 2.5s linear infinite;
     transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+    box-shadow: 0 0 14px rgba(0, 210, 255, 0.6);
 }
 
-@keyframes gradient-sweep {
+@keyframes progress-flow {
     0%   { background-position: 0% 50%; }
     100% { background-position: 200% 50%; }
 }
@@ -492,12 +504,12 @@ $text-muted:    #64748b;
     top: 0;
     bottom: 0;
     width: 16px;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.9);
     filter: blur(2px);
     border-radius: 50%;
 }
 
-// ─── Step Dots Bar ─────────────────────────────────────────────
+// ─── Step Progression Nodes ────────────────────────────────────
 .ws-dots-bar {
     display: flex;
     gap: 6px;
@@ -507,26 +519,35 @@ $text-muted:    #64748b;
 }
 
 .ws-dot-item {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
 
     &--done {
-        background: $cyan-glow;
-        box-shadow: 0 0 6px rgba(6, 182, 212, 0.5);
+        background: rgba(16, 185, 129, 0.3);
+        border: 1px solid $emerald-neon;
+        color: $emerald-neon;
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
     }
 
     &--active {
-        width: 18px;
+        width: 22px;
         border-radius: 9999px;
-        background: linear-gradient(90deg, $cyan-glow, $purple-glow);
-        box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+        background: linear-gradient(90deg, $cyan-neon, $purple-neon);
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
+    }
+
+    .dot-check-icon {
+        color: $emerald-neon;
     }
 }
 
-// ─── Friendly Tip Box ──────────────────────────────────────────
+// ─── Wisdom Tip Box ────────────────────────────────────────────
 .ws-tip-box {
     width: 100%;
     padding: 10px 14px;
@@ -535,23 +556,38 @@ $text-muted:    #64748b;
     border: 1px dashed rgba(255, 255, 255, 0.08);
 
     .ws-tip-content {
-        font-size: 0.72rem;
-        color: rgba(226, 232, 240, 0.8);
+        font-size: 0.75rem;
+        color: rgba(226, 232, 240, 0.85);
         line-height: 1.45;
         display: block;
         transition: opacity 0.3s ease;
     }
 }
 
-// ─── Footer Bar ────────────────────────────────────────────────
+// ─── Footer Protocol Bar ───────────────────────────────────────
 .ws-footer-bar {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     color: $text-muted;
-    font-weight: 500;
+    font-weight: 600;
+    flex-wrap: wrap;
+
+    .footer-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+
+        .dot-green {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: $emerald-neon;
+            box-shadow: 0 0 6px $emerald-neon;
+        }
+    }
 
     .dot-sep {
         opacity: 0.3;
@@ -559,12 +595,12 @@ $text-muted:    #64748b;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ RESPONSIVE LAYOUT
+// ✦ MOBILE RESPONSIVE
 // ═══════════════════════════════════════════════════════════════
 @media (max-width: 540px) {
     .welcome-screen__card {
-        padding: 28px 20px 22px;
-        gap: 18px;
+        padding: 26px 18px 20px;
+        gap: 16px;
         border-radius: 22px;
     }
 
@@ -578,30 +614,25 @@ $text-muted:    #64748b;
 
         .chip-text {
             flex-direction: row;
-            gap: 6px;
+            gap: 8px;
             align-items: center;
 
-            .chip-title { font-size: 0.7rem; }
+            .chip-title { font-size: 0.72rem; }
             .chip-sub { font-size: 0.65rem; opacity: 0.7; }
         }
     }
 
-    .ws-orb-container {
-        width: 76px;
-        height: 76px;
-    }
+    .ws-gyro-orb {
+        width: 80px;
+        height: 80px;
 
-    .ws-brand-core {
-        width: 62px;
-        height: 62px;
-
-        .ws-brand-logo {
-            width: 30px;
-            height: 30px;
+        .gyro-core {
+            width: 66px;
+            height: 66px;
         }
     }
 
-    .ws-main-heading {
+    .ws-title-group .ws-main-heading {
         font-size: 1.35rem;
     }
 }
