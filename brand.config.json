@@ -33,9 +33,9 @@
     },
     "typography": {
         "font_family": {
-            "primary": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-            "secondary": "Georgia, 'Times New Roman', Times, serif",
-            "monospace": "'Courier New', Courier, monospace"
+            "primary": "'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            "secondary": "'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+            "monospace": "'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace"
         },
         "font_sizes": {
             "xs": "0.75rem",
