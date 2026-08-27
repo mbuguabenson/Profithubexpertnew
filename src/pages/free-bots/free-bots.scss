@@ -2,7 +2,7 @@
 // ✦ TRADING BOTS CARDS TAB STYLES — DUAL MODE (LIGHT & DARK)
 // ═══════════════════════════════════════════════════════════════
 
-:root, .theme--light {
+:root, body.theme--light, .theme--light {
     --tb-bg:             #f3f2f8;
     --tb-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
     --tb-card-border:    rgba(124, 58, 237, 0.16);

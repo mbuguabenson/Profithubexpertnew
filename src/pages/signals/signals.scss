@@ -2,7 +2,7 @@
 // ✦ SIGNALS TAB — DUAL MODE (LIGHT & DARK)
 // ═══════════════════════════════════════════════════════════════
 
-:root, .theme--light {
+:root, body.theme--light, .theme--light {
     --sig-bg:             #f3f2f8;
     --sig-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
     --sig-card-border:    rgba(124, 58, 237, 0.16);

@@ -4,7 +4,7 @@
 // ✦ DIGIT CRACKER TAB — 5.0 HIGH HIERARCHY SOFT UI DESIGN
 // ═══════════════════════════════════════════════════════════════
 
-:root, .theme--light {
+:root, body.theme--light, .theme--light {
     --dc-bg:             #f3f2f8;
     --dc-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
     --dc-card-border:    rgba(124, 58, 237, 0.18);

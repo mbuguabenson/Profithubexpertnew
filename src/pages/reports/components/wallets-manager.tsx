@@ -15,7 +15,6 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
     const [wallets, setWallets] = useState<DerivWallet[]>([]);
     const [selectedWallet, setSelectedWallet] = useState<DerivWallet | null>(null);
     const [transactions, setTransactions] = useState<DerivWalletTransaction[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
     const [activeSubTab, setActiveSubTab] = useState<WalletSubTab>('overview');
     const [hideBalance, setHideBalance] = useState<boolean>(false);
@@ -29,10 +28,7 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
     const [transferTarget, setTransferTarget] = useState<string>('options');
     const [transferStatus, setTransferStatus] = useState<string | null>(null);
 
-    const isVirtual = activeLoginid.startsWith('VRTC') || activeLoginid.startsWith('VRT');
-
     const loadWalletsData = useCallback(async () => {
-        setIsLoading(true);
         setIsRefreshing(true);
         try {
             const list = await DerivAccountWalletService.getWallets(currency || 'USD');
@@ -47,7 +43,6 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
         } catch (err) {
             console.error('[WalletsManager] load error:', err);
         } finally {
-            setIsLoading(false);
             setIsRefreshing(false);
         }
     }, [currency]);
@@ -58,7 +53,7 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
 
     const totalEstValue = useMemo(() => {
         if (!wallets.length) return 0;
-        return wallets.reduce((acc, w) => acc + (w.converted_amount || w.balance || 0), 0);
+        return wallets.reduce((acc, w) => acc + (w.converted_balance || w.balance || 0), 0);
     }, [wallets]);
 
     const handleSimulateTransfer = () => {
@@ -253,7 +248,7 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
                                     </div>
                                     <div className="dw-item-row__info">
                                         <span className="dw-item-row__name">
-                                            {w.currency === 'USD' ? localize('US Dollar') : `${w.currency} ${w.wallet_name || ''}`}
+                                            {w.currency === 'USD' ? localize('US Dollar') : `${w.currency} Wallet`}
                                         </span>
                                     </div>
                                 </div>

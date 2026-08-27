@@ -1,6 +1,6 @@
 // ─── Dual Mode Soft Signal Card Component Styles ────────────────
 
-:root, .theme--light {
+:root, body.theme--light, .theme--light {
     --sig-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
     --sig-card-border:    rgba(124, 58, 237, 0.16);
     --sig-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;

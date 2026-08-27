@@ -4,15 +4,15 @@
 // ✦ CIRCLES ANALYSIS TAB — 5.0 HIGH HIERARCHY SOFT UI DESIGN
 // ═══════════════════════════════════════════════════════════════
 
-:root, .theme--light {
-    --ca-bg:             #0b0a1a;
-    --ca-card-bg:        rgba(30, 41, 59, 0.4);
-    --ca-card-border:    rgba(255, 255, 255, 0.08);
-    --ca-shadow-raised:  0 10px 30px rgba(0, 0, 0, 0.2);
-    --ca-shadow-hover:   0 15px 40px rgba(124, 58, 237, 0.15);
-    --ca-text-main:      #ffffff;
-    --ca-text-sub:       #94a3b8;
-    --ca-input-bg:       rgba(255, 255, 255, 0.03);
+:root, body.theme--light, .theme--light {
+    --ca-bg:             #f8fafc;
+    --ca-card-bg:        #ffffff;
+    --ca-card-border:    #e2e8f0;
+    --ca-shadow-raised:  0 4px 20px rgba(0, 0, 0, 0.05);
+    --ca-shadow-hover:   0 10px 30px rgba(124, 58, 237, 0.12);
+    --ca-text-main:      #0f172a;
+    --ca-text-sub:       #64748b;
+    --ca-input-bg:       #f1f5f9;
 }
 
 body.theme--dark, .theme--dark {
