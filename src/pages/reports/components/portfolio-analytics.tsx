@@ -191,6 +191,24 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
 
     const activeDonutInfo = selectedStrategyIndex !== null ? strategyStats[selectedStrategyIndex] : strategyStats[0];
     const isVirtual = activeLoginid.startsWith('VRTC') || activeLoginid.startsWith('VRT');
+    const maskedAcc = activeLoginid ? activeLoginid.slice(-4) : '5821';
+
+    // ── Real Activity Bars from Closed Transactions ──
+    const activityBars = useMemo(() => {
+        if (profitList.length === 0) return [];
+        const recent = profitList.slice(-7);
+        const maxTradeVal = Math.max(...recent.map(t => Number(t.buy_price) || 1), 1);
+
+        return recent.map((t, idx) => {
+            const net = (Number(t.sell_price) || 0) - (Number(t.buy_price) || 0);
+            const buy = Number(t.buy_price) || 1;
+            const volumePct = Math.min(Math.round((buy / maxTradeVal) * 100), 100);
+            const gainPct = net > 0 ? Math.min(Math.round((net / buy) * 100), 100) : 0;
+            const timeStr = t.sell_time ? new Date(t.sell_time * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `#${idx + 1}`;
+
+            return { label: timeStr, val: Math.max(volumePct, 15), gain: gainPct, profit: net };
+        });
+    }, [profitList]);
 
     return (
         <div className="portfolio-analytics">
