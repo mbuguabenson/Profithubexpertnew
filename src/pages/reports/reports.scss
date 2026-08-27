@@ -903,7 +903,152 @@
     }
 }
 
-// ── 8. Empty States ──
+// ── 8. Archived Statements Banner ──
+.reports-statement-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    width: 100%;
+}
+
+.reports-archive-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    padding: 1.4rem 1.8rem;
+    border-radius: 16px;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+    :global(body.theme--light) & {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    &__left {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+    }
+
+    &__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(56, 189, 248, 0.15);
+        color: #38bdf8;
+        flex-shrink: 0;
+
+        :global(body.theme--light) & {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+    }
+
+    &__text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    &__title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-prominent, #ffffff);
+
+        :global(body.theme--light) & {
+            color: #0f172a;
+        }
+    }
+
+    &__sub {
+        font-size: 1.15rem;
+        color: #94a3b8;
+
+        :global(body.theme--light) & {
+            color: #64748b;
+        }
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+}
+
+.reports-archive-btn {
+    padding: 0.65rem 1.3rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-prominent, #ffffff);
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+
+    :global(body.theme--light) & {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+        color: #0f172a;
+    }
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.15);
+
+        :global(body.theme--light) & {
+            background: #e2e8f0;
+        }
+    }
+
+    &--active {
+        background: #38bdf8 !important;
+        border-color: #38bdf8 !important;
+        color: #0f172a !important;
+        font-weight: 700;
+    }
+}
+
+.reports-archive-external-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.2rem;
+    border-radius: 10px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    font-size: 1.2rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+
+    :global(body.theme--light) & {
+        border-color: #e2e8f0;
+        color: #64748b;
+    }
+
+    &:hover {
+        color: var(--text-prominent, #ffffff);
+        border-color: rgba(255, 255, 255, 0.2);
+
+        :global(body.theme--light) & {
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+    }
+}
+
+// ── 9. Empty States ──
 .reports-empty-state {
     padding: 4rem 2rem;
     display: flex;

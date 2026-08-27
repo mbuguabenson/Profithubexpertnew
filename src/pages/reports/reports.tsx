@@ -66,7 +66,10 @@ export const ReportsPage: React.FC = () => {
     // Data states
     const [openPositions, setOpenPositions] = useState<OpenPosition[]>([]);
     const [statementList, setStatementList] = useState<StatementTransaction[]>([]);
+    const [archivedList, setArchivedList] = useState<StatementTransaction[]>([]);
     const [profitList, setProfitList] = useState<ProfitTransaction[]>([]);
+    const [showArchived, setShowArchived] = useState<boolean>(false);
+    const [isFetchingArchive, setIsFetchingArchive] = useState<boolean>(false);
 
     // Search and filters
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -136,6 +139,28 @@ export const ReportsPage: React.FC = () => {
             console.warn('[Reports] Data fetch notice:', err);
         } finally {
             setIsLoading(false);
+        }
+    }, [isAuthorized]);
+
+    // ── Fetch Archived Historical Statements ──
+    const fetchArchivedStatements = useCallback(async () => {
+        if (!isAuthorized || !api_base.api) return;
+        setIsFetchingArchive(true);
+        try {
+            // Query older historical statement ledger batches
+            const archiveRes = await api_base.api.send({
+                statement: 1,
+                description: 1,
+                limit: 100,
+                offset: 50,
+            });
+            if (archiveRes?.statement?.transactions) {
+                setArchivedList(archiveRes.statement.transactions);
+            }
+        } catch (err) {
+            console.warn('[Reports] Archived statement fetch notice:', err);
+        } finally {
+            setIsFetchingArchive(false);
         }
     }, [isAuthorized]);
 
@@ -763,58 +788,104 @@ export const ReportsPage: React.FC = () => {
 
                     {/* 3. STATEMENT LEDGER */}
                     {activeSubTab === 'statement' && (
-                        <div className="reports-table-container">
-                            {filteredStatementList.length === 0 ? (
-                                <div className="reports-empty-state">
-                                    <div className="reports-empty-state__icon">📜</div>
-                                    <h3>{localize('No transactions found')}</h3>
-                                    <p>{localize('Account deposits, withdrawals, and trade entries will appear here.')}</p>
+                        <div className="reports-statement-wrapper">
+                            {/* ── Official Deriv Archived Statements Banner ── */}
+                            <div className="reports-archive-banner">
+                                <div className="reports-archive-banner__left">
+                                    <div className="reports-archive-banner__icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                            <path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4" />
+                                        </svg>
+                                    </div>
+                                    <div className="reports-archive-banner__text">
+                                        <span className="reports-archive-banner__title">
+                                            {localize('Statements generated before the system upgrade are archived separately.')}
+                                        </span>
+                                        <span className="reports-archive-banner__sub">
+                                            {localize('Access pre-upgrade transaction logs, historical trades, and account ledgers.')}
+                                        </span>
+                                    </div>
                                 </div>
-                            ) : (
-                                <table className="reports-table">
-                                    <thead>
-                                        <tr>
-                                            <th>{localize('Ref ID')}</th>
-                                            <th>{localize('Action')}</th>
-                                            <th>{localize('Date & Time')}</th>
-                                            <th>{localize('Description')}</th>
-                                            <th>{localize('Amount')}</th>
-                                            <th>{localize('Balance After')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredStatementList.map(item => {
-                                            const isCredit = item.amount >= 0;
-                                            return (
-                                                <tr key={item.transaction_id}>
-                                                    <td>
-                                                        <span className="reports-badge-id">#{item.transaction_id}</span>
-                                                    </td>
-                                                    <td>
-                                                        <span className={`reports-action-badge reports-action-badge--${item.action_type.toLowerCase()}`}>
-                                                            {item.action_type.toUpperCase()}
-                                                        </span>
-                                                    </td>
-                                                    <td className="reports-cell-date">{formatDate(item.transaction_time)}</td>
-                                                    <td className="reports-cell-desc">
-                                                        <div className="reports-desc-text" title={item.longcode}>
-                                                            {item.longcode || item.shortcode || `${item.action_type} transaction`}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <span className={`reports-amount-text ${isCredit ? 'reports-amount-text--credit' : 'reports-amount-text--debit'}`}>
-                                                            {isCredit ? `+${formatMoney(currency, item.amount, true)}` : formatMoney(currency, item.amount, true)} {currency}
-                                                        </span>
-                                                    </td>
-                                                    <td className="reports-balance-after">
-                                                        {formatMoney(currency, item.balance_after, true)} {currency}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            )}
+                                <div className="reports-archive-banner__actions">
+                                    <button
+                                        className={`reports-archive-btn ${showArchived ? 'reports-archive-btn--active' : ''}`}
+                                        onClick={() => {
+                                            const next = !showArchived;
+                                            setShowArchived(next);
+                                            if (next && archivedList.length === 0) {
+                                                fetchArchivedStatements();
+                                            }
+                                        }}
+                                    >
+                                        {isFetchingArchive ? localize('Loading Archive...') : showArchived ? localize('View Live Statement') : localize('View Archived Statements')}
+                                    </button>
+                                    <button
+                                        className="reports-archive-external-btn"
+                                        onClick={() => window.open('https://app.deriv.com/reports/statement', '_blank')}
+                                        title={localize('Open Deriv Statement Archive Portal')}
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" />
+                                        </svg>
+                                        <span>{localize('Deriv Archive Portal')}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* ── Table Container ── */}
+                            <div className="reports-table-container">
+                                {((showArchived ? archivedList : filteredStatementList).length === 0) ? (
+                                    <div className="reports-empty-state">
+                                        <div className="reports-empty-state__icon">📜</div>
+                                        <h3>{showArchived ? localize('No archived transactions found') : localize('No transactions found')}</h3>
+                                        <p>{showArchived ? localize('Historical transactions prior to system upgrades will show here.') : localize('Account deposits, withdrawals, and trade entries will appear here.')}</p>
+                                    </div>
+                                ) : (
+                                    <table className="reports-table">
+                                        <thead>
+                                            <tr>
+                                                <th>{localize('Ref ID')}</th>
+                                                <th>{localize('Action')}</th>
+                                                <th>{localize('Date & Time')}</th>
+                                                <th>{localize('Description')}</th>
+                                                <th>{localize('Amount')}</th>
+                                                <th>{localize('Balance After')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(showArchived ? archivedList : filteredStatementList).map(item => {
+                                                const isCredit = item.amount >= 0;
+                                                return (
+                                                    <tr key={item.transaction_id}>
+                                                        <td>
+                                                            <span className="reports-badge-id">#{item.transaction_id}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`reports-action-badge reports-action-badge--${item.action_type.toLowerCase()}`}>
+                                                                {item.action_type.toUpperCase()}
+                                                            </span>
+                                                        </td>
+                                                        <td className="reports-cell-date">{formatDate(item.transaction_time)}</td>
+                                                        <td className="reports-cell-desc">
+                                                            <div className="reports-desc-text" title={item.longcode}>
+                                                                {item.longcode || item.shortcode || `${item.action_type} transaction`}
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`reports-amount-text ${isCredit ? 'reports-amount-text--credit' : 'reports-amount-text--debit'}`}>
+                                                                {isCredit ? `+${formatMoney(currency, item.amount, true)}` : formatMoney(currency, item.amount, true)} {currency}
+                                                            </span>
+                                                        </td>
+                                                        <td className="reports-balance-after">
+                                                            {formatMoney(currency, item.balance_after, true)} {currency}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
