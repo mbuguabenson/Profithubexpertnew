@@ -6,9 +6,6 @@ const distDir = path.join(rootDir, 'dist');
 const publicDir = path.join(rootDir, 'public');
 const smartchartsDist = path.join(rootDir, 'node_modules', '@deriv-com', 'smartcharts-champion', 'dist');
 
-const templateTraderDist = path.resolve('e:/Backup/dtrader-template/packages/trader/dist/trader');
-const templateReportsDist = path.resolve('e:/Backup/dtrader-template/packages/reports/dist/reports');
-
 function copySmartCharts(destBase) {
     if (!fs.existsSync(smartchartsDist)) {
         console.warn('⚠️ smartcharts-champion dist folder not found in node_modules');
@@ -29,26 +26,6 @@ function copySmartCharts(destBase) {
     }
 }
 
-function copyModuleDist(srcPath, moduleName) {
-    if (!fs.existsSync(srcPath)) {
-        console.warn(`⚠️ ${moduleName} dist not found at:`, srcPath);
-        return;
-    }
-
-    const targets = [
-        path.join(publicDir, moduleName),
-        path.join(publicDir, 'dtrader', moduleName),
-        path.join(distDir, moduleName),
-        path.join(distDir, 'dtrader', moduleName)
-    ];
-
-    targets.forEach(target => {
-        fs.mkdirSync(target, { recursive: true });
-        fs.cpSync(srcPath, target, { recursive: true });
-    });
-    console.log(`✅ Copied ${moduleName} chunks to all targets.`);
-}
-
 // 1. Copy smartcharts
 copySmartCharts(publicDir);
 if (!fs.existsSync(distDir)) {
@@ -56,27 +33,23 @@ if (!fs.existsSync(distDir)) {
 }
 copySmartCharts(distDir);
 
-// 2. Copy trader and reports module chunks
-copyModuleDist(templateTraderDist, 'trader');
-copyModuleDist(templateReportsDist, 'reports');
-
-// 3. Ensure public/ bundle is patched
+// 2. Ensure public/ bundle is patched if available
 try {
     require('./patch-dtrader-bundle');
 } catch (e) {
-    console.warn('⚠️ Could not run patch-dtrader-bundle:', e);
+    console.warn('⚠️ Notice during patch-dtrader-bundle:', e.message);
 }
 
-// 4. Ensure all trader chunk aliases are in place
+// 3. Ensure all trader chunk aliases are in place if trader chunks exist
 try {
     require('./align-trader-chunks');
 } catch (e) {
-    console.warn('⚠️ Could not run align-trader-chunks:', e);
+    console.warn('⚠️ Notice during align-trader-chunks:', e.message);
 }
 
-// 5. Copy public/ (including dtrader static suite) to dist/
+// 4. Copy public/ to dist/
 if (fs.existsSync(publicDir)) {
     fs.cpSync(publicDir, distDir, { recursive: true });
 }
 
-console.log('✅ All static assets, trader chunks, and smartcharts copied successfully.');
+console.log('✅ All static assets and smartcharts copied successfully.');

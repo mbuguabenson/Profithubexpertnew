@@ -4,8 +4,8 @@ const path = require('path');
 const dtraderJsDir = path.resolve(__dirname, '..', 'public', 'dtrader', 'js');
 
 if (!fs.existsSync(dtraderJsDir)) {
-    console.error('Directory not found:', dtraderJsDir);
-    process.exit(1);
+    console.log('ℹ️ DTrader js directory not found, skipping bundle patch.');
+    return;
 }
 
 // 1. Patch core.main~A (socket_base and BinarySocket)
