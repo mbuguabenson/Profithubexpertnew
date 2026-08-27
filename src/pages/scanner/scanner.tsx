@@ -223,7 +223,7 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
         }
         const matchPct = ((maxCount / sampleSize) * 100).toFixed(1);
         lines.push(`MATCH with ${mostCommon} → ${matchPct}%`);
-        signal = { barrier: typeof mostCommon === 'number' ? mostCommon : Number(mostCommon), contractType: 'DIGITMATCH', label: `Matches ${mostCommon}`, confidence: Number(matchPct) };
+        signal = { barrier: String(mostCommon), contractType: 'DIGITMATCH', label: `Matches ${mostCommon}`, confidence: Number(matchPct) };
     } else if (strategy === 'Differs') {
         const digitCounts: Record<number, number> = {};
         for (const d of digits) digitCounts[d] = (digitCounts[d] || 0) + 1;
@@ -253,7 +253,7 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
         if (targetDigit !== -1) {
             lines.push(`DIFFERS with ${targetDigit} → ${targetConfidence.toFixed(1)}%`);
             lines.push(`Excluded digits: [${excludedDigits.join(', ')}]`);
-            signal = { barrier: typeof targetDigit === 'number' ? targetDigit : Number(targetDigit), contractType: 'DIGITDIFF', label: `Differs ${targetDigit}`, confidence: targetConfidence };
+            signal = { barrier: String(targetDigit), contractType: 'DIGITDIFF', label: `Differs ${targetDigit}`, confidence: targetConfidence };
         } else {
             lines.push(`Waiting for Differs conditions...`);
             signal = { barrier: '0', contractType: 'DIGITDIFF', label: `Differs (Waiting)`, confidence: 0 };
@@ -287,7 +287,7 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
             const barrierMap: Record<number, number> = { 4: 6, 3: 7, 2: 8, 1: 8, 0: 8 };
             const barrier = barrierMap[maxUnder] ?? 6;
             lines.push(`UNDER sequence detected → ${underPct}% | Entry: Under ${barrier}`);
-            signal = { barrier: typeof barrier === 'number' ? barrier : Number(barrier), contractType: 'DIGITUNDER', label: `Under ${barrier}`, confidence: Number(underPct) };
+            signal = { barrier: String(barrier), contractType: 'DIGITUNDER', label: `Under ${barrier}`, confidence: Number(underPct) };
         } else if (allOver) {
             // Lowest digit in the over sequence determines barrier
             // 5 → Over 3, 6 → Over 2, ≥7 → Over 1
@@ -295,7 +295,7 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
             const barrierMap: Record<number, number> = { 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 };
             const barrier = barrierMap[minOver] ?? 3;
             lines.push(`OVER sequence detected → ${overPct}% | Entry: Over ${barrier}`);
-            signal = { barrier: typeof barrier === 'number' ? barrier : Number(barrier), contractType: 'DIGITOVER', label: `Over ${barrier}`, confidence: Number(overPct) };
+            signal = { barrier: String(barrier), contractType: 'DIGITOVER', label: `Over ${barrier}`, confidence: Number(overPct) };
         } else {
             lines.push(`UNDER/OVER sequence waiting...`);
             signal = { barrier: '5', contractType: 'DIGITOVER', label: 'Over/Under (Waiting)', confidence: 0 };
