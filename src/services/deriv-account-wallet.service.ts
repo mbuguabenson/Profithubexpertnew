@@ -438,45 +438,37 @@ export class DerivAccountWalletService {
     }
 
     /**
-     * Get registered applications list
+     * Get account settings (profile, email, country, personal details)
+     * WebSocket: { get_settings: 1 }
      */
-    public static async getRegisteredApplications(): Promise<any[]> {
+    public static async getAccountSettings(): Promise<any> {
         try {
-            if (api_base.api) {
-                const res = (await api_base.api.send({ app_list: 1 })) as any;
-                if (res?.app_list?.length) {
-                    return res.app_list;
-                }
+            const api = await this.getConnectedApi();
+            const res = (await api.send({ get_settings: 1 })) as any;
+            if (res?.get_settings) {
+                return res.get_settings;
             }
-        } catch {}
+        } catch (err) {
+            console.warn('[DerivAccountWalletService] get_settings error:', err);
+        }
+        return null;
+    }
 
-        const activeAppId = getAppId() || '3Mmq9JHMrJaUKT2KIhKZ';
-        return [
-            {
-                app_id: activeAppId,
-                name: 'ProfitHub Expert Master',
-                scopes: ['read', 'trade', 'payments', 'trading_information', 'admin'],
-                redirect_uri: 'https://profithubexpert.com/callback',
-                active_users: 128,
-                markup_percentage: 2.0,
-            },
-            {
-                app_id: '121856',
-                name: 'Deriv Automated Trading Bridge',
-                scopes: ['read', 'trade', 'trading_information'],
-                redirect_uri: 'http://localhost:8443/callback',
-                active_users: 45,
-                markup_percentage: 1.5,
-            },
-            {
-                app_id: '68351',
-                name: 'Copy Trading Replicator Node',
-                scopes: ['read', 'trade', 'admin'],
-                redirect_uri: 'https://profithubexpert.vercel.app/callback',
-                active_users: 22,
-                markup_percentage: 2.0,
-            },
-        ];
+    /**
+     * Get account status & KYC verification info
+     * WebSocket: { get_account_status: 1 }
+     */
+    public static async getAccountStatus(): Promise<any> {
+        try {
+            const api = await this.getConnectedApi();
+            const res = (await api.send({ get_account_status: 1 })) as any;
+            if (res?.get_account_status) {
+                return res.get_account_status;
+            }
+        } catch (err) {
+            console.warn('[DerivAccountWalletService] get_account_status error:', err);
+        }
+        return null;
     }
 
     /**

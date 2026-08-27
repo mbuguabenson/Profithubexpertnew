@@ -4,9 +4,11 @@ import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import { useApiBase } from '@/hooks/useApiBase';
 import { addComma, formatMoney } from '@/components/shared';
 import { PortfolioAnalytics } from './components/portfolio-analytics';
+import { WalletsManager } from './components/wallets-manager';
+import { AccountManagement } from './components/account-management';
 import './reports.scss';
 
-type ActiveSubTab = 'portfolio' | 'profit_table' | 'positions' | 'statement';
+type ActiveSubTab = 'portfolio' | 'wallets' | 'account' | 'profit_table' | 'positions' | 'statement';
 
 interface StatementTransaction {
     action_type: string;
@@ -355,7 +357,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* ── Top Metrics Cards (For Table Subtabs) ── */}
-            {activeSubTab !== 'portfolio' && (
+            {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
                 <div className="reports-metrics-grid">
                     {/* 1. Total Net Profit */}
                     <div className={`reports-metric-card ${metrics.totalProfit >= 0 ? 'reports-metric-card--profit' : 'reports-metric-card--loss'}`}>
@@ -442,6 +444,19 @@ export const ReportsPage: React.FC = () => {
                             <span className="reports-subtab-badge reports-subtab-badge--live">LIVE</span>
                         </button>
                         <button
+                            className={`reports-subtab-btn ${activeSubTab === 'wallets' ? 'reports-subtab-btn--active' : ''}`}
+                            onClick={() => setActiveSubTab('wallets')}
+                        >
+                            <span>💳 {localize('Wallets')}</span>
+                            <span className="reports-subtab-badge">REST API</span>
+                        </button>
+                        <button
+                            className={`reports-subtab-btn ${activeSubTab === 'account' ? 'reports-subtab-btn--active' : ''}`}
+                            onClick={() => setActiveSubTab('account')}
+                        >
+                            <span>👤 {localize('Account Management')}</span>
+                        </button>
+                        <button
                             className={`reports-subtab-btn ${activeSubTab === 'profit_table' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('profit_table')}
                         >
@@ -466,7 +481,7 @@ export const ReportsPage: React.FC = () => {
                         </button>
                     </div>
 
-                    {activeSubTab !== 'portfolio' && (
+                    {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
                         <div className="reports-filter-group">
                             {/* Search Input */}
                             <div className="reports-search-box">
@@ -521,6 +536,22 @@ export const ReportsPage: React.FC = () => {
                             profitList={profitList}
                             statementList={statementList}
                             openPositionsCount={openPositions.length}
+                            currency={currency}
+                            activeLoginid={activeLoginid}
+                        />
+                    )}
+
+                    {/* 0.1 WALLETS */}
+                    {activeSubTab === 'wallets' && (
+                        <WalletsManager
+                            currency={currency}
+                            activeLoginid={activeLoginid}
+                        />
+                    )}
+
+                    {/* 0.2 ACCOUNT MANAGEMENT */}
+                    {activeSubTab === 'account' && (
+                        <AccountManagement
                             currency={currency}
                             activeLoginid={activeLoginid}
                         />
