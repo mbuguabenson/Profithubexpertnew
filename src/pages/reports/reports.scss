@@ -1,28 +1,27 @@
 // ══════════════════════════════════════════════════════════════════════════
-// ✦ TURING AI & ELECTRIC INDIGO MODERN DESIGN SYSTEM — REPORTS & PORTFOLIO
+// ✦ DERIV OFFICIAL MINIMALIST DESIGN SYSTEM — REPORTS & PORTFOLIO
 // ══════════════════════════════════════════════════════════════════════════
 
 .reports-page {
     width: 100%;
     min-height: 100%;
-    padding: 2.4rem 3rem;
+    padding: 2rem 2.5rem;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 2.2rem;
-    background: #0c0f1d;
-    color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', Roboto, sans-serif;
-    letter-spacing: -0.01em;
+    gap: 1.8rem;
+    background: #0e1117;
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
     :global(body.theme--light) & {
-        background: #f8f9fe;
-        color: #1e1b4b;
+        background: #f8fafc;
+        color: #0f172a;
     }
 
     @media (max-width: 768px) {
-        padding: 1.4rem;
-        gap: 1.6rem;
+        padding: 1.2rem;
+        gap: 1.4rem;
     }
 
     // ── 1. Top Header Banner ──
@@ -31,410 +30,244 @@
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 1.6rem;
+        gap: 1.2rem;
     }
 
     &__title-box {
         display: flex;
         align-items: center;
-        gap: 1.6rem;
-        flex-wrap: wrap;
+        gap: 1.2rem;
     }
 
     &__title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        letter-spacing: -0.03em;
+        font-size: 2.4rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
         margin: 0;
         color: #ffffff;
 
         :global(body.theme--light) & {
-            color: #1e1b4b;
+            color: #0f172a;
+        }
+
+        @media (max-width: 480px) {
+            font-size: 2rem;
         }
     }
 
-    &__subtitle {
-        font-size: 1.25rem;
-        color: #94a3b8;
-        margin: 0.3rem 0 0;
+    &__account-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.45rem 1rem;
+        border-radius: 20px;
+        background: #1a1f2c;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 1.2rem;
+        font-weight: 600;
 
         :global(body.theme--light) & {
-            color: #64748b;
+            background: #ffffff;
+            border-color: #e2e8f0;
+            color: #334155;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+    }
+
+    &__account-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+
+        &--real {
+            background: #00a79e;
+            box-shadow: 0 0 6px rgba(0, 167, 158, 0.6);
+        }
+
+        &--demo {
+            background: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+        }
+    }
+
+    &__account-id {
+        font-family: var(--font-mono, monospace);
+        font-weight: 700;
+        color: #ffffff;
+
+        :global(body.theme--light) & {
+            color: #0f172a;
+        }
+    }
+
+    &__account-type-tag {
+        font-size: 1rem;
+        font-weight: 800;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
+
+        :global(body.theme--light) & {
+            background: #f1f5f9;
+            color: #475569;
         }
     }
 
     &__actions {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.8rem;
     }
 
     &__refresh-btn {
         display: inline-flex;
         align-items: center;
-        gap: 0.7rem;
-        padding: 0.85rem 1.6rem;
-        border-radius: 14px;
-        background: #6c5ce7;
+        gap: 0.6rem;
+        padding: 0.75rem 1.4rem;
+        border-radius: 8px;
+        background: #ff444f;
         border: none;
         color: #ffffff;
         font-size: 1.3rem;
-        font-weight: 700;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-        box-shadow: 0 4px 18px rgba(108, 92, 231, 0.35);
+        transition: all 0.18s ease;
 
         &:hover:not(:disabled) {
-            background: #5b4cdb;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.45);
+            background: #eb3e48;
         }
 
-        &:active:not(:disabled) {
-            transform: translateY(0);
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
         &--loading svg {
-            animation: reports-spin 0.8s linear infinite;
+            animation: reports-spin 0.7s linear infinite;
+        }
+
+        @media (max-width: 480px) {
+            padding: 0.7rem;
+            
+            .reports-page__refresh-label {
+                display: none;
+            }
         }
     }
 }
 
-// ── Turing AI Avatar Chip ──
-.reports-avatar-chip {
-    display: inline-flex;
+// ── 2. Minimalist Segmented Tabs Bar (Deriv Official Style) ──
+.reports-nav-bar {
+    display: flex;
     align-items: center;
-    gap: 1.2rem;
-    padding: 0.8rem 1.4rem;
-    border-radius: 18px;
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.2);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    gap: 0.4rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+    width: 100%;
 
     :global(body.theme--light) & {
-        background: #ffffff;
-        border-color: #e0e7ff;
-        box-shadow: 0 4px 20px rgba(108, 92, 231, 0.08);
+        border-bottom-color: #e2e8f0;
     }
-
-    &__icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
-        background: rgba(108, 92, 231, 0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.8rem;
-    }
-
-    &__info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-
-    &__name {
-        font-family: var(--font-mono, monospace);
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #ffffff;
-
-        :global(body.theme--light) & {
-            color: #1e1b4b;
-        }
-    }
-
-    &__status {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #10b981;
-    }
-
-    &__dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #10b981;
-        box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
-    }
-}
-
-// ── 2. Turing AI Segmented Squircle Dock ──
-.reports-dock-wrapper {
-    display: flex;
-    justify-content: flex-start;
-    width: 100%;
-    overflow-x: auto;
-    padding-bottom: 0.4rem;
 
     &::-webkit-scrollbar {
-        height: 0;
         display: none;
     }
 }
 
-.reports-dock {
+.reports-nav-item {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.6rem 0.8rem;
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.16);
-    border-radius: 20px;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    padding: 1rem 1.6rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    color: #94a3b8;
+    font-size: 1.4rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
 
     :global(body.theme--light) & {
-        background: #ffffff;
-        border-color: #e0e7ff;
-        box-shadow: 0 6px 24px rgba(108, 92, 231, 0.08);
+        color: #64748b;
     }
 
-    &__item {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.8rem;
-        padding: 0.85rem 1.6rem;
-        border-radius: 14px;
-        background: transparent;
-        border: none;
-        color: #94a3b8;
-        font-size: 1.35rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-        white-space: nowrap;
+    &:hover {
+        color: #ffffff;
 
         :global(body.theme--light) & {
-            color: #64748b;
-        }
-
-        &:hover {
-            color: #ffffff;
-            background: rgba(108, 92, 231, 0.1);
-
-            :global(body.theme--light) & {
-                color: #1e1b4b;
-                background: #f5f3ff;
-            }
-        }
-
-        &--active {
-            background: #6c5ce7 !important;
-            color: #ffffff !important;
-            box-shadow: 0 4px 18px rgba(108, 92, 231, 0.4);
-
-            .reports-dock__icon {
-                color: #ffffff;
-            }
-
-            .reports-dock__badge {
-                background: rgba(255, 255, 255, 0.25);
-                color: #ffffff;
-            }
+            color: #0f172a;
         }
     }
 
-    &__icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: currentColor;
-    }
+    &--active {
+        color: #ff444f !important;
+        border-bottom-color: #ff444f;
+        font-weight: 700;
 
-    &__label {
-        letter-spacing: -0.01em;
+        .reports-nav-item__badge {
+            background: rgba(255, 68, 79, 0.15);
+            color: #ff444f;
+        }
     }
 
     &__badge {
         font-size: 1.15rem;
         font-weight: 700;
-        padding: 0.2rem 0.7rem;
+        padding: 0.15rem 0.6rem;
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.08);
         color: #94a3b8;
-        font-family: var(--font-mono, monospace);
 
         :global(body.theme--light) & {
             background: #f1f5f9;
             color: #475569;
         }
 
-        &--pulse {
-            background: #10b981;
+        &--active {
+            background: #00a79e;
             color: #ffffff;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
-            animation: badge-pulse 2s infinite;
         }
     }
 }
 
-// ── 3. Turing AI 4-Card Luxury KPI Grid ──
-.reports-metrics-grid {
+// ── 3. Compact Summary KPI Strip ──
+.reports-summary-strip {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.8rem;
+    gap: 1.2rem;
 
-    @media (max-width: 1200px) {
+    @media (max-width: 992px) {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 480px) {
         grid-template-columns: 1fr;
     }
 }
 
-.reports-metric-card {
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.16);
-    border-radius: 24px;
-    padding: 2.2rem 2.4rem;
+.reports-summary-card {
+    background: #141824;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1.4rem 1.8rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 1.6rem;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-    overflow: hidden;
+    gap: 0.4rem;
 
     :global(body.theme--light) & {
         background: #ffffff;
-        border-color: #e0e7ff;
-        box-shadow: 0 6px 24px rgba(108, 92, 231, 0.06);
-    }
-
-    &:hover {
-        transform: translateY(-3px);
-        border-color: #6c5ce7;
-        box-shadow: 0 12px 36px rgba(108, 92, 231, 0.2);
-
-        :global(body.theme--light) & {
-            border-color: #6c5ce7;
-            box-shadow: 0 12px 36px rgba(108, 92, 231, 0.12);
-        }
-    }
-
-    &__header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    &__icon-box {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        &--teal {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-
-            :global(body.theme--light) & {
-                background: #dcfce7;
-                color: #059669;
-            }
-        }
-
-        &--rose {
-            background: rgba(244, 63, 94, 0.15);
-            color: #f43f5e;
-
-            :global(body.theme--light) & {
-                background: #ffe4e6;
-                color: #e11d48;
-            }
-        }
-
-        &--purple {
-            background: rgba(108, 92, 231, 0.15);
-            color: #6c5ce7;
-
-            :global(body.theme--light) & {
-                background: #ede9fe;
-                color: #6d28d9;
-            }
-        }
-
-        &--indigo {
-            background: rgba(99, 102, 241, 0.15);
-            color: #6366f1;
-
-            :global(body.theme--light) & {
-                background: #e0e7ff;
-                color: #4f46e5;
-            }
-        }
-
-        &--sky {
-            background: rgba(14, 165, 233, 0.15);
-            color: #0ea5e9;
-
-            :global(body.theme--light) & {
-                background: #e0f2fe;
-                color: #0284c7;
-            }
-        }
-    }
-
-    &__tag {
-        font-size: 1.1rem;
-        font-weight: 700;
-        padding: 0.35rem 0.9rem;
-        border-radius: 12px;
-        letter-spacing: 0.03em;
-
-        &--win {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-
-            :global(body.theme--light) & {
-                background: #dcfce7;
-                color: #059669;
-                border-color: #86efac;
-            }
-        }
-
-        &--loss {
-            background: rgba(244, 63, 94, 0.15);
-            color: #f43f5e;
-            border: 1px solid rgba(244, 63, 94, 0.3);
-
-            :global(body.theme--light) & {
-                background: #ffe4e6;
-                color: #e11d48;
-                border-color: #fca5a5;
-            }
-        }
-
-        &--neutral {
-            background: rgba(255, 255, 255, 0.06);
-            color: #94a3b8;
-
-            :global(body.theme--light) & {
-                background: #f1f5f9;
-                color: #475569;
-            }
-        }
-    }
-
-    &__body {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+        border-color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
     &__label {
-        font-size: 1.3rem;
-        font-weight: 600;
+        font-size: 1.2rem;
         color: #94a3b8;
+        font-weight: 600;
 
         :global(body.theme--light) & {
             color: #64748b;
@@ -442,76 +275,78 @@
     }
 
     &__value {
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: 800;
         font-family: var(--font-mono, monospace);
-        letter-spacing: -0.02em;
         color: #ffffff;
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
 
         :global(body.theme--light) & {
-            color: #1e1b4b;
+            color: #0f172a;
+        }
+
+        &--profit {
+            color: #00a79e;
+        }
+
+        &--loss {
+            color: #ff444f;
         }
     }
 
-    &__unit {
-        font-size: 1.4rem;
-        font-weight: 600;
+    &__sub {
+        font-size: 1.2rem;
         color: #94a3b8;
+        font-weight: 500;
     }
 
-    &--profit {
-        .reports-metric-card__value {
-            color: #10b981;
-        }
-    }
-
-    &--loss {
-        .reports-metric-card__value {
-            color: #f43f5e;
-        }
+    &__live-tag {
+        font-size: 1rem;
+        font-weight: 800;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        background: #00a79e;
+        color: #ffffff;
     }
 }
 
-// ── 4. Main Content Shell ──
-.reports-content-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1.8rem;
+// ── 4. Main Panel & Filter Bar ──
+.reports-content {
     width: 100%;
 }
 
-// ── 5. Turing AI Filter & Search Bar ──
+.reports-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    width: 100%;
+}
+
 .reports-filter-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1.4rem;
+    gap: 1rem;
 }
 
-.reports-search-pill {
+.reports-search-input-box {
     display: flex;
     align-items: center;
-    gap: 0.9rem;
-    padding: 0.8rem 1.4rem;
-    border-radius: 16px;
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.2);
-    width: 320px;
+    gap: 0.8rem;
+    padding: 0.65rem 1.2rem;
+    border-radius: 8px;
+    background: #141824;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 280px;
     color: #94a3b8;
-    transition: all 0.22s ease;
 
     :global(body.theme--light) & {
         background: #ffffff;
-        border-color: #e0e7ff;
+        border-color: #cbd5e1;
         color: #64748b;
-        box-shadow: 0 4px 16px rgba(108, 92, 231, 0.04);
-    }
-
-    &:focus-within {
-        border-color: #6c5ce7;
-        width: 360px;
-        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
     }
 
     input {
@@ -523,41 +358,48 @@
         width: 100%;
 
         :global(body.theme--light) & {
-            color: #1e1b4b;
+            color: #0f172a;
         }
 
         &::placeholder {
             color: #64748b;
         }
     }
-}
 
-.reports-date-capsule {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.4rem 0.5rem;
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.2);
-    border-radius: 16px;
-
-    :global(body.theme--light) & {
-        background: #ffffff;
-        border-color: #e0e7ff;
-        box-shadow: 0 4px 16px rgba(108, 92, 231, 0.04);
+    .reports-clear-search {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        font-size: 1.2rem;
     }
 }
 
-.reports-date-btn {
-    padding: 0.6rem 1.3rem;
-    border-radius: 12px;
+.reports-date-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    background: #141824;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.3rem;
+
+    :global(body.theme--light) & {
+        background: #ffffff;
+        border-color: #e2e8f0;
+    }
+}
+
+.reports-date-filter-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
     background: transparent;
     border: none;
     color: #94a3b8;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.15s ease;
 
     :global(body.theme--light) & {
         color: #64748b;
@@ -567,36 +409,34 @@
         color: #ffffff;
 
         :global(body.theme--light) & {
-            color: #1e1b4b;
+            color: #0f172a;
         }
     }
 
     &--active {
-        background: #6c5ce7;
+        background: #ff444f;
         color: #ffffff !important;
         font-weight: 700;
-        box-shadow: 0 2px 10px rgba(108, 92, 231, 0.35);
     }
 }
 
-// ── 6. High-Precision Modern Tables ──
-.reports-table-wrapper {
-    width: 100%;
-}
-
-.reports-table-container {
-    width: 100%;
-    overflow-x: auto;
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.16);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+// ── 5. Minimalist Deriv Official Tables ──
+.reports-table-card {
+    background: #141824;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
 
     :global(body.theme--light) & {
         background: #ffffff;
-        border-color: #e0e7ff;
-        box-shadow: 0 6px 24px rgba(108, 92, 231, 0.06);
+        border-color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
+}
+
+.reports-table-responsive {
+    width: 100%;
+    overflow-x: auto;
 }
 
 .reports-table {
@@ -606,21 +446,21 @@
     text-align: left;
 
     thead {
-        background: rgba(108, 92, 231, 0.04);
-        border-bottom: 1px solid rgba(108, 92, 231, 0.12);
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
         :global(body.theme--light) & {
-            background: #f8f9fe;
-            border-color: #e0e7ff;
+            background: #f8fafc;
+            border-bottom-color: #e2e8f0;
         }
 
         th {
-            padding: 1.6rem 2rem;
+            padding: 1.4rem 1.6rem;
             color: #94a3b8;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
 
             :global(body.theme--light) & {
                 color: #64748b;
@@ -631,10 +471,9 @@
     tbody {
         tr {
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            transition: background 0.15s ease;
 
             :global(body.theme--light) & {
-                border-color: #f1f5f9;
+                border-bottom-color: #f1f5f9;
             }
 
             &:last-child {
@@ -642,20 +481,20 @@
             }
 
             &:hover {
-                background: rgba(108, 92, 231, 0.04);
+                background: rgba(255, 255, 255, 0.02);
 
                 :global(body.theme--light) & {
-                    background: #f5f3ff;
+                    background: #f8fafc;
                 }
             }
 
             td {
-                padding: 1.6rem 2rem;
+                padding: 1.4rem 1.6rem;
                 font-family: var(--font-mono, monospace);
                 color: #ffffff;
 
                 :global(body.theme--light) & {
-                    color: #1e1b4b;
+                    color: #0f172a;
                 }
             }
         }
@@ -665,27 +504,23 @@
 .reports-badge-id {
     font-family: var(--font-mono, monospace);
     font-weight: 700;
-    font-size: 1.25rem;
-    padding: 0.35rem 0.9rem;
-    border-radius: 10px;
-    background: rgba(108, 92, 231, 0.12);
-    color: #a78bfa;
+    font-size: 1.2rem;
+    color: #94a3b8;
 
     :global(body.theme--light) & {
-        background: #ede9fe;
-        color: #6d28d9;
+        color: #475569;
     }
 }
 
 .reports-cell-desc {
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif !important;
-    max-width: 280px;
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
+    max-width: 320px;
 
     .reports-desc-text {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         color: #94a3b8;
 
         :global(body.theme--light) & {
@@ -695,7 +530,7 @@
 }
 
 .reports-cell-date {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     color: #94a3b8 !important;
 
     :global(body.theme--light) & {
@@ -703,107 +538,61 @@
     }
 }
 
-.reports-profit-pill {
-    display: inline-block;
-    padding: 0.4rem 1rem;
-    border-radius: 10px;
+.reports-pnl-tag {
     font-weight: 700;
     font-family: var(--font-mono, monospace);
 
     &--win {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-
-        :global(body.theme--light) & {
-            background: #dcfce7;
-            color: #059669;
-        }
+        color: #00a79e;
     }
 
     &--loss {
-        background: rgba(244, 63, 94, 0.15);
-        color: #f43f5e;
-
-        :global(body.theme--light) & {
-            background: #ffe4e6;
-            color: #e11d48;
-        }
+        color: #ff444f;
     }
 }
 
 .reports-action-badge {
     display: inline-block;
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
-    padding: 0.3rem 0.85rem;
-    border-radius: 8px;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    background: rgba(255, 255, 255, 0.06);
-    color: #94a3b8;
 
     &--buy {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-
-        :global(body.theme--light) & {
-            background: #dcfce7;
-            color: #059669;
-        }
+        background: rgba(0, 167, 158, 0.15);
+        color: #00a79e;
     }
 
     &--sell {
-        background: rgba(244, 63, 94, 0.15);
-        color: #f43f5e;
-
-        :global(body.theme--light) & {
-            background: #ffe4e6;
-            color: #e11d48;
-        }
+        background: rgba(255, 68, 79, 0.15);
+        color: #ff444f;
     }
 
     &--deposit {
-        background: rgba(108, 92, 231, 0.15);
-        color: #6c5ce7;
-
-        :global(body.theme--light) & {
-            background: #ede9fe;
-            color: #6d28d9;
-        }
+        background: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
     }
 
     &--withdrawal {
         background: rgba(245, 158, 11, 0.15);
         color: #f59e0b;
-
-        :global(body.theme--light) & {
-            background: #fef3c7;
-            color: #d97706;
-        }
     }
 }
 
-.reports-amount-text {
+.reports-amount {
     font-weight: 700;
 
     &--credit {
-        color: #10b981;
-
-        :global(body.theme--light) & {
-            color: #059669;
-        }
+        color: #00a79e;
     }
 
     &--debit {
-        color: #f43f5e;
-
-        :global(body.theme--light) & {
-            color: #e11d48;
-        }
+        color: #ff444f;
     }
 }
 
-.reports-balance-after {
+.reports-cell-balance {
     font-weight: 600;
     color: #94a3b8 !important;
 
@@ -812,95 +601,81 @@
     }
 }
 
-// ── 7. Turing AI Open Positions Live Widgets ──
+// ── 6. Open Positions Live Grid ──
 .reports-positions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 1.8rem;
-    padding: 1.8rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.4rem;
+    padding: 1.4rem;
 }
 
-.reports-pos-card {
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.2);
-    border-radius: 24px;
-    padding: 2.2rem;
+.reports-pos-item {
+    background: #0e1117;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 1.6rem;
     display: flex;
     flex-direction: column;
-    gap: 1.6rem;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    gap: 1.2rem;
     position: relative;
-    overflow: hidden;
-    transition: all 0.22s ease;
+    border-left: 4px solid #00a79e;
 
     :global(body.theme--light) & {
-        background: #ffffff;
-        border-color: #e0e7ff;
-        box-shadow: 0 6px 24px rgba(108, 92, 231, 0.06);
+        background: #f8fafc;
+        border-color: #e2e8f0;
     }
 
-    &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 4px;
-        background: #10b981;
+    &--loss {
+        border-left-color: #ff444f;
     }
 
-    &--red::before {
-        background: #f43f5e;
-    }
-
-    &__top {
+    &__header {
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
 
-    &__badge-row {
+    &__tags {
         display: flex;
         align-items: center;
-        gap: 0.8rem;
+        gap: 0.6rem;
     }
 
     &__symbol {
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 800;
         color: #ffffff;
 
         :global(body.theme--light) & {
-            color: #1e1b4b;
+            color: #0f172a;
         }
     }
 
     &__type {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         font-weight: 600;
-        padding: 0.25rem 0.75rem;
-        border-radius: 8px;
-        background: rgba(108, 92, 231, 0.12);
-        color: #a78bfa;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #94a3b8;
 
         :global(body.theme--light) & {
-            background: #ede9fe;
-            color: #6d28d9;
+            background: #e2e8f0;
+            color: #475569;
         }
     }
 
-    &__live-indicator {
-        font-size: 1.05rem;
+    &__live-dot {
+        font-size: 0.95rem;
         font-weight: 800;
-        padding: 0.25rem 0.75rem;
-        border-radius: 14px;
-        background: #10b981;
+        padding: 0.15rem 0.5rem;
+        border-radius: 10px;
+        background: #00a79e;
         color: #ffffff;
-        animation: badge-pulse 1.8s infinite;
     }
 
     &__desc {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         color: #94a3b8;
         line-height: 1.4;
 
@@ -909,104 +684,88 @@
         }
     }
 
-    &__metrics {
+    &__stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        padding: 1.2rem 1.4rem;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.03);
+        gap: 0.8rem;
+        padding: 1rem;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
 
         :global(body.theme--light) & {
-            background: #f8f9fe;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
         }
-    }
-
-    &__metric-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.3rem;
 
         .label {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #94a3b8;
-            font-weight: 600;
-
-            :global(body.theme--light) & {
-                color: #64748b;
-            }
+            display: block;
         }
 
-        .value {
-            font-size: 1.35rem;
+        .val {
+            font-size: 1.25rem;
             font-weight: 700;
             font-family: var(--font-mono, monospace);
             color: #ffffff;
 
             :global(body.theme--light) & {
-                color: #1e1b4b;
+                color: #0f172a;
             }
         }
     }
 
-    &__bottom {
+    &__footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 1rem;
+        gap: 0.8rem;
     }
 
-    &__pnl-box {
-        display: flex;
-        flex-direction: column;
-        gap: 0.3rem;
-
+    &__pnl {
         .label {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: #94a3b8;
-            font-weight: 600;
+            display: block;
         }
 
-        .pnl-val {
-            font-size: 1.8rem;
+        .val {
+            font-size: 1.6rem;
             font-weight: 800;
             font-family: var(--font-mono, monospace);
 
             &--win {
-                color: #10b981;
+                color: #00a79e;
             }
 
             &--loss {
-                color: #f43f5e;
+                color: #ff444f;
             }
         }
     }
 
     &__sell-btn {
-        padding: 0.8rem 1.6rem;
-        border-radius: 14px;
-        background: #6c5ce7;
+        padding: 0.65rem 1.3rem;
+        border-radius: 6px;
+        background: #ff444f;
         border: none;
         color: #ffffff;
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 700;
         cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 16px rgba(108, 92, 231, 0.35);
+        transition: all 0.15s ease;
 
         &:hover:not(:disabled) {
-            background: #5b4cdb;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.45);
+            background: #eb3e48;
         }
     }
 }
 
-// ── 8. Archived Statements Banner ──
-.reports-statement-wrapper {
+// ── 7. Archived Banner & Action Buttons ──
+.reports-statement-section {
     display: flex;
     flex-direction: column;
-    gap: 1.8rem;
+    gap: 1.4rem;
     width: 100%;
 }
 
@@ -1015,155 +774,136 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1.4rem;
-    padding: 1.6rem 2.2rem;
-    border-radius: 20px;
-    background: #14192b;
-    border: 1px solid rgba(108, 92, 231, 0.2);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+    gap: 1.2rem;
+    padding: 1.2rem 1.6rem;
+    border-radius: 10px;
+    background: #141824;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 
     :global(body.theme--light) & {
         background: #ffffff;
-        border-color: #e0e7ff;
-        box-shadow: 0 4px 20px rgba(108, 92, 231, 0.06);
+        border-color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
     &__left {
         display: flex;
         align-items: center;
-        gap: 1.4rem;
+        gap: 1rem;
     }
 
     &__icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(108, 92, 231, 0.15);
-        color: #6c5ce7;
-        flex-shrink: 0;
-
-        :global(body.theme--light) & {
-            background: #ede9fe;
-            color: #6d28d9;
-        }
+        font-size: 1.8rem;
     }
 
     &__text {
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
-    }
+        gap: 0.2rem;
 
-    &__title {
-        font-size: 1.35rem;
-        font-weight: 700;
-        color: #ffffff;
+        strong {
+            font-size: 1.3rem;
+            color: #ffffff;
 
-        :global(body.theme--light) & {
-            color: #1e1b4b;
+            :global(body.theme--light) & {
+                color: #0f172a;
+            }
         }
-    }
 
-    &__sub {
-        font-size: 1.2rem;
-        color: #94a3b8;
+        span {
+            font-size: 1.15rem;
+            color: #94a3b8;
 
-        :global(body.theme--light) & {
-            color: #64748b;
+            :global(body.theme--light) & {
+                color: #64748b;
+            }
         }
     }
 
     &__actions {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.8rem;
     }
 }
 
-.reports-archive-btn {
-    padding: 0.8rem 1.6rem;
-    border-radius: 14px;
-    background: #6c5ce7;
-    border: none;
-    color: #ffffff;
-    font-size: 1.25rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 16px rgba(108, 92, 231, 0.35);
-
-    &:hover {
-        background: #5b4cdb;
-        transform: translateY(-1px);
-    }
-
-    &--active {
-        background: #10b981 !important;
-        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35) !important;
-    }
-}
-
-.reports-archive-external-btn {
+.reports-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.75rem 1.4rem;
-    border-radius: 14px;
-    background: transparent;
-    border: 1px solid rgba(108, 92, 231, 0.2);
-    color: #94a3b8;
-    font-size: 1.25rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-size: 1.2rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.18s ease;
+    text-decoration: none;
+    transition: all 0.15s ease;
 
-    :global(body.theme--light) & {
-        border-color: #e0e7ff;
-        color: #64748b;
+    &--primary {
+        background: #ff444f;
+        border: 1px solid #ff444f;
+        color: #ffffff;
     }
 
-    &:hover {
+    &--secondary {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         color: #ffffff;
-        border-color: #6c5ce7;
 
         :global(body.theme--light) & {
-            color: #1e1b4b;
-            border-color: #6c5ce7;
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+    }
+
+    &--outline {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #94a3b8;
+
+        :global(body.theme--light) & {
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+
+        &:hover {
+            color: #ffffff;
+
+            :global(body.theme--light) & {
+                color: #0f172a;
+            }
         }
     }
 }
 
-// ── 9. Empty States ──
+// ── 8. Empty States ──
 .reports-empty-state {
-    padding: 4rem 2rem;
+    padding: 3.5rem 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.6rem;
     text-align: center;
 
     &__icon {
-        font-size: 3.6rem;
-        margin-bottom: 0.4rem;
+        font-size: 3rem;
+        margin-bottom: 0.2rem;
     }
 
     h3 {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 700;
         color: #ffffff;
         margin: 0;
 
         :global(body.theme--light) & {
-            color: #1e1b4b;
+            color: #0f172a;
         }
     }
 
     p {
-        font-size: 1.35rem;
+        font-size: 1.3rem;
         color: #94a3b8;
         margin: 0;
 
@@ -1177,9 +917,4 @@
 @keyframes reports-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
-}
-
-@keyframes badge-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
 }

@@ -38,7 +38,10 @@ export class AccountSwitcherService {
 
             // 2. Resolve token for the target account
             const accountsList = getAccountsList();
-            const targetToken = accountsList[targetLoginId] || '';
+            let targetToken = accountsList[targetLoginId] || '';
+            if (!targetToken) {
+                targetToken = (await import('@/utils/token-bridge')).getActiveToken(targetLoginId) || '';
+            }
 
             if (targetToken) {
                 localStorage.setItem('authToken', targetToken);
@@ -50,7 +53,7 @@ export class AccountSwitcherService {
             // 3. Resolve target account metadata from clientAccounts or accountsList
             let clientAccounts: Record<string, any> = {};
             try {
-                const rawClientAccounts = localStorage.getItem('clientAccounts');
+                const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
                 if (rawClientAccounts) {
                     clientAccounts = JSON.parse(rawClientAccounts);
                 }
@@ -58,6 +61,7 @@ export class AccountSwitcherService {
 
             const targetAccData = clientAccounts[targetLoginId] || {};
             const isVirtual = isDemoAccount(targetLoginId);
+            localStorage.setItem('account_type', isVirtual ? 'demo' : 'real');
             const currency = targetAccData.currency || (isVirtual ? 'USD' : 'USD');
             const balance = Number(targetAccData.balance || 0);
 
@@ -85,7 +89,7 @@ export class AccountSwitcherService {
             setIsAuthorizing(false);
 
             // 5. Broadcast global instant sync events for all listening components
-            window.dispatchEvent(new CustomEvent('account_switched', { detail: { loginid: targetLoginId, currency, balance } }));
+            window.dispatchEvent(new CustomEvent('account_switched', { detail: { loginid: targetLoginId, currency, balance, token: targetToken } }));
             window.dispatchEvent(new Event('currency_changed'));
             window.dispatchEvent(new Event('storage'));
 
@@ -96,9 +100,22 @@ export class AccountSwitcherService {
                         // Fast path: Authorize on existing live connection (~50ms)
                         const res = await api_base.api.authorize(targetToken);
                         if (res?.authorize) {
-                            console.log('[AccountSwitcherService] Live WebSocket authorized instantly:', res.authorize.loginid);
-                            // Subscribe to balance stream
+                            console.log('[AccountSwitcherService] Live WebSocket authorized instantly for:', res.authorize.loginid);
+                            api_base.account_info = {
+                                balance: res.authorize.balance,
+                                currency: res.authorize.currency,
+                                loginid: res.authorize.loginid,
+                            };
+                            api_base.token = res.authorize.loginid;
+                            api_base.is_authorized = true;
+
+                            if (clientStore && typeof clientStore.setBalance === 'function') {
+                                clientStore.setBalance(String(res.authorize.balance));
+                            }
+
+                            // Subscribe to live balance & transaction stream
                             api_base.api.send({ balance: 1, subscribe: 1 }).catch(() => {});
+                            api_base.api.send({ transaction: 1, subscribe: 1 }).catch(() => {});
                         }
                     } else {
                         // Fallback: Run authorizeAndSubscribe

@@ -20,8 +20,9 @@ export const getAccountsList = (): Record<string, string> => {
             const parsed = JSON.parse(rawAccountsList);
             if (parsed && typeof parsed === 'object') {
                 for (const k in parsed) {
-                    if (parsed[k] && !isInvalidBearerToken(parsed[k])) {
-                        map[k] = parsed[k];
+                    const token = typeof parsed[k] === 'string' ? parsed[k] : parsed[k]?.token;
+                    if (token && !isInvalidBearerToken(token)) {
+                        map[k] = token;
                     }
                 }
             }
@@ -41,7 +42,22 @@ export const getAccountsList = (): Record<string, string> => {
             }
         }
 
-        // 3. Check deriv_accounts in session/local storage
+        // 3. Check client_account_details
+        const rawAccountDetails = localStorage.getItem('client_account_details');
+        if (rawAccountDetails) {
+            const parsed = JSON.parse(rawAccountDetails);
+            if (Array.isArray(parsed)) {
+                parsed.forEach((item: any) => {
+                    const id = item?.loginid || item?.account_id;
+                    const token = item?.token;
+                    if (id && token && !isInvalidBearerToken(token)) {
+                        map[id] = token;
+                    }
+                });
+            }
+        }
+
+        // 4. Check deriv_accounts in session/local storage
         const rawDerivAccounts = sessionStorage.getItem('deriv_accounts') || localStorage.getItem('deriv_accounts');
         if (rawDerivAccounts) {
             const parsed = JSON.parse(rawDerivAccounts);
@@ -56,7 +72,7 @@ export const getAccountsList = (): Record<string, string> => {
             }
         }
 
-        // 4. Direct token fallback if mapped with active_loginid
+        // 5. Direct token fallback if mapped with active_loginid
         const activeId = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid');
         const directToken =
             localStorage.getItem('token') ||
@@ -82,15 +98,17 @@ const isInvalidBearerToken = (token: string | null | undefined): boolean =>
     !token || token === 'null' || token === 'undefined' || token === 'a1-guest';
 
 /** Synchronously checks if a valid token is available in storage or URL */
-export const getActiveToken = (): string | null => {
+export const getActiveToken = (specificLoginId?: string): string | null => {
     const list = getAccountsList();
-    const id = getActiveLoginId();
+    const id = specificLoginId || getActiveLoginId();
     if (id && list[id] && !isInvalidBearerToken(list[id])) {
         return list[id];
     }
-    for (const key in list) {
-        if (!isInvalidBearerToken(list[key])) {
-            return list[key];
+    if (!specificLoginId) {
+        for (const key in list) {
+            if (!isInvalidBearerToken(list[key])) {
+                return list[key];
+            }
         }
     }
 
@@ -99,18 +117,10 @@ export const getActiveToken = (): string | null => {
         localStorage.getItem('active_token') ||
         localStorage.getItem('authToken') ||
         localStorage.getItem('token1') ||
-        localStorage.getItem('deriv_api_token') ||
-        sessionStorage.getItem('token') ||
-        sessionStorage.getItem('active_token') ||
-        sessionStorage.getItem('token1');
+        localStorage.getItem('deriv_api_token');
 
     if (!isInvalidBearerToken(storedToken)) {
-        return storedToken!;
-    }
-
-    const oauthToken = OAuthTokenExchangeService.getAccessToken();
-    if (!isInvalidBearerToken(oauthToken)) {
-        return oauthToken!;
+        return storedToken;
     }
 
     return null;
@@ -120,9 +130,9 @@ export const getActiveToken = (): string | null => {
  * Robustly resolves a valid Deriv WebSocket authorization token for an account.
  * Fast-paths synchronous storage checks so postMessage handshakes are never delayed.
  */
-export const resolveValidDerivWSToken = async (_loginid?: string): Promise<string> => {
-    // 1. Fast synchronous check from storage / URL
-    const syncToken = getActiveToken();
+export const resolveValidDerivWSToken = async (loginid?: string): Promise<string> => {
+    // 1. Fast synchronous check from storage / URL for target loginid
+    const syncToken = getActiveToken(loginid);
     if (syncToken) {
         return syncToken;
     }
