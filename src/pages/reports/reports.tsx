@@ -59,7 +59,7 @@ interface OpenPosition {
 
 export const ReportsPage: React.FC = () => {
     const { isAuthorized, activeLoginid } = useApiBase();
-    const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('portfolio');
+    const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('positions');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [refreshIndex, setRefreshIndex] = useState<number>(0);
 
@@ -341,99 +341,77 @@ export const ReportsPage: React.FC = () => {
 
     return (
         <div className="reports-page">
-            {/* ── Top Header Banner ── */}
+            {/* ── Minimal Header ── */}
             <div className="reports-page__header">
                 <div className="reports-page__title-box">
-                    <h1 className="reports-page__title">{localize('Trading Reports & Portfolio')}</h1>
-                    <p className="reports-page__subtitle">
-                        {localize('Live streaming positions, transaction statement ledger, and performance analytics')}
-                    </p>
+                    <h1 className="reports-page__title">{localize('Reports')}</h1>
                 </div>
                 <div className="reports-page__actions">
                     <button
                         className={`reports-page__refresh-btn ${isLoading ? 'reports-page__refresh-btn--loading' : ''}`}
                         onClick={() => setRefreshIndex(prev => prev + 1)}
                         disabled={isLoading}
-                        title={localize('Refresh reports')}
+                        title={localize('Refresh')}
                     >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                         </svg>
-                        <span>{isLoading ? localize('Syncing...') : localize('Refresh')}</span>
+                        <span>{isLoading ? localize('Syncing...') : localize('Sync')}</span>
                     </button>
                 </div>
             </div>
 
-            {/* ── Top Metrics Cards (For Table Subtabs) ── */}
+            {/* ── Compact Minimal KPI Strip ── */}
             {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
                 <div className="reports-metrics-grid">
-                    {/* 1. Total Net Profit */}
+                    {/* 1. Net P&L */}
                     <div className={`reports-metric-card ${metrics.totalProfit >= 0 ? 'reports-metric-card--profit' : 'reports-metric-card--loss'}`}>
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Total Net Profit')}</span>
-                            <div className="reports-metric-card__icon-box">
-                                {metrics.totalProfit >= 0 ? '📈' : '📉'}
-                            </div>
+                            <span className="reports-metric-card__label">{localize('Net P&L')}</span>
+                            <span className={`reports-metric-card__tag ${metrics.totalProfit >= 0 ? 'reports-metric-card__tag--win' : 'reports-metric-card__tag--loss'}`}>
+                                {metrics.totalProfit >= 0 ? 'PROFIT' : 'LOSS'}
+                            </span>
                         </div>
                         <div className="reports-metric-card__value">
-                            {metrics.totalProfit >= 0 ? `+${formatMoney(currency, metrics.totalProfit, true)}` : formatMoney(currency, metrics.totalProfit, true)} {currency}
-                        </div>
-                        <div className="reports-metric-card__footer">
-                            <span className={`reports-metric-card__tag ${metrics.totalProfit >= 0 ? 'reports-metric-card__tag--win' : 'reports-metric-card__tag--loss'}`}>
-                                {metrics.totalProfit >= 0 ? 'PROFITABLE' : 'DRAWDOWN'}
-                            </span>
-                            <span className="reports-metric-card__subtext">Across {metrics.totalTrades} closed trades</span>
+                            {metrics.totalProfit >= 0 ? `+${formatMoney(currency, metrics.totalProfit, true)}` : formatMoney(currency, metrics.totalProfit, true)} <span className="reports-metric-card__unit">{currency}</span>
                         </div>
                     </div>
 
                     {/* 2. Win Rate */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Win Rate %')}</span>
-                            <div className="reports-metric-card__icon-box">🎯</div>
-                        </div>
-                        <div className="reports-metric-card__value">
-                            {metrics.winRate.toFixed(1)}%
-                        </div>
-                        <div className="reports-metric-card__footer">
+                            <span className="reports-metric-card__label">{localize('Win Rate')}</span>
                             <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
                                 {metrics.wins}W / {metrics.losses}L
                             </span>
-                            <span className="reports-metric-card__subtext">Success ratio</span>
+                        </div>
+                        <div className="reports-metric-card__value">
+                            {metrics.winRate.toFixed(1)}%
                         </div>
                     </div>
 
                     {/* 3. Total Contracts */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Total Contracts')}</span>
-                            <div className="reports-metric-card__icon-box">📑</div>
+                            <span className="reports-metric-card__label">{localize('Trades')}</span>
+                            {openPositions.length > 0 && (
+                                <span className="reports-metric-card__tag reports-metric-card__tag--win">
+                                    {openPositions.length} LIVE
+                                </span>
+                            )}
                         </div>
                         <div className="reports-metric-card__value">
                             {addComma(metrics.totalTrades)}
-                        </div>
-                        <div className="reports-metric-card__footer">
-                            <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
-                                {openPositions.length} LIVE OPEN
-                            </span>
-                            <span className="reports-metric-card__subtext">Executed orders</span>
                         </div>
                     </div>
 
                     {/* 4. Total Payout */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Total Payout Volume')}</span>
-                            <div className="reports-metric-card__icon-box">💎</div>
+                            <span className="reports-metric-card__label">{localize('Total Payout')}</span>
                         </div>
                         <div className="reports-metric-card__value">
-                            {formatMoney(currency, metrics.totalPayout, true)} {currency}
-                        </div>
-                        <div className="reports-metric-card__footer">
-                            <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
-                                RETURN VOLUME
-                            </span>
-                            <span className="reports-metric-card__subtext">Gross proceeds</span>
+                            {formatMoney(currency, metrics.totalPayout, true)} <span className="reports-metric-card__unit">{currency}</span>
                         </div>
                     </div>
                 </div>
@@ -441,15 +419,37 @@ export const ReportsPage: React.FC = () => {
 
             {/* ── Main Reports Container ── */}
             <div className="reports-content-card">
-                {/* ── Sub-Tabs & Filter Toolbar ── */}
+                {/* ── Minimal Sub-Tabs & Filter Toolbar ── */}
                 <div className="reports-toolbar">
                     <div className="reports-subtabs">
+                        <button
+                            className={`reports-subtab-btn ${activeSubTab === 'positions' ? 'reports-subtab-btn--active' : ''}`}
+                            onClick={() => setActiveSubTab('positions')}
+                        >
+                            <span>{localize('Positions')}</span>
+                            <span className={`reports-subtab-badge ${openPositions.length > 0 ? 'reports-subtab-badge--live' : ''}`}>
+                                {openPositions.length}
+                            </span>
+                        </button>
+                        <button
+                            className={`reports-subtab-btn ${activeSubTab === 'profit_table' ? 'reports-subtab-btn--active' : ''}`}
+                            onClick={() => setActiveSubTab('profit_table')}
+                        >
+                            <span>{localize('Profit Table')}</span>
+                            <span className="reports-subtab-badge">{filteredProfitList.length}</span>
+                        </button>
+                        <button
+                            className={`reports-subtab-btn ${activeSubTab === 'statement' ? 'reports-subtab-btn--active' : ''}`}
+                            onClick={() => setActiveSubTab('statement')}
+                        >
+                            <span>{localize('Statement')}</span>
+                            <span className="reports-subtab-badge">{filteredStatementList.length}</span>
+                        </button>
                         <button
                             className={`reports-subtab-btn ${activeSubTab === 'portfolio' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('portfolio')}
                         >
-                            <span>{localize('Portfolio & Analytics')}</span>
-                            <span className="reports-subtab-badge reports-subtab-badge--live">LIVE</span>
+                            <span>{localize('Analytics')}</span>
                         </button>
                         <button
                             className={`reports-subtab-btn ${activeSubTab === 'wallets' ? 'reports-subtab-btn--active' : ''}`}
@@ -461,30 +461,7 @@ export const ReportsPage: React.FC = () => {
                             className={`reports-subtab-btn ${activeSubTab === 'account' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('account')}
                         >
-                            <span>{localize('Account Management')}</span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'profit_table' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('profit_table')}
-                        >
-                            <span>{localize('Profit Table')}</span>
-                            <span className="reports-subtab-badge">{filteredProfitList.length}</span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'positions' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('positions')}
-                        >
-                            <span>{localize('Open Positions')}</span>
-                            <span className={`reports-subtab-badge ${openPositions.length > 0 ? 'reports-subtab-badge--live' : ''}`}>
-                                {openPositions.length}
-                            </span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'statement' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('statement')}
-                        >
-                            <span>{localize('Statement')}</span>
-                            <span className="reports-subtab-badge">{filteredStatementList.length}</span>
+                            <span>{localize('Settings')}</span>
                         </button>
                     </div>
 
@@ -492,13 +469,13 @@ export const ReportsPage: React.FC = () => {
                         <div className="reports-filter-group">
                             {/* Search Input */}
                             <div className="reports-search-box">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <circle cx="11" cy="11" r="8" />
                                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
                                 </svg>
                                 <input
                                     type="text"
-                                    placeholder={localize('Filter by ID or details...')}
+                                    placeholder={localize('Search ID or detail...')}
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                 />

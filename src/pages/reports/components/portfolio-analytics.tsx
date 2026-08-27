@@ -252,7 +252,7 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                 <div className="pa-kpi-card pa-kpi-card--deposit">
                     <div className="pa-kpi-card__header">
                         <div className="pa-kpi-card__title-box">
-                            <span className="pa-kpi-card__caption">{localize('Total Deposits')}</span>
+                            <span className="pa-kpi-card__caption">{localize('Deposits')}</span>
                             <h3 className="pa-kpi-card__value">
                                 {formatMoney(currency, financialStats.deposits, true)} <span className="pa-kpi-card__unit">{currency}</span>
                             </h3>
@@ -265,9 +265,8 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                     </div>
                     <div className="pa-kpi-card__footer">
                         <span className="pa-badge pa-badge--neutral">
-                            {financialStats.depositCount} {financialStats.depositCount === 1 ? localize('Transaction') : localize('Transactions')}
+                            {financialStats.depositCount} {financialStats.depositCount === 1 ? localize('Txn') : localize('Txns')}
                         </span>
-                        <span className="pa-kpi-card__subtext">{localize('Inflow capital')}</span>
                     </div>
                 </div>
 
@@ -275,7 +274,7 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                 <div className="pa-kpi-card pa-kpi-card--withdrawal">
                     <div className="pa-kpi-card__header">
                         <div className="pa-kpi-card__title-box">
-                            <span className="pa-kpi-card__caption">{localize('Total Withdrawals')}</span>
+                            <span className="pa-kpi-card__caption">{localize('Withdrawals')}</span>
                             <h3 className="pa-kpi-card__value">
                                 {formatMoney(currency, financialStats.withdrawals, true)} <span className="pa-kpi-card__unit">{currency}</span>
                             </h3>
@@ -288,9 +287,8 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                     </div>
                     <div className="pa-kpi-card__footer">
                         <span className="pa-badge pa-badge--neutral">
-                            {financialStats.withdrawalCount} {financialStats.withdrawalCount === 1 ? localize('Transaction') : localize('Transactions')}
+                            {financialStats.withdrawalCount} {financialStats.withdrawalCount === 1 ? localize('Txn') : localize('Txns')}
                         </span>
-                        <span className="pa-kpi-card__subtext">{localize('Outflow realized')}</span>
                     </div>
                 </div>
 
@@ -298,7 +296,7 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                 <div className={`pa-kpi-card ${financialStats.netProfit >= 0 ? 'pa-kpi-card--profit' : 'pa-kpi-card--loss'}`}>
                     <div className="pa-kpi-card__header">
                         <div className="pa-kpi-card__title-box">
-                            <span className="pa-kpi-card__caption">{localize('Net Trading Profit')}</span>
+                            <span className="pa-kpi-card__caption">{localize('Net Profit')}</span>
                             <h3 className={`pa-kpi-card__value ${financialStats.netProfit >= 0 ? 'pa-kpi-card__value--profit' : 'pa-kpi-card__value--loss'}`}>
                                 {financialStats.netProfit >= 0 ? `+${formatMoney(currency, financialStats.netProfit, true)}` : formatMoney(currency, financialStats.netProfit, true)}
                                 <span className="pa-kpi-card__unit"> {currency}</span>
@@ -319,37 +317,31 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                         </div>
                     </div>
                     <div className="pa-kpi-card__footer">
-                        <span className={`pa-badge ${financialStats.netProfit >= 0 ? 'pa-badge--success' : 'pa-badge--danger'}`}>
-                            {financialStats.winRate.toFixed(1)}% {localize('Win Rate')}
-                        </span>
-                        <span className="pa-kpi-card__subtext">
-                            {financialStats.wins}W • {financialStats.losses}L
+                        <span className={`pa-badge ${financialStats.winRate >= 50 ? 'pa-badge--success' : 'pa-badge--danger'}`}>
+                            {financialStats.winRate.toFixed(0)}% {localize('Win')}
                         </span>
                     </div>
                 </div>
 
-                {/* 5. Total Loss & Profit Factor KPI */}
-                <div className="pa-kpi-card pa-kpi-card--loss-stat">
+                {/* 5. Profit Factor KPI */}
+                <div className="pa-kpi-card">
                     <div className="pa-kpi-card__header">
                         <div className="pa-kpi-card__title-box">
-                            <span className="pa-kpi-card__caption">{localize('Total Realized Loss')}</span>
-                            <h3 className="pa-kpi-card__value pa-kpi-card__value--loss">
-                                -{formatMoney(currency, financialStats.totalLoss, true)} <span className="pa-kpi-card__unit">{currency}</span>
+                            <span className="pa-kpi-card__caption">{localize('Profit Factor')}</span>
+                            <h3 className="pa-kpi-card__value pa-kpi-card__value--muted">
+                                {financialStats.profitFactor}
                             </h3>
                         </div>
-                        <div className="pa-kpi-card__icon pa-kpi-card__icon--loss">
+                        <div className="pa-kpi-card__icon">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="15" y1="9" x2="9" y2="15" />
-                                <line x1="9" y1="9" x2="15" y2="15" />
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                             </svg>
                         </div>
                     </div>
                     <div className="pa-kpi-card__footer">
                         <span className="pa-badge pa-badge--neutral">
-                            {localize('Factor')}: {financialStats.profitFactor}
+                            {addComma(financialStats.totalTrades)} {localize('Trades')}
                         </span>
-                        <span className="pa-kpi-card__subtext">{addComma(financialStats.totalTrades)} {localize('total trades')}</span>
                     </div>
                 </div>
             </div>
@@ -360,8 +352,7 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                 <div className="pa-analytics-card">
                     <div className="pa-analytics-card__header">
                         <div>
-                            <h3 className="pa-analytics-card__title">{localize('Strategy Performance Distribution')}</h3>
-                            <p className="pa-analytics-card__subtitle">{localize('Volume allocation and trade profitability breakdown')}</p>
+                            <h3 className="pa-analytics-card__title">{localize('Strategy Breakdown')}</h3>
                         </div>
                         <div className="pa-period-pills">
                             {(['ALL', '30D', '7D', '24H'] as const).map(p => (
@@ -461,16 +452,15 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                     )}
                 </div>
 
-                {/* ── CARD 2: EXECUTION TELEMETRY & PROFIT DYNAMICS ── */}
+                {/* ── CARD 2: EXECUTION & VOLUME ── */}
                 <div className="pa-analytics-card">
                     <div className="pa-analytics-card__header">
                         <div>
-                            <h3 className="pa-analytics-card__title">{localize('Execution Dynamics & Volume')}</h3>
-                            <p className="pa-analytics-card__subtitle">{localize('Chronological trade distribution and execution efficiency')}</p>
+                            <h3 className="pa-analytics-card__title">{localize('Execution & Volume')}</h3>
                         </div>
                         <div className="pa-live-badge">
                             <span className="pa-live-badge__dot"></span>
-                            <span>{openPositionsCount} {localize('Active Positions')}</span>
+                            <span>{openPositionsCount} {localize('Open')}</span>
                         </div>
                     </div>
 

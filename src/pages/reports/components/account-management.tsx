@@ -75,10 +75,7 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
             {/* ── Top Header ── */}
             <div className="am-header">
                 <div>
-                    <h2 className="am-header__title">{localize('Account Settings & Security')}</h2>
-                    <p className="am-header__subtitle">
-                        {localize('Review your Deriv account details, verification status, linked wallets and permissions')}
-                    </p>
+                    <h2 className="am-header__title">{localize('Account Settings')}</h2>
                 </div>
                 <div className="am-header__actions">
                     <button
@@ -89,7 +86,7 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                         </svg>
-                        <span>{isLoading ? localize('Syncing...') : localize('Refresh')}</span>
+                        <span>{isLoading ? localize('Syncing...') : localize('Sync')}</span>
                     </button>
                 </div>
             </div>
@@ -100,7 +97,7 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                     className={`am-nav-pill ${activeSection === 'profile' ? 'am-nav-pill--active' : ''}`}
                     onClick={() => setActiveSection('profile')}
                 >
-                    {localize('Profile & Identity')}
+                    {localize('Profile')}
                 </button>
                 <button
                     className={`am-nav-pill ${activeSection === 'linked' ? 'am-nav-pill--active' : ''}`}
@@ -112,13 +109,13 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                     className={`am-nav-pill ${activeSection === 'markup' ? 'am-nav-pill--active' : ''}`}
                     onClick={() => setActiveSection('markup')}
                 >
-                    {localize('Markup Statistics')}
+                    {localize('Markup')}
                 </button>
                 <button
                     className={`am-nav-pill ${activeSection === 'security' ? 'am-nav-pill--active' : ''}`}
                     onClick={() => setActiveSection('security')}
                 >
-                    {localize('API Scopes')}
+                    {localize('Scopes')}
                 </button>
             </div>
 

@@ -1,37 +1,45 @@
 // ══════════════════════════════════════════════════════════════════════════
-// ✦ DERIV QUILL UI — REPORTS & TRANSACTION LEDGER (LIGHT & DARK DUAL-THEME)
+// ✦ DERIV OFFICIAL MINIMAL & CLEAN REPORTS DESIGN SYSTEM
 // ══════════════════════════════════════════════════════════════════════════
 
 .reports-page {
     width: 100%;
     min-height: 100%;
-    padding: 2.4rem 2.8rem;
+    padding: 2rem 2.4rem;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.8rem;
     background: var(--general-main-1, #0e1117);
-    color: var(--text-prominent, #161b22);
+    color: var(--text-prominent, #ffffff);
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
     :global(body.theme--light) & {
         background: #f8fafc;
+        color: #0f172a;
     }
 
-    // ── Header ──
+    @media (max-width: 768px) {
+        padding: 1.2rem;
+        gap: 1.4rem;
+    }
+
+    // ── Header Bar ──
     &__header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
-        gap: 1.6rem;
+        gap: 1.2rem;
+        padding-bottom: 0.4rem;
     }
 
     &__title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
         margin: 0;
-        color: var(--text-prominent, #161b22);
+        color: var(--text-prominent, #ffffff);
 
         :global(body.theme--light) & {
             color: #0f172a;
@@ -39,9 +47,9 @@
     }
 
     &__subtitle {
-        font-size: 1.3rem;
-        color: var(--text-less-prominent, #64748b);
-        margin: 0.4rem 0 0;
+        font-size: 1.25rem;
+        color: var(--text-less-prominent, #8b949e);
+        margin: 0.3rem 0 0;
 
         :global(body.theme--light) & {
             color: #64748b;
@@ -51,72 +59,78 @@
     &__actions {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: 0.8rem;
     }
 
     &__refresh-btn {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 0.8rem;
-        padding: 0.8rem 1.6rem;
-        border-radius: 8px;
-        background: var(--general-main-2, #181c24);
-        border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
-        color: var(--text-prominent, #161b22);
-        font-size: 1.25rem;
+        gap: 0.6rem;
+        padding: 0.65rem 1.2rem;
+        border-radius: 6px;
+        background: var(--general-main-2, #161b22);
+        border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.12));
+        color: var(--text-prominent, #ffffff);
+        font-size: 1.2rem;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.15s ease;
 
         :global(body.theme--light) & {
             background: #ffffff;
             border-color: #cbd5e1;
             color: #1e293b;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         &:hover:not(:disabled) {
-            background: var(--general-hover, rgba(255, 255, 255, 0.08));
-            border-color: rgba(255, 255, 255, 0.18);
+            background: var(--general-hover, rgba(255, 255, 255, 0.06));
+            border-color: rgba(255, 255, 255, 0.2);
 
             :global(body.theme--light) & {
                 background: #f1f5f9;
+                border-color: #94a3b8;
             }
         }
 
         &--loading svg {
-            animation: reports-spin 1s linear infinite;
+            animation: reports-spin 0.8s linear infinite;
         }
     }
 }
 
-// ── Metrics Grid (For Tables Subtabs) ──
+// ── Summary Metrics Bar (Minimalist 4-Card Row) ──
 .reports-metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.6rem;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1.2rem;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+    }
 }
 
 .reports-metric-card {
-    background: var(--general-main-2, #181c24);
+    background: var(--general-main-2, #161b22);
     border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
-    border-radius: 12px;
-    padding: 1.8rem 2rem;
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 130px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    transition: all 0.2s ease;
+    min-height: 100px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: border-color 0.15s ease;
 
     :global(body.theme--light) & {
         background: #ffffff;
         border-color: #e2e8f0;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
     }
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.18);
 
         :global(body.theme--light) & {
             border-color: #cbd5e1;
@@ -138,11 +152,11 @@
     }
 
     &__label {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         font-weight: 600;
-        color: var(--text-less-prominent, #64748b);
+        color: var(--text-less-prominent, #8b949e);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
 
         :global(body.theme--light) & {
             color: #64748b;
@@ -150,18 +164,27 @@
     }
 
     &__icon-box {
-        font-size: 1.6rem;
+        font-size: 1.3rem;
+        opacity: 0.85;
     }
 
     &__value {
-        font-size: 2.2rem;
-        font-weight: 800;
-        letter-spacing: -0.01em;
-        color: var(--text-prominent, #161b22);
+        font-size: 1.8rem;
+        font-weight: 700;
+        font-family: 'Space Grotesk', -apple-system, sans-serif;
+        color: var(--text-prominent, #ffffff);
         margin: 0.6rem 0;
 
         :global(body.theme--light) & {
             color: #0f172a;
+        }
+
+        .reports-metric-card--profit & {
+            color: #00a79e;
+        }
+
+        .reports-metric-card--loss & {
+            color: #ff444f;
         }
     }
 
@@ -169,14 +192,16 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: auto;
+        gap: 0.6rem;
     }
 
     &__tag {
-        font-size: 1.05rem;
+        font-size: 0.95rem;
         font-weight: 700;
-        padding: 0.25rem 0.7rem;
+        padding: 0.15rem 0.6rem;
         border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
 
         &--win {
             background: rgba(0, 167, 158, 0.12);
@@ -189,8 +214,8 @@
         }
 
         &--neutral {
-            background: var(--general-section-1, rgba(255, 255, 255, 0.06));
-            color: var(--text-less-prominent, #64748b);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-less-prominent, #8b949e);
 
             :global(body.theme--light) & {
                 background: #f1f5f9;
@@ -200,8 +225,8 @@
     }
 
     &__subtext {
-        font-size: 1.1rem;
-        color: var(--text-less-prominent, #64748b);
+        font-size: 1.05rem;
+        color: var(--text-less-prominent, #8b949e);
 
         :global(body.theme--light) & {
             color: #64748b;
@@ -209,25 +234,24 @@
     }
 }
 
-// ── Content Wrapper ──
+// ── Content Card Container ──
 .reports-content-card {
     background: transparent;
     border: none;
     display: flex;
     flex-direction: column;
     min-height: 480px;
-    gap: 1.6rem;
+    gap: 1.4rem;
 }
 
-// ── Quill Segmented Tab Bar ──
+// ── Deriv Official Flat Line Sub-Tabs ──
 .reports-toolbar {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding-bottom: 0.8rem;
+    align-items: flex-end;
     flex-wrap: wrap;
-    gap: 1.6rem;
-    border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    gap: 1.2rem;
+    border-bottom: 2px solid var(--border-normal, rgba(255, 255, 255, 0.08));
 
     :global(body.theme--light) & {
         border-bottom-color: #e2e8f0;
@@ -236,56 +260,51 @@
 
 .reports-subtabs {
     display: flex;
-    gap: 0.6rem;
-    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
-    padding: 0.4rem;
-    border-radius: 10px;
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    gap: 0.4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
 
-    :global(body.theme--light) & {
-        background: #f1f5f9;
-        border-color: #e2e8f0;
+    &::-webkit-scrollbar {
+        display: none;
     }
 }
 
 .reports-subtab-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.8rem;
-    padding: 0.8rem 1.6rem;
-    border-radius: 8px;
+    gap: 0.6rem;
+    padding: 0.9rem 1.4rem;
     border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
     background: transparent;
-    color: var(--text-less-prominent, #64748b);
+    color: var(--text-less-prominent, #8b949e);
     font-size: 1.3rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    white-space: nowrap;
+    transition: all 0.15s ease;
 
     :global(body.theme--light) & {
         color: #64748b;
     }
 
     &:hover {
-        color: var(--text-prominent, #161b22);
-        background: var(--general-hover, rgba(255, 255, 255, 0.06));
+        color: var(--text-prominent, #ffffff);
 
         :global(body.theme--light) & {
             color: #0f172a;
-            background: #e2e8f0;
         }
     }
 
     &--active {
-        background: var(--general-main-2, #181c24);
         color: var(--text-prominent, #ffffff);
+        border-bottom: 2px solid #ff444f;
         font-weight: 700;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 
         :global(body.theme--light) & {
-            background: #ffffff;
             color: #0f172a;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            border-bottom-color: #ff444f;
         }
     }
 }
@@ -293,10 +312,10 @@
 .reports-subtab-badge {
     font-size: 1rem;
     font-weight: 700;
-    padding: 0.2rem 0.6rem;
-    border-radius: 10px;
+    padding: 0.15rem 0.55rem;
+    border-radius: 12px;
     background: var(--general-section-2, rgba(255, 255, 255, 0.08));
-    color: var(--text-less-prominent, #64748b);
+    color: var(--text-less-prominent, #8b949e);
 
     :global(body.theme--light) & {
         background: #e2e8f0;
@@ -310,22 +329,24 @@
     }
 }
 
+// ── Filter Toolbar ──
 .reports-filter-group {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.8rem;
+    padding-bottom: 0.5rem;
     flex-wrap: wrap;
 }
 
 .reports-search-box {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    background: var(--general-main-2, #181c24);
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
-    border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    color: var(--text-less-prominent, #64748b);
+    gap: 0.6rem;
+    background: var(--general-main-2, #161b22);
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
+    border-radius: 6px;
+    padding: 0.55rem 1rem;
+    color: var(--text-less-prominent, #8b949e);
 
     :global(body.theme--light) & {
         background: #ffffff;
@@ -337,27 +358,31 @@
         background: transparent;
         border: none;
         outline: none;
-        color: var(--text-prominent, #161b22);
-        font-size: 1.25rem;
-        width: 180px;
+        color: var(--text-prominent, #ffffff);
+        font-size: 1.2rem;
+        width: 160px;
 
         :global(body.theme--light) & {
             color: #0f172a;
         }
 
         &::placeholder {
-            color: var(--text-less-prominent, #64748b);
+            color: var(--text-less-prominent, #8b949e);
+
+            :global(body.theme--light) & {
+                color: #94a3b8;
+            }
         }
     }
 }
 
 .reports-date-pills {
     display: flex;
-    gap: 0.4rem;
-    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
-    padding: 3px;
-    border-radius: 8px;
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    gap: 0.3rem;
+    background: var(--general-main-2, #161b22);
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+    border-radius: 6px;
+    padding: 0.25rem;
 
     :global(body.theme--light) & {
         background: #f1f5f9;
@@ -366,181 +391,218 @@
 }
 
 .reports-date-pill {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
+    padding: 0.35rem 0.85rem;
+    border-radius: 4px;
     border: none;
     background: transparent;
-    color: var(--text-less-prominent, #64748b);
+    color: var(--text-less-prominent, #8b949e);
     font-size: 1.15rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.15s ease;
 
     :global(body.theme--light) & {
         color: #64748b;
     }
 
     &:hover {
-        color: var(--text-prominent, #161b22);
+        color: var(--text-prominent, #ffffff);
+
+        :global(body.theme--light) & {
+            color: #0f172a;
+        }
     }
 
     &--active {
-        background: var(--general-main-2, #181c24);
+        background: var(--general-section-2, rgba(255, 255, 255, 0.12));
         color: var(--text-prominent, #ffffff);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        font-weight: 700;
 
         :global(body.theme--light) & {
             background: #ffffff;
             color: #0f172a;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         }
     }
 }
 
-// ── Tables (Quill UI Data Grid) ──
+// ── Clean Minimal Deriv Official Tables ──
 .reports-table-wrapper {
-    flex: 1;
-    overflow-x: auto;
-    background: var(--general-main-2, #181c24);
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
-    border-radius: 12px;
-
-    :global(body.theme--light) & {
-        background: #ffffff;
-        border-color: #e2e8f0;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-    }
+    width: 100%;
 }
 
 .reports-table-container {
     width: 100%;
-    min-height: 380px;
+    overflow-x: auto;
+    background: var(--general-main-2, #161b22);
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+    :global(body.theme--light) & {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    }
 }
 
 .reports-table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 1.25rem;
     text-align: left;
-    font-size: 1.3rem;
 
-    th {
-        padding: 1.2rem 1.8rem;
-        font-size: 1.1rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--text-less-prominent, #64748b);
-        background: var(--general-section-1, rgba(255, 255, 255, 0.02));
-        border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    thead {
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
 
         :global(body.theme--light) & {
             background: #f8fafc;
             border-bottom-color: #e2e8f0;
-            color: #475569;
+        }
+
+        th {
+            padding: 1.1rem 1.4rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-less-prominent, #8b949e);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+
+            :global(body.theme--light) & {
+                color: #64748b;
+            }
         }
     }
 
-    td {
-        padding: 1.3rem 1.8rem;
-        border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.04));
-        vertical-align: middle;
-        color: var(--text-prominent, #161b22);
+    tbody {
+        tr {
+            border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.04));
+            transition: background 0.12s ease;
 
-        :global(body.theme--light) & {
-            border-bottom-color: #f1f5f9;
-            color: #1e293b;
-        }
-    }
+            :global(body.theme--light) & {
+                border-bottom-color: #f1f5f9;
+            }
 
-    tr:hover td {
-        background: var(--general-hover, rgba(255, 255, 255, 0.03));
+            &:last-child {
+                border-bottom: none;
+            }
 
-        :global(body.theme--light) & {
-            background: #f8fafc;
+            &:hover {
+                background: rgba(255, 255, 255, 0.03);
+
+                :global(body.theme--light) & {
+                    background: #f8fafc;
+                }
+            }
+
+            td {
+                padding: 1.1rem 1.4rem;
+                color: var(--text-prominent, #ffffff);
+                white-space: nowrap;
+                vertical-align: middle;
+
+                :global(body.theme--light) & {
+                    color: #1e293b;
+                }
+            }
         }
     }
 }
 
 .reports-badge-id {
-    font-family: var(--font-mono, monospace);
-    font-size: 1.2rem;
+    font-family: 'Space Grotesk', monospace;
+    font-size: 1.15rem;
     font-weight: 600;
-    color: #00a8cc;
-    background: rgba(0, 168, 204, 0.1);
-    padding: 0.25rem 0.6rem;
-    border-radius: 4px;
+    color: var(--text-less-prominent, #8b949e);
+
+    :global(body.theme--light) & {
+        color: #64748b;
+    }
 }
 
 .reports-cell-desc {
     max-width: 320px;
-}
+    white-space: normal !important;
 
-.reports-desc-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text-prominent, #161b22);
-    font-size: 1.25rem;
+    .reports-desc-text {
+        font-size: 1.2rem;
+        line-height: 1.4;
+        color: var(--text-prominent, #ffffff);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
 
-    :global(body.theme--light) & {
-        color: #0f172a;
+        :global(body.theme--light) & {
+            color: #1e293b;
+        }
     }
 }
 
 .reports-cell-date {
-    color: var(--text-less-prominent, #64748b);
-    font-size: 1.2rem;
-    white-space: nowrap;
+    font-family: 'Space Grotesk', monospace;
+    font-size: 1.15rem;
+    color: var(--text-less-prominent, #8b949e);
+
+    :global(body.theme--light) & {
+        color: #64748b;
+    }
 }
 
 .reports-profit-pill {
     display: inline-block;
-    padding: 0.35rem 0.85rem;
-    border-radius: 6px;
+    font-family: 'Space Grotesk', monospace;
     font-weight: 700;
     font-size: 1.25rem;
-    white-space: nowrap;
 
     &--win {
-        background: rgba(0, 167, 158, 0.12);
         color: #00a79e;
     }
 
     &--loss {
-        background: rgba(255, 68, 79, 0.12);
         color: #ff444f;
     }
 }
 
 .reports-action-badge {
-    padding: 0.3rem 0.75rem;
-    border-radius: 4px;
-    font-size: 1.1rem;
+    display: inline-block;
+    font-size: 1rem;
     font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    text-transform: uppercase;
     letter-spacing: 0.04em;
 
-    &--buy {
-        background: rgba(0, 168, 204, 0.12);
-        color: #00a8cc;
-    }
-
-    &--sell {
-        background: rgba(124, 58, 237, 0.12);
-        color: #a78bfa;
-    }
-
-    &--deposit {
+    &--buy, &--contract {
         background: rgba(0, 167, 158, 0.12);
         color: #00a79e;
     }
 
+    &--sell {
+        background: rgba(255, 68, 79, 0.12);
+        color: #ff444f;
+    }
+
+    &--deposit {
+        background: rgba(59, 130, 246, 0.12);
+        color: #3b82f6;
+    }
+
     &--withdrawal {
-        background: rgba(255, 159, 26, 0.12);
-        color: #d97706;
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+    }
+
+    &--transfer {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8b5cf6;
     }
 }
 
 .reports-amount-text {
+    font-family: 'Space Grotesk', monospace;
     font-weight: 700;
 
     &--credit {
@@ -548,50 +610,49 @@
     }
 
     &--debit {
-        color: var(--text-prominent, #161b22);
-
-        :global(body.theme--light) & {
-            color: #0f172a;
-        }
+        color: #ff444f;
     }
 }
 
 .reports-balance-after {
+    font-family: 'Space Grotesk', monospace;
     font-weight: 600;
-    color: var(--text-less-prominent, #64748b);
-    font-family: var(--font-mono, monospace);
+    color: var(--text-prominent, #ffffff);
+
+    :global(body.theme--light) & {
+        color: #1e293b;
+    }
 }
 
-// ── Open Positions Cards ──
+// ── Open Positions Grid & Cards ──
 .reports-positions-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.8rem;
-    padding: 2rem;
+    gap: 1.4rem;
+    padding: 1.4rem;
 }
 
 .reports-pos-card {
     background: var(--general-main-1, #0e1117);
     border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
-    border-radius: 12px;
-    padding: 1.8rem;
+    border-radius: 8px;
+    padding: 1.4rem;
     display: flex;
     flex-direction: column;
-    gap: 1.4rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    gap: 1.2rem;
+    transition: border-color 0.15s ease;
 
     :global(body.theme--light) & {
-        background: #ffffff;
+        background: #f8fafc;
         border-color: #e2e8f0;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     &--green {
-        border-top: 3px solid #00a79e;
+        border-left: 3px solid #00a79e;
     }
 
     &--red {
-        border-top: 3px solid #ff444f;
+        border-left: 3px solid #ff444f;
     }
 
     &__top {
@@ -603,13 +664,13 @@
     &__badge-row {
         display: flex;
         align-items: center;
-        gap: 0.8rem;
+        gap: 0.6rem;
     }
 
     &__symbol {
         font-weight: 700;
-        font-size: 1.35rem;
-        color: var(--text-prominent, #161b22);
+        font-size: 1.3rem;
+        color: var(--text-prominent, #ffffff);
 
         :global(body.theme--light) & {
             color: #0f172a;
@@ -617,57 +678,76 @@
     }
 
     &__type {
-        font-size: 1.15rem;
-        color: var(--text-less-prominent, #64748b);
-        text-transform: capitalize;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text-less-prominent, #8b949e);
+        background: rgba(255, 255, 255, 0.06);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+
+        :global(body.theme--light) & {
+            background: #e2e8f0;
+            color: #475569;
+        }
     }
 
     &__live-indicator {
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 700;
-        background: #ff444f;
-        color: #ffffff;
-        padding: 0.2rem 0.6rem;
+        color: #00a79e;
+        background: rgba(0, 167, 158, 0.12);
+        padding: 0.15rem 0.5rem;
         border-radius: 4px;
-        animation: reports-pulse-glow 1.2s infinite alternate;
     }
 
     &__desc {
         font-size: 1.2rem;
-        color: var(--text-less-prominent, #64748b);
+        color: var(--text-less-prominent, #8b949e);
         line-height: 1.4;
+
+        :global(body.theme--light) & {
+            color: #64748b;
+        }
     }
 
     &__metrics {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-        background: var(--general-section-1, rgba(255, 255, 255, 0.03));
-        padding: 1.2rem;
-        border-radius: 8px;
+        gap: 0.8rem;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.8rem;
+        border-radius: 6px;
 
         :global(body.theme--light) & {
-            background: #f8fafc;
-        }
-    }
-
-    &__metric-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.3rem;
-
-        .label {
-            font-size: 1.05rem;
-            color: var(--text-less-prominent, #64748b);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
         }
 
-        .value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-prominent, #161b22);
+        .reports-pos-card__metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
 
-            :global(body.theme--light) & {
-                color: #0f172a;
+            .label {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--text-less-prominent, #8b949e);
+                text-transform: uppercase;
+
+                :global(body.theme--light) & {
+                    color: #64748b;
+                }
+            }
+
+            .value {
+                font-size: 1.2rem;
+                font-weight: 700;
+                font-family: 'Space Grotesk', monospace;
+                color: var(--text-prominent, #ffffff);
+
+                :global(body.theme--light) & {
+                    color: #0f172a;
+                }
             }
         }
     }
@@ -676,7 +756,12 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: auto;
+        padding-top: 0.4rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+        :global(body.theme--light) & {
+            border-top-color: #e2e8f0;
+        }
     }
 
     &__pnl-box {
@@ -685,13 +770,19 @@
         gap: 0.2rem;
 
         .label {
-            font-size: 1.1rem;
-            color: var(--text-less-prominent, #64748b);
+            font-size: 1rem;
+            color: var(--text-less-prominent, #8b949e);
+            font-weight: 600;
+
+            :global(body.theme--light) & {
+                color: #64748b;
+            }
         }
 
         .pnl-val {
-            font-size: 1.6rem;
-            font-weight: 800;
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-family: 'Space Grotesk', monospace;
 
             &--win {
                 color: #00a79e;
@@ -704,47 +795,47 @@
     }
 
     &__sell-btn {
-        padding: 0.7rem 1.4rem;
+        padding: 0.6rem 1.2rem;
         border-radius: 6px;
-        border: none;
         background: #ff444f;
+        border: none;
         color: #ffffff;
+        font-size: 1.15rem;
         font-weight: 700;
-        font-size: 1.2rem;
         cursor: pointer;
-        transition: background 0.2s ease;
+        transition: opacity 0.15s ease;
 
         &:hover:not(:disabled) {
-            background: #e63946;
+            opacity: 0.9;
         }
 
         &:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
         }
     }
 }
 
-// ── Clean Empty State ──
+// ── Empty State ──
 .reports-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 6rem 2rem;
+    padding: 4rem 2rem;
     text-align: center;
-    gap: 1.2rem;
+    gap: 0.8rem;
 
     &__icon {
-        font-size: 4rem;
-        opacity: 0.6;
+        font-size: 3rem;
+        opacity: 0.7;
     }
 
     h3 {
         font-size: 1.6rem;
         font-weight: 700;
         margin: 0;
-        color: var(--text-prominent, #161b22);
+        color: var(--text-prominent, #ffffff);
 
         :global(body.theme--light) & {
             color: #0f172a;
@@ -752,20 +843,23 @@
     }
 
     p {
-        font-size: 1.25rem;
-        color: var(--text-less-prominent, #64748b);
-        max-width: 420px;
+        font-size: 1.3rem;
+        color: var(--text-less-prominent, #8b949e);
         margin: 0;
+        max-width: 400px;
+
+        :global(body.theme--light) & {
+            color: #64748b;
+        }
     }
 }
 
-// ── Animations ──
 @keyframes reports-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
 
 @keyframes reports-pulse-glow {
-    0% { opacity: 0.7; }
-    100% { opacity: 1; }
+    from { opacity: 0.8; }
+    to { opacity: 1; }
 }
