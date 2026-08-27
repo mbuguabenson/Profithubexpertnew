@@ -341,19 +341,23 @@ export const ReportsPage: React.FC = () => {
 
     return (
         <div className="reports-page">
-            {/* ── Minimal Header ── */}
+            {/* ── Top Header Banner ── */}
             <div className="reports-page__header">
                 <div className="reports-page__title-box">
-                    <h1 className="reports-page__title">{localize('Reports')}</h1>
+                    <h1 className="reports-page__title">{localize('Reports & Activity')}</h1>
+                    <div className="reports-page__account-chip">
+                        <span className="reports-page__account-dot"></span>
+                        <span className="reports-page__account-id">{activeLoginid || 'Active'}</span>
+                    </div>
                 </div>
                 <div className="reports-page__actions">
                     <button
                         className={`reports-page__refresh-btn ${isLoading ? 'reports-page__refresh-btn--loading' : ''}`}
                         onClick={() => setRefreshIndex(prev => prev + 1)}
                         disabled={isLoading}
-                        title={localize('Refresh')}
+                        title={localize('Sync live reports')}
                     >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
                             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                         </svg>
                         <span>{isLoading ? localize('Syncing...') : localize('Sync')}</span>
@@ -361,156 +365,245 @@ export const ReportsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── Compact Minimal KPI Strip ── */}
+            {/* ── Apple WWDC25 Floating Segmented Dock Sub-Tabs ── */}
+            <div className="reports-dock-wrapper">
+                <div className="reports-dock">
+                    <button
+                        className={`reports-dock__item ${activeSubTab === 'positions' ? 'reports-dock__item--active' : ''}`}
+                        onClick={() => setActiveSubTab('positions')}
+                    >
+                        <div className="reports-dock__icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <circle cx="12" cy="12" r="10" />
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M12 2a10 10 0 0 1 10 10" />
+                            </svg>
+                        </div>
+                        <span className="reports-dock__label">{localize('Positions')}</span>
+                        {openPositions.length > 0 && (
+                            <span className="reports-dock__badge reports-dock__badge--pulse">{openPositions.length}</span>
+                        )}
+                    </button>
+
+                    <button
+                        className={`reports-dock__item ${activeSubTab === 'profit_table' ? 'reports-dock__item--active' : ''}`}
+                        onClick={() => setActiveSubTab('profit_table')}
+                    >
+                        <div className="reports-dock__icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <path d="M18 20V10M12 20V4M6 20v-6" />
+                            </svg>
+                        </div>
+                        <span className="reports-dock__label">{localize('Profit Table')}</span>
+                        <span className="reports-dock__badge">{filteredProfitList.length}</span>
+                    </button>
+
+                    <button
+                        className={`reports-dock__item ${activeSubTab === 'statement' ? 'reports-dock__item--active' : ''}`}
+                        onClick={() => setActiveSubTab('statement')}
+                    >
+                        <div className="reports-dock__icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                            </svg>
+                        </div>
+                        <span className="reports-dock__label">{localize('Statement')}</span>
+                        <span className="reports-dock__badge">{filteredStatementList.length}</span>
+                    </button>
+
+                    <button
+                        className={`reports-dock__item ${activeSubTab === 'portfolio' ? 'reports-dock__item--active' : ''}`}
+                        onClick={() => setActiveSubTab('portfolio')}
+                    >
+                        <div className="reports-dock__icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                                <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                            </svg>
+                        </div>
+                        <span className="reports-dock__label">{localize('Analytics')}</span>
+                    </button>
+
+                    <button
+                        className={`reports-dock__item ${activeSubTab === 'wallets' ? 'reports-dock__item--active' : ''}`}
+                        onClick={() => setActiveSubTab('wallets')}
+                    >
+                        <div className="reports-dock__icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+                            </svg>
+                        </div>
+                        <span className="reports-dock__label">{localize('Wallets')}</span>
+                    </button>
+
+                    <button
+                        className={`reports-dock__item ${activeSubTab === 'account' ? 'reports-dock__item--active' : ''}`}
+                        onClick={() => setActiveSubTab('account')}
+                    >
+                        <div className="reports-dock__icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+                                <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+                                <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" />
+                            </svg>
+                        </div>
+                        <span className="reports-dock__label">{localize('Settings')}</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* ── Modern Fintech KPI Tiles Strip ── */}
             {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
                 <div className="reports-metrics-grid">
-                    {/* 1. Net P&L */}
+                    {/* 1. Net P&L Card */}
                     <div className={`reports-metric-card ${metrics.totalProfit >= 0 ? 'reports-metric-card--profit' : 'reports-metric-card--loss'}`}>
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Net P&L')}</span>
+                            <div className="reports-metric-card__icon-box">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    {metrics.totalProfit >= 0 ? (
+                                        <path d="M23 6l-9.5 9.5-5-5L1 18M17 6h6v6" />
+                                    ) : (
+                                        <path d="M23 18l-9.5-9.5-5 5L1 6M17 18h6v-6" />
+                                    )}
+                                </svg>
+                            </div>
                             <span className={`reports-metric-card__tag ${metrics.totalProfit >= 0 ? 'reports-metric-card__tag--win' : 'reports-metric-card__tag--loss'}`}>
-                                {metrics.totalProfit >= 0 ? 'PROFIT' : 'LOSS'}
+                                {metrics.totalProfit >= 0 ? '+ PROFIT' : '- LOSS'}
                             </span>
                         </div>
-                        <div className="reports-metric-card__value">
-                            {metrics.totalProfit >= 0 ? `+${formatMoney(currency, metrics.totalProfit, true)}` : formatMoney(currency, metrics.totalProfit, true)} <span className="reports-metric-card__unit">{currency}</span>
+                        <div className="reports-metric-card__body">
+                            <span className="reports-metric-card__label">{localize('Net Realized P&L')}</span>
+                            <div className="reports-metric-card__value">
+                                {metrics.totalProfit >= 0 ? `+${formatMoney(currency, metrics.totalProfit, true)}` : formatMoney(currency, metrics.totalProfit, true)}
+                                <span className="reports-metric-card__unit"> {currency}</span>
+                            </div>
                         </div>
                     </div>
 
-                    {/* 2. Win Rate */}
+                    {/* 2. Win Rate Card */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Win Rate')}</span>
+                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--blue">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="m9 12 2 2 4-4" />
+                                </svg>
+                            </div>
                             <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
                                 {metrics.wins}W / {metrics.losses}L
                             </span>
                         </div>
-                        <div className="reports-metric-card__value">
-                            {metrics.winRate.toFixed(1)}%
+                        <div className="reports-metric-card__body">
+                            <span className="reports-metric-card__label">{localize('Win Rate')}</span>
+                            <div className="reports-metric-card__value">
+                                {metrics.winRate.toFixed(1)}%
+                            </div>
                         </div>
                     </div>
 
-                    {/* 3. Total Contracts */}
+                    {/* 3. Executed Orders */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Trades')}</span>
+                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--purple">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                    <line x1="10" y1="9" x2="8" y2="9" />
+                                </svg>
+                            </div>
                             {openPositions.length > 0 && (
                                 <span className="reports-metric-card__tag reports-metric-card__tag--win">
                                     {openPositions.length} LIVE
                                 </span>
                             )}
                         </div>
-                        <div className="reports-metric-card__value">
-                            {addComma(metrics.totalTrades)}
+                        <div className="reports-metric-card__body">
+                            <span className="reports-metric-card__label">{localize('Total Executed')}</span>
+                            <div className="reports-metric-card__value">
+                                {addComma(metrics.totalTrades)}
+                            </div>
                         </div>
                     </div>
 
-                    {/* 4. Total Payout */}
+                    {/* 4. Total Payout Card */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <span className="reports-metric-card__label">{localize('Total Payout')}</span>
+                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--amber">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                </svg>
+                            </div>
+                            <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
+                                VOLUME
+                            </span>
                         </div>
-                        <div className="reports-metric-card__value">
-                            {formatMoney(currency, metrics.totalPayout, true)} <span className="reports-metric-card__unit">{currency}</span>
+                        <div className="reports-metric-card__body">
+                            <span className="reports-metric-card__label">{localize('Gross Payout')}</span>
+                            <div className="reports-metric-card__value">
+                                {formatMoney(currency, metrics.totalPayout, true)}
+                                <span className="reports-metric-card__unit"> {currency}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* ── Main Reports Container ── */}
+            {/* ── Main Content Container ── */}
             <div className="reports-content-card">
-                {/* ── Minimal Sub-Tabs & Filter Toolbar ── */}
-                <div className="reports-toolbar">
-                    <div className="reports-subtabs">
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'positions' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('positions')}
-                        >
-                            <span>{localize('Positions')}</span>
-                            <span className={`reports-subtab-badge ${openPositions.length > 0 ? 'reports-subtab-badge--live' : ''}`}>
-                                {openPositions.length}
-                            </span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'profit_table' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('profit_table')}
-                        >
-                            <span>{localize('Profit Table')}</span>
-                            <span className="reports-subtab-badge">{filteredProfitList.length}</span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'statement' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('statement')}
-                        >
-                            <span>{localize('Statement')}</span>
-                            <span className="reports-subtab-badge">{filteredStatementList.length}</span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'portfolio' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('portfolio')}
-                        >
-                            <span>{localize('Analytics')}</span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'wallets' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('wallets')}
-                        >
-                            <span>{localize('Wallets')}</span>
-                        </button>
-                        <button
-                            className={`reports-subtab-btn ${activeSubTab === 'account' ? 'reports-subtab-btn--active' : ''}`}
-                            onClick={() => setActiveSubTab('account')}
-                        >
-                            <span>{localize('Settings')}</span>
-                        </button>
-                    </div>
-
-                    {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
-                        <div className="reports-filter-group">
-                            {/* Search Input */}
-                            <div className="reports-search-box">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                </svg>
-                                <input
-                                    type="text"
-                                    placeholder={localize('Search ID or detail...')}
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-
-                            {/* Date Filter Pills */}
-                            <div className="reports-date-pills">
-                                <button
-                                    className={`reports-date-pill ${dateRange === 'today' ? 'reports-date-pill--active' : ''}`}
-                                    onClick={() => setDateRange('today')}
-                                >
-                                    Today
-                                </button>
-                                <button
-                                    className={`reports-date-pill ${dateRange === '7d' ? 'reports-date-pill--active' : ''}`}
-                                    onClick={() => setDateRange('7d')}
-                                >
-                                    7D
-                                </button>
-                                <button
-                                    className={`reports-date-pill ${dateRange === '30d' ? 'reports-date-pill--active' : ''}`}
-                                    onClick={() => setDateRange('30d')}
-                                >
-                                    30D
-                                </button>
-                                <button
-                                    className={`reports-date-pill ${dateRange === 'all' ? 'reports-date-pill--active' : ''}`}
-                                    onClick={() => setDateRange('all')}
-                                >
-                                    All
-                                </button>
-                            </div>
+                {/* ── Floating Capsule Filter Toolbar ── */}
+                {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
+                    <div className="reports-filter-bar">
+                        {/* Search Pill */}
+                        <div className="reports-search-pill">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder={localize('Search by ID, market, or type...')}
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                            />
                         </div>
-                    )}
-                </div>
+
+                        {/* Date Filter Segmented Capsule */}
+                        <div className="reports-date-capsule">
+                            <button
+                                className={`reports-date-btn ${dateRange === 'today' ? 'reports-date-btn--active' : ''}`}
+                                onClick={() => setDateRange('today')}
+                            >
+                                Today
+                            </button>
+                            <button
+                                className={`reports-date-btn ${dateRange === '7d' ? 'reports-date-btn--active' : ''}`}
+                                onClick={() => setDateRange('7d')}
+                            >
+                                7D
+                            </button>
+                            <button
+                                className={`reports-date-btn ${dateRange === '30d' ? 'reports-date-btn--active' : ''}`}
+                                onClick={() => setDateRange('30d')}
+                            >
+                                30D
+                            </button>
+                            <button
+                                className={`reports-date-btn ${dateRange === 'all' ? 'reports-date-btn--active' : ''}`}
+                                onClick={() => setDateRange('all')}
+                            >
+                                All
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── Tab Views ── */}
                 <div className="reports-table-wrapper">

@@ -213,14 +213,24 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
         <div className="portfolio-analytics">
             {/* ════════════════ TOP FINANCIAL STATS ROW ════════════════ */}
             <div className="pa-top-grid">
-                {/* 1. Official Deriv Account Summary Card */}
+                {/* 1. Modern Fintech Account Card */}
                 <div className="pa-deriv-account-card">
-                    <div className="pa-deriv-account-card__header">
-                        <div className="pa-deriv-account-card__type">
-                            <span className={`pa-deriv-account-card__status-dot ${isVirtual ? 'pa-deriv-account-card__status-dot--demo' : 'pa-deriv-account-card__status-dot--real'}`}></span>
-                            <span className="pa-deriv-account-card__type-text">{isVirtual ? localize('Demo Account') : localize('Real Account')}</span>
+                    <div className="pa-deriv-account-card__bg-glow"></div>
+                    <div className="pa-deriv-account-card__top-row">
+                        <div className="pa-deriv-account-card__chip-box">
+                            <svg width="28" height="22" viewBox="0 0 32 24" fill="none">
+                                <rect width="32" height="24" rx="4" fill="rgba(255, 215, 0, 0.25)" stroke="rgba(255, 215, 0, 0.6)" strokeWidth="1.2" />
+                                <path d="M0 12h32M10 0v24M22 0v24" stroke="rgba(255, 215, 0, 0.4)" strokeWidth="0.8" />
+                            </svg>
+                            <span className="pa-deriv-account-card__contactless">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    <path d="M8.5 16.5a5 5 0 0 1 0-9M12 20a10 10 0 0 0 0-16M15.5 23.5a15 15 0 0 0 0-23" />
+                                </svg>
+                            </span>
                         </div>
-                        <span className="pa-deriv-account-card__id-badge">{activeLoginid || 'CR5821'}</span>
+                        <span className={`pa-deriv-account-card__badge ${isVirtual ? 'pa-deriv-account-card__badge--demo' : 'pa-deriv-account-card__badge--real'}`}>
+                            {isVirtual ? 'DEMO' : 'DERIV REAL'}
+                        </span>
                     </div>
 
                     <div className="pa-deriv-account-card__balance-box">
@@ -234,16 +244,12 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                     </div>
 
                     <div className="pa-deriv-account-card__footer">
-                        <div className="pa-deriv-account-card__cashflow">
-                            <span className="pa-deriv-account-card__cashflow-label">{localize('Net Cashflow')}</span>
-                            <span className={`pa-deriv-account-card__cashflow-val ${financialStats.deposits - financialStats.withdrawals >= 0 ? 'pa-deriv-account-card__cashflow-val--positive' : 'pa-deriv-account-card__cashflow-val--negative'}`}>
-                                {financialStats.deposits - financialStats.withdrawals >= 0 ? '+' : ''}
-                                {formatMoney(currency, financialStats.deposits - financialStats.withdrawals, true)} {currency}
-                            </span>
+                        <div className="pa-deriv-account-card__acc-num">
+                            •••• •••• •••• {activeLoginid ? activeLoginid.slice(-4) : '5821'}
                         </div>
-                        <div className="pa-deriv-account-card__tags">
-                            <span className="pa-tag pa-tag--muted">{currency}</span>
-                            <span className={`pa-tag ${isVirtual ? 'pa-tag--warning' : 'pa-tag--success'}`}>{isVirtual ? 'VIRTUAL' : 'PRIMARY'}</span>
+                        <div className="pa-deriv-account-card__cashflow-tag">
+                            {financialStats.deposits - financialStats.withdrawals >= 0 ? '+' : ''}
+                            {formatMoney(currency, financialStats.deposits - financialStats.withdrawals, true)} {currency}
                         </div>
                     </div>
                 </div>
