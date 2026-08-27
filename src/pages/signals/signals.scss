@@ -88,6 +88,12 @@ body.theme--dark, .theme--dark {
                 background: #ffffff;
                 box-shadow: 0 0 10px #ffffff;
                 animation: pulseGlow 1.5s infinite ease-in-out;
+
+                &.connecting {
+                    background: #f59e0b;
+                    box-shadow: 0 0 10px #f59e0b;
+                    animation: pulseGlow 0.8s infinite ease-in-out;
+                }
             }
         }
 

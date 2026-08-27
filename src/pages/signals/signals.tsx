@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import { tickSubscriber, SignalWithSymbol, EngineState } from './engine/TickSubscriber';
 import { SignalCard } from './components/SignalCard';
@@ -8,6 +8,21 @@ import './signals.scss';
 
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 
+// Fallback markets when api_base.active_symbols hasn't loaded yet
+const FALLBACK_MARKETS: {value: string, label: string}[] = [
+    { value: 'ALL', label: 'All Markets (Multi-Scan)' },
+    { value: 'R_100', label: 'Volatility 100 Index' },
+    { value: 'R_50', label: 'Volatility 50 Index' },
+    { value: 'R_75', label: 'Volatility 75 Index' },
+    { value: 'R_25', label: 'Volatility 25 Index' },
+    { value: 'R_10', label: 'Volatility 10 Index' },
+    { value: '1HZ100V', label: 'Volatility 100 (1s) Index' },
+    { value: '1HZ75V', label: 'Volatility 75 (1s) Index' },
+    { value: '1HZ50V', label: 'Volatility 50 (1s) Index' },
+    { value: '1HZ25V', label: 'Volatility 25 (1s) Index' },
+    { value: '1HZ10V', label: 'Volatility 10 (1s) Index' },
+];
+
 const Signals = observer(() => {
     const [market, setMarket] = useState('ALL');
     const [strategyFilter, setStrategyFilter] = useState('ALL');
@@ -15,33 +30,52 @@ const Signals = observer(() => {
     const [standard, setStandard] = useState<SignalWithSymbol[]>([]);
     const [pro, setPro] = useState<SignalWithSymbol[]>([]);
     const [superSignals, setSuperSignals] = useState<SignalWithSymbol[]>([]);
-    const [availableMarkets, setAvailableMarkets] = useState<{value: string, label: string}[]>([
-        { value: 'ALL', label: 'All Markets (Multi-Scan)' },
-        { value: 'R_100', label: 'Volatility 100 Index' }
-    ]);
+    const [isConnected, setIsConnected] = useState(false);
+    const [availableMarkets, setAvailableMarkets] = useState<{value: string, label: string}[]>(FALLBACK_MARKETS);
+    const marketsLoadedRef = useRef(false);
 
+    // Populate markets from api_base when active_symbols become available
     useEffect(() => {
-        if (api_base.active_symbols && api_base.active_symbols.length > 0) {
-            const symbols = api_base.active_symbols
-                .filter((s: any) => {
-                    if (!s.symbol && !s.underlying_symbol) return false;
-                    const sym = (s.symbol || s.underlying_symbol).toUpperCase();
-                    if (sym.includes('BOOM') || sym.includes('CRASH')) return false;
-                    return sym.includes('1HZ') || sym.startsWith('R_') || sym.includes('JD') || sym.includes('JUMP');
-                })
-                .map((s: any) => ({
-                    value: s.symbol || s.underlying_symbol,
-                    label: s.display_name || s.symbol || s.underlying_symbol
-                }));
+        const tryLoadMarkets = () => {
+            if (api_base.active_symbols && api_base.active_symbols.length > 0) {
+                const symbols = api_base.active_symbols
+                    .filter((s: any) => {
+                        if (!s.symbol && !s.underlying_symbol) return false;
+                        const sym = (s.symbol || s.underlying_symbol).toUpperCase();
+                        if (sym.includes('BOOM') || sym.includes('CRASH')) return false;
+                        return sym.includes('1HZ') || sym.startsWith('R_') || sym.includes('JD') || sym.includes('JUMP');
+                    })
+                    .map((s: any) => ({
+                        value: s.symbol || s.underlying_symbol,
+                        label: s.display_name || s.symbol || s.underlying_symbol
+                    }));
 
-            if (symbols.length > 0) {
-                setAvailableMarkets([
-                    { value: 'ALL', label: 'All Markets (Multi-Scan)' },
-                    ...symbols
-                ]);
+                if (symbols.length > 0) {
+                    setAvailableMarkets([
+                        { value: 'ALL', label: 'All Markets (Multi-Scan)' },
+                        ...symbols
+                    ]);
+                    marketsLoadedRef.current = true;
+                    return true;
+                }
             }
-        }
-    }, [api_base.active_symbols]);
+            return false;
+        };
+
+        // Try immediately
+        if (tryLoadMarkets()) return;
+
+        // Retry every 2s for up to 20s if active_symbols aren't available yet
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            if (tryLoadMarkets() || attempts >= 10) {
+                clearInterval(interval);
+            }
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const handleState = (state: EngineState) => {
@@ -49,8 +83,14 @@ const Signals = observer(() => {
             setStandard(state.standard.filter(s => s.status !== 'NEUTRAL').slice(0, 50));
             setPro(state.pro.filter(s => s.status !== 'NEUTRAL').slice(0, 50));
             setSuperSignals(state.super.slice(0, 50));
+
+            // Mark as connected once we receive any data
+            if (!isConnected && (state.analysis || state.standard.length > 0)) {
+                setIsConnected(true);
+            }
         };
 
+        setIsConnected(false);
         tickSubscriber.subscribe(handleState);
         tickSubscriber.startStreaming(market);
 
@@ -81,8 +121,8 @@ const Signals = observer(() => {
                 <div className="signals-header-card">
                     <div className="header-brand-box">
                         <div className="badge-live-pulse">
-                            <span className="pulse-dot" />
-                            <span>REAL-TIME AI SIGNALS</span>
+                            <span className={`pulse-dot${!isConnected ? ' connecting' : ''}`} />
+                            <span>{isConnected ? 'REAL-TIME AI SIGNALS' : 'CONNECTING TO MARKET...'}</span>
                         </div>
                         <h2 className="header-title">
                             Predictive <span className="title-highlight">Market Signals</span>

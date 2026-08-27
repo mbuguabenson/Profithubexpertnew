@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import TickSelector from '@/components/tick-selector/tick-selector';
-import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import DigitDistributionCircles from '@/pages/chart/digit-distribution-circles';
 import MarketSelector from '@/pages/smart-trading/components/market-selector';
@@ -26,31 +25,23 @@ const DIGIT_COLORS: Record<number, string> = {
 };
 
 const EasyTool = observer(() => {
-    const { smart_trading, common, ui } = useStore();
-    const { symbol, current_price, last_digit, ticks, stats_sample_size, setStatsSampleSize, markets, fetchMarkets, subscribeToActiveSymbol } = smart_trading;
+    const { smart_trading, ui } = useStore();
+    const { symbol, current_price, last_digit, ticks, stats_sample_size, setStatsSampleSize, markets, fetchMarkets } = smart_trading;
 
-    const { is_socket_opened } = common;
     const { is_dark_mode_on } = ui;
 
     const [selected_digit, setSelectedDigit] = useState<number | null>(null);
     const [history_count, setHistoryCount] = useState<15 | 50>(15);
 
-    // Initialize API and fetch active markets on mount
+    // Fetch active markets on mount (idempotent, safe to call)
+    // NOTE: Tick subscription is handled by the smart_trading store's MobX reaction
+    // in the constructor — do NOT call subscribeToActiveSymbol() here as it creates
+    // duplicate overlapping subscriptions that race and kill the stream after 1-2 ticks.
     useEffect(() => {
-        if (!api_base?.api) {
-            api_base.init();
-        }
         if (!markets || markets.length === 0) {
             fetchMarkets();
         }
     }, [markets, fetchMarkets]);
-
-    // Ensure we are subscribed to ticks and history via the smart_trading store
-    useEffect(() => {
-        if (symbol && subscribeToActiveSymbol) {
-            subscribeToActiveSymbol();
-        }
-    }, [symbol, is_socket_opened, subscribeToActiveSymbol]);
 
     // Update selected digit when last_digit changes if none selected
     useEffect(() => {

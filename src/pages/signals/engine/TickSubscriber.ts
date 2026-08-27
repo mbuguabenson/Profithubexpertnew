@@ -1,5 +1,4 @@
 import { SignalEngine, AnalysisResult, Signal } from './SignalEngine';
-import { getSocketURL } from '@/components/shared/utils/config/config';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 
 export type SignalWithSymbol = Signal & { symbol?: string };
@@ -11,13 +10,20 @@ export type EngineState = {
     super: SignalWithSymbol[];
 };
 
+/**
+ * TickSubscriber – Uses the shared api_base.api WebSocket connection
+ * (same pattern as MarketKiller, DigitCracker, FreeBots, etc.)
+ * instead of opening a standalone unauthenticated WebSocket.
+ */
 export class TickSubscriber {
     private engines: Map<string, SignalEngine> = new Map();
     private activeSymbols: string[] = [];
     private callbacks: ((state: EngineState) => void)[] = [];
     private isStreaming = false;
-    private ws: WebSocket | null = null;
     private currentMode: string = '';
+    private tickListenerSub: any = null;
+    private streamSubscriptionIds: string[] = [];
+    private retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
     constructor() {}
 
@@ -100,85 +106,124 @@ export class TickSubscriber {
             this.engines.set(sym, new SignalEngine());
         });
 
-        try {
-            const wsUrl = await getSocketURL();
-            if (!this.isStreaming || this.currentMode !== symbol) return;
-
-            this.ws = new WebSocket(wsUrl);
-
-            this.ws.onopen = () => {
-                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                    this.activeSymbols.forEach(sym => {
-                        this.ws!.send(JSON.stringify({
-                            ticks_history: sym,
-                            adjust_start_time: 1,
-                            count: 100,
-                            end: 'latest',
-                            style: 'ticks',
-                            subscribe: 1
-                        }));
-                    });
-                }
-            };
-
-            this.ws.onmessage = (event) => {
-                try {
-                    const msg = JSON.parse(event.data);
-                    
-                    if (msg.error) {
-                        if (msg.error.code !== 'AlreadySubscribed') {
-                            console.warn('WebSocket message notice in TickSubscriber:', msg.error.message || msg.error);
-                        }
-                        return;
-                    }
-
-                    if (msg.msg_type === 'history') {
-                        if (msg.history && msg.history.prices && msg.echo_req && msg.echo_req.ticks_history) {
-                            const sym = msg.echo_req.ticks_history;
-                            const engine = this.engines.get(sym);
-                            if (engine) {
-                                msg.history.prices.forEach((price: number) => {
-                                    engine.addTick(price);
-                                });
-                                this.emit();
-                            }
-                        }
-                    } else if (msg.msg_type === 'tick') {
-                        if (msg.tick && msg.tick.symbol) {
-                            const sym = msg.tick.symbol;
-                            const engine = this.engines.get(sym);
-                            if (engine) {
-                                engine.addTick(msg.tick.quote);
-                                this.emit();
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error parsing tick message:', e);
-                }
-            };
-
-            this.ws.onerror = (error) => {
-                console.warn('WebSocket connection notice in TickSubscriber:', error);
-            };
-
-            this.ws.onclose = () => {
-                this.isStreaming = false;
-            };
-        } catch (e) {
-            console.warn('Failed to get socket URL for TickSubscriber:', e);
-            this.isStreaming = false;
-        }
+        // Wait for api_base to be ready, then subscribe
+        this.waitForApiAndSubscribe();
     }
 
-    public stopStreaming() {
+    /**
+     * Waits for api_base.api to be connected, then subscribes to tick history.
+     * Mirrors the pattern used by MarketKiller store's waitForApiAndConnect.
+     */
+    private waitForApiAndSubscribe = (retryCount = 0) => {
         if (!this.isStreaming) return;
 
-        if (this.ws) {
-            this.ws.close();
-            this.ws = null;
+        if (!api_base?.api || api_base.api?.connection?.readyState !== 1) {
+            if (retryCount < 10) {
+                this.retryTimeout = setTimeout(() => this.waitForApiAndSubscribe(retryCount + 1), 1000);
+            } else {
+                console.warn('[SignalCentre] api_base not ready after 10 retries, giving up.');
+                this.isStreaming = false;
+            }
+            return;
         }
-        
+
+        this.subscribeAllSymbols();
+    };
+
+    /**
+     * Subscribes to tick history for all active symbols using the shared api_base.api connection.
+     * Uses ticks_history with subscribe:1 for initial history + live tick stream.
+     */
+    private subscribeAllSymbols = async () => {
+        if (!this.isStreaming || !api_base?.api) return;
+
+        // Subscribe to each symbol's tick history
+        for (const sym of this.activeSymbols) {
+            if (!this.isStreaming) return;
+
+            try {
+                const response = await api_base.api.send({
+                    ticks_history: sym,
+                    adjust_start_time: 1,
+                    count: 100,
+                    end: 'latest',
+                    style: 'ticks',
+                    subscribe: 1,
+                }).catch((err: any) => {
+                    // Handle AlreadySubscribed gracefully
+                    if (err?.error?.code === 'AlreadySubscribed') return err;
+                    return { error: err?.error || err };
+                });
+
+                if (response?.error) {
+                    if (response.error.code !== 'AlreadySubscribed') {
+                        console.warn(`[SignalCentre] Subscription note for ${sym}:`, response.error.message || response.error);
+                    }
+                }
+
+                // Save subscription ID for clean unsubscribe
+                if (response?.subscription?.id) {
+                    this.streamSubscriptionIds.push(response.subscription.id);
+                }
+
+                // Process initial history
+                if (response?.history?.prices && Array.isArray(response.history.prices)) {
+                    const engine = this.engines.get(sym);
+                    if (engine) {
+                        response.history.prices.forEach((price: number) => {
+                            engine.addTick(price);
+                        });
+                        this.emit();
+                    }
+                }
+            } catch (err: any) {
+                console.warn(`[SignalCentre] Failed to subscribe to ${sym}:`, err?.message || err);
+            }
+        }
+
+        // Register a single RxJS event listener for all incoming ticks
+        if (api_base.api?.onMessage) {
+            this.tickListenerSub = api_base.api.onMessage().subscribe((res: any) => {
+                const data = res?.data || res;
+
+                if (data?.msg_type === 'tick' && data?.tick?.symbol) {
+                    const sym = data.tick.symbol;
+                    const engine = this.engines.get(sym);
+                    if (engine) {
+                        engine.addTick(data.tick.quote);
+                        this.emit();
+                    }
+                }
+            });
+        }
+
+        console.log(`[SignalCentre] Subscribed to ${this.activeSymbols.length} symbols via api_base.api`);
+    };
+
+    public stopStreaming() {
+        if (this.retryTimeout) {
+            clearTimeout(this.retryTimeout);
+            this.retryTimeout = null;
+        }
+
+        // Unsubscribe RxJS listener to prevent memory leaks
+        if (this.tickListenerSub) {
+            try {
+                this.tickListenerSub.unsubscribe();
+            } catch (e) { /* ignore */ }
+            this.tickListenerSub = null;
+        }
+
+        // Forget all stream subscriptions via api_base
+        if (api_base?.api && this.streamSubscriptionIds.length > 0) {
+            this.streamSubscriptionIds.forEach(id => {
+                try {
+                    api_base.api.send({ forget: id });
+                } catch (e) { /* ignore */ }
+            });
+        }
+        this.streamSubscriptionIds = [];
+
         this.isStreaming = false;
         this.engines.clear();
         this.activeSymbols = [];
