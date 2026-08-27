@@ -190,8 +190,8 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
     }, [strategyStats, selectedStrategyIndex]);
 
     const activeDonutInfo = selectedStrategyIndex !== null ? strategyStats[selectedStrategyIndex] : strategyStats[0];
-    const isVirtual = activeLoginid.startsWith('VRTC') || activeLoginid.startsWith('VRT');
-    const maskedAcc = activeLoginid ? activeLoginid.slice(-4) : '5821';
+    const isVirtual = Boolean(activeLoginid && (activeLoginid.startsWith('VRTC') || activeLoginid.startsWith('VRT')));
+    const maskedAcc = activeLoginid ? String(activeLoginid).slice(-4) : '5821';
 
     // ── Real Activity Bars from Closed Transactions ──
     const activityBars = useMemo(() => {

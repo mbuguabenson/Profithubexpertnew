@@ -23,6 +23,7 @@ type AnalysisToolSubTab =
 const AnalysisTools: React.FC = () => {
     const { analysis } = useStore();
     const [selectedSubTab, setSelectedSubTab] = useState<AnalysisToolSubTab>('analysis-tool');
+    const [show_trade_config, setShowTradeConfig] = useState<boolean>(false);
     const [formData, setFormData] = useState({
         market: 'synthetic_index',
         submarket: 'random_index',

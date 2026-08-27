@@ -33,9 +33,9 @@
     },
     "typography": {
         "font_family": {
-            "primary": "'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
-            "secondary": "'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
-            "monospace": "'Roboto Mono', 'SF Mono', 'Courier New', Courier, monospace"
+            "primary": "'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
+            "secondary": "'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
+            "monospace": "'JetBrains Mono', 'Roboto Mono', 'SF Mono', monospace"
         },
         "font_sizes": {
             "xs": "0.75rem",
