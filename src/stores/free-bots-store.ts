@@ -2,6 +2,7 @@ import { action, makeObservable, observable, runInAction } from 'mobx';
 import { api_base } from '@/external/bot-skeleton';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import { DigitStatsEngine } from '@/lib/digit-stats-engine';
+import { getGroupedMarkets } from '@/constants/markets';
 import RootStore from './root-store';
 
 export type TBotConfig = {
@@ -43,26 +44,7 @@ const makeBotConfig = (overrides: Partial<TBotConfig> = {}): TBotConfig => ({
     ...overrides,
 });
 
-const DEFAULT_MARKETS = [
-    {
-        group: 'Volatility Indices',
-        items: [
-            { value: '1HZ10V', label: 'Volatility 10 (1s) Index' },
-            { value: '1HZ15V', label: 'Volatility 15 (1s) Index' },
-            { value: '1HZ25V', label: 'Volatility 25 (1s) Index' },
-            { value: '1HZ30V', label: 'Volatility 30 (1s) Index' },
-            { value: '1HZ50V', label: 'Volatility 50 (1s) Index' },
-            { value: '1HZ75V', label: 'Volatility 75 (1s) Index' },
-            { value: '1HZ90V', label: 'Volatility 90 (1s) Index' },
-            { value: '1HZ100V', label: 'Volatility 100 (1s) Index' },
-            { value: 'R_10', label: 'Volatility 10 Index' },
-            { value: 'R_25', label: 'Volatility 25 Index' },
-            { value: 'R_50', label: 'Volatility 50 Index' },
-            { value: 'R_75', label: 'Volatility 75 Index' },
-            { value: 'R_100', label: 'Volatility 100 Index' },
-        ],
-    },
-];
+const DEFAULT_MARKETS = getGroupedMarkets();
 
 export default class FreeBotsStore {
     root_store: RootStore;

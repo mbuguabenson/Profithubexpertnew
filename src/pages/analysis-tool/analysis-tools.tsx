@@ -8,6 +8,7 @@ import DigitCracker from '../digit-cracker';
 import DpTools from '../dp-tools/dp-tools';
 import { useStore } from '@/hooks/useStore';
 import { ApiHelpers } from '@/external/bot-skeleton';
+import { ALL_DERIV_MARKETS } from '@/constants/markets';
 import './analysis-tools.scss';
 
 type AnalysisToolSubTab =
@@ -20,38 +21,29 @@ type AnalysisToolSubTab =
     | 'xenon-tool';
 
 const AnalysisTools: React.FC = () => {
-    const { run_panel } = useStore();
-    const [active_tool, setActiveTool] = useState<AnalysisToolSubTab>('all-analysis');
-    const [show_trade_config, setShowTradeConfig] = useState(false);
-    const [tradeConfig, setTradeConfig] = useState({
+    const { analysis } = useStore();
+    const [selectedSubTab, setSelectedSubTab] = useState<AnalysisToolSubTab>('analysis-tool');
+    const [formData, setFormData] = useState({
         market: 'synthetic_index',
-        submarket: 'continuous_index',
-        symbol: 'R_50',
+        submarket: 'random_index',
+        symbol: 'R_100',
         tradeTypeCategory: 'digits',
-        tradeType: 'evenodd',
-        type: 'evenodd',
-        contract: 'DIGITEVEN',
-        duration: '1',
-        durationUnit: 't',
-        stake: '0.5',
-        stakeCurrency: 'AUD',
-        candleInterval: '1m',
+        tradeType: 'matchesdiffers',
+        contractType: 'DIGITDIFF',
+        durationType: 't',
+        duration: 1,
+        barrier: '0',
+        currency: 'USD',
+        amount: 1,
+        basis: 'stake',
         prediction: '0',
         prediction2: '0',
     });
     const [hasPrediction2, setHasPrediction2] = useState(false);
-    const volatilityOptions: Array<{ value: string; label: string }> = [
-        { value: 'R_10', label: 'Volatility 10 Index' },
-        { value: 'R_25', label: 'Volatility 25 Index' },
-        { value: 'R_50', label: 'Volatility 50 Index' },
-        { value: 'R_75', label: 'Volatility 75 Index' },
-        { value: 'R_100', label: 'Volatility 100 Index' },
-        { value: '1HZ10V', label: 'Volatility 10 (1s) Index' },
-        { value: '1HZ25V', label: 'Volatility 25 (1s) Index' },
-        { value: '1HZ50V', label: 'Volatility 50 (1s) Index' },
-        { value: '1HZ75V', label: 'Volatility 75 (1s) Index' },
-        { value: '1HZ100V', label: 'Volatility 100 (1s) Index' },
-    ];
+    const volatilityOptions: Array<{ value: string; label: string }> = ALL_DERIV_MARKETS.map(m => ({
+        value: m.value,
+        label: m.label,
+    }));
     const [options, setOptions] = useState({
         markets: [] as Array<[string, string]>,
         submarkets: [] as Array<[string, string]>,

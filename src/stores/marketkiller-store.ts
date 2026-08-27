@@ -189,8 +189,12 @@ export default class MarketkillerStore {
         this.root_store = root_store;
         this.stats_engine = new DigitStatsEngine();
 
-        // Initial ribbon markets
-        const initialMarkets = ['R_10', 'R_25', 'R_50', 'R_75', 'R_100', '1HZ10V'];
+        // Initial ribbon markets - covering all core volatility and jump indices
+        const initialMarkets = [
+            'R_10', '1HZ10V', 'R_25', '1HZ25V', 'R_50', '1HZ50V',
+            'R_75', '1HZ75V', 'R_100', '1HZ100V', '1HZ150V', '1HZ200V',
+            '1HZ250V', '1HZ300V', 'JD10', 'JD25', 'JD50', 'JD75', 'JD100'
+        ];
         initialMarkets.forEach(sym => {
             this.live_market_ribbon.push({ symbol: sym, price: '0.00', digit: null, is_up: true });
         });

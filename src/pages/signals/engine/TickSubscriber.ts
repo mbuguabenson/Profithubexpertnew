@@ -96,7 +96,12 @@ export class TickSubscriber {
                     })
                     .map((s: any) => s.symbol || s.underlying_symbol);
             } else {
-                this.activeSymbols = ['R_100', 'R_10', 'R_25', 'R_50', 'R_75', '1HZ100V', '1HZ10V'];
+                this.activeSymbols = [
+                    'R_10', '1HZ10V', '1HZ15V', 'R_25', '1HZ25V', '1HZ30V',
+                    'R_50', '1HZ50V', 'R_75', '1HZ75V', '1HZ90V', 'R_100',
+                    '1HZ100V', '1HZ150V', '1HZ200V', '1HZ250V', '1HZ300V',
+                    'JD10', 'JD25', 'JD50', 'JD75', 'JD100', 'STPIND'
+                ];
             }
         } else {
             this.activeSymbols = [symbol];

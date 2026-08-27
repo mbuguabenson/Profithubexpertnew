@@ -62,16 +62,38 @@ const MARKETS = [
     { label: 'Volatility 50 Index',     symbol: 'R_50',     group: 'Volatility' },
     { label: 'Volatility 75 Index',     symbol: 'R_75',     group: 'Volatility' },
     { label: 'Volatility 100 Index',    symbol: 'R_100',    group: 'Volatility' },
-    { label: 'Volatility 10(1s) Index', symbol: '1HZ10V',   group: 'Volatility 1s' },
-    { label: 'Volatility 25(1s) Index', symbol: '1HZ25V',   group: 'Volatility 1s' },
-    { label: 'Volatility 50(1s) Index', symbol: '1HZ50V',   group: 'Volatility 1s' },
-    { label: 'Volatility 75(1s) Index', symbol: '1HZ75V',   group: 'Volatility 1s' },
-    { label: 'Volatility 100(1s) Index',symbol: '1HZ100V',  group: 'Volatility 1s' },
-    { label: 'Jump 10 Index',           symbol: 'JUMP10',   group: 'Jump' },
-    { label: 'Jump 25 Index',           symbol: 'JUMP25',   group: 'Jump' },
-    { label: 'Jump 50 Index',           symbol: 'JUMP50',   group: 'Jump' },
-    { label: 'Jump 75 Index',           symbol: 'JUMP75',   group: 'Jump' },
-    { label: 'Jump 100 Index',          symbol: 'JUMP100',  group: 'Jump' },
+    { label: 'Volatility 10 (1s) Index', symbol: '1HZ10V',   group: 'Volatility 1s' },
+    { label: 'Volatility 15 (1s) Index', symbol: '1HZ15V',   group: 'Volatility 1s' },
+    { label: 'Volatility 25 (1s) Index', symbol: '1HZ25V',   group: 'Volatility 1s' },
+    { label: 'Volatility 30 (1s) Index', symbol: '1HZ30V',   group: 'Volatility 1s' },
+    { label: 'Volatility 50 (1s) Index', symbol: '1HZ50V',   group: 'Volatility 1s' },
+    { label: 'Volatility 75 (1s) Index', symbol: '1HZ75V',   group: 'Volatility 1s' },
+    { label: 'Volatility 90 (1s) Index', symbol: '1HZ90V',   group: 'Volatility 1s' },
+    { label: 'Volatility 100 (1s) Index',symbol: '1HZ100V',  group: 'Volatility 1s' },
+    { label: 'Volatility 150 (1s) Index',symbol: '1HZ150V',  group: 'Volatility 1s' },
+    { label: 'Volatility 200 (1s) Index',symbol: '1HZ200V',  group: 'Volatility 1s' },
+    { label: 'Volatility 250 (1s) Index',symbol: '1HZ250V',  group: 'Volatility 1s' },
+    { label: 'Volatility 300 (1s) Index',symbol: '1HZ300V',  group: 'Volatility 1s' },
+    { label: 'Jump 10 Index',           symbol: 'JD10',     group: 'Jump' },
+    { label: 'Jump 25 Index',           symbol: 'JD25',     group: 'Jump' },
+    { label: 'Jump 50 Index',           symbol: 'JD50',     group: 'Jump' },
+    { label: 'Jump 75 Index',           symbol: 'JD75',     group: 'Jump' },
+    { label: 'Jump 100 Index',          symbol: 'JD100',    group: 'Jump' },
+    { label: 'Step Index',              symbol: 'STPIND',   group: 'Step' },
+    { label: 'Step 100 Index',          symbol: 'STEP100',  group: 'Step' },
+    { label: 'Step 200 Index',          symbol: 'STEP200',  group: 'Step' },
+    { label: 'Step 500 Index',          symbol: 'STEP500',  group: 'Step' },
+    { label: 'Range Break 100 Index',   symbol: 'RDBEAR',   group: 'Range Break' },
+    { label: 'Range Break 200 Index',   symbol: 'RDBULL',   group: 'Range Break' },
+    { label: 'Drift Switch 10 Index',   symbol: 'DSI10',    group: 'Drift Switch' },
+    { label: 'Drift Switch 20 Index',   symbol: 'DSI20',    group: 'Drift Switch' },
+    { label: 'Drift Switch 30 Index',   symbol: 'DSI30',    group: 'Drift Switch' },
+    { label: 'EUR/USD',                 symbol: 'frxEURUSD', group: 'Forex' },
+    { label: 'GBP/USD',                 symbol: 'frxGBPUSD', group: 'Forex' },
+    { label: 'USD/JPY',                 symbol: 'frxUSDJPY', group: 'Forex' },
+    { label: 'BTC/USD (Bitcoin)',       symbol: 'cryBTCUSD', group: 'Crypto' },
+    { label: 'ETH/USD (Ethereum)',      symbol: 'cryETHUSD', group: 'Crypto' },
+    { label: 'Gold/USD',                symbol: 'frxXAUUSD', group: 'Commodities' },
 ] as const;
 
 const STRATEGIES: TScannerStrategy[] = [
@@ -85,7 +107,7 @@ const STRATEGIES: TScannerStrategy[] = [
 ];
 
 const MARTINGALE_OPTIONS: TMartingale[] = [1, 1.5, 2, 2.5, 3];
-const MARKET_GROUPS = ['Volatility', 'Volatility 1s', 'Jump'] as const;
+const MARKET_GROUPS = ['Volatility', 'Volatility 1s', 'Jump', 'Step', 'Range Break', 'Drift Switch', 'Forex', 'Crypto', 'Commodities'] as const;
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
+import { getGroupedMarkets } from '@/constants/markets';
 import MatchesKiller from './components/matches-killer';
 import Onetrader from './components/onetrader';
 import './marketkiller.scss';
@@ -20,18 +21,7 @@ const Marketkiller = observer(() => {
         };
     }, [symbol]);
 
-    // A unified subset of markets
-    const markets = [
-        { value: 'R_100', label: 'Volatility 100 Index' },
-        { value: 'R_50', label: 'Volatility 50 Index' },
-        { value: '1HZ100V', label: 'Vol 100 (1s) Index' },
-        { value: 'R_75', label: 'Volatility 75 Index' },
-        { value: '1HZ75V', label: 'Vol 75 (1s) Index' },
-        { value: 'R_25', label: 'Volatility 25 Index' },
-        { value: '1HZ25V', label: 'Vol 25 (1s) Index' },
-        { value: 'R_10', label: 'Volatility 10 Index' },
-        { value: '1HZ10V', label: 'Vol 10 (1s) Index' },
-    ];
+    const marketGroups = getGroupedMarkets();
 
     return (
         <div className='marketkiller-wrapper'>
@@ -60,10 +50,14 @@ const Marketkiller = observer(() => {
                     <div className='mk-market-selector'>
                         <label>ACTIVE STREAM</label>
                         <select value={symbol} onChange={e => marketkiller.setSymbol(e.target.value)}>
-                            {markets.map(m => (
-                                <option key={m.value} value={m.value}>
-                                    {m.label}
-                                </option>
+                            {marketGroups.map(group => (
+                                <optgroup key={group.group} label={group.group}>
+                                    {group.items.map(m => (
+                                        <option key={m.value} value={m.value}>
+                                            {m.label}
+                                        </option>
+                                    ))}
+                                </optgroup>
                             ))}
                         </select>
                     </div>

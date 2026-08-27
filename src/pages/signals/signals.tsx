@@ -8,19 +8,12 @@ import './signals.scss';
 
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 
+import { ALL_DERIV_MARKETS } from '@/constants/markets';
+
 // Fallback markets when api_base.active_symbols hasn't loaded yet
 const FALLBACK_MARKETS: {value: string, label: string}[] = [
     { value: 'ALL', label: 'All Markets (Multi-Scan)' },
-    { value: 'R_100', label: 'Volatility 100 Index' },
-    { value: 'R_50', label: 'Volatility 50 Index' },
-    { value: 'R_75', label: 'Volatility 75 Index' },
-    { value: 'R_25', label: 'Volatility 25 Index' },
-    { value: 'R_10', label: 'Volatility 10 Index' },
-    { value: '1HZ100V', label: 'Volatility 100 (1s) Index' },
-    { value: '1HZ75V', label: 'Volatility 75 (1s) Index' },
-    { value: '1HZ50V', label: 'Volatility 50 (1s) Index' },
-    { value: '1HZ25V', label: 'Volatility 25 (1s) Index' },
-    { value: '1HZ10V', label: 'Volatility 10 (1s) Index' },
+    ...ALL_DERIV_MARKETS.map(m => ({ value: m.value, label: m.label })),
 ];
 
 const Signals = observer(() => {

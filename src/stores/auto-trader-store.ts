@@ -1,6 +1,7 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
 import { api_base, ApiHelpers } from '@/external/bot-skeleton';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
+import { getGroupedMarkets } from '@/constants/markets';
 import RootStore from './root-store';
 
 export type TDigitStat = {
@@ -622,18 +623,7 @@ export default class AutoTraderStore {
                     this.markets = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
                 } else {
                     // Fallback to basic Volatility Indices if API fails or returns empty
-                    this.markets = [
-                        {
-                            group: 'Derived Indices',
-                            items: [
-                                { value: 'R_10', label: 'Volatility 10 Index' },
-                                { value: 'R_25', label: 'Volatility 25 Index' },
-                                { value: 'R_50', label: 'Volatility 50 Index' },
-                                { value: 'R_75', label: 'Volatility 75 Index' },
-                                { value: 'R_100', label: 'Volatility 100 Index' },
-                            ],
-                        },
-                    ];
+                    this.markets = getGroupedMarkets();
                 }
             });
         } catch (error) {

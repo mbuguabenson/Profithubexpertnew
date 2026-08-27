@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Localize } from '@deriv-com/translations';
 import { getSocketURL } from '@/components/shared/utils/config/config';
+import { ALL_DERIV_MARKETS } from '@/constants/markets';
 import './tick-analyser.scss';
 
 type ViewMode = 'summary' | 'detailed';
@@ -45,13 +46,7 @@ const TickAnalyser: React.FC = () => {
     const [lastDigits, setLastDigits] = useState<number[]>([]);
     const wsRef = useRef<WebSocket | null>(null);
 
-    const symbols = [
-        { value: 'R_10', label: 'Volatility 10 Index' },
-        { value: 'R_25', label: 'Volatility 25 Index' },
-        { value: 'R_50', label: 'Volatility 50 Index' },
-        { value: 'R_75', label: 'Volatility 75 Index' },
-        { value: 'R_100', label: 'Volatility 100 Index' },
-    ];
+    const symbols = ALL_DERIV_MARKETS.map(m => ({ value: m.value, label: m.label }));
 
     useEffect(() => {
         let isCancelled = false;
