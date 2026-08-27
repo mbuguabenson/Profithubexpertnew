@@ -121,106 +121,165 @@ export class DerivAccountWalletService {
     // ═════════════════════════════════════════════════════════════════════════
 
     /**
-     * Lists all wallets for the authenticated user
-     * GET /wallet/v1/wallets?conversion_currency=USD
+     * Lists all wallets & accounts for the authenticated user from real Deriv WebSocket & REST APIs
+     * WS: { balance: 1, account: 'all' }
+     * REST: GET /wallet/v1/wallets?conversion_currency=USD
      */
     public static async getWallets(conversionCurrency = 'USD'): Promise<DerivWallet[]> {
         const now = Date.now();
-        if (this.cachedWallets && now - this.lastWalletsFetch < 15000) {
+        if (this.cachedWallets && now - this.lastWalletsFetch < 10000) {
             return this.cachedWallets;
         }
 
-        const { token, appId } = this.getAuthCredentials();
-        if (!token) {
-            return this.generateFallbackWallets();
+        // 1. Try Deriv WebSocket API { balance: 1, account: 'all' }
+        if (api_base.api) {
+            try {
+                const wsRes = (await api_base.api.send({ balance: 1, account: 'all' })) as any;
+                if (wsRes?.balance?.accounts) {
+                    const accounts = wsRes.balance.accounts;
+                    const activeId = getActiveLoginId();
+                    const walletsList: DerivWallet[] = Object.keys(accounts).map(loginid => {
+                        const acc = accounts[loginid];
+                        const isDemo = loginid.startsWith('VR');
+                        const curr = acc.currency || (isDemo ? 'USD' : 'USD');
+                        const isCrypto = ['BTC', 'ETH', 'LTC', 'USDT', 'USDC'].includes(curr.toUpperCase());
+
+                        return {
+                            wallet_id: loginid,
+                            wallet_type: isDemo ? 'demo_fiat' : isCrypto ? 'crypto' : 'fiat',
+                            currency: curr,
+                            balance: typeof acc.balance === 'number' ? acc.balance : parseFloat(acc.balance || '0'),
+                            converted_balance: typeof acc.converted_amount === 'number' ? acc.converted_amount : undefined,
+                            status: 'active',
+                            is_default: loginid === activeId,
+                        };
+                    });
+
+                    if (walletsList.length > 0) {
+                        this.cachedWallets = walletsList;
+                        this.lastWalletsFetch = now;
+                        return walletsList;
+                    }
+                }
+            } catch (e) {
+                console.warn('[DerivAccountWalletService] balance all WS query error:', e);
+            }
         }
 
-        try {
-            const url = `${WALLET_BASE_URL}/wallet/v1/wallets?conversion_currency=${encodeURIComponent(conversionCurrency)}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Deriv-App-ID': appId,
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+        // 2. Try REST GET /wallet/v1/wallets
+        const { token, appId } = this.getAuthCredentials();
+        if (token) {
+            try {
+                const url = `${WALLET_BASE_URL}/wallet/v1/wallets?conversion_currency=${encodeURIComponent(conversionCurrency)}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Deriv-App-ID': appId,
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-            if (response.ok) {
-                const data = await response.json();
-                const walletsList: DerivWallet[] = (data?.wallets || data?.data || []).map((w: any) => ({
-                    wallet_id: w.wallet_id || w.id || `wallet-${w.currency}`,
-                    wallet_type: w.wallet_type || 'fiat',
-                    currency: w.currency || 'USD',
-                    balance: typeof w.balance === 'number' ? w.balance : parseFloat(w.balance || '0'),
-                    converted_balance: typeof w.converted_balance === 'number' ? w.converted_balance : undefined,
-                    status: w.status || 'active',
-                    is_default: !!w.is_default,
-                    icon_url: w.icon_url,
-                }));
+                if (response.ok) {
+                    const data = await response.json();
+                    const walletsList: DerivWallet[] = (data?.wallets || data?.data || []).map((w: any) => ({
+                        wallet_id: w.wallet_id || w.id || `wallet-${w.currency}`,
+                        wallet_type: w.wallet_type || 'fiat',
+                        currency: w.currency || 'USD',
+                        balance: typeof w.balance === 'number' ? w.balance : parseFloat(w.balance || '0'),
+                        converted_balance: typeof w.converted_balance === 'number' ? w.converted_balance : undefined,
+                        status: w.status || 'active',
+                        is_default: !!w.is_default,
+                        icon_url: w.icon_url,
+                    }));
 
-                if (walletsList.length > 0) {
-                    this.cachedWallets = walletsList;
-                    this.lastWalletsFetch = now;
-                    return walletsList;
+                    if (walletsList.length > 0) {
+                        this.cachedWallets = walletsList;
+                        this.lastWalletsFetch = now;
+                        return walletsList;
+                    }
                 }
+            } catch (err) {
+                console.warn('[DerivAccountWalletService] Wallets REST fetch notice:', err);
             }
-        } catch (err) {
-            console.warn('[DerivAccountWalletService] Wallets REST fetch failed, using fallback:', err);
         }
 
         return this.generateFallbackWallets();
     }
 
     /**
-     * Fetches cursor-paginated transaction history for a specific wallet type
-     * GET /wallet/v1/transactions/{wallet_type}
+     * Fetches real transaction history for a specific wallet type from WebSocket statement or REST
+     * WS: { statement: 1, limit: 50 }
+     * REST: GET /wallet/v1/transactions/{wallet_type}
      */
     public static async getWalletTransactions(
         walletType: string = 'fiat',
         options: { limit?: number; cursor?: string } = {}
     ): Promise<{ transactions: DerivWalletTransaction[]; nextCursor?: string }> {
-        const { token, appId } = this.getAuthCredentials();
-        if (!token) {
-            return { transactions: [] };
+        // 1. Try WebSocket statement API
+        if (api_base.api) {
+            try {
+                const stmtRes = (await api_base.api.send({ statement: 1, description: 1, limit: options.limit || 50 })) as any;
+                if (stmtRes?.statement?.transactions && stmtRes.statement.transactions.length > 0) {
+                    const txs: DerivWalletTransaction[] = stmtRes.statement.transactions.map((t: any) => ({
+                        transaction_id: String(t.transaction_id || t.id),
+                        action_type: (t.action_type || 'deposit').toLowerCase(),
+                        amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount || '0'),
+                        currency: t.currency || 'USD',
+                        balance_after: typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
+                        transaction_time: (t.transaction_time || Date.now() / 1000) * 1000,
+                        category: t.longcode || t.shortcode || t.action_type,
+                        channel: 'Deriv Cashier',
+                        status: 'Completed',
+                    }));
+
+                    return { transactions: txs };
+                }
+            } catch (e) {
+                console.warn('[DerivAccountWalletService] Statement transactions WS notice:', e);
+            }
         }
 
-        try {
-            const query = new URLSearchParams();
-            if (options.limit) query.set('limit', String(options.limit));
-            if (options.cursor) query.set('cursor', options.cursor);
+        // 2. Try REST /wallet/v1/transactions
+        const { token, appId } = this.getAuthCredentials();
+        if (token) {
+            try {
+                const query = new URLSearchParams();
+                if (options.limit) query.set('limit', String(options.limit));
+                if (options.cursor) query.set('cursor', options.cursor);
 
-            const url = `${WALLET_BASE_URL}/wallet/v1/transactions/${encodeURIComponent(walletType)}?${query.toString()}`;
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Deriv-App-ID': appId,
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
+                const url = `${WALLET_BASE_URL}/wallet/v1/transactions/${encodeURIComponent(walletType)}?${query.toString()}`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Deriv-App-ID': appId,
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-            if (response.ok) {
-                const data = await response.json();
-                const txs: DerivWalletTransaction[] = (data?.transactions || data?.data || []).map((t: any) => ({
-                    transaction_id: t.transaction_id || t.id || String(Date.now()),
-                    action_type: t.action_type || 'deposit',
-                    amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount || '0'),
-                    currency: t.currency || 'USD',
-                    balance_after: typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
-                    transaction_time: t.transaction_time || t.epoch || Date.now(),
-                    category: t.category,
-                    channel: t.channel,
-                    status: t.status || 'successful',
-                }));
+                if (response.ok) {
+                    const data = await response.json();
+                    const txs: DerivWalletTransaction[] = (data?.transactions || data?.data || []).map((t: any) => ({
+                        transaction_id: t.transaction_id || t.id || String(Date.now()),
+                        action_type: t.action_type || 'deposit',
+                        amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount || '0'),
+                        currency: t.currency || 'USD',
+                        balance_after: typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
+                        transaction_time: t.transaction_time || t.epoch || Date.now(),
+                        category: t.category,
+                        channel: t.channel,
+                        status: t.status || 'successful',
+                    }));
 
-                return {
-                    transactions: txs,
-                    nextCursor: data?.links?.next,
-                };
+                    return {
+                        transactions: txs,
+                        nextCursor: data?.links?.next,
+                    };
+                }
+            } catch (err) {
+                console.warn('[DerivAccountWalletService] Wallet transactions fetch error:', err);
             }
-        } catch (err) {
-            console.warn('[DerivAccountWalletService] Wallet transactions fetch error:', err);
         }
 
         return { transactions: [] };
@@ -422,19 +481,11 @@ export class DerivAccountWalletService {
                     return wsRes.app_markup_statistics;
                 }
             }
-        } catch {}
+        } catch (err) {
+            console.warn('[DerivAccountWalletService] app_markup_statistics WS notice:', err);
+        }
 
-        return {
-            total_turnover: 148520.5,
-            total_markup: 2970.41,
-            total_transactions: 1420,
-            currency: 'USD',
-            breakdown: [
-                { app_id: appId, app_name: 'ProfitHub Expert Pro', turnover: 98450.0, markup: 1969.0, clients_count: 86 },
-                { app_id: '121856', app_name: 'Deriv Bot Engine', turnover: 32410.5, markup: 648.21, clients_count: 34 },
-                { app_id: '1089', app_name: 'SmartTrader Suite', turnover: 17660.0, markup: 353.2, clients_count: 18 },
-            ],
-        };
+        return null;
     }
 
     /**

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { localize } from '@deriv-com/translations';
 import { DerivAccountWalletService } from '@/services/deriv-account-wallet.service';
 import { formatMoney, addComma } from '@/components/shared';
-import { getAccountsList, getActiveLoginId } from '@/utils/token-bridge';
+import { getAccountsList } from '@/utils/token-bridge';
 import './account-management.scss';
 
 interface AccountManagementProps {
@@ -142,13 +142,17 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                     <div className="am-card">
                         <div className="am-card__header">
                             <h3 className="am-card__title">🛡️ {localize('KYC & Verification Status')}</h3>
-                            <span className="am-status-badge am-status-badge--success">ACTIVE & SECURE</span>
+                            <span className={`am-status-badge ${status?.status?.includes('authenticated') || isVirtual ? 'am-status-badge--success' : 'am-status-badge--demo'}`}>
+                                {status?.status?.includes('authenticated') || isVirtual ? 'ACTIVE & VERIFIED' : 'AUTHENTICATION PENDING'}
+                            </span>
                         </div>
                         <div className="am-kyc-grid">
                             <div className="am-kyc-box">
                                 <div className="am-kyc-box__top">
                                     <span className="icon">🪪</span>
-                                    <span className="badge badge--green">VERIFIED</span>
+                                    <span className={`badge ${status?.authentication?.identity?.status === 'verified' || isVirtual ? 'badge--green' : 'badge--blue'}`}>
+                                        {(status?.authentication?.identity?.status || (isVirtual ? 'VERIFIED' : 'PENDING')).toUpperCase()}
+                                    </span>
                                 </div>
                                 <h4>{localize('Identity Proof (POI)')}</h4>
                                 <p>{localize('Government ID & Passport authenticated via Deriv KYC engine.')}</p>
@@ -156,7 +160,9 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                             <div className="am-kyc-box">
                                 <div className="am-kyc-box__top">
                                     <span className="icon">🏠</span>
-                                    <span className="badge badge--green">VERIFIED</span>
+                                    <span className={`badge ${status?.authentication?.document?.status === 'verified' || isVirtual ? 'badge--green' : 'badge--blue'}`}>
+                                        {(status?.authentication?.document?.status || (isVirtual ? 'VERIFIED' : 'PENDING')).toUpperCase()}
+                                    </span>
                                 </div>
                                 <h4>{localize('Address Proof (POA)')}</h4>
                                 <p>{localize('Utility statement & residential address verified.')}</p>
@@ -164,10 +170,12 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                             <div className="am-kyc-box">
                                 <div className="am-kyc-box__top">
                                     <span className="icon">📊</span>
-                                    <span className="badge badge--blue">COMPLETED</span>
+                                    <span className="badge badge--blue">
+                                        {(status?.risk_classification || 'COMPLETED').toUpperCase()}
+                                    </span>
                                 </div>
                                 <h4>{localize('Financial Assessment')}</h4>
-                                <p>{localize('Trading experience & risk profile assessment completed.')}</p>
+                                <p>{localize('Trading experience & risk profile assessment recorded.')}</p>
                             </div>
                             <div className="am-kyc-box">
                                 <div className="am-kyc-box__top">
@@ -234,52 +242,58 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                         <span className="am-live-badge">● API SYNCHRONIZED</span>
                     </div>
 
-                    <div className="am-kpi-row">
-                        <div className="am-kpi">
-                            <span className="label">{localize('Total App Turnover')}</span>
-                            <h3 className="value">${formatMoney('USD', markupStats?.total_turnover || 148520.5, true)}</h3>
-                            <span className="sub">{localize('Gross traded volume')}</span>
-                        </div>
-                        <div className="am-kpi am-kpi--green">
-                            <span className="label">{localize('Total Markup Accrued')}</span>
-                            <h3 className="value value--green">+${formatMoney('USD', markupStats?.total_markup || 2970.41, true)}</h3>
-                            <span className="sub">{localize('Net app commission earned')}</span>
-                        </div>
-                        <div className="am-kpi">
-                            <span className="label">{localize('Total App Transactions')}</span>
-                            <h3 className="value">{addComma(markupStats?.total_transactions || 1420)}</h3>
-                            <span className="sub">{localize('Bot & Trader executions')}</span>
-                        </div>
-                    </div>
+                    {markupStats && (markupStats.total_turnover > 0 || (markupStats.breakdown && markupStats.breakdown.length > 0)) ? (
+                        <>
+                            <div className="am-kpi-row">
+                                <div className="am-kpi">
+                                    <span className="label">{localize('Total App Turnover')}</span>
+                                    <h3 className="value">${formatMoney('USD', markupStats?.total_turnover || 0, true)}</h3>
+                                    <span className="sub">{localize('Gross traded volume')}</span>
+                                </div>
+                                <div className="am-kpi am-kpi--green">
+                                    <span className="label">{localize('Total Markup Accrued')}</span>
+                                    <h3 className="value value--green">+${formatMoney('USD', markupStats?.total_markup || 0, true)}</h3>
+                                    <span className="sub">{localize('Net app commission earned')}</span>
+                                </div>
+                                <div className="am-kpi">
+                                    <span className="label">{localize('Total App Transactions')}</span>
+                                    <h3 className="value">{addComma(markupStats?.total_transactions || 0)}</h3>
+                                    <span className="sub">{localize('Bot & Trader executions')}</span>
+                                </div>
+                            </div>
 
-                    <div className="am-table-box">
-                        <table className="am-table">
-                            <thead>
-                                <tr>
-                                    <th>{localize('App ID')}</th>
-                                    <th>{localize('Application Name')}</th>
-                                    <th>{localize('Turnover Volume')}</th>
-                                    <th>{localize('Markup Earned')}</th>
-                                    <th>{localize('Active Clients')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(markupStats?.breakdown || [
-                                    { app_id: '121856', app_name: 'ProfitHub Expert Master', turnover: 98450, markup: 1969, clients_count: 86 },
-                                    { app_id: '1089', app_name: 'Deriv Bot Replicator', turnover: 32410.5, markup: 648.21, clients_count: 34 },
-                                    { app_id: '68351', app_name: 'SmartTrader Suite', turnover: 17660, markup: 353.2, clients_count: 18 },
-                                ]).map((item: any) => (
-                                    <tr key={item.app_id}>
-                                        <td className="monospace">#{item.app_id}</td>
-                                        <td className="bold">{item.app_name}</td>
-                                        <td>${formatMoney('USD', item.turnover, true)}</td>
-                                        <td className="green bold">+${formatMoney('USD', item.markup, true)}</td>
-                                        <td>{item.clients_count} traders</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                            <div className="am-table-box">
+                                <table className="am-table">
+                                    <thead>
+                                        <tr>
+                                            <th>{localize('App ID')}</th>
+                                            <th>{localize('Application Name')}</th>
+                                            <th>{localize('Turnover Volume')}</th>
+                                            <th>{localize('Markup Earned')}</th>
+                                            <th>{localize('Active Clients')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(markupStats?.breakdown || []).map((item: any) => (
+                                            <tr key={item.app_id}>
+                                                <td className="monospace">#{item.app_id}</td>
+                                                <td className="bold">{item.app_name}</td>
+                                                <td>${formatMoney('USD', item.turnover, true)}</td>
+                                                <td className="green bold">+${formatMoney('USD', item.markup, true)}</td>
+                                                <td>{item.clients_count} traders</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="am-empty-markup">
+                            <div className="icon">📈</div>
+                            <h4>{localize('No Developer Markup Statistics')}</h4>
+                            <p>{localize('Markup statistics are tracked when trading volume is generated via registered Deriv developer applications (GET /applications/v1/markup-statistics).')}</p>
+                        </div>
+                    )}
                 </div>
             )}
 

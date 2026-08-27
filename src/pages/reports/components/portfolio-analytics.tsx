@@ -131,7 +131,11 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
             map[strategyName].profit += net;
         });
 
-        const totalTrades = profitList.length || 1;
+        const totalTrades = profitList.length;
+        if (totalTrades === 0) {
+            return [];
+        }
+
         const result: StrategyStat[] = Object.keys(map).map(name => {
             const data = map[name];
             return {
@@ -144,16 +148,6 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                 color: STRATEGY_COLORS[name] || '#3b82f6',
             };
         });
-
-        // If no trades, supply dummy preview categories for beautiful visualization
-        if (result.length === 0) {
-            return [
-                { name: 'Matches / Differs', trades: 42, wins: 36, profit: 240.5, winRate: 85.7, percentage: 42, color: '#3b82f6' },
-                { name: 'Even / Odd', trades: 26, wins: 20, profit: 115.2, winRate: 76.9, percentage: 26, color: '#6366f1' },
-                { name: 'Over / Under', trades: 18, wins: 14, profit: 89.0, winRate: 77.8, percentage: 18, color: '#f59e0b' },
-                { name: 'Rise / Fall', trades: 14, wins: 10, profit: 64.3, winRate: 71.4, percentage: 14, color: '#10b981' },
-            ];
-        }
 
         return result.sort((a, b) => b.trades - a.trades);
     }, [profitList]);
@@ -227,15 +221,18 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                                 </svg>
                             </span>
                         </div>
-
                         <div className="pa-bank-card__number">
-                            <span>{activeLoginid ? `${activeLoginid.slice(0, 4)} •••• •••• ${activeLoginid.slice(-4)}` : 'CR90 •••• •••• 5821'}</span>
+                            <span>••••</span>
+                            <span>••••</span>
+                            <span>••••</span>
+                            <span>{maskedAcc}</span>
                         </div>
-
                         <div className="pa-bank-card__bottom">
                             <div className="pa-bank-card__holder">
-                                <span className="pa-bank-card__label">{localize('TRADER ACCOUNT')}</span>
-                                <span className="pa-bank-card__name">{activeLoginid || 'TRADER'}</span>
+                                <span className="pa-bank-card__label">{localize('BALANCE')}</span>
+                                <span className="pa-bank-card__name">
+                                    {formatMoney(currency, financialStats.netProfit + financialStats.deposits - financialStats.withdrawals, true)} {currency}
+                                </span>
                             </div>
                             <div className="pa-bank-card__expiry">
                                 <span className="pa-bank-card__label">{localize('CURRENCY')}</span>
@@ -352,60 +349,68 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                         </div>
                     </div>
 
-                    <div className="pa-pie-content">
-                        {/* Interactive SVG Donut Chart */}
-                        <div className="pa-pie-chart-box">
-                            <svg width="220" height="220" viewBox="0 0 220 220" className="pa-donut-svg">
-                                <circle cx="110" cy="110" r="75" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="24" />
-                                {donutPaths.map(item => (
-                                    <path
-                                        key={item.idx}
-                                        d={item.d}
-                                        fill="none"
-                                        stroke={item.color}
-                                        strokeWidth={item.strokeWidth}
-                                        strokeLinecap="round"
-                                        className="pa-donut-segment"
-                                        onMouseEnter={() => setSelectedStrategyIndex(item.idx)}
+                    {strategyStats.length === 0 ? (
+                        <div className="pa-empty-pie">
+                            <div className="icon">🥧</div>
+                            <h4>{localize('No Closed Trades Recorded')}</h4>
+                            <p>{localize('Your traded strategy distribution and win rates will automatically calculate from real closed contracts.')}</p>
+                        </div>
+                    ) : (
+                        <div className="pa-pie-content">
+                            {/* Interactive SVG Donut Chart */}
+                            <div className="pa-pie-chart-box">
+                                <svg width="220" height="220" viewBox="0 0 220 220" className="pa-donut-svg">
+                                    <circle cx="110" cy="110" r="75" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="24" />
+                                    {donutPaths.map(item => (
+                                        <path
+                                            key={item.idx}
+                                            d={item.d}
+                                            fill="none"
+                                            stroke={item.color}
+                                            strokeWidth={item.strokeWidth}
+                                            strokeLinecap="round"
+                                            className="pa-donut-segment"
+                                            onMouseEnter={() => setSelectedStrategyIndex(item.idx)}
+                                            onMouseLeave={() => setSelectedStrategyIndex(null)}
+                                        />
+                                    ))}
+                                </svg>
+                                {/* Central Telemetry Callout */}
+                                <div className="pa-donut-center">
+                                    <span className="pa-donut-center__pct">
+                                        {activeDonutInfo ? `${activeDonutInfo.percentage.toFixed(0)}%` : '100%'}
+                                    </span>
+                                    <span className="pa-donut-center__label">
+                                        {activeDonutInfo ? activeDonutInfo.name : localize('Dominant')}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Strategy Breakdown Legend & Win Rates */}
+                            <div className="pa-strategy-legend">
+                                {strategyStats.map((stat, idx) => (
+                                    <div
+                                        key={stat.name}
+                                        className={`pa-legend-item ${selectedStrategyIndex === idx ? 'pa-legend-item--active' : ''}`}
+                                        onMouseEnter={() => setSelectedStrategyIndex(idx)}
                                         onMouseLeave={() => setSelectedStrategyIndex(null)}
-                                    />
+                                    >
+                                        <div className="pa-legend-item__color" style={{ background: stat.color, boxShadow: `0 0 10px ${stat.color}80` }}></div>
+                                        <div className="pa-legend-item__info">
+                                            <span className="pa-legend-item__name">{stat.name}</span>
+                                            <span className="pa-legend-item__count">{stat.trades} {localize('trades')}</span>
+                                        </div>
+                                        <div className="pa-legend-item__right">
+                                            <span className="pa-legend-item__winrate">{stat.winRate.toFixed(1)}% WR</span>
+                                            <span className={`pa-legend-item__pnl ${stat.profit >= 0 ? 'pa-legend-item__pnl--win' : 'pa-legend-item__pnl--loss'}`}>
+                                                {stat.profit >= 0 ? `+${formatMoney(currency, stat.profit, true)}` : formatMoney(currency, stat.profit, true)}
+                                            </span>
+                                        </div>
+                                    </div>
                                 ))}
-                            </svg>
-                            {/* Central Telemetry Callout */}
-                            <div className="pa-donut-center">
-                                <span className="pa-donut-center__pct">
-                                    {activeDonutInfo ? `${activeDonutInfo.percentage.toFixed(0)}%` : '100%'}
-                                </span>
-                                <span className="pa-donut-center__label">
-                                    {activeDonutInfo ? activeDonutInfo.name : localize('Dominant')}
-                                </span>
                             </div>
                         </div>
-
-                        {/* Strategy Breakdown Legend & Win Rates */}
-                        <div className="pa-strategy-legend">
-                            {strategyStats.map((stat, idx) => (
-                                <div
-                                    key={stat.name}
-                                    className={`pa-legend-item ${selectedStrategyIndex === idx ? 'pa-legend-item--active' : ''}`}
-                                    onMouseEnter={() => setSelectedStrategyIndex(idx)}
-                                    onMouseLeave={() => setSelectedStrategyIndex(null)}
-                                >
-                                    <div className="pa-legend-item__color" style={{ background: stat.color, boxShadow: `0 0 10px ${stat.color}80` }}></div>
-                                    <div className="pa-legend-item__info">
-                                        <span className="pa-legend-item__name">{stat.name}</span>
-                                        <span className="pa-legend-item__count">{stat.trades} {localize('trades')}</span>
-                                    </div>
-                                    <div className="pa-legend-item__right">
-                                        <span className="pa-legend-item__winrate">{stat.winRate.toFixed(1)}% WR</span>
-                                        <span className={`pa-legend-item__pnl ${stat.profit >= 0 ? 'pa-legend-item__pnl--win' : 'pa-legend-item__pnl--loss'}`}>
-                                            {stat.profit >= 0 ? `+${formatMoney(currency, stat.profit, true)}` : formatMoney(currency, stat.profit, true)}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* 2. Trading Volume & Success Activity Visualizer */}
@@ -434,45 +439,47 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                             </div>
                         </div>
 
-                        {/* Simulated/Visual Telemetry Bars */}
-                        <div className="pa-bars-grid">
-                            {[
-                                { month: 'Jan', val: 65, gain: 45 },
-                                { month: 'Feb', val: 40, gain: 30 },
-                                { month: 'Mar', val: 85, gain: 70 },
-                                { month: 'Apr', val: 55, gain: 50 },
-                                { month: 'May', val: 95, gain: 88 },
-                                { month: 'Jun', val: 75, gain: 65 },
-                                { month: 'Jul', val: 88, gain: 82 },
-                            ].map((bar, i) => (
-                                <div key={bar.month} className="pa-bar-column">
-                                    <div className="pa-bar-track">
-                                        <div
-                                            className="pa-bar-fill pa-bar-fill--primary"
-                                            style={{ height: `${bar.val}%`, transitionDelay: `${i * 50}ms` }}
-                                            title={`Volume: ${bar.val}%`}
-                                        ></div>
-                                        <div
-                                            className="pa-bar-fill pa-bar-fill--secondary"
-                                            style={{ height: `${bar.gain}%`, transitionDelay: `${i * 50 + 25}ms` }}
-                                            title={`Gain: ${bar.gain}%`}
-                                        ></div>
-                                    </div>
-                                    <span className="pa-bar-label">{bar.month}</span>
+                        {/* Real Telemetry Bars */}
+                        {activityBars.length === 0 ? (
+                            <div className="pa-empty-pie">
+                                <div className="icon">📊</div>
+                                <h4>{localize('No Trade Dynamics Data')}</h4>
+                                <p>{localize('Live executions and volume flow will automatically stream here once trades are completed.')}</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="pa-bars-grid">
+                                    {activityBars.map((bar, i) => (
+                                        <div key={bar.label + i} className="pa-bar-column">
+                                            <div className="pa-bar-track">
+                                                <div
+                                                    className="pa-bar-fill pa-bar-fill--primary"
+                                                    style={{ height: `${bar.val}%`, transitionDelay: `${i * 50}ms` }}
+                                                    title={`Volume: ${bar.val}%`}
+                                                ></div>
+                                                <div
+                                                    className="pa-bar-fill pa-bar-fill--secondary"
+                                                    style={{ height: `${bar.gain}%`, transitionDelay: `${i * 50 + 25}ms` }}
+                                                    title={`Gain: ${bar.gain}%`}
+                                                ></div>
+                                            </div>
+                                            <span className="pa-bar-label">{bar.label}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
 
-                        <div className="pa-activity-legend">
-                            <div className="pa-act-leg-item">
-                                <span className="pa-act-dot pa-act-dot--primary"></span>
-                                <span>{localize('Gross Trade Volume')}</span>
-                            </div>
-                            <div className="pa-act-leg-item">
-                                <span className="pa-act-dot pa-act-dot--secondary"></span>
-                                <span>{localize('Net Profit Harvest')}</span>
-                            </div>
-                        </div>
+                                <div className="pa-activity-legend">
+                                    <div className="pa-act-leg-item">
+                                        <span className="pa-act-dot pa-act-dot--primary"></span>
+                                        <span>{localize('Gross Trade Volume')}</span>
+                                    </div>
+                                    <div className="pa-act-leg-item">
+                                        <span className="pa-act-dot pa-act-dot--secondary"></span>
+                                        <span>{localize('Net Profit Harvest')}</span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
