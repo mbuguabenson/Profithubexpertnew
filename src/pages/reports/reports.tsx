@@ -373,13 +373,22 @@ export const ReportsPage: React.FC = () => {
 
     return (
         <div className="reports-page">
-            {/* ── Top Header Banner ── */}
+            {/* ── Top Header Banner (Turing AI Style) ── */}
             <div className="reports-page__header">
                 <div className="reports-page__title-box">
-                    <h1 className="reports-page__title">{localize('Reports & Activity')}</h1>
-                    <div className="reports-page__account-chip">
-                        <span className="reports-page__account-dot"></span>
-                        <span className="reports-page__account-id">{activeLoginid || 'Active'}</span>
+                    <div className="reports-avatar-chip">
+                        <span className="reports-avatar-chip__icon">👤</span>
+                        <div className="reports-avatar-chip__info">
+                            <span className="reports-avatar-chip__name">{activeLoginid || 'Deriv Account'}</span>
+                            <div className="reports-avatar-chip__status">
+                                <span className="reports-avatar-chip__dot"></span>
+                                <span>{isAuthorized ? localize('Live Connected') : localize('Authorizing...')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 className="reports-page__title">{localize('Reports & Analytics')}</h1>
+                        <p className="reports-page__subtitle">{localize('Track real-time positions, ledger statements, and financial growth')}</p>
                     </div>
                 </div>
                 <div className="reports-page__actions">
@@ -389,15 +398,15 @@ export const ReportsPage: React.FC = () => {
                         disabled={isLoading}
                         title={localize('Sync live reports')}
                     >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
                             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                         </svg>
-                        <span>{isLoading ? localize('Syncing...') : localize('Sync')}</span>
+                        <span>{isLoading ? localize('Syncing...') : localize('Sync Data')}</span>
                     </button>
                 </div>
             </div>
 
-            {/* ── Apple WWDC25 Floating Segmented Dock Sub-Tabs ── */}
+            {/* ── Turing AI Floating Squircle Segmented Dock ── */}
             <div className="reports-dock-wrapper">
                 <div className="reports-dock">
                     <button
@@ -490,14 +499,14 @@ export const ReportsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── Modern Fintech KPI Tiles Strip ── */}
+            {/* ── Turing AI 4-Card Luxury KPI Grid ── */}
             {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
                 <div className="reports-metrics-grid">
                     {/* 1. Net P&L Card */}
                     <div className={`reports-metric-card ${metrics.totalProfit >= 0 ? 'reports-metric-card--profit' : 'reports-metric-card--loss'}`}>
                         <div className="reports-metric-card__header">
-                            <div className="reports-metric-card__icon-box">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                            <div className={`reports-metric-card__icon-box ${metrics.totalProfit >= 0 ? 'reports-metric-card__icon-box--teal' : 'reports-metric-card__icon-box--rose'}`}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
                                     {metrics.totalProfit >= 0 ? (
                                         <path d="M23 6l-9.5 9.5-5-5L1 18M17 6h6v6" />
                                     ) : (
@@ -506,7 +515,7 @@ export const ReportsPage: React.FC = () => {
                                 </svg>
                             </div>
                             <span className={`reports-metric-card__tag ${metrics.totalProfit >= 0 ? 'reports-metric-card__tag--win' : 'reports-metric-card__tag--loss'}`}>
-                                {metrics.totalProfit >= 0 ? '+ PROFIT' : '- LOSS'}
+                                {metrics.totalProfit >= 0 ? '+ PROFIT' : '- DRAWDOWN'}
                             </span>
                         </div>
                         <div className="reports-metric-card__body">
@@ -521,8 +530,8 @@ export const ReportsPage: React.FC = () => {
                     {/* 2. Win Rate Card */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--blue">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--purple">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
                                     <circle cx="12" cy="12" r="10" />
                                     <path d="m9 12 2 2 4-4" />
                                 </svg>
@@ -532,7 +541,7 @@ export const ReportsPage: React.FC = () => {
                             </span>
                         </div>
                         <div className="reports-metric-card__body">
-                            <span className="reports-metric-card__label">{localize('Win Rate')}</span>
+                            <span className="reports-metric-card__label">{localize('Success Win Rate')}</span>
                             <div className="reports-metric-card__value">
                                 {metrics.winRate.toFixed(1)}%
                             </div>
@@ -542,8 +551,8 @@ export const ReportsPage: React.FC = () => {
                     {/* 3. Executed Orders */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--purple">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--indigo">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                     <polyline points="14 2 14 8 20 8" />
                                     <line x1="16" y1="13" x2="8" y2="13" />
@@ -568,17 +577,17 @@ export const ReportsPage: React.FC = () => {
                     {/* 4. Total Payout Card */}
                     <div className="reports-metric-card">
                         <div className="reports-metric-card__header">
-                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--amber">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                            <div className="reports-metric-card__icon-box reports-metric-card__icon-box--sky">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
                                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                                 </svg>
                             </div>
                             <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
-                                VOLUME
+                                GROSS VOLUME
                             </span>
                         </div>
                         <div className="reports-metric-card__body">
-                            <span className="reports-metric-card__label">{localize('Gross Payout')}</span>
+                            <span className="reports-metric-card__label">{localize('Total Payout Volume')}</span>
                             <div className="reports-metric-card__value">
                                 {formatMoney(currency, metrics.totalPayout, true)}
                                 <span className="reports-metric-card__unit"> {currency}</span>
