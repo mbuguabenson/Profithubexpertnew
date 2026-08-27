@@ -11,7 +11,6 @@ import {
     setAuthData,
     setIsAuthorized,
     setIsAuthorizing,
-    setAccountList,
 } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
 import { getAccountsList } from '@/utils/token-bridge';
 import { isDemoAccount } from '@/utils/account-helpers';

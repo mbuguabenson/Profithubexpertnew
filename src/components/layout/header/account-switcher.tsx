@@ -10,7 +10,6 @@ import { Localize, localize } from '@deriv-com/translations';
 import { DerivAccountWalletService, DerivWallet } from '@/services/deriv-account-wallet.service';
 import { AccountSwitcherService } from '@/services/account-switcher.service';
 import { getSocketURL } from '@/components/shared/utils/config/config';
-import { getAccountsList } from '@/utils/token-bridge';
 import { TAccountSwitcher } from './common/types';
 import AccountInfoWrapper from './account-info-wrapper';
 const realAccountImg = '/real-account.jpg';
@@ -64,7 +63,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     const [wallets, setWallets] = useState<DerivWallet[]>([]);
     const [userNickname, setUserNickname] = useState<string>('');
     const wrapperRef = useRef<HTMLDivElement>(null);
-    const { accountList, activeLoginid, authData } = useApiBase();
+    const { accountList, activeLoginid } = useApiBase();
     const { client, run_panel } = useStore() ?? {};
 
     const [displayCurrency, setDisplayCurrency] = useState<'USD' | 'KES'>(() => {
