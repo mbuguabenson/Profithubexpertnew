@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
+import { TradingMilestoneModal } from '@/components/shared';
 import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import { SUPPORTED_VOLATILITY_MARKETS } from '@/utils/digit-strategy';
@@ -114,6 +115,7 @@ const PovertyHunter: React.FC = observer(() => {
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [accumulatedLoss, setAccumulatedLoss] = useState<number>(0);
     const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
+    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({ isOpen: false, type: null });
 
     // ── Differs Automation Condition States ──
     const [differTargetDigit, setDifferTargetDigit] = useState<number | null>(null);
@@ -596,8 +598,14 @@ const PovertyHunter: React.FC = observer(() => {
         // Check Take Profit & Stop Loss
         const tp = parseFloat(takeProfit) || 9999;
         const sl = parseFloat(stopLoss) || 9999;
-        if (sessionProfit >= tp || sessionProfit <= -sl) {
-            setBotState('PAUSED');
+        if (sessionProfit >= tp) {
+            setBotState('IDLE');
+            setMilestone({ isOpen: true, type: 'tp' });
+            return;
+        }
+        if (sessionProfit <= -sl) {
+            setBotState('IDLE');
+            setMilestone({ isOpen: true, type: 'sl' });
             return;
         }
 
@@ -705,6 +713,37 @@ const PovertyHunter: React.FC = observer(() => {
         setLossesCount(0);
         setTradeLog([]);
     };
+
+    // TopBar controller integration
+    useEffect(() => {
+        window.dispatchEvent(
+            new CustomEvent('PH_ENGINE_STATUS_UPDATE', {
+                detail: {
+                    tab: 'poverty_hunter',
+                    isRunning: botState === 'TRADING' || botState === 'SCANNING',
+                    state: botState,
+                    profit: sessionProfit,
+                },
+            })
+        );
+    }, [botState, sessionProfit]);
+
+    useEffect(() => {
+        const handleTrigger = (e: Event) => {
+            const customEvent = e as CustomEvent<{ tab: string; action: string }>;
+            if (customEvent.detail?.tab === 'poverty_hunter') {
+                if (botState === 'IDLE') {
+                    handleStartBot();
+                } else {
+                    handleStopBot();
+                }
+            }
+        };
+        window.addEventListener('PH_TRIGGER_ENGINE_ACTION', handleTrigger);
+        return () => {
+            window.removeEventListener('PH_TRIGGER_ENGINE_ACTION', handleTrigger);
+        };
+    }, [botState]);
 
     // ── SVG Line Chart Points Calculation (50 Last Digits) ──
     const { chartPoints, splinePath, chartWidth } = useMemo(() => {
@@ -1370,6 +1409,21 @@ const PovertyHunter: React.FC = observer(() => {
                     </div>
                 </div>
             </div>
+            <TradingMilestoneModal
+                isOpen={milestone.isOpen}
+                type={milestone.type}
+                amount={sessionProfit}
+                targetAmount={milestone.type === 'tp' ? parseFloat(takeProfit) || 10 : parseFloat(stopLoss) || 25}
+                currency={currency}
+                botName="Poverty Hunter Bot"
+                winsCount={winsCount}
+                lossesCount={lossesCount}
+                onClose={() => setMilestone({ isOpen: false, type: null })}
+                onRestart={() => {
+                    setMilestone({ isOpen: false, type: null });
+                    handleStartBot();
+                }}
+            />
         </div>
     );
 });

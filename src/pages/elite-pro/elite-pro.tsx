@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { generateOAuthURL } from '@/components/shared';
+import { generateOAuthURL, TradingMilestoneModal } from '@/components/shared';
 import { api_base } from '@/external/bot-skeleton';
 
 import {
@@ -265,6 +265,7 @@ const ElitePro = observer(() => {
     const [totalProfit, setTotalProfit] = useState(0);
     const [wins, setWins] = useState(0);
     const [losses, setLosses] = useState(0);
+    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({ isOpen: false, type: null });
 
     const currentStakeRef = useRef(0.35);
     const autoAbortRef = useRef<AbortController | null>(null);
@@ -953,11 +954,13 @@ const ElitePro = observer(() => {
                     if (totalProfitRef.current >= tp) {
                         addLogEntry('TARGET REACHED', 'Take Profit Target Hit 🎉', 'PENDING', 0);
                         setAutoState('IDLE');
+                        setMilestone({ isOpen: true, type: 'tp' });
                         break;
                     }
                     if (totalProfitRef.current <= -sl) {
                         addLogEntry('STOP LOSS HIT', 'Stop Loss Limit Reached 🛡️', 'PENDING', 0);
                         setAutoState('IDLE');
+                        setMilestone({ isOpen: true, type: 'sl' });
                         break;
                     }
 
@@ -1260,6 +1263,37 @@ const ElitePro = observer(() => {
             globalObserver.unregister('bot.manual_stop', handleGlobalStop);
         };
     }, [stopAutoTrading]);
+
+    // TopBar controller integration
+    useEffect(() => {
+        window.dispatchEvent(
+            new CustomEvent('PH_ENGINE_STATUS_UPDATE', {
+                detail: {
+                    tab: 'elite_pro',
+                    isRunning: autoState !== 'IDLE',
+                    state: autoState,
+                    profit: totalProfit,
+                },
+            })
+        );
+    }, [autoState, totalProfit]);
+
+    useEffect(() => {
+        const handleTrigger = (e: Event) => {
+            const customEvent = e as CustomEvent<{ tab: string; action: string }>;
+            if (customEvent.detail?.tab === 'elite_pro') {
+                if (autoStateRef.current === 'IDLE') {
+                    void startAutoTrading();
+                } else {
+                    void stopAutoTrading();
+                }
+            }
+        };
+        window.addEventListener('PH_TRIGGER_ENGINE_ACTION', handleTrigger);
+        return () => {
+            window.removeEventListener('PH_TRIGGER_ENGINE_ACTION', handleTrigger);
+        };
+    }, [startAutoTrading, stopAutoTrading]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -1896,6 +1930,21 @@ const ElitePro = observer(() => {
                     </div>
                 </main>
             </div>
+            <TradingMilestoneModal
+                isOpen={milestone.isOpen}
+                type={milestone.type}
+                amount={totalProfit}
+                targetAmount={milestone.type === 'tp' ? parseFloat(takeProfit) || 10 : parseFloat(stopLoss) || 5}
+                currency={currency}
+                botName="Elite Pro AI Engine"
+                winsCount={wins}
+                lossesCount={losses}
+                onClose={() => setMilestone({ isOpen: false, type: null })}
+                onRestart={() => {
+                    setMilestone({ isOpen: false, type: null });
+                    void startAutoTrading();
+                }}
+            />
         </div>
     );
 });

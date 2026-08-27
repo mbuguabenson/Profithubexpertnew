@@ -23,7 +23,7 @@ import { useDevice } from '@deriv-com/ui';
 import RunPanel from '../../components/run-panel';
 import ChartModal from '../chart/chart-modal';
 import Dashboard from '../dashboard';
-import RunStrategy from '../dashboard/run-strategy';
+import TopBarTradeController from '@/components/topbar-trade-controller';
 import Scanner from '../bot-builder/scanner/scanner';
 import { TabIcon } from './tab-icons';
 import './main.scss';
@@ -49,7 +49,7 @@ const DigitFlowPage = lazyRetry(() => import('../digitflow/digitflow'), 'digitfl
 const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pro');
 const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
 const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
-const DTraderPage = lazyRetry(() => import('../dtrader'), 'dtrader');
+// const DTraderPage = lazyRetry(() => import('../dtrader'), 'dtrader');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -112,7 +112,6 @@ const AppWrapper = observer(() => {
         'elite_pro',
         'poverty_hunter',
         'auto_x_eo',
-        'dtrader',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -544,18 +543,6 @@ const AppWrapper = observer(() => {
                 </TabErrorBoundary>
             )
         },
-        {
-            key: 'dtrader',
-            id: 'id-dtrader',
-            label: <TabIcon iconKey='dtrader' label='DTrader' />,
-            content: (
-                <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
-                        <DTraderPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
     ], [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]);
 
     const activeTabsList = useMemo(() => {
@@ -578,8 +565,8 @@ const AppWrapper = observer(() => {
             });
     }, [siteConfig, allTabDescriptors]);
 
-    const currentTabKey = hash[active_hash_tab] ?? hash[0];
-    const filteredActiveIndex = Math.max(0, activeTabsList.findIndex(t => t.key === currentTabKey));
+    const currentTabKey = (hash[active_hash_tab] ?? location.hash?.replace('#', '') ?? hash[0] ?? 'dashboard').toLowerCase();
+    const filteredActiveIndex = Math.max(0, activeTabsList.findIndex(t => t.key.toLowerCase() === currentTabKey));
 
     const handleFilteredTabChange = React.useCallback(
         (filteredIndex: number) => {
@@ -604,13 +591,16 @@ const AppWrapper = observer(() => {
 
     if (!store) return null;
 
+    // 1. Remove run panel and drawer from dashboard, dtrader, and trading bots
+    const shouldHideRunPanelAndDrawer = ['dashboard', 'dtrader', 'trading_bots', 'free_bots', 'trading-bots'].includes(currentTabKey);
+
     return (
         <React.Fragment>
             <div className='main'>
                 <div
                     className={classNames('main__container', {
                         'main__container--active': active_tour && active_tab === DASHBOARD && !isDesktop,
-                        'main__container--drawer-open': isDesktop && is_drawer_open,
+                        'main__container--drawer-open': isDesktop && is_drawer_open && !shouldHideRunPanelAndDrawer,
                     })}
                 >
                     <Tabs active_index={filteredActiveIndex} className='main__tabs' onTabItemClick={handleFilteredTabChange} history={window.history as any} top>
@@ -625,26 +615,28 @@ const AppWrapper = observer(() => {
 
             {isDesktop ? (
                 <>
-                    <div style={{
-                        position: 'fixed',
-                        top: '5rem',
-                        right: 0,
-                        width: '35rem',
-                        height: '5rem',
-                        zIndex: 1100,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'var(--general-main-2)',
-                        borderBottom: '1px solid var(--general-section-1)',
-                        padding: '0 1.6rem',
-                    }}>
-                        <RunStrategy />
-                    </div>
-                    <RunPanel />
+                    {!shouldHideRunPanelAndDrawer && (
+                        <div style={{
+                            position: 'fixed',
+                            top: '5rem',
+                            right: 0,
+                            width: '35rem',
+                            height: '5rem',
+                            zIndex: 1100,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'var(--general-main-2)',
+                            borderBottom: '1px solid var(--general-section-1)',
+                            padding: '0 1.6rem',
+                        }}>
+                            <TopBarTradeController currentTabKey={currentTabKey} />
+                        </div>
+                    )}
+                    {!shouldHideRunPanelAndDrawer && <RunPanel />}
                 </>
             ) : (
-                !is_open && <RunPanel />
+                !is_open && !shouldHideRunPanelAndDrawer && <RunPanel />
             )}
 
             <ChartModal />

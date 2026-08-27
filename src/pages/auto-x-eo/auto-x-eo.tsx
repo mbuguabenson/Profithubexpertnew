@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
+import { TradingMilestoneModal } from '@/components/shared';
 import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import { SUPPORTED_VOLATILITY_MARKETS } from '@/utils/digit-strategy';
@@ -170,6 +171,7 @@ const AutoXEo: React.FC = observer(() => {
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [accumulatedLoss, setAccumulatedLoss] = useState<number>(0);
     const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
+    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({ isOpen: false, type: null });
 
     // ── Active Market Data Map & Subscriptions ──
     const marketsDataRef = useRef<Map<string, MarketDigitState>>(new Map());
@@ -733,12 +735,12 @@ const AutoXEo: React.FC = observer(() => {
 
         if (sessionProfit >= tpVal) {
             setBotState('IDLE');
-            alert(`🎉 Take Profit Reached! Session Profit: +${sessionProfit.toFixed(2)} ${currency}`);
+            setMilestone({ isOpen: true, type: 'tp' });
             return;
         }
         if (sessionProfit <= -slVal) {
             setBotState('IDLE');
-            alert(`🛑 Stop Loss Triggered! Session Loss: ${sessionProfit.toFixed(2)} ${currency}`);
+            setMilestone({ isOpen: true, type: 'sl' });
             return;
         }
 
@@ -833,6 +835,37 @@ const AutoXEo: React.FC = observer(() => {
         setBotState('IDLE');
         executionLockRef.current = false;
     };
+
+    // TopBar controller integration
+    useEffect(() => {
+        window.dispatchEvent(
+            new CustomEvent('PH_ENGINE_STATUS_UPDATE', {
+                detail: {
+                    tab: 'auto_x_eo',
+                    isRunning: botState !== 'IDLE',
+                    state: botState,
+                    profit: sessionProfit,
+                },
+            })
+        );
+    }, [botState, sessionProfit]);
+
+    useEffect(() => {
+        const handleTrigger = (e: Event) => {
+            const customEvent = e as CustomEvent<{ tab: string; action: string }>;
+            if (customEvent.detail?.tab === 'auto_x_eo') {
+                if (botState === 'IDLE') {
+                    handleStartBot();
+                } else {
+                    handleStopBot();
+                }
+            }
+        };
+        window.addEventListener('PH_TRIGGER_ENGINE_ACTION', handleTrigger);
+        return () => {
+            window.removeEventListener('PH_TRIGGER_ENGINE_ACTION', handleTrigger);
+        };
+    }, [botState]);
 
     // ── 50 Ticks Wave Spline Line Chart Calculations ──
     const chartPoints = useMemo(() => {
@@ -1526,6 +1559,21 @@ const AutoXEo: React.FC = observer(() => {
                     </div>
                 </div>
             </div>
+            <TradingMilestoneModal
+                isOpen={milestone.isOpen}
+                type={milestone.type}
+                amount={sessionProfit}
+                targetAmount={milestone.type === 'tp' ? parseFloat(takeProfit) || 10 : parseFloat(stopLoss) || 25}
+                currency={currency}
+                botName="AUTO X E/O Bot"
+                winsCount={winsCount}
+                lossesCount={lossesCount}
+                onClose={() => setMilestone({ isOpen: false, type: null })}
+                onRestart={() => {
+                    setMilestone({ isOpen: false, type: null });
+                    setBotState('SCANNING');
+                }}
+            />
         </div>
     );
 });

@@ -18,9 +18,56 @@ const DTraderPage: React.FC = observer(() => {
         return `/dtrader/index.html?${params.toString()}`;
     }, [client?.loginid]);
 
+    const sendAuthToIframe = () => {
+        try {
+            const iframeWin = iframeRef.current?.contentWindow;
+            if (!iframeWin) return;
+
+            const activeLoginId = client?.loginid || localStorage.getItem('active_loginid') || '';
+            const activeToken = localStorage.getItem('active_token') ||
+                                localStorage.getItem('deriv_api_token') ||
+                                localStorage.getItem('token') ||
+                                localStorage.getItem('token1') ||
+                                localStorage.getItem('authToken') || '';
+
+            const rawAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('client_account_details');
+
+            const payload = {
+                type: 'NEWDTRADER_BRIDGE_AUTH',
+                payload: {
+                    active_loginid: activeLoginId,
+                    active_token: activeToken,
+                    token: activeToken,
+                    accounts: rawAccounts,
+                    server_url: localStorage.getItem('config.server_url') || 'ws.derivws.com',
+                    app_id: localStorage.getItem('config.app_id') || '121856'
+                }
+            };
+
+            iframeWin.postMessage(payload, '*');
+            iframeWin.postMessage({ type: 'SET_SESSION', ...payload.payload }, '*');
+        } catch (e) {
+            console.warn('[DTraderPage] Error posting session to iframe:', e);
+        }
+    };
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data && (event.data.type === 'IFRAME_READY' || event.data.type === 'REQUEST_SESSION')) {
+                sendAuthToIframe();
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => {
+            window.removeEventListener('message', handleMessage);
+        };
+    }, [client?.loginid]);
+
     useEffect(() => {
         const handleIframeLoad = () => {
             setIsLoading(false);
+            sendAuthToIframe();
             try {
                 // Synchronize parent storage items into iframe if same-origin
                 const iframeWin = iframeRef.current?.contentWindow;
@@ -29,13 +76,17 @@ const DTraderPage: React.FC = observer(() => {
                         'client.accounts',
                         'clientAccounts',
                         'accountsList',
+                        'client_account_details',
+                        'deriv_accounts',
                         'active_loginid',
                         'active_token',
+                        'deriv_api_token',
                         'authToken',
                         'token',
                         'token1',
                         'config.server_url',
                         'config.app_id',
+                        'theme'
                     ];
                     keys.forEach(k => {
                         const val = localStorage.getItem(k);
