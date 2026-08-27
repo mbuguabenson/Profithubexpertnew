@@ -49,6 +49,7 @@ const DigitFlowPage = lazyRetry(() => import('../digitflow/digitflow'), 'digitfl
 const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pro');
 const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
 const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
+const ReportsPage = lazyRetry(() => import('../reports'), 'reports');
 // const DTraderPage = lazyRetry(() => import('../dtrader'), 'dtrader');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
@@ -112,10 +113,50 @@ const AppWrapper = observer(() => {
         'elite_pro',
         'poverty_hunter',
         'auto_x_eo',
+        'reports',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
+
+    const LAST_TAB_STORAGE_KEY = 'profithub_last_active_tab';
+
+    // Automatic page memory restoration across reloads
+    React.useEffect(() => {
+        const rawHash = location.hash?.replace('#', '')?.toLowerCase();
+        if (rawHash && hash.includes(rawHash)) {
+            localStorage.setItem(LAST_TAB_STORAGE_KEY, rawHash);
+            const targetIdx = hash.indexOf(rawHash);
+            if (targetIdx > -1 && targetIdx !== active_tab) {
+                setActiveTab(targetIdx);
+            }
+        } else {
+            const rememberedTab = localStorage.getItem(LAST_TAB_STORAGE_KEY)?.toLowerCase();
+            if (rememberedTab && hash.includes(rememberedTab)) {
+                window.location.hash = rememberedTab;
+                const targetIdx = hash.indexOf(rememberedTab);
+                if (targetIdx > -1 && targetIdx !== active_tab) {
+                    setActiveTab(targetIdx);
+                }
+            }
+        }
+    }, []);
+
+    // Listen to hash changes to update memory
+    React.useEffect(() => {
+        const handleHashMemorySync = () => {
+            const currentHash = window.location.hash?.replace('#', '')?.toLowerCase();
+            if (currentHash && hash.includes(currentHash)) {
+                localStorage.setItem(LAST_TAB_STORAGE_KEY, currentHash);
+                const targetIdx = hash.indexOf(currentHash);
+                if (targetIdx > -1 && targetIdx !== active_tab) {
+                    setActiveTab(targetIdx);
+                }
+            }
+        };
+        window.addEventListener('hashchange', handleHashMemorySync);
+        return () => window.removeEventListener('hashchange', handleHashMemorySync);
+    }, [active_tab, setActiveTab]);
 
     const [siteConfig, setSiteConfig] = useState(() => getSiteConfig());
 
@@ -543,6 +584,18 @@ const AppWrapper = observer(() => {
                 </TabErrorBoundary>
             )
         },
+        {
+            key: 'reports',
+            id: 'id-reports',
+            label: <TabIcon iconKey='reports' label='Reports' />,
+            content: (
+                <TabErrorBoundary tabId='id-reports' tabName='Reports'>
+                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Reports...')} />}>
+                        <ReportsPage />
+                    </Suspense>
+                </TabErrorBoundary>
+            )
+        },
     ], [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]);
 
     const activeTabsList = useMemo(() => {
@@ -576,6 +629,7 @@ const AppWrapper = observer(() => {
                 if (globalIndex > -1) {
                     setActiveTab(globalIndex);
                     window.location.hash = targetTab.key;
+                    localStorage.setItem('profithub_last_active_tab', targetTab.key);
                     const el_id = targetTab.id;
                     if (el_id) {
                         const el_tab = document.getElementById(el_id);
@@ -591,8 +645,8 @@ const AppWrapper = observer(() => {
 
     if (!store) return null;
 
-    // 1. Remove run panel and drawer from dashboard, dtrader, and trading bots
-    const shouldHideRunPanelAndDrawer = ['dashboard', 'dtrader', 'trading_bots', 'free_bots', 'trading-bots'].includes(currentTabKey);
+    // 1. Remove run panel and drawer from dashboard, dtrader, reports, and trading bots
+    const shouldHideRunPanelAndDrawer = ['dashboard', 'dtrader', 'reports', 'trading_bots', 'free_bots', 'trading-bots'].includes(currentTabKey);
 
     return (
         <React.Fragment>

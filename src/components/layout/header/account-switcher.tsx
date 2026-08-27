@@ -602,20 +602,29 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         <div className='acc-panel__account-info'>
                                             <span className='acc-panel__account-name'>
                                                 {account.isVirtual
-                                                    ? localize('Demo')
-                                                    : getCurrencyLabel(account.rawCurrency)}
+                                                    ? localize('Deriv Demo Account')
+                                                    : `Deriv ${getCurrencyLabel(account.rawCurrency)} Account`}
                                             </span>
                                             <span className='acc-panel__account-id'>
-                                                {account.loginid.slice(0, 10)}..
+                                                {account.loginid}
                                             </span>
                                         </div>
 
-                                        {/* Balance */}
-                                        <span className='acc-panel__account-balance'>
-                                            {account.currency
-                                                ? `${account.balance} ${account.currency}`
-                                                : localize('No currency')}
-                                        </span>
+                                        {/* Balance & Active Checkmark */}
+                                        <div className='acc-panel__account-right'>
+                                            <span className='acc-panel__account-balance'>
+                                                {account.currency
+                                                    ? `${account.balance} ${account.currency}`
+                                                    : localize('No currency')}
+                                            </span>
+                                            {account.isActive && (
+                                                <div className='acc-panel__account-check'>
+                                                    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#10b981' strokeWidth='3' strokeLinecap='round' strokeLinejoin='round'>
+                                                        <polyline points='20 6 9 17 4 12' />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>

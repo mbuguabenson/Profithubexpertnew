@@ -442,28 +442,45 @@
     }
 
     &__account-name {
-        font-size: 12px;
+        font-size: 1.25rem;
         font-weight: 700;
         color: var(--text-general, #ffffff);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
     }
 
     &__account-id {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 9px;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.45));
-        font-weight: 500;
+        font-size: 1.1rem;
+        color: var(--text-less-prominent, rgba(255, 255, 255, 0.5));
+        font-weight: 600;
+        letter-spacing: 0.04em;
+    }
+
+    &__account-right {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-left: 1rem;
     }
 
     &__account-balance {
-        font-size: 13px;
+        font-size: 1.35rem;
         font-weight: 800;
-        color: var(--ph-primary, #f5c542);
+        color: var(--text-prominent, #ffffff);
         white-space: nowrap;
+    }
+
+    &__account-check {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.15);
         flex-shrink: 0;
     }
 
