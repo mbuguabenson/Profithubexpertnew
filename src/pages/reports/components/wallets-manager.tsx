@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { localize } from '@deriv-com/translations';
 import { DerivAccountWalletService, DerivWallet, DerivWalletTransaction } from '@/services/deriv-account-wallet.service';
 import { formatMoney } from '@/components/shared';
@@ -9,19 +9,31 @@ interface WalletsManagerProps {
     activeLoginid: string;
 }
 
+type WalletSubTab = 'overview' | 'wallet' | 'partners' | 'trading' | 'p2p';
+
 export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, activeLoginid }) => {
     const [wallets, setWallets] = useState<DerivWallet[]>([]);
     const [selectedWallet, setSelectedWallet] = useState<DerivWallet | null>(null);
     const [transactions, setTransactions] = useState<DerivWalletTransaction[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+    const [activeSubTab, setActiveSubTab] = useState<WalletSubTab>('overview');
+    const [hideBalance, setHideBalance] = useState<boolean>(false);
+    const [showTransactionsLedger, setShowTransactionsLedger] = useState<boolean>(false);
+
+    // Filter and Modals
     const [filterType, setFilterType] = useState<string>('all');
     const [transferModalOpen, setTransferModalOpen] = useState<boolean>(false);
     const [transferAmount, setTransferAmount] = useState<string>('10');
-    const [transferTarget, setTransferTarget] = useState<string>('');
+    const [transferSource, setTransferSource] = useState<string>('wallet');
+    const [transferTarget, setTransferTarget] = useState<string>('options');
     const [transferStatus, setTransferStatus] = useState<string | null>(null);
+
+    const isVirtual = activeLoginid.startsWith('VRTC') || activeLoginid.startsWith('VRT');
 
     const loadWalletsData = useCallback(async () => {
         setIsLoading(true);
+        setIsRefreshing(true);
         try {
             const list = await DerivAccountWalletService.getWallets(currency || 'USD');
             setWallets(list);
@@ -36,6 +48,7 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
             console.error('[WalletsManager] load error:', err);
         } finally {
             setIsLoading(false);
+            setIsRefreshing(false);
         }
     }, [currency]);
 
@@ -43,19 +56,16 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
         loadWalletsData();
     }, [loadWalletsData, activeLoginid]);
 
-    const handleSelectWallet = async (wallet: DerivWallet) => {
-        setSelectedWallet(wallet);
-        try {
-            const txRes = await DerivAccountWalletService.getWalletTransactions(wallet.wallet_type || 'fiat', { limit: 20 });
-            setTransactions(txRes.transactions || []);
-        } catch {}
-    };
+    const totalEstValue = useMemo(() => {
+        if (!wallets.length) return 0;
+        return wallets.reduce((acc, w) => acc + (w.converted_amount || w.balance || 0), 0);
+    }, [wallets]);
 
     const handleSimulateTransfer = () => {
         if (!transferAmount || Number(transferAmount) <= 0) return;
-        setTransferStatus('Processing instant wallet transfer...');
+        setTransferStatus('Processing instant transfer...');
         setTimeout(() => {
-            setTransferStatus(`Successfully transferred ${transferAmount} ${selectedWallet?.currency || 'USD'} to ${transferTarget || 'Trading Account'}!`);
+            setTransferStatus(`Successfully transferred ${transferAmount} ${currency || 'USD'} to ${transferTarget.toUpperCase()}!`);
             setTimeout(() => {
                 setTransferModalOpen(false);
                 setTransferStatus(null);
@@ -69,240 +79,358 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
         return t.action_type.toLowerCase() === filterType.toLowerCase();
     });
 
-    const getWalletIcon = (type: string, curr: string) => {
-        if (curr.includes('BTC')) return '₿';
-        if (curr.includes('ETH')) return 'Ξ';
-        if (curr.includes('LTC')) return 'Ł';
-        if (curr.includes('USDT')) return '₮';
-        if (type.includes('demo')) return '🎮';
-        return '💵';
+    const displayBalance = (amount: number, curr = currency || 'USD') => {
+        if (hideBalance) return '••••••';
+        return `${formatMoney(curr, amount, true)} ${curr}`;
     };
 
-    const isVirtual = activeLoginid.startsWith('VRTC') || activeLoginid.startsWith('VRT');
-
     return (
-        <div className="wallets-manager">
-            {/* ── Top Header Toolbar ── */}
-            <div className="wm-header">
-                <div>
-                    <h2 className="wm-header__title">💳 {localize('Deriv Wallets Hub')}</h2>
-                    <p className="wm-header__subtitle">
-                        {localize('Official Deriv Wallet REST API integration — multi-currency balances, transfers, and ledger')}
-                    </p>
-                </div>
-                <div className="wm-header__actions">
-                    <button className="wm-btn wm-btn--primary" onClick={() => setTransferModalOpen(true)}>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                            <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                        </svg>
-                        <span>{localize('Transfer Funds')}</span>
-                    </button>
-                    <button
-                        className={`wm-btn wm-btn--secondary ${isLoading ? 'wm-btn--loading' : ''}`}
-                        onClick={loadWalletsData}
-                        disabled={isLoading}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                        </svg>
-                        <span>{isLoading ? localize('Syncing...') : localize('Refresh')}</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* ── Wallets Cards Carousel / Grid ── */}
-            <div className="wm-wallets-grid">
-                {wallets.map(w => {
-                    const isSelected = selectedWallet?.wallet_id === w.wallet_id;
-                    return (
-                        <div
-                            key={w.wallet_id}
-                            className={`wm-wallet-card ${isSelected ? 'wm-wallet-card--selected' : ''} ${w.wallet_type.includes('demo') ? 'wm-wallet-card--demo' : ''}`}
-                            onClick={() => handleSelectWallet(w)}
+        <div className="deriv-wallets-hub">
+            {/* ════════════════ 1. TOP DARK OVERVIEW HERO CARD ════════════════ */}
+            <div className="dw-hero-card">
+                {/* ── Subtabs Navigation Bar ── */}
+                <div className="dw-hero-card__top">
+                    <div className="dw-subtabs">
+                        <button
+                            className={`dw-subtab ${activeSubTab === 'overview' ? 'dw-subtab--active' : ''}`}
+                            onClick={() => setActiveSubTab('overview')}
                         >
-                            <div className="wm-wallet-card__top">
-                                <div className="wm-wallet-card__badge-box">
-                                    <span className="wm-wallet-card__icon">{getWalletIcon(w.wallet_type, w.currency)}</span>
-                                    <span className="wm-wallet-card__currency">{w.currency}</span>
-                                </div>
-                                {w.is_default && <span className="wm-tag wm-tag--default">DEFAULT</span>}
-                                {w.wallet_type.includes('demo') && <span className="wm-tag wm-tag--demo">DEMO</span>}
-                            </div>
+                            {localize('Overview')}
+                        </button>
+                        <button
+                            className={`dw-subtab ${activeSubTab === 'wallet' ? 'dw-subtab--active' : ''}`}
+                            onClick={() => setActiveSubTab('wallet')}
+                        >
+                            {localize('Wallet')}
+                        </button>
+                        <button
+                            className={`dw-subtab ${activeSubTab === 'partners' ? 'dw-subtab--active' : ''}`}
+                            onClick={() => setActiveSubTab('partners')}
+                        >
+                            {localize('Partners')}
+                        </button>
+                        <button
+                            className={`dw-subtab ${activeSubTab === 'trading' ? 'dw-subtab--active' : ''}`}
+                            onClick={() => setActiveSubTab('trading')}
+                        >
+                            {localize('Trading')}
+                        </button>
+                        <button
+                            className={`dw-subtab ${activeSubTab === 'p2p' ? 'dw-subtab--active' : ''}`}
+                            onClick={() => setActiveSubTab('p2p')}
+                        >
+                            {localize('P2P')}
+                        </button>
+                    </div>
 
-                            <div className="wm-wallet-card__balance-box">
-                                <span className="label">{localize('Available Balance')}</span>
-                                <h3 className="amount">
-                                    {formatMoney(w.currency, w.balance, true)} <span className="curr">{w.currency}</span>
-                                </h3>
-                                {w.converted_balance !== undefined && (
-                                    <span className="converted">≈ ${w.converted_balance.toFixed(2)} USD</span>
-                                )}
-                            </div>
+                    {/* Show / Hide Balance Eye Toggle */}
+                    <button
+                        className="dw-eye-toggle"
+                        onClick={() => setHideBalance(!hideBalance)}
+                        title={hideBalance ? localize('Show balance') : localize('Hide balance')}
+                    >
+                        {hideBalance ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                        ) : (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        )}
+                    </button>
+                </div>
 
-                            <div className="wm-wallet-card__footer">
-                                <span className="wm-wallet-card__id">{w.wallet_id}</span>
-                                <span className="wm-wallet-card__status">● {w.status || 'Active'}</span>
-                            </div>
+                {/* ── Balance Value & Circular Action Buttons ── */}
+                <div className="dw-hero-card__body">
+                    {/* Left: Total Value */}
+                    <div className="dw-balance-group">
+                        <span className="dw-balance-group__caption">{localize('Est. total value')}</span>
+                        <div className="dw-balance-group__amount-row">
+                            <h2 className="dw-balance-group__value">
+                                {hideBalance ? '••••••••' : `${formatMoney(currency, totalEstValue || 0, true)} ${currency}`}
+                            </h2>
+                            <button
+                                className={`dw-refresh-icon-btn ${isRefreshing ? 'dw-refresh-icon-btn--spinning' : ''}`}
+                                onClick={loadWalletsData}
+                                title={localize('Refresh balance')}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                                </svg>
+                            </button>
                         </div>
-                    );
-                })}
-            </div>
+                        <span className="dw-balance-group__updated">{localize('Updated just now')}</span>
+                    </div>
 
-            {/* ── Active Wallet Action Banner & Stats ── */}
-            {selectedWallet && (
-                <div className="wm-active-banner">
-                    <div className="wm-active-banner__left">
-                        <div className="wm-active-banner__icon">{getWalletIcon(selectedWallet.wallet_type, selectedWallet.currency)}</div>
-                        <div className="wm-active-banner__info">
-                            <h4>{selectedWallet.currency} {selectedWallet.wallet_type.toUpperCase()} WALLET</h4>
-                            <p>{localize('Account')} ID: <strong>{activeLoginid}</strong> | Status: <strong className="green">ONLINE & SYNCHRONIZED</strong></p>
+                    {/* Right: 3 Circular Action Buttons */}
+                    <div className="dw-actions-group">
+                        {/* 1. Deposit (Red / Coral Circle) */}
+                        <div className="dw-action-item">
+                            <button
+                                className="dw-circle-btn dw-circle-btn--deposit"
+                                onClick={() => {
+                                    window.open('https://app.deriv.com/cashier/deposit', '_blank');
+                                }}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                            </button>
+                            <span className="dw-action-label">{localize('Deposit')}</span>
+                        </div>
+
+                        {/* 2. Transfer (Dark Circle with Swap Icon) */}
+                        <div className="dw-action-item">
+                            <button
+                                className="dw-circle-btn dw-circle-btn--transfer"
+                                onClick={() => setTransferModalOpen(true)}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                                </svg>
+                            </button>
+                            <span className="dw-action-label">{localize('Transfer')}</span>
+                        </div>
+
+                        {/* 3. Withdraw (Dark Circle with Minus Icon) */}
+                        <div className="dw-action-item">
+                            <button
+                                className="dw-circle-btn dw-circle-btn--withdraw"
+                                onClick={() => {
+                                    window.open('https://app.deriv.com/cashier/withdrawal', '_blank');
+                                }}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                            </button>
+                            <span className="dw-action-label">{localize('Withdraw')}</span>
                         </div>
                     </div>
-                    <div className="wm-active-banner__right">
-                        <a
-                            href="https://app.deriv.com/cashier/deposit"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="wm-action-pill wm-action-pill--green"
-                        >
-                            📥 {localize('Deposit to Wallet')}
-                        </a>
-                        <a
-                            href="https://app.deriv.com/cashier/withdrawal"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="wm-action-pill wm-action-pill--purple"
-                        >
-                            📤 {localize('Withdraw from Wallet')}
-                        </a>
+                </div>
+            </div>
+
+            {/* ════════════════ 2. WALLET SECTION ════════════════ */}
+            <div className="dw-section">
+                <h3 className="dw-section__title">{localize('Wallet')}</h3>
+                <div className="dw-section__list">
+                    {wallets.length === 0 ? (
+                        <div className="dw-item-row">
+                            <div className="dw-item-row__left">
+                                <div className="dw-currency-flag">
+                                    <span>🇺🇸</span>
+                                </div>
+                                <span className="dw-item-row__name">{localize('US Dollar')}</span>
+                            </div>
+                            <div className="dw-item-row__right">
+                                <span className="dw-item-row__balance">{displayBalance(0, 'USD')}</span>
+                            </div>
+                        </div>
+                    ) : (
+                        wallets.map(w => (
+                            <div
+                                key={w.wallet_id}
+                                className={`dw-item-row ${selectedWallet?.wallet_id === w.wallet_id ? 'dw-item-row--selected' : ''}`}
+                                onClick={() => setSelectedWallet(w)}
+                            >
+                                <div className="dw-item-row__left">
+                                    <div className="dw-currency-flag">
+                                        {w.currency.includes('USD') ? (
+                                            <span>🇺🇸</span>
+                                        ) : w.currency.includes('EUR') ? (
+                                            <span>🇪🇺</span>
+                                        ) : w.currency.includes('BTC') ? (
+                                            <span>₿</span>
+                                        ) : w.currency.includes('ETH') ? (
+                                            <span>Ξ</span>
+                                        ) : (
+                                            <span>💵</span>
+                                        )}
+                                    </div>
+                                    <div className="dw-item-row__info">
+                                        <span className="dw-item-row__name">
+                                            {w.currency === 'USD' ? localize('US Dollar') : `${w.currency} ${w.wallet_name || ''}`}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="dw-item-row__right">
+                                    <span className="dw-item-row__balance">{displayBalance(w.balance || 0, w.currency)}</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* ════════════════ 3. TRADING SECTION ════════════════ */}
+            <div className="dw-section">
+                <h3 className="dw-section__title">{localize('Trading')}</h3>
+                <div className="dw-trading-grid">
+                    {/* 1. Options */}
+                    <div className="dw-item-row dw-item-row--card">
+                        <div className="dw-item-row__left">
+                            <div className="dw-trading-icon dw-trading-icon--options">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                                </svg>
+                            </div>
+                            <span className="dw-item-row__name">{localize('Options')}</span>
+                        </div>
+                        <div className="dw-item-row__right">
+                            <span className="dw-item-row__balance">{displayBalance(selectedWallet?.balance || 0, currency)}</span>
+                        </div>
+                    </div>
+
+                    {/* 2. TradingView */}
+                    <div className="dw-item-row dw-item-row--card">
+                        <div className="dw-item-row__left">
+                            <div className="dw-trading-icon dw-trading-icon--tv">
+                                <span className="tv-logo-text">17</span>
+                            </div>
+                            <span className="dw-item-row__name">{localize('TradingView')}</span>
+                        </div>
+                        <div className="dw-item-row__right">
+                            <span className="dw-item-row__balance">{displayBalance(0, currency)}</span>
+                        </div>
+                    </div>
+
+                    {/* 3. Standard MT5 */}
+                    <div className="dw-item-row dw-item-row--card">
+                        <div className="dw-item-row__left">
+                            <div className="dw-trading-icon dw-trading-icon--mt5">
+                                <span className="mt5-badge-text">MT5</span>
+                            </div>
+                            <span className="dw-item-row__name">{localize('Standard')}</span>
+                        </div>
+                        <div className="dw-item-row__right">
+                            <span className="dw-item-row__balance">{displayBalance(0, currency)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ════════════════ 4. VIEW ALL TRANSACTIONS PILL BUTTON ════════════════ */}
+            <div className="dw-transactions-action-box">
+                <button
+                    className="dw-view-transactions-btn"
+                    onClick={() => setShowTransactionsLedger(!showTransactionsLedger)}
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                    <span>{showTransactionsLedger ? localize('Hide transactions') : localize('View all transactions')}</span>
+                </button>
+            </div>
+
+            {/* ════════════════ 5. EXPANDABLE TRANSACTIONS LEDGER ════════════════ */}
+            {showTransactionsLedger && (
+                <div className="dw-transactions-ledger">
+                    <div className="dw-transactions-ledger__header">
+                        <h4>{localize('Wallet Statement & Transactions')}</h4>
+                        <div className="wm-filters">
+                            {['all', 'deposit', 'withdrawal', 'transfer'].map(f => (
+                                <button
+                                    key={f}
+                                    className={`wm-filter-pill ${filterType === f ? 'wm-filter-pill--active' : ''}`}
+                                    onClick={() => setFilterType(f)}
+                                >
+                                    {f.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="reports-table-wrapper">
+                        <table className="reports-table">
+                            <thead>
+                                <tr>
+                                    <th>{localize('Action Type')}</th>
+                                    <th>{localize('Reference ID')}</th>
+                                    <th>{localize('Date & Time')}</th>
+                                    <th>{localize('Amount')}</th>
+                                    <th>{localize('Balance After')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredTransactions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} style={{ textAlign: 'center', padding: '3.6rem', color: '#858b97' }}>
+                                            {localize('No transactions recorded for this wallet.')}
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredTransactions.map(tx => (
+                                        <tr key={tx.transaction_id}>
+                                            <td>
+                                                <span className={`reports-action-badge reports-action-badge--${tx.action_type.toLowerCase()}`}>
+                                                    {tx.action_type.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td className="reports-badge-id">#{tx.transaction_id}</td>
+                                            <td className="reports-cell-date">
+                                                {tx.transaction_time ? new Date(tx.transaction_time * 1000).toLocaleString() : '—'}
+                                            </td>
+                                            <td className={`reports-amount-text ${Number(tx.amount) >= 0 ? 'reports-amount-text--credit' : 'reports-amount-text--debit'}`}>
+                                                {Number(tx.amount) >= 0 ? `+${formatMoney(currency, tx.amount, true)}` : formatMoney(currency, tx.amount, true)} {currency}
+                                            </td>
+                                            <td className="reports-balance-after">
+                                                {formatMoney(currency, tx.balance_after, true)} {currency}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
 
-            {/* ── Wallet Transactions Ledger ── */}
-            <div className="wm-transactions-box">
-                <div className="wm-transactions-box__header">
-                    <div>
-                        <h3 className="title">📜 {localize('Wallet Transactions Ledger')}</h3>
-                        <p className="subtitle">{localize('GET /wallet/v1/transactions cursor-paginated history')}</p>
-                    </div>
-                    <div className="wm-filter-pills">
-                        {['all', 'deposit', 'withdrawal', 'transfer'].map(f => (
-                            <button
-                                key={f}
-                                className={`wm-filter-pill ${filterType === f ? 'wm-filter-pill--active' : ''}`}
-                                onClick={() => setFilterType(f)}
-                            >
-                                {f.toUpperCase()}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {filteredTransactions.length === 0 ? (
-                    <div className="wm-empty-state">
-                        <div className="icon">💳</div>
-                        <h4>{localize('No wallet transactions recorded')}</h4>
-                        <p>{localize('Deposits, withdrawals, and inter-wallet transfers will appear here in real time.')}</p>
-                    </div>
-                ) : (
-                    <table className="wm-table">
-                        <thead>
-                            <tr>
-                                <th>{localize('Transaction ID')}</th>
-                                <th>{localize('Type')}</th>
-                                <th>{localize('Date & Time')}</th>
-                                <th>{localize('Channel / Category')}</th>
-                                <th>{localize('Amount')}</th>
-                                <th>{localize('Balance After')}</th>
-                                <th>{localize('Status')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredTransactions.map(tx => {
-                                const isPositive = tx.amount >= 0 || tx.action_type === 'deposit';
-                                return (
-                                    <tr key={tx.transaction_id}>
-                                        <td className="monospace">#{tx.transaction_id}</td>
-                                        <td>
-                                            <span className={`wm-action-badge wm-action-badge--${tx.action_type.toLowerCase()}`}>
-                                                {tx.action_type.toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td className="date">{new Date(tx.transaction_time).toLocaleString()}</td>
-                                        <td>{tx.channel || tx.category || 'Direct Cashier'}</td>
-                                        <td>
-                                            <span className={`wm-amount ${isPositive ? 'wm-amount--positive' : 'wm-amount--negative'}`}>
-                                                {isPositive ? `+${formatMoney(tx.currency, Math.abs(tx.amount), true)}` : `-${formatMoney(tx.currency, Math.abs(tx.amount), true)}`} {tx.currency}
-                                            </span>
-                                        </td>
-                                        <td className="monospace">{formatMoney(tx.currency, tx.balance_after, true)} {tx.currency}</td>
-                                        <td>
-                                            <span className="wm-status-badge wm-status-badge--success">
-                                                {tx.status || 'COMPLETED'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
-            {/* ── Inter-Wallet Transfer Modal ── */}
+            {/* ════════════════ 6. INTER-WALLET TRANSFER MODAL ════════════════ */}
             {transferModalOpen && (
-                <div className="wm-modal-overlay" onClick={() => setTransferModalOpen(false)}>
+                <div className="wm-modal-backdrop" onClick={() => setTransferModalOpen(false)}>
                     <div className="wm-modal" onClick={e => e.stopPropagation()}>
                         <div className="wm-modal__header">
-                            <h3>⚡ {localize('Instant Wallet Transfer')}</h3>
-                            <button className="wm-modal__close" onClick={() => setTransferModalOpen(false)}>✕</button>
+                            <h3>{localize('Transfer Funds')}</h3>
+                            <button onClick={() => setTransferModalOpen(false)}>×</button>
                         </div>
-                        <div className="wm-modal__body">
-                            <div className="wm-form-group">
-                                <label>{localize('From Source Wallet')}</label>
-                                <div className="wm-selected-pill">
-                                    {selectedWallet?.currency} ({selectedWallet?.wallet_type}) — Balance: {formatMoney(selectedWallet?.currency || 'USD', selectedWallet?.balance || 0, true)}
-                                </div>
-                            </div>
-                            <div className="wm-form-group">
-                                <label>{localize('To Destination Account / Wallet')}</label>
-                                <select
-                                    value={transferTarget}
-                                    onChange={e => setTransferTarget(e.target.value)}
-                                    className="wm-select"
-                                >
-                                    <option value="">Deriv MT5 Synthetic Standard</option>
-                                    <option value="Deriv X CFD">Deriv X CFD Financial</option>
-                                    <option value="DTrader Real Wallet">DTrader Real Wallet (USD)</option>
-                                    <option value="Crypto BTC Vault">Crypto BTC Vault</option>
-                                </select>
-                            </div>
-                            <div className="wm-form-group">
-                                <label>{localize('Transfer Amount')} ({selectedWallet?.currency || 'USD'})</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    step="0.01"
-                                    value={transferAmount}
-                                    onChange={e => setTransferAmount(e.target.value)}
-                                    className="wm-input"
-                                />
-                            </div>
-                            {transferStatus && (
-                                <div className="wm-status-banner">
-                                    {transferStatus}
-                                </div>
-                            )}
+
+                        <div className="wm-modal__field">
+                            <label>{localize('From')}</label>
+                            <select value={transferSource} onChange={e => setTransferSource(e.target.value)}>
+                                <option value="wallet">US Dollar Wallet ({formatMoney(currency, selectedWallet?.balance || 0, true)} {currency})</option>
+                            </select>
                         </div>
-                        <div className="wm-modal__footer">
-                            <button className="wm-btn wm-btn--secondary" onClick={() => setTransferModalOpen(false)}>
-                                {localize('Cancel')}
-                            </button>
-                            <button className="wm-btn wm-btn--primary" onClick={handleSimulateTransfer}>
-                                {localize('Confirm Transfer')}
-                            </button>
+
+                        <div className="wm-modal__field">
+                            <label>{localize('To')}</label>
+                            <select value={transferTarget} onChange={e => setTransferTarget(e.target.value)}>
+                                <option value="options">Options Account</option>
+                                <option value="tradingview">TradingView Account</option>
+                                <option value="standard">Standard MT5 Account</option>
+                            </select>
                         </div>
+
+                        <div className="wm-modal__field">
+                            <label>{localize('Amount')} ({currency})</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={transferAmount}
+                                onChange={e => setTransferAmount(e.target.value)}
+                            />
+                        </div>
+
+                        {transferStatus && (
+                            <div className="wm-modal__status-msg">{transferStatus}</div>
+                        )}
+
+                        <button className="wm-btn wm-btn--primary" onClick={handleSimulateTransfer}>
+                            {localize('Confirm Transfer')}
+                        </button>
                     </div>
                 </div>
             )}

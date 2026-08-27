@@ -1,220 +1,361 @@
 // ══════════════════════════════════════════════════════════════════════════
-// ✦ DERIV QUILL UI — MULTI-CURRENCY WALLETS MANAGER
+// ✦ DERIV OFFICIAL WALLETS & CASHIER OVERVIEW
 // ══════════════════════════════════════════════════════════════════════════
 
-.wallets-manager {
+.deriv-wallets-hub {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 2.4rem;
     width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
 }
 
-// ── Header ──
-.wm-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1.6rem;
-
-    &__title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        margin: 0;
-        color: var(--text-prominent, #ffffff);
-    }
-
-    &__subtitle {
-        font-size: 1.2rem;
-        color: var(--text-less-prominent, #858b97);
-        margin: 0.3rem 0 0;
-    }
-
-    &__actions {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-}
-
-.wm-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.8rem;
-    padding: 0.8rem 1.6rem;
-    border-radius: 8px;
-    font-size: 1.25rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &--primary {
-        background: var(--brand-primary, #ff444f);
-        border: none;
-        color: #ffffff;
-
-        &:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-    }
-
-    &--secondary {
-        background: var(--general-main-2, #181c24);
-        border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
-        color: var(--text-prominent, #ffffff);
-
-        &:hover:not(:disabled) {
-            background: var(--general-hover, rgba(255, 255, 255, 0.08));
-        }
-    }
-
-    &--loading svg {
-        animation: wm-spin 1s linear infinite;
-    }
-}
-
-@keyframes wm-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-// ── Wallets Grid ──
-.wm-wallets-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1.6rem;
-}
-
-.wm-wallet-card {
-    background: var(--general-main-2, #181c24);
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
-    border-radius: 12px;
-    padding: 1.8rem 2rem;
+// ── 1. Top Dark Overview Hero Card ──
+.dw-hero-card {
+    background: #13171f;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 2.2rem 2.8rem;
     display: flex;
     flex-direction: column;
-    gap: 1.4rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover {
-        border-color: rgba(255, 255, 255, 0.18);
-        transform: translateY(-2px);
-    }
-
-    &--selected {
-        border-color: #00a79e;
-        box-shadow: 0 0 0 1px #00a79e, 0 4px 14px rgba(0, 167, 158, 0.12);
-    }
+    gap: 2.4rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 
     &__top {
         display: flex;
         justify-content: space-between;
         align-items: center;
-    }
-
-    &__icon-group {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    &__icon-box {
-        width: 38px;
-        height: 38px;
-        border-radius: 8px;
-        background: var(--general-section-1, rgba(255, 255, 255, 0.05));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.6rem;
-    }
-
-    &__name {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--text-prominent, #ffffff);
-    }
-
-    &__type-tag {
-        font-size: 1.05rem;
-        color: var(--text-less-prominent, #858b97);
-        text-transform: capitalize;
-    }
-
-    &__badges {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    &__badge {
-        font-size: 1rem;
-        font-weight: 700;
-        padding: 0.25rem 0.65rem;
-        border-radius: 4px;
-
-        &--default {
-            background: rgba(0, 167, 158, 0.12);
-            color: #00a79e;
-        }
-
-        &--status {
-            background: var(--general-section-1, rgba(255, 255, 255, 0.06));
-            color: var(--text-less-prominent, #858b97);
-        }
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 0.8rem;
     }
 
     &__body {
         display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-
-    &__balance-label {
-        font-size: 1.1rem;
-        color: var(--text-less-prominent, #858b97);
-    }
-
-    &__balance-val {
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--text-prominent, #ffffff);
-        letter-spacing: -0.01em;
-    }
-
-    &__balance-usd {
-        font-size: 1.15rem;
-        color: var(--text-less-prominent, #858b97);
-    }
-
-    &__footer {
-        display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
-    }
-
-    &__loginid {
-        font-family: var(--font-mono, monospace);
-        font-size: 1.1rem;
-        color: var(--text-less-prominent, #858b97);
-    }
-
-    &__action-hint {
-        font-size: 1.15rem;
-        font-weight: 600;
-        color: #00a8cc;
+        flex-wrap: wrap;
+        gap: 2rem;
     }
 }
 
-// ── Ledger Container ──
-.wm-ledger-card {
-    background: var(--general-main-2, #181c24);
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+.dw-subtabs {
+    display: flex;
+    gap: 2.4rem;
+}
+
+.dw-subtab {
+    background: transparent;
+    border: none;
+    padding: 0.6rem 0 1rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-less-prominent, #858b97);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+
+    &:hover {
+        color: #ffffff;
+    }
+
+    &--active {
+        color: #ffffff;
+        font-weight: 700;
+
+        &::after {
+            content: '';
+            position: absolute;
+            bottom: -0.9rem;
+            left: 0;
+            right: 0;
+            height: 2.5px;
+            background: #ff444f;
+            border-radius: 2px;
+        }
+    }
+}
+
+.dw-eye-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-less-prominent, #858b97);
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+
+    &:hover {
+        color: #ffffff;
+    }
+}
+
+// ── Balance Group ──
+.dw-balance-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    &__caption {
+        font-size: 1.25rem;
+        color: var(--text-less-prominent, #858b97);
+    }
+
+    &__amount-row {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+    }
+
+    &__value {
+        font-size: 3.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        margin: 0;
+    }
+
+    &__updated {
+        font-size: 1.15rem;
+        color: var(--text-less-prominent, #858b97);
+    }
+}
+
+.dw-refresh-icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-less-prominent, #858b97);
+    cursor: pointer;
+    padding: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+
+    &:hover {
+        color: #ffffff;
+    }
+
+    &--spinning svg {
+        animation: dw-spin 0.9s linear infinite;
+    }
+}
+
+@keyframes dw-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+// ── Circular Action Buttons ──
+.dw-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 2.2rem;
+}
+
+.dw-action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.dw-circle-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.18s ease, filter 0.18s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+    }
+
+    &--deposit {
+        background: #ff444f;
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(255, 68, 79, 0.35);
+    }
+
+    &--transfer, &--withdraw {
+        background: #222730;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+}
+
+.dw-action-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-prominent, #ffffff);
+}
+
+// ── 2. Sections (Wallet & Trading) ──
+.dw-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+
+    &__title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-prominent, #ffffff);
+        margin: 0;
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+}
+
+.dw-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.6rem 2rem;
     border-radius: 12px;
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.18s ease;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    &--card {
+        background: #141820;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 1.8rem 2rem;
+
+        &:hover {
+            background: #191e28;
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+    }
+
+    &__left {
+        display: flex;
+        align-items: center;
+        gap: 1.4rem;
+    }
+
+    &__name {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-prominent, #ffffff);
+    }
+
+    &__right {
+        display: flex;
+        align-items: center;
+    }
+
+    &__balance {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: var(--text-prominent, #ffffff);
+    }
+}
+
+.dw-currency-flag {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+// ── Trading Grid & Icons ──
+.dw-trading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.4rem;
+}
+
+.dw-trading-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &--options {
+        background: #ff444f;
+        color: #ffffff;
+    }
+
+    &--tv {
+        background: #000000;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+
+        .tv-logo-text {
+            font-family: sans-serif;
+            font-weight: 900;
+            font-size: 1.4rem;
+            letter-spacing: -1px;
+        }
+    }
+
+    &--mt5 {
+        background: #0052cc;
+        color: #ffffff;
+
+        .mt5-badge-text {
+            font-size: 0.95rem;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+        }
+    }
+}
+
+// ── 4. View All Transactions Pill Button ──
+.dw-transactions-action-box {
+    display: flex;
+    justify-content: center;
+    padding: 1.6rem 0;
+}
+
+.dw-view-transactions-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 2.6rem;
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: transparent;
+    color: var(--text-prominent, #ffffff);
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+// ── 5. Expandable Transactions Ledger ──
+.dw-transactions-ledger {
+    background: #141820;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
     padding: 2.2rem 2.4rem;
     display: flex;
     flex-direction: column;
@@ -226,55 +367,17 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 1.2rem;
-    }
 
-    &__title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-prominent, #ffffff);
-        margin: 0;
-    }
-
-    &__subtitle {
-        font-size: 1.2rem;
-        color: var(--text-less-prominent, #858b97);
-        margin: 0.3rem 0 0;
+        h4 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-prominent, #ffffff);
+        }
     }
 }
 
-// ── Filter Buttons ──
-.wm-filters {
-    display: flex;
-    gap: 0.4rem;
-    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
-    padding: 3px;
-    border-radius: 8px;
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
-}
-
-.wm-filter-pill {
-    padding: 0.5rem 1.2rem;
-    border-radius: 6px;
-    border: none;
-    background: transparent;
-    color: var(--text-less-prominent, #858b97);
-    font-size: 1.15rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.18s ease;
-
-    &:hover {
-        color: var(--text-prominent, #ffffff);
-    }
-
-    &--active {
-        background: var(--general-main-1, #0e1117);
-        color: var(--text-prominent, #ffffff);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-    }
-}
-
-// ── Transfer Modal ──
+// ── Modal ──
 .wm-modal-backdrop {
     position: fixed;
     inset: 0;
@@ -288,8 +391,8 @@
 }
 
 .wm-modal {
-    background: var(--general-main-2, #181c24);
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.12));
+    background: #181c24;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
     padding: 2.4rem;
     max-width: 460px;
@@ -308,19 +411,19 @@
             font-size: 1.6rem;
             font-weight: 700;
             margin: 0;
-            color: var(--text-prominent, #ffffff);
+            color: #ffffff;
         }
 
         button {
             background: transparent;
             border: none;
-            color: var(--text-less-prominent, #858b97);
+            color: #858b97;
             font-size: 2rem;
             cursor: pointer;
             line-height: 1;
 
             &:hover {
-                color: var(--text-prominent, #ffffff);
+                color: #ffffff;
             }
         }
     }
@@ -333,20 +436,20 @@
         label {
             font-size: 1.15rem;
             font-weight: 600;
-            color: var(--text-less-prominent, #858b97);
+            color: #858b97;
         }
 
         input, select {
-            background: var(--general-main-1, #0e1117);
-            border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
+            background: #0e1117;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             padding: 1rem 1.2rem;
-            color: var(--text-prominent, #ffffff);
+            color: #ffffff;
             font-size: 1.3rem;
             outline: none;
 
             &:focus {
-                border-color: #00a79e;
+                border-color: #ff444f;
             }
         }
     }
