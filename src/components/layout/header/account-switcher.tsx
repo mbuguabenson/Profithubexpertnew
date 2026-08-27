@@ -8,6 +8,7 @@ import { useStore } from '@/hooks/useStore';
 import { isDemoAccount } from '@/utils/account-helpers';
 import { Localize, localize } from '@deriv-com/translations';
 import { DerivAccountWalletService, DerivWallet } from '@/services/deriv-account-wallet.service';
+import { AccountSwitcherService } from '@/services/account-switcher.service';
 import { getSocketURL } from '@/components/shared/utils/config/config';
 import { getAccountsList } from '@/utils/token-bridge';
 import { TAccountSwitcher } from './common/types';
@@ -145,27 +146,10 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
 
     const handleAccountSelect = useCallback(
         (loginid: string) => {
-            localStorage.setItem('active_loginid', loginid);
-            
-            // Optimistic update for UI instant switch
-            if (authData && accountList) {
-                const targetAccount = accountList.find(a => a.loginid === loginid);
-                if (targetAccount) {
-                    const newAuthData = { ...authData, loginid };
-                    newAuthData.balance = targetAccount.balance ? Number(targetAccount.balance) : 0;
-                    newAuthData.currency = targetAccount.currency;
-                    newAuthData.is_virtual = targetAccount.is_virtual || (loginid.startsWith('VR') ? 1 : 0);
-                    // Use a dynamic import for setAuthData since it might not be exported from useApiBase
-                    import('@/external/bot-skeleton/services/api/observables/connection-status-stream').then(module => {
-                        module.setAuthData(newAuthData);
-                    });
-                }
-            }
-
-            client?.checkAndRegenerateWebSocket();
             setIsOpen(false);
+            AccountSwitcherService.switchAccount(loginid, client);
         },
-        [client, authData, accountList]
+        [client]
     );
 
     // Reset demo balance handler

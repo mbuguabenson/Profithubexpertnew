@@ -51,6 +51,14 @@ export const WalletsManager: React.FC<WalletsManagerProps> = ({ currency, active
         loadWalletsData();
     }, [loadWalletsData, activeLoginid]);
 
+    useEffect(() => {
+        const handleAccountSwitch = () => {
+            loadWalletsData();
+        };
+        window.addEventListener('account_switched', handleAccountSwitch);
+        return () => window.removeEventListener('account_switched', handleAccountSwitch);
+    }, [loadWalletsData]);
+
     const totalEstValue = useMemo(() => {
         if (!wallets.length) return 0;
         return wallets.reduce((acc, w) => acc + (w.converted_balance || w.balance || 0), 0);

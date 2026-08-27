@@ -143,6 +143,14 @@ export const ReportsPage: React.FC = () => {
         fetchReportsData();
     }, [fetchReportsData, refreshIndex, activeLoginid]);
 
+    useEffect(() => {
+        const handleAccountSwitch = () => {
+            fetchReportsData();
+        };
+        window.addEventListener('account_switched', handleAccountSwitch);
+        return () => window.removeEventListener('account_switched', handleAccountSwitch);
+    }, [fetchReportsData]);
+
     // ── Subscribe to Open Positions stream for real-time updates ──
     useEffect(() => {
         if (!isAuthorized || !api_base.api) return;

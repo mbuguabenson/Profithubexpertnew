@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { localize } from '@deriv-com/translations';
 import { DerivAccountWalletService } from '@/services/deriv-account-wallet.service';
+import { AccountSwitcherService } from '@/services/account-switcher.service';
+import { useStore } from '@/hooks/useStore';
 import { formatMoney, addComma } from '@/components/shared';
 import { getAccountsList } from '@/utils/token-bridge';
 import './account-management.scss';
@@ -11,6 +13,8 @@ interface AccountManagementProps {
 }
 
 export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, activeLoginid }) => {
+    const { client } = useStore() ?? {};
+    const [currentLoginId, setCurrentLoginId] = useState<string>(activeLoginid || localStorage.getItem('active_loginid') || '');
     const [nickname, setNickname] = useState<string>('');
     const [settings, setSettings] = useState<any>(null);
     const [status, setStatus] = useState<any>(null);
@@ -19,7 +23,7 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
     const [activeSection, setActiveSection] = useState<'profile' | 'linked' | 'markup' | 'security'>('profile');
 
     const accountsMap = getAccountsList();
-    const isVirtual = activeLoginid.startsWith('VRTC') || activeLoginid.startsWith('VRT');
+    const isVirtual = currentLoginId.startsWith('VRTC') || currentLoginId.startsWith('VRT');
 
     const loadAccountData = useCallback(async () => {
         setIsLoading(true);
@@ -30,7 +34,7 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                 DerivAccountWalletService.getAccountStatus(),
                 DerivAccountWalletService.getMarkupStatistics(),
             ]);
-            setNickname(nick || activeLoginid);
+            setNickname(nick || currentLoginId);
             setSettings(sett);
             setStatus(stat);
             setMarkupStats(markup);
@@ -39,16 +43,31 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
         } finally {
             setIsLoading(false);
         }
+    }, [currentLoginId]);
+
+    useEffect(() => {
+        const nextId = activeLoginid || localStorage.getItem('active_loginid') || '';
+        setCurrentLoginId(nextId);
     }, [activeLoginid]);
 
     useEffect(() => {
         loadAccountData();
     }, [loadAccountData]);
 
+    useEffect(() => {
+        const handleAccountSwitch = (e: any) => {
+            const newId = e?.detail?.loginid || localStorage.getItem('active_loginid') || '';
+            setCurrentLoginId(newId);
+            loadAccountData();
+        };
+        window.addEventListener('account_switched', handleAccountSwitch);
+        return () => window.removeEventListener('account_switched', handleAccountSwitch);
+    }, [loadAccountData]);
+
     const linkedAccounts = Object.keys(accountsMap).map(id => ({
         id,
         isDemo: id.startsWith('VR'),
-        isActive: id === activeLoginid,
+        isActive: id === currentLoginId,
     }));
 
     return (
@@ -201,9 +220,10 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                                     ) : (
                                         <button
                                             className="wm-btn wm-btn--secondary"
-                                            onClick={() => {
-                                                localStorage.setItem('active_loginid', acc.id);
-                                                window.location.reload();
+                                            onClick={async () => {
+                                                await AccountSwitcherService.switchAccount(acc.id, client);
+                                                setCurrentLoginId(acc.id);
+                                                loadAccountData();
                                             }}
                                         >
                                             {localize('Switch Account')}
