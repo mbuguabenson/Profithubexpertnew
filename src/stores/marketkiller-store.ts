@@ -202,14 +202,14 @@ export default class MarketkillerStore {
     @action
     private waitForApiAndConnect = () => {
         const tryConnect = () => {
-            if (api_base.api) {
+            if (api_base?.api && api_base.api.connection?.readyState === 1) {
                 runInAction(() => {
                     this.is_connected = true;
                 });
                 this.subscribeToTicks();
                 this.subscribeToRibbon();
             } else {
-                setTimeout(tryConnect, 1000);
+                setTimeout(tryConnect, 800);
             }
         };
         tryConnect();
@@ -275,14 +275,21 @@ export default class MarketkillerStore {
             this.tick_listener_sub = null;
         }
 
-        if (!api_base.api || api_base.api.connection?.readyState !== 1) {
-            console.warn('[Marketkiller] Subscribing aborted: WebSocket disconnected.');
+        if (!api_base?.api || api_base.api.connection?.readyState !== 1) {
+            console.warn('[Marketkiller] Subscribing aborted: WebSocket disconnected. Retrying in 1s...');
+            setTimeout(() => this.subscribeToTicks(), 1000);
             return;
         }
 
         try {
-            console.log('[Marketkiller] Subscribing to ticks for:', this.symbol);
-            const req = { ticks: this.symbol, subscribe: 1 };
+            console.log('[Marketkiller] Subscribing to ticks and history for:', this.symbol);
+            const req = {
+                ticks_history: this.symbol,
+                count: 100,
+                end: 'latest',
+                style: 'ticks',
+                subscribe: 1,
+            };
             const response = await api_base.api.send(req).catch((err: any) => {
                 if (err?.error?.code === 'AlreadySubscribed') return err;
                 return { error: err?.error || err };
@@ -292,9 +299,30 @@ export default class MarketkillerStore {
                 if (response.error.code !== 'AlreadySubscribed') {
                     console.warn('[Marketkiller] Tick Subscription note:', response.error.message || response.error);
                 }
-            } else if (response) {
-                // Extract subscription ID safely
-                this.tick_subscription = response.subscription?.id || response.tick?.id;
+            }
+
+            if (response?.subscription) {
+                this.tick_subscription = response.subscription.id;
+            }
+
+            // Populate history immediately so all stats, analytics & charts render on load
+            if (response?.history?.prices && Array.isArray(response.history.prices)) {
+                const prices: number[] = response.history.prices;
+                const digits = prices.map(p => {
+                    const priceStr = parseFloat(String(p)).toFixed(2);
+                    return parseInt(priceStr.slice(-1), 10);
+                }).filter(d => !isNaN(d));
+
+                runInAction(() => {
+                    this.ticks = digits.slice(-120);
+                    if (prices.length > 0) {
+                        const lastPrice = prices[prices.length - 1];
+                        this.current_price = parseFloat(String(lastPrice)).toFixed(2);
+                        this.last_digit = parseInt(this.current_price.slice(-1), 10);
+                        this.stats_engine.updateWithHistory(this.ticks.slice(-this.matches_settings.check_ticks), parseFloat(String(this.current_price)));
+                        this.updateDigitAnalytics();
+                    }
+                });
             }
 
             // Register fresh RxJS event listener for the tick stream

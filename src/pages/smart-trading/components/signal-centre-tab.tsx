@@ -270,18 +270,10 @@ const SignalCentreTab = observer(() => {
     const botRef = useRef(false);
     const botStakeRef = useRef(1.0);
 
-    const api_base_ref = useRef<any>(null);
-    useEffect(() => {
-        if (!api_base?.api) {
-            api_base?.init?.();
-        }
-        api_base_ref.current = api_base?.api;
-    }, []);
-
     const subscribeSymbol = useCallback((sym: string): Promise<number[]> => {
         return new Promise(resolve => {
-            const api = api_base_ref.current || api_base?.api;
-            if (!api) {
+            const api = api_base?.api;
+            if (!api || api.connection?.readyState !== 1) {
                 if (!api_base?.api) api_base?.init?.();
                 resolve([]);
                 return;
@@ -301,8 +293,8 @@ const SignalCentreTab = observer(() => {
                     const hist = resp.history || resp.ticks_history;
                     if (hist?.prices) {
                         hist.prices.forEach((p: any) => {
-                            const s = String(p);
-                            const dig = parseInt(s[s.length - 1]);
+                            const s = String(p).trim();
+                            const dig = parseInt(s[s.length - 1], 10);
                             if (!isNaN(dig)) acc.push(dig);
                         });
                     }
@@ -310,15 +302,14 @@ const SignalCentreTab = observer(() => {
                     const streamId = resp.subscription?.id;
                     const sub = api.onMessage().subscribe((msg: any) => {
                         if (msg.msg_type === 'tick' && msg.tick?.symbol === sym) {
-                            const s = String(msg.tick.quote);
-                            const dig = parseInt(s[s.length - 1]);
+                            const s = String(msg.tick.quote).trim();
+                            const dig = parseInt(s[s.length - 1], 10);
                             if (!isNaN(dig)) {
                                 acc.push(dig);
                                 if (acc.length > 120) acc.shift();
                             }
                         }
                     });
-
 
                     subsRef.current.set(sym, () => {
                         sub.unsubscribe();
@@ -399,8 +390,28 @@ const SignalCentreTab = observer(() => {
         clearAllSubs();
     }, [clearAllSubs]);
 
+    // Auto-scan on mount and when tradeType changes
+    useEffect(() => {
+        let mounted = true;
+        const checkAndScan = () => {
+            if (!mounted) return;
+            if (api_base?.api && api_base.api.connection?.readyState === 1) {
+                runScan();
+            } else {
+                setTimeout(checkAndScan, 800);
+            }
+        };
+        const timer = setTimeout(checkAndScan, 500);
+
+        return () => {
+            mounted = false;
+            clearTimeout(timer);
+            clearAllSubs();
+        };
+    }, [tradeType, runScan, clearAllSubs]);
+
     const executeTrade = useCallback(async (analysis: MarketAnalysis, stakeAmt: number, customPrediction?: number) => {
-        const api = api_base_ref.current || api_base?.api;
+        const api = api_base?.api;
         if (!api || !is_socket_opened) return null;
         let contractType = '';
         let barrier: number | undefined;

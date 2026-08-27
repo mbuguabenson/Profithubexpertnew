@@ -11,17 +11,14 @@ const Marketkiller = observer(() => {
     const { active_subtab, current_price, last_digit, symbol, is_connected, is_running } = marketkiller;
 
     useEffect(() => {
-        // Kickstart the isolated streaming socket hook on mount if valid
-        if (marketkiller.root_store.common?.is_socket_opened) {
-            marketkiller.is_connected = true;
-            marketkiller.subscribeToTicks();
-        }
+        // Kickstart streaming ticks & stats on mount
+        marketkiller.subscribeToTicks();
 
         return () => {
             // Safety cleanup hook
             marketkiller.is_running = false;
         };
-    }, []);
+    }, [symbol]);
 
     // A unified subset of markets
     const markets = [

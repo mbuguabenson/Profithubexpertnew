@@ -372,7 +372,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     return (
         <div className='acc-info__wrapper' ref={wrapperRef}>
             <AccountInfoWrapper>
-                {/* ── Header Account Button ──────────────────────────────── */}
+                {/* ── Header Account Card ──────────────────────────────── */}
                 <div
                     data-testid='dt_acc_info'
                     id='dt_core_account-info_acc-info'
@@ -393,13 +393,13 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         }
                     }}
                 >
-                    {/* Currency circle icon */}
+                    {/* Currency / Avatar circle icon */}
                     <div className={classNames('acc-chip__currency-icon', {
                         'acc-chip__currency-icon--demo': isVirtual,
                         'acc-chip__currency-icon--real': !isVirtual,
                     })}>
                         {isVirtual ? (
-                            <span className='acc-icon__letter' style={{ fontSize: 15, fontWeight: 800, color: '#fff' }}>D</span>
+                            <span className='acc-icon__letter' style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>D</span>
                         ) : (
                             <img
                                 src={realAccountImg}
@@ -407,21 +407,56 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                 className='acc-chip__real-img'
                             />
                         )}
+                        <span className='acc-chip__online-dot'></span>
                     </div>
 
                     {/* Two-line text block */}
                     <div className='acc-chip__text-block'>
-                        {/* Line 1: Account label + chevron */}
                         <div className='acc-chip__label-row'>
-                            <span className='acc-chip__account-label'>
-                                {isVirtual ? localize('Demo account') : (
-                                    <>
-                                        <span className='acc-chip__real-label'>Real</span>
-                                        {currency && <span className='acc-chip__real-currency'>· {getCurrencyDisplayCode(currency)}</span>}
-                                    </>
-                                )}
+                            <span className={classNames('acc-chip__type-badge', {
+                                'acc-chip__type-badge--demo': isVirtual,
+                                'acc-chip__type-badge--real': !isVirtual,
+                            })}>
+                                {isVirtual ? 'DEMO' : 'REAL'}
                             </span>
-                            {showChevron && (
+                            {currency && <span className='acc-chip__currency-tag'>{getCurrencyDisplayCode(currency)}</span>}
+                        </div>
+
+                        {/* Balance */}
+                        <span
+                            data-testid='dt_balance'
+                            className={classNames('acc-chip__balance', {
+                                'acc-chip__balance--no-currency': !currency && !isVirtual,
+                            })}
+                        >
+                            {isBalanceVisible ? chipBalance : '••••••'}
+                        </span>
+                    </div>
+
+                    {/* Actions: Eye toggle button + Chevron */}
+                    <div className='acc-chip__actions'>
+                        <button
+                            type='button'
+                            className='acc-chip__visibility-btn'
+                            onClick={toggleBalanceVisibility}
+                            aria-label={isBalanceVisible ? 'Hide balance' : 'Show balance'}
+                            title={isBalanceVisible ? 'Hide balance' : 'Show balance'}
+                        >
+                            {isBalanceVisible ? (
+                                <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+                                    <path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' />
+                                    <circle cx='12' cy='12' r='3' />
+                                </svg>
+                            ) : (
+                                <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+                                    <path d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24' />
+                                    <line x1='1' y1='1' x2='23' y2='23' />
+                                </svg>
+                            )}
+                        </button>
+
+                        {showChevron && (
+                            <div className='acc-chip__chevron-wrapper'>
                                 <svg
                                     className={classNames('acc-chip__chevron', {
                                         'acc-chip__chevron--open': isOpen,
@@ -434,44 +469,14 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                     <path
                                         d='M2 4L6 8L10 4'
                                         stroke='currentColor'
-                                        strokeWidth='1.8'
+                                        strokeWidth='2'
                                         strokeLinecap='round'
                                         strokeLinejoin='round'
                                     />
                                 </svg>
-                            )}
-                        </div>
-
-                        {/* Line 2: Balance */}
-                        <span
-                            data-testid='dt_balance'
-                            className={classNames('acc-chip__balance', {
-                                'acc-chip__balance--no-currency': !currency && !isVirtual,
-                            })}
-                        >
-                            {isBalanceVisible ? chipBalance : '••••'}
-                        </span>
-                    </div>
-
-                    {/* Eye toggle button */}
-                    <button
-                        type='button'
-                        className='acc-chip__visibility-btn'
-                        onClick={toggleBalanceVisibility}
-                        aria-label={isBalanceVisible ? 'Hide balance' : 'Show balance'}
-                    >
-                        {isBalanceVisible ? (
-                            <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
-                                <path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' />
-                                <circle cx='12' cy='12' r='3' />
-                            </svg>
-                        ) : (
-                            <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
-                                <path d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24' />
-                                <line x1='1' y1='1' x2='23' y2='23' />
-                            </svg>
+                            </div>
                         )}
-                    </button>
+                    </div>
                 </div>
             </AccountInfoWrapper>
 

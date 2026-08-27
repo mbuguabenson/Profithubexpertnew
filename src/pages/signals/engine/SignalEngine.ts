@@ -42,11 +42,15 @@ export class SignalEngine {
     private quotes: number[] = [];
     private readonly MAX_TICKS = 100;
 
-    public addTick(quote: number) {
-        const digitStr = quote.toFixed(4).slice(-1);
-        const digit = parseInt(digitStr, 10);
+    public addTick(quote: number | string) {
+        const num = typeof quote === 'number' ? quote : parseFloat(String(quote));
+        if (isNaN(num)) return;
 
-        this.quotes.push(quote);
+        const s = String(quote).trim();
+        const digit = parseInt(s.slice(-1), 10);
+        if (isNaN(digit)) return;
+
+        this.quotes.push(num);
         this.ticks.push(digit);
 
         if (this.ticks.length > this.MAX_TICKS) {
