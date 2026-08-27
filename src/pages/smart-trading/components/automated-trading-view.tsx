@@ -219,8 +219,8 @@ const AutomatedTradingView = observer(() => {
                 currency: smart_trading.root_store.client.currency || 'USD',
                 duration: config.ticks || 1,
                 duration_unit: 't',
-                symbol: symbol,
-                ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
+                underlying_symbol: symbol,
+                ...(prediction !== undefined && prediction !== null && prediction !== '' ? { barrier: String(prediction) } : {}),
             });
 
             if (proposal.error) {

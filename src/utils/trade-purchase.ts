@@ -44,11 +44,20 @@ const removeUndefinedFields = <T extends Record<string, any>>(fields: T): T =>
     }, {} as T);
 
 export const normalizeTradeParameters = (parameters: TTradeParameters) => {
-    const { symbol, underlying_symbol, ...rest } = parameters;
+    const { symbol, underlying_symbol, barrier, barrier2, prediction, ...rest } = parameters;
     const normalized_symbol = (underlying_symbol || symbol)?.toString().trim() || '1HZ100V';
     const symbol_field = { underlying_symbol: normalized_symbol };
+    const barrier_field: Record<string, string> = {};
 
-    return removeUndefinedFields({ ...rest, ...symbol_field });
+    const rawBarrier = barrier !== undefined && barrier !== null ? barrier : prediction;
+    if (rawBarrier !== undefined && rawBarrier !== null && rawBarrier !== '') {
+        barrier_field.barrier = String(rawBarrier);
+    }
+    if (barrier2 !== undefined && barrier2 !== null && barrier2 !== '') {
+        barrier_field.barrier2 = String(barrier2);
+    }
+
+    return removeUndefinedFields({ ...rest, ...symbol_field, ...barrier_field });
 };
 
 const ensureAuthorizedForTrading = async () => {

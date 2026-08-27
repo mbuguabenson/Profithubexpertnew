@@ -136,19 +136,25 @@ export default class MarketkillerStore {
 
         let buyRes: any;
         try {
+            const rawBarrier = config.barrier !== undefined && config.barrier !== null ? config.barrier : config.prediction;
+            const currency = this.root_store?.client?.currency || 'USD';
+            const parameters: Record<string, any> = {
+                amount: safeStake,
+                basis: 'stake',
+                contract_type: config.type,
+                currency,
+                duration: this.matches_settings.duration || 1,
+                duration_unit: 't',
+                underlying_symbol: config.symbol,
+            };
+            if (rawBarrier !== undefined && rawBarrier !== null && rawBarrier !== '') {
+                parameters.barrier = String(rawBarrier);
+            }
+
             buyRes = await api_base.api.send({
                 buy: '1',
                 price: safeStake,
-                    parameters: {
-                    amount: safeStake,
-                    basis: 'stake',
-                    contract_type: config.type,
-                    currency: 'USD',
-                    duration: this.matches_settings.duration || 1,
-                    duration_unit: 't',
-                    symbol: config.symbol,
-                    barrier: typeof config.barrier === 'number' ? config.barrier : Number(config.barrier),
-                },
+                parameters,
             });
         } catch (e: any) {
             const msg = this.extractErrorMsg(e);
@@ -580,19 +586,25 @@ export default class MarketkillerStore {
         // contracts open on the same entry tick → same entry AND exit spot.
         const sendPromises: Promise<any>[] = tradeConfigs.map(config => {
             const safeStake = Number(Math.max(config.stake || 0.35, 0.35).toFixed(2));
+            const rawBarrier = config.barrier !== undefined && config.barrier !== null ? config.barrier : config.prediction;
+            const currency = this.root_store?.client?.currency || 'USD';
+            const parameters: Record<string, any> = {
+                amount: safeStake,
+                basis: 'stake',
+                contract_type: config.type,
+                currency,
+                duration: this.matches_settings.duration || 1,
+                duration_unit: 't',
+                underlying_symbol: config.symbol,
+            };
+            if (rawBarrier !== undefined && rawBarrier !== null && rawBarrier !== '') {
+                parameters.barrier = String(rawBarrier);
+            }
+
             return api_base.api.send({
                 buy: '1',
                 price: safeStake,
-                parameters: {
-                    amount: safeStake,
-                    basis: 'stake',
-                    contract_type: config.type,
-                    currency: 'USD',
-                    duration: this.matches_settings.duration || 1,
-                    duration_unit: 't',
-                    symbol: config.symbol,
-                    barrier: typeof config.barrier === 'number' ? config.barrier : Number(config.barrier),
-                },
+                parameters,
             });
         });
 

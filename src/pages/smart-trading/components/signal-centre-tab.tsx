@@ -424,10 +424,18 @@ const SignalCentreTab = observer(() => {
 
         try {
             const req: any = {
-                proposal: 1, amount: stakeAmt, basis: 'stake', contract_type: contractType,
-                currency: currency, duration: ticks, duration_unit: 't', symbol: analysis.symbol,
+                proposal: 1,
+                amount: stakeAmt,
+                basis: 'stake',
+                contract_type: contractType,
+                currency: currency || 'USD',
+                duration: ticks,
+                duration_unit: 't',
+                underlying_symbol: analysis.symbol,
             };
-            if (barrier !== undefined) req.barrier = barrier;
+            if (barrier !== undefined && barrier !== null && barrier !== '') {
+                req.barrier = String(barrier);
+            }
             const resp = await api.send(req);
             if (resp.error) {
                 addLog(`❌ Proposal Error: ${resp.error.message}`);

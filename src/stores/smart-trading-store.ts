@@ -2176,8 +2176,8 @@ export default class SmartTradingStore {
                         duration_unit: 't',
                         symbol: this.symbol,
                         ...( ['DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'].includes(trade_type || '') &&
-                        prediction !== undefined
-                            ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) }
+                        prediction !== undefined && prediction !== null && prediction !== ''
+                            ? { barrier: String(prediction) }
                             : {}),
                     })
                 ),
@@ -2627,7 +2627,7 @@ export default class SmartTradingStore {
                     duration,
                     duration_unit: 't',
                     symbol: this.symbol,
-                    ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
+                    ...(prediction !== undefined && prediction !== null && prediction !== '' ? { barrier: String(prediction) } : {}),
                 })
             );
 
@@ -2894,7 +2894,7 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol: this.symbol,
-                    ...(trade.prediction !== undefined ? { barrier: typeof trade.prediction === 'number' ? trade.prediction : Number(trade.prediction) } : {}),
+                    ...(trade.prediction !== undefined && trade.prediction !== null && trade.prediction !== '' ? { barrier: String(trade.prediction) } : {}),
                 })
             );
 
@@ -3167,7 +3167,7 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol: config.market,
-                    ...(prediction !== undefined ? { barrier: typeof prediction === 'number' ? prediction : Number(prediction) } : {}),
+                    ...(prediction !== undefined && prediction !== null && prediction !== '' ? { barrier: String(prediction) } : {}),
                 })
             );
 
@@ -3412,7 +3412,7 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol,
-                    ...(barrier !== undefined ? { barrier: typeof barrier === 'number' ? barrier : Number(barrier) } : {}),
+                    ...(barrier !== undefined && barrier !== null && barrier !== '' ? { barrier: String(barrier) } : {}),
                 });
 
                 const response = await api_base.api.send(proposal_request);

@@ -550,8 +550,8 @@ const Hyperbot = observer(() => {
                             currency: curr,
                             duration: 1,
                             duration_unit: 't',
-                            symbol: market,
-                            barrier: typeof barrierDigit === 'number' ? barrierDigit : Number(barrierDigit),
+                            underlying_symbol: market,
+                            ...(barrierDigit !== undefined && barrierDigit !== null && barrierDigit !== '' ? { barrier: String(barrierDigit) } : {}),
                         },
                     };
 
@@ -815,8 +815,8 @@ const Hyperbot = observer(() => {
                                 currency: curr,
                                 duration: 1,
                                 duration_unit: 't',
-                                symbol: market,
-                                barrier: typeof barrierDigit === 'number' ? barrierDigit : Number(barrierDigit),
+                                underlying_symbol: market,
+                                ...(barrierDigit !== undefined && barrierDigit !== null && barrierDigit !== '' ? { barrier: String(barrierDigit) } : {}),
                             },
                         };
 
