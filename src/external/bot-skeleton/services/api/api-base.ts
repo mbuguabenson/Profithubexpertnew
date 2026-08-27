@@ -202,7 +202,7 @@ class APIBase {
         const hasAccountID = V2GetActiveAccountId();
 
         if (!this.has_active_symbols && !hasAccountID) {
-            this.active_symbols_promise = this.getActiveSymbols().then(() => undefined);
+            this.active_symbols_promise = this.getActiveSymbols();
         }
 
         this.initEventListeners();
