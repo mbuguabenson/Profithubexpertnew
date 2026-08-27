@@ -18,25 +18,25 @@ export interface GroupedMarketOptions {
 
 export const ALL_DERIV_MARKETS: MarketOption[] = [
     // ── Continuous Volatility Indices ──
-    { value: 'R_10', label: 'Volatility 10 Index', group: 'Derived Indices' },
-    { value: 'R_25', label: 'Volatility 25 Index', group: 'Derived Indices' },
-    { value: 'R_50', label: 'Volatility 50 Index', group: 'Derived Indices' },
-    { value: 'R_75', label: 'Volatility 75 Index', group: 'Derived Indices' },
-    { value: 'R_100', label: 'Volatility 100 Index', group: 'Derived Indices' },
+    { value: 'R_10', label: 'Volatility 10 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_25', label: 'Volatility 25 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_50', label: 'Volatility 50 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_75', label: 'Volatility 75 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_100', label: 'Volatility 100 Index', group: 'Continuous Volatility Indices' },
 
-    // ── 1-Second Volatility Indices (1s) ──
-    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ15V', label: 'Volatility 15 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ30V', label: 'Volatility 30 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ90V', label: 'Volatility 90 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ150V', label: 'Volatility 150 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ200V', label: 'Volatility 200 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ250V', label: 'Volatility 250 (1s) Index', group: 'Derived 1s Indices' },
-    { value: '1HZ300V', label: 'Volatility 300 (1s) Index', group: 'Derived 1s Indices' },
+    // ── 1-Second Continuous Volatility Indices (1s) ──
+    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ15V', label: 'Volatility 15 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ30V', label: 'Volatility 30 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ90V', label: 'Volatility 90 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ150V', label: 'Volatility 150 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ200V', label: 'Volatility 200 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ250V', label: 'Volatility 250 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ300V', label: 'Volatility 300 (1s) Index', group: 'Continuous 1s Indices' },
 
     // ── Jump Indices ──
     { value: 'JD10', label: 'Jump 10 Index', group: 'Jump Indices' },
@@ -51,47 +51,12 @@ export const ALL_DERIV_MARKETS: MarketOption[] = [
     { value: 'STEP200', label: 'Step 200 Index', group: 'Step Indices' },
     { value: 'STEP500', label: 'Step 500 Index', group: 'Step Indices' },
 
-    // ── Range Break Indices ──
+    // ── Range Break & Drift Switch Indices ──
     { value: 'RDBEAR', label: 'Range Break 100 Index', group: 'Range Break Indices' },
     { value: 'RDBULL', label: 'Range Break 200 Index', group: 'Range Break Indices' },
-
-    // ── Drift Switch Indices ──
     { value: 'DSI10', label: 'Drift Switch 10 Index', group: 'Drift Switch Indices' },
     { value: 'DSI20', label: 'Drift Switch 20 Index', group: 'Drift Switch Indices' },
     { value: 'DSI30', label: 'Drift Switch 30 Index', group: 'Drift Switch Indices' },
-
-    // ── Crash & Boom Indices ──
-    { value: 'CRASH300', label: 'Crash 300 Index', group: 'Crash / Boom' },
-    { value: 'CRASH500', label: 'Crash 500 Index', group: 'Crash / Boom' },
-    { value: 'CRASH600', label: 'Crash 600 Index', group: 'Crash / Boom' },
-    { value: 'CRASH900', label: 'Crash 900 Index', group: 'Crash / Boom' },
-    { value: 'CRASH1000', label: 'Crash 1000 Index', group: 'Crash / Boom' },
-    { value: 'BOOM300', label: 'Boom 300 Index', group: 'Crash / Boom' },
-    { value: 'BOOM500', label: 'Boom 500 Index', group: 'Crash / Boom' },
-    { value: 'BOOM600', label: 'Boom 600 Index', group: 'Crash / Boom' },
-    { value: 'BOOM900', label: 'Boom 900 Index', group: 'Crash / Boom' },
-    { value: 'BOOM1000', label: 'Boom 1000 Index', group: 'Crash / Boom' },
-
-    // ── Major Forex Pairs ──
-    { value: 'frxEURUSD', label: 'EUR/USD', group: 'Forex' },
-    { value: 'frxGBPUSD', label: 'GBP/USD', group: 'Forex' },
-    { value: 'frxUSDJPY', label: 'USD/JPY', group: 'Forex' },
-    { value: 'frxAUDUSD', label: 'AUD/USD', group: 'Forex' },
-    { value: 'frxUSDCAD', label: 'USD/CAD', group: 'Forex' },
-    { value: 'frxUSDCHF', label: 'USD/CHF', group: 'Forex' },
-    { value: 'frxEURGBP', label: 'EUR/GBP', group: 'Forex' },
-    { value: 'frxEURJPY', label: 'EUR/JPY', group: 'Forex' },
-    { value: 'frxGBPJPY', label: 'GBP/JPY', group: 'Forex' },
-
-    // ── Cryptocurrencies ──
-    { value: 'cryBTCUSD', label: 'BTC/USD (Bitcoin)', group: 'Cryptocurrencies' },
-    { value: 'cryETHUSD', label: 'ETH/USD (Ethereum)', group: 'Cryptocurrencies' },
-    { value: 'cryLTCUSD', label: 'LTC/USD (Litecoin)', group: 'Cryptocurrencies' },
-
-    // ── Commodities ──
-    { value: 'frxXAUUSD', label: 'Gold/USD', group: 'Commodities' },
-    { value: 'frxXAGUSD', label: 'Silver/USD', group: 'Commodities' },
-    { value: 'frxXBRUSD', label: 'Oil/USD', group: 'Commodities' },
 ];
 
 /**

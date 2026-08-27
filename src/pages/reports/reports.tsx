@@ -3,9 +3,10 @@ import { localize } from '@deriv-com/translations';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import { useApiBase } from '@/hooks/useApiBase';
 import { addComma, formatMoney } from '@/components/shared';
+import { PortfolioAnalytics } from './components/portfolio-analytics';
 import './reports.scss';
 
-type ActiveSubTab = 'positions' | 'statement' | 'profit_table';
+type ActiveSubTab = 'portfolio' | 'profit_table' | 'positions' | 'statement';
 
 interface StatementTransaction {
     action_type: string;
@@ -56,7 +57,7 @@ interface OpenPosition {
 
 export const ReportsPage: React.FC = () => {
     const { isAuthorized, activeLoginid } = useApiBase();
-    const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('profit_table');
+    const [activeSubTab, setActiveSubTab] = useState<ActiveSubTab>('portfolio');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [refreshIndex, setRefreshIndex] = useState<number>(0);
 
@@ -353,78 +354,80 @@ export const ReportsPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── 4 Top Metrics Cards ── */}
-            <div className="reports-metrics-grid">
-                {/* 1. Total Net Profit */}
-                <div className={`reports-metric-card ${metrics.totalProfit >= 0 ? 'reports-metric-card--profit' : 'reports-metric-card--loss'}`}>
-                    <div className="reports-metric-card__header">
-                        <span className="reports-metric-card__label">{localize('Total Net Profit')}</span>
-                        <div className="reports-metric-card__icon-box">
-                            {metrics.totalProfit >= 0 ? '📈' : '📉'}
+            {/* ── Top Metrics Cards (For Table Subtabs) ── */}
+            {activeSubTab !== 'portfolio' && (
+                <div className="reports-metrics-grid">
+                    {/* 1. Total Net Profit */}
+                    <div className={`reports-metric-card ${metrics.totalProfit >= 0 ? 'reports-metric-card--profit' : 'reports-metric-card--loss'}`}>
+                        <div className="reports-metric-card__header">
+                            <span className="reports-metric-card__label">{localize('Total Net Profit')}</span>
+                            <div className="reports-metric-card__icon-box">
+                                {metrics.totalProfit >= 0 ? '📈' : '📉'}
+                            </div>
+                        </div>
+                        <div className="reports-metric-card__value">
+                            {metrics.totalProfit >= 0 ? `+${formatMoney(currency, metrics.totalProfit, true)}` : formatMoney(currency, metrics.totalProfit, true)} {currency}
+                        </div>
+                        <div className="reports-metric-card__footer">
+                            <span className={`reports-metric-card__tag ${metrics.totalProfit >= 0 ? 'reports-metric-card__tag--win' : 'reports-metric-card__tag--loss'}`}>
+                                {metrics.totalProfit >= 0 ? 'PROFITABLE' : 'DRAWDOWN'}
+                            </span>
+                            <span className="reports-metric-card__subtext">Across {metrics.totalTrades} closed trades</span>
                         </div>
                     </div>
-                    <div className="reports-metric-card__value">
-                        {metrics.totalProfit >= 0 ? `+${formatMoney(currency, metrics.totalProfit, true)}` : formatMoney(currency, metrics.totalProfit, true)} {currency}
-                    </div>
-                    <div className="reports-metric-card__footer">
-                        <span className={`reports-metric-card__tag ${metrics.totalProfit >= 0 ? 'reports-metric-card__tag--win' : 'reports-metric-card__tag--loss'}`}>
-                            {metrics.totalProfit >= 0 ? 'PROFITABLE' : 'DRAWDOWN'}
-                        </span>
-                        <span className="reports-metric-card__subtext">Across {metrics.totalTrades} closed trades</span>
-                    </div>
-                </div>
 
-                {/* 2. Win Rate */}
-                <div className="reports-metric-card">
-                    <div className="reports-metric-card__header">
-                        <span className="reports-metric-card__label">{localize('Win Rate %')}</span>
-                        <div className="reports-metric-card__icon-box">🎯</div>
+                    {/* 2. Win Rate */}
+                    <div className="reports-metric-card">
+                        <div className="reports-metric-card__header">
+                            <span className="reports-metric-card__label">{localize('Win Rate %')}</span>
+                            <div className="reports-metric-card__icon-box">🎯</div>
+                        </div>
+                        <div className="reports-metric-card__value">
+                            {metrics.winRate.toFixed(1)}%
+                        </div>
+                        <div className="reports-metric-card__footer">
+                            <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
+                                {metrics.wins}W / {metrics.losses}L
+                            </span>
+                            <span className="reports-metric-card__subtext">Success ratio</span>
+                        </div>
                     </div>
-                    <div className="reports-metric-card__value">
-                        {metrics.winRate.toFixed(1)}%
-                    </div>
-                    <div className="reports-metric-card__footer">
-                        <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
-                            {metrics.wins}W / {metrics.losses}L
-                        </span>
-                        <span className="reports-metric-card__subtext">Success ratio</span>
-                    </div>
-                </div>
 
-                {/* 3. Total Contracts */}
-                <div className="reports-metric-card">
-                    <div className="reports-metric-card__header">
-                        <span className="reports-metric-card__label">{localize('Total Contracts')}</span>
-                        <div className="reports-metric-card__icon-box">📑</div>
+                    {/* 3. Total Contracts */}
+                    <div className="reports-metric-card">
+                        <div className="reports-metric-card__header">
+                            <span className="reports-metric-card__label">{localize('Total Contracts')}</span>
+                            <div className="reports-metric-card__icon-box">📑</div>
+                        </div>
+                        <div className="reports-metric-card__value">
+                            {addComma(metrics.totalTrades)}
+                        </div>
+                        <div className="reports-metric-card__footer">
+                            <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
+                                {openPositions.length} LIVE OPEN
+                            </span>
+                            <span className="reports-metric-card__subtext">Executed orders</span>
+                        </div>
                     </div>
-                    <div className="reports-metric-card__value">
-                        {addComma(metrics.totalTrades)}
-                    </div>
-                    <div className="reports-metric-card__footer">
-                        <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
-                            {openPositions.length} LIVE OPEN
-                        </span>
-                        <span className="reports-metric-card__subtext">Executed orders</span>
-                    </div>
-                </div>
 
-                {/* 4. Total Payout */}
-                <div className="reports-metric-card">
-                    <div className="reports-metric-card__header">
-                        <span className="reports-metric-card__label">{localize('Total Payout Volume')}</span>
-                        <div className="reports-metric-card__icon-box">💎</div>
-                    </div>
-                    <div className="reports-metric-card__value">
-                        {formatMoney(currency, metrics.totalPayout, true)} {currency}
-                    </div>
-                    <div className="reports-metric-card__footer">
-                        <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
-                            RETURN VOLUME
-                        </span>
-                        <span className="reports-metric-card__subtext">Gross proceeds</span>
+                    {/* 4. Total Payout */}
+                    <div className="reports-metric-card">
+                        <div className="reports-metric-card__header">
+                            <span className="reports-metric-card__label">{localize('Total Payout Volume')}</span>
+                            <div className="reports-metric-card__icon-box">💎</div>
+                        </div>
+                        <div className="reports-metric-card__value">
+                            {formatMoney(currency, metrics.totalPayout, true)} {currency}
+                        </div>
+                        <div className="reports-metric-card__footer">
+                            <span className="reports-metric-card__tag reports-metric-card__tag--neutral">
+                                RETURN VOLUME
+                            </span>
+                            <span className="reports-metric-card__subtext">Gross proceeds</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* ── Main Reports Container ── */}
             <div className="reports-content-card">
@@ -432,17 +435,24 @@ export const ReportsPage: React.FC = () => {
                 <div className="reports-toolbar">
                     <div className="reports-subtabs">
                         <button
+                            className={`reports-subtab-btn ${activeSubTab === 'portfolio' ? 'reports-subtab-btn--active' : ''}`}
+                            onClick={() => setActiveSubTab('portfolio')}
+                        >
+                            <span>💼 {localize('Portfolio & Analytics')}</span>
+                            <span className="reports-subtab-badge reports-subtab-badge--live">LIVE</span>
+                        </button>
+                        <button
                             className={`reports-subtab-btn ${activeSubTab === 'profit_table' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('profit_table')}
                         >
-                            <span>{localize('Profit Table')}</span>
+                            <span>📊 {localize('Profit Table')}</span>
                             <span className="reports-subtab-badge">{filteredProfitList.length}</span>
                         </button>
                         <button
                             className={`reports-subtab-btn ${activeSubTab === 'positions' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('positions')}
                         >
-                            <span>{localize('Open Positions')}</span>
+                            <span>⚡ {localize('Open Positions')}</span>
                             <span className={`reports-subtab-badge ${openPositions.length > 0 ? 'reports-subtab-badge--live' : ''}`}>
                                 {openPositions.length}
                             </span>
@@ -451,58 +461,70 @@ export const ReportsPage: React.FC = () => {
                             className={`reports-subtab-btn ${activeSubTab === 'statement' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('statement')}
                         >
-                            <span>{localize('Statement')}</span>
+                            <span>📑 {localize('Statement')}</span>
                             <span className="reports-subtab-badge">{filteredStatementList.length}</span>
                         </button>
                     </div>
 
-                    <div className="reports-filter-group">
-                        {/* Search Input */}
-                        <div className="reports-search-box">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="11" cy="11" r="8" />
-                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                            </svg>
-                            <input
-                                type="text"
-                                placeholder={localize('Filter by ID or details...')}
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                            />
-                        </div>
+                    {activeSubTab !== 'portfolio' && (
+                        <div className="reports-filter-group">
+                            {/* Search Input */}
+                            <div className="reports-search-box">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder={localize('Filter by ID or details...')}
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                />
+                            </div>
 
-                        {/* Date Filter Pills */}
-                        <div className="reports-date-pills">
-                            <button
-                                className={`reports-date-pill ${dateRange === 'today' ? 'reports-date-pill--active' : ''}`}
-                                onClick={() => setDateRange('today')}
-                            >
-                                Today
-                            </button>
-                            <button
-                                className={`reports-date-pill ${dateRange === '7d' ? 'reports-date-pill--active' : ''}`}
-                                onClick={() => setDateRange('7d')}
-                            >
-                                7D
-                            </button>
-                            <button
-                                className={`reports-date-pill ${dateRange === '30d' ? 'reports-date-pill--active' : ''}`}
-                                onClick={() => setDateRange('30d')}
-                            >
-                                30D
-                            </button>
-                            <button
-                                className={`reports-date-pill ${dateRange === 'all' ? 'reports-date-pill--active' : ''}`}
-                                onClick={() => setDateRange('all')}
-                            >
-                                All
-                            </button>
+                            {/* Date Filter Pills */}
+                            <div className="reports-date-pills">
+                                <button
+                                    className={`reports-date-pill ${dateRange === 'today' ? 'reports-date-pill--active' : ''}`}
+                                    onClick={() => setDateRange('today')}
+                                >
+                                    Today
+                                </button>
+                                <button
+                                    className={`reports-date-pill ${dateRange === '7d' ? 'reports-date-pill--active' : ''}`}
+                                    onClick={() => setDateRange('7d')}
+                                >
+                                    7D
+                                </button>
+                                <button
+                                    className={`reports-date-pill ${dateRange === '30d' ? 'reports-date-pill--active' : ''}`}
+                                    onClick={() => setDateRange('30d')}
+                                >
+                                    30D
+                                </button>
+                                <button
+                                    className={`reports-date-pill ${dateRange === 'all' ? 'reports-date-pill--active' : ''}`}
+                                    onClick={() => setDateRange('all')}
+                                >
+                                    All
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* ── Tab Views ── */}
                 <div className="reports-table-wrapper">
+                    {/* 0. PORTFOLIO & ANALYTICS */}
+                    {activeSubTab === 'portfolio' && (
+                        <PortfolioAnalytics
+                            profitList={profitList}
+                            statementList={statementList}
+                            openPositionsCount={openPositions.length}
+                            currency={currency}
+                            activeLoginid={activeLoginid}
+                        />
+                    )}
                     {/* 1. PROFIT TABLE */}
                     {activeSubTab === 'profit_table' && (
                         <div className="reports-table-container">

@@ -88,12 +88,6 @@ const MARKETS = [
     { label: 'Drift Switch 10 Index',   symbol: 'DSI10',    group: 'Drift Switch' },
     { label: 'Drift Switch 20 Index',   symbol: 'DSI20',    group: 'Drift Switch' },
     { label: 'Drift Switch 30 Index',   symbol: 'DSI30',    group: 'Drift Switch' },
-    { label: 'EUR/USD',                 symbol: 'frxEURUSD', group: 'Forex' },
-    { label: 'GBP/USD',                 symbol: 'frxGBPUSD', group: 'Forex' },
-    { label: 'USD/JPY',                 symbol: 'frxUSDJPY', group: 'Forex' },
-    { label: 'BTC/USD (Bitcoin)',       symbol: 'cryBTCUSD', group: 'Crypto' },
-    { label: 'ETH/USD (Ethereum)',      symbol: 'cryETHUSD', group: 'Crypto' },
-    { label: 'Gold/USD',                symbol: 'frxXAUUSD', group: 'Commodities' },
 ] as const;
 
 const STRATEGIES: TScannerStrategy[] = [
@@ -107,7 +101,7 @@ const STRATEGIES: TScannerStrategy[] = [
 ];
 
 const MARTINGALE_OPTIONS: TMartingale[] = [1, 1.5, 2, 2.5, 3];
-const MARKET_GROUPS = ['Volatility', 'Volatility 1s', 'Jump', 'Step', 'Range Break', 'Drift Switch', 'Forex', 'Crypto', 'Commodities'] as const;
+const MARKET_GROUPS = ['Volatility', 'Volatility 1s', 'Jump', 'Step', 'Range Break', 'Drift Switch'] as const;
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 

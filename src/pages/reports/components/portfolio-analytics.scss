@@ -1,0 +1,677 @@
+// ══════════════════════════════════════════════════════════════════════════
+// 🚀 MODERN PORTFOLIO ANALYTICS STYLES (Soft-UI / Glassmorphism / Electric Blue)
+// ══════════════════════════════════════════════════════════════════════════
+
+.portfolio-analytics {
+    display: flex;
+    flex-direction: column;
+    gap: 2.2rem;
+    width: 100%;
+}
+
+// ── Top Financial Stats Grid ──
+.pa-top-grid {
+    display: grid;
+    grid-template-columns: 320px repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1.8rem;
+    align-items: stretch;
+
+    @media (max-width: 1200px) {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+}
+
+// ── Modern Bank Card / Net Worth Widget ──
+.pa-bank-card-container {
+    perspective: 1000px;
+}
+
+.pa-bank-card {
+    position: relative;
+    height: 100%;
+    min-height: 190px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+    padding: 1.8rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 16px 36px rgba(37, 99, 235, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    color: #ffffff;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+
+    &:hover {
+        transform: translateY(-4px) scale(1.01);
+        box-shadow: 0 20px 45px rgba(37, 99, 235, 0.48), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    }
+
+    &__shimmer {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    &__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1;
+    }
+
+    &__brand {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    &__logo-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    }
+
+    &__brand-text {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+    }
+
+    &__badge {
+        font-size: 0.95rem;
+        font-weight: 800;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px);
+        letter-spacing: 0.06em;
+    }
+
+    &__chip-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 0.6rem 0;
+        z-index: 1;
+    }
+
+    &__chip {
+        width: 38px;
+        height: 28px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        padding: 4px;
+        box-sizing: border-box;
+    }
+
+    &__chip-line {
+        height: 1px;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    &__contactless {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    &__number {
+        font-family: 'SF Mono', 'Roboto Mono', 'Fira Code', monospace;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        z-index: 1;
+    }
+
+    &__bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        z-index: 1;
+    }
+
+    &__label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.7);
+        letter-spacing: 0.08em;
+        display: block;
+        margin-bottom: 0.2rem;
+    }
+
+    &__name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+    }
+}
+
+// ── Soft-UI Financial KPI Cards ──
+.pa-kpi-card {
+    background: var(--general-main-2, #161b22);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 1.8rem 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+
+    &:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.18);
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+    }
+
+    &--profit {
+        background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, var(--general-main-2, #161b22) 100%);
+        border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    &--loss {
+        background: linear-gradient(180deg, rgba(239, 68, 68, 0.06) 0%, var(--general-main-2, #161b22) 100%);
+        border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.8rem;
+    }
+
+    &__label {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-less-prominent, #858b97);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    &__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        &--blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        &--purple {
+            background: rgba(139, 92, 246, 0.15);
+            color: #8b5cf6;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        &--green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        &--red {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    }
+
+    &__value {
+        font-size: 2.3rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        color: var(--text-prominent, #ffffff);
+        font-family: 'SF Mono', 'Roboto Mono', 'Fira Code', monospace;
+        margin: 0.4rem 0;
+
+        &--profit {
+            color: #10b981;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+        }
+
+        &--loss {
+            color: #ef4444;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.25);
+        }
+    }
+
+    &__curr {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-less-prominent, #858b97);
+        letter-spacing: 0.02em;
+    }
+
+    &__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: auto;
+        padding-top: 0.8rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    &__subtext {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-less-prominent, #858b97);
+    }
+}
+
+// ── Pill Badges ──
+.pa-pill-badge {
+    font-size: 1.05rem;
+    font-weight: 800;
+    padding: 0.35rem 0.85rem;
+    border-radius: 8px;
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    &--blue {
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    &--purple {
+        background: rgba(139, 92, 246, 0.15);
+        color: #a78bfa;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    &--green {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    &--red {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+}
+
+// ── Visual Analytics Section ──
+.pa-analytics-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+
+    @media (max-width: 980px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pa-card {
+    background: var(--general-main-2, #161b22);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 2.2rem 2.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1.2rem;
+    }
+
+    &__title {
+        font-size: 1.7rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0;
+        color: var(--text-prominent, #ffffff);
+    }
+
+    &__subtitle {
+        font-size: 1.2rem;
+        color: var(--text-less-prominent, #858b97);
+        margin: 0.3rem 0 0;
+    }
+}
+
+// ── Period Pills ──
+.pa-period-pills {
+    display: flex;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 3px;
+    border-radius: 10px;
+}
+
+.pa-period-pill {
+    padding: 0.4rem 1rem;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-less-prominent, #858b97);
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        color: var(--text-prominent, #ffffff);
+    }
+
+    &--active {
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+}
+
+// ── Pie / Donut Chart Layout ──
+.pa-pie-content {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+
+    @media (max-width: 600px) {
+        flex-direction: column;
+        gap: 2rem;
+    }
+}
+
+.pa-pie-chart-box {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pa-donut-svg {
+    transform: rotate(0deg);
+    overflow: visible;
+}
+
+.pa-donut-segment {
+    transition: stroke-width 0.25s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.2s ease, filter 0.25s ease;
+    cursor: pointer;
+
+    &:hover {
+        filter: drop-shadow(0 0 12px currentColor);
+    }
+}
+
+.pa-donut-center {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+
+    &__pct {
+        font-size: 2.6rem;
+        font-weight: 900;
+        color: var(--text-prominent, #ffffff);
+        letter-spacing: -0.03em;
+        line-height: 1;
+    }
+
+    &__label {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-less-prominent, #858b97);
+        margin-top: 0.3rem;
+        max-width: 110px;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+// ── Strategy Breakdown Legend ──
+.pa-strategy-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    flex: 1;
+    min-width: 220px;
+}
+
+.pa-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 0.8rem 1.2rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover,
+    &--active {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateX(4px);
+    }
+
+    &__color {
+        width: 12px;
+        height: 12px;
+        border-radius: 4px;
+        flex-shrink: 0;
+    }
+
+    &__info {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    &__name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-prominent, #ffffff);
+    }
+
+    &__count {
+        font-size: 1.05rem;
+        color: var(--text-less-prominent, #858b97);
+    }
+
+    &__right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.2rem;
+    }
+
+    &__winrate {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #38bdf8;
+    }
+
+    &__pnl {
+        font-size: 1.1rem;
+        font-weight: 700;
+        font-family: 'SF Mono', monospace;
+
+        &--win {
+            color: #10b981;
+        }
+
+        &--loss {
+            color: #ef4444;
+        }
+    }
+}
+
+// ── Activity Telemetry Bars ──
+.pa-activity-bars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+}
+
+.pa-live-pulse-badge {
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    letter-spacing: 0.05em;
+}
+
+.pa-activity-summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+    padding: 1.2rem 1.6rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pa-act-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+
+    &__label {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text-less-prominent, #858b97);
+    }
+
+    &__val {
+        font-size: 1.7rem;
+        font-weight: 900;
+        color: var(--text-prominent, #ffffff);
+        margin: 0;
+
+        &--green {
+            color: #10b981;
+        }
+
+        &--blue {
+            color: #3b82f6;
+        }
+    }
+}
+
+.pa-bars-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 150px;
+    padding: 1rem 0;
+    gap: 1.2rem;
+}
+
+.pa-bar-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    gap: 0.6rem;
+}
+
+.pa-bar-track {
+    position: relative;
+    width: 24px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pa-bar-fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    border-radius: 12px;
+    transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &--primary {
+        background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    &--secondary {
+        width: 60%;
+        background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+        border-radius: 8px;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+        z-index: 1;
+    }
+}
+
+.pa-bar-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-less-prominent, #858b97);
+}
+
+.pa-activity-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.4rem;
+    padding-top: 0.4rem;
+}
+
+.pa-act-leg-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-less-prominent, #858b97);
+}
+
+.pa-act-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+
+    &--primary {
+        background: #3b82f6;
+        box-shadow: 0 0 6px #3b82f6;
+    }
+
+    &--secondary {
+        background: #38bdf8;
+        box-shadow: 0 0 6px #38bdf8;
+    }
+}
