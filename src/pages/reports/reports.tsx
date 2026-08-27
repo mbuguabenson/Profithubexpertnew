@@ -180,10 +180,14 @@ export const ReportsPage: React.FC = () => {
                 const data = JSON.parse(e.data);
                 if (data.msg_type === 'proposal_open_contract' && data.proposal_open_contract) {
                     const poc = data.proposal_open_contract;
+                    if (poc.is_sold || poc.status !== 'open') {
+                        setOpenPositions(prev => prev.filter(c => c.contract_id !== poc.contract_id));
+                        // Automatically refresh profit table & statement when trade closes
+                        fetchReportsData();
+                        return;
+                    }
+
                     setOpenPositions(prev => {
-                        if (poc.is_sold || poc.status !== 'open') {
-                            return prev.filter(c => c.contract_id !== poc.contract_id);
-                        }
                         const existingIdx = prev.findIndex(c => c.contract_id === poc.contract_id);
                         const updated: OpenPosition = {
                             contract_id: poc.contract_id,
@@ -209,6 +213,9 @@ export const ReportsPage: React.FC = () => {
                         }
                         return [updated, ...prev];
                     });
+                } else if (data.msg_type === 'transaction' && data.transaction) {
+                    // Live transaction received (buy/sell/deposit/withdrawal)
+                    fetchReportsData();
                 }
             } catch {}
         };
@@ -226,7 +233,7 @@ export const ReportsPage: React.FC = () => {
                 api_base.api.send({ forget: subId }).catch(() => {});
             }
         };
-    }, [isAuthorized]);
+    }, [isAuthorized, fetchReportsData]);
 
     // ── Handle Sell Contract ──
     const handleSellContract = async (contractId: number, price = 0) => {
