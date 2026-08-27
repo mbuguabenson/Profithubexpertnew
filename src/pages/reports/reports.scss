@@ -1,3 +1,7 @@
+// ══════════════════════════════════════════════════════════════════════════
+// ✦ DERIV QUILL UI — REPORTS & TRANSACTION LEDGER
+// ══════════════════════════════════════════════════════════════════════════
+
 .reports-page {
     width: 100%;
     min-height: 100%;
@@ -5,7 +9,7 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 2.4rem;
+    gap: 2rem;
     background: var(--general-main-1, #0e1117);
     color: var(--text-prominent, #ffffff);
 
@@ -32,23 +36,29 @@
         margin: 0.4rem 0 0;
     }
 
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
     &__refresh-btn {
         display: flex;
         align-items: center;
         gap: 0.8rem;
-        padding: 0.9rem 1.8rem;
-        border-radius: 10px;
-        background: var(--general-section-1, rgba(255, 255, 255, 0.07));
-        border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.12));
+        padding: 0.8rem 1.6rem;
+        border-radius: 8px;
+        background: var(--general-main-2, #181c24);
+        border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
         color: var(--text-prominent, #ffffff);
-        font-size: 1.3rem;
-        font-weight: 700;
+        font-size: 1.25rem;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
 
         &:hover:not(:disabled) {
-            background: var(--general-hover, rgba(255, 255, 255, 0.14));
-            transform: translateY(-1px);
+            background: var(--general-hover, rgba(255, 255, 255, 0.08));
+            border-color: rgba(255, 255, 255, 0.18);
         }
 
         &--loading svg {
@@ -57,35 +67,35 @@
     }
 }
 
-// ── Metrics Grid ──
+// ── Metrics Grid (For Tables Subtabs) ──
 .reports-metrics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.6rem;
 }
 
 .reports-metric-card {
-    background: var(--general-main-2, #161b22);
-    border: 1px solid var(--general-section-1, rgba(255, 255, 255, 0.08));
-    border-radius: 16px;
+    background: var(--general-main-2, #181c24);
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+    border-radius: 12px;
     padding: 1.8rem 2rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    justify-content: space-between;
+    min-height: 130px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
 
     &:hover {
-        transform: translateY(-2px);
-        border-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.16);
     }
 
     &--profit {
-        border-left: 4px solid #10b981;
+        border-left: 3px solid #00a79e;
     }
 
     &--loss {
-        border-left: 4px solid #ef4444;
+        border-left: 3px solid #ff444f;
     }
 
     &__header {
@@ -95,131 +105,128 @@
     }
 
     &__label {
-        font-size: 1.25rem;
-        font-weight: 700;
+        font-size: 1.15rem;
+        font-weight: 600;
         color: var(--text-less-prominent, #858b97);
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
     &__icon-box {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
     }
 
     &__value {
         font-size: 2.2rem;
-        font-weight: 900;
-        letter-spacing: -0.02em;
+        font-weight: 800;
+        letter-spacing: -0.01em;
         color: var(--text-prominent, #ffffff);
+        margin: 0.6rem 0;
     }
 
     &__footer {
         display: flex;
         align-items: center;
-        gap: 0.8rem;
+        justify-content: space-between;
         margin-top: auto;
     }
 
     &__tag {
         font-size: 1.05rem;
-        font-weight: 800;
-        padding: 0.2rem 0.8rem;
-        border-radius: 6px;
-        letter-spacing: 0.04em;
+        font-weight: 700;
+        padding: 0.25rem 0.7rem;
+        border-radius: 4px;
 
         &--win {
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
+            background: rgba(0, 167, 158, 0.12);
+            color: #00a79e;
         }
 
         &--loss {
-            background: rgba(239, 68, 68, 0.15);
-            color: #ef4444;
+            background: rgba(255, 68, 79, 0.12);
+            color: #ff444f;
         }
 
         &--neutral {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--general-section-1, rgba(255, 255, 255, 0.06));
             color: var(--text-less-prominent, #858b97);
         }
     }
 
     &__subtext {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         color: var(--text-less-prominent, #858b97);
     }
 }
 
-// ── Content Card ──
+// ── Content Wrapper ──
 .reports-content-card {
     background: transparent;
     border: none;
-    border-radius: 20px;
-    overflow: visible;
     display: flex;
     flex-direction: column;
     min-height: 480px;
+    gap: 1.6rem;
 }
 
-// ── Toolbar ──
+// ── Quill Segmented Tab Bar ──
 .reports-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.8rem 0 1.8rem;
+    padding-bottom: 0.8rem;
     flex-wrap: wrap;
     gap: 1.6rem;
+    border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
 }
 
 .reports-subtabs {
     display: flex;
-    gap: 0.8rem;
-    background: rgba(255, 255, 255, 0.04);
-    padding: 0.6rem;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    gap: 0.6rem;
+    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
+    padding: 0.4rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
 }
 
 .reports-subtab-btn {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    padding: 0.9rem 1.8rem;
-    border-radius: 12px;
-    border: 1px solid transparent;
+    padding: 0.8rem 1.6rem;
+    border-radius: 8px;
+    border: none;
     background: transparent;
-    color: var(--text-less-prominent, #94a3b8);
+    color: var(--text-less-prominent, #858b97);
     font-size: 1.3rem;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s ease;
 
     &:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-prominent, #ffffff);
+        background: var(--general-hover, rgba(255, 255, 255, 0.06));
     }
 
     &--active {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        border-color: rgba(255, 255, 255, 0.25);
-        color: #ffffff;
-        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        background: var(--general-main-2, #181c24);
+        color: var(--text-prominent, #ffffff);
+        font-weight: 700;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 }
 
 .reports-subtab-badge {
-    font-size: 1.05rem;
-    font-weight: 800;
-    padding: 0.2rem 0.7rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.15);
-    color: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    background: var(--general-section-2, rgba(255, 255, 255, 0.08));
+    color: var(--text-less-prominent, #858b97);
 
     &--live {
-        background: #10b981;
+        background: #00a79e;
         color: #ffffff;
-        box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
         animation: reports-pulse-glow 1.5s infinite alternate;
     }
 }
@@ -227,7 +234,7 @@
 .reports-filter-group {
     display: flex;
     align-items: center;
-    gap: 1.2rem;
+    gap: 1rem;
     flex-wrap: wrap;
 }
 
@@ -235,9 +242,9 @@
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    background: var(--general-main-1, #0e1117);
-    border: 1px solid var(--general-section-1, rgba(255, 255, 255, 0.08));
-    border-radius: 10px;
+    background: var(--general-main-2, #181c24);
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+    border-radius: 8px;
     padding: 0.6rem 1.2rem;
     color: var(--text-less-prominent, #858b97);
 
@@ -258,34 +265,41 @@
 .reports-date-pills {
     display: flex;
     gap: 0.4rem;
+    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
 }
 
 .reports-date-pill {
-    padding: 0.55rem 1.1rem;
-    border-radius: 8px;
-    border: 1px solid var(--general-section-1, rgba(255, 255, 255, 0.08));
-    background: var(--general-main-1, #0e1117);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
     color: var(--text-less-prominent, #858b97);
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.18s ease;
 
     &:hover {
-        color: #ffffff;
+        color: var(--text-prominent, #ffffff);
     }
 
     &--active {
-        background: rgba(255, 255, 255, 0.16);
-        color: #ffffff;
-        border-color: rgba(255, 255, 255, 0.25);
+        background: var(--general-main-2, #181c24);
+        color: var(--text-prominent, #ffffff);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     }
 }
 
-// ── Tables ──
+// ── Tables (Quill UI Data Grid) ──
 .reports-table-wrapper {
     flex: 1;
     overflow-x: auto;
+    background: var(--general-main-2, #181c24);
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+    border-radius: 12px;
 }
 
 .reports-table-container {
@@ -300,35 +314,35 @@
     font-size: 1.3rem;
 
     th {
-        padding: 1.4rem 2rem;
-        font-size: 1.15rem;
-        font-weight: 800;
+        padding: 1.2rem 1.8rem;
+        font-size: 1.1rem;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--text-less-prominent, #858b97);
-        background: var(--general-section-1, rgba(255, 255, 255, 0.03));
-        border-bottom: 1px solid var(--general-section-1, rgba(255, 255, 255, 0.08));
+        background: var(--general-section-1, rgba(255, 255, 255, 0.02));
+        border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
     }
 
     td {
-        padding: 1.4rem 2rem;
-        border-bottom: 1px solid var(--general-section-1, rgba(255, 255, 255, 0.05));
+        padding: 1.3rem 1.8rem;
+        border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.04));
         vertical-align: middle;
     }
 
     tr:hover td {
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--general-hover, rgba(255, 255, 255, 0.03));
     }
 }
 
 .reports-badge-id {
-    font-family: monospace;
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #38bdf8;
-    background: rgba(56, 189, 248, 0.1);
-    padding: 0.3rem 0.8rem;
-    border-radius: 6px;
+    font-family: var(--font-mono, monospace);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #00a8cc;
+    background: rgba(0, 168, 204, 0.1);
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
 }
 
 .reports-cell-desc {
@@ -351,58 +365,56 @@
 
 .reports-profit-pill {
     display: inline-block;
-    padding: 0.4rem 1rem;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 1.3rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.25rem;
     white-space: nowrap;
 
     &--win {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.3);
+        background: rgba(0, 167, 158, 0.12);
+        color: #00a79e;
     }
 
     &--loss {
-        background: rgba(239, 68, 68, 0.15);
-        color: #ef4444;
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: rgba(255, 68, 79, 0.12);
+        color: #ff444f;
     }
 }
 
 .reports-action-badge {
-    padding: 0.35rem 0.85rem;
-    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
     font-size: 1.1rem;
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: 0.04em;
 
     &--buy {
-        background: rgba(59, 130, 246, 0.15);
-        color: #60a5fa;
+        background: rgba(0, 168, 204, 0.12);
+        color: #00a8cc;
     }
 
     &--sell {
-        background: rgba(168, 85, 247, 0.15);
-        color: #c084fc;
+        background: rgba(124, 58, 237, 0.12);
+        color: #a78bfa;
     }
 
     &--deposit {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
+        background: rgba(0, 167, 158, 0.12);
+        color: #00a79e;
     }
 
     &--withdrawal {
-        background: rgba(245, 158, 11, 0.15);
-        color: #fbbf24;
+        background: rgba(255, 159, 26, 0.12);
+        color: #ff9f1a;
     }
 }
 
 .reports-amount-text {
-    font-weight: 800;
+    font-weight: 700;
 
     &--credit {
-        color: #10b981;
+        color: #00a79e;
     }
 
     &--debit {
@@ -411,8 +423,9 @@
 }
 
 .reports-balance-after {
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-less-prominent, #858b97);
+    font-family: var(--font-mono, monospace);
 }
 
 // ── Open Positions Cards ──
@@ -425,20 +438,20 @@
 
 .reports-pos-card {
     background: var(--general-main-1, #0e1117);
-    border: 1px solid var(--general-section-1, rgba(255, 255, 255, 0.08));
-    border-radius: 14px;
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+    border-radius: 12px;
     padding: 1.8rem;
     display: flex;
     flex-direction: column;
     gap: 1.4rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     &--green {
-        border-top: 3px solid #10b981;
+        border-top: 3px solid #00a79e;
     }
 
     &--red {
-        border-top: 3px solid #ef4444;
+        border-top: 3px solid #ff444f;
     }
 
     &__top {
@@ -454,7 +467,7 @@
     }
 
     &__symbol {
-        font-weight: 800;
+        font-weight: 700;
         font-size: 1.35rem;
         color: var(--text-prominent, #ffffff);
     }
@@ -467,10 +480,10 @@
 
     &__live-indicator {
         font-size: 1rem;
-        font-weight: 900;
-        background: #ef4444;
+        font-weight: 700;
+        background: #ff444f;
         color: #ffffff;
-        padding: 0.15rem 0.5rem;
+        padding: 0.2rem 0.6rem;
         border-radius: 4px;
         animation: reports-pulse-glow 1.2s infinite alternate;
     }
@@ -485,9 +498,9 @@
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
-        background: var(--general-main-2, #161b22);
+        background: var(--general-section-1, rgba(255, 255, 255, 0.03));
         padding: 1.2rem;
-        border-radius: 10px;
+        border-radius: 8px;
     }
 
     &__metric-item {
@@ -502,7 +515,7 @@
 
         .value {
             font-size: 1.25rem;
-            font-weight: 800;
+            font-weight: 700;
             color: var(--text-prominent, #ffffff);
         }
     }
@@ -526,31 +539,31 @@
 
         .pnl-val {
             font-size: 1.6rem;
-            font-weight: 900;
+            font-weight: 800;
 
             &--win {
-                color: #10b981;
+                color: #00a79e;
             }
 
             &--loss {
-                color: #ef4444;
+                color: #ff444f;
             }
         }
     }
 
     &__sell-btn {
-        padding: 0.8rem 1.6rem;
-        border-radius: 8px;
+        padding: 0.7rem 1.4rem;
+        border-radius: 6px;
         border: none;
-        background: #ef4444;
+        background: #ff444f;
         color: #ffffff;
-        font-weight: 800;
+        font-weight: 700;
         font-size: 1.2rem;
         cursor: pointer;
         transition: background 0.2s ease;
 
         &:hover:not(:disabled) {
-            background: #dc2626;
+            background: #e63946;
         }
 
         &:disabled {
@@ -560,7 +573,7 @@
     }
 }
 
-// ── Empty State ──
+// ── Clean Empty State ──
 .reports-empty-state {
     display: flex;
     flex-direction: column;
@@ -572,18 +585,18 @@
 
     &__icon {
         font-size: 4rem;
-        opacity: 0.8;
+        opacity: 0.6;
     }
 
     h3 {
-        font-size: 1.8rem;
-        font-weight: 800;
+        font-size: 1.6rem;
+        font-weight: 700;
         margin: 0;
         color: var(--text-prominent, #ffffff);
     }
 
     p {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         color: var(--text-less-prominent, #858b97);
         max-width: 420px;
         margin: 0;

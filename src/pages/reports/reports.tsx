@@ -440,34 +440,33 @@ export const ReportsPage: React.FC = () => {
                             className={`reports-subtab-btn ${activeSubTab === 'portfolio' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('portfolio')}
                         >
-                            <span>💼 {localize('Portfolio & Analytics')}</span>
+                            <span>{localize('Portfolio & Analytics')}</span>
                             <span className="reports-subtab-badge reports-subtab-badge--live">LIVE</span>
                         </button>
                         <button
                             className={`reports-subtab-btn ${activeSubTab === 'wallets' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('wallets')}
                         >
-                            <span>💳 {localize('Wallets')}</span>
-                            <span className="reports-subtab-badge">REST API</span>
+                            <span>{localize('Wallets')}</span>
                         </button>
                         <button
                             className={`reports-subtab-btn ${activeSubTab === 'account' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('account')}
                         >
-                            <span>👤 {localize('Account Management')}</span>
+                            <span>{localize('Account Management')}</span>
                         </button>
                         <button
                             className={`reports-subtab-btn ${activeSubTab === 'profit_table' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('profit_table')}
                         >
-                            <span>📊 {localize('Profit Table')}</span>
+                            <span>{localize('Profit Table')}</span>
                             <span className="reports-subtab-badge">{filteredProfitList.length}</span>
                         </button>
                         <button
                             className={`reports-subtab-btn ${activeSubTab === 'positions' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('positions')}
                         >
-                            <span>⚡ {localize('Open Positions')}</span>
+                            <span>{localize('Open Positions')}</span>
                             <span className={`reports-subtab-badge ${openPositions.length > 0 ? 'reports-subtab-badge--live' : ''}`}>
                                 {openPositions.length}
                             </span>
@@ -476,7 +475,7 @@ export const ReportsPage: React.FC = () => {
                             className={`reports-subtab-btn ${activeSubTab === 'statement' ? 'reports-subtab-btn--active' : ''}`}
                             onClick={() => setActiveSubTab('statement')}
                         >
-                            <span>📑 {localize('Statement')}</span>
+                            <span>{localize('Statement')}</span>
                             <span className="reports-subtab-badge">{filteredStatementList.length}</span>
                         </button>
                     </div>

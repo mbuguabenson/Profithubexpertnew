@@ -1,11 +1,11 @@
 // ══════════════════════════════════════════════════════════════════════════
-// 👤 ACCOUNT MANAGEMENT STYLES (Soft-UI Neumorphic / Glassmorphism / Vibrant)
+// ✦ DERIV QUILL UI — ACCOUNT MANAGEMENT & SECURITY CENTER
 // ══════════════════════════════════════════════════════════════════════════
 
 .account-management {
     display: flex;
     flex-direction: column;
-    gap: 2.2rem;
+    gap: 2rem;
     width: 100%;
 }
 
@@ -18,15 +18,15 @@
     gap: 1.6rem;
 
     &__title {
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
         margin: 0;
         color: var(--text-prominent, #ffffff);
     }
 
     &__subtitle {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         color: var(--text-less-prominent, #858b97);
         margin: 0.3rem 0 0;
     }
@@ -36,21 +36,20 @@
     display: inline-flex;
     align-items: center;
     gap: 0.8rem;
-    padding: 0.85rem 1.6rem;
-    border-radius: 12px;
+    padding: 0.8rem 1.6rem;
+    border-radius: 8px;
     font-size: 1.25rem;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &--secondary {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--general-main-2, #181c24);
+        border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
         color: var(--text-prominent, #ffffff);
 
         &:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-1px);
+            background: var(--general-hover, rgba(255, 255, 255, 0.08));
         }
     }
 
@@ -64,435 +63,263 @@
     to { transform: rotate(360deg); }
 }
 
-// ── Nav Pills ──
+// ── Nav Pills (Quill Segmented Tabs) ──
 .am-nav-pills {
     display: flex;
-    gap: 0.8rem;
-    background: rgba(255, 255, 255, 0.04);
-    padding: 0.6rem;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    flex-wrap: wrap;
+    gap: 0.4rem;
+    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    width: fit-content;
 }
 
 .am-nav-pill {
-    padding: 0.8rem 1.6rem;
-    border-radius: 10px;
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
     border: none;
     background: transparent;
     color: var(--text-less-prominent, #858b97);
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
 
     &:hover {
-        color: #ffffff;
+        color: var(--text-prominent, #ffffff);
     }
 
     &--active {
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        color: #ffffff;
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        background: var(--general-main-2, #181c24);
+        color: var(--text-prominent, #ffffff);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     }
 }
 
-// ── Cards & Grid ──
-.am-grid {
+// ── Profile Grid ──
+.am-profile-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-
-    @media (max-width: 960px) {
-        grid-template-columns: 1fr;
-    }
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.8rem;
 }
 
 .am-card {
-    background: var(--general-main-2, #161b22);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
+    background: var(--general-main-2, #181c24);
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.08));
+    border-radius: 12px;
     padding: 2.2rem 2.4rem;
     display: flex;
     flex-direction: column;
-    gap: 1.8rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    gap: 1.6rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
     &__header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
+        padding-bottom: 1.2rem;
+        border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
 
-    &__title {
-        font-size: 1.7rem;
+        h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-prominent, #ffffff);
+        }
+    }
+}
+
+// ── Profile Hero ──
+.am-profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+
+    &__avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--general-section-1, rgba(255, 255, 255, 0.08));
+        border: 2px solid var(--brand-primary, #7c3aed);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
         font-weight: 800;
-        margin: 0;
         color: var(--text-prominent, #ffffff);
     }
 
-    &__subtitle {
+    &__details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    &__name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-prominent, #ffffff);
+    }
+
+    &__id {
+        font-family: var(--font-mono, monospace);
         font-size: 1.2rem;
         color: var(--text-less-prominent, #858b97);
-        margin: 0.3rem 0 0;
     }
 }
 
-.am-status-badge {
-    font-size: 1.05rem;
-    font-weight: 800;
-    padding: 0.35rem 0.85rem;
-    border-radius: 8px;
-    letter-spacing: 0.04em;
-
-    &--real {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    &--demo {
-        background: rgba(99, 102, 241, 0.15);
-        color: #818cf8;
-        border: 1px solid rgba(99, 102, 241, 0.3);
-    }
-
-    &--success {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-        border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-}
-
-.am-live-badge {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #10b981;
-}
-
-// ── Profile Info List ──
+// ── Info List ──
 .am-info-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.am-info-item {
+.am-info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.4rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-radius: 12px;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--border-normal, rgba(255, 255, 255, 0.04));
 
-    .label {
-        font-size: 1.2rem;
-        font-weight: 600;
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &__label {
+        font-size: 1.15rem;
         color: var(--text-less-prominent, #858b97);
     }
 
-    .value {
+    &__val {
         font-size: 1.25rem;
-        font-weight: 700;
-        color: #ffffff;
-
-        &--highlight {
-            color: #38bdf8;
-            font-weight: 800;
-        }
-
-        &--curr {
-            color: #10b981;
-            font-weight: 800;
-        }
-
-        &.monospace {
-            font-family: 'SF Mono', monospace;
-        }
+        font-weight: 600;
+        color: var(--text-prominent, #ffffff);
     }
 }
 
-// ── KYC Grid ──
+// ── KYC Status Tiles ──
 .am-kyc-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.4rem;
-
-    @media (max-width: 600px) {
-        grid-template-columns: 1fr;
-    }
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1.2rem;
 }
 
-.am-kyc-box {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    padding: 1.4rem 1.6rem;
+.am-kyc-tile {
+    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    border-radius: 8px;
+    padding: 1.2rem;
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
 
-    &__top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    &__title {
+        font-size: 1.1rem;
+        color: var(--text-less-prominent, #858b97);
+    }
 
-        .icon {
-            font-size: 2rem;
+    &__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.15rem;
+        font-weight: 700;
+
+        &--verified {
+            color: #00a79e;
+        }
+
+        &--pending {
+            color: #ff9f1a;
+        }
+
+        &--none {
+            color: var(--text-less-prominent, #858b97);
         }
     }
-
-    h4 {
-        font-size: 1.3rem;
-        font-weight: 800;
-        margin: 0;
-        color: #ffffff;
-    }
-
-    p {
-        font-size: 1.1rem;
-        color: #858b97;
-        margin: 0;
-        line-height: 1.4;
-    }
 }
 
-.badge {
-    font-size: 0.95rem;
-    font-weight: 800;
-    padding: 0.2rem 0.65rem;
-    border-radius: 6px;
-
-    &--green {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-    }
-
-    &--blue {
-        background: rgba(59, 130, 246, 0.15);
-        color: #38bdf8;
-    }
-
-    &--active {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-    }
-}
-
-// ── Accounts Grid ──
-.am-accounts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.6rem;
-}
-
-.am-acc-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
-    padding: 1.6rem 1.8rem;
+// ── Linked Accounts List ──
+.am-linked-list {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    transition: all 0.2s ease;
+    gap: 1rem;
+}
 
-    &:hover {
-        transform: translateY(-2px);
-        border-color: rgba(255, 255, 255, 0.15);
-    }
+.am-linked-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 1.4rem;
+    border-radius: 8px;
+    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    transition: all 0.2s ease;
 
     &--active {
-        border-color: #3b82f6;
-        background: linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+        border-color: #00a79e;
+        background: rgba(0, 167, 158, 0.05);
     }
 
-    &__top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .icon {
-            font-size: 2rem;
-        }
+    &__id {
+        font-family: var(--font-mono, monospace);
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-prominent, #ffffff);
     }
 
-    .loginid {
-        font-family: 'SF Mono', monospace;
-        font-size: 1.5rem;
-        font-weight: 800;
-        margin: 0;
-        color: #ffffff;
-    }
-
-    .curr-label {
-        font-size: 1.15rem;
-        color: #858b97;
-    }
-
-    &__footer {
-        margin-top: auto;
-        padding-top: 0.8rem;
+    &__type {
+        font-size: 1.1rem;
+        color: var(--text-less-prominent, #858b97);
     }
 }
 
-.pill {
-    font-size: 0.95rem;
-    font-weight: 800;
-    padding: 0.2rem 0.65rem;
-    border-radius: 6px;
-
-    &--real {
-        background: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-    }
-
-    &--demo {
-        background: rgba(99, 102, 241, 0.15);
-        color: #818cf8;
-    }
-}
-
-.active-tag {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: #10b981;
-}
-
-.switch-btn {
-    width: 100%;
-    padding: 0.7rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.05);
-    color: #ffffff;
-    font-size: 1.15rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover {
-        background: #2563eb;
-        border-color: #2563eb;
-    }
-}
-
-// ── Markup Statistics ──
-.am-kpi-row {
+// ── Markup / Developer Table ──
+.am-markup-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.6rem;
+    gap: 1.4rem;
 }
 
-.am-kpi {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    padding: 1.6rem 1.8rem;
+.am-markup-card {
+    background: var(--general-section-1, rgba(255, 255, 255, 0.03));
+    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.06));
+    border-radius: 8px;
+    padding: 1.4rem;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
 
-    .label {
+    &__label {
         font-size: 1.1rem;
-        font-weight: 600;
-        color: #858b97;
-        text-transform: uppercase;
+        color: var(--text-less-prominent, #858b97);
     }
 
-    .value {
-        font-size: 2.2rem;
-        font-weight: 900;
-        font-family: 'SF Mono', monospace;
-        color: #ffffff;
-        margin: 0;
+    &__val {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-prominent, #ffffff);
 
         &--green {
-            color: #10b981;
+            color: #00a79e;
         }
     }
-
-    .sub {
-        font-size: 1.1rem;
-        color: #858b97;
-    }
 }
 
-.am-table-box {
-    overflow-x: auto;
-}
-
-.am-table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th {
-        text-align: left;
-        padding: 1.2rem 1.4rem;
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #858b97;
-        text-transform: uppercase;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    td {
-        padding: 1.2rem 1.4rem;
-        font-size: 1.25rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        color: #ffffff;
-
-        &.monospace { font-family: 'SF Mono', monospace; }
-        &.bold { font-weight: 700; }
-        &.green { color: #10b981; }
-    }
-}
-
-// ── Scopes Grid ──
-.am-scopes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.6rem;
-}
-
-.am-scope-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 14px;
-    padding: 1.6rem 1.8rem;
+// ── Token Scopes Badges ──
+.am-token-badges {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 0.8rem;
+}
 
-    &__header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        h4 {
-            font-size: 1.35rem;
-            font-weight: 800;
-            margin: 0;
-            color: #ffffff;
-        }
-    }
-
-    .scope-tag {
-        font-family: 'SF Mono', monospace;
-        font-size: 1.05rem;
-        padding: 0.2rem 0.6rem;
-        background: rgba(59, 130, 246, 0.15);
-        color: #38bdf8;
-        border-radius: 6px;
-        align-self: flex-start;
-    }
-
-    p {
-        font-size: 1.15rem;
-        color: #858b97;
-        margin: 0;
-        line-height: 1.4;
-    }
+.am-token-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    background: var(--general-section-1, rgba(255, 255, 255, 0.06));
+    color: var(--text-prominent, #ffffff);
+    font-size: 1.15rem;
+    font-weight: 600;
+    font-family: var(--font-mono, monospace);
 }

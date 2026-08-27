@@ -56,9 +56,9 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
             {/* ── Top Header ── */}
             <div className="am-header">
                 <div>
-                    <h2 className="am-header__title">👤 {localize('Deriv Account Management')}</h2>
+                    <h2 className="am-header__title">{localize('Account Settings & Security')}</h2>
                     <p className="am-header__subtitle">
-                        {localize('Official Deriv Account APIs (nickname, KYC authentication, linked portfolios, and developer markup analytics)')}
+                        {localize('Review your Deriv account details, verification status, linked wallets and permissions')}
                     </p>
                 </div>
                 <div className="am-header__actions">
@@ -81,59 +81,62 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                     className={`am-nav-pill ${activeSection === 'profile' ? 'am-nav-pill--active' : ''}`}
                     onClick={() => setActiveSection('profile')}
                 >
-                    👤 {localize('Profile & Identity')}
+                    {localize('Profile & Identity')}
                 </button>
                 <button
                     className={`am-nav-pill ${activeSection === 'linked' ? 'am-nav-pill--active' : ''}`}
                     onClick={() => setActiveSection('linked')}
                 >
-                    🔗 {localize('Linked Accounts Hub')} ({linkedAccounts.length})
+                    {localize('Linked Accounts')} ({linkedAccounts.length})
                 </button>
                 <button
                     className={`am-nav-pill ${activeSection === 'markup' ? 'am-nav-pill--active' : ''}`}
                     onClick={() => setActiveSection('markup')}
                 >
-                    📈 {localize('Markup Statistics')}
+                    {localize('Markup Statistics')}
                 </button>
                 <button
                     className={`am-nav-pill ${activeSection === 'security' ? 'am-nav-pill--active' : ''}`}
                     onClick={() => setActiveSection('security')}
                 >
-                    🛡️ {localize('API Token Scopes')}
+                    {localize('API Scopes')}
                 </button>
             </div>
 
             {/* ── 1. Profile & KYC Verification ── */}
             {activeSection === 'profile' && (
-                <div className="am-grid">
+                <div className="am-profile-grid">
                     {/* User Identity Card */}
                     <div className="am-card">
                         <div className="am-card__header">
-                            <h3 className="am-card__title">🪪 {localize('Account Profile Info')}</h3>
-                            <span className={`am-status-badge ${isVirtual ? 'am-status-badge--demo' : 'am-status-badge--real'}`}>
-                                {isVirtual ? 'DEMO ACCOUNT' : 'REAL TRADING'}
+                            <h3>{localize('Account Profile')}</h3>
+                            <span className="pa-tag pa-tag--muted">
+                                {isVirtual ? localize('Demo Account') : localize('Real Account')}
                             </span>
                         </div>
+
+                        <div className="am-profile-hero">
+                            <div className="am-profile-hero__avatar">
+                                {(nickname || activeLoginid || 'U').slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="am-profile-hero__details">
+                                <span className="am-profile-hero__name">{nickname || 'Deriv Trader'}</span>
+                                <span className="am-profile-hero__id">{activeLoginid}</span>
+                            </div>
+                        </div>
+
                         <div className="am-info-list">
-                            <div className="am-info-item">
-                                <span className="label">{localize('Account Nickname')}</span>
-                                <span className="value value--highlight">{nickname || 'Trader'}</span>
+                            <div className="am-info-row">
+                                <span className="am-info-row__label">{localize('Email Address')}</span>
+                                <span className="am-info-row__val">{settings?.email || '—'}</span>
                             </div>
-                            <div className="am-info-item">
-                                <span className="label">{localize('Active Login ID')}</span>
-                                <span className="value monospace">{activeLoginid}</span>
+                            <div className="am-info-row">
+                                <span className="am-info-row__label">{localize('Country of Residence')}</span>
+                                <span className="am-info-row__val">{settings?.country || settings?.country_code || '—'}</span>
                             </div>
-                            <div className="am-info-item">
-                                <span className="label">{localize('Email Address')}</span>
-                                <span className="value">{settings?.email || 'Authenticated Trader'}</span>
-                            </div>
-                            <div className="am-info-item">
-                                <span className="label">{localize('Country of Residence')}</span>
-                                <span className="value">{settings?.country || settings?.country_code || 'Kenya (KE)'}</span>
-                            </div>
-                            <div className="am-info-item">
-                                <span className="label">{localize('Account Currency')}</span>
-                                <span className="value value--curr">{currency}</span>
+                            <div className="am-info-row">
+                                <span className="am-info-row__label">{localize('Account Currency')}</span>
+                                <span className="am-info-row__val">{currency}</span>
                             </div>
                         </div>
                     </div>
@@ -141,49 +144,35 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
                     {/* KYC Verification Card */}
                     <div className="am-card">
                         <div className="am-card__header">
-                            <h3 className="am-card__title">🛡️ {localize('KYC & Verification Status')}</h3>
-                            <span className={`am-status-badge ${status?.status?.includes('authenticated') || isVirtual ? 'am-status-badge--success' : 'am-status-badge--demo'}`}>
-                                {status?.status?.includes('authenticated') || isVirtual ? 'ACTIVE & VERIFIED' : 'AUTHENTICATION PENDING'}
+                            <h3>{localize('Verification & KYC Status')}</h3>
+                            <span className={`pa-tag ${status?.status?.includes('authenticated') || isVirtual ? 'pa-tag--success' : 'pa-tag--warning'}`}>
+                                {status?.status?.includes('authenticated') || isVirtual ? localize('VERIFIED') : localize('PENDING')}
                             </span>
                         </div>
                         <div className="am-kyc-grid">
-                            <div className="am-kyc-box">
-                                <div className="am-kyc-box__top">
-                                    <span className="icon">🪪</span>
-                                    <span className={`badge ${status?.authentication?.identity?.status === 'verified' || isVirtual ? 'badge--green' : 'badge--blue'}`}>
-                                        {(status?.authentication?.identity?.status || (isVirtual ? 'VERIFIED' : 'PENDING')).toUpperCase()}
-                                    </span>
-                                </div>
-                                <h4>{localize('Identity Proof (POI)')}</h4>
-                                <p>{localize('Government ID & Passport authenticated via Deriv KYC engine.')}</p>
+                            <div className="am-kyc-tile">
+                                <span className="am-kyc-tile__title">{localize('Identity (POI)')}</span>
+                                <span className={`am-kyc-tile__status ${status?.authentication?.identity?.status === 'verified' || isVirtual ? 'am-kyc-tile__status--verified' : 'am-kyc-tile__status--pending'}`}>
+                                    {status?.authentication?.identity?.status === 'verified' || isVirtual ? '● Verified' : '○ Pending'}
+                                </span>
                             </div>
-                            <div className="am-kyc-box">
-                                <div className="am-kyc-box__top">
-                                    <span className="icon">🏠</span>
-                                    <span className={`badge ${status?.authentication?.document?.status === 'verified' || isVirtual ? 'badge--green' : 'badge--blue'}`}>
-                                        {(status?.authentication?.document?.status || (isVirtual ? 'VERIFIED' : 'PENDING')).toUpperCase()}
-                                    </span>
-                                </div>
-                                <h4>{localize('Address Proof (POA)')}</h4>
-                                <p>{localize('Utility statement & residential address verified.')}</p>
+                            <div className="am-kyc-tile">
+                                <span className="am-kyc-tile__title">{localize('Address (POA)')}</span>
+                                <span className={`am-kyc-tile__status ${status?.authentication?.document?.status === 'verified' || isVirtual ? 'am-kyc-tile__status--verified' : 'am-kyc-tile__status--pending'}`}>
+                                    {status?.authentication?.document?.status === 'verified' || isVirtual ? '● Verified' : '○ Pending'}
+                                </span>
                             </div>
-                            <div className="am-kyc-box">
-                                <div className="am-kyc-box__top">
-                                    <span className="icon">📊</span>
-                                    <span className="badge badge--blue">
-                                        {(status?.risk_classification || 'COMPLETED').toUpperCase()}
-                                    </span>
-                                </div>
-                                <h4>{localize('Financial Assessment')}</h4>
-                                <p>{localize('Trading experience & risk profile assessment recorded.')}</p>
+                            <div className="am-kyc-tile">
+                                <span className="am-kyc-tile__title">{localize('Risk Profile')}</span>
+                                <span className="am-kyc-tile__status am-kyc-tile__status--verified">
+                                    {(status?.risk_classification || 'COMPLETED').toUpperCase()}
+                                </span>
                             </div>
-                            <div className="am-kyc-box">
-                                <div className="am-kyc-box__top">
-                                    <span className="icon">🔒</span>
-                                    <span className="badge badge--green">SECURED</span>
-                                </div>
-                                <h4>{localize('Two-Factor Security')}</h4>
-                                <p>{localize('OAuth session protection & API token scoping active.')}</p>
+                            <div className="am-kyc-tile">
+                                <span className="am-kyc-tile__title">{localize('Session Auth')}</span>
+                                <span className="am-kyc-tile__status am-kyc-tile__status--verified">
+                                    ● OAuth 2.0
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -194,34 +183,30 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
             {activeSection === 'linked' && (
                 <div className="am-card">
                     <div className="am-card__header">
-                        <div>
-                            <h3 className="am-card__title">🔗 {localize('Linked Deriv Accounts')}</h3>
-                            <p className="am-card__subtitle">{localize('All multi-currency accounts and virtual wallets linked to your profile')}</p>
-                        </div>
+                        <h3>{localize('Linked Deriv Accounts')}</h3>
+                        <span className="pa-tag pa-tag--muted">{linkedAccounts.length} {localize('Accounts')}</span>
                     </div>
-                    <div className="am-accounts-grid">
+                    <div className="am-linked-list">
                         {linkedAccounts.map(acc => (
-                            <div key={acc.id} className={`am-acc-card ${acc.isActive ? 'am-acc-card--active' : ''}`}>
-                                <div className="am-acc-card__top">
-                                    <span className="icon">{acc.isDemo ? '🎮' : '💵'}</span>
-                                    <span className={`pill ${acc.isDemo ? 'pill--demo' : 'pill--real'}`}>
-                                        {acc.isDemo ? 'DEMO' : 'REAL'}
-                                    </span>
+                            <div key={acc.id} className={`am-linked-item ${acc.isActive ? 'am-linked-item--active' : ''}`}>
+                                <div>
+                                    <span className="am-linked-item__id">{acc.id}</span>
+                                    <div className="am-linked-item__type">
+                                        {acc.isDemo ? localize('Demo Account • Virtual Currency') : localize('Real Account • Fiat Currency')}
+                                    </div>
                                 </div>
-                                <h4 className="loginid">{acc.id}</h4>
-                                <span className="curr-label">{acc.isDemo ? 'USD Virtual Currency' : 'USD Fiat Real Currency'}</span>
-                                <div className="am-acc-card__footer">
+                                <div>
                                     {acc.isActive ? (
-                                        <span className="active-tag">● CURRENTLY ACTIVE</span>
+                                        <span className="pa-tag pa-tag--success">● {localize('ACTIVE')}</span>
                                     ) : (
                                         <button
-                                            className="switch-btn"
+                                            className="wm-btn wm-btn--secondary"
                                             onClick={() => {
                                                 localStorage.setItem('active_loginid', acc.id);
                                                 window.location.reload();
                                             }}
                                         >
-                                            Switch to this Account
+                                            {localize('Switch Account')}
                                         </button>
                                     )}
                                 </div>
@@ -235,94 +220,53 @@ export const AccountManagement: React.FC<AccountManagementProps> = ({ currency, 
             {activeSection === 'markup' && (
                 <div className="am-card">
                     <div className="am-card__header">
-                        <div>
-                            <h3 className="am-card__title">📈 {localize('Application Markup Statistics')}</h3>
-                            <p className="am-card__subtitle">{localize('GET /applications/v1/markup-statistics (Turnover volume & app markups)')}</p>
-                        </div>
-                        <span className="am-live-badge">● API SYNCHRONIZED</span>
+                        <h3>{localize('App Markup & Commissions')}</h3>
                     </div>
 
                     {markupStats && (markupStats.total_turnover > 0 || (markupStats.breakdown && markupStats.breakdown.length > 0)) ? (
-                        <>
-                            <div className="am-kpi-row">
-                                <div className="am-kpi">
-                                    <span className="label">{localize('Total App Turnover')}</span>
-                                    <h3 className="value">${formatMoney('USD', markupStats?.total_turnover || 0, true)}</h3>
-                                    <span className="sub">{localize('Gross traded volume')}</span>
-                                </div>
-                                <div className="am-kpi am-kpi--green">
-                                    <span className="label">{localize('Total Markup Accrued')}</span>
-                                    <h3 className="value value--green">+${formatMoney('USD', markupStats?.total_markup || 0, true)}</h3>
-                                    <span className="sub">{localize('Net app commission earned')}</span>
-                                </div>
-                                <div className="am-kpi">
-                                    <span className="label">{localize('Total App Transactions')}</span>
-                                    <h3 className="value">{addComma(markupStats?.total_transactions || 0)}</h3>
-                                    <span className="sub">{localize('Bot & Trader executions')}</span>
-                                </div>
+                        <div className="am-markup-grid">
+                            <div className="am-markup-card">
+                                <span className="am-markup-card__label">{localize('Total Turnover')}</span>
+                                <h3 className="am-markup-card__val">${formatMoney('USD', markupStats?.total_turnover || 0, true)}</h3>
                             </div>
-
-                            <div className="am-table-box">
-                                <table className="am-table">
-                                    <thead>
-                                        <tr>
-                                            <th>{localize('App ID')}</th>
-                                            <th>{localize('Application Name')}</th>
-                                            <th>{localize('Turnover Volume')}</th>
-                                            <th>{localize('Markup Earned')}</th>
-                                            <th>{localize('Active Clients')}</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(markupStats?.breakdown || []).map((item: any) => (
-                                            <tr key={item.app_id}>
-                                                <td className="monospace">#{item.app_id}</td>
-                                                <td className="bold">{item.app_name}</td>
-                                                <td>${formatMoney('USD', item.turnover, true)}</td>
-                                                <td className="green bold">+${formatMoney('USD', item.markup, true)}</td>
-                                                <td>{item.clients_count} traders</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="am-markup-card">
+                                <span className="am-markup-card__label">{localize('Total Commission')}</span>
+                                <h3 className="am-markup-card__val am-markup-card__val--green">${formatMoney('USD', markupStats?.total_markup || 0, true)}</h3>
                             </div>
-                        </>
+                            <div className="am-markup-card">
+                                <span className="am-markup-card__label">{localize('Transactions')}</span>
+                                <h3 className="am-markup-card__val">{addComma(markupStats?.total_transactions || 0)}</h3>
+                            </div>
+                        </div>
                     ) : (
-                        <div className="am-empty-markup">
-                            <div className="icon">📈</div>
-                            <h4>{localize('No Developer Markup Statistics')}</h4>
-                            <p>{localize('Markup statistics are tracked when trading volume is generated via registered Deriv developer applications (GET /applications/v1/markup-statistics).')}</p>
+                        <div className="pa-empty-state">
+                            <div className="pa-empty-state__icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                                    <line x1="18" y1="20" x2="18" y2="10" />
+                                    <line x1="12" y1="20" x2="12" y2="4" />
+                                    <line x1="6" y1="20" x2="6" y2="14" />
+                                </svg>
+                            </div>
+                            <h4 className="pa-empty-state__title">{localize('Standard Trading Account')}</h4>
+                            <p className="pa-empty-state__description">
+                                {localize('Developer markup commissions will appear here when registered as an official Deriv App partner.')}
+                            </p>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* ── 4. API Token & Permissions ── */}
+            {/* ── 4. API Token Scopes ── */}
             {activeSection === 'security' && (
                 <div className="am-card">
                     <div className="am-card__header">
-                        <div>
-                            <h3 className="am-card__title">🛡️ {localize('API Token Scopes & Authorizations')}</h3>
-                            <p className="am-card__subtitle">{localize('Active permissions authorized under Deriv API connection')}</p>
-                        </div>
+                        <h3>{localize('Active API Token Permissions')}</h3>
                     </div>
-
-                    <div className="am-scopes-grid">
-                        {[
-                            { name: 'read', title: 'Read Access', desc: 'Allows viewing account balance, open contracts, and transaction history.', active: true },
-                            { name: 'trade', title: 'Trade Execution', desc: 'Allows placing contract orders, bot automated purchases, and selling open contracts.', active: true },
-                            { name: 'trading_information', title: 'Market & Trading Information', desc: 'Allows real-time tick subscriptions, charts, and contract proposals.', active: true },
-                            { name: 'payments', title: 'Cashier & Wallet Payments', desc: 'Allows initiating deposits, withdrawals, and inter-wallet balance transfers.', active: true },
-                            { name: 'admin', title: 'Account Administration', desc: 'Allows modifying user settings, tokens, and app registrations.', active: true },
-                        ].map(scope => (
-                            <div key={scope.name} className="am-scope-card">
-                                <div className="am-scope-card__header">
-                                    <h4>{scope.title}</h4>
-                                    <span className="badge badge--active">ACTIVE</span>
-                                </div>
-                                <code className="scope-tag">{scope.name}</code>
-                                <p>{scope.desc}</p>
-                            </div>
+                    <div className="am-token-badges">
+                        {['read', 'trade', 'payments', 'trading_information', 'admin'].map(scope => (
+                            <span key={scope} className="am-token-badge">
+                                ✓ {scope.toUpperCase()}
+                            </span>
                         ))}
                     </div>
                 </div>

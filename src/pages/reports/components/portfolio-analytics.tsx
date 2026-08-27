@@ -214,145 +214,155 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
         <div className="portfolio-analytics">
             {/* ════════════════ TOP FINANCIAL STATS ROW ════════════════ */}
             <div className="pa-top-grid">
-                {/* 1. Modern Bank Card / Net Worth Widget */}
-                <div className="pa-bank-card-container">
-                    <div className="pa-bank-card">
-                        <div className="pa-bank-card__shimmer"></div>
-                        <div className="pa-bank-card__top">
-                            <div className="pa-bank-card__brand">
-                                <span className="pa-bank-card__logo-dot"></span>
-                                <span className="pa-bank-card__brand-text">DERIV {isVirtual ? 'DEMO' : 'REAL'}</span>
-                            </div>
-                            <span className="pa-bank-card__badge">{isVirtual ? 'VIRTUAL WALLET' : 'PRIMARY ACCOUNT'}</span>
+                {/* 1. Official Deriv Account Summary Card */}
+                <div className="pa-deriv-account-card">
+                    <div className="pa-deriv-account-card__header">
+                        <div className="pa-deriv-account-card__type">
+                            <span className={`pa-deriv-account-card__status-dot ${isVirtual ? 'pa-deriv-account-card__status-dot--demo' : 'pa-deriv-account-card__status-dot--real'}`}></span>
+                            <span className="pa-deriv-account-card__type-text">{isVirtual ? localize('Demo Account') : localize('Real Account')}</span>
                         </div>
+                        <span className="pa-deriv-account-card__id-badge">{activeLoginid || 'CR5821'}</span>
+                    </div>
 
-                        <div className="pa-bank-card__chip-row">
-                            <div className="pa-bank-card__chip">
-                                <span className="pa-bank-card__chip-line"></span>
-                                <span className="pa-bank-card__chip-line"></span>
-                            </div>
-                            <span className="pa-bank-card__contactless">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M8.5 16.5a5 5 0 0 1 0-9" />
-                                    <path d="M12 19a8.5 8.5 0 0 0 0-14" />
-                                    <path d="M15.5 21.5a12 12 0 0 0 0-19" />
-                                </svg>
+                    <div className="pa-deriv-account-card__balance-box">
+                        <span className="pa-deriv-account-card__balance-label">{localize('Account Balance')}</span>
+                        <div className="pa-deriv-account-card__balance-value">
+                            <span className="pa-deriv-account-card__amount">
+                                {formatMoney(currency, financialStats.netProfit + financialStats.deposits - financialStats.withdrawals, true)}
+                            </span>
+                            <span className="pa-deriv-account-card__currency">{currency}</span>
+                        </div>
+                    </div>
+
+                    <div className="pa-deriv-account-card__footer">
+                        <div className="pa-deriv-account-card__cashflow">
+                            <span className="pa-deriv-account-card__cashflow-label">{localize('Net Cashflow')}</span>
+                            <span className={`pa-deriv-account-card__cashflow-val ${financialStats.deposits - financialStats.withdrawals >= 0 ? 'pa-deriv-account-card__cashflow-val--positive' : 'pa-deriv-account-card__cashflow-val--negative'}`}>
+                                {financialStats.deposits - financialStats.withdrawals >= 0 ? '+' : ''}
+                                {formatMoney(currency, financialStats.deposits - financialStats.withdrawals, true)} {currency}
                             </span>
                         </div>
-                        <div className="pa-bank-card__number">
-                            <span>••••</span>
-                            <span>••••</span>
-                            <span>••••</span>
-                            <span>{maskedAcc}</span>
-                        </div>
-                        <div className="pa-bank-card__bottom">
-                            <div className="pa-bank-card__holder">
-                                <span className="pa-bank-card__label">{localize('BALANCE')}</span>
-                                <span className="pa-bank-card__name">
-                                    {formatMoney(currency, financialStats.netProfit + financialStats.deposits - financialStats.withdrawals, true)} {currency}
-                                </span>
-                            </div>
-                            <div className="pa-bank-card__expiry">
-                                <span className="pa-bank-card__label">{localize('CURRENCY')}</span>
-                                <span className="pa-bank-card__name">{currency}</span>
-                            </div>
+                        <div className="pa-deriv-account-card__tags">
+                            <span className="pa-tag pa-tag--muted">{currency}</span>
+                            <span className={`pa-tag ${isVirtual ? 'pa-tag--warning' : 'pa-tag--success'}`}>{isVirtual ? 'VIRTUAL' : 'PRIMARY'}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* 2. Total Deposits */}
+                {/* 2. Total Deposits KPI */}
                 <div className="pa-kpi-card pa-kpi-card--deposit">
                     <div className="pa-kpi-card__header">
-                        <span className="pa-kpi-card__label">{localize('Total Deposits')}</span>
-                        <div className="pa-kpi-card__icon pa-kpi-card__icon--blue">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                                <path d="M12 19V5M5 12l7-7 7 7"/>
+                        <div className="pa-kpi-card__title-box">
+                            <span className="pa-kpi-card__caption">{localize('Total Deposits')}</span>
+                            <h3 className="pa-kpi-card__value">
+                                {formatMoney(currency, financialStats.deposits, true)} <span className="pa-kpi-card__unit">{currency}</span>
+                            </h3>
+                        </div>
+                        <div className="pa-kpi-card__icon pa-kpi-card__icon--deposit">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <path d="M12 5v14M5 12l7 7 7-7" />
                             </svg>
                         </div>
                     </div>
-                    <div className="pa-kpi-card__value">
-                        +{formatMoney(currency, financialStats.deposits, true)} <span className="pa-kpi-card__curr">{currency}</span>
-                    </div>
                     <div className="pa-kpi-card__footer">
-                        <span className="pa-pill-badge pa-pill-badge--blue">
-                            📥 {financialStats.depositCount} {localize('Deposits')}
+                        <span className="pa-badge pa-badge--neutral">
+                            {financialStats.depositCount} {financialStats.depositCount === 1 ? localize('Transaction') : localize('Transactions')}
                         </span>
-                        <span className="pa-kpi-card__subtext">{localize('Capital inflow volume')}</span>
+                        <span className="pa-kpi-card__subtext">{localize('Inflow capital')}</span>
                     </div>
                 </div>
 
-                {/* 3. Total Withdrawals */}
-                <div className="pa-kpi-card pa-kpi-card--withdraw">
+                {/* 3. Total Withdrawals KPI */}
+                <div className="pa-kpi-card pa-kpi-card--withdrawal">
                     <div className="pa-kpi-card__header">
-                        <span className="pa-kpi-card__label">{localize('Total Withdrawals')}</span>
-                        <div className="pa-kpi-card__icon pa-kpi-card__icon--purple">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                                <path d="M12 5v14M5 12l7 7 7-7"/>
+                        <div className="pa-kpi-card__title-box">
+                            <span className="pa-kpi-card__caption">{localize('Total Withdrawals')}</span>
+                            <h3 className="pa-kpi-card__value">
+                                {formatMoney(currency, financialStats.withdrawals, true)} <span className="pa-kpi-card__unit">{currency}</span>
+                            </h3>
+                        </div>
+                        <div className="pa-kpi-card__icon pa-kpi-card__icon--withdrawal">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <path d="M12 19V5M5 12l7-7 7 7" />
                             </svg>
                         </div>
                     </div>
-                    <div className="pa-kpi-card__value">
-                        -{formatMoney(currency, financialStats.withdrawals, true)} <span className="pa-kpi-card__curr">{currency}</span>
-                    </div>
                     <div className="pa-kpi-card__footer">
-                        <span className="pa-pill-badge pa-pill-badge--purple">
-                            📤 {financialStats.withdrawalCount} {localize('Processed')}
+                        <span className="pa-badge pa-badge--neutral">
+                            {financialStats.withdrawalCount} {financialStats.withdrawalCount === 1 ? localize('Transaction') : localize('Transactions')}
                         </span>
-                        <span className="pa-kpi-card__subtext">{localize('Capital payout volume')}</span>
+                        <span className="pa-kpi-card__subtext">{localize('Outflow realized')}</span>
                     </div>
                 </div>
 
-                {/* 4. Net Profit */}
+                {/* 4. Net Profit / Loss KPI */}
                 <div className={`pa-kpi-card ${financialStats.netProfit >= 0 ? 'pa-kpi-card--profit' : 'pa-kpi-card--loss'}`}>
                     <div className="pa-kpi-card__header">
-                        <span className="pa-kpi-card__label">{localize('Net Profit')}</span>
-                        <div className={`pa-kpi-card__icon ${financialStats.netProfit >= 0 ? 'pa-kpi-card__icon--green' : 'pa-kpi-card__icon--red'}`}>
-                            {financialStats.netProfit >= 0 ? '📈' : '📉'}
+                        <div className="pa-kpi-card__title-box">
+                            <span className="pa-kpi-card__caption">{localize('Net Trading Profit')}</span>
+                            <h3 className={`pa-kpi-card__value ${financialStats.netProfit >= 0 ? 'pa-kpi-card__value--profit' : 'pa-kpi-card__value--loss'}`}>
+                                {financialStats.netProfit >= 0 ? `+${formatMoney(currency, financialStats.netProfit, true)}` : formatMoney(currency, financialStats.netProfit, true)}
+                                <span className="pa-kpi-card__unit"> {currency}</span>
+                            </h3>
+                        </div>
+                        <div className={`pa-kpi-card__icon ${financialStats.netProfit >= 0 ? 'pa-kpi-card__icon--profit' : 'pa-kpi-card__icon--loss'}`}>
+                            {financialStats.netProfit >= 0 ? (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                    <path d="M23 6l-9.5 9.5-5-5L1 18" />
+                                    <path d="M17 6h6v6" />
+                                </svg>
+                            ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                    <path d="M23 18l-9.5-9.5-5 5L1 6" />
+                                    <path d="M17 18h6v-6" />
+                                </svg>
+                            )}
                         </div>
                     </div>
-                    <div className={`pa-kpi-card__value ${financialStats.netProfit >= 0 ? 'pa-kpi-card__value--profit' : 'pa-kpi-card__value--loss'}`}>
-                        {financialStats.netProfit >= 0 ? `+${formatMoney(currency, financialStats.netProfit, true)}` : formatMoney(currency, financialStats.netProfit, true)} <span className="pa-kpi-card__curr">{currency}</span>
-                    </div>
                     <div className="pa-kpi-card__footer">
-                        <span className={`pa-pill-badge ${financialStats.netProfit >= 0 ? 'pa-pill-badge--green' : 'pa-pill-badge--red'}`}>
+                        <span className={`pa-badge ${financialStats.netProfit >= 0 ? 'pa-badge--success' : 'pa-badge--danger'}`}>
                             {financialStats.winRate.toFixed(1)}% {localize('Win Rate')}
                         </span>
-                        <span className="pa-kpi-card__subtext">PF: {financialStats.profitFactor}</span>
+                        <span className="pa-kpi-card__subtext">
+                            {financialStats.wins}W • {financialStats.losses}L
+                        </span>
                     </div>
                 </div>
 
-                {/* 5. Total Loss */}
+                {/* 5. Total Loss & Profit Factor KPI */}
                 <div className="pa-kpi-card pa-kpi-card--loss-stat">
                     <div className="pa-kpi-card__header">
-                        <span className="pa-kpi-card__label">{localize('Total Loss')}</span>
-                        <div className="pa-kpi-card__icon pa-kpi-card__icon--red">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+                        <div className="pa-kpi-card__title-box">
+                            <span className="pa-kpi-card__caption">{localize('Total Realized Loss')}</span>
+                            <h3 className="pa-kpi-card__value pa-kpi-card__value--loss">
+                                -{formatMoney(currency, financialStats.totalLoss, true)} <span className="pa-kpi-card__unit">{currency}</span>
+                            </h3>
+                        </div>
+                        <div className="pa-kpi-card__icon pa-kpi-card__icon--loss">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                                 <circle cx="12" cy="12" r="10" />
                                 <line x1="15" y1="9" x2="9" y2="15" />
                                 <line x1="9" y1="9" x2="15" y2="15" />
                             </svg>
                         </div>
                     </div>
-                    <div className="pa-kpi-card__value pa-kpi-card__value--loss">
-                        -{formatMoney(currency, financialStats.totalLoss, true)} <span className="pa-kpi-card__curr">{currency}</span>
-                    </div>
                     <div className="pa-kpi-card__footer">
-                        <span className="pa-pill-badge pa-pill-badge--red">
-                            {financialStats.losses} {localize('Loss Contracts')}
+                        <span className="pa-badge pa-badge--neutral">
+                            {localize('Factor')}: {financialStats.profitFactor}
                         </span>
-                        <span className="pa-kpi-card__subtext">{localize('Controlled Risk')}</span>
+                        <span className="pa-kpi-card__subtext">{addComma(financialStats.totalTrades)} {localize('total trades')}</span>
                     </div>
                 </div>
             </div>
 
-            {/* ════════════════ VISUAL CHARTS & STRATEGIES SECTION ════════════════ */}
-            <div className="pa-analytics-row">
-                {/* 1. Best Traded Strategies Donut / Pie Chart */}
-                <div className="pa-card pa-card--pie">
-                    <div className="pa-card__header">
+            {/* ════════════════ VISUAL ANALYTICS GRID ════════════════ */}
+            <div className="pa-analytics-grid">
+                {/* ── CARD 1: BEST TRADED STRATEGIES DONUT CHART ── */}
+                <div className="pa-analytics-card">
+                    <div className="pa-analytics-card__header">
                         <div>
-                            <h3 className="pa-card__title">🥧 {localize('Best Traded Strategies')}</h3>
-                            <p className="pa-card__subtitle">{localize('Volume and win-rate distribution across contract types')}</p>
+                            <h3 className="pa-analytics-card__title">{localize('Strategy Performance Distribution')}</h3>
+                            <p className="pa-analytics-card__subtitle">{localize('Volume allocation and trade profitability breakdown')}</p>
                         </div>
                         <div className="pa-period-pills">
                             {(['ALL', '30D', '7D', '24H'] as const).map(p => (
@@ -368,61 +378,82 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                     </div>
 
                     {strategyStats.length === 0 ? (
-                        <div className="pa-empty-pie">
-                            <div className="icon">🥧</div>
-                            <h4>{localize('No Closed Trades Recorded')}</h4>
-                            <p>{localize('Your traded strategy distribution and win rates will automatically calculate from real closed contracts.')}</p>
+                        <div className="pa-empty-state">
+                            <div className="pa-empty-state__icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 6v6l4 2" />
+                                </svg>
+                            </div>
+                            <h4 className="pa-empty-state__title">{localize('No Closed Trades Found')}</h4>
+                            <p className="pa-empty-state__description">{localize('Completed trading positions from your Deriv account will automatically appear here.')}</p>
                         </div>
                     ) : (
-                        <div className="pa-pie-content">
-                            {/* Interactive SVG Donut Chart */}
-                            <div className="pa-pie-chart-box">
-                                <svg width="220" height="220" viewBox="0 0 220 220" className="pa-donut-svg">
-                                    <circle cx="110" cy="110" r="75" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="24" />
+                        <div className="pa-donut-layout">
+                            {/* Left: SVG Donut Visualizer */}
+                            <div className="pa-donut-chart-container">
+                                <svg className="pa-donut-svg" viewBox="0 0 220 220">
+                                    <circle cx="110" cy="110" r="75" fill="none" stroke="var(--general-section-1, rgba(255,255,255,0.06))" strokeWidth="22" />
                                     {donutPaths.map(item => (
                                         <path
-                                            key={item.idx}
+                                            key={item.stat.name}
                                             d={item.d}
                                             fill="none"
                                             stroke={item.color}
                                             strokeWidth={item.strokeWidth}
                                             strokeLinecap="round"
-                                            className="pa-donut-segment"
+                                            className="pa-donut-slice"
+                                            onClick={() => setSelectedStrategyIndex(selectedStrategyIndex === item.idx ? null : item.idx)}
                                             onMouseEnter={() => setSelectedStrategyIndex(item.idx)}
-                                            onMouseLeave={() => setSelectedStrategyIndex(null)}
+                                            style={{ cursor: 'pointer', transition: 'all 0.25s ease' }}
                                         />
                                     ))}
                                 </svg>
-                                {/* Central Telemetry Callout */}
-                                <div className="pa-donut-center">
-                                    <span className="pa-donut-center__pct">
-                                        {activeDonutInfo ? `${activeDonutInfo.percentage.toFixed(0)}%` : '100%'}
+                                <div className="pa-donut-center-info">
+                                    <span className="pa-donut-center-label">
+                                        {activeDonutInfo ? activeDonutInfo.name : localize('Total Trades')}
                                     </span>
-                                    <span className="pa-donut-center__label">
-                                        {activeDonutInfo ? activeDonutInfo.name : localize('Dominant')}
+                                    <span className="pa-donut-center-val">
+                                        {activeDonutInfo ? `${activeDonutInfo.winRate.toFixed(1)}%` : addComma(financialStats.totalTrades)}
+                                    </span>
+                                    <span className="pa-donut-center-sub">
+                                        {activeDonutInfo ? localize('Win Rate') : localize('Closed Contracts')}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Strategy Breakdown Legend & Win Rates */}
-                            <div className="pa-strategy-legend">
+                            {/* Right: Strategy Metrics Breakdown List */}
+                            <div className="pa-strategy-legend-list">
                                 {strategyStats.map((stat, idx) => (
                                     <div
                                         key={stat.name}
-                                        className={`pa-legend-item ${selectedStrategyIndex === idx ? 'pa-legend-item--active' : ''}`}
+                                        className={`pa-legend-row ${selectedStrategyIndex === idx ? 'pa-legend-row--active' : ''}`}
+                                        onClick={() => setSelectedStrategyIndex(selectedStrategyIndex === idx ? null : idx)}
                                         onMouseEnter={() => setSelectedStrategyIndex(idx)}
-                                        onMouseLeave={() => setSelectedStrategyIndex(null)}
                                     >
-                                        <div className="pa-legend-item__color" style={{ background: stat.color, boxShadow: `0 0 10px ${stat.color}80` }}></div>
-                                        <div className="pa-legend-item__info">
-                                            <span className="pa-legend-item__name">{stat.name}</span>
-                                            <span className="pa-legend-item__count">{stat.trades} {localize('trades')}</span>
+                                        <div className="pa-legend-row__top">
+                                            <div className="pa-legend-row__title-group">
+                                                <span className="pa-legend-row__dot" style={{ backgroundColor: stat.color }}></span>
+                                                <span className="pa-legend-row__name">{stat.name}</span>
+                                            </div>
+                                            <div className="pa-legend-row__metrics">
+                                                <span className={`pa-legend-row__profit ${stat.profit >= 0 ? 'pa-legend-row__profit--pos' : 'pa-legend-row__profit--neg'}`}>
+                                                    {stat.profit >= 0 ? `+${formatMoney(currency, stat.profit, true)}` : formatMoney(currency, stat.profit, true)} {currency}
+                                                </span>
+                                                <span className="pa-legend-row__share">{stat.percentage.toFixed(1)}%</span>
+                                            </div>
                                         </div>
-                                        <div className="pa-legend-item__right">
-                                            <span className="pa-legend-item__winrate">{stat.winRate.toFixed(1)}% WR</span>
-                                            <span className={`pa-legend-item__pnl ${stat.profit >= 0 ? 'pa-legend-item__pnl--win' : 'pa-legend-item__pnl--loss'}`}>
-                                                {stat.profit >= 0 ? `+${formatMoney(currency, stat.profit, true)}` : formatMoney(currency, stat.profit, true)}
-                                            </span>
+
+                                        <div className="pa-legend-row__progress-track">
+                                            <div
+                                                className="pa-legend-row__progress-fill"
+                                                style={{ width: `${stat.percentage}%`, backgroundColor: stat.color }}
+                                            ></div>
+                                        </div>
+
+                                        <div className="pa-legend-row__bottom">
+                                            <span className="pa-legend-row__subtext">{stat.trades} {localize('trades')} ({stat.wins}W / {stat.trades - stat.wins}L)</span>
+                                            <span className="pa-legend-row__winrate">{stat.winRate.toFixed(0)}% {localize('win rate')}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -431,38 +462,76 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                     )}
                 </div>
 
-                {/* 2. Trading Volume & Success Activity Visualizer */}
-                <div className="pa-card pa-card--activity">
-                    <div className="pa-card__header">
+                {/* ── CARD 2: EXECUTION TELEMETRY & PROFIT DYNAMICS ── */}
+                <div className="pa-analytics-card">
+                    <div className="pa-analytics-card__header">
                         <div>
-                            <h3 className="pa-card__title">📊 {localize('Income & Trade Dynamics')}</h3>
-                            <p className="pa-card__subtitle">{localize('Performance density and trade execution flow')}</p>
+                            <h3 className="pa-analytics-card__title">{localize('Execution Dynamics & Volume')}</h3>
+                            <p className="pa-analytics-card__subtitle">{localize('Chronological trade distribution and execution efficiency')}</p>
                         </div>
-                        <span className="pa-live-pulse-badge">● {localize('REALTIME SYNC')}</span>
+                        <div className="pa-live-badge">
+                            <span className="pa-live-badge__dot"></span>
+                            <span>{openPositionsCount} {localize('Active Positions')}</span>
+                        </div>
                     </div>
 
-                    <div className="pa-activity-bars-container">
-                        <div className="pa-activity-summary-row">
-                            <div className="pa-act-stat">
-                                <span className="pa-act-stat__label">{localize('Total Executions')}</span>
-                                <h4 className="pa-act-stat__val">{addComma(financialStats.totalTrades)}</h4>
+                    <div className="pa-activity-content">
+                        {/* Summary Bar */}
+                        <div className="pa-activity-kpis">
+                            <div className="pa-act-kpi">
+                                <span className="pa-act-kpi__label">{localize('Total Executed')}</span>
+                                <h4 className="pa-act-kpi__val">{addComma(financialStats.totalTrades)}</h4>
                             </div>
-                            <div className="pa-act-stat">
-                                <span className="pa-act-stat__label">{localize('Profitable Trades')}</span>
-                                <h4 className="pa-act-stat__val pa-act-stat__val--green">{financialStats.wins} W</h4>
+                            <div className="pa-act-kpi">
+                                <span className="pa-act-kpi__label">{localize('Profitable Trades')}</span>
+                                <h4 className="pa-act-kpi__val pa-act-kpi__val--green">{financialStats.wins} W</h4>
                             </div>
-                            <div className="pa-act-stat">
-                                <span className="pa-act-stat__label">{localize('Open Live Positions')}</span>
-                                <h4 className="pa-act-stat__val pa-act-stat__val--blue">{openPositionsCount}</h4>
+                            <div className="pa-act-kpi">
+                                <span className="pa-act-kpi__label">{localize('Loss Contracts')}</span>
+                                <h4 className="pa-act-kpi__val pa-act-kpi__val--red">{financialStats.losses} L</h4>
+                            </div>
+                            <div className="pa-act-kpi">
+                                <span className="pa-act-kpi__label">{localize('Gross Volume')}</span>
+                                <h4 className="pa-act-kpi__val pa-act-kpi__val--blue">
+                                    {formatMoney(currency, financialStats.grossProfit + financialStats.totalLoss, true)}
+                                </h4>
+                            </div>
+                        </div>
+
+                        {/* Win / Loss Ratio Progress Bar */}
+                        <div className="pa-ratio-meter">
+                            <div className="pa-ratio-meter__labels">
+                                <span className="pa-ratio-meter__win-label">
+                                    {localize('Wins')}: {financialStats.winRate.toFixed(1)}%
+                                </span>
+                                <span className="pa-ratio-meter__loss-label">
+                                    {localize('Losses')}: {(100 - financialStats.winRate).toFixed(1)}%
+                                </span>
+                            </div>
+                            <div className="pa-ratio-meter__track">
+                                <div
+                                    className="pa-ratio-meter__win-fill"
+                                    style={{ width: `${financialStats.totalTrades > 0 ? financialStats.winRate : 50}%` }}
+                                ></div>
+                                <div
+                                    className="pa-ratio-meter__loss-fill"
+                                    style={{ width: `${financialStats.totalTrades > 0 ? 100 - financialStats.winRate : 50}%` }}
+                                ></div>
                             </div>
                         </div>
 
                         {/* Real Telemetry Bars */}
                         {activityBars.length === 0 ? (
-                            <div className="pa-empty-pie">
-                                <div className="icon">📊</div>
-                                <h4>{localize('No Trade Dynamics Data')}</h4>
-                                <p>{localize('Live executions and volume flow will automatically stream here once trades are completed.')}</p>
+                            <div className="pa-empty-state">
+                                <div className="pa-empty-state__icon">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                                        <line x1="3" y1="9" x2="21" y2="9" />
+                                        <line x1="9" y1="21" x2="9" y2="9" />
+                                    </svg>
+                                </div>
+                                <h4 className="pa-empty-state__title">{localize('No Execution Data')}</h4>
+                                <p className="pa-empty-state__description">{localize('Telemetry and volume flow will stream here as contracts complete.')}</p>
                             </div>
                         ) : (
                             <>
@@ -472,12 +541,12 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                                             <div className="pa-bar-track">
                                                 <div
                                                     className="pa-bar-fill pa-bar-fill--primary"
-                                                    style={{ height: `${bar.val}%`, transitionDelay: `${i * 50}ms` }}
+                                                    style={{ height: `${bar.val}%` }}
                                                     title={`Volume: ${bar.val}%`}
                                                 ></div>
                                                 <div
-                                                    className="pa-bar-fill pa-bar-fill--secondary"
-                                                    style={{ height: `${bar.gain}%`, transitionDelay: `${i * 50 + 25}ms` }}
+                                                    className={`pa-bar-fill ${bar.profit >= 0 ? 'pa-bar-fill--secondary' : 'pa-bar-fill--loss'}`}
+                                                    style={{ height: `${bar.gain > 0 ? bar.gain : 20}%` }}
                                                     title={`Gain: ${bar.gain}%`}
                                                 ></div>
                                             </div>
@@ -489,11 +558,11 @@ export const PortfolioAnalytics: React.FC<PortfolioAnalyticsProps> = ({
                                 <div className="pa-activity-legend">
                                     <div className="pa-act-leg-item">
                                         <span className="pa-act-dot pa-act-dot--primary"></span>
-                                        <span>{localize('Gross Trade Volume')}</span>
+                                        <span>{localize('Trade Stake Volume')}</span>
                                     </div>
                                     <div className="pa-act-leg-item">
                                         <span className="pa-act-dot pa-act-dot--secondary"></span>
-                                        <span>{localize('Net Profit Harvest')}</span>
+                                        <span>{localize('Realized Net Gain')}</span>
                                     </div>
                                 </div>
                             </>
