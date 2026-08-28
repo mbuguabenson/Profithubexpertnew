@@ -233,10 +233,6 @@ export default class ClientStore {
         this.loginid = loginid;
     };
 
-    setWebSocketLoginId = (ws_login_id: string) => {
-        this.ws_login_id = ws_login_id;
-    };
-
     switchAccount = async (loginid: string) => {
         if (!loginid) return false;
         const { AccountSwitcherService } = await import('@/services/account-switcher.service');
