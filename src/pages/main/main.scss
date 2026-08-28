@@ -112,16 +112,10 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
             }
 
             &__list {
-                background: #263d88 !important;
-                
-                :global(.theme--light) & {
-                    background: #263d88 !important;
-                    border-color: rgba(255, 255, 255, 0.2) !important;
-                }
-
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                background: #0f172a !important;
+                border: 1px solid rgba(124, 58, 237, 0.25) !important;
                 border-radius: 8px !important;
-                padding: 6px 10px !important;
+                padding: 6px 8px !important;
                 margin-top: 0 !important;
                 margin-bottom: 4px !important;
                 justify-content: flex-start !important;
@@ -132,7 +126,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 overflow-x: auto !important;
                 overflow-y: visible !important;
                 width: 100% !important;
-                box-shadow: 0 4px 16px rgba(38, 61, 136, 0.4) !important;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
                 &::-webkit-scrollbar {
                     display: none !important;
                 }
@@ -149,7 +143,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                     width: 100% !important;
                     border-radius: 0 !important;
                     gap: 4px !important;
-                    background: #263d88 !important;
+                    background: #0f172a !important;
                 }
 
                 &--header {
@@ -172,78 +166,89 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
             }
 
             &__item {
-                background: rgba(255, 255, 255, 0.12) !important;
-                color: #ffffff !important;
+                background: transparent !important;
+                color: #94a3b8 !important;
 
                 :global(.theme--light) & {
-                    background: rgba(255, 255, 255, 0.12) !important;
-                    color: #ffffff !important;
+                    background: transparent !important;
+                    color: #94a3b8 !important;
                 }
                 width: auto !important;
-                height: 38px !important;
+                height: 36px !important;
                 min-width: 0 !important;
                 max-width: none !important;
                 border-radius: 6px !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                padding: 0 16px !important;
+                padding: 0 14px !important;
                 margin: 0 !important;
                 box-sizing: border-box !important;
                 position: relative !important;
                 flex-shrink: 0 !important;
                 white-space: nowrap !important;
                 cursor: pointer !important;
-                border: 1px solid rgba(255, 255, 255, 0.15) !important;
-                transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                border: 1px solid transparent !important;
+                font-size: 13px !important;
+                font-weight: 500 !important;
+                transition: all 0.2s ease !important;
 
                 svg {
                     fill: none;
-                    stroke: #ffffff !important;
-                    color: #ffffff !important;
+                    stroke: #94a3b8 !important;
+                    color: #94a3b8 !important;
                     
                     path, circle, rect {
-                        fill: #ffffff !important;
-                        stroke: #ffffff !important;
+                        fill: #94a3b8 !important;
+                        stroke: #94a3b8 !important;
                     }
                 }
 
                 &:hover {
-                    background: rgba(255, 255, 255, 0.25) !important;
+                    background: rgba(124, 58, 237, 0.12) !important;
                     color: #ffffff !important;
-                    border-color: rgba(255, 255, 255, 0.35) !important;
-                    transform: translateY(-1px) !important;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+                    border-color: rgba(124, 58, 237, 0.3) !important;
                     z-index: 10 !important;
+
+                    svg {
+                        stroke: #ffffff !important;
+                        color: #ffffff !important;
+                        path, circle, rect {
+                            fill: #ffffff !important;
+                            stroke: #ffffff !important;
+                        }
+                    }
                 }
 
                 &.dc-tabs__active {
-                    background: #ffffff !important;
-                    color: #263d88 !important;
-                    border: 1px solid #ffffff !important;
-                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+                    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+                    color: #ffffff !important;
+                    border: 1px solid rgba(168, 85, 247, 0.5) !important;
+                    box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4) !important;
                     border-radius: 6px !important;
                     transform: none !important;
                     z-index: 5 !important;
-                    font-weight: 700 !important;
+                    font-weight: 600 !important;
 
                     svg {
-                        stroke: #263d88 !important;
+                        stroke: #ffffff !important;
+                        color: #ffffff !important;
                         path, circle, rect {
-                            fill: #263d88 !important;
-                            stroke: #263d88 !important;
+                            fill: #ffffff !important;
+                            stroke: #ffffff !important;
                         }
                     }
                     
                     :global(.theme--light) & {
-                        background: #ffffff !important;
-                        color: #263d88 !important;
+                        background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+                        color: #ffffff !important;
 
                         svg {
-                            stroke: #263d88 !important;
+                            stroke: #ffffff !important;
+                            color: #ffffff !important;
                             path, circle, rect {
-                                fill: #263d88 !important;
-                                stroke: #263d88 !important;
+                                fill: #ffffff !important;
+                                stroke: #ffffff !important;
                             }
                         }
                     }
