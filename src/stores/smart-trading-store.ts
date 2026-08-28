@@ -1328,14 +1328,30 @@ export default class SmartTradingStore {
                 });
 
                 const proposal_response = await api_base.api.send(proposal_request);
-                if (proposal_response.error || !proposal_response.proposal?.id) return;
+                if (proposal_response.error || !proposal_response.proposal?.id) {
+                    this.is_executing = false;
+                    this.root_store.run_panel.setContractStage(contract_stages.NOT_RUNNING);
+                    this.root_store.run_panel.setIsRunning(false);
+                    if (proposal_response.error) {
+                        globalObserver.emit('Error', proposal_response.error);
+                    }
+                    return;
+                }
 
                 const buy_response = await api_base.api.send({
                     buy: proposal_response.proposal.id,
                     price: this.current_stake,
                 });
 
-                if (buy_response.error || !buy_response.buy?.contract_id) return;
+                if (buy_response.error || !buy_response.buy?.contract_id) {
+                    this.is_executing = false;
+                    this.root_store.run_panel.setContractStage(contract_stages.NOT_RUNNING);
+                    this.root_store.run_panel.setIsRunning(false);
+                    if (buy_response.error) {
+                        globalObserver.emit('Error', buy_response.error);
+                    }
+                    return;
+                }
 
                 api_base.api.subscribe(
                     { proposal_open_contract: 1, contract_id: buy_response.buy.contract_id },
@@ -1587,6 +1603,9 @@ export default class SmartTradingStore {
             if (buy_response.error) {
                 console.error('SmartTrading Speedbot Buy Error:', buy_response.error);
                 this.is_executing = false;
+                this.root_store.run_panel.setContractStage(contract_stages.NOT_RUNNING);
+                this.root_store.run_panel.setIsRunning(false);
+                globalObserver.emit('Error', buy_response.error);
                 return;
             }
 

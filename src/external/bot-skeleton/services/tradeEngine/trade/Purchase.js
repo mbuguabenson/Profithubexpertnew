@@ -333,12 +333,15 @@ export default Engine =>
 
                         log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
 
-                        // ─── Bug 3 fix: Emit Error to unfreeze panel ──────────────────
                         globalObserver.emit('Error', {
                             code: errCode,
                             message: errMsg,
                             name: errCode,
                         });
+
+                        if (['InsufficientBalance', 'NotEnoughMoney', 'AccountBalanceExceeded'].includes(errCode) || errMsg.toLowerCase().includes('insufficient')) {
+                            globalObserver.emit('bot.stop_button_click');
+                        }
 
                         this.store.dispatch(purchaseSuccessful());
                         if (this.afterPromise) {
@@ -372,14 +375,16 @@ export default Engine =>
 
                 log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
 
-                // ─── Bug 3 fix: Emit Error to unfreeze run-panel ─────────────────
-                // Without this, InsufficientBalance errors from the buy API never
-                // reach the run-panel's onError, leaving it frozen in PURCHASE_SENT.
+                // Emit Error to unfreeze run-panel
                 globalObserver.emit('Error', {
                     code: errCode,
                     message: errMsg,
                     name: errCode,
                 });
+
+                if (['InsufficientBalance', 'NotEnoughMoney', 'AccountBalanceExceeded'].includes(errCode) || errMsg.toLowerCase().includes('insufficient')) {
+                    globalObserver.emit('bot.stop_button_click');
+                }
 
                 this.store.dispatch(purchaseSuccessful());
                 if (this.afterPromise) {

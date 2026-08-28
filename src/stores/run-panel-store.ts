@@ -203,6 +203,19 @@ export default class RunPanelStore {
             client.setIsLoggedIn(true);
         }
 
+        const currentBalance = parseFloat(client.balance || '0');
+        if (client.is_logged_in && currentBalance <= 0) {
+            const isVirtual = client.is_virtual;
+            const message = isVirtual
+                ? localize('Your demo account balance is 0. Please reset your demo balance to continue.')
+                : localize('Your account balance is insufficient to start trading. Please deposit funds or switch to Demo.');
+
+            this.showErrorMessage(message);
+            this.setIsRunning(false);
+            this.setContractStage(contract_stages.NOT_RUNNING);
+            return;
+        }
+
         /**
          * Due to Apple's policy on cellular data usage in ios audioElement.play() should be initially called on
          * user action(e.g click/touch) to be downloaded, otherwise throws an error. Also it should be called
@@ -597,7 +610,7 @@ export default class RunPanelStore {
         observer.register('bot.sell', this.onBotSellEvent);
         observer.register('bot.stop', this.onBotStopEvent);
         observer.register('bot.bot_ready', this.onBotReadyEvent);
-        observer.register('bot.click_stop', this.onStopButtonClick);
+        observer.register('bot.click_stop', this.onStopBotClick);
         observer.register('bot.trade_again', this.onBotTradeAgain);
         observer.register('contract.status', this.onContractStatusEvent);
         observer.register('bot.contract', this.onBotContractEvent);
@@ -809,9 +822,23 @@ export default class RunPanelStore {
     onError = (data: { error: any }) => {
         // data.error for API errors, data for code errors
         const error = data.error || data;
-        if (unrecoverable_errors.includes(error.code)) {
+        const isInsufficientBalance =
+            error?.code === 'InsufficientBalance' ||
+            error?.code === 'NotEnoughMoney' ||
+            error?.code === 'AccountBalanceExceeded' ||
+            (typeof error?.message === 'string' && error.message.toLowerCase().includes('insufficient'));
+
+        if (unrecoverable_errors.includes(error.code) || isInsufficientBalance) {
             this.root_store.summary_card.clear();
             this.error_type = ErrorTypes.UNRECOVERABLE_ERRORS;
+            this.is_contract_buying_in_progress = false;
+            this.setIsRunning(false);
+            this.setContractStage(contract_stages.NOT_RUNNING);
+            this.core.ui?.setAccountSwitcherDisabledMessage?.();
+            this.unregisterBotListeners();
+            if (this.dbot?.stopBot) {
+                this.dbot.stopBot().catch(() => {});
+            }
         } else {
             this.error_type = ErrorTypes.RECOVERABLE_ERRORS;
         }
