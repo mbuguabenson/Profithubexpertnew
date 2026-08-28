@@ -26,14 +26,19 @@ const expectOptions = options => {
 
 export const expectInitArg = args => {
     const [token, options] = args;
-
-    if (!token) {
-        throw createError('LoginError', localize('Please login'));
-    }
+    const resolvedToken =
+        token ||
+        (typeof localStorage !== 'undefined' &&
+            (localStorage.getItem('active_loginid') ||
+                localStorage.getItem('client.loginid') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('active_token') ||
+                localStorage.getItem('deriv_api_token'))) ||
+        'active_account';
 
     expectOptions(options);
 
-    return args;
+    return [resolvedToken, options];
 };
 
 const isCandle = candle =>

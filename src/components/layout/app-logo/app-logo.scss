@@ -72,3 +72,89 @@
         }
     }
 }
+
+// ─── Universal Brand Logo Component Styles (User Brand Identity) ───
+.lth-brand-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    user-select: none;
+    cursor: pointer;
+
+    &__row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    &__icon {
+        display: block;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 6px rgba(3, 61, 38, 0.25));
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+        &:hover {
+            transform: scale(1.06);
+        }
+    }
+
+    &__text-col {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+    }
+
+    &__title-row {
+        display: flex;
+        align-items: center;
+    }
+
+    &__legacy {
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: 1.8px;
+        font-family: 'Cinzel', 'Playfair Display', 'Times New Roman', serif;
+        line-height: 1;
+        transition: color 0.2s ease;
+
+        :global(.theme--dark) & {
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        :global(.theme--light) & {
+            color: #033d26;
+            text-shadow: none;
+        }
+    }
+
+    &__trading-hub {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 3.5px;
+        font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+        color: #8dc63f;
+        text-transform: uppercase;
+        margin-top: 1px;
+        line-height: 1;
+    }
+
+    &__subtitle {
+        font-size: 0.48rem;
+        margin-top: 2px;
+        letter-spacing: 1.1px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-family: 'Cinzel', 'Times New Roman', serif;
+        line-height: 1;
+
+        :global(.theme--dark) & {
+            color: #94a3b8;
+        }
+
+        :global(.theme--light) & {
+            color: #033d26;
+        }
+    }
+}

@@ -157,13 +157,18 @@ export default Engine =>
 
         /* eslint-disable class-methods-use-this */
         validateTradeOptions(tradeOptions) {
+            if (!tradeOptions) return {};
             const take_profit = tradeOptions.take_profit;
             const stop_loss = tradeOptions.stop_loss;
 
-            if (take_profit) {
+            if (take_profit || stop_loss) {
+                tradeOptions.limit_order = tradeOptions.limit_order || {};
+            }
+
+            if (take_profit && tradeOptions.limit_order) {
                 tradeOptions.limit_order.take_profit = take_profit;
             }
-            if (stop_loss) {
+            if (stop_loss && tradeOptions.limit_order) {
                 tradeOptions.limit_order.stop_loss = stop_loss;
             }
 

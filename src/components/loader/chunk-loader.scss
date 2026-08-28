@@ -1,68 +1,143 @@
 // ═══════════════════════════════════════════════════════════════
-// ✦ ULTIMATE PREMIUM CHUNK LOADER
+// ✦ LEGACY TRADING HUB — ULTRA CHUNK LOADER SCSS
 // ═══════════════════════════════════════════════════════════════
 
-/* ── COMPACT LOADER (NON-WELCOME) ── */
-.ultimate-compact-loader {
+/* ── COMPACT GYROSCOPIC LOADER (IN-APP TAB SWITCHES) ── */
+.lth-compact-loader {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 18px;
     width: 100%;
     height: 100%;
-    min-height: 200px;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    color: #e2e8f0;
+    min-height: 220px;
+    padding: 30px;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    color: #f8fafc;
+    user-select: none;
 
-    .ucl-spinner {
+    .lth-gyro-wrapper {
         position: relative;
-        width: 50px;
-        height: 50px;
-        
-        .ucl-ring {
+        width: 58px;
+        height: 58px;
+        perspective: 800px;
+
+        .lth-orbit {
             position: absolute;
             inset: 0;
             border-radius: 50%;
             border: 2px solid transparent;
+            box-sizing: border-box;
+
+            .lth-orbit-dot {
+                position: absolute;
+                top: -3px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+            }
         }
 
-        .ucl-ring-1 {
-            border-top-color: #3b82f6;
-            border-right-color: #60a5fa;
-            animation: uclSpin 1s linear infinite;
-        }
-        
-        .ucl-ring-2 {
-            inset: 8px;
-            border-bottom-color: #8b5cf6;
-            border-left-color: #a78bfa;
-            animation: uclSpinReverse 1.5s linear infinite;
+        .lth-orbit-outer {
+            border-top-color: #00f2fe;
+            border-right-color: #38bdf8;
+            filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.6));
+            animation: lthGyroRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+
+            .lth-orbit-dot {
+                background: #00f2fe;
+                box-shadow: 0 0 10px #00f2fe;
+            }
         }
 
-        .ucl-core {
+        .lth-orbit-mid {
+            inset: 7px;
+            border-bottom-color: #f59e0b;
+            border-left-color: #fbbf24;
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+            animation: lthGyroReverse 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+
+            .lth-orbit-dot {
+                background: #fbbf24;
+                box-shadow: 0 0 8px #fbbf24;
+            }
+        }
+
+        .lth-orbit-inner {
+            inset: 14px;
+            border-top-color: #10b981;
+            border-left-color: #34d399;
+            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.5));
+            animation: lthGyroRotate 0.8s linear infinite;
+        }
+
+        .lth-core-orb {
             position: absolute;
-            inset: 18px;
-            background: #ffffff;
+            inset: 19px;
+            background: radial-gradient(circle, #ffffff 20%, #00f2fe 70%, #0284c7 100%);
             border-radius: 50%;
-            box-shadow: 0 0 10px #ffffff;
-            animation: uclPulse 1s ease-in-out infinite alternate;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 14px #00f2fe;
+            animation: lthCorePulse 1.4s ease-in-out infinite alternate;
+
+            .lth-core-icon {
+                color: #060911;
+                filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.8));
+            }
         }
     }
 
-    .ucl-text {
-        font-size: 0.9rem;
-        font-weight: 600;
-        letter-spacing: 0.05em;
+    .lth-loader-telemetry {
         display: flex;
         align-items: center;
-        gap: 2px;
-        color: #94a3b8;
+        gap: 8px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(0, 242, 254, 0.18);
+        padding: 6px 14px;
+        border-radius: 9999px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+
+        .lth-loader-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: #cbd5e1;
+            text-transform: uppercase;
+        }
+
+        .lth-loader-pulses {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            .p-dot {
+                width: 4px;
+                height: 4px;
+                border-radius: 50%;
+                background: #00f2fe;
+                animation: lthPulseWave 1s infinite ease-in-out;
+
+                &:nth-child(2) {
+                    animation-delay: 0.2s;
+                    background: #38bdf8;
+                }
+                &:nth-child(3) {
+                    animation-delay: 0.4s;
+                    background: #f59e0b;
+                }
+            }
+        }
     }
 }
 
-/* ── FX WELCOME LOADER (PREMIUM GLASSMORPHISM) ── */
-.fx-welcome-loader {
+/* ── FULL FX WELCOME LOADER ── */
+.lth-welcome-loader {
     position: fixed;
     inset: 0;
     z-index: 99999;
@@ -71,230 +146,235 @@
     justify-content: center;
     overflow: hidden;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    background: #000;
+    background: #060911;
 
-    .fx-background {
+    .lth-ambient-bg {
         position: absolute;
         inset: 0;
         z-index: 1;
 
-        /* Grid lines simulating a trading chart grid */
-        .fx-grid {
+        .lth-cyber-grid {
             position: absolute;
             inset: 0;
             background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
+                linear-gradient(rgba(0, 242, 254, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.04) 1px, transparent 1px);
+            background-size: 44px 44px;
         }
 
-        /* Abstract candlesticks (CSS lines) */
-        .fx-candlesticks {
+        .lth-glow-orb {
             position: absolute;
-            inset: 0;
-            background: 
-                linear-gradient(180deg, #10b981 0%, transparent 40%) 20% 40% / 4px 60px no-repeat,
-                linear-gradient(180deg, #ef4444 0%, transparent 40%) 40% 60% / 4px 80px no-repeat,
-                linear-gradient(180deg, #10b981 0%, transparent 40%) 60% 30% / 4px 50px no-repeat,
-                linear-gradient(180deg, #ef4444 0%, transparent 40%) 80% 50% / 4px 90px no-repeat;
-            opacity: 0.3;
-        }
-
-        .fx-glow {
-            position: absolute;
-            width: 40vw;
-            height: 40vw;
+            width: 45vw;
+            height: 45vw;
             border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.15;
-            
-            &.fx-glow-1 {
-                top: 10%;
+            filter: blur(90px);
+            opacity: 0.16;
+
+            &.lth-glow-cyan {
+                top: 5%;
                 left: 10%;
-                background: #10b981;
-                animation: driftGlow 15s ease-in-out infinite alternate;
+                background: #00f2fe;
+                animation: lthDrift 14s ease-in-out infinite alternate;
             }
-            &.fx-glow-2 {
-                bottom: 10%;
+
+            &.lth-glow-gold {
+                bottom: 5%;
                 right: 10%;
-                background: #ef4444;
-                animation: driftGlowRev 12s ease-in-out infinite alternate;
+                background: #f59e0b;
+                animation: lthDriftRev 12s ease-in-out infinite alternate;
             }
         }
 
-        .fx-blur-overlay {
+        .lth-blur-mask {
             position: absolute;
             inset: 0;
-            backdrop-filter: blur(12px);
-            background: linear-gradient(135deg, rgba(3, 7, 18, 0.8) 0%, rgba(3, 7, 18, 0.95) 100%);
+            backdrop-filter: blur(16px);
+            background: radial-gradient(circle at center, rgba(6, 9, 17, 0.7) 0%, rgba(6, 9, 17, 0.95) 100%);
         }
     }
 
-    .fx-glass-card {
+    .lth-glass-card {
         position: relative;
         z-index: 10;
         width: 100%;
-        max-width: 540px;
-        background: rgba(15, 23, 42, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 16px;
-        padding: 32px;
+        max-width: 520px;
+        background: rgba(12, 19, 35, 0.78);
+        border: 1px solid rgba(0, 242, 254, 0.2);
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.85), inset 0 0 30px rgba(0, 242, 254, 0.05);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-radius: 20px;
+        padding: 30px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
-        animation: cardFloat 2s ease-out forwards;
+        gap: 20px;
+        animation: lthCardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 
-        .fx-card-header {
+        .lth-card-header {
             display: flex;
             align-items: center;
             gap: 16px;
 
-            .fx-logo-orb {
+            .lth-logo-badge {
                 width: 48px;
                 height: 48px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                border-radius: 12px;
+                background: linear-gradient(135deg, #00f2fe, #0284c7);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #fff;
-                box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-                
-                .icon-pulse {
-                    animation: heartbeat 1.5s infinite;
+                color: #060911;
+                box-shadow: 0 0 20px rgba(0, 242, 254, 0.45);
+
+                .lth-pulse-icon {
+                    animation: lthHeartbeat 1.2s infinite;
                 }
             }
 
-            .fx-brand {
+            .lth-brand-meta {
                 display: flex;
                 flex-direction: column;
 
-                .fx-title {
-                    font-size: 1.5rem;
-                    font-weight: 800;
+                .lth-brand-title {
+                    font-size: 1.35rem;
+                    font-weight: 900;
                     margin: 0;
                     color: #fff;
-                    letter-spacing: -0.02em;
+                    letter-spacing: 0.02em;
+
+                    .text-cyan {
+                        color: #00f2fe;
+                    }
+                    .text-gold {
+                        color: #f59e0b;
+                    }
                 }
 
-                .fx-subtitle {
-                    font-size: 0.75rem;
+                .lth-brand-subtitle {
+                    font-size: 0.65rem;
                     color: #94a3b8;
-                    font-weight: 600;
-                    letter-spacing: 0.1em;
+                    font-weight: 700;
+                    letter-spacing: 0.12em;
+                    text-transform: uppercase;
+                    font-family: 'JetBrains Mono', monospace;
                 }
             }
         }
 
-        .fx-terminal {
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        .lth-terminal {
+            background: rgba(4, 6, 12, 0.85);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             overflow: hidden;
 
-            .fx-terminal-header {
+            .lth-terminal-header {
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                padding: 10px 14px;
+                padding: 8px 12px;
                 background: rgba(255, 255, 255, 0.03);
                 border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
                 .dot {
-                    width: 10px;
-                    height: 10px;
+                    width: 9px;
+                    height: 9px;
                     border-radius: 50%;
                     &.red { background: #ef4444; }
                     &.yellow { background: #f59e0b; }
                     &.green { background: #10b981; }
                 }
 
-                .terminal-title {
+                .terminal-tag {
                     margin-left: 8px;
-                    font-size: 0.7rem;
+                    font-size: 0.68rem;
                     color: #64748b;
                     font-family: 'JetBrains Mono', monospace;
                 }
             }
 
-            .fx-terminal-body {
-                padding: 14px;
+            .lth-terminal-body {
+                padding: 12px 14px;
                 font-family: 'JetBrains Mono', monospace;
-                font-size: 0.8rem;
-                height: 180px;
+                font-size: 0.76rem;
+                height: 140px;
                 display: flex;
                 flex-direction: column;
                 justify-content: flex-end;
-                gap: 6px;
+                gap: 5px;
 
-                .fx-log-line {
+                .lth-log-row {
                     display: flex;
-                    gap: 12px;
-                    color: #10b981;
-                    animation: logFadeIn 0.3s ease-out forwards;
+                    gap: 10px;
+                    color: #34d399;
+                    animation: lthLogSlide 0.25s ease-out forwards;
 
-                    .log-timestamp {
+                    .lth-log-time {
                         color: #64748b;
+                        flex-shrink: 0;
                     }
 
-                    .log-text {
-                        color: #e2e8f0;
+                    .lth-log-msg {
+                        color: #f1f5f9;
                     }
 
                     &.typing .cursor {
-                        animation: blink 1s infinite;
-                        color: #3b82f6;
+                        animation: lthBlink 0.8s infinite;
+                        color: #00f2fe;
                     }
                 }
             }
         }
 
-        .fx-progress-container {
+        .lth-progress-block {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
 
-            .fx-progress-meta {
+            .lth-progress-labels {
                 display: flex;
                 justify-content: space-between;
-                font-size: 0.8rem;
-                font-weight: 600;
+                font-size: 0.75rem;
+                font-weight: 700;
                 color: #94a3b8;
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
 
-                .status-pct {
-                    color: #fff;
-                    font-variant-numeric: tabular-nums;
+                .lth-status-pill {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .lth-pct-num {
+                    color: #00f2fe;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-weight: 800;
                 }
             }
 
-            .fx-progress-track {
+            .lth-track {
                 width: 100%;
                 height: 6px;
-                background: rgba(255, 255, 255, 0.05);
+                background: rgba(255, 255, 255, 0.08);
                 border-radius: 4px;
                 overflow: hidden;
 
-                .fx-progress-fill {
+                .lth-fill {
                     height: 100%;
-                    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+                    background: linear-gradient(90deg, #00f2fe, #38bdf8, #f59e0b);
                     border-radius: 4px;
-                    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                    transition: width 0.15s linear;
                     position: relative;
 
-                    .fx-progress-glow {
+                    .lth-beam {
                         position: absolute;
                         top: 0;
                         right: 0;
                         bottom: 0;
-                        width: 20px;
-                        background: #fff;
+                        width: 24px;
+                        background: #ffffff;
                         filter: blur(4px);
-                        opacity: 0.5;
+                        opacity: 0.7;
                     }
                 }
             }
@@ -302,53 +382,53 @@
     }
 }
 
-// ── Animations ──
-@keyframes uclSpin {
+// ── KEYFRAME ANIMATIONS ──
+@keyframes lthGyroRotate {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-@keyframes uclSpinReverse {
+@keyframes lthGyroReverse {
     0% { transform: rotate(360deg); }
     100% { transform: rotate(0deg); }
 }
 
-@keyframes uclPulse {
-    0% { transform: scale(0.9); opacity: 0.8; }
-    100% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 15px #fff; }
+@keyframes lthCorePulse {
+    0% { transform: scale(0.85); box-shadow: 0 0 6px #00f2fe; }
+    100% { transform: scale(1.1); box-shadow: 0 0 16px #00f2fe; }
 }
 
-@keyframes driftGlow {
+@keyframes lthPulseWave {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes lthDrift {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(50px, 30px) scale(1.1); }
+    100% { transform: translate(40px, 20px) scale(1.1); }
 }
 
-@keyframes driftGlowRev {
+@keyframes lthDriftRev {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(-40px, -20px) scale(1.05); }
+    100% { transform: translate(-30px, -20px) scale(1.08); }
 }
 
-@keyframes cardFloat {
-    0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+@keyframes lthCardEntrance {
+    0% { opacity: 0; transform: translateY(16px) scale(0.96); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes logFadeIn {
-    0% { opacity: 0; transform: translateX(-10px); }
+@keyframes lthLogSlide {
+    0% { opacity: 0; transform: translateX(-8px); }
     100% { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes heartbeat {
+@keyframes lthHeartbeat {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+    50% { transform: scale(1.12); }
 }
 
-@keyframes blink {
+@keyframes lthBlink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
 }

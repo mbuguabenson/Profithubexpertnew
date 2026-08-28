@@ -1,22 +1,22 @@
 {
-    "brand_name": "ProfitHub",
-    "admin_loginid": "Profithubadmin",
-    "brand_domain": "profithub.co.ke",
+    "brand_name": "Legacy Trading Hub",
+    "admin_loginid": "LegacyAdmin",
+    "brand_domain": "legacytradinghub.com",
     "brand_hostname": {
-        "staging": "staging.profithub.co.ke/dashboard",
-        "production": "www.profithub.co.ke/dashboard"
+        "staging": "staging.legacytradinghub.com/dashboard",
+        "production": "www.legacytradinghub.com/dashboard"
     },
-    "domain_name": "www.profithub.co.ke",
+    "domain_name": "www.legacytradinghub.com",
     "colors": {
-        "primary": "#7c3aed",
-        "secondary": "#64748b",
-        "tertiary": "#8b5cf6",
+        "primary": "#38bdf8",
+        "secondary": "#94a3b8",
+        "tertiary": "#f59e0b",
         "success": "#10b981",
         "danger": "#ef4444",
         "warning": "#f59e0b",
-        "info": "#0ea5e9",
-        "neutral": "#6b7280",
-        "black": "#0f172a",
+        "info": "#00f2fe",
+        "neutral": "#64748b",
+        "black": "#060911",
         "white": "#ffffff",
         "grey": {
             "50": "#f8fafc",
@@ -33,9 +33,9 @@
     },
     "typography": {
         "font_family": {
-            "primary": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+            "primary": "-apple-system, BlinkMacSystemFont, 'Inter', 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif",
             "secondary": "Georgia, 'Times New Roman', Times, serif",
-            "monospace": "'Courier New', Courier, monospace"
+            "monospace": "'JetBrains Mono', 'Courier New', Courier, monospace"
         },
         "font_sizes": {
             "xs": "0.75rem",
@@ -59,14 +59,14 @@
         "css_variable_prefix": "--brand"
     },
     "platform": {
-        "name": "Pfhub",
+        "name": "LTH",
         "logo": {
             "type": "component",
             "component_name": "BrandLogo",
-            "alt_text": "Pfhub",
+            "alt_text": "Legacy Trading Hub",
             "link_url": "/",
             "show_text": false,
-            "text": "Pfhub"
+            "text": "Legacy Trading Hub"
         },
         "footer": {
             "enable_language_settings": false,
@@ -74,10 +74,10 @@
         },
         "hostname": {
             "production": {
-                "com": "www.profithub.co.ke"
+                "com": "www.legacytradinghub.com"
             },
             "staging": {
-                "com": "staging.profithub.co.ke"
+                "com": "staging.legacytradinghub.com"
             }
         },
         "auth2_url": {

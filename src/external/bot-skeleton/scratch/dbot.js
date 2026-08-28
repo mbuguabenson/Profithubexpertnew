@@ -313,6 +313,11 @@ class DBot {
         api_base.is_stopping = false;
 
         try {
+            // Ensure api connection is active
+            if (!api_base.api || api_base.api?.connection?.readyState !== 1) {
+                await api_base.init();
+            }
+
             // Always initialize a fresh Interpreter session for current active account
             this.interpreter = Interpreter();
 
@@ -341,9 +346,10 @@ class DBot {
      * @param {Object} limitations Optional limitations (legacy argument)
      */
     generateCode(limitations = {}) {
+        const ws = this.workspace || window.Blockly?.derivWorkspace || window.Blockly?.getMainWorkspace?.();
         const workspaceCode =
-            (this.workspace && window.Blockly?.JavaScript?.javascriptGenerator?.workspaceToCode?.(this.workspace)) ||
-            (this.workspace && window.Blockly?.JavaScript?.workspaceToCode?.(this.workspace)) ||
+            (ws && window.Blockly?.JavaScript?.javascriptGenerator?.workspaceToCode?.(ws)) ||
+            (ws && window.Blockly?.JavaScript?.workspaceToCode?.(ws)) ||
             '';
 
         if (!workspaceCode.trim()) {

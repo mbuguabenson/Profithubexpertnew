@@ -7,7 +7,7 @@ import { useStore } from '@/hooks/useStore';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import { sanitizeAccountsList } from '@/utils/token-bridge';
 import { getBrandLabel } from '@/components/shared/utils/brand/brand';
-import { BarChart3, Bot, Copy, Loader2 } from 'lucide-react';
+import { BarChart3, Bot, Copy, Loader2, ShieldCheck } from 'lucide-react';
 import './app-root.scss';
 
 const AppContent = lazy(() => import('./app-content'));
@@ -51,11 +51,11 @@ const ErrorComponentWrapper = observer(() => {
 
 const INIT_STEPS = [
     'Connecting to Volatility Markets...',
-    'Loading AI Trading Models...',
+    'Loading Neural Trading Models...',
     'Authenticating Deriv Gateway...',
     'Calibrating Multi-Market Scanner...',
     'Synchronizing Live Orderbook...',
-    'Finalizing Trading Environment...',
+    'Finalizing Legacy Trading Suite...',
 ];
 
 const TICKER_ITEMS = [
@@ -108,29 +108,29 @@ const WelcomeScreen = ({
     const [exiting, setExiting] = useState(false);
     const [activeStep, setActiveStep] = useState(0);
 
-    // Cycle through steps
+    // Fast, crisp step cycling
     useEffect(() => {
         const stepTimer = window.setInterval(() => {
             setActiveStep(prev => (prev + 1) % INIT_STEPS.length);
-        }, 1200);
+        }, 800);
         return () => window.clearInterval(stepTimer);
     }, []);
 
-    // Handle complete transition
+    // Instant exit zoom effect when complete
     useEffect(() => {
         if (!isComplete) return;
         const exitTimer = window.setTimeout(() => {
             setExiting(true);
-            window.setTimeout(onFinished, 650);
-        }, 120);
+            window.setTimeout(onFinished, 480);
+        }, 50);
         return () => window.clearTimeout(exitTimer);
     }, [isComplete, onFinished]);
 
     const roundedProgress = Math.min(100, Math.round(progress));
 
-    // Dynamic brand split (e.g. PROFIT + HUB or DB + TRADERS)
+    // Dynamic brand split (e.g. LEGACY + TRADING HUB)
     const { leftBrand, rightBrand } = useMemo(() => {
-        const full = (brandLabel || 'PROFIT HUB').trim();
+        const full = (brandLabel || 'LEGACY TRADING HUB').trim();
         const parts = full.split(' ');
         if (parts.length >= 2) {
             return { leftBrand: parts[0], rightBrand: parts.slice(1).join(' ') };
@@ -140,7 +140,7 @@ const WelcomeScreen = ({
     }, []);
 
     return (
-        <div className={`welcome-screen ${exiting ? 'welcome-screen--exit' : 'welcome-screen--visible'}`}>
+        <div className={`welcome-screen ${exiting ? 'welcome-screen--zoom-out' : 'welcome-screen--visible'}`}>
             {/* Background Candlestick Atmosphere */}
             <div className="ws-candlesticks-bg" aria-hidden="true">
                 {CANDLESTICKS.map((candle, idx) => (
@@ -156,20 +156,24 @@ const WelcomeScreen = ({
                 ))}
             </div>
 
-            {/* Subtle Vignette Overlay */}
+            {/* Subtle Vignette & Neon Glows */}
             <div className="ws-vignette-overlay" aria-hidden="true" />
+            <div className="ws-ambient-glow ws-ambient-glow-cyan" aria-hidden="true" />
+            <div className="ws-ambient-glow ws-ambient-glow-gold" aria-hidden="true" />
 
-            {/* Exact Reference Center Modal Card */}
+            {/* Glowing Glass Hero Card */}
             <div className="welcome-screen__card">
-
                 {/* 1. Glowing Dual-Tone Brand Logo */}
                 <div className="ws-brand-header">
+                    <div className="ws-logo-crest-wrapper">
+                        <img src="/logo_icon.svg" alt="Legacy" className="ws-logo-crest" />
+                    </div>
                     <div className="ws-brand-title">
                         <span className="brand-left">{leftBrand}</span>
                         <span className="brand-right">{rightBrand}</span>
                     </div>
                     <div className="ws-hub-sub">
-                        <span className="hub-text">TRADING HUB</span>
+                        <span className="hub-text">INSTITUTIONAL QUANTUM SUITE</span>
                         <span className="hub-live-badge">
                             <span className="dot-live" />
                             <span>LIVE</span>
@@ -182,7 +186,7 @@ const WelcomeScreen = ({
                 {/* 2. Welcome Subtitle */}
                 <div className="ws-greetings">
                     <h2 className="greeting-title">Welcome to {brandLabel}</h2>
-                    <p className="greeting-sub">Empowering your financial journey.</p>
+                    <p className="greeting-sub">High-Performance Algorithmic Trading & AI Analytics</p>
                 </div>
 
                 {/* 3. Sleek Progress Bar with Percentage */}
@@ -221,10 +225,10 @@ const WelcomeScreen = ({
                     </div>
 
                     <div className="feature-orb-item">
-                        <div className="orb-circle orb-red">
-                            <Bot size={20} className="orb-icon text-coral" />
+                        <div className="orb-circle orb-gold">
+                            <Bot size={20} className="orb-icon text-gold" />
                         </div>
-                        <span className="orb-label">Trading Bots</span>
+                        <span className="orb-label">Quantum Bots</span>
                     </div>
 
                     <div className="feature-orb-item">
@@ -237,7 +241,8 @@ const WelcomeScreen = ({
 
                 {/* 6. Footer Caption inside Card */}
                 <div className="ws-card-footer-caption">
-                    <span>Preparing a seamless trading experience for you</span>
+                    <ShieldCheck size={13} className="text-emerald" />
+                    <span>Protected by Legacy Quantum Security Infrastructure</span>
                 </div>
             </div>
 
@@ -291,7 +296,7 @@ const AppRoot = () => {
     useEffect(() => {
         statusIntervalRef.current = window.setInterval(() => {
             setStatusIndex(prev => (prev + 1) % INIT_STEPS.length);
-        }, 1400);
+        }, 900);
         return () => {
             if (statusIntervalRef.current) {
                 window.clearInterval(statusIntervalRef.current);
@@ -299,12 +304,13 @@ const AppRoot = () => {
         };
     }, []);
 
+    // Snappy, ultra-fast smooth interpolation curve
     useEffect(() => {
         let animationFrameId: number;
         const step = () => {
             const current = progressRef.current;
             const target = targetProgressRef.current;
-            const increment = isReducedMotion ? 2 : Math.max(0.85, (target - current) * 0.14);
+            const increment = isReducedMotion ? 5 : Math.max(1.6, (target - current) * 0.22);
             const next = Math.min(100, current + increment);
             progressRef.current = next;
             setProgress(next);
@@ -320,7 +326,7 @@ const AppRoot = () => {
         if (is_api_initialized) {
             targetProgressRef.current = 100;
         } else {
-            targetProgressRef.current = 70;
+            targetProgressRef.current = 75;
         }
     }, [is_api_initialized]);
 
@@ -331,7 +337,7 @@ const AppRoot = () => {
                 setIsApiInitialized(true);
                 targetProgressRef.current = 100;
             }
-        }, 2000);
+        }, 1400);
 
         const initializeApi = async () => {
             if (api_base_initialization_started.current) return;
@@ -357,11 +363,11 @@ const AppRoot = () => {
         welcomeTimeoutRef.current = window.setTimeout(() => {
             setWelcomeForceExit(true);
             setShowWelcome(false);
-        }, 2600);
+        }, 1600);
 
         welcomeHardExitRef.current = window.setTimeout(() => {
             setShowWelcome(false);
-        }, 3600);
+        }, 2200);
 
         return () => {
             if (welcomeTimeoutRef.current) {

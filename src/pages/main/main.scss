@@ -112,21 +112,21 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
             }
 
             &__list {
-                background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
-                border: 1px solid rgba(255, 255, 255, 0.25) !important;
+                background: #0b0e14 !important;
+                border: 1px solid #1c2433 !important;
                 border-radius: 8px !important;
-                padding: 6px 8px !important;
+                padding: 4px 6px !important;
                 margin-top: 0 !important;
                 margin-bottom: 4px !important;
                 justify-content: flex-start !important;
                 align-items: center !important;
                 display: flex !important;
                 flex-wrap: nowrap !important;
-                gap: 6px !important;
+                gap: 4px !important;
                 overflow-x: auto !important;
                 overflow-y: visible !important;
                 width: 100% !important;
-                box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35) !important;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
                 &::-webkit-scrollbar {
                     display: none !important;
                 }
@@ -142,8 +142,10 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                     margin: 0 !important;
                     width: 100% !important;
                     border-radius: 0 !important;
-                    gap: 4px !important;
-                    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+                    gap: 3px !important;
+                    background: #0b0e14 !important;
+                    border-left: none !important;
+                    border-right: none !important;
                 }
 
                 &--header {
@@ -167,21 +169,21 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
 
             &__item {
                 background: transparent !important;
-                color: rgba(255, 255, 255, 0.85) !important;
+                color: #848e9c !important;
 
                 :global(.theme--light) & {
                     background: transparent !important;
-                    color: rgba(255, 255, 255, 0.85) !important;
+                    color: #848e9c !important;
                 }
                 width: auto !important;
-                height: 36px !important;
+                height: 34px !important;
                 min-width: 0 !important;
                 max-width: none !important;
                 border-radius: 6px !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                padding: 0 14px !important;
+                padding: 0 12px !important;
                 margin: 0 !important;
                 box-sizing: border-box !important;
                 position: relative !important;
@@ -189,66 +191,80 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 white-space: nowrap !important;
                 cursor: pointer !important;
                 border: 1px solid transparent !important;
-                font-size: 13px !important;
+                font-size: 12.5px !important;
                 font-weight: 500 !important;
-                transition: all 0.2s ease !important;
+                letter-spacing: 0.01em !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif !important;
+                transition: all 0.16s ease !important;
 
                 svg {
                     fill: none;
-                    stroke: rgba(255, 255, 255, 0.85) !important;
-                    color: rgba(255, 255, 255, 0.85) !important;
+                    stroke: #848e9c !important;
+                    color: #848e9c !important;
+                    transition: stroke 0.16s ease;
                     
-                    path, circle, rect {
-                        fill: rgba(255, 255, 255, 0.85) !important;
-                        stroke: rgba(255, 255, 255, 0.85) !important;
+                    path, circle, rect, polygon, line, polyline {
+                        stroke: #848e9c !important;
                     }
                 }
 
                 &:hover {
-                    background: rgba(255, 255, 255, 0.18) !important;
-                    color: #ffffff !important;
-                    border-color: rgba(255, 255, 255, 0.3) !important;
+                    background: rgba(255, 255, 255, 0.05) !important;
+                    color: #eaecef !important;
+                    border-color: rgba(255, 255, 255, 0.08) !important;
                     z-index: 10 !important;
 
                     svg {
-                        stroke: #ffffff !important;
-                        color: #ffffff !important;
-                        path, circle, rect {
-                            fill: #ffffff !important;
-                            stroke: #ffffff !important;
+                        stroke: #eaecef !important;
+                        color: #eaecef !important;
+
+                        path, circle, rect, polygon, line, polyline {
+                            stroke: #eaecef !important;
                         }
                     }
                 }
 
                 &.dc-tabs__active {
-                    background: #ffffff !important;
-                    color: #7c3aed !important;
-                    border: 1px solid #ffffff !important;
-                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+                    background: #18202f !important;
+                    color: #ffffff !important;
+                    border: 1px solid #28354d !important;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
                     border-radius: 6px !important;
                     transform: none !important;
                     z-index: 5 !important;
                     font-weight: 700 !important;
 
+                    &::after {
+                        content: '';
+                        position: absolute;
+                        bottom: 0;
+                        left: 15%;
+                        right: 15%;
+                        height: 2px;
+                        background: #00f2fe;
+                        border-radius: 2px;
+                        box-shadow: 0 0 6px rgba(0, 242, 254, 0.8);
+                    }
+
                     svg {
-                        stroke: #7c3aed !important;
-                        color: #7c3aed !important;
-                        path, circle, rect {
-                            fill: #7c3aed !important;
-                            stroke: #7c3aed !important;
+                        stroke: #00f2fe !important;
+                        color: #00f2fe !important;
+
+                        path, circle, rect, polygon, line, polyline {
+                            stroke: #00f2fe !important;
                         }
                     }
                     
                     :global(.theme--light) & {
-                        background: #ffffff !important;
-                        color: #7c3aed !important;
+                        background: #18202f !important;
+                        color: #ffffff !important;
 
                         svg {
-                            stroke: #7c3aed !important;
-                            color: #7c3aed !important;
-                            path, circle, rect {
-                                fill: #7c3aed !important;
-                                stroke: #7c3aed !important;
+                            stroke: #00f2fe !important;
+                            color: #00f2fe !important;
+
+                            path, circle, rect, polygon, line, polyline {
+                                stroke: #00f2fe !important;
                             }
                         }
                     }
@@ -973,24 +989,25 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
     justify-content: center;
 }
 
-/* Modern Redesigned Tabs Header Icon + Label Styling */
+/* Institutional Matte Dark Tab Icon + Label Styling */
 .main-tab-icon-wrapper {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 7px;
     white-space: nowrap;
 
     svg {
         display: block;
         flex-shrink: 0;
-        transition: transform 0.2s ease, stroke 0.2s ease;
+        width: 16px;
+        height: 16px;
     }
 
     .main-tab-label-text {
-        font-size: 1.3rem;
-        font-weight: 600;
-        letter-spacing: 0.2px;
+        font-size: 12.5px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
         line-height: 1;
     }
 }
