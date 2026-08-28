@@ -12,7 +12,7 @@ import {
     setIsAuthorized,
     setIsAuthorizing,
 } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
-import { getAccountsList } from '@/utils/token-bridge';
+import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 import { isDemoAccount } from '@/utils/account-helpers';
 
 export class AccountSwitcherService {
@@ -25,12 +25,14 @@ export class AccountSwitcherService {
      */
     public static async switchAccount(targetLoginId: string, clientStore?: any): Promise<boolean> {
         if (!targetLoginId) return false;
-        if (this.isSwitching) return false;
+        if (this.isSwitching) {
+            console.warn('[AccountSwitcherService] Switch already in progress, queuing...');
+        }
 
         this.isSwitching = true;
 
         try {
-            console.log(`[AccountSwitcherService] Initiating instant switch to ${targetLoginId}...`);
+            console.log(`[AccountSwitcherService] Initiating switch to ${targetLoginId}...`);
 
             // 1. Update localStorage identifiers
             localStorage.setItem('active_loginid', targetLoginId);
@@ -40,7 +42,7 @@ export class AccountSwitcherService {
             const accountsList = getAccountsList();
             let targetToken = accountsList[targetLoginId] || '';
             if (!targetToken) {
-                targetToken = (await import('@/utils/token-bridge')).getActiveToken(targetLoginId) || '';
+                targetToken = getActiveToken(targetLoginId) || getActiveToken() || '';
             }
 
             if (targetToken) {
@@ -71,7 +73,16 @@ export class AccountSwitcherService {
                 if (typeof clientStore.setBalance === 'function') clientStore.setBalance(String(balance));
                 if (typeof clientStore.setCurrency === 'function') clientStore.setCurrency(currency);
                 if (typeof clientStore.setIsVirtual === 'function') clientStore.setIsVirtual(isVirtual ? 1 : 0);
+                if (typeof clientStore.setWebSocketLoginId === 'function') clientStore.setWebSocketLoginId(targetLoginId);
+                if (typeof clientStore.setIsLoggedIn === 'function') clientStore.setIsLoggedIn(true);
             }
+
+            api_base.account_info = {
+                balance,
+                currency,
+                loginid: targetLoginId,
+            };
+            api_base.token = targetLoginId;
 
             // Update RxJS connection status observables
             setAuthData({
@@ -109,8 +120,19 @@ export class AccountSwitcherService {
                             api_base.token = res.authorize.loginid;
                             api_base.is_authorized = true;
 
-                            if (clientStore && typeof clientStore.setBalance === 'function') {
-                                clientStore.setBalance(String(res.authorize.balance));
+                            if (clientStore) {
+                                if (typeof clientStore.setBalance === 'function') {
+                                    clientStore.setBalance(String(res.authorize.balance));
+                                }
+                                if (typeof clientStore.setCurrency === 'function') {
+                                    clientStore.setCurrency(res.authorize.currency);
+                                }
+                                if (typeof clientStore.setLoginId === 'function') {
+                                    clientStore.setLoginId(res.authorize.loginid);
+                                }
+                                if (res.authorize.account_list && typeof clientStore.setAccountList === 'function') {
+                                    clientStore.setAccountList(res.authorize.account_list);
+                                }
                             }
 
                             // Subscribe to live balance & transaction stream

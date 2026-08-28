@@ -14,7 +14,7 @@ export const getAccountsList = (): Record<string, string> => {
     const map: Record<string, string> = {};
 
     try {
-        // 1. Check accountsList
+        // 1. Check accountsList map
         const rawAccountsList = localStorage.getItem('accountsList');
         if (rawAccountsList) {
             const parsed = JSON.parse(rawAccountsList);
@@ -72,7 +72,16 @@ export const getAccountsList = (): Record<string, string> => {
             }
         }
 
-        // 5. Direct token fallback if mapped with active_loginid
+        // 5. Check acct1..acct10 & token1..token10 in localStorage and sessionStorage
+        for (let i = 1; i <= 10; i++) {
+            const acct = localStorage.getItem(`acct${i}`) || sessionStorage.getItem(`acct${i}`);
+            const tok = localStorage.getItem(`token${i}`) || sessionStorage.getItem(`token${i}`);
+            if (acct && tok && !isInvalidBearerToken(tok)) {
+                map[acct] = tok;
+            }
+        }
+
+        // 6. Direct token fallback if mapped with active_loginid
         const activeId = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid');
         const directToken =
             localStorage.getItem('token') ||
@@ -118,8 +127,7 @@ export const getActiveToken = (specificLoginId?: string): string | null => {
         localStorage.getItem('authToken') ||
         localStorage.getItem('token1') ||
         localStorage.getItem('deriv_api_token');
-
-    if (!isInvalidBearerToken(storedToken)) {
+    if (storedToken && !isInvalidBearerToken(storedToken)) {
         return storedToken;
     }
 

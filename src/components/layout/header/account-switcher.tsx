@@ -10,12 +10,10 @@ import { Localize, localize } from '@deriv-com/translations';
 import { DerivAccountWalletService, DerivWallet } from '@/services/deriv-account-wallet.service';
 import { AccountSwitcherService } from '@/services/account-switcher.service';
 import { getAccountsList } from '@/utils/token-bridge';
-import { getSocketURL } from '@/components/shared/utils/config/config';
 import { TAccountSwitcher } from './common/types';
 import AccountInfoWrapper from './account-info-wrapper';
 const realAccountImg = '/real-account.jpg';
 import './account-switcher.scss';
-
 
 const getCurrencyLabel = (currency: string): string => {
     const labels: Record<string, string> = {
@@ -120,7 +118,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         };
     }, [displayCurrency, isOpen]);
 
-    const is_bot_running = run_panel?.is_running || api_base.is_running;
+    const is_bot_running = Boolean(run_panel?.is_running || (api_base as any)?.is_running);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -145,9 +143,14 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     }, [is_bot_running]);
 
     const handleAccountSelect = useCallback(
-        (loginid: string) => {
+        async (loginid: string) => {
+            console.log('[AccountSwitcher] Selected account:', loginid);
             setIsOpen(false);
-            AccountSwitcherService.switchAccount(loginid, client);
+            try {
+                await AccountSwitcherService.switchAccount(loginid, client);
+            } catch (err) {
+                console.error('[AccountSwitcher] Error switching account:', err);
+            }
         },
         [client]
     );
@@ -181,110 +184,68 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             {
                                 method: 'POST',
                                 headers: {
-                                    'Deriv-App-ID': appId,
-                                    'Authorization': `Bearer ${authInfo.access_token}`,
+                                    Authorization: `Bearer ${authInfo.access_token}`,
                                     'Content-Type': 'application/json',
-                                },
+                                    'X-App-Id': appId,
+                                } as any,
+                                body: JSON.stringify({ amount: 10000 }),
                             }
                         );
 
-                        if (res.ok || res.status === 200) {
+                        if (res.ok) {
+                            const data = await res.json().catch(() => null);
+                            const newBalance = data?.balance ?? data?.data?.balance ?? 10000;
+                            if (client?.setBalance) {
+                                client.setBalance(String(newBalance));
+                            }
                             success = true;
                         } else {
                             const errData = await res.json().catch(() => null);
-                            if (errData?.errors?.[0]?.message) {
-                                errorMessage = errData.errors[0].message;
-                            }
+                            errorMessage = errData?.error?.message || `Server returned ${res.status}`;
                         }
                     } catch (restErr: any) {
-                        console.warn('[AccountSwitcher] REST reset failed, trying WebSocket:', restErr);
+                        console.warn('[AccountSwitcher] REST reset failed, trying WS fallback:', restErr?.message);
                     }
                 }
 
-                // Method 2: Deriv Classic WebSocket topup_virtual
-                if (!success && api_base.api) {
-                    try {
-                        const response = (await api_base.api.send({ topup_virtual: 1 })) as any;
-                        if (response?.error) {
-                            errorMessage = response.error.message;
-                        } else if (response?.topup_virtual) {
-                            success = true;
-                        }
-                    } catch (wsErr: any) {
-                        errorMessage = wsErr?.message || errorMessage;
-                    }
-                }
-
-                // Method 3: Standalone WebSocket with demo token if stored
+                // Method 2: Direct Deriv WebSocket API Fallback (topup_virtual)
                 if (!success) {
-                    try {
-                        const accountsList = getAccountsList();
-                        const demoToken = currentLoginId ? accountsList[currentLoginId] : null;
-                        if (demoToken && !demoToken.startsWith('ory_at_')) {
-                            const wsUrl = await getSocketURL();
-                            const ws = new WebSocket(wsUrl);
-                            await new Promise<void>((resolve, reject) => {
-                                const timeout = setTimeout(() => {
-                                    ws.close();
-                                    reject(new Error('Topup timeout'));
-                                }, 8000);
+                    const tokens = getAccountsList();
+                    const targetToken =
+                        tokens[currentLoginId || ''] ||
+                        localStorage.getItem('token') ||
+                        localStorage.getItem('active_token');
 
-                                ws.onopen = () => {
-                                    ws.send(JSON.stringify({ authorize: demoToken }));
-                                };
-
-                                ws.onmessage = (event) => {
-                                    try {
-                                        const data = JSON.parse(event.data);
-                                        if (data.msg_type === 'authorize') {
-                                            if (data.error) {
-                                                clearTimeout(timeout);
-                                                ws.close();
-                                                reject(new Error(data.error.message));
-                                            } else {
-                                                ws.send(JSON.stringify({ topup_virtual: 1 }));
-                                            }
-                                        } else if (data.msg_type === 'topup_virtual') {
-                                            clearTimeout(timeout);
-                                            ws.close();
-                                            if (data.error) {
-                                                reject(new Error(data.error.message));
-                                            } else {
-                                                resolve();
-                                            }
-                                        }
-                                    } catch {}
-                                };
-
-                                ws.onerror = (err) => {
-                                    clearTimeout(timeout);
-                                    ws.close();
-                                    reject(err);
-                                };
-                            });
-                            success = true;
+                    if (targetToken && api_base.api && api_base.api.connection?.readyState === WebSocket.OPEN) {
+                        try {
+                            const wsRes = await (api_base.api as any).send({ topup_virtual: 1 });
+                            if (wsRes?.topup_virtual) {
+                                const newAmount = wsRes.topup_virtual.amount ?? 10000;
+                                if (client?.setBalance) {
+                                    client.setBalance(String(newAmount));
+                                }
+                                success = true;
+                            } else if (wsRes?.error) {
+                                errorMessage = wsRes.error.message || 'Topup request failed';
+                            }
+                        } catch (wsSendErr: any) {
+                            errorMessage = wsSendErr?.message || 'WebSocket request failed';
                         }
-                    } catch (standaloneErr: any) {
-                        if (!errorMessage) errorMessage = standaloneErr?.message;
+                    } else if (!targetToken) {
+                        errorMessage = localize('No active token found for demo account.');
                     }
                 }
 
                 if (success) {
                     setResetMessage({
                         type: 'success',
-                        text: localize('Balance reset to 10,000.00 USD'),
+                        text: localize('Balance successfully reset to 10,000.00 USD'),
                     });
-                    // Refresh balance
-                    if (api_base.api) {
-                        try {
-                            await api_base.api.send({ balance: 1 });
-                        } catch {}
-                    }
-                    client?.checkAndRegenerateWebSocket();
+                    api_base.api?.send({ balance: 1, subscribe: 1 }).catch(() => {});
                 } else {
                     setResetMessage({
                         type: 'error',
-                        text: errorMessage || localize('Failed to reset balance. Balance may already be 10,000 USD.'),
+                        text: errorMessage || localize('Could not reset demo balance. Only accounts below 1,000 USD can be reset.'),
                     });
                 }
             } catch (error: any) {
@@ -433,10 +394,12 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         return `${balance} ${getCurrencyDisplayCode(accCurr)}`;
     })();
 
-    // Sync active tab with active account type
+    // Set initial tab when dropdown opens
     useEffect(() => {
-        setActiveTab(isVirtual ? 'demo' : 'real');
-    }, [isVirtual]);
+        if (isOpen) {
+            setActiveTab(isVirtual ? 'demo' : 'real');
+        }
+    }, [isOpen]);
 
     return (
         <div className='acc-info__wrapper' ref={wrapperRef}>
@@ -555,33 +518,45 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                     {/* Real / Demo / Wallets tab toggle */}
                     <div className='acc-panel__tabs'>
                         <button
+                            type='button'
                             className={classNames('acc-panel__tab', {
                                 'acc-panel__tab--active-real': activeTab === 'real',
                                 'acc-panel__tab--inactive': activeTab !== 'real',
                             })}
-                            onClick={() => setActiveTab('real')}
+                            onClick={e => {
+                                e.stopPropagation();
+                                setActiveTab('real');
+                            }}
                             id='acc-tab-real'
                         >
                             <Localize i18n_default_text='Real' />
                             {activeTab === 'real' && <span className='acc-panel__tab-underline acc-panel__tab-underline--real' />}
                         </button>
                         <button
+                            type='button'
                             className={classNames('acc-panel__tab', {
                                 'acc-panel__tab--active-demo': activeTab === 'demo',
                                 'acc-panel__tab--inactive': activeTab !== 'demo',
                             })}
-                            onClick={() => setActiveTab('demo')}
+                            onClick={e => {
+                                e.stopPropagation();
+                                setActiveTab('demo');
+                            }}
                             id='acc-tab-demo'
                         >
                             <Localize i18n_default_text='Demo' />
                             {activeTab === 'demo' && <span className='acc-panel__tab-underline acc-panel__tab-underline--demo' />}
                         </button>
                         <button
+                            type='button'
                             className={classNames('acc-panel__tab', {
                                 'acc-panel__tab--active-wallets': activeTab === 'wallets',
                                 'acc-panel__tab--inactive': activeTab !== 'wallets',
                             })}
-                            onClick={() => setActiveTab('wallets')}
+                            onClick={e => {
+                                e.stopPropagation();
+                                setActiveTab('wallets');
+                            }}
                             id='acc-tab-wallets'
                         >
                             <Localize i18n_default_text='Wallets' />
@@ -613,7 +588,8 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                             aria-selected={wallet.is_default}
                                             tabIndex={0}
                                             className='acc-panel__account'
-                                            onClick={() => {
+                                            onClick={e => {
+                                                e.stopPropagation();
                                                 window.open('https://app.deriv.com/wallets', '_blank');
                                                 setIsOpen(false);
                                             }}
@@ -639,11 +615,27 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                 </div>
                             )
                         ) : tabAccounts.length === 0 ? (
-                            <p className='acc-panel__empty'>
-                                {activeTab === 'real'
-                                    ? localize('No real accounts')
-                                    : localize('No demo accounts')}
-                            </p>
+                            <div className='acc-panel__empty-container' style={{ padding: '16px 8px', textAlign: 'center' }}>
+                                <p className='acc-panel__empty' style={{ margin: '0 0 10px' }}>
+                                    {activeTab === 'real'
+                                        ? localize('No real accounts linked')
+                                        : localize('No demo accounts linked')}
+                                </p>
+                                {activeTab === 'real' && (
+                                    <button
+                                        type='button'
+                                        className='acc-panel__manage-btn'
+                                        style={{ margin: '0 auto', display: 'inline-flex' }}
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            window.open('https://app.deriv.com/redirect?action=add_account', '_blank');
+                                            setIsOpen(false);
+                                        }}
+                                    >
+                                        + {localize('Add Deriv Real Account')}
+                                    </button>
+                                )}
+                            </div>
                         ) : (
                             <div className='acc-panel__account-list' role='listbox'>
                                 {tabAccounts.map(account => (
@@ -655,10 +647,14 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         className={classNames('acc-panel__account', {
                                             'acc-panel__account--active': account.isActive,
                                         })}
-                                        onClick={() => handleAccountSelect(account.loginid)}
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            handleAccountSelect(account.loginid);
+                                        }}
                                         onKeyDown={e => {
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
+                                                e.stopPropagation();
                                                 handleAccountSelect(account.loginid);
                                             }
                                         }}
@@ -676,15 +672,15 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         <div className='acc-panel__account-info'>
                                             <span className='acc-panel__account-name'>
                                                 {account.isVirtual
-                                                    ? localize('Deriv Demo Account')
-                                                    : `Deriv ${getCurrencyLabel(account.rawCurrency)} Account`}
+                                                    ? localize('Demo')
+                                                    : getCurrencyLabel(account.rawCurrency)}
                                             </span>
                                             <span className='acc-panel__account-id'>
                                                 {account.loginid}
                                             </span>
                                         </div>
 
-                                        {/* Balance & Active Checkmark */}
+                                        {/* Balance */}
                                         <div className='acc-panel__account-right'>
                                             <span className='acc-panel__account-balance'>
                                                 {account.currency
@@ -692,11 +688,11 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                                     : localize('No currency')}
                                             </span>
                                             {account.isActive && (
-                                                <div className='acc-panel__account-check'>
-                                                    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='#10b981' strokeWidth='3' strokeLinecap='round' strokeLinejoin='round'>
-                                                        <polyline points='20 6 9 17 4 12' />
+                                                <span className='acc-panel__account-check'>
+                                                    <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3' strokeLinecap='round' strokeLinejoin='round'>
+                                                        <polyline points='20 6 9 17 4 12'></polyline>
                                                     </svg>
-                                                </div>
+                                                </span>
                                             )}
                                         </div>
                                     </div>
@@ -708,8 +704,10 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                     {/* Footer actions */}
                     <div className='acc-panel__footer'>
                         <button
+                            type='button'
                             className='acc-panel__manage-btn'
-                            onClick={() => {
+                            onClick={e => {
+                                e.stopPropagation();
                                 window.open('https://app.deriv.com/account/personal-details', '_blank');
                                 setIsOpen(false);
                             }}
@@ -721,6 +719,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         <div className='acc-panel__footer-right'>
                             {activeTab === 'demo' && demoAccounts.length > 0 && (
                                 <button
+                                    type='button'
                                     className={classNames('acc-panel__reset-btn', {
                                         'acc-panel__reset-btn--loading': isResettingBalance,
                                     })}
@@ -772,10 +771,12 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             )}
 
                             <button
+                                type='button'
                                 className='acc-panel__logout-btn'
-                                onClick={async () => {
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    client?.logout();
                                     setIsOpen(false);
-                                    await client?.logout();
                                 }}
                                 id='acc-logout-btn'
                             >

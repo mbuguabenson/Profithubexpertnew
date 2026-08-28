@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
-/* [AI] - Analytics removed - utility functions moved to @/utils/account-helpers */
 import { isVirtualAccount } from '@/utils/account-helpers';
-/* [/AI] */
 import { CurrencyIcon } from '@/components/currency/currency-icon';
 import { addComma, getDecimalPlaces } from '@/components/shared';
 import { useApiBase } from '@/hooks/useApiBase';
@@ -15,35 +13,50 @@ const useActiveAccount = ({
     allBalanceData: Balance | null;
     directBalance?: string;
 }) => {
-    const { accountList, activeLoginid } = useApiBase();
+    const { accountList, activeLoginid, authData } = useApiBase();
 
-    const activeAccount = useMemo(
-        () => accountList?.find(account => account.loginid === activeLoginid),
-        [activeLoginid, accountList]
-    );
+    const resolvedLoginId =
+        activeLoginid ||
+        authData?.loginid ||
+        localStorage.getItem('active_loginid') ||
+        localStorage.getItem('client.loginid') ||
+        '';
+
+    const activeAccount = useMemo(() => {
+        if (!resolvedLoginId) return undefined;
+        
+        const found = accountList?.find(account => account.loginid === resolvedLoginId);
+        if (found) return found;
+
+        return {
+            loginid: resolvedLoginId,
+            currency: authData?.currency || 'USD',
+            balance: authData?.balance ?? 0,
+            is_virtual: isVirtualAccount(resolvedLoginId) ? 1 : 0,
+        };
+    }, [resolvedLoginId, accountList, authData]);
 
     const currentBalanceData = allBalanceData?.accounts?.[activeAccount?.loginid ?? ''];
 
     const modifiedAccount = useMemo(() => {
         if (!activeAccount) return undefined;
 
-        // Use centralized utility to determine if demo account
         const isVirtual = isVirtualAccount(activeAccount.loginid);
+        const accCurrency = activeAccount?.currency || 'USD';
 
         return {
             ...activeAccount,
-            balance: currentBalanceData?.balance
-                ? addComma(currentBalanceData.balance.toFixed(getDecimalPlaces(currentBalanceData.currency)))
+            balance: currentBalanceData?.balance !== undefined
+                ? addComma(Number(currentBalanceData.balance).toFixed(getDecimalPlaces(currentBalanceData.currency || accCurrency)))
                 : directBalance
-                  ? addComma(parseFloat(directBalance).toFixed(getDecimalPlaces(activeAccount.currency)))
-                  : addComma(parseFloat('0').toFixed(getDecimalPlaces(activeAccount.currency))),
-            currencyLabel: isVirtual ? 'Demo' : activeAccount?.currency,
-            icon: <CurrencyIcon currency={activeAccount?.currency?.toLowerCase()} isVirtual={isVirtual} />,
+                  ? addComma(parseFloat(directBalance).toFixed(getDecimalPlaces(accCurrency)))
+                  : addComma(Number(activeAccount.balance || 0).toFixed(getDecimalPlaces(accCurrency))),
+            currencyLabel: isVirtual ? 'Demo' : accCurrency,
+            icon: <CurrencyIcon currency={accCurrency.toLowerCase()} isVirtual={isVirtual} />,
             isVirtual: isVirtual,
-            isActive: activeAccount?.loginid === activeLoginid,
+            isActive: true,
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeAccount, activeLoginid, allBalanceData, directBalance]);
+    }, [activeAccount, currentBalanceData, directBalance]);
 
     return {
         /** User's current active account. */
