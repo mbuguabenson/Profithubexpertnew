@@ -13,7 +13,7 @@ import {
     setIsAuthorized,
     setIsAuthorizing,
 } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
-import { getAccountsList, getActiveToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 import { isDemoAccount } from '@/utils/account-helpers';
 
 export class AccountSwitcherService {

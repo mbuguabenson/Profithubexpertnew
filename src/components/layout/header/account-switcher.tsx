@@ -195,12 +195,6 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
 
                 // Method 2: Direct Deriv WebSocket API Fallback (topup_virtual)
                 if (!success) {
-                    const tokens = getAccountsList();
-                    const targetToken =
-                        tokens[currentLoginId || ''] ||
-                        localStorage.getItem('token') ||
-                        localStorage.getItem('active_token');
-
                     if (api_base.api) {
                         try {
                             const topupRes = await api_base.api.send({ topup_virtual: 1 });
