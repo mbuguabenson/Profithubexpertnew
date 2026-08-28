@@ -29,7 +29,13 @@
 
 ### 4. Design & Typography Tokens
 - Palette: 10 color tokens (`--color-text`, `--color-local-accent`, etc.).
-- Dashboard Theme: Clean, solid, opaque dark luxury cards (`#0c1222` / `#0f1422` with `#1a243a` borders, zero glassmorphism blur) highlighted with the multi-color neon spectrum ribbon palette.
+- Dashboard Hierarchy:
+  1. Top Status & Metric Chips (Strategies count, Market Radar, Deriv WebSocket).
+  2. 4-Pillar Core Grid (`AI Smart Trader`, `Bot Builder IDE`, `24+ Free Bots`, `Market Radar & Signals`).
+  3. Action Launchers Bar (`Launch AI Smart Trader` & `Import Strategy XML`).
+  4. Institutional 2-Column Utility Section (`Deriv Verified Registration` & `VIP WhatsApp Community`).
+  5. Saved Strategies Workspace Table.
+- Theme: Clean, solid, opaque dark luxury cards (`#0c1222` / `#0f1422` with `#1a243a` borders, zero glassmorphism blur) highlighted with the multi-color neon spectrum ribbon palette.
 - Font Stack: `Inter` across all 5 typography scale classes (`type-1` to `type-5`).
 - Spacing: 10 scale steps (`space-1` to `space-10`).
 - Shapes: 3 radius standards (`radius-1`: 8px, `radius-2`: 12px, `radius-3`: 999px).
