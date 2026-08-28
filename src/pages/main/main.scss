@@ -127,16 +127,14 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
             }
 
             &__list {
-                background: linear-gradient(135deg, rgba(16, 28, 61, 0.95) 0%, rgba(13, 22, 48, 0.98) 100%) !important;
-                backdrop-filter: blur(16px) saturate(180%) !important;
-                -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+                background: #263d88 !important;
                 
                 :global(.theme--light) & {
-                    background: linear-gradient(135deg, rgba(16, 28, 61, 0.95) 0%, rgba(13, 22, 48, 0.98) 100%) !important;
-                    border-color: rgba(59, 130, 246, 0.25) !important;
+                    background: #263d88 !important;
+                    border-color: rgba(255, 255, 255, 0.2) !important;
                 }
 
-                border: 1px solid rgba(59, 130, 246, 0.25) !important;
+                border: 1px solid rgba(255, 255, 255, 0.2) !important;
                 border-radius: 8px !important;
                 padding: 6px 10px !important;
                 margin-top: 0 !important;
@@ -149,7 +147,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 overflow-x: auto !important;
                 overflow-y: visible !important;
                 width: 100% !important;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+                box-shadow: 0 4px 16px rgba(38, 61, 136, 0.4) !important;
                 &::-webkit-scrollbar {
                     display: none !important;
                 }
@@ -166,7 +164,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                     width: 100% !important;
                     border-radius: 0 !important;
                     gap: 4px !important;
-                    background: linear-gradient(135deg, rgba(16, 28, 61, 0.98) 0%, rgba(13, 22, 48, 1) 100%) !important;
+                    background: #263d88 !important;
                 }
 
                 &--header {
@@ -189,18 +187,18 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
             }
 
             &__item {
-                background: transparent !important;
-                color: rgba(255, 255, 255, 0.75) !important;
+                background: rgba(255, 255, 255, 0.12) !important;
+                color: #ffffff !important;
 
                 :global(.theme--light) & {
-                    background: transparent !important;
-                    color: rgba(255, 255, 255, 0.75) !important;
+                    background: rgba(255, 255, 255, 0.12) !important;
+                    color: #ffffff !important;
                 }
                 width: auto !important;
-                height: 40px !important;
+                height: 38px !important;
                 min-width: 0 !important;
                 max-width: none !important;
-                border-radius: 4px !important;
+                border-radius: 6px !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -211,56 +209,56 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 flex-shrink: 0 !important;
                 white-space: nowrap !important;
                 cursor: pointer !important;
-                border: 1px solid transparent !important;
+                border: 1px solid rgba(255, 255, 255, 0.15) !important;
                 transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
 
                 svg {
                     fill: none;
-                    stroke: rgba(255, 255, 255, 0.75) !important;
-                    color: rgba(255, 255, 255, 0.75) !important;
+                    stroke: #ffffff !important;
+                    color: #ffffff !important;
                     
                     path, circle, rect {
-                        fill: rgba(255, 255, 255, 0.75) !important;
-                        stroke: rgba(255, 255, 255, 0.75) !important;
+                        fill: #ffffff !important;
+                        stroke: #ffffff !important;
                     }
                 }
 
                 &:hover {
-                    background: rgba(255, 255, 255, 0.1) !important;
+                    background: rgba(255, 255, 255, 0.25) !important;
                     color: #ffffff !important;
-                    border-color: transparent !important;
-                    transform: none !important;
-                    box-shadow: none !important;
+                    border-color: rgba(255, 255, 255, 0.35) !important;
+                    transform: translateY(-1px) !important;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
                     z-index: 10 !important;
                 }
 
                 &.dc-tabs__active {
-                    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%) !important;
-                    color: #ffffff !important;
-                    border: 1px solid rgba(96, 165, 250, 0.45) !important;
-                    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+                    background: #ffffff !important;
+                    color: #263d88 !important;
+                    border: 1px solid #ffffff !important;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
                     border-radius: 6px !important;
                     transform: none !important;
                     z-index: 5 !important;
                     font-weight: 700 !important;
 
                     svg {
-                        stroke: #ffffff !important;
+                        stroke: #263d88 !important;
                         path, circle, rect {
-                            fill: #ffffff !important;
-                            stroke: #ffffff !important;
+                            fill: #263d88 !important;
+                            stroke: #263d88 !important;
                         }
                     }
                     
                     :global(.theme--light) & {
-                        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%) !important;
-                        color: #ffffff !important;
+                        background: #ffffff !important;
+                        color: #263d88 !important;
 
                         svg {
-                            stroke: #ffffff !important;
+                            stroke: #263d88 !important;
                             path, circle, rect {
-                                fill: #ffffff !important;
-                                stroke: #ffffff !important;
+                                fill: #263d88 !important;
+                                stroke: #263d88 !important;
                             }
                         }
                     }
