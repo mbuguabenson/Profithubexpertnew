@@ -391,31 +391,26 @@ export default class RunPanelStore {
         const { ui } = this.core;
         const { scanner, dollarflipper } = this.root_store;
 
-        this.dbot.stopBot();
+        if (this.dbot?.stopBot) {
+            this.dbot.stopBot().catch(() => {});
+        }
 
         ui.setPromptHandler(false);
 
-        if (this.error_type) {
-            // when user click stop button when there is a error but bot is retrying
-            this.setContractStage(contract_stages.NOT_RUNNING);
-            ui.setAccountSwitcherDisabledMessage();
-            this.setIsRunning(false);
-        } else if (this.has_open_contract) {
-            // when user click stop button when bot is running
-            this.setContractStage(contract_stages.IS_STOPPING);
-        } else {
-            // when user click stop button before bot start running
-            this.setContractStage(contract_stages.NOT_RUNNING);
-            this.unregisterBotListeners();
-            ui.setAccountSwitcherDisabledMessage();
-            this.setIsRunning(false);
-        }
+        // Immediate unfreeze & clean stop
+        this.setContractStage(contract_stages.NOT_RUNNING);
+        this.unregisterBotListeners();
+        ui.setAccountSwitcherDisabledMessage();
+        this.setIsRunning(false);
+        this.setHasOpenContract(false);
+        this.is_contract_buying_in_progress = false;
+        this.is_sell_requested = false;
 
         // Halt automations & forget sequences when user explicitly stops the bot
-        if (scanner.is_full_ai_automation) {
+        if (scanner?.is_full_ai_automation) {
             scanner.setFullAiAutomation(false);
         }
-        if (scanner.signal_sequence_id) {
+        if (scanner?.signal_sequence_id) {
             scanner.signal_sequence_id = null;
         }
         if (dollarflipper?.is_running) {
@@ -708,47 +703,17 @@ export default class RunPanelStore {
     onBotStopEvent = () => {
         const { summary_card } = this.root_store;
         const { ui } = this.core;
-        const indicateBotStopped = () => {
-            this.error_type = undefined;
-            this.setContractStage(contract_stages.NOT_RUNNING);
-            ui.setAccountSwitcherDisabledMessage();
-            this.unregisterBotListeners();
-        };
-        if (this.error_type === ErrorTypes.RECOVERABLE_ERRORS) {
-            // Bot should indicate it started in below cases:
-            // - When error happens it's a recoverable error
-            const { shouldRestartOnError = false, timeMachineEnabled = false } =
-                this.dbot?.interpreter?.bot?.tradeEngine?.options ?? {};
-            const is_bot_recoverable = shouldRestartOnError || timeMachineEnabled;
-
-            if (is_bot_recoverable) {
-                this.error_type = undefined;
-                this.setContractStage(contract_stages.PURCHASE_SENT);
-            } else {
-                this.setIsRunning(false);
-                indicateBotStopped();
-            }
-        } else if (this.error_type === ErrorTypes.UNRECOVERABLE_ERRORS) {
-            // Bot should indicate it stopped in below cases:
-            // - When error happens and it's an unrecoverable error
-            this.setIsRunning(false);
-            indicateBotStopped();
-        } else if (this.has_open_contract) {
-            // Bot should indicate the contract is closed in below cases:
-            // - When bot was running and an error happens
-            this.error_type = undefined;
-            this.is_sell_requested = false;
-            this.setContractStage(contract_stages.CONTRACT_CLOSED);
-            ui.setAccountSwitcherDisabledMessage();
-            this.unregisterBotListeners();
-        } else {
-            this.setIsRunning(false);
-            indicateBotStopped();
-        }
-
+        
+        this.error_type = undefined;
+        this.is_sell_requested = false;
+        this.is_contract_buying_in_progress = false;
+        this.setIsRunning(false);
         this.setHasOpenContract(false);
+        this.setContractStage(contract_stages.NOT_RUNNING);
+        ui?.setAccountSwitcherDisabledMessage?.();
+        this.unregisterBotListeners();
 
-        summary_card.clearContractUpdateConfigValues();
+        summary_card?.clearContractUpdateConfigValues?.();
 
         // listen for new version update
         const listen_new_version = new Event('ListenPWAUpdate');

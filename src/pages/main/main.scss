@@ -112,21 +112,21 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
             }
 
             &__list {
-                background: #0b0e14 !important;
-                border: 1px solid #1c2433 !important;
-                border-radius: 8px !important;
-                padding: 4px 6px !important;
+                background: #0c1222 !important;
+                border: 1px solid #1a243a !important;
+                border-radius: 10px !important;
+                padding: 5px 8px !important;
                 margin-top: 0 !important;
-                margin-bottom: 4px !important;
+                margin-bottom: 6px !important;
                 justify-content: flex-start !important;
                 align-items: center !important;
                 display: flex !important;
                 flex-wrap: nowrap !important;
-                gap: 4px !important;
+                gap: 5px !important;
                 overflow-x: auto !important;
                 overflow-y: visible !important;
                 width: 100% !important;
-                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
                 &::-webkit-scrollbar {
                     display: none !important;
                 }
@@ -134,7 +134,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 // Add a pseudo-element to fix flexbox ignoring right padding on overflow
                 &::after {
                     content: '';
-                    min-width: 4px;
+                    min-width: 6px;
                 }
 
                 @include mobile-or-tablet-screen {
@@ -143,7 +143,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                     width: 100% !important;
                     border-radius: 0 !important;
                     gap: 3px !important;
-                    background: #0b0e14 !important;
+                    background: #0c1222 !important;
                     border-left: none !important;
                     border-right: none !important;
                 }
@@ -169,21 +169,21 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
 
             &__item {
                 background: transparent !important;
-                color: #848e9c !important;
+                color: #94a3b8 !important;
 
                 :global(.theme--light) & {
                     background: transparent !important;
-                    color: #848e9c !important;
+                    color: #94a3b8 !important;
                 }
                 width: auto !important;
-                height: 34px !important;
+                height: 36px !important;
                 min-width: 0 !important;
                 max-width: none !important;
-                border-radius: 6px !important;
+                border-radius: 8px !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                padding: 0 12px !important;
+                padding: 0 14px !important;
                 margin: 0 !important;
                 box-sizing: border-box !important;
                 position: relative !important;
@@ -191,80 +191,79 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 white-space: nowrap !important;
                 cursor: pointer !important;
                 border: 1px solid transparent !important;
-                font-size: 12.5px !important;
-                font-weight: 500 !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
                 letter-spacing: 0.01em !important;
                 font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif !important;
-                transition: all 0.16s ease !important;
+                transition: all 0.18s ease !important;
 
                 svg {
                     fill: none;
-                    stroke: #848e9c !important;
-                    color: #848e9c !important;
-                    transition: stroke 0.16s ease;
+                    stroke: #94a3b8 !important;
+                    color: #94a3b8 !important;
+                    transition: stroke 0.18s ease;
                     
                     path, circle, rect, polygon, line, polyline {
-                        stroke: #848e9c !important;
+                        stroke: #94a3b8 !important;
                     }
                 }
 
                 &:hover {
-                    background: rgba(255, 255, 255, 0.05) !important;
-                    color: #eaecef !important;
-                    border-color: rgba(255, 255, 255, 0.08) !important;
+                    background: #121b30 !important;
+                    color: #ffffff !important;
+                    border-color: #23304d !important;
                     z-index: 10 !important;
 
                     svg {
-                        stroke: #eaecef !important;
-                        color: #eaecef !important;
+                        stroke: #ffffff !important;
+                        color: #ffffff !important;
 
                         path, circle, rect, polygon, line, polyline {
-                            stroke: #eaecef !important;
+                            stroke: #ffffff !important;
                         }
                     }
                 }
 
                 &.dc-tabs__active {
-                    background: #18202f !important;
+                    background: #111a2e !important;
                     color: #ffffff !important;
-                    border: 1px solid #28354d !important;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
-                    border-radius: 6px !important;
+                    border: 1px solid #28395c !important;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
+                    border-radius: 8px !important;
                     transform: none !important;
                     z-index: 5 !important;
-                    font-weight: 700 !important;
+                    font-weight: 800 !important;
 
                     &::after {
                         content: '';
                         position: absolute;
                         bottom: 0;
-                        left: 15%;
-                        right: 15%;
-                        height: 2px;
-                        background: #00f2fe;
+                        left: 10%;
+                        right: 10%;
+                        height: 2.5px;
+                        background: linear-gradient(90deg, #00d2ff 0%, #7928ca 35%, #ff007a 65%, #ffd600 100%);
                         border-radius: 2px;
-                        box-shadow: 0 0 6px rgba(0, 242, 254, 0.8);
                     }
 
                     svg {
-                        stroke: #00f2fe !important;
-                        color: #00f2fe !important;
+                        stroke: #00d2ff !important;
+                        color: #00d2ff !important;
 
                         path, circle, rect, polygon, line, polyline {
-                            stroke: #00f2fe !important;
+                            stroke: #00d2ff !important;
                         }
                     }
                     
                     :global(.theme--light) & {
-                        background: #18202f !important;
+                        background: #111a2e !important;
                         color: #ffffff !important;
 
                         svg {
-                            stroke: #00f2fe !important;
-                            color: #00f2fe !important;
+                            stroke: #00d2ff !important;
+                            color: #00d2ff !important;
 
                             path, circle, rect, polygon, line, polyline {
-                                stroke: #00f2fe !important;
+                                stroke: #00d2ff !important;
                             }
                         }
                     }

@@ -368,28 +368,33 @@ export default Engine =>
                 data: this.tradeOptions.amount,
             });
 
-            return action().then(onSuccess).catch(err => {
-                const errCode = err?.error?.code || err?.code || 'PurchaseFailed';
-                const errMsg = err?.error?.message || err?.message || 'Purchase failed';
+                return action().then(onSuccess).catch(err => {
+                    const errCode = err?.error?.code || err?.code || 'PurchaseFailed';
+                    const errMsg = err?.error?.message || err?.message || 'Purchase failed';
 
-                log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
+                    log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
 
-                // Emit Error to unfreeze run-panel
-                globalObserver.emit('Error', {
-                    code: errCode,
-                    message: errMsg,
-                    name: errCode,
+                    // Emit Error to unfreeze run-panel
+                    globalObserver.emit('Error', {
+                        code: errCode,
+                        message: errMsg,
+                        name: errCode,
+                    });
+
+                    if (
+                        ['InsufficientBalance', 'NotEnoughMoney', 'AccountBalanceExceeded', 'CustomLimitsReached'].includes(errCode) ||
+                        errMsg.toLowerCase().includes('insufficient') ||
+                        errMsg.toLowerCase().includes('balance')
+                    ) {
+                        globalObserver.emit('bot.stop');
+                        globalObserver.emit('bot.stop_button_click');
+                    }
+
+                    this.store.dispatch(purchaseSuccessful());
+                    if (this.afterPromise) {
+                        this.afterPromise();
+                    }
                 });
-
-                if (['InsufficientBalance', 'NotEnoughMoney', 'AccountBalanceExceeded'].includes(errCode) || errMsg.toLowerCase().includes('insufficient')) {
-                    globalObserver.emit('bot.stop_button_click');
-                }
-
-                this.store.dispatch(purchaseSuccessful());
-                if (this.afterPromise) {
-                    this.afterPromise();
-                }
-            });
         }
 
         getPurchaseReference = () => purchase_reference;
