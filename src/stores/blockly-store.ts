@@ -42,8 +42,8 @@ export default class BlocklyStore {
         return this._has_saved_bots;
     }
 
-    // Private property to cache the result of the async check
-    _has_saved_bots = false;
+    // Private property to cache the result of the async check (default true as default workspace is always loaded)
+    _has_saved_bots = true;
 
     // Method to check for saved bots and update the cache
     checkForSavedBots = async (): Promise<void> => {

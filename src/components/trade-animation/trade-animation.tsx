@@ -69,20 +69,9 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
 
     const status_classes = ['', '', ''];
 
-    // Check if there are no active or saved bots
-    const has_no_bots = !has_active_bot && !has_saved_bots;
-    const is_bot_builder_tab = active_tab === DBOT_TABS.BOT_BUILDER;
-
-    // Disable the RUN button if:
-    // 1. There are no active or saved bots AND the user is not in the bot builder tab
-    const should_disable_run = has_no_bots && !is_bot_builder_tab;
-
-    const is_disabled = is_stop_button_visible ? false : should_disable_run;
-
-    // Show the tooltip when:
-    // 1. The user is NOT in the bot builder tab, AND
-    // 2. There are no bots
-    const should_show_tooltip = !is_stop_button_visible && !is_bot_builder_tab && has_no_bots;
+    // Run button is always active and selectable across tabs
+    const is_disabled = is_stop_button_visible ? Boolean(is_stop_button_disabled) : false;
+    const should_show_tooltip = false;
 
     const button_props = React.useMemo(() => {
         if (is_stop_button_visible && !is_stop_button_disabled) {
