@@ -303,9 +303,11 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition_accumula
             growth_rate        : ${growth_rate},
             currency           : '${currency}',
             amount             : ${stake_amount},
-            limit_order        : ${JSON.stringify(limit_order)},
+            limit_order        : {
+                take_profit: ${limit_order.take_profit || 'undefined'},
+            },
             basis              : 'stake',
-            take_profit          : ${limit_order.take_profit},
+            take_profit        : ${limit_order.take_profit || 'undefined'},
         });
         BinaryBotPrivateHasCalledTradeOptions = true;
     `;

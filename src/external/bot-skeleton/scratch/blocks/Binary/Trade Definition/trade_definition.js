@@ -176,12 +176,12 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition = block 
     const restart_on_error_block = block.getChildByType('trade_definition_restartonerror');
     const restart_on_buy_sell_block = block.getChildByType('trade_definition_restartbuysell');
 
-    const symbol = market_block.getFieldValue('SYMBOL_LIST');
-    const trade_type = trade_type_block.getFieldValue('TRADETYPE_LIST');
-    const contract_type = contract_type_block.getFieldValue('TYPE_LIST');
-    const candle_interval = candle_interval_block.getFieldValue('CANDLEINTERVAL_LIST');
-    const should_restart_on_error = restart_on_error_block.getFieldValue('RESTARTONERROR') !== 'FALSE';
-    const should_restart_on_buy_sell = restart_on_buy_sell_block.getFieldValue('TIME_MACHINE_ENABLED') !== 'FALSE';
+    const symbol = market_block?.getFieldValue('SYMBOL_LIST') || 'R_100';
+    const trade_type = trade_type_block?.getFieldValue('TRADETYPE_LIST') || 'callput';
+    const contract_type = contract_type_block?.getFieldValue('TYPE_LIST') || 'both';
+    const candle_interval = candle_interval_block?.getFieldValue('CANDLEINTERVAL_LIST') || 'FALSE';
+    const should_restart_on_error = restart_on_error_block ? restart_on_error_block.getFieldValue('RESTARTONERROR') !== 'FALSE' : true;
+    const should_restart_on_buy_sell = restart_on_buy_sell_block ? restart_on_buy_sell_block.getFieldValue('TIME_MACHINE_ENABLED') !== 'FALSE' : true;
 
     const { opposites } = config();
     const raw_tt = (trade_type || '').toUpperCase();

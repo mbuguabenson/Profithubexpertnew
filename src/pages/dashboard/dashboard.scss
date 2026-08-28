@@ -2,53 +2,55 @@
 @use 'risk-disclaimer.scss';
 
 // ═══════════════════════════════════════════════════════════════
-// ✦ DASHBOARD UI — CLEAN, STRAIGHT, ONE-LINE ACTION TILES
+// ✦ DASHBOARD UI — CLEAN, GLASSMORPHIC & INSTITUTIONAL DESIGN
 // ═══════════════════════════════════════════════════════════════
 
 :root, .theme--light {
-    --dash-bg:               #ffffff;
-    --dash-card-bg:          #ffffff;
-    --dash-card-border:      rgba(0, 0, 0, 0.08);
-    --dash-shadow-soft:      0 8px 30px rgba(0, 0, 0, 0.04);
-    --dash-shadow-raised:    0 12px 35px rgba(0, 0, 0, 0.06);
-    --dash-text-main:        #1e293b;
+    --dash-bg:               #f8fafc;
+    --dash-card-bg:          rgba(255, 255, 255, 0.85);
+    --dash-card-border:      rgba(226, 232, 240, 0.8);
+    --dash-shadow-soft:      0 10px 30px rgba(0, 0, 0, 0.04);
+    --dash-shadow-raised:    0 16px 40px rgba(0, 0, 0, 0.08);
+    --dash-text-main:        #0f172a;
     --dash-text-sub:         #64748b;
 
-    --gold-banner-bg:        #fffbeb;
+    --gold-banner-bg:        linear-gradient(135deg, #fffdf5 0%, #fffbeb 100%);
     --gold-banner-border:    #fef08a;
-    --gold-btn-bg:           #f59e0b;
-    --gold-btn-hover:        #d97706;
+    --gold-btn-bg:           linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --gold-btn-hover:        linear-gradient(135deg, #d97706 0%, #b45309 100%);
 
-    --wa-card-bg:            #ffffff;
-    --wa-card-border:        #e2e8f0;
-    --wa-btn-bg:             #10b981;
-    --wa-btn-hover:          #059669;
+    --wa-card-bg:            linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 253, 244, 0.85) 100%);
+    --wa-card-border:        rgba(187, 247, 208, 0.8);
+    --wa-btn-bg:             linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --wa-btn-hover:          linear-gradient(135deg, #059669 0%, #047857 100%);
 
-    --tile-bg:               #f8fafc;
-    --tile-hover-bg:         #ffffff;
+    --glass-card-bg:         rgba(255, 255, 255, 0.8);
+    --glass-card-border:     rgba(255, 255, 255, 0.9);
+    --glass-card-shadow:     0 12px 32px rgba(15, 23, 42, 0.05);
 }
 
 body.theme--dark, .theme--dark {
     --dash-bg:               #070b14;
-    --dash-card-bg:          rgba(15, 23, 42, 0.75);
+    --dash-card-bg:          rgba(15, 23, 42, 0.7);
     --dash-card-border:      rgba(255, 255, 255, 0.08);
-    --dash-shadow-soft:      0 10px 30px rgba(0, 0, 0, 0.5);
-    --dash-shadow-raised:    0 14px 40px rgba(0, 0, 0, 0.7);
+    --dash-shadow-soft:      0 12px 35px rgba(0, 0, 0, 0.5);
+    --dash-shadow-raised:    0 18px 45px rgba(0, 0, 0, 0.7);
     --dash-text-main:        #ffffff;
-    --dash-text-sub:         #cbd5e1;
+    --dash-text-sub:         #94a3b8;
 
-    --gold-banner-bg:        rgba(245, 158, 11, 0.12);
+    --gold-banner-bg:        linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.04) 100%);
     --gold-banner-border:    rgba(245, 158, 11, 0.35);
-    --gold-btn-bg:           #f59e0b;
-    --gold-btn-hover:        #d97706;
+    --gold-btn-bg:           linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --gold-btn-hover:        linear-gradient(135deg, #d97706 0%, #b45309 100%);
 
-    --wa-card-bg:            rgba(15, 23, 42, 0.75);
-    --wa-card-border:        rgba(255, 255, 255, 0.08);
-    --wa-btn-bg:             #10b981;
-    --wa-btn-hover:          #059669;
+    --wa-card-bg:            linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(6, 78, 59, 0.25) 100%);
+    --wa-card-border:        rgba(16, 185, 129, 0.25);
+    --wa-btn-bg:             linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --wa-btn-hover:          linear-gradient(135deg, #059669 0%, #047857 100%);
 
-    --tile-bg:               rgba(30, 41, 59, 0.6);
-    --tile-hover-bg:         rgba(30, 41, 59, 0.95);
+    --glass-card-bg:         linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%);
+    --glass-card-border:     rgba(255, 255, 255, 0.12);
+    --glass-card-shadow:     0 14px 40px rgba(0, 0, 0, 0.6);
 }
 
 .bot-dashboard {
@@ -68,41 +70,47 @@ body.theme--dark, .theme--dark {
         width: 100%;
         min-height: 100vh;
         background: var(--dash-bg);
-        padding: 24px 32px 100px;
+        padding: 28px 36px 100px;
         box-sizing: border-box;
 
         @include mobile-screen {
-            padding: 14px 14px 80px;
+            padding: 16px 14px 80px;
         }
 
         .quick-panel {
-            max-width: 960px;
+            max-width: 1040px;
             margin: 0 auto;
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 22px;
         }
     }
 }
 
-// Top Notice Header
+// ─── Top Hub Welcome Header ───────────────────────────────────────────
 .dash-hub-header-notice {
     text-align: center;
+    padding: 6px 12px;
 
     .notice-text {
-        font-size: 0.92rem;
+        font-size: 0.94rem;
         color: var(--dash-text-sub);
         margin: 0;
         font-weight: 500;
-        line-height: 1.5;
+        line-height: 1.6;
+
+        strong {
+            color: var(--dash-text-main);
+            font-weight: 700;
+        }
     }
 }
 
 .tab__dashboard__table {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 22px;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -119,6 +127,7 @@ body.theme--dark, .theme--dark {
     box-shadow: var(--dash-shadow-soft);
     gap: 16px;
     flex-wrap: wrap;
+    backdrop-filter: blur(12px);
 
     .notice-left-text {
         font-size: 0.92rem;
@@ -135,8 +144,8 @@ body.theme--dark, .theme--dark {
     .dash-gold-btn {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        padding: 10px 24px;
+        gap: 6px;
+        padding: 10px 22px;
         border-radius: 10px;
         background: var(--gold-btn-bg);
         color: #ffffff;
@@ -144,42 +153,53 @@ body.theme--dark, .theme--dark {
         font-weight: 800;
         text-decoration: none;
         box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
-        transition: transform 0.2s ease, background-color 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
 
         &:hover {
-            background: var(--gold-btn-hover);
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
         }
     }
 }
 
-// Quick Platform Metrics Row
+// ─── Quick Platform Metrics Row (Glassmorphic Badges) ─────────────────
 .dash-quick-metrics-row {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
-    margin-top: -4px;
 
     .metric-pill {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 6px 14px;
+        gap: 8px;
+        padding: 8px 18px;
         border-radius: 24px;
-        background: var(--tile-bg);
-        border: 1px solid var(--dash-card-border);
-        font-size: 0.8rem;
+        background: var(--glass-card-bg);
+        border: 1px solid var(--glass-card-border);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        backdrop-filter: blur(12px);
+        font-size: 0.82rem;
         color: var(--dash-text-sub);
+        transition: transform 0.2s ease;
+
+        &:hover {
+            transform: translateY(-1px);
+        }
 
         strong {
             color: var(--dash-text-main);
+            font-weight: 700;
         }
+
+        .text-emerald { color: #10b981; }
+        .text-blue { color: #3b82f6; }
+        .text-purple { color: #a855f7; }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 2. FLOATING MANUAL TRADER BUTTON
+// 2. FLOATING MANUAL TRADER ACTION BUTTON
 // ═══════════════════════════════════════════════════════════════
 .dash-manual-trader-row {
     display: flex;
@@ -189,109 +209,230 @@ body.theme--dark, .theme--dark {
     .dash-manual-trader-btn {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 12px 30px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #10b981, #059669);
-        border: none;
+        gap: 10px;
+        padding: 13px 32px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         color: #ffffff;
-        font-size: 0.88rem;
+        font-size: 0.92rem;
         font-weight: 800;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
         cursor: pointer;
-        box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+        backdrop-filter: blur(12px);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
 
         &:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.5);
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 3. 4 MAIN ACTION TILES IN ONE LINE (STRAIGHT & CLEAN)
+// 3. 4 HIGH-END GLASSMORPHIC ACTION CARDS
 // ═══════════════════════════════════════════════════════════════
 .dash-action-tiles-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 18px;
+
+    @include tablet-screen {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
 
     @include mobile-screen {
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
+        gap: 12px;
     }
 
-    .dash-action-tile {
+    .dash-glass-card {
+        position: relative;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 20px 14px;
-        border-radius: 18px;
-        background: var(--tile-bg);
-        border: 1px solid var(--dash-card-border);
-        box-shadow: var(--dash-shadow-soft);
+        justify-content: space-between;
+        padding: 22px 20px;
+        min-height: 180px;
+        border-radius: 20px;
+        background: var(--glass-card-bg);
+        border: 1px solid var(--glass-card-border);
+        box-shadow: var(--glass-card-shadow);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
         cursor: pointer;
-        transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+        overflow: hidden;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+
+        // Subtle ambient back-glow
+        .glass-card-glow {
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            opacity: 0.25;
+            filter: blur(25px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+
+        // ── Color Theme Variants ──
+        &.glass-purple {
+            .glass-card-glow { background: #a855f7; }
+            .glass-badge { background: rgba(168, 85, 247, 0.12); color: #c084fc; border-color: rgba(168, 85, 247, 0.3); }
+            &:hover {
+                border-color: rgba(168, 85, 247, 0.5);
+                box-shadow: 0 18px 45px rgba(168, 85, 247, 0.22);
+            }
+        }
+
+        &.glass-emerald {
+            .glass-card-glow { background: #10b981; }
+            .glass-badge { background: rgba(16, 185, 129, 0.12); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+            &:hover {
+                border-color: rgba(16, 185, 129, 0.5);
+                box-shadow: 0 18px 45px rgba(16, 185, 129, 0.22);
+            }
+        }
+
+        &.glass-blue {
+            .glass-card-glow { background: #3b82f6; }
+            .glass-badge { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+            &:hover {
+                border-color: rgba(59, 130, 246, 0.5);
+                box-shadow: 0 18px 45px rgba(59, 130, 246, 0.22);
+            }
+        }
+
+        &.glass-amber {
+            .glass-card-glow { background: #f59e0b; }
+            .glass-badge { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+            &:hover {
+                border-color: rgba(245, 158, 11, 0.5);
+                box-shadow: 0 18px 45px rgba(245, 158, 11, 0.22);
+            }
+        }
 
         &:hover {
-            transform: translateY(-4px);
-            background: var(--tile-hover-bg);
-            box-shadow: var(--dash-shadow-raised);
+            transform: translateY(-5px);
+            .glass-card-glow {
+                opacity: 0.45;
+                transform: scale(1.2);
+            }
+            .glass-explore-arrow {
+                transform: translate(2px, -2px);
+                color: var(--dash-text-main);
+            }
         }
 
-        .tile-icon-orb {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
+        .glass-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .glass-icon-wrapper {
+            width: 46px;
+            height: 46px;
             display: grid;
             place-items: center;
-            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.25s ease;
 
-            &.orb-purple { background: rgba(124, 58, 237, 0.15); .tile-icon { color: #a855f7; } }
-            &.orb-emerald { background: rgba(16, 185, 129, 0.15); .tile-icon { color: #10b981; } }
-            &.orb-blue { background: rgba(59, 130, 246, 0.15); .tile-icon { color: #3b82f6; } }
-            &.orb-amber { background: rgba(245, 158, 11, 0.15); .tile-icon { color: #f59e0b; } }
+            .glass-icon-svg {
+                display: block;
+                filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.15));
+            }
         }
 
-        .tile-title {
-            font-size: 0.95rem;
-            font-weight: 700;
+        .glass-badge {
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid;
+            text-transform: uppercase;
+        }
+
+        .glass-card-body {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .glass-title {
+            font-size: 1.05rem;
+            font-weight: 800;
             color: var(--dash-text-main);
-            text-align: center;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .glass-subtitle {
+            font-size: 0.78rem;
+            color: var(--dash-text-sub);
+            margin: 0;
+            line-height: 1.35;
+        }
+
+        .glass-card-footer {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid var(--dash-card-border);
+
+            .glass-explore-text {
+                font-size: 0.72rem;
+                font-weight: 700;
+                color: var(--dash-text-sub);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            .glass-explore-arrow {
+                color: var(--dash-text-sub);
+                transition: transform 0.2s ease, color 0.2s ease;
+            }
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 4. COMMUNITY WHATSAPP GROUP CARD
+// 4. COMMUNITY VIP WHATSAPP GROUP CARD
 // ═══════════════════════════════════════════════════════════════
 .dash-whatsapp-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 24px;
-    border-radius: 16px;
+    padding: 20px 26px;
+    border-radius: 18px;
     background: var(--wa-card-bg);
     border: 1px solid var(--wa-card-border);
     box-shadow: var(--dash-shadow-soft);
-    gap: 16px;
+    gap: 20px;
     flex-wrap: wrap;
+    backdrop-filter: blur(16px);
 
     .whatsapp-info {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 16px;
         flex: 1;
         min-width: 260px;
 
         .whatsapp-icon-circle {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.15);
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.35);
             display: grid;
             place-items: center;
             flex-shrink: 0;
@@ -301,11 +442,17 @@ body.theme--dark, .theme--dark {
             }
         }
 
-        .whatsapp-desc {
-            font-size: 0.9rem;
+        .wa-title {
+            font-size: 1rem;
+            font-weight: 800;
             color: var(--dash-text-main);
+            margin: 0 0 2px 0;
+        }
+
+        .whatsapp-desc {
+            font-size: 0.85rem;
+            color: var(--dash-text-sub);
             margin: 0;
-            font-weight: 500;
             line-height: 1.4;
         }
     }
@@ -313,38 +460,51 @@ body.theme--dark, .theme--dark {
     .dash-whatsapp-btn {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        padding: 10px 22px;
-        border-radius: 10px;
+        gap: 6px;
+        padding: 12px 24px;
+        border-radius: 12px;
         background: var(--wa-btn-bg);
         color: #ffffff;
         font-size: 0.88rem;
         font-weight: 800;
         text-decoration: none;
-        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-        transition: transform 0.2s ease, background-color 0.2s ease;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
 
         &:hover {
-            background: var(--wa-btn-hover);
             transform: translateY(-2px);
+            box-shadow: 0 8px 26px rgba(16, 185, 129, 0.5);
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 5. STRATEGY MANAGEMENT / BOT LIST
+// 5. STRATEGY MANAGEMENT & BOT LIST CONTAINER
 // ═══════════════════════════════════════════════════════════════
 .dash-bot-list-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 8px;
+    background: var(--glass-card-bg);
+    border: 1px solid var(--glass-card-border);
+    border-radius: 20px;
+    padding: 22px 24px;
+    box-shadow: var(--glass-card-shadow);
+    backdrop-filter: blur(16px);
+
+    .dash-bot-list-header {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-bottom: 16px;
+    }
 
     .dash-bot-list-title {
         font-size: 1.1rem;
         font-weight: 800;
         color: var(--dash-text-main);
         margin: 0;
-        letter-spacing: -0.01em;
+    }
+
+    .dash-bot-list-sub {
+        font-size: 0.8rem;
+        color: var(--dash-text-sub);
     }
 }

@@ -111,7 +111,7 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
 
         this.accountInfo = {
             ...api_base.account_info,
-            loginid: activeLoginId || (api_base.account_info as any)?.loginid || token,
+            loginid: activeLoginId || api_base.account_info?.loginid || token,
         };
         this.token = activeLoginId || api_base.token || token;
 

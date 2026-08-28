@@ -345,10 +345,13 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition_multipli
             multiplier         : ${multiplier_value},
             currency           : '${currency}',
             amount             : ${stake_amount},
-            limit_order        : ${JSON.stringify(limit_order)},
+            limit_order        : {
+                stop_loss: ${limit_order.stop_loss || 'undefined'},
+                take_profit: ${limit_order.take_profit || 'undefined'},
+            },
             basis              : 'stake',
-            stop_loss          : ${limit_order.stop_loss},
-            take_profit        : ${limit_order.take_profit},
+            stop_loss          : ${limit_order.stop_loss || 'undefined'},
+            take_profit        : ${limit_order.take_profit || 'undefined'},
         });
         BinaryBotPrivateHasCalledTradeOptions = true;
     `;

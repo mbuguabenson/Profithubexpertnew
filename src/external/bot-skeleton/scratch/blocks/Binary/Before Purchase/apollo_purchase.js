@@ -67,7 +67,7 @@ window.Blockly.Blocks.apollo_purchase = {
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.apollo_purchase = block => {
-    const purchaseList = block.getFieldValue('PURCHASE_LIST');
+    const purchaseList = block.getFieldValue('PURCHASE_LIST') || 'CALL';
     const multipleContracts = block.getFieldValue('MULTIPLE_CONTRACTS');
     const contractQuantity = block.getFieldValue('CONTRACT_QUANTITY');
 
@@ -130,7 +130,7 @@ window.Blockly.Blocks.apollo_purchase2 = {
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.apollo_purchase2 = block => {
-    const purchaseList = block.getFieldValue('PURCHASE_LIST');
+    const purchaseList = block.getFieldValue('PURCHASE_LIST') || 'CALL';
     const code = `Bot.purchase('${purchaseList}');\n`;
     return code;
 };

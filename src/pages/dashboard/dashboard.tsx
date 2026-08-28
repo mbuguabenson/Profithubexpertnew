@@ -34,11 +34,11 @@ const DashboardComponent = observer(({ handleTabChange }: TMobileIconGuide) => {
                         {/* Top Hub Welcome Notice */}
                         <div className='dash-hub-header-notice'>
                             <p className='notice-text'>
-                                Welcome to 360 Trading Hub. Serving your trading needs for more than 3 years and still strong with more advanced tools & Bots.
+                                Welcome to <strong>Legacy Trading Hub</strong> — Institutional algorithmic trading suite with next-generation automated bots, AI intelligence, and precision execution.
                             </p>
                         </div>
 
-                        {/* Exact Screenshot Dashboard UI Components */}
+                        {/* Clean Glassmorphic Dashboard UI Components */}
                         <Cards has_dashboard_strategies={has_dashboard_strategies} is_mobile={!isDesktop} />
                     </div>
                 </div>

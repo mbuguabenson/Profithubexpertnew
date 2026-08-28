@@ -1,44 +1,142 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
   <defs>
-    <!-- Filter for subtle crispness -->
-    <filter id="logoGlow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.15" />
+    <!-- Forest Onyx Base Gradient -->
+    <linearGradient id="forestGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="50%" stop-color="#022c1e" />
+      <stop offset="100%" stop-color="#011a12" />
+    </linearGradient>
+
+    <!-- Vibrant Lime / Emerald Bar Gradients -->
+    <linearGradient id="limeGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a3e635" />
+      <stop offset="100%" stop-color="#65a30d" />
+    </linearGradient>
+
+    <linearGradient id="limeGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#bef264" />
+      <stop offset="50%" stop-color="#84cc16" />
+      <stop offset="100%" stop-color="#4d7c0f" />
+    </linearGradient>
+
+    <linearGradient id="limeGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#86efac" />
+      <stop offset="50%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#15803d" />
+    </linearGradient>
+
+    <!-- Dynamic Neon Arrow Gradient -->
+    <linearGradient id="arrowGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="40%" stop-color="#059669" />
+      <stop offset="75%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <!-- Subtle Gold Horizon Accent -->
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+
+    <!-- Drop Shadow / Glow Filters -->
+    <filter id="lthGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#10b981" flood-opacity="0.35" />
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+
+    <filter id="barShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.2" />
     </filter>
   </defs>
 
-  <g filter="url(#logoGlow)">
-    <!-- ─── 1. Lime Green Background Chart Bars ─── -->
+  <g filter="url(#lthGlow)">
+    <!-- ─── 1. Background Rising Volume Pillars (Chart Bars) ─── -->
     <!-- Bar 1 -->
-    <rect x="52" y="52" width="12" height="66" rx="1.5" fill="#8dc63f" />
-    <!-- Bar 2 (Tallest) -->
-    <rect x="70" y="38" width="13" height="80" rx="1.5" fill="#8dc63f" />
+    <rect x="52" y="58" width="13" height="60" rx="3" fill="url(#limeGrad1)" filter="url(#barShadow)" />
+    <rect x="53" y="59" width="11" height="4" rx="1.5" fill="#ffffff" fill-opacity="0.4" />
+
+    <!-- Bar 2 (Master Peak) -->
+    <rect x="71" y="36" width="14" height="82" rx="3" fill="url(#limeGrad2)" filter="url(#barShadow)" />
+    <rect x="72" y="37" width="12" height="5" rx="1.5" fill="#ffffff" fill-opacity="0.5" />
+
     <!-- Bar 3 -->
-    <rect x="90" y="55" width="12" height="63" rx="1.5" fill="#8dc63f" />
+    <rect x="91" y="62" width="13" height="56" rx="3" fill="url(#limeGrad1)" filter="url(#barShadow)" />
+    <rect x="92" y="63" width="11" height="4" rx="1.5" fill="#ffffff" fill-opacity="0.4" />
+
     <!-- Bar 4 -->
-    <rect x="108" y="65" width="12" height="53" rx="1.5" fill="#8dc63f" />
+    <rect x="110" y="70" width="13" height="48" rx="3" fill="url(#limeGrad3)" filter="url(#barShadow)" />
+    <rect x="111" y="71" width="11" height="4" rx="1.5" fill="#ffffff" fill-opacity="0.4" />
+
     <!-- Bar 5 -->
-    <rect x="126" y="58" width="12" height="60" rx="1.5" fill="#8dc63f" />
-    <!-- Bar 6 -->
-    <rect x="144" y="50" width="12" height="68" rx="1.5" fill="#8dc63f" />
+    <rect x="129" y="54" width="13" height="64" rx="3" fill="url(#limeGrad2)" filter="url(#barShadow)" />
+    <rect x="130" y="55" width="11" height="4" rx="1.5" fill="#ffffff" fill-opacity="0.4" />
 
-    <!-- ─── 2. Dark Forest Green 'L' Frame & Base ─── -->
-    <!-- Vertical Left Bar of L -->
-    <path d="M33 55 H46 V106 H33 Z" fill="#033d26" />
-    <!-- Horizontal Base Bar of L -->
-    <path d="M33 118 H156 V131 H33 Z" fill="#033d26" />
+    <!-- ─── 2. Institutional Forest Onyx 'L' Architectural Base ─── -->
+    <!-- Left Vertical Bracket Stem -->
+    <path d="M28 54 
+             C28 50 31 48 35 48 
+             L45 48 
+             C47 48 48 49 48 51 
+             L48 108 
+             L28 108 
+             Z" 
+          fill="url(#forestGrad)" />
 
-    <!-- ─── 3. Dynamic Rising Trendline & Arrow ─── -->
-    <!-- Main Thick Polyline Arrow Body -->
-    <path d="M33 106 
-             L75 54 
-             L92 76 
+    <!-- Solid Horizontal Foundation Base -->
+    <path d="M28 116 
+             L152 116 
+             C155 116 157 118 157 121 
+             L157 130 
+             C157 133 155 135 152 135 
+             L28 135 
+             C25 135 23 133 23 130 
+             L23 121 
+             C23 118 25 116 28 116 
+             Z" 
+          fill="url(#forestGrad)" />
+
+    <!-- Gold Precision Micro-Grid Base Line -->
+    <line x1="28" y1="116" x2="152" y2="116" stroke="url(#goldAccent)" stroke-width="1.5" stroke-linecap="round" />
+
+    <!-- ─── 3. Majestic Ascending Breakout Trajectory Arrow ─── -->
+    <!-- Outer Glow Stroke Outline -->
+    <path d="M28 104 
+             L75 52 
+             L94 74 
              L136 32" 
-          stroke="#033d26" 
-          stroke-width="13" 
-          stroke-linecap="square" 
-          stroke-linejoin="miter" />
+          stroke="#10b981" 
+          stroke-width="17" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          opacity="0.35" />
 
-    <!-- Arrow Head at top right -->
-    <polygon points="124,18 160,25 146,58 139,40 120,40" fill="#033d26" />
+    <!-- Main Forest Onyx Arrow Path -->
+    <path d="M28 104 
+             L75 52 
+             L94 74 
+             L136 32" 
+          stroke="url(#forestGrad)" 
+          stroke-width="12" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+
+    <!-- Neon Emerald High-Precision Core Centerline -->
+    <path d="M30 103 
+             L75 53 
+             L94 75 
+             L134 33" 
+          stroke="url(#arrowGrad)" 
+          stroke-width="4.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+
+    <!-- Dynamic Aerodynamic Arrowhead -->
+    <polygon points="120,16 158,22 144,56 136,38 116,38" fill="url(#arrowGrad)" filter="url(#barShadow)" />
+    <polygon points="124,20 154,25 142,51 136,38 120,38" fill="url(#forestGrad)" />
+    <polygon points="132,24 150,26 142,42 138,36" fill="url(#arrowGrad)" />
+
+    <!-- Micro Apex Core Node -->
+    <circle cx="154" cy="24" r="2.5" fill="#ffffff" />
   </g>
 </svg>

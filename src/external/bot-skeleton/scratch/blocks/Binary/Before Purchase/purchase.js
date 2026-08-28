@@ -84,7 +84,7 @@ window.Blockly.Blocks.purchase = {
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.purchase = block => {
-    const purchaseList = block.getFieldValue('PURCHASE_LIST');
+    const purchaseList = block.getFieldValue('PURCHASE_LIST') || 'CALL';
     
     return `
         Bot.purchase('${purchaseList}');

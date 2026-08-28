@@ -1,58 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 140" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 140" fill="none">
   <defs>
-    <!-- Import Cinzel/Playfair-like styling fallback -->
+    <!-- Forest Onyx Gradient -->
+    <linearGradient id="fullForest" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="50%" stop-color="#022c1e" />
+      <stop offset="100%" stop-color="#011a12" />
+    </linearGradient>
+
+    <!-- Lime / Emerald Gradient -->
+    <linearGradient id="fullLime" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#bef264" />
+      <stop offset="50%" stop-color="#84cc16" />
+      <stop offset="100%" stop-color="#4d7c0f" />
+    </linearGradient>
+
+    <linearGradient id="fullLimeSoft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a3e635" />
+      <stop offset="100%" stop-color="#65a30d" />
+    </linearGradient>
+
+    <!-- Arrow Gradient -->
+    <linearGradient id="fullArrow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="40%" stop-color="#059669" />
+      <stop offset="75%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <linearGradient id="goldAcc" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047" />
+      <stop offset="100%" stop-color="#eab308" />
+    </linearGradient>
+
+    <!-- Typography Text Gradients -->
+    <linearGradient id="textHubGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#84cc16" />
+      <stop offset="50%" stop-color="#a3e635" />
+      <stop offset="100%" stop-color="#65a30d" />
+    </linearGradient>
+
+    <filter id="logoFullGlow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#10b981" flood-opacity="0.25" />
+    </filter>
+
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&amp;family=Outfit:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap');
-      .logo-legacy {
+      @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&amp;family=Plus+Jakarta+Sans:wght@700;800;900&amp;display=swap');
+      .brand-title-legacy {
         font-family: 'Cinzel', 'Playfair Display', 'Times New Roman', serif;
         font-weight: 800;
-        letter-spacing: 2.5px;
-        fill: #033d26;
+        letter-spacing: 3px;
+        fill: #064e3b;
       }
-      .logo-hub {
-        font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
-        font-weight: 700;
-        letter-spacing: 7px;
-        fill: #8dc63f;
+      .brand-title-hub {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-weight: 800;
+        letter-spacing: 8px;
+        fill: url(#textHubGrad2);
       }
-      .logo-tagline {
+      .brand-tagline {
         font-family: 'Cinzel', 'Times New Roman', serif;
         font-weight: 700;
-        letter-spacing: 1.8px;
+        letter-spacing: 2px;
         font-size: 11px;
-        fill: #033d26;
+        fill: #022c1e;
       }
     </style>
   </defs>
 
-  <!-- ─── Icon / Emblem Group ─── -->
-  <g transform="translate(5, 0) scale(0.95)">
-    <!-- Lime Green Background Bars -->
-    <rect x="52" y="52" width="12" height="66" rx="1.5" fill="#8dc63f" />
-    <rect x="70" y="38" width="13" height="80" rx="1.5" fill="#8dc63f" />
-    <rect x="90" y="55" width="12" height="63" rx="1.5" fill="#8dc63f" />
-    <rect x="108" y="65" width="12" height="53" rx="1.5" fill="#8dc63f" />
-    <rect x="126" y="58" width="12" height="60" rx="1.5" fill="#8dc63f" />
-    <rect x="144" y="50" width="12" height="68" rx="1.5" fill="#8dc63f" />
+  <!-- ─── Vector Emblem ─── -->
+  <g transform="translate(10, 0) scale(0.92)" filter="url(#logoFullGlow)">
+    <!-- Chart Bars -->
+    <rect x="52" y="58" width="13" height="60" rx="3" fill="url(#fullLimeSoft)" />
+    <rect x="71" y="36" width="14" height="82" rx="3" fill="url(#fullLime)" />
+    <rect x="91" y="62" width="13" height="56" rx="3" fill="url(#fullLimeSoft)" />
+    <rect x="110" y="70" width="13" height="48" rx="3" fill="url(#fullLimeSoft)" />
+    <rect x="129" y="54" width="13" height="64" rx="3" fill="url(#fullLime)" />
 
-    <!-- Dark Green Left & Bottom Frame -->
-    <path d="M33 55 H46 V106 H33 Z" fill="#033d26" />
-    <path d="M33 118 H156 V131 H33 Z" fill="#033d26" />
+    <!-- 'L' Frame -->
+    <path d="M28 54 C28 50 31 48 35 48 L45 48 C47 48 48 49 48 51 L48 108 L28 108 Z" fill="url(#fullForest)" />
+    <path d="M28 116 L152 116 C155 116 157 118 157 121 L157 130 C157 133 155 135 152 135 L28 135 C25 135 23 133 23 130 L23 121 C23 118 25 116 28 116 Z" fill="url(#fullForest)" />
+    <line x1="28" y1="116" x2="152" y2="116" stroke="url(#goldAcc)" stroke-width="1.5" />
 
-    <!-- Rising Dark Green Trendline Arrow -->
-    <path d="M33 106 L75 54 L92 76 L136 32" stroke="#033d26" stroke-width="13" stroke-linecap="square" stroke-linejoin="miter" />
-    <polygon points="124,18 160,25 146,58 139,40 120,40" fill="#033d26" />
+    <!-- Trajectory Arrow -->
+    <path d="M28 104 L75 52 L94 74 L136 32" stroke="url(#fullForest)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M30 103 L75 53 L94 75 L134 33" stroke="url(#fullArrow)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+    <polygon points="120,16 158,22 144,56 136,38 116,38" fill="url(#fullArrow)" />
+    <polygon points="124,20 154,25 142,51 136,38 120,38" fill="url(#fullForest)" />
+    <polygon points="132,24 150,26 142,42 138,36" fill="url(#fullArrow)" />
+    <circle cx="154" cy="24" r="2.5" fill="#ffffff" />
   </g>
 
-  <!-- ─── Typography Group ─── -->
-  <g transform="translate(175, 10)">
-    <!-- 1. LEGACY -->
-    <text x="0" y="58" class="logo-legacy" font-size="52">LEGACY</text>
-
-    <!-- 2. TRADING HUB -->
-    <text x="3" y="88" class="logo-hub" font-size="23">TRADING HUB</text>
-
-    <!-- 3. Tagline -->
-    <text x="32" y="108" class="logo-tagline">WHERE STRATEGY MEETS PRECISION.</text>
+  <!-- ─── Luxury Typography ─── -->
+  <g transform="translate(185, 12)">
+    <text x="0" y="56" class="brand-title-legacy" font-size="52">LEGACY</text>
+    <text x="3" y="86" class="brand-title-hub" font-size="22">TRADING HUB</text>
+    <text x="24" y="106" class="brand-tagline">WHERE STRATEGY MEETS PRECISION.</text>
   </g>
 </svg>
