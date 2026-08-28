@@ -112,39 +112,39 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
 
     const actionTiles = [
         {
-            id: 'import',
-            title: 'Import Strategy',
-            subtitle: 'Load XML or Drive bots',
-            badge: 'BOT LOADER',
-            icon: <GlassImportIcon />,
-            glassTheme: 'glass-purple',
-            callback: () => openFileLoader(),
-        },
-        {
             id: 'smart-trader',
-            title: 'Smart Trader',
-            subtitle: 'AI Auto-Analysis & Trades',
-            badge: 'AI ENGINE',
+            title: 'AI Smart Trader',
+            subtitle: 'AI Automated & Manual Execution',
+            badge: 'LIVE TRADING',
             icon: <GlassSmartIcon />,
-            glassTheme: 'glass-emerald',
+            cardTheme: 'glass-emerald',
             callback: () => setActiveTab(DBOT_TABS.MANUAL_TRADING),
         },
         {
+            id: 'bot-builder',
+            title: 'Bot Builder IDE',
+            subtitle: 'Visual Drag & Drop Workspace',
+            badge: 'BLOCKLY IDE',
+            icon: <GlassImportIcon />,
+            cardTheme: 'glass-purple',
+            callback: () => openFileLoader(),
+        },
+        {
             id: 'free-bots',
-            title: 'Free Bots',
-            subtitle: '24+ Pre-built Strategies',
+            title: '24+ Free Bots',
+            subtitle: 'Pre-loaded Institutional Systems',
             badge: 'PRE-LOADED',
             icon: <GlassFreeIcon />,
-            glassTheme: 'glass-blue',
+            cardTheme: 'glass-blue',
             callback: () => setActiveTab(DBOT_TABS.TRADING_BOTS),
         },
         {
             id: 'signal-tools',
-            title: 'Signal Tools',
-            subtitle: 'Live Market Intelligence',
+            title: 'Market Radar & Signals',
+            subtitle: 'Real-time Live Digit Analysis',
             badge: 'RADAR INTEL',
             icon: <GlassSignalsIcon />,
-            glassTheme: 'glass-amber',
+            cardTheme: 'glass-amber',
             callback: () => setActiveTab(DBOT_TABS.SIGNALS),
         },
     ];
@@ -156,56 +156,28 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                     'tab__dashboard__table--minimized': has_dashboard_strategies && is_mobile,
                 })}
             >
-                {/* 1. Account Creation Gold Notice Banner */}
-                <div className="dash-gold-notice-card">
-                    <div className="notice-left-text">
-                        <strong className="text-amber">Don't have an Account?</strong> Use this verified link to create your live account with Deriv.
-                    </div>
-                    <a
-                        href="https://track.deriv.com/_b_FkYd-u53x-m-sZlUf1gWNd7ZgqdRLk/1/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="dash-gold-btn"
-                    >
-                        <span>Open Account</span>
-                        <ArrowUpRight size={15} />
-                    </a>
-                </div>
-
-                {/* 2. Quick Platform Metrics Bar (Glassmorphic Pills) */}
+                {/* 1. Quick Platform Status & Metric Chips */}
                 <div className="dash-quick-metrics-row">
                     <div className="metric-pill">
                         <Zap size={14} className="text-emerald" />
-                        <span><strong>24+</strong> Free Pre-loaded Bots</span>
+                        <span><strong>24+</strong> Pre-Loaded Strategies</span>
                     </div>
                     <div className="metric-pill">
                         <BarChart3 size={14} className="text-blue" />
-                        <span><strong>Live</strong> AI Market Scanners</span>
+                        <span><strong>Live</strong> AI Market Radar</span>
                     </div>
                     <div className="metric-pill">
                         <ShieldCheck size={14} className="text-purple" />
-                        <span><strong>Encrypted</strong> Deriv API WebSocket</span>
+                        <span><strong>High-Speed</strong> Deriv API WebSocket</span>
                     </div>
                 </div>
 
-                {/* 3. Floating Quick Strike Trader Action */}
-                <div className="dash-manual-trader-row">
-                    <button
-                        onClick={() => setActiveTab(DBOT_TABS.MANUAL_TRADING)}
-                        className="dash-manual-trader-btn"
-                    >
-                        <TrendingUp size={18} />
-                        <span>LAUNCH MANUAL TRADER</span>
-                        <ArrowUpRight size={16} />
-                    </button>
-                </div>
-
-                {/* 4. 4 High-End Glassmorphic Action Cards */}
+                {/* 2. Primary 4-Tile Navigation Grid */}
                 <div className="dash-action-tiles-grid">
                     {actionTiles.map(tile => (
                         <div
                             key={tile.id}
-                            className={classNames('dash-glass-card', tile.glassTheme)}
+                            className={classNames('dash-glass-card', tile.cardTheme)}
                             onClick={tile.callback}
                         >
                             <div className="glass-card-glow" />
@@ -220,35 +192,76 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                                 <p className="glass-subtitle">{tile.subtitle}</p>
                             </div>
                             <div className="glass-card-footer">
-                                <span className="glass-explore-text">Launch Module</span>
+                                <span className="glass-explore-text">Open Module</span>
                                 <ArrowUpRight size={14} className="glass-explore-arrow" />
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* 5. Community WhatsApp Group Card (Glass Refinement) */}
-                <div className="dash-whatsapp-card">
-                    <div className="whatsapp-info">
-                        <div className="whatsapp-icon-circle">
-                            <MessageCircle size={24} className="wa-icon" />
-                        </div>
-                        <div>
-                            <h5 className="wa-title">VIP Trading Community</h5>
-                            <p className="whatsapp-desc">
-                                Join our thriving network of profitable traders for real-time market analysis and daily strategy setups.
+                {/* 3. Primary Execution Launcher Row */}
+                <div className="dash-launchers-row">
+                    <button
+                        onClick={() => setActiveTab(DBOT_TABS.MANUAL_TRADING)}
+                        className="dash-manual-trader-btn"
+                    >
+                        <TrendingUp size={18} />
+                        <span>LAUNCH AI SMART TRADER</span>
+                        <ArrowUpRight size={16} />
+                    </button>
+                    <button
+                        onClick={() => openFileLoader()}
+                        className="dash-import-btn"
+                    >
+                        <Zap size={16} />
+                        <span>IMPORT STRATEGY XML</span>
+                    </button>
+                </div>
+
+                {/* 4. Utility & Community 2-Column Row */}
+                <div className="dash-utility-dual-grid">
+                    {/* Account Registration Card */}
+                    <div className="dash-gold-notice-card">
+                        <div className="notice-left-content">
+                            <h5 className="notice-title"><strong className="text-amber">Deriv Verified Account</strong></h5>
+                            <p className="notice-left-text">
+                                Don't have an account? Open a live Deriv account with instant deposit & low latency trading.
                             </p>
                         </div>
+                        <a
+                            href="https://track.deriv.com/_b_FkYd-u53x-m-sZlUf1gWNd7ZgqdRLk/1/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dash-gold-btn"
+                        >
+                            <span>Open Account</span>
+                            <ArrowUpRight size={15} />
+                        </a>
                     </div>
-                    <a
-                        href="https://chat.whatsapp.com/L1n7hNl9ZJ8ErYVvXk1z6D"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="dash-whatsapp-btn"
-                    >
-                        <span>Join WhatsApp Group</span>
-                        <ArrowUpRight size={15} />
-                    </a>
+
+                    {/* Community WhatsApp Card */}
+                    <div className="dash-whatsapp-card">
+                        <div className="whatsapp-info">
+                            <div className="whatsapp-icon-circle">
+                                <MessageCircle size={22} className="wa-icon" />
+                            </div>
+                            <div>
+                                <h5 className="wa-title">VIP Trading Network</h5>
+                                <p className="whatsapp-desc">
+                                    Join our community for daily setups, bot releases, and market signals.
+                                </p>
+                            </div>
+                        </div>
+                        <a
+                            href="https://chat.whatsapp.com/L1n7hNl9ZJ8ErYVvXk1z6D"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="dash-whatsapp-btn"
+                        >
+                            <span>Join Group</span>
+                            <ArrowUpRight size={15} />
+                        </a>
+                    </div>
                 </div>
 
                 {/* 6. Google Drive Modal Dialog */}

@@ -119,57 +119,6 @@
     gap: 22px;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 1. GOLD NOTICE CARD (DONT HAVE AN ACCOUNT?)
-// ═══════════════════════════════════════════════════════════════
-.dash-gold-notice-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 26px;
-    border-radius: 18px;
-    background: #0f1422;
-    border: 1px solid #2e2412;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-    gap: 16px;
-    flex-wrap: wrap;
-    position: relative;
-    overflow: hidden;
-
-    .notice-left-text {
-        font-size: 0.94rem;
-        color: #ffffff;
-        font-weight: 500;
-
-        .text-amber {
-            color: #ffd600;
-            font-weight: 800;
-            margin-right: 6px;
-        }
-    }
-
-    .dash-gold-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 11px 24px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #ff7a00 0%, #ffd600 100%);
-        color: #060911;
-        font-size: 0.9rem;
-        font-weight: 900;
-        text-decoration: none;
-        letter-spacing: 0.02em;
-        box-shadow: 0 4px 14px rgba(255, 122, 0, 0.35);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-        &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 214, 0, 0.5);
-        }
-    }
-}
-
 // ─── Quick Platform Metrics Row (Solid Badges) ────────────────────────
 .dash-quick-metrics-row {
     display: flex;
@@ -207,25 +156,28 @@
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 2. FLOATING MANUAL TRADER ACTION BUTTON
+// 2. PRIMARY ACTION LAUNCHERS ROW
 // ═══════════════════════════════════════════════════════════════
-.dash-manual-trader-row {
+.dash-launchers-row {
     display: flex;
+    align-items: center;
     justify-content: center;
-    margin: 4px 0;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 6px 0;
 
     .dash-manual-trader-btn {
         display: inline-flex;
         align-items: center;
-        gap: 12px;
-        padding: 14px 36px;
-        border-radius: 16px;
+        gap: 10px;
+        padding: 14px 32px;
+        border-radius: 14px;
         background: linear-gradient(135deg, #00d2ff 0%, #7928ca 40%, #ff007a 100%);
         border: none;
         color: #ffffff;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         font-weight: 900;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
         cursor: pointer;
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -233,6 +185,110 @@
         &:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 30px rgba(255, 0, 122, 0.4);
+        }
+    }
+
+    .dash-import-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 28px;
+        border-radius: 14px;
+        background: #0c1222;
+        border: 1px solid #1a243a;
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+            border-color: #9333ea;
+            background: #111a30;
+            box-shadow: 0 6px 20px rgba(147, 51, 234, 0.25);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3. UTILITY & COMMUNITY DUAL GRID (ACCOUNT & WHATSAPP)
+// ═══════════════════════════════════════════════════════════════
+.dash-utility-dual-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+
+    @include tablet-screen {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    @include mobile-screen {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+.dash-gold-notice-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-radius: 18px;
+    background: #0f1422;
+    border: 1px solid #2e2412;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+
+    .notice-left-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+
+        .notice-title {
+            font-size: 0.95rem;
+            margin: 0;
+            color: #ffffff;
+
+            .text-amber {
+                color: #ffd600;
+                font-weight: 800;
+            }
+        }
+
+        .notice-left-text {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            margin: 0;
+            line-height: 1.4;
+        }
+    }
+
+    .dash-gold-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ff7a00 0%, #ffd600 100%);
+        color: #060911;
+        font-size: 0.85rem;
+        font-weight: 900;
+        text-decoration: none;
+        letter-spacing: 0.02em;
+        box-shadow: 0 4px 14px rgba(255, 122, 0, 0.35);
+        flex-shrink: 0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 214, 0, 0.5);
         }
     }
 }
