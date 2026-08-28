@@ -2,8 +2,6 @@ import React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import ContractResultOverlay from '@/components/contract-result-overlay';
-import { DBOT_TABS } from '@/constants/bot-contents';
-
 import { useStore } from '@/hooks/useStore';
 import {
     LabelPairedPauseLgFillIcon,
@@ -26,10 +24,8 @@ type TTradeAnimation = {
 };
 
 const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnimation) => {
-    const { dashboard, run_panel, summary_card, blockly_store, scanner } = useStore();
-    const { active_tab } = dashboard;
+    const { run_panel, summary_card, blockly_store, scanner } = useStore();
     const { isMobile } = useDevice();
-    const { has_active_bot, has_saved_bots } = blockly_store;
     const { is_contract_completed, profit } = summary_card;
     const { contract_stage, is_stop_button_visible, is_stop_button_disabled, is_paused, onRunButtonClick, onStopBotClick } =
         run_panel;
