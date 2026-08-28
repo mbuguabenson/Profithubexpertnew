@@ -17,13 +17,28 @@ import Sell from './Sell';
 import Ticks from './Ticks';
 import Total from './Total';
 
-const watchBefore = store =>
-    watchScope({
+const watchBefore = store => {
+    const currentState = store.getState();
+    const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
+
+    // In Fast Mode: Execute Before Purchase immediately once per trade cycle to queue buy order ahead of next tick
+    if (
+        isFastMode &&
+        currentState.scope === constants.BEFORE_PURCHASE &&
+        currentState.proposalsReady &&
+        !currentState.hasFiredFastBefore
+    ) {
+        store.dispatch({ type: 'FAST_BEFORE_FIRED' });
+        return Promise.resolve(true);
+    }
+
+    return watchScope({
         store,
         stopScope: constants.DURING_PURCHASE,
         passScope: constants.BEFORE_PURCHASE,
         passFlag: 'proposalsReady',
     });
+};
 
 const watchDuring = store =>
     watchScope({
@@ -42,6 +57,11 @@ export const resetPrevTick = () => {
 };
 
 const watchScope = ({ store, stopScope, passScope, passFlag }) => {
+    const currentState = store.getState();
+    if (currentState.scope === stopScope) {
+        return Promise.resolve(false);
+    }
+
     return new Promise(resolve => {
         let isResolved = false;
         const unsubscribe = store.subscribe(() => {

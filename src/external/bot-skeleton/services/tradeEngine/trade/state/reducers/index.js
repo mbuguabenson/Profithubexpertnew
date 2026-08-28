@@ -12,6 +12,12 @@ const signal = (state = initialState, action) => {
             return {
                 ...state,
                 scope: constants.BEFORE_PURCHASE,
+                hasFiredFastBefore: false,
+            };
+        case 'FAST_BEFORE_FIRED':
+            return {
+                ...state,
+                hasFiredFastBefore: true,
             };
         case constants.PROPOSALS_READY:
             return {
