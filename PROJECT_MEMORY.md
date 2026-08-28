@@ -19,8 +19,8 @@
   - Plain Indices: Trade once every 2.0s tick without skipping.
   - 1s Indices (`1HZ...`): Trade once every 1.0s tick without skipping.
   - Direct buy parameters used in Fast mode to eliminate proposal wait times (0ms round-trip latency).
-  - Immediate Live-Tick Consumption: `watchScope` resolves instantly on the active tick without waiting for listener wakeups, completely eliminating the 2-tick skip between consecutive trades.
-  - No CPU locks or synchronous busy-waiting: ticks trigger via WebSocket events safely.
+  - Immediate Buy Dispatch (Zero-Skip Breakthrough): In Fast Mode, as soon as a trade concludes and `Trade Again` triggers, `watchBefore` instantly resolves and dispatches the next buy order over WebSocket before the next tick occurs. Deriv receives the buy order ahead of time and locks in the **exact next incoming tick as the entry spot**, eliminating the 1-2 tick gap between consecutive trades.
+  - Epoch Gating Removed: Eliminated `lastPurchasedTickEpoch` timestamp comparison in `Purchase.js` that was blocking immediate back-to-back purchases.
 
 ### 2. Trade Settlement & Result Posting
 - Contracts settle via normal `proposal_open_contract` with `is_sold: 1`.
