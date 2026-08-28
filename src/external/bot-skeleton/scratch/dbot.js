@@ -198,6 +198,10 @@ class DBot {
                         varDB.variableMap = window.Blockly.derivWorkspace.getVariableMap();
 
                         window.Blockly.JavaScript.variableDB_ = varDB;
+                        if (window.Blockly?.JavaScript?.javascriptGenerator) {
+                            window.Blockly.JavaScript.workspaceToCode = (ws) =>
+                                window.Blockly.JavaScript.javascriptGenerator.workspaceToCode(ws || window.Blockly.derivWorkspace);
+                        }
 
                         this.addBeforeRunFunction(this.unselectBlocks.bind(this));
                         this.addBeforeRunFunction(this.disableStrayBlocks.bind(this));

@@ -297,44 +297,63 @@ export default class TicksService {
 
     requestTicks(options) {
         const { symbol, granularity, style } = options;
+        const targetSymbol = symbol === 'na' || !symbol ? 'R_100' : symbol;
         const request_object = {
-            ticks_history: symbol === 'na' ? 'R_100' : symbol,
+            ticks_history: targetSymbol,
             subscribe: 1,
             end: 'latest',
             count: 1000,
             granularity: granularity ? Number(granularity) : undefined,
             style,
         };
-        return new Promise((resolve) => {
+        return new Promise(resolve => {
             if (!api_base.api) {
                 resolve([]);
                 return;
             }
-            doUntilDone(() => api_base.api.send(request_object), ['AlreadySubscribed'], api_base)
-                .then(r => {
-                    if (style === 'ticks') {
-                        const ticks = historyToTicks(r.history);
 
-                        this.updateTicksAndCallListeners(symbol, ticks);
-                        const lastTick = ticks[ticks.length - 1];
-                        if (lastTick && typeof window !== 'undefined') {
-                            window.dispatchEvent(new CustomEvent('live_tick_update', { detail: { quote: lastTick.quote, symbol, epoch: lastTick.epoch } }));
-                        }
-                        resolve(ticks);
-                    } else {
-                        const candles = parseCandles(r.candles);
-
-                        this.updateCandlesAndCallListeners([symbol, Number(granularity)], candles);
-
-                        resolve(candles);
+            const processResponse = r => {
+                if (style === 'ticks') {
+                    const ticks = historyToTicks(r.history || r.ticks_history || []);
+                    this.updateTicksAndCallListeners(targetSymbol, ticks);
+                    const lastTick = ticks[ticks.length - 1];
+                    if (lastTick && typeof window !== 'undefined') {
+                        window.dispatchEvent(
+                            new CustomEvent('live_tick_update', {
+                                detail: { quote: lastTick.quote, symbol: targetSymbol, epoch: lastTick.epoch },
+                            })
+                        );
                     }
-                })
-                .catch(error => {
-                    // Handle AlreadySubscribed or other API errors gracefully without uncaught rejection
-                    if (style === 'ticks' && this.ticks.has(symbol)) {
-                        resolve(this.ticks.get(symbol));
-                    } else if (style === 'candles' && this.candles.hasIn([symbol, Number(granularity)])) {
-                        resolve(this.candles.getIn([symbol, Number(granularity)]));
+                    resolve(ticks);
+                } else {
+                    const candles = parseCandles(r.candles || []);
+                    this.updateCandlesAndCallListeners([targetSymbol, Number(granularity)], candles);
+                    resolve(candles);
+                }
+            };
+
+            api_base.api
+                .send(request_object)
+                .then(processResponse)
+                .catch(async error => {
+                    const errCode = error?.error?.code || error?.code;
+                    // If already subscribed, fetch history without subscribe parameter to avoid infinite 5s retry loops
+                    if (errCode === 'AlreadySubscribed') {
+                        try {
+                            const reqNoSub = { ...request_object };
+                            delete reqNoSub.subscribe;
+                            const r = await api_base.api.send(reqNoSub);
+                            processResponse(r);
+                            return;
+                        } catch (subErr) {
+                            console.warn('[TicksService] History fallback notice:', subErr);
+                        }
+                    }
+
+                    if (style === 'ticks' && this.ticks.has(targetSymbol)) {
+                        resolve(this.ticks.get(targetSymbol));
+                    } else if (style === 'candles' && this.candles.hasIn([targetSymbol, Number(granularity)])) {
+                        resolve(this.candles.getIn([targetSymbol, Number(granularity)]));
                     } else {
                         resolve([]);
                     }

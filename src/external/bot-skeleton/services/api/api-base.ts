@@ -709,3 +709,6 @@ class APIBase {
 }
 
 export const api_base = new APIBase();
+if (typeof window !== 'undefined') {
+    (window as any).api_base = api_base;
+}
