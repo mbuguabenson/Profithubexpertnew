@@ -37,6 +37,12 @@ export default class TransactionsStore {
             recovered_transactions: observable,
             is_called_proposal_open_contract: observable,
             is_transaction_details_modal_open: observable,
+            total_completed_runs: observable,
+            total_profit_accumulator: observable,
+            total_stake_accumulator: observable,
+            total_payout_accumulator: observable,
+            total_won_accumulator: observable,
+            total_lost_accumulator: observable,
             transactions: computed,
             onBotContractEvent: action.bound,
             pushTransaction: action.bound,
@@ -53,6 +59,13 @@ export default class TransactionsStore {
     elements: TElement;
     active_transaction_id: null | number = null;
     recovered_completed_transactions: number[] = [];
+    // Persistent counter that survives array truncation
+    total_completed_runs = 0;
+    total_profit_accumulator = 0;
+    total_stake_accumulator = 0;
+    total_payout_accumulator = 0;
+    total_won_accumulator = 0;
+    total_lost_accumulator = 0;
     recovered_transactions: number[] = [];
     is_called_proposal_open_contract = false;
     is_transaction_details_modal_open = false;
@@ -66,44 +79,14 @@ export default class TransactionsStore {
     }
 
     get statistics() {
-        let total_runs = 0;
-        // Filter out only contract transactions and remove dividers
-        const trxs = this.transactions.filter(
-            trx => trx.type === transaction_elements.CONTRACT && typeof trx.data === 'object'
-        );
-        const statistics = trxs.reduce(
-            (stats, { data }) => {
-                const contract = data as TContractInfo;
-                const profit = Number(contract.profit) || 0;
-                const is_completed = contract.is_completed || false;
-                const buy_price = Number(contract.buy_price) || 0;
-                const payout = Number(contract.payout) || Number(contract.bid_price) || 0;
-                const bid_price = Number(contract.bid_price) || 0;
-
-                if (is_completed) {
-                    if (profit > 0) {
-                        stats.won_contracts += 1;
-                        stats.total_payout += payout ?? bid_price ?? 0;
-                    } else {
-                        stats.lost_contracts += 1;
-                    }
-                    stats.total_profit += profit;
-                    stats.total_stake += buy_price;
-                    total_runs += 1;
-                }
-                return stats;
-            },
-            {
-                lost_contracts: 0,
-                number_of_runs: 0,
-                total_profit: 0,
-                total_payout: 0,
-                total_stake: 0,
-                won_contracts: 0,
-            }
-        );
-        statistics.number_of_runs = total_runs;
-        return statistics;
+        return {
+            number_of_runs: this.total_completed_runs,
+            total_profit: this.total_profit_accumulator,
+            total_stake: this.total_stake_accumulator,
+            total_payout: this.total_payout_accumulator,
+            won_contracts: this.total_won_accumulator,
+            lost_contracts: this.total_lost_accumulator,
+        };
     }
 
     toggleTransactionDetailsModal = (is_open: boolean) => {
@@ -180,13 +163,32 @@ export default class TransactionsStore {
                 data: contract,
             });
 
-            // Limit history to 200 items for maximum UI speed & responsiveness
-            if (account_elements.length > 200) {
-                account_elements.length = 200;
+            // Accumulate stats if this new contract is already completed
+            if (is_completed) {
+                const profit = Number(data.profit) || 0;
+                const buy_price = Number(data.buy_price) || 0;
+                const payout = Number(data.payout) || Number(data.bid_price) || 0;
+                this.total_completed_runs += 1;
+                this.total_profit_accumulator += profit;
+                this.total_stake_accumulator += buy_price;
+                if (profit > 0) {
+                    this.total_won_accumulator += 1;
+                    this.total_payout_accumulator += payout;
+                } else {
+                    this.total_lost_accumulator += 1;
+                }
+            }
+
+            // Limit history to 5000 items for UI performance
+            if (account_elements.length > 5000) {
+                account_elements.length = 5000;
             }
         } else {
             // Update existing contract data in-place
             const existing = account_elements[same_contract_index];
+            const existingData = typeof existing.data === 'object' ? existing.data as TContractInfo : null;
+            const wasAlreadyCompleted = existingData?.is_completed;
+
             account_elements[same_contract_index] = {
                 ...existing,
                 data: {
@@ -194,6 +196,22 @@ export default class TransactionsStore {
                     ...contract,
                 },
             };
+
+            // Accumulate stats when contract transitions to completed (only once)
+            if (is_completed && !wasAlreadyCompleted) {
+                const profit = Number(data.profit) || 0;
+                const buy_price = Number(data.buy_price) || 0;
+                const payout = Number(data.payout) || Number(data.bid_price) || 0;
+                this.total_completed_runs += 1;
+                this.total_profit_accumulator += profit;
+                this.total_stake_accumulator += buy_price;
+                if (profit > 0) {
+                    this.total_won_accumulator += 1;
+                    this.total_payout_accumulator += payout;
+                } else {
+                    this.total_lost_accumulator += 1;
+                }
+            }
         }
 
         this.elements = {
@@ -209,6 +227,12 @@ export default class TransactionsStore {
         this.recovered_completed_transactions = this.recovered_completed_transactions?.slice(0, 0);
         this.recovered_transactions = this.recovered_transactions?.slice(0, 0);
         this.is_transaction_details_modal_open = false;
+        this.total_completed_runs = 0;
+        this.total_profit_accumulator = 0;
+        this.total_stake_accumulator = 0;
+        this.total_payout_accumulator = 0;
+        this.total_won_accumulator = 0;
+        this.total_lost_accumulator = 0;
     }
 
     registerReactions() {
