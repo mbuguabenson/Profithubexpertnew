@@ -107,7 +107,12 @@ export class AccountSwitcherService {
             window.dispatchEvent(new Event('storage'));
 
             // 6. Seamless live WebSocket re-authorization with strict 2500ms timeout guard
-            if (api_base.api && api_base.api.connection && api_base.api.connection.readyState === WebSocket.OPEN) {
+            const { DerivWSAccountsService } = await import('./derivws-accounts.service');
+            DerivWSAccountsService.clearCache();
+
+            let authorized = false;
+
+            if (api_base.api && api_base.api.connection && api_base.api.connection.readyState === WebSocket.OPEN && targetToken) {
                 const authorizePromise = (async () => {
                     if (targetToken && typeof api_base.api.authorize === 'function') {
                         return api_base.api.authorize(targetToken);
@@ -130,6 +135,7 @@ export class AccountSwitcherService {
                         };
                         api_base.token = res.authorize.loginid;
                         api_base.is_authorized = true;
+                        authorized = true;
 
                         if (clientStore) {
                             if (typeof clientStore.setBalance === 'function') {
@@ -149,17 +155,14 @@ export class AccountSwitcherService {
                         // Subscribe to live balance & transaction stream on new account
                         api_base.api.send({ balance: 1, subscribe: 1 }).catch(() => {});
                         api_base.api.send({ transaction: 1, subscribe: 1 }).catch(() => {});
-                    } else if (res?.error) {
-                        console.warn('[AccountSwitcherService] Authorize error, refreshing socket in background:', res.error);
-                        api_base.init(true).catch(() => {});
                     }
                 } catch (timeoutOrWsErr: any) {
-                    console.warn('[AccountSwitcherService] Fast authorize non-fatal notice:', timeoutOrWsErr?.message);
-                    // Background socket refresh so user is never blocked
-                    api_base.init(true).catch(() => {});
+                    console.warn('[AccountSwitcherService] Fast authorize notice, falling back to background socket refresh:', timeoutOrWsErr?.message);
                 }
-            } else {
-                // If socket not open, initialize in background
+            }
+
+            // If not authorized over existing connection (e.g. PKCE OAuth OTP or token mismatch), reinitialize socket in background
+            if (!authorized) {
                 api_base.init(true).catch(() => {});
             }
 

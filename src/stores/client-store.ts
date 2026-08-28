@@ -201,7 +201,10 @@ export default class ClientStore {
     }
 
     get is_virtual() {
-        return !isEmptyObject(this.accounts) && this.accounts[this.loginid] && !!this.accounts[this.loginid].is_virtual;
+        if (this.loginid) {
+            return isDemoAccount(this.loginid) ? 1 : 0;
+        }
+        return !isEmptyObject(this.accounts) && this.accounts[this.loginid] && !!this.accounts[this.loginid].is_virtual ? 1 : 0;
     }
 
     get all_loginids() {

@@ -105,11 +105,15 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
     }
 
     loginAndGetBalance(token) {
-        if (this.token === token) {
-            return Promise.resolve();
-        }
-        this.accountInfo = api_base.account_info;
-        this.token = api_base.token;
+        const activeLoginId =
+            (typeof localStorage !== 'undefined' && (localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid'))) ||
+            '';
+
+        this.accountInfo = {
+            ...api_base.account_info,
+            loginid: activeLoginId || (api_base.account_info as any)?.loginid || token,
+        };
+        this.token = activeLoginId || api_base.token || token;
 
         // ─── Bug 1 fix: Guard against duplicate subscriptions ─────────────────────
         // Without this flag, every bot start re-registers a new transaction recovery

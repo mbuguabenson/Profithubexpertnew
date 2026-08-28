@@ -162,12 +162,15 @@ window.Blockly.Blocks.trade_definition = {
 window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition = block => {
     const { client } = DBotStore.instance;
 
-    if (!client || !client.is_logged_in) {
+    const account =
+        localStorage.getItem('active_loginid') ||
+        localStorage.getItem('client.loginid') ||
+        client?.loginid ||
+        '';
+
+    if (!account && (!client || !client.is_logged_in)) {
         throw new Error('Please login');
     }
-
-    const { loginid } = client;
-    const account = loginid;
     const market_block = block.getChildByType('trade_definition_market');
     const trade_type_block = block.getChildByType('trade_definition_tradetype');
     const contract_type_block = block.getChildByType('trade_definition_contracttype');

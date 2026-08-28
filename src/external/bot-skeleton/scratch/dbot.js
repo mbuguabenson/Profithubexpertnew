@@ -306,9 +306,11 @@ class DBot {
 
         try {
             api_base.is_stopping = false;
+            // Always initialize a fresh Interpreter session for current active account
+            this.interpreter = Interpreter();
+
             const code = this.generateCode();
             if (!this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) {
-                this.interpreter = Interpreter();
                 await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
             }
 
