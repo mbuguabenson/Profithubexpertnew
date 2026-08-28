@@ -49,7 +49,6 @@ const DigitFlowPage = lazyRetry(() => import('../digitflow/digitflow'), 'digitfl
 const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pro');
 const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
 const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
-const ReportsPage = lazyRetry(() => import('../reports'), 'reports');
 // const DTraderPage = lazyRetry(() => import('../dtrader'), 'dtrader');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
@@ -113,7 +112,6 @@ const AppWrapper = observer(() => {
         'elite_pro',
         'poverty_hunter',
         'auto_x_eo',
-        'reports',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -580,18 +578,6 @@ const AppWrapper = observer(() => {
                 <TabErrorBoundary tabId='id-auto-x-eo' tabName='AUTO X E/O'>
                     <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AUTO X E/O...')} />}>
                         <AutoXEoPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'reports',
-            id: 'id-reports',
-            label: <TabIcon iconKey='reports' label='Reports' />,
-            content: (
-                <TabErrorBoundary tabId='id-reports' tabName='Reports'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Reports...')} />}>
-                        <ReportsPage />
                     </Suspense>
                 </TabErrorBoundary>
             )
