@@ -69,7 +69,6 @@ export default Engine =>
 
             const onSuccess = response => {
                 this.is_contract_buying_in_progress = false;
-                console.log('[FAST-DIAG] ✅ Buy response RECEIVED at', Date.now(), 'contract_id:', response?.buy?.contract_id);
                 const { buy } = response;
 
                 contractStatus({
@@ -361,8 +360,6 @@ export default Engine =>
                 });
             } catch {}
 
-            const purchaseSentTime = Date.now();
-            console.log('[FAST-DIAG] 📨 Buy request SENT at', purchaseSentTime, 'trade_option:', trade_option.contract_type || contract_type);
             const action = () => api_base.api.send(trade_option);
             this.isSold = false;
 

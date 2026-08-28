@@ -73,44 +73,6 @@ const CurrencyDropdown = () => {
 };
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Header Speed Toggle (Desktop: ⚡ Fast Switch | Mobile: ⚡ Icon Alone)
-// ─────────────────────────────────────────────────────────────────────────────
-const HeaderSpeedToggle = observer(() => {
-    const { run_panel } = useStore() ?? {};
-    const { isDesktop } = useDevice();
-
-    if (!run_panel) return null;
-
-    const isActive = run_panel.is_every_tick_mode;
-
-    return (
-        <button
-            type='button'
-            id='header-speed-toggle'
-            className={clsx('app-header__speed-toggle', {
-                'app-header__speed-toggle--active': isActive,
-                'app-header__speed-toggle--mobile': !isDesktop,
-            })}
-            title={
-                isActive
-                    ? 'Speed / Zero-Skip Mode ACTIVE: Trades on every incoming tick (1.0s on 1s Indices, 2.0s on Plain Indices)'
-                    : 'Speed / Zero-Skip Mode OFF: Click to enable continuous every-tick execution'
-            }
-            onClick={() => run_panel.toggleEveryTickMode()}
-        >
-            <span className='speed-toggle__icon'>⚡</span>
-            {isDesktop && (
-                <>
-                    <span className='speed-toggle__text'>Fast</span>
-                    <div className='speed-toggle__track'>
-                        <div className='speed-toggle__thumb' />
-                    </div>
-                </>
-            )}
-        </button>
-    );
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main AppHeader
@@ -341,7 +303,6 @@ const AppHeader = observer(() => {
                 </Wrapper>
                 <Wrapper variant='right'>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <HeaderSpeedToggle />
                         {!isDesktop && (
                             <button
                                 type='button'
