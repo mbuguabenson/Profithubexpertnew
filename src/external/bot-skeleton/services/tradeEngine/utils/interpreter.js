@@ -182,7 +182,14 @@ const Interpreter = () => {
     }
 
     async function stop() {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
+            const safetyTimeout = setTimeout(() => {
+                api_base.is_stopping = false;
+                $scope.stopped = true;
+                globalObserver.emit('bot.stop');
+                resolve();
+            }, 1200);
+
             try {
                 const global_timeouts = globalObserver.getState('global_timeouts') ?? [];
                 const is_timeouts_cancellable = Object.keys(global_timeouts).every(
@@ -191,10 +198,9 @@ const Interpreter = () => {
 
                 if (!bot.tradeEngine.contractId && is_timeouts_cancellable) {
                     api_base.is_stopping = true;
-                    // When user is rate limited, allow them to stop the bot immediately
-                    // granted there is no active contract.
                     global_timeouts.forEach(timeout => clearTimeout(global_timeouts[timeout]));
-                    terminateSession().then(() => {
+                    terminateSession().finally(() => {
+                        clearTimeout(safetyTimeout);
                         api_base.is_stopping = false;
                         resolve();
                     });
@@ -203,40 +209,46 @@ const Interpreter = () => {
                     !$scope.is_error_triggered &&
                     isMultiplierContract(bot?.tradeEngine?.data?.contract?.contract_type ?? '')
                 ) {
-                    globalObserver.register('contract.status', async contractStatus => {
+                    const statusListener = async contractStatus => {
                         if (contractStatus.id === 'contract.sold') {
-                            terminateSession().then(() => resolve());
+                            globalObserver.unregister('contract.status', statusListener);
+                            terminateSession().finally(() => {
+                                clearTimeout(safetyTimeout);
+                                resolve();
+                            });
                         }
-                    });
+                    };
+                    globalObserver.register('contract.status', statusListener);
                 } else {
                     api_base.is_stopping = true;
-                    terminateSession().then(() => {
+                    terminateSession().finally(() => {
+                        clearTimeout(safetyTimeout);
                         api_base.is_stopping = false;
                         resolve();
                     });
                 }
             } catch (e) {
-                reject(e);
+                clearTimeout(safetyTimeout);
+                api_base.is_stopping = false;
+                resolve();
             }
         });
     }
 
     async function terminateSession() {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             try {
                 $scope.stopped = true;
                 $scope.is_error_triggered = false;
                 globalObserver.emit('bot.stop');
                 const { ticksService } = $scope;
-                // Unsubscribe previous ticks_history subscription
-                // Unsubscribe the subscriptions from Proposal, Balance and OpenContract
                 api_base.clearSubscriptions();
 
-                ticksService.unsubscribeFromTicksService().then(() => {
+                ticksService.unsubscribeFromTicksService().finally(() => {
                     resolve();
                 });
             } catch (error) {
-                reject(error);
+                resolve();
             }
         });
     }

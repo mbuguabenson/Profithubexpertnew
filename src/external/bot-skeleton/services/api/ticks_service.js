@@ -362,19 +362,18 @@ export default class TicksService {
     }
 
     forget = () => {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             if (api_base?.api) {
                 try {
                     const tickSubscriptions = this.subscriptions.get('tick');
                     const subscriptionIds = tickSubscriptions ? Array.from(tickSubscriptions.values()) : [];
-                    Promise.all(subscriptionIds.map(id => doUntilDone(() => api_base.api.forget(id))))
-                        .then(() => {
-                            this.subscriptions = this.subscriptions.delete('tick');
-                            resolve();
-                        })
-                        .catch(reject);
+                    this.subscriptions = this.subscriptions.delete('tick');
+                    Promise.all(subscriptionIds.map(id => api_base.api.forget(id).catch(() => {})))
+                        .then(() => resolve())
+                        .catch(() => resolve());
                 } catch (e) {
-                    console.log('Error in forget ticks', e);
+                    console.warn('Error in forget ticks', e);
+                    resolve();
                 }
             } else {
                 resolve();
@@ -383,26 +382,25 @@ export default class TicksService {
     };
 
     forgetCandleSubscription = () => {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             if (api_base?.api) {
                 try {
                     const ohlcSubscriptions = this.subscriptions.get('ohlc');
                     let subscriptionIds = [];
                     if (ohlcSubscriptions) {
-                        ohlcSubscriptions.forEach((granularityMap) => {
+                        ohlcSubscriptions.forEach(granularityMap => {
                             if (granularityMap && typeof granularityMap.values === 'function') {
                                 subscriptionIds = subscriptionIds.concat(Array.from(granularityMap.values()));
                             }
                         });
                     }
-                    Promise.all(subscriptionIds.map(id => doUntilDone(() => api_base.api.forget(id))))
-                        .then(() => {
-                            this.subscriptions = this.subscriptions.delete('ohlc');
-                            resolve();
-                        })
-                        .catch(reject);
+                    this.subscriptions = this.subscriptions.delete('ohlc');
+                    Promise.all(subscriptionIds.map(id => api_base.api.forget(id).catch(() => {})))
+                        .then(() => resolve())
+                        .catch(() => resolve());
                 } catch (e) {
-                    console.log('Error in forget candles', e);
+                    console.warn('Error in forget candles', e);
+                    resolve();
                 }
             } else {
                 resolve();
@@ -411,21 +409,11 @@ export default class TicksService {
     };
 
     unsubscribeFromTicksService() {
-        return new Promise((resolve, reject) => {
-            this.forget()
-                .then(() => {
-                    try {
-                        this.forgetCandleSubscription()
-                            .then(() => {
-                                resolve();
-                            })
-                            .catch(reject);
-                    } catch (e) {
-                        console.log('Error in unsubscribeFromTicksService', e);
-                    }
-                })
-                .catch(reject);
+        return new Promise(resolve => {
             this.ticks_history_promise = null;
+            Promise.all([this.forget(), this.forgetCandleSubscription()])
+                .then(() => resolve())
+                .catch(() => resolve());
         });
     }
 }

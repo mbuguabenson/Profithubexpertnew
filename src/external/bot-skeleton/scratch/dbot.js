@@ -439,22 +439,28 @@ class DBot {
      */
     async stopBot() {
         api_base.setIsRunning(false);
+        api_base.is_stopping = true;
 
         try {
             if (this.interpreter) {
-                await this.interpreter.stop();
+                const stopPromise = this.interpreter.stop();
+                const timeoutPromise = new Promise(res => setTimeout(res, 1500));
+                await Promise.race([stopPromise, timeoutPromise]);
             } else {
                 globalObserver.emit('bot.stop');
             }
+        } catch (err) {
+            console.warn('[DBot] stopBot caught non-fatal notice:', err);
         } finally {
             api_base.is_stopping = false;
             this.is_bot_running = false;
             this.interpreter = null;
             this.interpreter = Interpreter();
             if (this.symbol) {
-                await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
+                this.interpreter.bot.tradeEngine.watchTicks(this.symbol).catch(() => {});
             }
             forgetAccumulatorsProposalRequest(this);
+            globalObserver.emit('bot.stop');
         }
     }
 
