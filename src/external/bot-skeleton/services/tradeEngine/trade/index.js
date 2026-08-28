@@ -36,7 +36,11 @@ const watchDuring = store =>
 /* The watchScope function is called randomly and resets the prevTick
  * which leads to the same problem we try to solve. So prevTick is isolated
  */
-let prevTick;
+export let prevTick;
+export const resetPrevTick = () => {
+    prevTick = undefined;
+};
+
 const watchScope = ({ store, stopScope, passScope, passFlag }) => {
     // in case watch is called after stop is fired
     if (store.getState().scope === stopScope) {
@@ -92,6 +96,9 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
         if (!this.options) {
             throw createError('NotInitialized', getLocalizedErrorMessage('NotInitialized'));
         }
+
+        resetPrevTick();
+        this.lastPurchasedTickEpoch = undefined;
 
         globalObserver.emit('bot.running');
 

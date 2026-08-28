@@ -66,6 +66,7 @@ export default Engine =>
                 this.contractId = '';
                 if (this.bulk_contract_ids) this.bulk_contract_ids.clear();
                 if (this.bulk_sold_contract_ids) this.bulk_sold_contract_ids.clear();
+                this.lastPurchasedTickEpoch = undefined;
                 clearTimeout(this.transaction_recovery_timeout);
 
                 contractStatus({
