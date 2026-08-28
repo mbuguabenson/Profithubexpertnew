@@ -117,9 +117,6 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
             throw createError('NotInitialized', getLocalizedErrorMessage('NotInitialized'));
         }
 
-        resetPrevTick();
-        this.lastPurchasedTickEpoch = undefined;
-
         globalObserver.emit('bot.running');
 
         const validated_trade_options = this.validateTradeOptions(tradeOptions);
