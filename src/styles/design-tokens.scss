@@ -1,0 +1,58 @@
+/* Design System Tokens (Frequency-Based Extraction) */
+
+:root {
+  /* Colors */
+  --color-text: #181c25;
+  --color-text-2: #1a1a1a;
+  --color-text-3: #ffffff;
+  --color-local-accent: #e0e0e0;
+  --color-text-4: #0e0e0e;
+  --color-local-accent-2: #11141b;
+  --color-local-accent-3: #ff444f;
+  --color-local-accent-4: #595959;
+  --color-local-accent-5: #333333;
+  --color-local-accent-6: #000000;
+
+  /* Typography */
+  --font-type-1-family: 'Inter', sans-serif;
+  --font-type-1-size: 16px;
+  --font-type-1-weight: 400;
+  --font-type-1-line-height: 24px;
+
+  --font-type-2-family: 'Inter', sans-serif;
+  --font-type-2-size: 14px;
+  --font-type-2-weight: 700;
+  --font-type-2-line-height: 20px;
+
+  --font-type-3-family: 'Inter', sans-serif;
+  --font-type-3-size: 14px;
+  --font-type-3-weight: 400;
+  --font-type-3-line-height: 20px;
+
+  --font-type-4-family: 'Inter', sans-serif;
+  --font-type-4-size: 12px;
+  --font-type-4-weight: 500;
+  --font-type-4-line-height: 16px;
+
+  --font-type-5-family: 'Inter', sans-serif;
+  --font-type-5-size: 14px;
+  --font-type-5-weight: 600;
+  --font-type-5-line-height: 20px;
+
+  /* Spacing */
+  --spacing-space-1: 12px;
+  --spacing-space-2: 16px;
+  --spacing-space-3: 24px;
+  --spacing-space-4: 8px;
+  --spacing-space-5: 6px;
+  --spacing-space-6: 32px;
+  --spacing-space-7: 96px;
+  --spacing-space-8: 20px;
+  --spacing-space-9: 56px;
+  --spacing-space-10: 2px;
+
+  /* Border Radius */
+  --radius-radius-1: 8px;
+  --radius-radius-2: 12px;
+  --radius-radius-3: 999px;
+}
