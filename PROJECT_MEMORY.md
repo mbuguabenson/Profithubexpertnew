@@ -16,6 +16,7 @@
   - Plain Indices: Trade once every 2.0s tick without skipping.
   - 1s Indices (`1HZ...`): Trade once every 1.0s tick without skipping.
   - Direct buy parameters used in Fast mode to eliminate proposal wait times (0ms round-trip latency).
+  - Immediate Live-Tick Consumption: `watchScope` resolves instantly on the active tick without waiting for listener wakeups, completely eliminating the 2-tick skip between consecutive trades.
   - No CPU locks or synchronous busy-waiting: ticks trigger via WebSocket events safely.
 
 ### 2. Trade Settlement & Result Posting
