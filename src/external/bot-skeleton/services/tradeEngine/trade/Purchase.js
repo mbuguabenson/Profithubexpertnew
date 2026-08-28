@@ -45,26 +45,9 @@ export default Engine =>
             }
             this.is_contract_buying_in_progress = true;
 
-            const isEveryTickMode = Boolean(is_fast_override) || localStorage.getItem('dbot_every_tick_mode') === 'true';
-            const speed = isEveryTickMode ? '2' : (localStorage.getItem('bot_execution_speed') || '1');
-            const isSpeedMode = speed !== '1' || isEveryTickMode;
-
-            if (!isSpeedMode && this.store.getState().scope !== BEFORE_PURCHASE) {
+            if (this.store.getState().scope !== BEFORE_PURCHASE) {
                 this.is_contract_buying_in_progress = false;
                 return Promise.resolve();
-            }
-
-            if (isSpeedMode && !isEveryTickMode) {
-                const now = Date.now();
-                const lastPurchase = this.lastPurchaseTime || 0;
-                const symbol = this.symbol || this.tradeOptions?.symbol || (this.trade_option && this.trade_option.underlying_symbol) || '';
-                const is1sMarket = symbol && (symbol.startsWith('1HZ') || symbol.includes('1s') || symbol.includes('1S'));
-                const minDelay = speed === '3' ? 50 : (is1sMarket ? 1000 : 2000);
-                if (now - lastPurchase < minDelay) {
-                    this.is_contract_buying_in_progress = false;
-                    return Promise.resolve();
-                }
-                this.lastPurchaseTime = now;
             }
 
             const onSuccess = response => {
