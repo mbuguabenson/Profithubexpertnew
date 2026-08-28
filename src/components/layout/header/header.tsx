@@ -81,7 +81,15 @@ const AppHeader = observer(() => {
     const { isAuthorizing, activeLoginid, setIsAuthorizing, authData } = useApiBase();
     const { client } = useStore() ?? {};
     const [authTimeout, setAuthTimeout] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const is_account_regenerating = client?.is_account_regenerating || false;
+
+    const handleMobileRefresh = useCallback(() => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            window.location.reload();
+        }, 200);
+    }, []);
 
     // Detect OAuth callback on mount (before App.tsx cleans up the URL).
     const [isOAuthPending, setIsOAuthPending] = useState(() => {
@@ -294,6 +302,21 @@ const AppHeader = observer(() => {
                 </Wrapper>
                 <Wrapper variant='right'>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {!isDesktop && (
+                            <button
+                                type='button'
+                                className={clsx('app-header__mobile-refresh-btn', {
+                                    'app-header__mobile-refresh-btn--spinning': isRefreshing,
+                                })}
+                                onClick={handleMobileRefresh}
+                                title='Refresh Application'
+                                aria-label='Refresh Application'
+                            >
+                                <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+                                    <path d='M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67' />
+                                </svg>
+                            </button>
+                        )}
                         {/* Currency dropdown — only when logged in */}
                         {activeLoginid && (
                             <>

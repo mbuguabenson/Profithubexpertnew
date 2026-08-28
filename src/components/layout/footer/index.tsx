@@ -8,7 +8,6 @@ import { FILTERED_LANGUAGES } from '@/utils/languages';
 import { isLoggedIn } from '@/utils/token-bridge';
 import { useTranslations } from '@deriv-com/translations';
 import { DesktopLanguagesModal, Tooltip } from '@deriv-com/ui';
-import { LabelPairedUserMdRegularIcon } from '@deriv/quill-icons/LabelPaired';
 import ChangeTheme from './ChangeTheme';
 import FullScreen from './FullScreen';
 import LanguageSettings from './LanguageSettings';
@@ -50,19 +49,6 @@ const Footer = () => {
         <footer className='app-footer'>
             <FullScreen />
             {(isAuthorized || isLoggedIn()) && <LogoutFooter />}
-            <div className='app-footer__vertical-line' />
-
-            {/* Account Info & API Center */}
-            <Tooltip
-                as='button'
-                className='app-footer__icon'
-                onClick={() => window.dispatchEvent(new Event('open_account_info'))}
-                tooltipContent={localize('Deriv Account API Center')}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', padding: '0 6px' }}
-            >
-                <LabelPairedUserMdRegularIcon fill='#f5c542' width={16} height={16} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa' }}>Account API</span>
-            </Tooltip>
             <div className='app-footer__vertical-line' />
 
             {/* WhatsApp contact link (migrated from header) */}

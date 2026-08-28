@@ -110,15 +110,6 @@ const useMobileMenuConfig = (
                     },
                 },
 
-                // System Center Option
-                {
-                    as: 'button',
-                    label: localize('System Center (NOC)'),
-                    LeftComponent: InfoIcon,
-                    onClick: () => {
-                        window.dispatchEvent(new Event('open_system_center'));
-                    },
-                },
                 // Risk Disclaimer Option
                 onOpenDisclaimer && {
                     as: 'button',

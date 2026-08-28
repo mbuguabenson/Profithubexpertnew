@@ -127,19 +127,17 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
             }
 
             &__list {
-                background: rgba(16, 18, 20, 0.85) !important;
+                background: linear-gradient(135deg, rgba(16, 28, 61, 0.95) 0%, rgba(13, 22, 48, 0.98) 100%) !important;
                 backdrop-filter: blur(16px) saturate(180%) !important;
                 -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
                 
                 :global(.theme--light) & {
-                    background: rgba(16, 18, 20, 0.85) !important;
-                    border-color: rgba(255, 255, 255, 0.05) !important;
+                    background: linear-gradient(135deg, rgba(16, 28, 61, 0.95) 0%, rgba(13, 22, 48, 0.98) 100%) !important;
+                    border-color: rgba(59, 130, 246, 0.25) !important;
                 }
 
-                -webkit-backdrop-filter: none !important;
-                backdrop-filter: none !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
-                border-radius: 0 !important;
+                border: 1px solid rgba(59, 130, 246, 0.25) !important;
+                border-radius: 8px !important;
                 padding: 6px 10px !important;
                 margin-top: 0 !important;
                 margin-bottom: 4px !important;
@@ -151,7 +149,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 overflow-x: auto !important;
                 overflow-y: visible !important;
                 width: 100% !important;
-                box-shadow: none !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
                 &::-webkit-scrollbar {
                     display: none !important;
                 }
@@ -163,11 +161,12 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 }
 
                 @include mobile-or-tablet-screen {
-                    padding: 4px 0 !important;
+                    padding: 4px 6px !important;
                     margin: 0 !important;
                     width: 100% !important;
                     border-radius: 0 !important;
-                    gap: 0 !important;
+                    gap: 4px !important;
+                    background: linear-gradient(135deg, rgba(16, 28, 61, 0.98) 0%, rgba(13, 22, 48, 1) 100%) !important;
                 }
 
                 &--header {
