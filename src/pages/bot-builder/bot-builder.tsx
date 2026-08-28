@@ -153,12 +153,18 @@ const BotBuilder = observer(() => {
         };
     }, [active_tab, is_loading, dashboard.pending_free_bot, load_modal]);
 
-    // Resize Blockly workspace on assistant toggle
+    // Resize Blockly workspace on tab change, assistant toggle, or drawer state
     React.useEffect(() => {
-        setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-        }, 100);
-    }, [dashboard.is_protool_assistant_visible]);
+        if (active_tab === DBOT_TABS.BOT_BUILDER) {
+            const timer = setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+                if (window.Blockly?.derivWorkspace) {
+                    window.Blockly.svgResize(window.Blockly.derivWorkspace);
+                }
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [active_tab, dashboard.is_protool_assistant_visible, run_panel.is_drawer_open]);
 
     const showSidebar = dashboard.is_protool_assistant_visible;
     const showEntryScanner = entry_scanner.is_scanner_open;
@@ -170,6 +176,7 @@ const BotBuilder = observer(() => {
                     'bot-builder--active': active_tab === DBOT_TABS.BOT_BUILDER && !is_preview_on_popup,
                     'bot-builder--inactive': is_preview_on_popup,
                     'bot-builder--tour-active': active_tour,
+                    'bot-builder--drawer-open': isDesktop && run_panel.is_drawer_open,
                 })}
                 style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', overflow: 'hidden' }}
             >
