@@ -159,7 +159,7 @@ const BotBuilder = observer(() => {
             const timer = setTimeout(() => {
                 window.dispatchEvent(new Event('resize'));
                 if (window.Blockly?.derivWorkspace) {
-                    window.Blockly.svgResize(window.Blockly.derivWorkspace);
+                    (window.Blockly as any)?.svgResize?.(window.Blockly.derivWorkspace);
                 }
             }, 100);
             return () => clearTimeout(timer);
