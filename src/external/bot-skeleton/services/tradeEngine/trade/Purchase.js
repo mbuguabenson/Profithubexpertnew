@@ -68,6 +68,7 @@ export default Engine =>
             }
 
             const onSuccess = response => {
+                this.is_contract_buying_in_progress = false;
                 const { buy } = response;
 
                 contractStatus({
@@ -368,6 +369,7 @@ export default Engine =>
             });
 
                 return action().then(onSuccess).catch(err => {
+                    this.is_contract_buying_in_progress = false;
                     const errCode = err?.error?.code || err?.code || 'PurchaseFailed';
                     const errMsg = err?.error?.message || err?.message || 'Purchase failed';
 

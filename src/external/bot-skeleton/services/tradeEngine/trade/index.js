@@ -42,50 +42,16 @@ export const resetPrevTick = () => {
 };
 
 const watchScope = ({ store, stopScope, passScope, passFlag }) => {
-    const currentState = store.getState();
-    // in case watch is called after stop is fired
-    if (currentState.scope === stopScope) {
-        return Promise.resolve(false);
-    }
-
-    const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
-
-    // In Fast Mode: Resolve Before Purchase instantly so buy order arrives at Deriv ahead of the next incoming tick
-    if (
-        isFastMode &&
-        passScope === constants.BEFORE_PURCHASE &&
-        currentState.scope === constants.BEFORE_PURCHASE &&
-        currentState[passFlag]
-    ) {
-        return Promise.resolve(true);
-    }
-
-    if (
-        isFastMode &&
-        currentState.scope === passScope &&
-        currentState[passFlag] &&
-        currentState.newTick &&
-        currentState.newTick !== prevTick
-    ) {
-        prevTick = currentState.newTick;
-        return Promise.resolve(true);
-    }
-
     return new Promise(resolve => {
         let isResolved = false;
         const unsubscribe = store.subscribe(() => {
             if (isResolved) return;
             const newState = store.getState();
 
-            if (
-                isFastMode &&
-                passScope === constants.BEFORE_PURCHASE &&
-                newState.scope === constants.BEFORE_PURCHASE &&
-                newState[passFlag]
-            ) {
+            if (newState.scope === stopScope) {
                 isResolved = true;
                 unsubscribe();
-                resolve(true);
+                resolve(false);
                 return;
             }
 
@@ -96,12 +62,6 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
                 isResolved = true;
                 unsubscribe();
                 resolve(true);
-            }
-
-            if (newState.scope === stopScope) {
-                isResolved = true;
-                unsubscribe();
-                resolve(false);
             }
         });
     });
