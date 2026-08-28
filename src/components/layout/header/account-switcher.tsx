@@ -9,6 +9,7 @@ import { isDemoAccount } from '@/utils/account-helpers';
 import { Localize, localize } from '@deriv-com/translations';
 import { DerivAccountWalletService, DerivWallet } from '@/services/deriv-account-wallet.service';
 import { AccountSwitcherService } from '@/services/account-switcher.service';
+import { getAccountsList } from '@/utils/token-bridge';
 import { getSocketURL } from '@/components/shared/utils/config/config';
 import { TAccountSwitcher } from './common/types';
 import AccountInfoWrapper from './account-info-wrapper';
