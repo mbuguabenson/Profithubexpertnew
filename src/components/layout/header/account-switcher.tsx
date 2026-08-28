@@ -300,8 +300,93 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     );
 
     const formattedAccounts = useMemo(() => {
-        if (!accountList) return [];
-        return accountList
+        const accountsMap: Record<string, any> = {};
+
+        // 1. Merge from accountList observable
+        if (Array.isArray(accountList)) {
+            accountList.forEach(a => {
+                if (a.loginid) {
+                    accountsMap[a.loginid] = {
+                        loginid: a.loginid,
+                        currency: a.currency || 'USD',
+                        balance: a.balance ?? 0,
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                    };
+                }
+            });
+        }
+
+        // 2. Merge from MobX client.account_list
+        if (client?.account_list && Array.isArray(client.account_list)) {
+            client.account_list.forEach((a: any) => {
+                if (a.loginid) {
+                    accountsMap[a.loginid] = {
+                        ...accountsMap[a.loginid],
+                        loginid: a.loginid,
+                        currency: a.currency || accountsMap[a.loginid]?.currency || 'USD',
+                        balance: a.balance ?? accountsMap[a.loginid]?.balance ?? 0,
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                    };
+                }
+            });
+        }
+
+        // 3. Merge from localStorage client.accounts or clientAccounts
+        try {
+            const rawStored = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+            if (rawStored) {
+                const parsed = JSON.parse(rawStored);
+                Object.keys(parsed).forEach(id => {
+                    const acc = parsed[id];
+                    accountsMap[id] = {
+                        loginid: id,
+                        currency: acc?.currency || accountsMap[id]?.currency || 'USD',
+                        balance: acc?.balance ?? accountsMap[id]?.balance ?? 0,
+                        is_virtual: isDemoAccount(id) ? 1 : 0,
+                        token: acc?.token,
+                    };
+                });
+            }
+        } catch {}
+
+        // 4. Merge from client_account_details
+        try {
+            const rawDetails = localStorage.getItem('client_account_details');
+            if (rawDetails) {
+                const parsedDetails = JSON.parse(rawDetails);
+                if (Array.isArray(parsedDetails)) {
+                    parsedDetails.forEach((a: any) => {
+                        const id = a.loginid || a.account_id;
+                        if (id) {
+                            accountsMap[id] = {
+                                ...accountsMap[id],
+                                loginid: id,
+                                currency: a.currency || accountsMap[id]?.currency || 'USD',
+                                balance: a.balance ?? accountsMap[id]?.balance ?? 0,
+                                is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(id) ? 1 : 0),
+                            };
+                        }
+                    });
+                }
+            }
+        } catch {}
+
+        // 5. Merge from tokens list
+        const tokensList = getAccountsList();
+        Object.keys(tokensList).forEach(id => {
+            if (!accountsMap[id]) {
+                accountsMap[id] = {
+                    loginid: id,
+                    currency: 'USD',
+                    balance: 0,
+                    is_virtual: isDemoAccount(id) ? 1 : 0,
+                };
+            }
+        });
+
+        const activeId = activeLoginid || localStorage.getItem('active_loginid') || client?.loginid || '';
+
+        return Object.values(accountsMap)
             .map(account => {
                 const accCurr = account.currency || 'USD';
                 const balanceNum = Number(account.balance ?? 0);
@@ -320,11 +405,11 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                     rawCurrency: accCurr,
                     balance: displayBal,
                     isVirtual: isDemoAccount(account.loginid),
-                    isActive: account.loginid === activeLoginid,
+                    isActive: account.loginid === activeId,
                 };
             })
             .sort((a, b) => (a.isActive ? -1 : b.isActive ? 1 : 0));
-    }, [accountList, activeLoginid, displayCurrency, rate]);
+    }, [accountList, client?.account_list, client?.loginid, activeLoginid, displayCurrency, rate]);
 
     const realAccounts = formattedAccounts.filter(a => !a.isVirtual);
     const demoAccounts = formattedAccounts.filter(a => a.isVirtual);
@@ -569,9 +654,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         className={classNames('acc-panel__account', {
                                             'acc-panel__account--active': account.isActive,
                                         })}
-                                        onClick={() => !account.isActive && handleAccountSelect(account.loginid)}
+                                        onClick={() => handleAccountSelect(account.loginid)}
                                         onKeyDown={e => {
-                                            if (!account.isActive && (e.key === 'Enter' || e.key === ' ')) {
+                                            if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
                                                 handleAccountSelect(account.loginid);
                                             }

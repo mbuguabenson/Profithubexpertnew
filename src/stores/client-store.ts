@@ -233,6 +233,23 @@ export default class ClientStore {
         this.loginid = loginid;
     };
 
+    setWebSocketLoginId = (ws_login_id: string) => {
+        this.ws_login_id = ws_login_id;
+    };
+
+    setIsVirtual = (is_virtual: number) => {
+        if (this.accounts[this.loginid]) {
+            this.accounts[this.loginid].is_virtual = is_virtual;
+        } else {
+            this.accounts[this.loginid] = {
+                loginid: this.loginid,
+                currency: this.currency,
+                balance: Number(this.balance),
+                is_virtual,
+            } as any;
+        }
+    };
+
     setAccountList = (account_list?: TAuthData['account_list']) => {
         this.accounts = {};
         account_list?.forEach(account => {
