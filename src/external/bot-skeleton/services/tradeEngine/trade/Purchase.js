@@ -38,21 +38,19 @@ export default Engine =>
                 this.multiple_trades_count = 0; // Reset flag for subsequent runs
                 return this.bulkPurchase(contract_type, count);
             }
-            // Prevent calling purchase twice
-            const isEveryTickMode = Boolean(is_fast_override) || localStorage.getItem('dbot_every_tick_mode') === 'true';
-            const currentTickEpoch = this.lastTickEpoch || this.store.getState()?.epoch || 0;
-
-            if (isEveryTickMode && currentTickEpoch > 0) {
-                if (this.lastPurchasedTickEpoch === currentTickEpoch) {
-                    // Duplicate purchase attempt on identical tick epoch - avoid duplicate trades
-                    return Promise.resolve();
-                }
-                this.lastPurchasedTickEpoch = currentTickEpoch;
+            
+            // Prevent duplicate parallel purchases
+            if (this.is_contract_buying_in_progress) {
+                return Promise.resolve();
             }
+            this.is_contract_buying_in_progress = true;
 
+            const isEveryTickMode = Boolean(is_fast_override) || localStorage.getItem('dbot_every_tick_mode') === 'true';
             const speed = isEveryTickMode ? '2' : (localStorage.getItem('bot_execution_speed') || '1');
             const isSpeedMode = speed !== '1' || isEveryTickMode;
+
             if (!isSpeedMode && this.store.getState().scope !== BEFORE_PURCHASE) {
+                this.is_contract_buying_in_progress = false;
                 return Promise.resolve();
             }
 
@@ -63,6 +61,7 @@ export default Engine =>
                 const is1sMarket = symbol && (symbol.startsWith('1HZ') || symbol.includes('1s') || symbol.includes('1S'));
                 const minDelay = speed === '3' ? 50 : (is1sMarket ? 1000 : 2000);
                 if (now - lastPurchase < minDelay) {
+                    this.is_contract_buying_in_progress = false;
                     return Promise.resolve();
                 }
                 this.lastPurchaseTime = now;

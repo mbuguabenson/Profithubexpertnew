@@ -50,7 +50,16 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
 
     const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
 
-    // In Fast Mode: If conditions are already met and current tick hasn't been consumed, resolve immediately!
+    // In Fast Mode: Resolve Before Purchase instantly so buy order arrives at Deriv ahead of the next incoming tick
+    if (
+        isFastMode &&
+        passScope === constants.BEFORE_PURCHASE &&
+        currentState.scope === constants.BEFORE_PURCHASE &&
+        currentState[passFlag]
+    ) {
+        return Promise.resolve(true);
+    }
+
     if (
         isFastMode &&
         currentState.scope === passScope &&
@@ -67,6 +76,18 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
         const unsubscribe = store.subscribe(() => {
             if (isResolved) return;
             const newState = store.getState();
+
+            if (
+                isFastMode &&
+                passScope === constants.BEFORE_PURCHASE &&
+                newState.scope === constants.BEFORE_PURCHASE &&
+                newState[passFlag]
+            ) {
+                isResolved = true;
+                unsubscribe();
+                resolve(true);
+                return;
+            }
 
             if (newState.newTick === prevTick) return;
             prevTick = newState.newTick;
