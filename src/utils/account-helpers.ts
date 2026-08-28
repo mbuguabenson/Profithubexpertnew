@@ -42,6 +42,13 @@ export const isRealAccount = (loginid: string): boolean => {
     return !isDemoAccount(loginid);
 };
 
+if (typeof window !== 'undefined') {
+    (window as any).isDemoAccount = isDemoAccount;
+    (window as any).isRealAccount = isRealAccount;
+    (window as any).isVirtualAccount = isVirtualAccount;
+    (window as any).isVirtual = isVirtualAccount;
+}
+
 /**
  * Get account type based on loginid and localStorage
  * This is the centralized function for determining account type

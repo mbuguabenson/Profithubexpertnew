@@ -110,6 +110,21 @@ const Interpreter = () => {
             js_interpreter.nativeToPseudo(bot_interface.getPurchaseReference)
         );
 
+        const checkIsDemo = (loginid) => {
+            const id = (typeof loginid === 'string' ? loginid : '') || (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') || '';
+            return id.startsWith('VR') || id.startsWith('VRT') || id.startsWith('VRTC') || id.startsWith('VRW') || id.startsWith('DEM') || id.startsWith('DOT');
+        };
+        const checkIsReal = (loginid) => {
+            const id = (typeof loginid === 'string' ? loginid : '') || (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') || '';
+            const isDemo = id.startsWith('VR') || id.startsWith('VRT') || id.startsWith('VRTC') || id.startsWith('VRW') || id.startsWith('DEM') || id.startsWith('DOT');
+            return !isDemo && Boolean(id);
+        };
+
+        js_interpreter.setProperty(scope, 'isDemoAccount', js_interpreter.nativeToPseudo(checkIsDemo));
+        js_interpreter.setProperty(scope, 'isRealAccount', js_interpreter.nativeToPseudo(checkIsReal));
+        js_interpreter.setProperty(scope, 'isVirtualAccount', js_interpreter.nativeToPseudo(checkIsDemo));
+        js_interpreter.setProperty(scope, 'isVirtual', js_interpreter.nativeToPseudo(checkIsDemo));
+
         const pseudo_bot_interface = js_interpreter.nativeToPseudo(bot_interface);
 
         Object.entries(ticks_interface).forEach(([name, f]) =>

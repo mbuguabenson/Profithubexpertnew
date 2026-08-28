@@ -227,17 +227,16 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
                         })}
                         title={
                             run_panel.is_every_tick_mode
-                                ? localize('Speed Mode ACTIVE: Zero-skip execution on every tick (1.0s on 1s Indices, 2.0s on Plain Indices)')
-                                : localize('Speed Mode OFF: Click to enable continuous every-tick execution')
+                                ? localize('Fast Mode ACTIVE: Zero-skip execution on every tick (1.0s on 1s Indices, 2.0s on Plain Indices)')
+                                : localize('Fast Mode OFF: Click to enable continuous every-tick execution')
                         }
                         onClick={e => {
                             e.stopPropagation();
                             run_panel.toggleEveryTickMode();
                         }}
                     >
-                        <span className='speed-switch__icon'>⚡</span>
                         <span className='speed-switch__label'>
-                            <Localize i18n_default_text='Speed' />
+                            <Localize i18n_default_text='Fast' />
                         </span>
                         <div className='speed-switch__track'>
                             <div className='speed-switch__thumb' />
