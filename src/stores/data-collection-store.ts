@@ -27,20 +27,7 @@ export default class DataCollectionStore {
         });
         this.root_store = root_store;
         this.core = core;
-        if (isProduction() || /(.*?)\.binary.sx$/.test(window.location.hostname)) {
-            this.root_store = root_store;
-
-            reaction(
-                () => this.root_store.run_panel.is_running,
-                () => (this.root_store.run_panel.is_running ? this.trackRun() : undefined)
-            );
-            reaction(
-                () => this.root_store.transactions.transactions,
-                transactions => {
-                    if (this.run_id) this.trackTransaction(transactions);
-                }
-            );
-        }
+        // Deriv BI telemetry disabled to prevent 406 network errors and latency on custom domain
     }
 
     // Constants
