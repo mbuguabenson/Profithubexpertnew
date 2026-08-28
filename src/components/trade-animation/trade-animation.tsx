@@ -217,32 +217,9 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
                 })}
             >
                 {show_overlay && <ContractResultOverlay profit={profit as number} />}
-                <div className='animation__header-row'>
-                    <span className='animation__text'>
-                        <ContractStageText contract_stage={contract_stage as number} />
-                    </span>
-                    <div
-                        className={classNames('animation__speed-switch', {
-                            'animation__speed-switch--active': run_panel.is_every_tick_mode,
-                        })}
-                        title={
-                            run_panel.is_every_tick_mode
-                                ? localize('Fast Mode ACTIVE: Zero-skip execution on every tick (1.0s on 1s Indices, 2.0s on Plain Indices)')
-                                : localize('Fast Mode OFF: Click to enable continuous every-tick execution')
-                        }
-                        onClick={e => {
-                            e.stopPropagation();
-                            run_panel.toggleEveryTickMode();
-                        }}
-                    >
-                        <span className='speed-switch__label'>
-                            <Localize i18n_default_text='Fast' />
-                        </span>
-                        <div className='speed-switch__track'>
-                            <div className='speed-switch__thumb' />
-                        </div>
-                    </div>
-                </div>
+                <span className='animation__text'>
+                    <ContractStageText contract_stage={contract_stage as number} />
+                </span>
                 <div className='animation__progress'>
                     <div className='animation__progress-line'>
                         <div className={`animation__progress-bar animation__progress-${contract_stage}`} />

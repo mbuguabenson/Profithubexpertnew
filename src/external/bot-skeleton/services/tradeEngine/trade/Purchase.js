@@ -122,15 +122,24 @@ export default Engine =>
                 }, watchdogDuration);
 
                 if (isSpeedMode) {
-                    const postDelay = speed === '3' ? 10 : 50;
-                    setTimeout(() => {
+                    const postDelay = isEveryTickMode ? 0 : (speed === '3' ? 10 : 50);
+                    if (postDelay === 0) {
                         this._clearWatchdog();
                         this.contractId = '';
                         if (this.afterPromise) {
                             this.afterPromise();
                         }
                         this.store.dispatch(sell());
-                    }, postDelay);
+                    } else {
+                        setTimeout(() => {
+                            this._clearWatchdog();
+                            this.contractId = '';
+                            if (this.afterPromise) {
+                                this.afterPromise();
+                            }
+                            this.store.dispatch(sell());
+                        }, postDelay);
+                    }
                 }
 
                 delayIndex = 0;
