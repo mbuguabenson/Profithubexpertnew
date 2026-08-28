@@ -29,6 +29,7 @@
 
 ### 4. Design & Typography Tokens
 - Palette: 10 color tokens (`--color-text`, `--color-local-accent`, etc.).
+- Dashboard Spectrum Ribbon: Multi-color neon spectrum gradient (`#00d2ff` Cyan ➡️ `#7928ca` Purple ➡️ `#ff007a` Magenta ➡️ `#ff7a00` Orange ➡️ `#ffd600` Gold ➡️ `#00ff87` Lime) against luxury deep black (`#050811`).
 - Font Stack: `Inter` across all 5 typography scale classes (`type-1` to `type-5`).
 - Spacing: 10 scale steps (`space-1` to `space-10`).
 - Shapes: 3 radius standards (`radius-1`: 8px, `radius-2`: 12px, `radius-3`: 999px).
