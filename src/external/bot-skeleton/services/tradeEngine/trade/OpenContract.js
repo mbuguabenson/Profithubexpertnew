@@ -80,6 +80,13 @@ export default Engine =>
                     this.afterPromise = null;
                 }
 
+                // Clean up Deriv contract stream so WebSocket does not accumulate hundreds of subscriptions
+                try {
+                    if (contract?.subscription?.id) {
+                        api_base.api?.send({ forget: contract.subscription.id }).catch(() => {});
+                    }
+                } catch (e) {}
+
                 this.store.dispatch(sell());
             }
         }

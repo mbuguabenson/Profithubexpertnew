@@ -58,9 +58,18 @@ const Interpreter = () => {
     }
 
     function loop() {
-        if ($scope.stopped || !interpreter.run()) {
-            onFinish(interpreter.pseudoToNative(interpreter.value));
-        }
+        if ($scope.stopped) return;
+        // Yield to event loop to allow garbage collection and prevent stack overflow on continuous runs (e.g. 65+ trades)
+        setTimeout(() => {
+            if ($scope.stopped) return;
+            try {
+                if (!interpreter.run()) {
+                    onFinish(interpreter.pseudoToNative(interpreter.value));
+                }
+            } catch (e) {
+                console.error('[Interpreter] Runtime loop error:', e);
+            }
+        }, 0);
     }
 
     function createAsync(js_interpreter, func) {
