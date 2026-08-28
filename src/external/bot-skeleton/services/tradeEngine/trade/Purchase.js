@@ -121,27 +121,6 @@ export default Engine =>
                     }
                 }, watchdogDuration);
 
-                if (isSpeedMode) {
-                    const postDelay = isEveryTickMode ? 0 : (speed === '3' ? 10 : 50);
-                    if (postDelay === 0) {
-                        this._clearWatchdog();
-                        this.contractId = '';
-                        if (this.afterPromise) {
-                            this.afterPromise();
-                        }
-                        this.store.dispatch(sell());
-                    } else {
-                        setTimeout(() => {
-                            this._clearWatchdog();
-                            this.contractId = '';
-                            if (this.afterPromise) {
-                                this.afterPromise();
-                            }
-                            this.store.dispatch(sell());
-                        }, postDelay);
-                    }
-                }
-
                 delayIndex = 0;
                 log(LogTypes.PURCHASE, { transaction_id: buy.transaction_id });
                 info({
