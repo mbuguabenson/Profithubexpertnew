@@ -24,19 +24,19 @@ const AnalysisTools: React.FC = () => {
     const { analysis } = useStore();
     const [selectedSubTab, setSelectedSubTab] = useState<AnalysisToolSubTab>('analysis-tool');
     const [show_trade_config, setShowTradeConfig] = useState<boolean>(false);
-    const [formData, setFormData] = useState({
+    const [tradeConfig, setTradeConfig] = useState({
         market: 'synthetic_index',
         submarket: 'random_index',
         symbol: 'R_100',
         tradeTypeCategory: 'digits',
         tradeType: 'matchesdiffers',
-        contractType: 'DIGITDIFF',
-        durationType: 't',
-        duration: 1,
-        barrier: '0',
-        currency: 'USD',
-        amount: 1,
-        basis: 'stake',
+        type: 'matchesdiffers',
+        contract: 'DIGITDIFF',
+        durationUnit: 't',
+        duration: '1',
+        stake: '1',
+        stakeCurrency: 'USD',
+        candleInterval: '60',
         prediction: '0',
         prediction2: '0',
     });
