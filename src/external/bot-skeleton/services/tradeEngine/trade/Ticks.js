@@ -30,6 +30,7 @@ export default Engine =>
                     if (!lastTick || typeof lastTick.epoch !== 'number') return;
 
                     const { epoch } = lastTick;
+                    this.lastTickEpoch = epoch;
                     this.store.dispatch({ type: constants.NEW_TICK, payload: epoch });
                 };
 

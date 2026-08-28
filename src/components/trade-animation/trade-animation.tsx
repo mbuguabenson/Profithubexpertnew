@@ -161,6 +161,26 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
                 </div>
             ) : (
                 <div className='animation__run-stop-group'>
+                    {/* Zero-Skip Every-Tick Mode Toggle */}
+                    <button
+                        type='button'
+                        id='db-animation__every-tick-toggle'
+                        className={classNames('animation__every-tick-toggle', {
+                            'animation__every-tick-toggle--active': run_panel.is_every_tick_mode,
+                        })}
+                        title={
+                            run_panel.is_every_tick_mode
+                                ? localize('Zero-Skip Mode ACTIVE: Trades on every incoming tick (1.0s on 1s Indices, 2.0s on Plain Indices) with anti-duplicate guard')
+                                : localize('Zero-Skip Mode OFF: Click to trade continuously on every tick without skipping')
+                        }
+                        onClick={run_panel.toggleEveryTickMode}
+                    >
+                        <span className='every-tick-icon'>⚡</span>
+                        <span className='every-tick-label'>
+                            {run_panel.is_every_tick_mode ? <Localize i18n_default_text='Zero Skip: ON' /> : <Localize i18n_default_text='Zero Skip: OFF' />}
+                        </span>
+                    </button>
+
                     {/* Pause / Resume button — visible while running or when paused */}
                     {(is_stop_button_visible || is_paused) && (
                         <button

@@ -39,13 +39,24 @@ export default Engine =>
                 return this.bulkPurchase(contract_type, count);
             }
             // Prevent calling purchase twice
-            const speed = localStorage.getItem('bot_execution_speed') || '1';
-            const isSpeedMode = speed !== '1';
+            const isEveryTickMode = localStorage.getItem('dbot_every_tick_mode') === 'true';
+            const currentTickEpoch = this.lastTickEpoch || this.store.getState()?.epoch || 0;
+
+            if (isEveryTickMode && currentTickEpoch > 0) {
+                if (this.lastPurchasedTickEpoch === currentTickEpoch) {
+                    // Duplicate purchase attempt on identical tick epoch - avoid duplicate trades
+                    return Promise.resolve();
+                }
+                this.lastPurchasedTickEpoch = currentTickEpoch;
+            }
+
+            const speed = isEveryTickMode ? '2' : (localStorage.getItem('bot_execution_speed') || '1');
+            const isSpeedMode = speed !== '1' || isEveryTickMode;
             if (!isSpeedMode && this.store.getState().scope !== BEFORE_PURCHASE) {
                 return Promise.resolve();
             }
 
-            if (isSpeedMode) {
+            if (isSpeedMode && !isEveryTickMode) {
                 const now = Date.now();
                 const lastPurchase = this.lastPurchaseTime || 0;
                 const symbol = this.symbol || this.tradeOptions?.symbol || (this.trade_option && this.trade_option.underlying_symbol) || '';

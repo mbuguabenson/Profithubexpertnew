@@ -48,6 +48,8 @@ export default class RunPanelStore {
             run_id: observable,
             error_type: observable,
             show_bot_stop_message: observable,
+            is_every_tick_mode: observable,
+            toggleEveryTickMode: action,
             is_stop_button_visible: computed,
             is_stop_button_disabled: computed,
             is_clear_stat_disabled: computed,
@@ -116,6 +118,17 @@ export default class RunPanelStore {
     is_sell_requested = false;
     show_bot_stop_message = false;
     is_contract_buying_in_progress = false;
+    is_every_tick_mode = typeof localStorage !== 'undefined' ? localStorage.getItem('dbot_every_tick_mode') === 'true' : false;
+
+    toggleEveryTickMode = () => {
+        this.is_every_tick_mode = !this.is_every_tick_mode;
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('dbot_every_tick_mode', String(this.is_every_tick_mode));
+            if (this.is_every_tick_mode) {
+                localStorage.setItem('bot_execution_speed', '2');
+            }
+        }
+    };
 
     run_id = '';
     onOkButtonClick: (() => void) | null = null;
