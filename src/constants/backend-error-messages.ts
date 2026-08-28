@@ -7,7 +7,7 @@ import { sanitizeParameterValue } from '../utils/xss-protection';
  * @param errorResponse - The complete error response containing code_args, details, etc.
  * @returns Processed parameters object
  */
-const processBackendParameters = (_message: string, errorResponse?: Record<string, any>) => {
+const processBackendParameters = (errorResponse?: Record<string, any>) => {
     if (!errorResponse) return {};
 
     const params: Record<string, any> = {};
@@ -393,7 +393,7 @@ export const getLocalizedErrorMessage = (errorCode: string, errorResponse?: Reco
     }
 
     // Process backend parameters for {{param}} format
-    const processedParams = processBackendParameters(message, errorResponse);
+    const processedParams = processBackendParameters(errorResponse);
 
     // For messages that already have parameter placeholders, replace them directly
     // instead of using localize() which adds "..." for unknown translation keys
