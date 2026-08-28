@@ -42,8 +42,13 @@ export const handleBackendError = (error: BackendError): string => {
         };
     }
 
+    const errorDetails = {
+        ...details,
+        message: error.message || details?.message,
+    };
+
     // Get localized message for the specific error code with details
-    return getLocalizedErrorMessage(error.code, details);
+    return getLocalizedErrorMessage(error.code, errorDetails);
 };
 
 /**

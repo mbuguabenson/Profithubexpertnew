@@ -376,7 +376,12 @@ export const getLocalizedErrorMessage = (errorCode: string, errorResponse?: Reco
         });
 
         // If no predefined message, use the backend message if available
-        message = errorResponse?.message || localize('An error occurred. Please try again.');
+        message =
+            errorResponse?.message ||
+            errorResponse?.error?.message ||
+            errorResponse?.details?.message ||
+            (typeof errorResponse === 'string' ? errorResponse : '') ||
+            localize('An error occurred. Please try again.');
     }
 
     // Handle direct replacement of [_1], [_2], [_3] format with code_args values
