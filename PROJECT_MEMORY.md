@@ -11,6 +11,9 @@
 - **Header Speed Switch**:
   - Desktop: Toggle switch labeled `⚡ Fast`.
   - Mobile: Dedicated `⚡` speed icon button.
+- **Blockly Purchase Block**:
+  - Direct checkbox on the block: `Purchase [ CONTRACT_TYPE ▼ ] ⚡ Fast: [ ☑ ]`.
+  - Generates `Bot.purchase('TYPE', isFast)` to control zero-latency execution per block.
 - **Run Panel Card**: Keep clean in original dimensions and layout.
 - **Trade Engine Speed**:
   - Plain Indices: Trade once every 2.0s tick without skipping.
