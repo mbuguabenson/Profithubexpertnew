@@ -21,8 +21,8 @@ type AnalysisToolSubTab =
     | 'xenon-tool';
 
 const AnalysisTools: React.FC = () => {
-    const { analysis } = useStore();
-    const [selectedSubTab, setSelectedSubTab] = useState<AnalysisToolSubTab>('analysis-tool');
+    const { run_panel } = useStore();
+    const [active_tool, setActiveTool] = useState<AnalysisToolSubTab>('analysis-tool');
     const [show_trade_config, setShowTradeConfig] = useState<boolean>(false);
     const [tradeConfig, setTradeConfig] = useState({
         market: 'synthetic_index',
