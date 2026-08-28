@@ -95,18 +95,10 @@ export const generateDerivApiInstance = async (forceNew = false) => {
             // Use the standard websocket connection for all requests to ensure stability and auth context
 
 
-            // Intercept and cache authorize calls to prevent redundant round-trip latencies
+            // Ensure authorized_token tracks active token properly
             const originalAuthorize = deriv_api.authorize;
             if (typeof originalAuthorize === 'function') {
                 deriv_api.authorize = async function (token) {
-                    if (deriv_api.authorized_token === token || (currentWebSocketURL && currentWebSocketURL.includes('otp='))) {
-                        return {
-                            authorize: {
-                                loginid: localStorage.getItem('active_loginid'),
-                                currency: localStorage.getItem('active_currency') || 'USD',
-                            },
-                        };
-                    }
                     const result = await originalAuthorize.call(this, token);
                     if (result && !result.error) {
                         deriv_api.authorized_token = token;
