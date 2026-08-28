@@ -25,6 +25,8 @@
 ### 2. Trade Settlement & Result Posting
 - Contracts settle via normal `proposal_open_contract` with `is_sold: 1`.
 - `handleContractSold` updates Journal, totals, and triggers `sell()`.
+- Stream Cleanup (`forget`): Every completed contract immediately sends a `forget` command to Deriv to prevent accumulating hundreds of open WebSocket streams that throttle and pause the bot after 60+ trades.
+- JS Interpreter Microtask Scheduling: `interpreter.js` loop schedules iterations asynchronously to allow full garbage collection and prevent call stack exhaustion on long bot sessions.
 - Error Unfreezing & Immediate Clean Stop:
   - When stopping the bot or when an API error occurs (e.g., *"Your account balance is insufficient"*), the Run Panel immediately resets `is_running = false`, `has_open_contract = false`, and transitions directly to `contract_stages.NOT_RUNNING`.
   - The UI never gets stuck in *"Bot is stopping"* or freezes on purchase errors.
