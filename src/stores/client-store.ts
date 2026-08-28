@@ -237,17 +237,21 @@ export default class ClientStore {
         this.ws_login_id = ws_login_id;
     };
 
+    switchAccount = async (loginid: string) => {
+        if (!loginid) return false;
+        const { AccountSwitcherService } = await import('@/services/account-switcher.service');
+        return AccountSwitcherService.switchAccount(loginid, this);
+    };
+
     setIsVirtual = (is_virtual: number) => {
-        if (this.accounts[this.loginid]) {
-            this.accounts[this.loginid].is_virtual = is_virtual;
-        } else {
-            this.accounts[this.loginid] = {
-                loginid: this.loginid,
-                currency: this.currency,
-                balance: Number(this.balance),
+        this.accounts = {
+            ...this.accounts,
+            [this.loginid]: {
+                ...this.accounts[this.loginid],
                 is_virtual,
-            } as any;
-        }
+                loginid: this.loginid,
+            } as any,
+        };
     };
 
     setAccountList = (account_list?: TAuthData['account_list']) => {

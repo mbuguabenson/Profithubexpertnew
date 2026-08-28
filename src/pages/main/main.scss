@@ -236,8 +236,14 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                 }
 
                 &.dc-tabs__active {
-                    background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%) !important;
+                    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%) !important;
                     color: #ffffff !important;
+                    border: 1px solid rgba(96, 165, 250, 0.45) !important;
+                    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+                    border-radius: 6px !important;
+                    transform: none !important;
+                    z-index: 5 !important;
+                    font-weight: 700 !important;
 
                     svg {
                         stroke: #ffffff !important;
@@ -248,7 +254,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                     }
                     
                     :global(.theme--light) & {
-                        background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%) !important;
+                        background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%) !important;
                         color: #ffffff !important;
 
                         svg {
@@ -259,13 +265,6 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                             }
                         }
                     }
-
-                    border-radius: 4px !important;
-                    border-color: transparent !important;
-                    box-shadow: none !important;
-                    transform: none !important;
-                    z-index: 5 !important;
-                    font-weight: 700 !important;
                 }
             }
 

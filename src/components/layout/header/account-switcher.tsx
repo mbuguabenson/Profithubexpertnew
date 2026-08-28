@@ -33,7 +33,10 @@ const getCurrencyLabel = (currency: string): string => {
 // ─── Demo account icon ────────────────────────────────────────────────────────
 const DemoIcon = () => (
     <div className='acc-icon acc-icon--demo'>
-        <span className='acc-icon__letter'>D</span>
+        <span className='acc-icon__text-demo'>
+            <span className='acc-icon__d'>D</span>
+            <span className='acc-icon__dollar'>$</span>
+        </span>
     </div>
 );
 
@@ -431,7 +434,10 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         'acc-chip__currency-icon--real': !isVirtual,
                     })}>
                         {isVirtual ? (
-                            <span className='acc-icon__letter' style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>D</span>
+                            <span className='acc-icon__text-demo' style={{ display: 'flex', alignItems: 'baseline', gap: '0.5px' }}>
+                                <span style={{ fontSize: 13, fontWeight: 900, color: '#ffffff', lineHeight: 1 }}>D</span>
+                                <span style={{ fontSize: 9.5, fontWeight: 800, color: '#f5c542', lineHeight: 1 }}>$</span>
+                            </span>
                         ) : (
                             <img
                                 src={realAccountImg}

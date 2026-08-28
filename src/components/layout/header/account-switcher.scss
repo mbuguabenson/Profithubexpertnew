@@ -8,7 +8,7 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     height: 100%;
     margin-right: 0.8rem;
     user-select: none;
@@ -18,7 +18,7 @@
 }
 
 // ════════════════════════════════════════════════════════════════
-//  ACC-CHIP — Original Header Account Layout
+//  ACC-CHIP — Header Account Layout (High Contrast on Dark Mode)
 // ════════════════════════════════════════════════════════════════
 .acc-chip {
     position: relative;
@@ -47,60 +47,79 @@
     &__label-row {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
     }
 
     &__account-label {
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--ph-primary, #e8a730);
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #f5c542;
         white-space: nowrap;
         line-height: 1.3;
         text-decoration: underline;
-        text-decoration-color: rgba(232, 167, 48, 0.35);
+        text-decoration-color: rgba(245, 197, 66, 0.4);
         text-underline-offset: 2px;
         display: flex;
         align-items: center;
         gap: 4px;
     }
 
-    &__real-label {
-        font-weight: 600;
-        color: var(--ph-primary, #e8a730);
+    &__type-badge {
+        font-size: 9.5px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 1px 5px;
+        border-radius: 4px;
+        line-height: 1.2;
+
+        &--demo {
+            background: rgba(156, 163, 175, 0.2);
+            color: #e2e8f0;
+            border: 1px solid rgba(156, 163, 175, 0.35);
+        }
+
+        &--real {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
     }
 
-    &__real-currency {
-        font-size: 10.5px;
-        font-weight: 500;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.6));
+    &__currency-tag {
+        font-size: 11px;
+        font-weight: 700;
+        color: #cbd5e1;
         letter-spacing: 0.02em;
+
+        body:not(.theme--dark) & {
+            color: #475569;
+        }
     }
 
     &--interactive {
         cursor: pointer;
 
         &:hover {
-            .acc-chip__account-label {
-                text-decoration-color: var(--ph-primary, #e8a730);
-            }
+            opacity: 0.9;
         }
 
         &:active {
-            opacity: 0.85;
+            opacity: 0.8;
         }
     }
 
     &--open {
         .acc-chip__account-label {
-            text-decoration-color: var(--ph-primary, #e8a730);
+            text-decoration-color: #f5c542;
         }
     }
 
-    // ── Currency circle icon ──────────────────────────────────
+    // ── Currency / Avatar circle icon ─────────────────────────
     &__currency-icon {
         flex-shrink: 0;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -109,15 +128,17 @@
         transition: box-shadow 0.25s ease, transform 0.2s ease;
 
         &--demo {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             color: #ffffff;
         }
 
         &--real {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
-            color: #ffffff;
+            background: transparent;
+            box-shadow: 0 0 0 1.5px rgba(245, 197, 66, 0.7), 0 2px 8px rgba(0, 0, 0, 0.4);
+            border: none;
+            overflow: hidden;
         }
     }
 
@@ -125,24 +146,29 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transform: scale(1.18);
         border-radius: 50%;
         display: block;
     }
 
     // ── Balance display ───────────────────────────────────────
     &__balance {
-        font-size: 13.5px;
-        font-weight: 700;
-        color: var(--text-prominent, #ffffff);
+        font-size: 14px;
+        font-weight: 800;
+        color: #ffffff;
         letter-spacing: -0.01em;
         line-height: 1.2;
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
 
+        body:not(.theme--dark) & {
+            color: #0f172a;
+        }
+
         &--no-currency {
             font-size: 11px;
             font-weight: 500;
-            color: var(--text-less-prominent, rgba(255, 255, 255, 0.45));
+            color: #94a3b8;
         }
     }
 
@@ -151,19 +177,19 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
         border-radius: 4px;
         border: none;
         background: transparent;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.5));
+        color: #cbd5e1;
         cursor: pointer;
         transition: color 0.15s ease, background-color 0.15s ease;
         flex-shrink: 0;
 
         &:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text-prominent, #ffffff);
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
         }
     }
 
@@ -181,7 +207,7 @@
         justify-content: center;
         width: 14px;
         height: 14px;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.5));
+        color: #cbd5e1;
         transition: transform 0.2s ease;
     }
 
@@ -196,7 +222,63 @@
 }
 
 // ════════════════════════════════════════════════════════════════
-//  ACC-PANEL — Dropdown Panel (Compatible across ALL modes)
+//  ACC-ICON — Reusable Account Avatar Icon
+// ════════════════════════════════════════════════════════════════
+.acc-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    &--demo {
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    &--real {
+        background: transparent;
+        box-shadow: 0 0 0 1.5px rgba(245, 197, 66, 0.6), 0 2px 6px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+    }
+
+    &__text-demo {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 0.5px;
+    }
+
+    &__d {
+        font-size: 12px;
+        font-weight: 900;
+        color: #ffffff;
+        line-height: 1;
+    }
+
+    &__dollar {
+        font-size: 9px;
+        font-weight: 800;
+        color: #f5c542;
+        line-height: 1;
+    }
+
+    &__img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.18);
+        display: block;
+        border-radius: 50%;
+    }
+}
+
+// ════════════════════════════════════════════════════════════════
+//  ACC-PANEL — Dropdown Panel (High Contrast & Clean Typography)
 // ════════════════════════════════════════════════════════════════
 .acc-panel {
     position: absolute;
@@ -204,13 +286,13 @@
     right: 0;
     z-index: 9999;
     width: 320px;
-    background: var(--general-main-1, #131722);
-    border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
+    background: #131722;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
     overflow: hidden;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     animation: acc-panel-enter 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
     body:not(.theme--dark) & {
@@ -229,8 +311,8 @@
     // ── Tabs ───────────────────────────────────────────────────
     &__tabs {
         display: flex;
-        background: var(--general-section-1, rgba(255, 255, 255, 0.03));
-        border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+        background: rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
         body:not(.theme--dark) & {
             background: #f8fafc;
@@ -246,8 +328,8 @@
         justify-content: center;
         padding: 12px 8px;
         font-size: 13px;
-        font-weight: 600;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.55));
+        font-weight: 700;
+        color: #94a3b8;
         border: none;
         background: transparent;
         cursor: pointer;
@@ -259,8 +341,8 @@
         }
 
         &:hover {
-            color: var(--text-prominent, #ffffff);
-            background: rgba(255, 255, 255, 0.03);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
 
             body:not(.theme--dark) & {
                 color: #0f172a;
@@ -271,8 +353,8 @@
         &--active-real,
         &--active-demo,
         &--active-wallets {
-            color: var(--text-prominent, #ffffff) !important;
-            font-weight: 700;
+            color: #ffffff !important;
+            font-weight: 800;
 
             body:not(.theme--dark) & {
                 color: #0f172a !important;
@@ -285,7 +367,7 @@
         bottom: 0;
         left: 0;
         right: 0;
-        height: 2px;
+        height: 2.5px;
 
         &--real {
             background: #10b981;
@@ -308,9 +390,9 @@
     }
 
     &__section-label {
-        font-size: 10px;
-        font-weight: 700;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.5));
+        font-size: 10.5px;
+        font-weight: 800;
+        color: #94a3b8;
         margin: 0 0 8px 4px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
@@ -321,8 +403,8 @@
     }
 
     &__empty {
-        font-size: 12px;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.5));
+        font-size: 12.5px;
+        color: #cbd5e1;
         text-align: center;
         padding: 16px 0;
         margin: 0;
@@ -345,8 +427,8 @@
         justify-content: space-between;
         padding: 9px 12px;
         border-radius: 8px;
-        background: var(--general-section-1, rgba(255, 255, 255, 0.03));
-        border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
         cursor: pointer;
         transition: all 0.15s ease;
 
@@ -356,8 +438,8 @@
         }
 
         &:hover:not(.acc-panel__account--active) {
-            background: var(--general-section-2, rgba(255, 255, 255, 0.06));
-            border-color: var(--border-normal, rgba(255, 255, 255, 0.15));
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
 
             body:not(.theme--dark) & {
                 background: #f8fafc;
@@ -366,8 +448,8 @@
         }
 
         &--active {
-            border-color: var(--ph-primary, #f5c542);
-            background: rgba(245, 197, 66, 0.06);
+            border-color: #f5c542;
+            background: rgba(245, 197, 66, 0.08);
             cursor: default;
 
             body:not(.theme--dark) & {
@@ -398,9 +480,9 @@
     }
 
     &__account-name {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text-prominent, #ffffff);
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffffff;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -412,9 +494,9 @@
 
     &__account-id {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, monospace;
-        font-size: 10.5px;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.45));
-        font-weight: 500;
+        font-size: 11px;
+        color: #cbd5e1;
+        font-weight: 600;
         letter-spacing: 0.02em;
 
         body:not(.theme--dark) & {
@@ -430,9 +512,9 @@
     }
 
     &__account-balance {
-        font-size: 12.5px;
-        font-weight: 700;
-        color: var(--ph-primary, #f5c542);
+        font-size: 13.5px;
+        font-weight: 800;
+        color: #f5c542;
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
     }
@@ -444,7 +526,7 @@
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: rgba(16, 185, 129, 0.15);
+        background: rgba(16, 185, 129, 0.2);
         color: #10b981;
         flex-shrink: 0;
     }
@@ -455,8 +537,8 @@
         align-items: center;
         justify-content: space-between;
         padding: 10px 12px;
-        border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
-        background: var(--general-section-1, rgba(255, 255, 255, 0.02));
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
 
         body:not(.theme--dark) & {
             background: #f8fafc;
@@ -473,11 +555,11 @@
     &__manage-btn {
         padding: 5px 10px;
         border-radius: 6px;
-        border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.15));
+        border: 1px solid rgba(255, 255, 255, 0.2);
         background: transparent;
-        color: var(--text-less-prominent, rgba(255, 255, 255, 0.7));
+        color: #ffffff;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.15s ease;
         white-space: nowrap;
@@ -489,9 +571,9 @@
         }
 
         &:hover {
-            border-color: var(--ph-primary, #f5c542);
-            color: var(--ph-primary, #f5c542);
-            background: rgba(245, 197, 66, 0.04);
+            border-color: #f5c542;
+            color: #f5c542;
+            background: rgba(245, 197, 66, 0.08);
         }
     }
 
@@ -501,18 +583,19 @@
         gap: 4px;
         padding: 5px 10px;
         border-radius: 6px;
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        background: rgba(59, 130, 246, 0.08);
-        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        background: rgba(59, 130, 246, 0.12);
+        color: #60a5fa;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.15s ease;
         white-space: nowrap;
 
         &:hover:not(:disabled) {
-            background: rgba(59, 130, 246, 0.16);
+            background: rgba(59, 130, 246, 0.22);
             border-color: #3b82f6;
+            color: #ffffff;
         }
 
         &:disabled {
@@ -531,18 +614,19 @@
         gap: 4px;
         padding: 5px 10px;
         border-radius: 6px;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        background: rgba(239, 68, 68, 0.06);
-        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: all 0.15s ease;
         white-space: nowrap;
 
         &:hover {
-            background: rgba(239, 68, 68, 0.14);
+            background: rgba(239, 68, 68, 0.22);
             border-color: #ef4444;
+            color: #ffffff;
         }
     }
 
@@ -557,8 +641,8 @@
         right: 12px;
         padding: 8px 12px;
         border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 11.5px;
+        font-weight: 700;
         text-align: center;
         animation: acc-panel-enter 0.2s ease;
 
