@@ -203,30 +203,15 @@ export default class RunPanelStore {
             client.setIsLoggedIn(true);
         }
 
-        const currentBalance = parseFloat(client.balance || '0');
-        if (client.is_logged_in && currentBalance <= 0) {
-            const isVirtual = client.is_virtual;
-            const message = isVirtual
-                ? localize('Your demo account balance is 0. Please reset your demo balance to continue.')
-                : localize('Your account balance is insufficient to start trading. Please deposit funds or switch to Demo.');
-
-            this.showErrorMessage(message);
-            this.setIsRunning(false);
-            this.setContractStage(contract_stages.NOT_RUNNING);
-            return;
-        }
-
-        /**
-         * Due to Apple's policy on cellular data usage in ios audioElement.play() should be initially called on
-         * user action(e.g click/touch) to be downloaded, otherwise throws an error. Also it should be called
-         * syncronously, so keep above await.
-         */
         if (is_ios || isSafari()) this.preloadAudio();
 
         this.registerBotListeners();
 
         if (!this.dbot.shouldRunBot()) {
             this.unregisterBotListeners();
+            this.setIsRunning(false);
+            this.setContractStage(contract_stages.NOT_RUNNING);
+            this.showErrorMessage(localize('Please load or configure a trading bot strategy in Bot Builder or Quick Strategy before running.'));
             return;
         }
 
@@ -247,7 +232,12 @@ export default class RunPanelStore {
 
             summary_card.clear();
             this.setContractStage(contract_stages.STARTING);
-            this.dbot.runBot();
+            Promise.resolve(this.dbot.runBot()).catch(error => {
+                console.error('[RunPanelStore] Failed to run bot:', error);
+                this.setIsRunning(false);
+                this.setContractStage(contract_stages.NOT_RUNNING);
+                this.unregisterBotListeners();
+            });
         });
         this.setShowBotStopMessage(false);
     };

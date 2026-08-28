@@ -310,15 +310,14 @@ class DBot {
      * JavaScript code that's fed to the interpreter.
      */
     async runBot() {
-        if (api_base.is_stopping) return;
+        api_base.is_stopping = false;
 
         try {
-            api_base.is_stopping = false;
             // Always initialize a fresh Interpreter session for current active account
             this.interpreter = Interpreter();
 
             const code = this.generateCode();
-            if (!this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) {
+            if (this.symbol && !this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) {
                 await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
             }
 
@@ -330,8 +329,10 @@ class DBot {
                 this.stopBot();
             });
         } catch (error) {
+            console.error('[DBot] runBot error:', error);
             globalObserver.emit('Error', error);
             this.stopBot();
+            throw error;
         }
     }
 
@@ -340,6 +341,15 @@ class DBot {
      * @param {Object} limitations Optional limitations (legacy argument)
      */
     generateCode(limitations = {}) {
+        const workspaceCode =
+            (this.workspace && window.Blockly?.JavaScript?.javascriptGenerator?.workspaceToCode?.(this.workspace)) ||
+            (this.workspace && window.Blockly?.JavaScript?.workspaceToCode?.(this.workspace)) ||
+            '';
+
+        if (!workspaceCode.trim()) {
+            throw new Error('No strategy blocks found in workspace. Please load a strategy in Bot Builder or Quick Strategy.');
+        }
+
         return `
             var BinaryBotPrivateInit;
             var BinaryBotPrivateStart;
@@ -387,7 +397,7 @@ class DBot {
                 }
             }
             var BinaryBotPrivateLimitations = ${JSON.stringify(limitations)};
-            ${window.Blockly.JavaScript.javascriptGenerator.workspaceToCode(this.workspace)}
+            ${workspaceCode}
             BinaryBotPrivateRun(BinaryBotPrivateInit);
             while (true) {
                 BinaryBotPrivateTickAnalysis();
@@ -418,20 +428,24 @@ class DBot {
      * that trade will be completed first to reflect correct contract status in UI.
      */
     async stopBot() {
-        if (api_base.is_stopping) return;
-
         api_base.setIsRunning(false);
 
-        if (this.interpreter) {
-            await this.interpreter.stop();
-        } else {
-            globalObserver.emit('bot.stop');
+        try {
+            if (this.interpreter) {
+                await this.interpreter.stop();
+            } else {
+                globalObserver.emit('bot.stop');
+            }
+        } finally {
+            api_base.is_stopping = false;
+            this.is_bot_running = false;
+            this.interpreter = null;
+            this.interpreter = Interpreter();
+            if (this.symbol) {
+                await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
+            }
+            forgetAccumulatorsProposalRequest(this);
         }
-        this.is_bot_running = false;
-        this.interpreter = null;
-        this.interpreter = Interpreter();
-        await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
-        forgetAccumulatorsProposalRequest(this);
     }
 
     /**
