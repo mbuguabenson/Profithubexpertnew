@@ -43,23 +43,11 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
         return Promise.resolve(false);
     }
     return new Promise(resolve => {
-        const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
-        const currentState = store.getState();
-
-        // If in Fast mode and conditions are already satisfied, trigger immediately without tick delay
-        if (isFastMode && currentState.scope === passScope && currentState[passFlag]) {
-            resolve(true);
-            return;
-        }
-
         const unsubscribe = store.subscribe(() => {
             const newState = store.getState();
-            const isFast = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
 
-            if (!isFast) {
-                if (newState.newTick === prevTick) return;
-                prevTick = newState.newTick;
-            }
+            if (newState.newTick === prevTick) return;
+            prevTick = newState.newTick;
 
             if (newState.scope === passScope && newState[passFlag]) {
                 unsubscribe();

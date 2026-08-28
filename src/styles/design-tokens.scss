@@ -13,7 +13,7 @@
   --color-local-accent-5: #333333;
   --color-local-accent-6: #000000;
 
-  /* Typography */
+  /* Typography Variables */
   --font-type-1-family: 'Inter', sans-serif;
   --font-type-1-size: 16px;
   --font-type-1-weight: 400;
@@ -55,4 +55,53 @@
   --radius-radius-1: 8px;
   --radius-radius-2: 12px;
   --radius-radius-3: 999px;
+}
+
+/* Typography Utility Classes */
+.type-1, .text-type-1 {
+  font-family: var(--font-type-1-family) !important;
+  font-size: var(--font-type-1-size) !important;
+  font-weight: var(--font-type-1-weight) !important;
+  line-height: var(--font-type-1-line-height) !important;
+}
+
+.type-2, .text-type-2 {
+  font-family: var(--font-type-2-family) !important;
+  font-size: var(--font-type-2-size) !important;
+  font-weight: var(--font-type-2-weight) !important;
+  line-height: var(--font-type-2-line-height) !important;
+}
+
+.type-3, .text-type-3 {
+  font-family: var(--font-type-3-family) !important;
+  font-size: var(--font-type-3-size) !important;
+  font-weight: var(--font-type-3-weight) !important;
+  line-height: var(--font-type-3-line-height) !important;
+}
+
+.type-4, .text-type-4 {
+  font-family: var(--font-type-4-family) !important;
+  font-size: var(--font-type-4-size) !important;
+  font-weight: var(--font-type-4-weight) !important;
+  line-height: var(--font-type-4-line-height) !important;
+}
+
+.type-5, .text-type-5 {
+  font-family: var(--font-type-5-family) !important;
+  font-size: var(--font-type-5-size) !important;
+  font-weight: var(--font-type-5-weight) !important;
+  line-height: var(--font-type-5-line-height) !important;
+}
+
+/* Shape Radius Utility Classes */
+.radius-1, .rounded-radius-1 {
+  border-radius: var(--radius-radius-1) !important;
+}
+
+.radius-2, .rounded-radius-2 {
+  border-radius: var(--radius-radius-2) !important;
+}
+
+.radius-3, .rounded-radius-3 {
+  border-radius: var(--radius-radius-3) !important;
 }
