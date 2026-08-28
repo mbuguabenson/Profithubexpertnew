@@ -689,7 +689,9 @@ export default class RunPanelStore {
     };
 
     onBotRunningEvent = () => {
+        this.setIsRunning(true);
         this.setHasOpenContract(true);
+        this.setContractStage(contract_stages.STARTING);
 
         // prevent new version update
         const ignore_new_version = new Event('IgnorePWAUpdate');

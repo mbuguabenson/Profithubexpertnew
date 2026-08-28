@@ -10,8 +10,8 @@ const signal = (state = initialState, action) => {
     switch (action.type) {
         case constants.START:
             return {
+                ...state,
                 scope: constants.BEFORE_PURCHASE,
-                proposalsReady: state.proposalsReady,
             };
         case constants.PROPOSALS_READY:
             return {
@@ -25,20 +25,20 @@ const signal = (state = initialState, action) => {
             };
         case constants.PURCHASE_SUCCESSFUL:
             return {
+                ...state,
                 scope: constants.DURING_PURCHASE,
                 openContract: false,
-                proposalsReady: state.proposalsReady,
             };
         case constants.OPEN_CONTRACT:
             return {
+                ...state,
                 scope: constants.DURING_PURCHASE,
                 openContract: true,
-                proposalsReady: state.proposalsReady,
             };
         case constants.SELL:
             return {
+                ...state,
                 scope: constants.STOP,
-                proposalsReady: state.proposalsReady,
             };
         case constants.NEW_TICK:
             return {
