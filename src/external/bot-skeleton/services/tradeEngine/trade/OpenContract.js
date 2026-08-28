@@ -34,6 +34,7 @@ export default Engine =>
         }
 
         handleContractSold(contract) {
+            console.log('[FAST-DIAG] 🏁 Contract SOLD at', Date.now(), 'contract_id:', contract?.contract_id);
             if (!contract) return;
             const cId = String(contract.contract_id);
             if (!this.bulk_sold_contract_ids) {

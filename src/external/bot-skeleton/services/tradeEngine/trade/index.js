@@ -21,6 +21,16 @@ const watchBefore = store => {
     const currentState = store.getState();
     const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
 
+    if (isFastMode) {
+        console.log('[FAST-DIAG] watchBefore called:', {
+            scope: currentState.scope,
+            proposalsReady: currentState.proposalsReady,
+            hasFiredFastBefore: currentState.hasFiredFastBefore,
+            newTick: currentState.newTick,
+            time: Date.now(),
+        });
+    }
+
     // In Fast Mode: Execute Before Purchase immediately once per trade cycle to queue buy order ahead of next tick
     if (
         isFastMode &&
@@ -29,6 +39,7 @@ const watchBefore = store => {
         !currentState.hasFiredFastBefore
     ) {
         store.dispatch({ type: 'FAST_BEFORE_FIRED' });
+        console.log('[FAST-DIAG] ⚡ watchBefore INSTANT RESOLVE at', Date.now());
         return Promise.resolve(true);
     }
 
@@ -62,6 +73,9 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
         return Promise.resolve(false);
     }
 
+    const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
+    const subscribeTime = Date.now();
+
     return new Promise(resolve => {
         let isResolved = false;
         const unsubscribe = store.subscribe(() => {
@@ -79,6 +93,9 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
             prevTick = newState.newTick;
 
             if (newState.scope === passScope && newState[passFlag]) {
+                if (isFastMode) {
+                    console.log(`[FAST-DIAG] watchScope(${passFlag}) resolved after ${Date.now() - subscribeTime}ms waiting for tick`);
+                }
                 isResolved = true;
                 unsubscribe();
                 resolve(true);
