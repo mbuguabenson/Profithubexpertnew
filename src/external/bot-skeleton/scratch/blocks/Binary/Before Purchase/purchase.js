@@ -11,19 +11,27 @@ window.Blockly.Blocks.purchase = {
     },
     definition() {
         return {
-            message0: localize('Purchase {{ contract_type }}', { contract_type: '%1' }),
+            message0: localize('Purchase {{ contract_type }} ⚡ Fast: {{ fast_exec }}', {
+                contract_type: '%1',
+                fast_exec: '%2',
+            }),
             args0: [
                 {
                     type: 'field_dropdown',
                     name: 'PURCHASE_LIST',
                     options: [['', '']],
                 },
+                {
+                    type: 'field_checkbox',
+                    name: 'FAST_EXECUTION',
+                    checked: true,
+                },
             ],
             previousStatement: null,
             colour: window.Blockly.Colours.Special1.colour,
             colourSecondary: window.Blockly.Colours.Special1.colourSecondary,
             colourTertiary: window.Blockly.Colours.Special1.colourTertiary,
-            tooltip: localize('This block purchases contract of a specified type.'),
+            tooltip: localize('This block purchases contract of a specified type. Enable Fast Execution for instant zero-latency tick trading.'),
             category: window.Blockly.Categories.Before_Purchase,
         };
     },
@@ -31,7 +39,7 @@ window.Blockly.Blocks.purchase = {
         return {
             display_name: localize('Purchase'),
             description: localize(
-                'Use this block to purchase the specific contract you want. You may add multiple Purchase blocks together with conditional blocks to define your purchase conditions. This block can only be used within the Purchase conditions block.'
+                'Use this block to purchase the specific contract you want. Enable Fast Execution checkbox for 0ms execution without quote delays.'
             ),
             key_words: localize('buy'),
         };
@@ -85,8 +93,9 @@ window.Blockly.Blocks.purchase = {
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.purchase = block => {
     const purchaseList = block.getFieldValue('PURCHASE_LIST') || 'CALL';
+    const isFast = block.getFieldValue('FAST_EXECUTION') === 'TRUE';
     
     return `
-        Bot.purchase('${purchaseList}');
+        Bot.purchase('${purchaseList}', ${isFast});
     `;
 };

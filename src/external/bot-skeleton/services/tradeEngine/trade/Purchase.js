@@ -32,14 +32,14 @@ export default Engine =>
         }
 
         // ─── Purchase (single trade) ───────────────────────────────────────────────
-        async purchase(contract_type) {
+        async purchase(contract_type, is_fast_override) {
             if (this.multiple_trades_count > 1) {
                 const count = this.multiple_trades_count;
                 this.multiple_trades_count = 0; // Reset flag for subsequent runs
                 return this.bulkPurchase(contract_type, count);
             }
             // Prevent calling purchase twice
-            const isEveryTickMode = localStorage.getItem('dbot_every_tick_mode') === 'true';
+            const isEveryTickMode = Boolean(is_fast_override) || localStorage.getItem('dbot_every_tick_mode') === 'true';
             const currentTickEpoch = this.lastTickEpoch || this.store.getState()?.epoch || 0;
 
             if (isEveryTickMode && currentTickEpoch > 0) {

@@ -8,7 +8,7 @@ const getBotInterface = tradeEngine => {
         init: (...args) => tradeEngine.init(...args),
         start: (...args) => tradeEngine.start(...args),
         stop: (...args) => tradeEngine.stop(...args),
-        purchase: contract_type => tradeEngine.purchase(contract_type),
+        purchase: (contract_type, is_fast) => tradeEngine.purchase(contract_type, is_fast),
         bulkPurchase: (contract_type, count) => tradeEngine.bulkPurchase(contract_type, count),
         setBulkPurchaseCount: count => {
             tradeEngine.multiple_trades_count = count;
