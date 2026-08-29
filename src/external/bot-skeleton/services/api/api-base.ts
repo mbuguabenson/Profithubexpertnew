@@ -164,8 +164,6 @@ class APIBase {
     };
 
     async init(force_create_connection = false) {
-        this.toggleRunButton(true);
-
         if (this.api) {
             this.unsubscribeAllSubscriptions();
         }
@@ -689,7 +687,9 @@ class APIBase {
     toggleRunButton = (toggle: boolean) => {
         const run_button = document.querySelector('#db-animation__run-button');
         if (!run_button) return;
-        (run_button as HTMLButtonElement).disabled = toggle;
+        if (!toggle) {
+            (run_button as HTMLButtonElement).disabled = false;
+        }
     };
 
     setIsRunning(toggle = false) {

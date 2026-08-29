@@ -63,6 +63,16 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [is_delete_modal_open, is_stop_button_visible]);
 
+    // Ensure the Run button is never left permanently disabled by legacy DOM mutations
+    React.useEffect(() => {
+        if (!is_stop_button_visible) {
+            const run_btn = document.querySelector('#db-animation__run-button') as HTMLButtonElement;
+            if (run_btn && run_btn.disabled) {
+                run_btn.disabled = false;
+            }
+        }
+    }, [is_stop_button_visible, contract_stage]);
+
     const status_classes = ['', '', ''];
 
     // Run button is always active and selectable across tabs
