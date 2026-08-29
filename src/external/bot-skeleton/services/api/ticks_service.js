@@ -204,30 +204,36 @@ export default class TicksService {
         if (api_base.api) {
             const subscription = api_base.api.onMessage().subscribe(({ data }) => {
                 if (data.msg_type === 'tick') {
-                        const { tick } = data;
-                        if (!tick || typeof tick !== 'object') {
-                            // Defensive: ignore malformed tick messages coming from the socket
-                            // Log minimal info to aid debugging without exposing sensitive data
-                            try {
-                                console.warn('[TicksService] Ignoring malformed tick message', {
-                                    msg_type: data.msg_type,
-                                    raw: data?.tick ?? null,
-                                });
-                            } catch (e) {
-                                /* noop */
-                            }
+                    let tick = data.tick;
+                    if (!tick || typeof tick !== 'object') {
+                        if (data.quote !== undefined || data.price !== undefined) {
+                            tick = {
+                                symbol: data.symbol || data.echo_req?.ticks,
+                                quote: data.quote ?? data.price,
+                                epoch: data.epoch || Math.floor(Date.now() / 1000),
+                                id: data.id || data.req_id,
+                            };
+                        } else if (typeof data.tick === 'number' || typeof data.tick === 'string') {
+                            tick = {
+                                symbol: data.symbol || data.echo_req?.ticks,
+                                quote: Number(data.tick),
+                                epoch: data.epoch || Math.floor(Date.now() / 1000),
+                                id: data.id || data.req_id,
+                            };
+                        } else {
                             return;
                         }
-
-                        const { symbol, id } = tick;
-                        if (typeof window !== 'undefined') {
-                            window.dispatchEvent(new CustomEvent('live_tick_update', { detail: tick }));
-                        }
-                        if (this.ticks.has(symbol)) {
-                            this.subscriptions = this.subscriptions.setIn(['tick', symbol], id);
-                            this.updateTicksAndCallListeners(symbol, updateTicks(this.ticks.get(symbol), parseTick(tick)));
-                        }
                     }
+
+                    const { symbol, id } = tick;
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('live_tick_update', { detail: tick }));
+                    }
+                    if (symbol && this.ticks.has(symbol)) {
+                        this.subscriptions = this.subscriptions.setIn(['tick', symbol], id);
+                        this.updateTicksAndCallListeners(symbol, updateTicks(this.ticks.get(symbol), parseTick(tick)));
+                    }
+                }
 
                     if (data.msg_type === 'ohlc') {
                         const { ohlc } = data;
