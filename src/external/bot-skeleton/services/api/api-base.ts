@@ -358,31 +358,74 @@ class APIBase {
             const responseAccountList = balance?.account_list || authResult?.account_list;
             const storedAccounts = DerivWSAccountsService.getStoredAccounts();
             let rawStoredClientAccounts: any = null;
+            const existingBalances: Record<string, number> = {};
+
             try {
                 const storedRaw = localStorage.getItem('client_account_details');
-                if (storedRaw) rawStoredClientAccounts = JSON.parse(storedRaw);
+                if (storedRaw) {
+                    rawStoredClientAccounts = JSON.parse(storedRaw);
+                    if (Array.isArray(rawStoredClientAccounts)) {
+                        rawStoredClientAccounts.forEach((a: any) => {
+                            const id = a.loginid || a.account_id;
+                            if (id && typeof a.balance === 'number' && a.balance > 0) {
+                                existingBalances[id] = a.balance;
+                            }
+                        });
+                    }
+                }
+            } catch {}
+
+            try {
+                const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+                if (rawClientAccounts) {
+                    const parsed = JSON.parse(rawClientAccounts);
+                    Object.keys(parsed).forEach(id => {
+                        const b = Number(parsed[id]?.balance);
+                        if (id && !isNaN(b) && b > 0 && existingBalances[id] === undefined) {
+                            existingBalances[id] = b;
+                        }
+                    });
+                }
             } catch {}
 
             let accountList: any[] = [];
             if (responseAccountList && Array.isArray(responseAccountList) && responseAccountList.length > 0) {
-                accountList = responseAccountList.map((a: any) => ({
-                    balance: typeof a.balance === 'number' ? a.balance : (a.loginid === balance?.loginid ? (typeof balance?.balance === 'number' ? balance.balance : 0) : 0),
-                    currency: a.currency || 'USD',
-                    is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
-                    loginid: a.loginid,
-                }));
+                accountList = responseAccountList.map((a: any) => {
+                    let bal = 0;
+                    if (typeof a.balance === 'number') {
+                        bal = a.balance;
+                    } else if (a.loginid === balance?.loginid && typeof balance?.balance === 'number') {
+                        bal = balance.balance;
+                    } else if (existingBalances[a.loginid] !== undefined) {
+                        bal = existingBalances[a.loginid];
+                    }
+                    return {
+                        balance: bal,
+                        currency: a.currency || 'USD',
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                        loginid: a.loginid,
+                    };
+                });
             } else if (Array.isArray(rawStoredClientAccounts) && rawStoredClientAccounts.length > 0) {
-                accountList = rawStoredClientAccounts.map((a: any) => ({
-                    balance: typeof a.balance === 'number' ? a.balance : (a.loginid === balance?.loginid ? (typeof balance?.balance === 'number' ? balance.balance : 0) : 0),
-                    currency: a.currency || 'USD',
-                    is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
-                    loginid: a.loginid,
-                }));
+                accountList = rawStoredClientAccounts.map((a: any) => {
+                    let bal = typeof a.balance === 'number' ? a.balance : 0;
+                    if (a.loginid === balance?.loginid && typeof balance?.balance === 'number') {
+                        bal = balance.balance;
+                    } else if (existingBalances[a.loginid] !== undefined) {
+                        bal = existingBalances[a.loginid];
+                    }
+                    return {
+                        balance: bal,
+                        currency: a.currency || 'USD',
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                        loginid: a.loginid,
+                    };
+                });
             } else if (storedAccounts && storedAccounts.length > 0) {
                 accountList = storedAccounts
                     .filter(a => !a.status || a.status === 'active')
                     .map(a => ({
-                        balance: parseFloat(a.balance) || 0,
+                        balance: parseFloat(a.balance) || existingBalances[a.account_id] || 0,
                         currency: a.currency || 'USD',
                         is_virtual: a.account_type === 'demo' ? 1 : 0,
                         loginid: a.account_id,
