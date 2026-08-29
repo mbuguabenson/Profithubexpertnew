@@ -104,6 +104,28 @@ export default class RunPanelStore {
         this.core = core;
         this.disposeReactionsFn = this.registerReactions();
         this.timer = null;
+
+        const handleAccountSwitch = () => {
+            try {
+                this.dbot?.terminateBot?.();
+            } catch (e) {
+                console.warn('[RunPanelStore] terminateBot on account_switched error:', e);
+            }
+            this.unregisterBotListeners();
+            runInAction(() => {
+                this.setIsRunning(false);
+                this.setHasOpenContract(false);
+                this.setContractStage(contract_stages.NOT_RUNNING);
+                this.is_paused = false;
+                this.is_contract_buying_in_progress = false;
+                this.setShowBotStopMessage(false);
+            });
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', handleAccountSwitch);
+        }
+        globalObserver.register('api.authorize', handleAccountSwitch);
     }
 
     active_index = 0;
@@ -641,10 +663,21 @@ export default class RunPanelStore {
                 disposeIsSocketOpenedListener = reaction(
                     () => client.loginid,
                     (loginid, previousLoginid) => {
-                        if (this.is_running && previousLoginid && previousLoginid !== loginid) {
-                            this.dbot.terminateBot();
+                        if (previousLoginid && previousLoginid !== loginid) {
+                            try {
+                                this.dbot?.terminateBot?.();
+                            } catch (e) {
+                                console.warn('[RunPanelStore] terminateBot on loginid change error:', e);
+                            }
                             this.unregisterBotListeners();
-                            this.setIsRunning(false);
+                            runInAction(() => {
+                                this.setIsRunning(false);
+                                this.setHasOpenContract(false);
+                                this.setContractStage(contract_stages.NOT_RUNNING);
+                                this.is_paused = false;
+                                this.is_contract_buying_in_progress = false;
+                                this.setShowBotStopMessage(false);
+                            });
                         }
                     }
                 );

@@ -216,14 +216,33 @@ const AppWrapper = observer(() => {
     }, [location.search]);
 
     const prevConnectionStatus = React.useRef(connectionStatus);
+    const isAccountSwitching = React.useRef(false);
+
+    React.useEffect(() => {
+        const onAccountSwitch = () => {
+            isAccountSwitching.current = true;
+            setWebSocketState(true);
+            setTimeout(() => {
+                isAccountSwitching.current = false;
+            }, 3000);
+        };
+
+        window.addEventListener('account_switched', onAccountSwitch);
+        return () => {
+            window.removeEventListener('account_switched', onAccountSwitch);
+        };
+    }, [setWebSocketState]);
 
     React.useEffect(() => {
         const wasDisconnected = prevConnectionStatus.current === CONNECTION_STATUS.CLOSED;
         const isConnectedNow = connectionStatus === CONNECTION_STATUS.OPENED;
 
         if (wasDisconnected && isConnectedNow) {
-            if (run_panel.is_running) {
+            // Only show bot stopped dialog if bot was running a real open contract and NOT switching accounts
+            if (run_panel.is_running && run_panel.has_open_contract && !isAccountSwitching.current) {
                 setWebSocketState(false);
+            } else {
+                setWebSocketState(true);
             }
         } else if (connectionStatus !== CONNECTION_STATUS.OPENED) {
             // Keep the dialog hidden while offline or in unknown states
@@ -231,7 +250,7 @@ const AppWrapper = observer(() => {
         }
 
         prevConnectionStatus.current = connectionStatus;
-    }, [connectionStatus, setWebSocketState, run_panel.is_running]);
+    }, [connectionStatus, setWebSocketState, run_panel.is_running, run_panel.has_open_contract]);
 
     React.useEffect(() => {
         if (active_tab === BOT_BUILDER) {
