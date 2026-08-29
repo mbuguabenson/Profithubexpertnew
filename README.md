@@ -1,189 +1,130 @@
-# Trading Bot Template
+# 🚀 Profit Hub Expert (Legacy Trading Hub)
 
-> A white-label starter for building and deploying your own visual trading bot platform on top of the Deriv trading API. Fork it, brand it, deploy it.
-
-![Prerequisite](https://img.shields.io/badge/node-20.x-blue.svg)
-![Prerequisite](https://img.shields.io/badge/npm-9.x-blue.svg)
-![Build](https://img.shields.io/badge/build-RSBuild-green.svg)
-![Framework](https://img.shields.io/badge/framework-React%2018-blue.svg)
-
-This repository is a **template**, not a finished product. It is intended to be forked, customized with your own brand, and deployed to your own domain. The trading engine, OAuth flow, and WebSocket integration all point at Deriv's infrastructure out of the box — everything else (branding, theming, menu, logo, fonts, analytics, error reporting) is yours to configure.
+> **Next-Generation Algorithmic Trading Platform, Visual Bot Builder & Deriv WebSocket Trading Suite**  
+> Designed, Engineered, and Maintained by **Mbuguabenson** ([Benadesigns.co.ke](https://benadesigns.co.ke)).
 
 ---
 
-## Table of Contents
-
-- [What You Get](#what-you-get)
-- [Who This Is For](#who-this-is-for)
-- [Quick Start (Fork → Brand → Run)](#quick-start-fork--brand--run)
-- [Prerequisites](#prerequisites)
-- [Documentation](#documentation)
-- [Project Layout](#project-layout)
-- [Configuration at a Glance](#configuration-at-a-glance)
-- [Things You Must Not Change](#things-you-must-not-change)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [License](#license)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![RSBuild](https://img.shields.io/badge/Build-RSBuild-F39C12?style=for-the-badge&logo=webpack&logoColor=white)](https://rsbuild.dev/)
+[![MobX](https://img.shields.io/badge/State-MobX%206-FF5722?style=for-the-badge&logo=mobx&logoColor=white)](https://mobx.js.org/)
+[![Deriv WS](https://img.shields.io/badge/API-Deriv%20WebSocket-FF444F?style=for-the-badge)](https://deriv.com)
 
 ---
 
-## What You Get
+## 👨‍💻 Codeowner & Lead Architect
 
-- **Visual Bot Builder** — Drag-and-drop strategy builder powered by Blockly, with a library of pre-built trading blocks.
-- **Integrated Charts** — SmartCharts (TradingView-style) with the standard set of technical indicators (SMA, EMA, Bollinger Bands, MACD, RSI).
-- **Dashboard** — Bot performance, recent activity, and quick actions.
-- **OAuth 2.0 with PKCE** — Production-ready authentication flow against Deriv's OAuth server.
-- **Authenticated WebSocket connection** — Real-time market data, balance, trade execution, and account switching via the DerivWS API.
-- **White-label configuration** — A single `brand.config.json` drives your colors, typography, logo, domain, menus, and theme behavior.
-- **Centralized error logging** — `ErrorLogger` utility with a pluggable interface for Sentry, TrackJS, or any other reporting service.
-- **Optional monitoring stack** — Guides for re-enabling Datadog RUM, TrackJS, Rudderstack analytics, and Growthbook feature flags (removed from the base to keep the bundle lean).
-- **Fast builds** — RSBuild for sub-second dev server startup and optimized production bundles.
-
-## Who This Is For
-
-Developers who want to ship a branded derivatives trading bot application without building the Blockly integration, bot runtime, OAuth flow, or WebSocket layer from scratch. You are expected to be comfortable with:
-
-- React, TypeScript, and modern JavaScript tooling
-- Deploying a static SPA to your own infrastructure (Vercel, Netlify, Cloudflare Pages, S3+CloudFront, etc.)
-- Registering an OAuth app with Deriv to get a `CLIENT_ID` for your domain
+| Property | Details |
+| :--- | :--- |
+| **Codeowner / Developer** | **Mbuguabenson** |
+| **Email** | [mbuguabenson2020@gmail.com](mailto:mbuguabenson2020@gmail.com) |
+| **Official Website & Portfolio** | [Benadesigns.co.ke](https://benadesigns.co.ke) |
+| **Direct Contact / WhatsApp** | `+254 757 722 344` |
+| **Expertise & Services** | **Graphic Designer \| Web Signages & Custom Web Applications \| FinTech & Algorithmic Trading Systems** |
 
 ---
 
-## Quick Start (Fork → Brand → Run)
+## 📖 About The Project
 
-```bash
-# 1. Fork this repo on GitHub, then clone your fork
-git clone https://github.com/<your-org>/<your-fork>.git
-cd <your-fork>
+**Profit Hub Expert** is an institutional-grade, high-performance automated trading terminal built on top of the Deriv WebSocket API. It provides visual bot development, mathematical statistical digit analysis engines, sub-millisecond execution tools, multi-account management, and live risk-hedging algorithms.
 
-# 2. Install dependencies (Node 20.x required)
-npm install
+### 🌟 Key Highlights
 
-# 3. Configure your brand
-#    Edit brand.config.json: brand_name, domain, colors, logo, typography
-#    See user-guide/03-white-labeling.md for the full reference
+1. **Fast-Switch Account Architecture**
+   - Instant 0ms perceived latency switching between Real accounts (USD, CR IDs) and Demo accounts (VRTC).
+   - In-memory optimistic balance updating with WebSocket authorization and state synchronization.
 
-# 4. Generate brand CSS (validates your config, writes src/styles/_themes.scss)
-npm run generate:brand-css
+2. **Advanced Digit Analysis & Prediction Engines**
+   - **Digit Cracker**: Live digit power distribution, entropy rankings, even/odd percentages, and automated prediction targeting.
+   - **Over/Under Power Engine**: Real-time momentum scoring, volatility metrics, and dynamic threshold switching.
+   - **Market Killer**: Direct purchase execution with automated recovery chains and tick stream ribbons covering all Volatility & Jump indices.
+   - **Easy Tool & Smart Trading**: Streamlined one-click digit and contract execution with automatic tick history hydration.
 
-# 5. Add your OAuth credentials
-#    Create .env and set CLIENT_ID to the OAuth client ID you registered with Deriv
-echo "CLIENT_ID=your_deriv_oauth_client_id" > .env
+3. **Elite Pro & Multi-Trader Suite**
+   - **Elite Pro Terminal**: Mobile-responsive trading suite with live digit grids, Martingale recovery, and multi-market monitoring.
+   - **Auto X E/O & Poverty Hunter**: High-velocity algorithmic engines tailored for rapid tick-based market strategies.
+   - **Multi-Trader**: Simultaneous multi-account and multi-market contract execution over independent socket connections.
 
-# 6. Start the dev server
-npm start
-#    → https://localhost:8443
+4. **Visual Blockly Strategy Builder (DBot Engine)**
+   - Drag-and-drop trading block workspace with support for custom indicators, Martingale, D'Alembert, Oscar's Grind, and Accumulators.
+   - Real-time XML strategy import/export, strategy testing, and live execution.
+
+5. **Institutional Charting & Indicator Integration**
+   - Embedded SmartCharts with technical indicators (SMA, EMA, MACD, RSI, Bollinger Bands).
+
+---
+
+## 🏗️ Architecture & Technology Stack
+
+```
+Profit Hub Expert
+ ├── Core Framework: React 18 & TypeScript 5 (Strict Mode)
+ ├── State Management: MobX 6 & Reactive Observables
+ ├── Build Pipeline: RSBuild (Rspack-powered lightning build system)
+ ├── Trading Layer: Deriv WebSocket API (OAuth 2.0 PKCE & Secure WebSocket Streams)
+ ├── Execution Layer: Normalized single-tick proposal & direct buy routers
+ └── Design System: Custom SCSS, Glassmorphism, Responsive CSS Grid & Flexbox
 ```
 
-Then walk through the full setup in [Getting Started](./user-guide/01-getting-started.md).
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+- **Node.js**: `20.x` or higher
+- **npm**: `9.x` or higher
+- **Modern Browser**: Chrome, Edge, Firefox, or Safari (Supporting WebCrypto & WebSockets)
+
+### Installation & Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/mbuguabenson/Profithubexpertnew.git
+cd Profithubexpertnew
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure your environment variables (.env)
+echo "CLIENT_ID=your_deriv_app_id" > .env
+
+# 4. Generate Brand CSS Tokens
+npm run generate:brand-css
+
+# 5. Start Development Server
+npm start
+# -> Dev server runs at https://localhost:8443
+```
+
+### Production Build
+
+```bash
+# Compile and optimize production bundle with RSBuild
+npm run build
+```
 
 ---
 
-## Prerequisites
+## 🎨 Branding & Customization
 
-| Requirement | Version                             | Why                                                      |
-| ----------- | ----------------------------------- | -------------------------------------------------------- |
-| Node.js     | 20.x                                | Enforced via `package.json` engines                      |
-| npm         | 9.x                                 | Package manager                                          |
-| Git         | 2.30+                               | Version control                                          |
-| Browser     | Chrome, Firefox, or Safari (latest) | Dev server runs on HTTPS; WebCrypto is required for PKCE |
-
-You will also need a **Deriv OAuth client ID** registered against the domain you intend to deploy to. Without it, login will fail — the authentication flow and the WebSocket handshake both depend on it.
+The design system and corporate identity are configured in [`brand.config.json`](./brand.config.json):
+- **Brand Name**: Legacy Trading Hub / Profit Hub Expert
+- **Color Palettes**: Primary (`#38bdf8`), Tertiary (`#f59e0b`), Slate Greys, Dark Glassmorphism
+- **Typography**: Inter / Plus Jakarta Sans / JetBrains Mono
 
 ---
 
-## Documentation
+## 📞 Support & Inquiries
 
-All the setup, configuration, and architectural context lives under [`user-guide/`](./user-guide). Start here:
+For software inquiries, white-label solutions, UI/UX graphic design, or custom fintech trading tools:
 
-| #   | Guide                                                             | What's inside                                                       |
-| --- | ----------------------------------------------------------------- | ------------------------------------------------------------------- |
-| 01  | [Getting Started](./user-guide/01-getting-started.md)             | Prerequisites, project setup, commands, environment variables       |
-| 02  | [Architecture Overview](./user-guide/02-architecture-overview.md) | Layers, MobX stores, RxJS streams, bot engine, build system         |
-| 03  | [White Labeling](./user-guide/03-white-labeling.md)               | Branding, colors, typography, logo, menus, theme configuration      |
-| 04  | [Authentication](./user-guide/04-authentication.md)               | OAuth 2.0 with PKCE, token exchange, session management, logout     |
-| 05  | [WebSocket Integration](./user-guide/05-websocket-integration.md) | Connection architecture, public vs authenticated endpoints, DerivWS |
-| 06  | [Error Handling](./user-guide/06-error-handling.md)               | Centralized `ErrorLogger`, Sentry/TrackJS integration, migration    |
-| 07  | [Monitoring & Analytics](./user-guide/07-monitoring-analytics.md) | Re-enabling Datadog, TrackJS, Rudderstack, Growthbook               |
-| 08  | [Changelog](./user-guide/08-changelog.md)                         | What changed from the original Deriv Bot to this template           |
-
-New to the template? Read them in order. Just need to re-skin? Jump straight to [White Labeling](./user-guide/03-white-labeling.md).
+- **Author**: **Mbuguabenson**
+- **Website**: [Benadesigns.co.ke](https://benadesigns.co.ke)
+- **Email**: [mbuguabenson2020@gmail.com](mailto:mbuguabenson2020@gmail.com)
+- **Phone / WhatsApp**: `+254 757 722 344`
 
 ---
 
-## Project Layout
-
-- [`brand.config.json`](./brand.config.json) — white-label config (brand, colors, logo, domain)
-- [`src/`](./src) — application source ([`app/`](./src/app), [`pages/`](./src/pages), [`stores/`](./src/stores), [`services/`](./src/services), [`hooks/`](./src/hooks), [`components/layout/`](./src/components/layout))
-- [`src/external/bot-skeleton/`](./src/external/bot-skeleton) — bot runtime, Blockly blocks, WebSocket layer
-- [`src/external/indicators/`](./src/external/indicators) — SMA, EMA, Bollinger Bands, MACD, RSI
-- [`scripts/generate-brand-css.js`](./scripts/generate-brand-css.js) — generates `src/styles/_themes.scss` from `brand.config.json`
-- [`user-guide/`](./user-guide) — developer documentation (see above)
-
-For the layer-by-layer breakdown see [Architecture Overview](./user-guide/02-architecture-overview.md); for the full directory tree see [Getting Started — Project Structure](./user-guide/01-getting-started.md#project-structure).
-
----
-
-## Configuration at a Glance
-
-- **`brand.config.json`** drives every visual/identity knob — brand, colors, typography, logo, footer, hostnames. Edit it and run `npm run generate:brand-css`. Full reference: [White Labeling Guide](./user-guide/03-white-labeling.md).
-- **`.env`** holds secrets. `CLIENT_ID` is required for login; everything else (`APP_ID`, Google Drive, translations, monitoring credentials) is optional. Full table: [Getting Started — Environment Variables](./user-guide/01-getting-started.md#environment-variables).
-- **npm scripts** — see `package.json`. Most common: `npm start`, `npm run build`, `npm test`, `npm run generate:brand-css`. Full list: [Getting Started — Available Commands](./user-guide/01-getting-started.md#available-commands).
-
----
-
-## Things You Must Not Change
-
-The template relies on Deriv's infrastructure for OAuth and for the WebSocket trading API. Keep these values in `brand.config.json` pointed at Deriv — changing them will break login and all trading functionality:
-
-- `platform.auth2_url.production` → `https://auth.deriv.com/oauth2/`
-- `platform.auth2_url.staging` → `https://staging-auth.deriv.com/oauth2/`
-- `platform.derivws.url.production` → `https://api.derivws.com/trading/v1/`
-- `platform.derivws.url.staging` → `https://staging-api.derivws.com/trading/v1/`
-
-Everything else (brand name, colors, logo, fonts, your own `platform.hostname`, menus, footer toggles) is yours to change.
-
-See [White Labeling — Configuration Constraints](./user-guide/03-white-labeling.md#authentication-urls) and [Changelog — Configuration Constraints](./user-guide/08-changelog.md#configuration-constraints).
-
----
-
-## Deployment
-
-Any static host will work — the build output in `dist/` is a plain SPA.
-
-1. Run `npm run build` and ship the `dist/` directory.
-2. Register a Deriv OAuth client for your deployed domain and set `CLIENT_ID` in your host's environment variables.
-3. Set `platform.hostname.production.com` in `brand.config.json` to your deployed hostname (no protocol, no trailing slash) so `isProduction()` detects the right environment and connects to the production WebSocket. The hostname you put here must match the redirect URI you register with Deriv.
-4. Make sure your host serves `index.html` for unknown routes (SPA fallback) — OAuth redirects back to `/?code=...&state=...` and the `App` component handles the callback inline.
-
-### Example: deploying to Vercel
-
-This is one concrete path that works — any static host (Netlify, Cloudflare Pages, S3+CloudFront, your own infra) will do, but the shape of the steps is the same. Adapt as needed for your host.
-
-1. **Fork & clone** — fork this repo to your GitHub org (e.g. `your-org/your-fork`) and clone locally.
-2. **Configure locally** — edit `brand.config.json` (brand, colors, logo, and especially `platform.hostname.production.com` → the domain you'll deploy to), run `npm install` then `npm run generate:brand-css`, commit, push.
-3. **Create a Vercel project** — import your GitHub repo. **Override the Output Directory to `dist`** (Vercel's default is wrong for RSBuild). Framework preset can be left as "Other"; Vercel picks up `npm run build` automatically.
-4. **Deploy once** — let Vercel do the first deploy so you have a stable domain (e.g. `your-fork.vercel.app` or your custom domain). Login won't work yet.
-5. **Register the OAuth app with Deriv** — at [developers.deriv.com](https://developers.deriv.com/), register a new app using your deployed domain as the redirect URI (`https://your-fork.vercel.app/`), copy the **Client ID** Deriv issues.
-6. **Add env vars on Vercel** — in Project Settings → Environment Variables, add `CLIENT_ID=<the_id_from_deriv>`. Add any optional ones (`APP_ID`, Google Drive, monitoring) here too.
-7. **Redeploy** — env vars are injected at build time, so push a commit or click "Redeploy" in Vercel. Login now works.
-
-On other hosts the equivalents are: set the output/publish directory to `dist`, deploy once to get a stable URL, register that URL with Deriv, add `CLIENT_ID` to the host's environment variables, trigger a rebuild.
-
----
-
-## Contributing
-
-This repo is intended as a template; most users will want to maintain their own fork rather than upstream changes. That said, bug fixes and improvements that apply to every downstream fork are welcome.
-
-- Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
-- Run `npm run test:lint` before pushing
-- Run `npm test` and make sure the build still passes
-
-For bot builder and Blockly block changes, look in [`src/external/bot-skeleton/scratch/blocks/`](./src/external/bot-skeleton).
-
----
-
-## License
-
-See [LICENSE](./LICENSE).
+© 2026 **Profit Hub Expert** / **Benadesigns.co.ke**. All Rights Reserved.
