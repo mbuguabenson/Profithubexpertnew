@@ -3,20 +3,28 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import './dtrader.scss';
 
+const DTRADER_URL = 'https://deriv-dtrader-ten.vercel.app';
+
 const DTraderPage: React.FC = observer(() => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [iframeKey, setIframeKey] = useState(0);
     const { client } = useStore();
 
-    // Ensure tokens and active session are populated before loading iframe
+    // Construct the live iframe URL with query params
     const dtraderSrc = React.useMemo(() => {
         const theme = localStorage.getItem('theme') || 'dark';
         const activeLoginId = client?.loginid || localStorage.getItem('active_loginid') || '';
+        const activeToken = localStorage.getItem('active_token') ||
+                            localStorage.getItem('deriv_api_token') ||
+                            localStorage.getItem('token') ||
+                            localStorage.getItem('authToken') || '';
         const params = new URLSearchParams();
         if (theme) params.set('theme', theme);
         if (activeLoginId) params.set('account', activeLoginId);
-        return `/dtrader/index.html?${params.toString()}`;
-    }, [client?.loginid]);
+        if (activeToken) params.set('token1', activeToken);
+        return `${DTRADER_URL}/?${params.toString()}`;
+    }, [client?.loginid, iframeKey]);
 
     const sendAuthToIframe = () => {
         try {
@@ -51,6 +59,24 @@ const DTraderPage: React.FC = observer(() => {
         }
     };
 
+    const handleOpenNewTab = () => {
+        const activeLoginId = client?.loginid || localStorage.getItem('active_loginid') || '';
+        const activeToken = localStorage.getItem('active_token') ||
+                            localStorage.getItem('deriv_api_token') ||
+                            localStorage.getItem('token') ||
+                            localStorage.getItem('authToken') || '';
+        const params = new URLSearchParams();
+        if (activeLoginId) params.set('account', activeLoginId);
+        if (activeToken) params.set('token1', activeToken);
+        const url = `${DTRADER_URL}/?${params.toString()}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleReload = () => {
+        setIsLoading(true);
+        setIframeKey(prev => prev + 1);
+    };
+
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             if (event.data && (event.data.type === 'IFRAME_READY' || event.data.type === 'REQUEST_SESSION')) {
@@ -68,36 +94,6 @@ const DTraderPage: React.FC = observer(() => {
         const handleIframeLoad = () => {
             setIsLoading(false);
             sendAuthToIframe();
-            try {
-                // Synchronize parent storage items into iframe if same-origin
-                const iframeWin = iframeRef.current?.contentWindow;
-                if (iframeWin && iframeWin.localStorage) {
-                    const keys = [
-                        'client.accounts',
-                        'clientAccounts',
-                        'accountsList',
-                        'client_account_details',
-                        'deriv_accounts',
-                        'active_loginid',
-                        'active_token',
-                        'deriv_api_token',
-                        'authToken',
-                        'token',
-                        'token1',
-                        'config.server_url',
-                        'config.app_id',
-                        'theme'
-                    ];
-                    keys.forEach(k => {
-                        const val = localStorage.getItem(k);
-                        if (val !== null) {
-                            iframeWin.localStorage.setItem(k, val);
-                        }
-                    });
-                }
-            } catch (e) {
-                console.warn('[DTraderPage] Storage sync notice:', e);
-            }
         };
 
         const iframe = iframeRef.current;
@@ -111,6 +107,38 @@ const DTraderPage: React.FC = observer(() => {
 
     return (
         <div className="dtrader-page-container">
+            <div className="dtrader-toolbar">
+                <div className="dtrader-toolbar__left">
+                    <span className="dtrader-toolbar__title">DTrader Terminal</span>
+                    <span className="dtrader-toolbar__badge">Live Trading & Advanced Charts</span>
+                </div>
+                <div className="dtrader-toolbar__right">
+                    <button
+                        className="dtrader-toolbar__btn"
+                        onClick={handleReload}
+                        title="Reload DTrader Terminal"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M23 4v6h-6" />
+                            <path d="M1 20v-6h6" />
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                    <button
+                        className="dtrader-toolbar__btn dtrader-toolbar__btn--primary"
+                        onClick={handleOpenNewTab}
+                        title="Open DTrader in a separate browser tab"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                            <polyline points="15 3 21 3 21 9" />
+                            <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                        <span>Open in New Tab</span>
+                    </button>
+                </div>
+            </div>
             {isLoading && (
                 <div className="dtrader-loading-overlay">
                     <div className="dtrader-spinner" />
@@ -118,12 +146,13 @@ const DTraderPage: React.FC = observer(() => {
                 </div>
             )}
             <iframe
+                key={iframeKey}
                 ref={iframeRef}
                 src={dtraderSrc}
                 title="DTrader"
                 className="dtrader-iframe-frame"
-                allow="clipboard-read; clipboard-write"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+                allow="clipboard-read; clipboard-write; fullscreen"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
             />
         </div>
     );
