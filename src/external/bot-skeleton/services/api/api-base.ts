@@ -290,18 +290,22 @@ class APIBase {
                             }
                         } else if (res?.error) {
                             console.warn('[APIBase] Token authorize returned error:', res.error.message || res.error);
-                            if (res.error.code === 'InvalidToken') {
+                            if (res.error.code === 'InvalidToken' || res.error.code === 'InputValidationFailed' || String(res.error.message).includes('authorize')) {
                                 localStorage.removeItem('active_token');
                                 localStorage.removeItem('deriv_api_token');
                                 localStorage.removeItem('token');
+                                localStorage.removeItem('authToken');
                             }
                         }
                     } catch (tokErr: any) {
                         console.warn('[APIBase] Token authorize failed:', tokErr?.message || tokErr);
-                        if (tokErr?.error?.code === 'InvalidToken') {
+                        const code = tokErr?.error?.code || tokErr?.code;
+                        const msg = tokErr?.error?.message || tokErr?.message || '';
+                        if (code === 'InvalidToken' || code === 'InputValidationFailed' || String(msg).includes('authorize')) {
                             localStorage.removeItem('active_token');
                             localStorage.removeItem('deriv_api_token');
                             localStorage.removeItem('token');
+                            localStorage.removeItem('authToken');
                         }
                     }
                 }

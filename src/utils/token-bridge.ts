@@ -103,8 +103,14 @@ export const getActiveLoginId = (): string =>
     localStorage.getItem('client.loginid') ||
     '';
 
-const isInvalidBearerToken = (token: string | null | undefined): boolean =>
-    !token || token === 'null' || token === 'undefined' || token === 'a1-guest';
+export const isInvalidBearerToken = (token: string | null | undefined): boolean =>
+    !token ||
+    token === 'null' ||
+    token === 'undefined' ||
+    token === 'a1-guest' ||
+    token === 'guest' ||
+    token.includes('.') || // Disallow JWT / Bearer tokens which cause 'Input validation failed: authorize'
+    token.length > 64;
 
 /** Synchronously checks if a valid token is available in storage or URL */
 export const getActiveToken = (specificLoginId?: string): string | null => {
@@ -141,7 +147,7 @@ export const getActiveToken = (specificLoginId?: string): string | null => {
 export const resolveValidDerivWSToken = async (loginid?: string): Promise<string> => {
     // 1. Fast synchronous check from storage / URL for target loginid
     const syncToken = getActiveToken(loginid);
-    if (syncToken) {
+    if (syncToken && !isInvalidBearerToken(syncToken)) {
         return syncToken;
     }
 
@@ -158,25 +164,19 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
         // noop
     }
 
-    // 3. PKCE OAuth2 Access Token fallback
-    const oauthToken = OAuthTokenExchangeService.getAccessToken();
-    if (!isInvalidBearerToken(oauthToken)) {
-        return oauthToken!;
-    }
-
-    // 4. Fetch OTP WebSocket URL with strict 800ms timeout to avoid blocking handshakes
+    // 3. Fetch OTP WebSocket token for PKCE OAuth2 session
     try {
         const authInfo = OAuthTokenExchangeService.getAuthInfo();
         if (authInfo?.access_token) {
             const fetchPromise = DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
             const timeoutPromise = new Promise<string>((_, reject) =>
-                setTimeout(() => reject(new Error('OTP fetch timeout')), 800)
+                setTimeout(() => reject(new Error('OTP fetch timeout')), 1000)
             );
             const wsUrl = await Promise.race([fetchPromise, timeoutPromise]);
             if (wsUrl) {
                 const parsedUrl = new URL(wsUrl);
                 const otpToken = parsedUrl.searchParams.get('token') || parsedUrl.searchParams.get('otp');
-                if (otpToken) {
+                if (otpToken && !isInvalidBearerToken(otpToken)) {
                     return otpToken;
                 }
             }
