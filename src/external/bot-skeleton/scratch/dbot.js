@@ -327,7 +327,7 @@ class DBot {
 
             const code = this.generateCode();
             if (this.symbol && !this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) {
-                await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
+                this.interpreter.bot.tradeEngine.watchTicks(this.symbol).catch(() => {});
             }
 
             this.is_bot_running = true;

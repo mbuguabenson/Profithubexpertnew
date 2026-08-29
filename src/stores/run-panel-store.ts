@@ -238,7 +238,9 @@ export default class RunPanelStore {
             client.setIsLoggedIn(true);
         }
 
-        if (is_ios || isSafari()) this.preloadAudio();
+        if (is_ios || isSafari()) {
+            setTimeout(() => this.preloadAudio(), 0);
+        }
 
         this.registerBotListeners();
 
