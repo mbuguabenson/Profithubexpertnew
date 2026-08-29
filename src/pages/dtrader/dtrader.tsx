@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
-import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
+import { getAppId } from '@/components/shared/utils/config/config';
 import './dtrader.scss';
 
 const DTRADER_URL = 'https://deriv-dtrader.vercel.app';
@@ -20,10 +20,10 @@ const DTraderPage: React.FC = observer(() => {
         const activeToken = localStorage.getItem('active_token') ||
                             localStorage.getItem('deriv_api_token') ||
                             localStorage.getItem('token') ||
-                            getActiveToken(activeLoginId) ||
+                            (activeLoginId ? getActiveToken(activeLoginId) : null) ||
                             localStorage.getItem('authToken') || '';
         const appId = String(getAppId() || localStorage.getItem('config.app_id') || '121856');
-        const serverUrl = getSocketURL() || localStorage.getItem('config.server_url') || 'ws.derivws.com';
+        const serverUrl = localStorage.getItem('config.server_url') || 'ws.derivws.com';
 
         const params = new URLSearchParams();
         if (theme) params.set('theme', theme);
@@ -70,7 +70,7 @@ const DTraderPage: React.FC = observer(() => {
 
             const rawAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('client_account_details');
             const appId = String(getAppId() || localStorage.getItem('config.app_id') || '121856');
-            const serverUrl = getSocketURL() || localStorage.getItem('config.server_url') || 'ws.derivws.com';
+            const serverUrl = localStorage.getItem('config.server_url') || 'ws.derivws.com';
 
             const payload = {
                 type: 'NEWDTRADER_BRIDGE_AUTH',
