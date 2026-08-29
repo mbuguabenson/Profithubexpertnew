@@ -131,13 +131,17 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         async (loginid: string) => {
             console.log('[AccountSwitcher] Switching to account:', loginid);
             setIsOpen(false);
+            const target = formattedAccounts.find(a => a.loginid === loginid);
             try {
-                await AccountSwitcherService.switchAccount(loginid, client);
+                await AccountSwitcherService.switchAccount(loginid, client, {
+                    balance: target?.balance,
+                    currency: target?.currency,
+                });
             } catch (err) {
                 console.error('[AccountSwitcher] Error switching account:', err);
             }
         },
-        [client]
+        [client, formattedAccounts]
     );
 
     // Reset demo balance handler

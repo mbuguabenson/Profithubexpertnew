@@ -25,8 +25,13 @@ export class AccountSwitcherService {
      * Instantly switch the active account across the entire platform
      * @param targetLoginId The loginid to switch to (e.g. 'CR123456', 'VRTC987654')
      * @param clientStore Optional reference to MobX ClientStore
+     * @param options Optional pre-known balance and currency for instant 0ms sync
      */
-    public static async switchAccount(targetLoginId: string, clientStore?: any): Promise<boolean> {
+    public static async switchAccount(
+        targetLoginId: string,
+        clientStore?: any,
+        options?: { balance?: number | string; currency?: string }
+    ): Promise<boolean> {
         if (!targetLoginId) return false;
         if (this.isSwitching) {
             console.warn('[AccountSwitcherService] Switch already in progress, proceeding with latest target...');
@@ -61,18 +66,20 @@ export class AccountSwitcherService {
             }
 
             // 3. Resolve target account metadata with priority fallback
-            let targetBalance: number = 0;
-            let targetCurrency: string = isDemoAccount(targetLoginId) ? 'USD' : 'USD';
+            let targetBalance: number = options?.balance !== undefined ? Number(options.balance) : 0;
+            let targetCurrency: string = options?.currency || (isDemoAccount(targetLoginId) ? 'USD' : 'USD');
 
-            // Priority 1: Check in-memory clientStore
-            if (clientStore?.accounts?.[targetLoginId]?.balance !== undefined) {
-                targetBalance = Number(clientStore.accounts[targetLoginId].balance);
-                targetCurrency = clientStore.accounts[targetLoginId].currency || targetCurrency;
-            } else if (Array.isArray(clientStore?.account_list)) {
-                const found = clientStore.account_list.find((a: any) => a.loginid === targetLoginId);
-                if (found && found.balance !== undefined) {
-                    targetBalance = Number(found.balance);
-                    targetCurrency = found.currency || targetCurrency;
+            if (targetBalance === 0) {
+                // Priority 1: Check in-memory clientStore
+                if (clientStore?.accounts?.[targetLoginId]?.balance !== undefined) {
+                    targetBalance = Number(clientStore.accounts[targetLoginId].balance);
+                    targetCurrency = clientStore.accounts[targetLoginId].currency || targetCurrency;
+                } else if (Array.isArray(clientStore?.account_list)) {
+                    const found = clientStore.account_list.find((a: any) => a.loginid === targetLoginId);
+                    if (found && found.balance !== undefined) {
+                        targetBalance = Number(found.balance);
+                        targetCurrency = found.currency || targetCurrency;
+                    }
                 }
             }
 
@@ -116,8 +123,8 @@ export class AccountSwitcherService {
             // 4. INSTANT OPTIMISTIC STORE UPDATES (0ms perceived UI latency)
             if (clientStore) {
                 if (typeof clientStore.setLoginId === 'function') clientStore.setLoginId(targetLoginId);
-                if (typeof clientStore.setBalance === 'function') clientStore.setBalance(String(balance));
                 if (typeof clientStore.setCurrency === 'function') clientStore.setCurrency(targetCurrency);
+                if (typeof clientStore.setBalance === 'function') clientStore.setBalance(String(balance));
                 if (typeof clientStore.setIsVirtual === 'function') clientStore.setIsVirtual(isVirtual ? 1 : 0);
                 if (typeof clientStore.setWebSocketLoginId === 'function') clientStore.setWebSocketLoginId(targetLoginId);
                 if (typeof clientStore.setIsLoggedIn === 'function') clientStore.setIsLoggedIn(true);
@@ -141,6 +148,17 @@ export class AccountSwitcherService {
                 landing_company_name: 'svg',
                 user_id: 0,
             } as any);
+
+            // Synchronize accountList observable immediately
+            try {
+                const currentList = Array.isArray(clientStore?.account_list) ? [...clientStore.account_list] : [];
+                if (currentList.length > 0) {
+                    const updated = currentList.map((a: any) =>
+                        a.loginid === targetLoginId ? { ...a, balance, currency: targetCurrency } : a
+                    );
+                    setAccountList(updated);
+                }
+            } catch {}
 
             setIsAuthorized(true);
             setIsAuthorizing(false);

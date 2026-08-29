@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
+import { getAccountsList } from '@/utils/token-bridge';
 import './dtrader.scss';
 
 const DTRADER_URL = 'https://deriv-dtrader-ten.vercel.app';
@@ -11,7 +12,7 @@ const DTraderPage: React.FC = observer(() => {
     const [iframeKey, setIframeKey] = useState(0);
     const { client } = useStore();
 
-    // Construct the live iframe URL with query params
+    // Construct the live iframe URL with all session & app_id override query params
     const dtraderSrc = React.useMemo(() => {
         const theme = localStorage.getItem('theme') || 'dark';
         const activeLoginId = client?.loginid || localStorage.getItem('active_loginid') || '';
@@ -19,12 +20,33 @@ const DTraderPage: React.FC = observer(() => {
                             localStorage.getItem('deriv_api_token') ||
                             localStorage.getItem('token') ||
                             localStorage.getItem('authToken') || '';
+        const appId = localStorage.getItem('config.app_id') || '121856';
+        const serverUrl = localStorage.getItem('config.server_url') || 'ws.derivws.com';
+
         const params = new URLSearchParams();
         if (theme) params.set('theme', theme);
+        if (appId) params.set('app_id', appId);
+        if (serverUrl) params.set('server_url', serverUrl);
         if (activeLoginId) params.set('account', activeLoginId);
+        if (activeLoginId) params.set('acct1', activeLoginId);
         if (activeToken) params.set('token1', activeToken);
+        if (client?.currency) params.set('cur1', client.currency);
+
+        // Append remaining accounts if available
+        try {
+            const allAccounts = getAccountsList();
+            let idx = 2;
+            Object.keys(allAccounts).forEach(id => {
+                if (id !== activeLoginId && allAccounts[id]) {
+                    params.set(`acct${idx}`, id);
+                    params.set(`token${idx}`, allAccounts[id]);
+                    idx++;
+                }
+            });
+        } catch {}
+
         return `${DTRADER_URL}/?${params.toString()}`;
-    }, [client?.loginid, iframeKey]);
+    }, [client?.loginid, client?.currency, iframeKey]);
 
     const sendAuthToIframe = () => {
         try {
@@ -39,6 +61,8 @@ const DTraderPage: React.FC = observer(() => {
                                 localStorage.getItem('authToken') || '';
 
             const rawAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('client_account_details');
+            const appId = localStorage.getItem('config.app_id') || '121856';
+            const serverUrl = localStorage.getItem('config.server_url') || 'ws.derivws.com';
 
             const payload = {
                 type: 'NEWDTRADER_BRIDGE_AUTH',
@@ -47,13 +71,14 @@ const DTraderPage: React.FC = observer(() => {
                     active_token: activeToken,
                     token: activeToken,
                     accounts: rawAccounts,
-                    server_url: localStorage.getItem('config.server_url') || 'ws.derivws.com',
-                    app_id: localStorage.getItem('config.app_id') || '121856'
+                    server_url: serverUrl,
+                    app_id: appId,
                 }
             };
 
             iframeWin.postMessage(payload, '*');
             iframeWin.postMessage({ type: 'SET_SESSION', ...payload.payload }, '*');
+            iframeWin.postMessage({ type: 'DERIV_AUTH_OVERRIDE', app_id: appId, server_url: serverUrl, loginid: activeLoginId, token: activeToken }, '*');
         } catch (e) {
             console.warn('[DTraderPage] Error posting session to iframe:', e);
         }

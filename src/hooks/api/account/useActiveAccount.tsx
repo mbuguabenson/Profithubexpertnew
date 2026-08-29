@@ -47,10 +47,10 @@ const useActiveAccount = ({
         let rawBal: number | string = 0;
         if (currentBalanceData?.balance !== undefined) {
             rawBal = currentBalanceData.balance;
-        } else if (directBalance !== undefined && directBalance !== null && directBalance !== '') {
-            rawBal = directBalance;
         } else if (authData?.loginid === activeAccount.loginid && authData?.balance !== undefined) {
             rawBal = authData.balance;
+        } else if (directBalance !== undefined && directBalance !== null && directBalance !== '') {
+            rawBal = directBalance;
         } else if (activeAccount.balance !== undefined) {
             rawBal = activeAccount.balance;
         }
