@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { getAccountsList, getActiveToken, isInvalidBearerToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import './dtrader.scss';
 
 const DTRADER_URL = 'https://deriv-dtrader.vercel.app';
@@ -66,7 +67,8 @@ const DTraderPage: React.FC = observer(() => {
                                 localStorage.getItem('token1') ||
                                 localStorage.getItem('authToken') || '';
 
-            const rawAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('client_account_details');
+            const authInfo = OAuthTokenExchangeService.getAuthInfo();
+            const rawAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('client_account_details') || localStorage.getItem('accountsList');
             const appId = String(getAppId() || localStorage.getItem('config.app_id') || '121856');
             const serverUrl = localStorage.getItem('config.server_url') || 'ws.derivws.com';
 
@@ -76,6 +78,9 @@ const DTraderPage: React.FC = observer(() => {
                     active_loginid: activeLoginId,
                     active_token: activeToken,
                     token: activeToken,
+                    access_token: authInfo?.access_token || '',
+                    refresh_token: authInfo?.refresh_token || '',
+                    auth_info: authInfo,
                     accounts: rawAccounts,
                     server_url: serverUrl,
                     app_id: appId,
@@ -84,7 +89,8 @@ const DTraderPage: React.FC = observer(() => {
 
             iframeWin.postMessage(payload, '*');
             iframeWin.postMessage({ type: 'SET_SESSION', ...payload.payload }, '*');
-            iframeWin.postMessage({ type: 'DERIV_AUTH_OVERRIDE', app_id: appId, server_url: serverUrl, loginid: activeLoginId, token: activeToken }, '*');
+            iframeWin.postMessage({ type: 'AUTH_DATA', ...payload.payload }, '*');
+            iframeWin.postMessage({ type: 'DERIV_AUTH_OVERRIDE', app_id: appId, server_url: serverUrl, loginid: activeLoginId, token: activeToken, access_token: authInfo?.access_token }, '*');
         } catch (e) {
             console.warn('[DTraderPage] Error posting session to iframe:', e);
         }
@@ -92,7 +98,13 @@ const DTraderPage: React.FC = observer(() => {
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
-            if (event.data && (event.data.type === 'IFRAME_READY' || event.data.type === 'REQUEST_SESSION')) {
+            if (event.data && (
+                event.data.type === 'IFRAME_READY' || 
+                event.data.type === 'REQUEST_SESSION' || 
+                event.data.type === 'GET_AUTH' || 
+                event.data.type === 'READY' ||
+                event.data.type === 'PING'
+            )) {
                 sendAuthToIframe();
             }
         };
