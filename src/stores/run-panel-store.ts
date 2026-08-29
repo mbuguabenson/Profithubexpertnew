@@ -125,7 +125,7 @@ export default class RunPanelStore {
         if (typeof window !== 'undefined') {
             window.addEventListener('account_switched', handleAccountSwitch);
         }
-        globalObserver.register('api.authorize', handleAccountSwitch);
+        observer.register('api.authorize', handleAccountSwitch);
     }
 
     active_index = 0;
