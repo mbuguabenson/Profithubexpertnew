@@ -122,120 +122,6 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         };
     }, []);
 
-    const toggleDropdown = useCallback(() => {
-        if (is_bot_running) return;
-        setIsOpen(prev => !prev);
-    }, [is_bot_running]);
-
-    const handleAccountSelect = useCallback(
-        async (loginid: string) => {
-            console.log('[AccountSwitcher] Switching to account:', loginid);
-            setIsOpen(false);
-            const target = formattedAccounts.find(a => a.loginid === loginid);
-            try {
-                await AccountSwitcherService.switchAccount(loginid, client, {
-                    balance: target?.balance,
-                    currency: target?.currency,
-                });
-            } catch (err) {
-                console.error('[AccountSwitcher] Error switching account:', err);
-            }
-        },
-        [client, formattedAccounts]
-    );
-
-    // Reset demo balance handler
-    const handleResetBalance = useCallback(
-        async (e: React.MouseEvent) => {
-            e.stopPropagation();
-            if (isResettingBalance) return;
-
-            setIsResettingBalance(true);
-            setResetMessage(null);
-
-            let success = false;
-            let errorMessage = '';
-
-            try {
-                const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
-                const { getAppId } = await import('@/components/shared/utils/config/config');
-
-                // Method 1: Deriv Options REST API (Official Reset Demo Balance)
-                const authInfo = OAuthTokenExchangeService.getAuthInfo();
-                const appId = getAppId() || '121856';
-                const currentLoginId = activeLoginid || localStorage.getItem('active_loginid') || client?.loginid;
-
-                if (authInfo?.access_token && currentLoginId) {
-                    try {
-                        const res = await fetch(
-                            `https://api.derivws.com/trading/v1/options/accounts/${encodeURIComponent(currentLoginId)}/reset-demo-balance`,
-                            {
-                                method: 'POST',
-                                headers: {
-                                    Authorization: `Bearer ${authInfo.access_token}`,
-                                    'Content-Type': 'application/json',
-                                    'X-App-Id': appId,
-                                } as any,
-                                body: JSON.stringify({ amount: 10000 }),
-                            }
-                        );
-
-                        if (res.ok) {
-                            const data = await res.json().catch(() => null);
-                            const newBalance = data?.balance ?? data?.data?.balance ?? 10000;
-                            if (client?.setBalance) {
-                                client.setBalance(String(newBalance));
-                            }
-                            success = true;
-                        } else {
-                            const errData = await res.json().catch(() => null);
-                            errorMessage = errData?.error?.message || `Server returned ${res.status}`;
-                        }
-                    } catch (restErr: any) {
-                        console.warn('[AccountSwitcher] REST reset failed, trying WS fallback:', restErr?.message);
-                    }
-                }
-
-                // Method 2: Direct Deriv WebSocket API Fallback (topup_virtual)
-                if (!success) {
-                    if (api_base.api) {
-                        try {
-                            const topupRes = await api_base.api.send({ topup_virtual: 1 });
-                            if (topupRes?.topup_virtual) {
-                                const newAmount = topupRes.topup_virtual.amount ?? 10000;
-                                if (client?.setBalance) {
-                                    client.setBalance(String(newAmount));
-                                }
-                                success = true;
-                            } else if (topupRes?.error) {
-                                errorMessage = topupRes.error.message || 'Topup request rejected';
-                            }
-                        } catch (wsErr: any) {
-                            errorMessage = wsErr?.message || 'WebSocket topup failed';
-                        }
-                    }
-                }
-
-                if (success) {
-                    setResetMessage({ type: 'success', text: localize('Demo balance reset to $10,000!') });
-                    setTimeout(() => setResetMessage(null), 3500);
-                } else {
-                    setResetMessage({
-                        type: 'error',
-                        text: errorMessage || localize('Could not reset demo balance. Only virtual accounts can be reset.'),
-                    });
-                    setTimeout(() => setResetMessage(null), 4000);
-                }
-            } catch (err: any) {
-                setResetMessage({ type: 'error', text: err?.message || localize('Reset failed') });
-                setTimeout(() => setResetMessage(null), 4000);
-            } finally {
-                setIsResettingBalance(false);
-            }
-        },
-        [isResettingBalance, activeLoginid, client]
-    );
-
     // ─── Format accounts list ────────────────────────────────────────────────
     const formattedAccounts = useMemo(() => {
         const accountsMap: Record<
@@ -357,6 +243,120 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
             })
             .sort((a, b) => (a.isActive ? -1 : b.isActive ? 1 : 0));
     }, [accountList, client?.account_list, client?.loginid, activeLoginid, displayCurrency, rate]);
+
+    const toggleDropdown = useCallback(() => {
+        if (is_bot_running) return;
+        setIsOpen(prev => !prev);
+    }, [is_bot_running]);
+
+    const handleAccountSelect = useCallback(
+        async (loginid: string) => {
+            console.log('[AccountSwitcher] Switching to account:', loginid);
+            setIsOpen(false);
+            const target = formattedAccounts.find(a => a.loginid === loginid);
+            try {
+                await AccountSwitcherService.switchAccount(loginid, client, {
+                    balance: target?.balance,
+                    currency: target?.currency,
+                });
+            } catch (err) {
+                console.error('[AccountSwitcher] Error switching account:', err);
+            }
+        },
+        [client, formattedAccounts]
+    );
+
+    // Reset demo balance handler
+    const handleResetBalance = useCallback(
+        async (e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (isResettingBalance) return;
+
+            setIsResettingBalance(true);
+            setResetMessage(null);
+
+            let success = false;
+            let errorMessage = '';
+
+            try {
+                const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
+                const { getAppId } = await import('@/components/shared/utils/config/config');
+
+                // Method 1: Deriv Options REST API (Official Reset Demo Balance)
+                const authInfo = OAuthTokenExchangeService.getAuthInfo();
+                const appId = getAppId() || '121856';
+                const currentLoginId = activeLoginid || localStorage.getItem('active_loginid') || client?.loginid;
+
+                if (authInfo?.access_token && currentLoginId) {
+                    try {
+                        const res = await fetch(
+                            `https://api.derivws.com/trading/v1/options/accounts/${encodeURIComponent(currentLoginId)}/reset-demo-balance`,
+                            {
+                                method: 'POST',
+                                headers: {
+                                    Authorization: `Bearer ${authInfo.access_token}`,
+                                    'Content-Type': 'application/json',
+                                    'X-App-Id': appId,
+                                } as any,
+                                body: JSON.stringify({ amount: 10000 }),
+                            }
+                        );
+
+                        if (res.ok) {
+                            const data = await res.json().catch(() => null);
+                            const newBalance = data?.balance ?? data?.data?.balance ?? 10000;
+                            if (client?.setBalance) {
+                                client.setBalance(String(newBalance));
+                            }
+                            success = true;
+                        } else {
+                            const errData = await res.json().catch(() => null);
+                            errorMessage = errData?.error?.message || `Server returned ${res.status}`;
+                        }
+                    } catch (restErr: any) {
+                        console.warn('[AccountSwitcher] REST reset failed, trying WS fallback:', restErr?.message);
+                    }
+                }
+
+                // Method 2: Direct Deriv WebSocket API Fallback (topup_virtual)
+                if (!success) {
+                    if (api_base.api) {
+                        try {
+                            const topupRes = await api_base.api.send({ topup_virtual: 1 });
+                            if (topupRes?.topup_virtual) {
+                                const newAmount = topupRes.topup_virtual.amount ?? 10000;
+                                if (client?.setBalance) {
+                                    client.setBalance(String(newAmount));
+                                }
+                                success = true;
+                            } else if (topupRes?.error) {
+                                errorMessage = topupRes.error.message || 'Topup request rejected';
+                            }
+                        } catch (wsErr: any) {
+                            errorMessage = wsErr?.message || 'WebSocket topup failed';
+                        }
+                    }
+                }
+
+                if (success) {
+                    setResetMessage({ type: 'success', text: localize('Demo balance reset to $10,000!') });
+                    setTimeout(() => setResetMessage(null), 3500);
+                } else {
+                    setResetMessage({
+                        type: 'error',
+                        text: errorMessage || localize('Could not reset demo balance. Only virtual accounts can be reset.'),
+                    });
+                    setTimeout(() => setResetMessage(null), 4000);
+                }
+            } catch (err: any) {
+                setResetMessage({ type: 'error', text: err?.message || localize('Reset failed') });
+                setTimeout(() => setResetMessage(null), 4000);
+            } finally {
+                setIsResettingBalance(false);
+            }
+        },
+        [isResettingBalance, activeLoginid, client]
+    );
 
     const realAccounts = formattedAccounts.filter(a => !a.isVirtual);
     const demoAccounts = formattedAccounts.filter(a => a.isVirtual);
