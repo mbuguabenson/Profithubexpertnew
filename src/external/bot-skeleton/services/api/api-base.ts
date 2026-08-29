@@ -431,6 +431,18 @@ class APIBase {
                 }
             }
 
+            setAuthData({
+                loginid: balance?.loginid,
+                currency: balance?.currency || 'USD',
+                balance: typeof balance?.balance === 'number' ? balance.balance : 0,
+                is_virtual: account_type === 'real' ? 0 : 1,
+                email: balance?.email || '',
+                fullname: balance?.fullname || '',
+                landing_company_name: balance?.landing_company_name || 'svg',
+                user_id: balance?.user_id || 0,
+            } as any);
+            setAccountList(accountList);
+
             setIsAuthorized(true);
             this.is_authorized = true;
             localStorage.setItem('client_account_details', JSON.stringify(accountList));

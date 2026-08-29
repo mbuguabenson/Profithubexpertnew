@@ -53,27 +53,64 @@ export class AccountSwitcherService {
                 localStorage.setItem('token', targetToken);
             }
 
-            // 3. Resolve target account metadata from clientAccounts or accountsList
-            let clientAccounts: Record<string, any> = {};
-            try {
-                const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
-                if (rawClientAccounts) {
-                    clientAccounts = JSON.parse(rawClientAccounts);
-                }
-            } catch {}
+            // 3. Resolve target account metadata with priority fallback
+            let targetBalance: number = 0;
+            let targetCurrency: string = isDemoAccount(targetLoginId) ? 'USD' : 'USD';
 
-            const targetAccData = clientAccounts[targetLoginId] || {};
+            // Priority 1: Check in-memory clientStore
+            if (clientStore?.accounts?.[targetLoginId]?.balance !== undefined) {
+                targetBalance = Number(clientStore.accounts[targetLoginId].balance);
+                targetCurrency = clientStore.accounts[targetLoginId].currency || targetCurrency;
+            } else if (Array.isArray(clientStore?.account_list)) {
+                const found = clientStore.account_list.find((a: any) => a.loginid === targetLoginId);
+                if (found && found.balance !== undefined) {
+                    targetBalance = Number(found.balance);
+                    targetCurrency = found.currency || targetCurrency;
+                }
+            }
+
+            // Priority 2: Check localStorage client_account_details
+            if (targetBalance === 0) {
+                try {
+                    const rawDetails = localStorage.getItem('client_account_details');
+                    if (rawDetails) {
+                        const parsed = JSON.parse(rawDetails);
+                        if (Array.isArray(parsed)) {
+                            const found = parsed.find((a: any) => a.loginid === targetLoginId);
+                            if (found && found.balance !== undefined) {
+                                targetBalance = Number(found.balance);
+                                targetCurrency = found.currency || targetCurrency;
+                            }
+                        }
+                    }
+                } catch {}
+            }
+
+            // Priority 3: Check client.accounts
+            if (targetBalance === 0) {
+                try {
+                    const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+                    if (rawClientAccounts) {
+                        const parsed = JSON.parse(rawClientAccounts);
+                        const found = parsed[targetLoginId];
+                        if (found) {
+                            targetBalance = Number(found.balance || 0);
+                            targetCurrency = found.currency || targetCurrency;
+                        }
+                    }
+                } catch {}
+            }
+
             const isVirtual = isDemoAccount(targetLoginId);
             localStorage.setItem('account_type', isVirtual ? 'demo' : 'real');
-            const currency = targetAccData.currency || (isVirtual ? 'USD' : 'USD');
-            localStorage.setItem('active_currency', currency);
-            const balance = Number(targetAccData.balance || 0);
+            localStorage.setItem('active_currency', targetCurrency);
+            const balance = targetBalance;
 
             // 4. INSTANT OPTIMISTIC STORE UPDATES (0ms perceived UI latency)
             if (clientStore) {
                 if (typeof clientStore.setLoginId === 'function') clientStore.setLoginId(targetLoginId);
                 if (typeof clientStore.setBalance === 'function') clientStore.setBalance(String(balance));
-                if (typeof clientStore.setCurrency === 'function') clientStore.setCurrency(currency);
+                if (typeof clientStore.setCurrency === 'function') clientStore.setCurrency(targetCurrency);
                 if (typeof clientStore.setIsVirtual === 'function') clientStore.setIsVirtual(isVirtual ? 1 : 0);
                 if (typeof clientStore.setWebSocketLoginId === 'function') clientStore.setWebSocketLoginId(targetLoginId);
                 if (typeof clientStore.setIsLoggedIn === 'function') clientStore.setIsLoggedIn(true);
@@ -81,7 +118,7 @@ export class AccountSwitcherService {
 
             api_base.account_info = {
                 balance,
-                currency,
+                currency: targetCurrency,
                 loginid: targetLoginId,
             };
             api_base.token = targetLoginId;
@@ -89,20 +126,20 @@ export class AccountSwitcherService {
             // Update RxJS connection status observables
             setAuthData({
                 loginid: targetLoginId,
-                currency,
+                currency: targetCurrency,
                 balance,
                 is_virtual: isVirtual ? 1 : 0,
-                email: targetAccData.email || '',
-                fullname: targetAccData.fullname || '',
-                landing_company_name: targetAccData.landing_company_name || 'svg',
-                user_id: targetAccData.user_id || 0,
+                email: '',
+                fullname: '',
+                landing_company_name: 'svg',
+                user_id: 0,
             } as any);
 
             setIsAuthorized(true);
             setIsAuthorizing(false);
 
             // 5. Broadcast global instant sync events for all listening components
-            window.dispatchEvent(new CustomEvent('account_switched', { detail: { loginid: targetLoginId, currency, balance, token: targetToken } }));
+            window.dispatchEvent(new CustomEvent('account_switched', { detail: { loginid: targetLoginId, currency: targetCurrency, balance, token: targetToken } }));
             window.dispatchEvent(new Event('currency_changed'));
             window.dispatchEvent(new Event('storage'));
 
@@ -128,29 +165,62 @@ export class AccountSwitcherService {
                     const res: any = await Promise.race([authorizePromise, timeoutPromise]);
                     if (res?.authorize && res.authorize.loginid === targetLoginId) {
                         console.log('[AccountSwitcherService] WebSocket authorized successfully for:', res.authorize.loginid);
+                        const authBalance = typeof res.authorize.balance === 'number' ? res.authorize.balance : parseFloat(res.authorize.balance || '0');
+                        const authCurrency = res.authorize.currency || targetCurrency;
+                        const authLoginid = res.authorize.loginid;
+                        const authAccountList = res.authorize.account_list;
+
                         api_base.account_info = {
-                            balance: res.authorize.balance,
-                            currency: res.authorize.currency,
-                            loginid: res.authorize.loginid,
+                            balance: authBalance,
+                            currency: authCurrency,
+                            loginid: authLoginid,
                         };
-                        api_base.token = res.authorize.loginid;
+                        api_base.token = authLoginid;
                         api_base.is_authorized = true;
                         authorized = true;
 
                         if (clientStore) {
                             if (typeof clientStore.setBalance === 'function') {
-                                clientStore.setBalance(String(res.authorize.balance));
+                                clientStore.setBalance(String(authBalance));
                             }
                             if (typeof clientStore.setCurrency === 'function') {
-                                clientStore.setCurrency(res.authorize.currency);
+                                clientStore.setCurrency(authCurrency);
                             }
                             if (typeof clientStore.setLoginId === 'function') {
-                                clientStore.setLoginId(res.authorize.loginid);
+                                clientStore.setLoginId(authLoginid);
                             }
-                            if (res.authorize.account_list && typeof clientStore.setAccountList === 'function') {
-                                clientStore.setAccountList(res.authorize.account_list);
+                            if (authAccountList && typeof clientStore.setAccountList === 'function') {
+                                clientStore.setAccountList(authAccountList);
                             }
                         }
+
+                        setAuthData({
+                            loginid: authLoginid,
+                            currency: authCurrency,
+                            balance: authBalance,
+                            is_virtual: isVirtual ? 1 : 0,
+                            email: res.authorize.email || '',
+                            fullname: res.authorize.fullname || '',
+                            landing_company_name: res.authorize.landing_company_name || 'svg',
+                            user_id: res.authorize.user_id || 0,
+                        } as any);
+
+                        if (authAccountList) {
+                            setAccountList(authAccountList);
+                        }
+
+                        globalObserver.emit('api.authorize', {
+                            account_list: authAccountList,
+                            current_account: {
+                                loginid: authLoginid,
+                                currency: authCurrency,
+                                is_virtual: isVirtual ? 1 : 0,
+                                balance: authBalance,
+                            },
+                        });
+
+                        window.dispatchEvent(new CustomEvent('account_switched', { detail: { loginid: authLoginid, currency: authCurrency, balance: authBalance, token: targetToken } }));
+                        window.dispatchEvent(new Event('currency_changed'));
 
                         // Subscribe to live balance & transaction stream on new account
                         api_base.api.send({ balance: 1, subscribe: 1 }).catch(() => {});

@@ -44,19 +44,28 @@ const useActiveAccount = ({
         const isVirtual = isVirtualAccount(activeAccount.loginid);
         const accCurrency = activeAccount?.currency || 'USD';
 
+        let rawBal: number | string = 0;
+        if (currentBalanceData?.balance !== undefined) {
+            rawBal = currentBalanceData.balance;
+        } else if (directBalance !== undefined && directBalance !== null && directBalance !== '') {
+            rawBal = directBalance;
+        } else if (authData?.loginid === activeAccount.loginid && authData?.balance !== undefined) {
+            rawBal = authData.balance;
+        } else if (activeAccount.balance !== undefined) {
+            rawBal = activeAccount.balance;
+        }
+
+        const numBal = typeof rawBal === 'number' ? rawBal : parseFloat(String(rawBal).replace(/,/g, '')) || 0;
+
         return {
             ...activeAccount,
-            balance: currentBalanceData?.balance !== undefined
-                ? addComma(Number(currentBalanceData.balance).toFixed(getDecimalPlaces(currentBalanceData.currency || accCurrency)))
-                : directBalance
-                  ? addComma(parseFloat(directBalance).toFixed(getDecimalPlaces(accCurrency)))
-                  : addComma(Number(activeAccount.balance || 0).toFixed(getDecimalPlaces(accCurrency))),
+            balance: addComma(numBal.toFixed(getDecimalPlaces(currentBalanceData?.currency || accCurrency))),
             currencyLabel: isVirtual ? 'Demo' : accCurrency,
             icon: <CurrencyIcon currency={accCurrency.toLowerCase()} isVirtual={isVirtual} />,
             isVirtual: isVirtual,
             isActive: true,
         };
-    }, [activeAccount, currentBalanceData, directBalance]);
+    }, [activeAccount, currentBalanceData, directBalance, authData]);
 
     return {
         /** User's current active account. */

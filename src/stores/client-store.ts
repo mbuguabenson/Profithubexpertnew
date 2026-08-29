@@ -258,11 +258,44 @@ export default class ClientStore {
         account_list?.forEach(account => {
             this.accounts[account.loginid] = account;
         });
-        if (account_list) this.account_list = account_list;
+        if (account_list) {
+            this.account_list = account_list;
+            try {
+                localStorage.setItem('client_account_details', JSON.stringify(account_list));
+            } catch {}
+        }
     };
 
     setBalance = (balance: string) => {
         this.balance = balance;
+        const numBal = parseFloat(balance) || 0;
+        if (this.loginid) {
+            if (this.accounts[this.loginid]) {
+                this.accounts[this.loginid] = {
+                    ...this.accounts[this.loginid],
+                    balance: numBal,
+                };
+            }
+            if (Array.isArray(this.account_list)) {
+                this.account_list = this.account_list.map(acc =>
+                    acc.loginid === this.loginid ? { ...acc, balance: numBal } : acc
+                );
+                try {
+                    localStorage.setItem('client_account_details', JSON.stringify(this.account_list));
+                } catch {}
+            }
+            try {
+                const storedAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+                if (storedAccounts) {
+                    const parsed = JSON.parse(storedAccounts);
+                    if (parsed[this.loginid]) {
+                        parsed[this.loginid].balance = numBal;
+                        localStorage.setItem('client.accounts', JSON.stringify(parsed));
+                        localStorage.setItem('clientAccounts', JSON.stringify(parsed));
+                    }
+                }
+            } catch {}
+        }
     };
 
     setCurrency = (currency: string) => {
