@@ -401,12 +401,16 @@ export const getLocalizedErrorMessage = (errorCode: string, errorResponse?: Reco
     if (processedParams && Object.keys(processedParams).length > 0) {
         Object.keys(processedParams).forEach(key => {
             const placeholder = `{{${key}}}`;
-            finalMessage = finalMessage.replace(new RegExp(placeholder, 'g'), processedParams[key]);
+            const val = processedParams[key] !== undefined && processedParams[key] !== null && processedParams[key] !== 'undefined' ? processedParams[key] : '';
+            finalMessage = finalMessage.replace(new RegExp(placeholder, 'g'), val);
         });
     } else {
         // Only use localize() for static messages without dynamic parameters
         finalMessage = localize(message, processedParams);
     }
+
+    // Clean up empty parentheses or dangling ID placeholders if request ID is omitted
+    finalMessage = finalMessage.replace(/\(ID:\s*\)/g, '').replace(/undefined/g, 'request').trim();
 
     return finalMessage;
 };

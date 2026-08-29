@@ -148,10 +148,17 @@ const getBackoffDelayInMs = (error_obj, delay_index) => {
     const { TRADE_TYPE_CATEGORY_NAMES } = config();
 
     if (code) {
+        const resolved_msg_type =
+            error.msg_type ||
+            msg_type ||
+            echo_req?.msg_type ||
+            (echo_req ? Object.keys(echo_req).find(k => !['req_id', 'passthrough', 'subscribe'].includes(k)) : '') ||
+            'trade request';
+
         const error_details = {
-            message_type: error.msg_type,
+            message_type: resolved_msg_type,
             delay: next_delay_in_seconds,
-            request: echo_req?.req_id,
+            request: echo_req?.req_id || 'api',
             message: message || localize('The market is closed'),
             trade_type: TRADE_TYPE_CATEGORY_NAMES?.[selected_trade_type] ?? '',
         };
