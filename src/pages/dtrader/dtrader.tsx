@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
-import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
+import { getAccountsList, getActiveToken, isInvalidBearerToken } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
 import './dtrader.scss';
 
@@ -31,11 +31,9 @@ const DTraderPage: React.FC = observer(() => {
         if (serverUrl) params.set('server_url', serverUrl);
         if (activeLoginId) params.set('account', activeLoginId);
         if (activeLoginId) params.set('acct1', activeLoginId);
-        if (activeToken) {
+        if (activeToken && !isInvalidBearerToken(activeToken)) {
             params.set('token', activeToken);
             params.set('token1', activeToken);
-        } else {
-            params.set('token', 'guest');
         }
         if (client?.currency) params.set('cur1', client.currency);
 
