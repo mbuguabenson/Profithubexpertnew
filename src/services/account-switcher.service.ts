@@ -9,10 +9,12 @@
 
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import {
+    setAccountList,
     setAuthData,
     setIsAuthorized,
     setIsAuthorizing,
 } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
+import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
 import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 import { isDemoAccount } from '@/utils/account-helpers';
 
