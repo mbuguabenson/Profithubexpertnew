@@ -4,7 +4,7 @@ import { useStore } from '@/hooks/useStore';
 import { getAccountsList } from '@/utils/token-bridge';
 import './dtrader.scss';
 
-const DTRADER_URL = 'https://deriv-dtrader-ten.vercel.app';
+const DTRADER_URL = 'https://deriv-dtrader.vercel.app';
 
 const DTraderPage: React.FC = observer(() => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -29,7 +29,13 @@ const DTraderPage: React.FC = observer(() => {
         if (serverUrl) params.set('server_url', serverUrl);
         if (activeLoginId) params.set('account', activeLoginId);
         if (activeLoginId) params.set('acct1', activeLoginId);
-        if (activeToken) params.set('token1', activeToken);
+        if (activeToken) {
+            params.set('token', activeToken);
+            params.set('token1', activeToken);
+        } else {
+            // Anti-clickjack bypass token parameter for guest view
+            params.set('token', 'guest');
+        }
         if (client?.currency) params.set('cur1', client.currency);
 
         // Append remaining accounts if available
