@@ -72,6 +72,22 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         return localStorage.getItem('is_balance_visible') !== 'false';
     });
 
+    // Account switching state (shows loader while initializing new account balance)
+    const [isSwitchingAccount, setIsSwitchingAccount] = useState(false);
+
+    useEffect(() => {
+        const handleStart = () => setIsSwitchingAccount(true);
+        const handleEnd = () => setIsSwitchingAccount(false);
+        window.addEventListener('account_switching_start', handleStart);
+        window.addEventListener('account_switching_end', handleEnd);
+        window.addEventListener('account_switched', handleEnd);
+        return () => {
+            window.removeEventListener('account_switching_start', handleStart);
+            window.removeEventListener('account_switching_end', handleEnd);
+            window.removeEventListener('account_switched', handleEnd);
+        };
+    }, []);
+
     const toggleBalanceVisibility = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         setIsBalanceVisible(prev => {
@@ -444,9 +460,19 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             data-testid='dt_balance'
                             className={classNames('acc-chip__balance', {
                                 'acc-chip__balance--no-currency': !currency && !isVirtual,
+                                'acc-chip__balance--loading': isSwitchingAccount || client?.is_account_regenerating,
                             })}
                         >
-                            {isBalanceVisible ? chipBalance : '••••••'}
+                            {isSwitchingAccount || client?.is_account_regenerating ? (
+                                <div className='acc-chip__balance-loader' title={localize('Initializing balance...')}>
+                                    <span className='acc-chip__spinner' />
+                                    <span className='acc-chip__loading-text'>{localize('Updating...')}</span>
+                                </div>
+                            ) : isBalanceVisible ? (
+                                chipBalance
+                            ) : (
+                                '••••••'
+                            )}
                         </span>
                     </div>
 

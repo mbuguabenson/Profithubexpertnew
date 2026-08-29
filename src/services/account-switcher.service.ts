@@ -41,6 +41,7 @@ export class AccountSwitcherService {
 
         try {
             console.log(`[AccountSwitcherService] Initiating high-speed switch to ${targetLoginId}...`);
+            window.dispatchEvent(new CustomEvent('account_switching_start', { detail: { loginid: targetLoginId } }));
 
             // 1. Update localStorage identifiers immediately
             localStorage.setItem('active_loginid', targetLoginId);
@@ -269,6 +270,7 @@ export class AccountSwitcherService {
             return false;
         } finally {
             this.isSwitching = false;
+            window.dispatchEvent(new CustomEvent('account_switching_end', { detail: { loginid: targetLoginId } }));
         }
     }
 }
