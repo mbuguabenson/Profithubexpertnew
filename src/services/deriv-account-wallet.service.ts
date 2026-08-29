@@ -105,13 +105,7 @@ export class DerivAccountWalletService {
     private static getAuthCredentials(): { token: string; appId: string } {
         const authInfo = OAuthTokenExchangeService.getAuthInfo();
         const appId = getAppId() || '121856';
-        let token = authInfo?.access_token || '';
-
-        if (!token) {
-            const activeLoginId = getActiveLoginId();
-            const accounts = getAccountsList();
-            token = (activeLoginId && accounts[activeLoginId]) || localStorage.getItem('token1') || localStorage.getItem('active_token') || '';
-        }
+        const token = authInfo?.access_token || '';
 
         return { token, appId };
     }

@@ -256,6 +256,23 @@ export default class DigitCrackerStore {
         this.subscribeToTicks();
     };
 
+    @action
+    unsubscribeFromTicks = () => {
+        if (this.unsubscribe_ticks) {
+            try {
+                this.unsubscribe_ticks();
+            } catch {}
+            this.unsubscribe_ticks = null;
+        }
+        if (this.active_stream_id && api_base.api) {
+            try {
+                api_base.api.send({ forget: this.active_stream_id }).catch(() => {});
+            } catch {}
+            this.active_stream_id = null;
+        }
+        this.is_subscribing = false;
+    };
+
     private active_stream_id: string | null = null;
 
     @action
