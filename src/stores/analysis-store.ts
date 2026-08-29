@@ -1,8 +1,9 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
-import { api_base, ApiHelpers } from '@/external/bot-skeleton';
+import { api_base, ApiHelpers, observer as globalObserver } from '@/external/bot-skeleton';
 import { DigitStatsEngine } from '@/lib/digit-stats-engine';
 import { DigitTradeEngine } from '@/lib/digit-trade-engine';
 import { getGroupedMarkets } from '@/constants/markets';
+import { safeSubscribe } from '@/utils/websocket-handler';
 import RootStore from './root-store';
 
 export type TDigitStat = {
@@ -122,14 +123,26 @@ export default class AnalysisStore {
                 this.is_connected = !!is_socket_opened;
                 if (is_socket_opened) {
                     this.fetchMarkets();
-                    if (!this.unsubscribe_ticks) {
-                        this.subscribeToTicks(); // Auto-subscribe if connected and not already
-                    }
+                    this.subscribeToTicks();
                 } else {
-                    this.unsubscribeFromTicks(); // Clean up on disconnect
+                    this.unsubscribeFromTicks();
                 }
             }
         );
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                this.subscribeToTicks();
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && (!this.ticks || this.ticks.length === 0)) {
+                    this.subscribeToTicks();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            this.subscribeToTicks();
+        });
     }
 
     @action
@@ -375,7 +388,6 @@ export default class AnalysisStore {
     subscribeToTicks = async (retry_count = 0) => {
         if (!this.symbol || this.is_subscribing) return;
 
-        // Ensure we don't exceed API limits
         const safeCount = Math.min(this.total_ticks, 5000);
 
         this.unsubscribeFromTicks();
@@ -386,96 +398,78 @@ export default class AnalysisStore {
         if (this.active_stream_id && api_base.api) {
             try {
                 api_base.api.send({ forget: this.active_stream_id });
-            } catch (e) {
-                // Ignore forget errors
-            }
+            } catch (e) {}
             this.active_stream_id = null;
         }
 
         try {
             if (!api_base.api) {
-                throw new Error('API not initialized');
+                if (retry_count < 10) {
+                    setTimeout(() => this.subscribeToTicks(retry_count + 1), 1000);
+                }
+                return;
             }
 
-            let response: any;
+            const sym = this.symbol;
+
+            // 1. Fetch initial tick history
             try {
-                response = await api_base.api.send({
-                    ticks_history: this.symbol,
+                const history_res: any = await api_base.api.send({
+                    ticks_history: sym,
                     count: safeCount,
                     end: 'latest',
                     style: 'ticks',
-                    subscribe: 1,
                 });
 
-                if (response?.error?.code === 'AlreadySubscribed') {
-                    // If already subscribed, just fetch history once and reuse the existing global listener logic
-                    response = await api_base.api.send({
-                        ticks_history: this.symbol,
-                        count: safeCount,
-                        end: 'latest',
-                        style: 'ticks',
-                    });
-                } else if (response?.error) {
-                    console.warn('[AnalysisStore] ticks_history response error:', response.error);
-                    return;
-                }
-            } catch (err: any) {
-                if (err?.error?.code === 'AlreadySubscribed') {
-                    try {
-                        response = await api_base.api.send({
-                            ticks_history: this.symbol,
-                            count: safeCount,
-                            end: 'latest',
-                            style: 'ticks',
-                        });
-                    } catch (retryErr) {
-                        console.warn('[AnalysisStore] ticks_history retry failed:', retryErr);
-                        return;
-                    }
-                } else {
-                    console.warn('[AnalysisStore] ticks_history error:', err);
-                    return;
-                }
-            }
+                if (this.symbol !== sym) return;
 
-            runInAction(() => {
-                if (response?.subscription?.id) {
-                    this.active_stream_id = response.subscription.id;
-                }
+                const history = history_res?.history || history_res?.ticks_history;
+                if (history?.prices && Array.isArray(history.prices) && history.prices.length > 0) {
+                    const price_numbers = history.prices.map((p: string | number) => Number(p));
+                    const last_digits = price_numbers.map((p: number) => this.stats_engine.extractLastDigit(p));
 
-                // Handle initial history
-                if (response && (response.history || response.ticks_history)) {
-                    const history = response.history || response.ticks_history;
-                    if (history.prices) {
-                        const price_numbers = history.prices.map((p: string | number) => Number(p));
-                        const last_digits = price_numbers.map((p: number) => this.stats_engine.extractLastDigit(p));
-
+                    runInAction(() => {
                         this.current_price = price_numbers[price_numbers.length - 1];
                         this.ticks = last_digits;
                         this.last_digit = last_digits[last_digits.length - 1] ?? null;
 
                         this.stats_engine.update(last_digits, price_numbers);
                         this.refreshStats();
-                    }
+                    });
                 }
+            } catch (histErr) {
+                console.warn('[AnalysisStore] ticks_history error:', histErr);
+            }
 
+            if (this.symbol !== sym) return;
+
+            // 2. Direct RxJS observable stream via safeSubscribe
+            const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+            const subscription = safeSubscribe(
+                tickObservable,
+                (tickRes: any) => {
+                    if (this.symbol !== sym) return;
+                    if (tickRes?.tick && tickRes.tick.symbol === sym) {
+                        this.handleTick(tickRes.tick);
+                    }
+                },
+                (err: any) => {
+                    console.warn(`[AnalysisStore] Stream error for ${sym}:`, err);
+                }
+            );
+
+            this.unsubscribe_ticks = () => {
+                try {
+                    subscription?.unsubscribe?.();
+                } catch (e) {}
+            };
+
+            runInAction(() => {
                 this.is_loading = false;
                 this.is_subscribing = false;
             });
 
-            // Setup real-time listener (dispose previous one first)
-            if (this.unsubscribe_ticks) this.unsubscribe_ticks();
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const subscription = api_base.api.onMessage().subscribe((msg: any) => {
-                const data = msg.data || msg;
-                if (data.msg_type === 'tick' && data.tick && data.tick.symbol === this.symbol) {
-                    this.handleTick(data.tick);
-                }
-            });
-
-            this.unsubscribe_ticks = () => subscription.unsubscribe();
-            console.log(`[AnalysisStore] Subscribed to ${this.symbol} (Depth: ${safeCount})`);
+            console.log(`[AnalysisStore] Subscribed to ${sym} (Depth: ${safeCount})`);
         } catch (e: unknown) {
             console.error('[AnalysisStore] Subscribe error:', e);
             runInAction(() => {
@@ -484,7 +478,7 @@ export default class AnalysisStore {
                 this.is_subscribing = false;
             });
 
-            if (retry_count < 3) {
+            if (retry_count < 5) {
                 setTimeout(() => this.subscribeToTicks(retry_count + 1), 2000);
             }
         }

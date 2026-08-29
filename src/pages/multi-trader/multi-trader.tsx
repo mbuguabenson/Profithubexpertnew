@@ -175,7 +175,7 @@ const MultiTrader: React.FC = observer(() => {
 
     const sendJSON = useCallback(async (obj: Record<string, any>): Promise<any> => {
         // If main api_base is connected & authorized, try it first for speed
-        if (api_base.api && api_base.is_authorized && api_base.api.connection?.readyState === WebSocket.OPEN) {
+        if (api_base.api && api_base.api.connection?.readyState === WebSocket.OPEN) {
             try {
                 const res = await api_base.api.send(obj);
                 if (res?.error) {
@@ -227,8 +227,11 @@ const MultiTrader: React.FC = observer(() => {
 
             if (data.msg_type === 'authorize') {
                 if (data.error) {
-                    setStatus('disconnected');
-                    addLog(`Authorization failed: ${data.error.message}`, 'error');
+                    // Only disconnect if api_base is also not authorized
+                    if (!api_base.is_authorized) {
+                        setStatus('disconnected');
+                        addLog(`Authorization notice: ${data.error.message}`, 'warning');
+                    }
                 } else {
                     setStatus('connected');
                     addLog(`Authorized as ${data.authorize.loginid} (${data.authorize.currency || 'USD'})`, 'success');
@@ -244,14 +247,23 @@ const MultiTrader: React.FC = observer(() => {
     }, [addLog]);
 
     const connect = useCallback(async (): Promise<boolean> => {
+        // 1. Check if main api_base is already active and authorized (supports PKCE OAuth OTP & Tokens)
+        if (api_base.api && api_base.api.connection?.readyState === WebSocket.OPEN && (api_base.is_authorized || client?.is_logged_in)) {
+            setStatus('connected');
+            const loginid = api_base.account_info?.loginid || client?.loginid || 'Active Account';
+            const curr = api_base.account_info?.currency || client?.currency || 'USD';
+            addLog(`MultiTrader ready and connected as ${loginid} (${curr})`, 'success');
+            return true;
+        }
+
         if (wsRef.current?.readyState === WebSocket.OPEN && status === 'connected') return true;
         
         const activeLogin = localStorage.getItem('active_loginid') || client?.loginid;
         const currentToken = (typeof client?.getToken === 'function' ? client.getToken() : null) || 
                              (activeLogin ? getActiveToken(activeLogin) : null) || 
-                             (await resolveValidDerivWSToken());
+                             (await resolveValidDerivWSToken(activeLogin || undefined));
                              
-        if (!currentToken) {
+        if (!currentToken && !api_base.is_authorized && !client?.is_logged_in) {
             addLog('Please log in or connect your Deriv account first.', 'error');
             return false;
         }
@@ -265,15 +277,24 @@ const MultiTrader: React.FC = observer(() => {
 
             return await new Promise<boolean>((resolve) => {
                 const timeout = setTimeout(() => {
-                    if (status !== 'connected') {
+                    if (api_base.api && api_base.api.connection?.readyState === WebSocket.OPEN && (api_base.is_authorized || client?.is_logged_in)) {
+                        setStatus('connected');
+                        resolve(true);
+                    } else if (status !== 'connected') {
                         setStatus('disconnected');
                         resolve(false);
                     }
-                }, 10000);
+                }, 8000);
 
                 ws.onopen = () => {
-                    addLog('Connected to Deriv Server. Authorizing…', 'info');
-                    ws.send(JSON.stringify({ authorize: currentToken }));
+                    addLog('Connected to Deriv WebSocket. Initializing…', 'info');
+                    if (currentToken) {
+                        ws.send(JSON.stringify({ authorize: currentToken }));
+                    } else if (api_base.is_authorized) {
+                        clearTimeout(timeout);
+                        setStatus('connected');
+                        resolve(true);
+                    }
                 };
 
                 ws.onmessage = (raw) => {
@@ -283,6 +304,9 @@ const MultiTrader: React.FC = observer(() => {
                         if (data.msg_type === 'authorize') {
                             clearTimeout(timeout);
                             if (!data.error) {
+                                setStatus('connected');
+                                resolve(true);
+                            } else if (api_base.is_authorized) {
                                 setStatus('connected');
                                 resolve(true);
                             } else {
@@ -297,21 +321,32 @@ const MultiTrader: React.FC = observer(() => {
 
                 ws.onclose = () => {
                     clearTimeout(timeout);
-                    setStatus('disconnected');
-                    if (runningRef.current) {
-                        runningRef.current = false;
-                        setRunning(false);
-                        addLog('Connection lost. Bot stopped.', 'error');
+                    if (!api_base.is_authorized && !client?.is_logged_in) {
+                        setStatus('disconnected');
+                        if (runningRef.current) {
+                            runningRef.current = false;
+                            setRunning(false);
+                            addLog('Connection lost. Bot stopped.', 'error');
+                        }
                     }
                 };
 
                 ws.onerror = () => {
                     clearTimeout(timeout);
-                    addLog('WebSocket connection error.', 'error');
-                    resolve(false);
+                    if (api_base.is_authorized || client?.is_logged_in) {
+                        setStatus('connected');
+                        resolve(true);
+                    } else {
+                        addLog('WebSocket connection notice.', 'warning');
+                        resolve(false);
+                    }
                 };
             });
         } catch (err: any) {
+            if (api_base.is_authorized || client?.is_logged_in) {
+                setStatus('connected');
+                return true;
+            }
             setStatus('disconnected');
             addLog(`WebSocket connection error: ${err?.message || err}`, 'error');
             return false;
@@ -323,17 +358,19 @@ const MultiTrader: React.FC = observer(() => {
         connect();
 
         const handleAccountSwitch = () => {
-            addLog('Account switch detected. Reconnecting MultiTrader…', 'info');
+            addLog('Account switch detected. Synchronizing MultiTrader…', 'info');
             if (wsRef.current) {
                 try { wsRef.current.close(); } catch {}
             }
-            setStatus('disconnected');
+            setStatus('connecting');
             setTimeout(() => connect(), 300);
         };
 
         window.addEventListener('account_switched', handleAccountSwitch);
+        window.addEventListener('currency_changed', handleAccountSwitch);
         return () => {
             window.removeEventListener('account_switched', handleAccountSwitch);
+            window.removeEventListener('currency_changed', handleAccountSwitch);
             runningRef.current = false;
             try { wsRef.current?.close(); } catch {}
         };

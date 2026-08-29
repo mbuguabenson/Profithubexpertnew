@@ -1,8 +1,9 @@
-import { action, makeObservable, observable, runInAction } from 'mobx';
-import { api_base } from '@/external/bot-skeleton';
+import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import { DigitStatsEngine } from '@/lib/digit-stats-engine';
 import { getGroupedMarkets } from '@/constants/markets';
+import { safeSubscribe } from '@/utils/websocket-handler';
 import RootStore from './root-store';
 
 export type TBotConfig = {
@@ -114,6 +115,34 @@ export default class FreeBotsStore {
         this.root_store = root_store;
         this.stats_engine = new DigitStatsEngine();
         this.waitAndConnect();
+
+        reaction(
+            () => this.root_store.common?.is_socket_opened,
+            is_socket_opened => {
+                this.is_connected = !!is_socket_opened;
+                if (is_socket_opened) {
+                    this.fetchMarkets();
+                    this.subscribeToTicks();
+                } else if (this.unsubscribe) {
+                    this.unsubscribe();
+                    this.unsubscribe = null;
+                }
+            }
+        );
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                this.subscribeToTicks();
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && (!this.ticks || this.ticks.length === 0)) {
+                    this.subscribeToTicks();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            this.subscribeToTicks();
+        });
     }
 
     private waitAndConnect = () => {
@@ -177,9 +206,11 @@ export default class FreeBotsStore {
     private active_stream_id: string | null = null;
     @action
     subscribeToTicks = async (retry_count = 0) => {
-        if (!api_base.api || this.is_subscribing) return;
+        if (this.is_subscribing) return;
         if (this.unsubscribe) {
-            this.unsubscribe();
+            try {
+                this.unsubscribe();
+            } catch (e) {}
             this.unsubscribe = null;
         }
 
@@ -190,52 +221,29 @@ export default class FreeBotsStore {
             this.active_stream_id = null;
         }
 
+        if (!api_base.api) {
+            if (retry_count < 10) {
+                setTimeout(() => this.subscribeToTicks(retry_count + 1), 1000);
+            }
+            return;
+        }
+
         this.is_subscribing = true;
+        const sym = this.symbol;
 
         try {
-            let response: any;
+            // 1. Initial historical data
             try {
-                response = await api_base.api.send({
-                    ticks_history: this.symbol,
+                const histRes: any = await api_base.api.send({
+                    ticks_history: sym,
                     count: 200,
                     end: 'latest',
                     style: 'ticks',
-                    subscribe: 1,
                 });
-            } catch (err: any) {
-                if (err?.error?.code === 'AlreadySubscribed') {
-                    try {
-                        response = await api_base.api.send({
-                            ticks_history: this.symbol,
-                            count: 200,
-                            end: 'latest',
-                            style: 'ticks',
-                        });
-                    } catch (retryErr) {
-                        console.warn('[FreeBotsStore] ticks_history retry failed:', retryErr);
-                        this.is_subscribing = false;
-                        return;
-                    }
-                } else {
-                    console.warn('[FreeBotsStore] ticks_history subscription failed:', err);
-                    this.is_subscribing = false;
-                    return;
-                }
-            }
 
-            if (response?.subscription?.id) {
-                this.active_stream_id = response.subscription.id;
-            }
+                if (this.symbol !== sym) return;
 
-            if (response?.error) {
-                console.warn('[FreeBotsStore] ticks_history response error:', response.error);
-                this.is_subscribing = false;
-                return;
-            }
-
-            // Handle initial history
-            if (response && (response.history || response.ticks_history)) {
-                const hist = response.history || response.ticks_history;
+                const hist = histRes?.history || histRes?.ticks_history;
                 if (hist?.prices?.length) {
                     runInAction(() => {
                         const prices = hist.prices.map(Number);
@@ -246,20 +254,34 @@ export default class FreeBotsStore {
                         this.current_price = prices[prices.length - 1];
                         this.stats_engine.update(this.ticks, prices);
                         this.refreshStats();
-                        this.is_subscribing = false;
                     });
                 }
+            } catch (histErr) {
+                console.warn('[FreeBotsStore] ticks_history note:', histErr);
             }
 
-            // Setup real-time listener
-            const subscription = api_base.api.onMessage().subscribe((msg: any) => {
-                const data = msg.data || msg;
-                if (data.msg_type === 'tick' && data.tick && data.tick.symbol === this.symbol) {
-                    this.processTick(data.tick);
-                }
-            });
+            if (this.symbol !== sym) return;
 
-            this.unsubscribe = () => subscription.unsubscribe();
+            // 2. Direct RxJS Observable stream via safeSubscribe
+            const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+            const subscription = safeSubscribe(
+                tickObservable,
+                (msg: any) => {
+                    if (this.symbol !== sym) return;
+                    if (msg?.tick && msg.tick.symbol === sym) {
+                        this.processTick(msg.tick);
+                    }
+                },
+                (err: any) => {
+                    console.warn(`[FreeBotsStore] Stream error for ${sym}:`, err);
+                }
+            );
+
+            this.unsubscribe = () => {
+                try {
+                    subscription?.unsubscribe?.();
+                } catch (e) {}
+            };
 
             runInAction(() => {
                 this.is_subscribing = false;
@@ -270,7 +292,7 @@ export default class FreeBotsStore {
                 this.is_subscribing = false;
             });
 
-            if (retry_count < 3) {
+            if (retry_count < 5) {
                 setTimeout(() => this.subscribeToTicks(retry_count + 1), 2000);
             }
         }

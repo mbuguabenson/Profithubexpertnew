@@ -12,6 +12,7 @@ import {
 } from '@/lib/analysis/smart-predictions';
 import { VSenseEngine, VSenseSignal } from '@/lib/analysis/v-sense-engine';
 import AnalysisEngine from '@/lib/analysis-engine';
+import { safeSubscribe } from '@/utils/websocket-handler';
 import RootStore from './root-store';
 
 type TDerivResponse = {
@@ -580,6 +581,21 @@ export default class SmartTradingStore {
                 }
             }
         );
+
+        // Account switch, authorization, and tab focus listeners to prevent dead tick streams
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                this.subscribeToActiveSymbol();
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && (!this.ticks || this.ticks.length === 0)) {
+                    this.subscribeToActiveSymbol();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            this.subscribeToActiveSymbol();
+        });
     }
 
     @action
@@ -1032,7 +1048,7 @@ export default class SmartTradingStore {
 
         // Ensure API is connected or initializing
         if (!api_base?.api || api_base.api?.connection?.readyState !== 1) {
-            if (retry_count < 5) {
+            if (retry_count < 10) {
                 if (!api_base?.api) {
                     api_base.init();
                 }
@@ -1042,97 +1058,68 @@ export default class SmartTradingStore {
         }
 
         try {
-            let response: any;
+            const sym = this.symbol;
+            const pip = this.active_symbols_data[sym]?.pip ?? (this.active_symbols_data[sym] as any)?.pip_size ?? 2;
+
+            // 1. Fetch initial tick history for immediate display & calculation
             try {
-                response = await api_base.api.send({
-                    ticks_history: this.symbol,
+                const history_res: any = await api_base.api.send({
+                    ticks_history: sym,
                     count: 1000,
                     end: 'latest',
                     style: 'ticks',
-                    subscribe: 1,
                 });
-            } catch (err: any) {
-                if (err?.error?.code === 'AlreadySubscribed') {
-                    try {
-                        response = await api_base.api.send({
-                            ticks_history: this.symbol,
-                            count: 1000,
-                            end: 'latest',
-                            style: 'ticks',
-                        });
-                    } catch (retryErr) {
-                        console.warn(`[SmartTrading] Retry failed for ${this.symbol}:`, retryErr);
-                        return;
-                    }
-                } else {
-                    console.warn(`[SmartTrading] Subscription error for ${this.symbol}:`, err);
-                    return;
-                }
-            }
 
-            if (response?.error?.code === 'AlreadySubscribed') {
-                try {
-                    response = await api_base.api.send({
-                        ticks_history: this.symbol,
-                        count: 1000,
-                        end: 'latest',
-                        style: 'ticks',
-                    });
-                } catch (retryErr) {
-                    console.warn(`[SmartTrading] Fallback error for ${this.symbol}:`, retryErr);
-                    return;
-                }
-            }
+                if (this.symbol !== sym) return; // Discard if symbol switched in the meantime
 
-            if (response?.error) {
-                console.warn(`[SmartTrading] Subscription warning for ${this.symbol}:`, response.error.message);
-                return;
-            }
-
-            // Save subscription ID if provided for clean unsubscribe
-            if (response?.subscription?.id) {
-                this.active_stream_id = response.subscription.id;
-            }
-
-            // Handle initial history
-            if (response?.history || response?.ticks_history) {
-                const history = response.history || response.ticks_history;
-                if (history?.prices && Array.isArray(history.prices)) {
+                const history = history_res?.history || history_res?.ticks_history;
+                if (history?.prices && Array.isArray(history.prices) && history.prices.length > 0) {
                     const digits = history.prices.map((p: any) => {
-                        const s = String(p);
-                        return parseInt(s[s.length - 1], 10);
+                        const s = typeof p === 'number' ? p.toFixed(pip) : String(p);
+                        return parseInt(s.slice(-1), 10);
                     });
-                    this.updateDigitStats(digits, history.prices[history.prices.length - 1]);
+                    const last_price = history.prices[history.prices.length - 1];
+                    const formatted_price = typeof last_price === 'number' ? last_price.toFixed(pip) : String(last_price);
+                    this.updateDigitStats(digits, formatted_price);
                 }
+            } catch (histErr) {
+                console.warn(`[SmartTrading] History fetch warning for ${sym}:`, histErr);
             }
 
-            // Setup real-time listener
-            if (api_base.api?.onMessage) {
-                const subscription = api_base.api.onMessage().subscribe((msg: any) => {
-                    if (msg?.msg_type === 'tick' && msg?.tick && msg.tick.symbol === this.symbol) {
-                        const quote = msg.tick.quote;
-                        const price_str = String(quote);
-                        const last_char = price_str[price_str.length - 1];
-                        const digit = parseInt(last_char, 10);
+            if (this.symbol !== sym) return;
 
-                        if (!isNaN(digit)) {
-                            const new_ticks = [...this.ticks, digit].slice(-1000);
-                            this.updateDigitStats(new_ticks, quote);
+            // 2. Subscribe to live tick stream via RxJS safeSubscribe
+            const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+            const subscription = safeSubscribe(
+                tickObservable,
+                (tickRes: any) => {
+                    if (this.symbol !== sym) return;
+                    if (tickRes?.tick && tickRes.tick.symbol === sym) {
+                        const quote = tickRes.tick.quote;
+                        const formatted_price = typeof quote === 'number' ? quote.toFixed(pip) : String(quote);
+                        const last_digit = parseInt(formatted_price.slice(-1), 10);
+
+                        if (!isNaN(last_digit)) {
+                            const new_ticks = [...this.ticks, last_digit].slice(-1000);
+                            this.updateDigitStats(new_ticks, formatted_price);
                         }
                     }
-                });
+                },
+                (err: any) => {
+                    console.warn(`[SmartTrading] Stream error for ${sym}:`, err);
+                }
+            );
 
-                this.unsubscribeTicks = () => {
-                    try {
-                        subscription?.unsubscribe?.();
-                    } catch (e) {}
-                };
-            }
+            this.unsubscribeTicks = () => {
+                try {
+                    subscription?.unsubscribe?.();
+                } catch (e) {}
+            };
 
-            console.log(`[SmartTrading] Subscribed to ${this.symbol} via API`);
+            console.log(`[SmartTrading] Subscribed to ${sym} tick stream`);
         } catch (error) {
             console.error('[SmartTrading] Tick subscription failed:', error);
-            if (retry_count < 3) {
+            if (retry_count < 5) {
                 setTimeout(() => this.subscribeToActiveSymbol(retry_count + 1), 2000);
             }
         }
@@ -1556,18 +1543,6 @@ export default class SmartTradingStore {
 
         try {
             if (!api_base.api) return;
-
-            type TProposalRequest = {
-                proposal: number;
-                amount: number;
-                basis: string;
-                contract_type: string;
-                currency: string;
-                duration: number;
-                duration_unit: string;
-                symbol: string;
-                barrier?: number;
-            };
 
             const proposal_request = normalizeTradeParameters({
                 proposal: 1,
@@ -2195,7 +2170,7 @@ export default class SmartTradingStore {
                         duration_unit: 't',
                         symbol: this.symbol,
                         ...( ['DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'].includes(trade_type || '') &&
-                        prediction !== undefined && prediction !== null && prediction !== ''
+                        prediction !== undefined && prediction !== null
                             ? { barrier: String(prediction) }
                             : {}),
                     })
@@ -2646,7 +2621,7 @@ export default class SmartTradingStore {
                     duration,
                     duration_unit: 't',
                     symbol: this.symbol,
-                    ...(prediction !== undefined && prediction !== null && prediction !== '' ? { barrier: String(prediction) } : {}),
+                    ...(prediction !== undefined && prediction !== null ? { barrier: String(prediction) } : {}),
                 })
             );
 
@@ -2913,7 +2888,7 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol: this.symbol,
-                    ...(trade.prediction !== undefined && trade.prediction !== null && trade.prediction !== '' ? { barrier: String(trade.prediction) } : {}),
+                    ...(trade.prediction !== undefined && trade.prediction !== null ? { barrier: String(trade.prediction) } : {}),
                 })
             );
 
@@ -3186,7 +3161,7 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol: config.market,
-                    ...(prediction !== undefined && prediction !== null && prediction !== '' ? { barrier: String(prediction) } : {}),
+                    ...(prediction !== undefined && prediction !== null ? { barrier: String(prediction) } : {}),
                 })
             );
 
@@ -3431,7 +3406,7 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol,
-                    ...(barrier !== undefined && barrier !== null && barrier !== '' ? { barrier: String(barrier) } : {}),
+                    ...(barrier !== undefined && barrier !== null ? { barrier: String(barrier) } : {}),
                 });
 
                 const response = await api_base.api.send(proposal_request);

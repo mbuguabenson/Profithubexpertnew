@@ -1,9 +1,10 @@
-import { action, makeObservable, observable, runInAction } from 'mobx';
-import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import RootStore from './root-store';
 // import { localize } from '@deriv-com/translations';
 // import { serialize } from 'v8';
-import { normalizeTradeParameters, buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
+import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
+import { safeSubscribe } from '@/utils/websocket-handler';
 
 export type TStrategy = 'OVER_UNDER' | 'EVEN_ODD' | 'DIFFERS';
 export type TPrediction = 'UNDER' | 'OVER' | 'EVEN' | 'ODD' | 'DIFFERS' | 'WAIT';
@@ -68,6 +69,37 @@ export default class DollarmineStore {
     constructor(root_store: RootStore) {
         makeObservable(this);
         this.root_store = root_store;
+
+        reaction(
+            () => this.root_store.common?.is_socket_opened,
+            is_socket_opened => {
+                if (is_socket_opened && this.is_scanning) {
+                    this._tick_subs.clear();
+                    this.fetchActiveSymbols();
+                }
+            }
+        );
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                if (this.is_scanning) {
+                    this._tick_subs.clear();
+                    this.fetchActiveSymbols();
+                }
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && this.is_scanning) {
+                    this._tick_subs.clear();
+                    this.fetchActiveSymbols();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            if (this.is_scanning) {
+                this._tick_subs.clear();
+                this.fetchActiveSymbols();
+            }
+        });
     }
 
     private isApiReady(): boolean {
@@ -119,33 +151,39 @@ export default class DollarmineStore {
         if (!api_base.api) return;
         this.active_symbols.forEach(market => {
             if (!this._tick_subs.has(market.symbol)) {
+                const sym = market.symbol;
                 // Initial history
                 api_base.api!.send({
-                    ticks_history: market.symbol,
+                    ticks_history: sym,
                     count: 100,
                     end: 'latest',
                     style: 'ticks',
                 }).then((res: any) => {
-                     if (res.history || res.ticks_history) {
-                         const hist = res.history || res.ticks_history;
+                     const hist = res?.history || res?.ticks_history;
+                     if (hist?.prices && Array.isArray(hist.prices) && hist.prices.length > 0) {
                          const prices = hist.prices || [];
                          const digits = prices.map((p: any) => parseInt(p.toString().slice(-1)));
                          const lastPrice = prices[prices.length - 1]?.toString() || '0';
-                         this.updateMarketStats(market.symbol, market.display_name, market.is1s, digits, lastPrice);
+                         this.updateMarketStats(sym, market.display_name, market.is1s, digits, lastPrice);
                      }
                 }).catch(() => {});
 
-                // Stream
-                const sub = api_base.api!.onMessage().subscribe((msg: any) => {
-                    const data = msg?.data || msg;
-                    if (data?.msg_type === 'tick' && data.tick?.symbol === market.symbol && data.tick?.quote) {
-                        const quote = data.tick.quote.toString();
-                        const digit = parseInt(quote.slice(-1));
-                        this.handleNewTick(market.symbol, digit, quote);
+                // Stream via safeSubscribe
+                const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+                const sub = safeSubscribe(
+                    tickObservable,
+                    (msg: any) => {
+                        if (msg?.tick && msg.tick.symbol === sym && msg.tick.quote) {
+                            const quote = msg.tick.quote.toString();
+                            const digit = parseInt(quote.slice(-1));
+                            this.handleNewTick(sym, digit, quote);
+                        }
+                    },
+                    (err: any) => {
+                        console.warn(`[DollarmineStore] Stream error for ${sym}:`, err);
                     }
-                });
-                this._tick_subs.set(market.symbol, sub);
-                api_base.api!.send({ ticks: market.symbol, subscribe: 1 }).catch(() => {});
+                );
+                this._tick_subs.set(sym, sub);
             }
         });
     }
@@ -376,12 +414,19 @@ export default class DollarmineStore {
     private async executeTrade(strategy: TStrategy, symbol: string, contract_type: string, barrier?: number) {
         this._execution_lock.set(strategy, true);
 
-        const logEntry = {
+        const logEntry: {
+            time: string;
+            strategy: string;
+            market: string;
+            contract: string;
+            result: 'WIN' | 'LOSS' | 'PENDING';
+            profit: number;
+        } = {
             time: new Date().toLocaleTimeString(),
             strategy,
             market: symbol,
             contract: contract_type,
-            result: 'PENDING' as const,
+            result: 'PENDING',
             profit: 0
         };
 

@@ -155,7 +155,6 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
             try {
                 const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
                 const { getAppId } = await import('@/components/shared/utils/config/config');
-                const { getAccountsList } = await import('@/utils/token-bridge');
 
                 // Method 1: Deriv Options REST API (Official Reset Demo Balance)
                 const authInfo = OAuthTokenExchangeService.getAuthInfo();

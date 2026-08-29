@@ -183,7 +183,7 @@ class APIBase {
                 this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
             }
 
-            this.api = await generateDerivApiInstance();
+            this.api = await generateDerivApiInstance(force_create_connection);
 
             this.api?.connection.addEventListener('open', this.onsocketopen.bind(this));
             this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
@@ -278,13 +278,18 @@ class APIBase {
 
             // 2. If not already authenticated, proceed with token authorization if available
             if (!authResult) {
-                const token = await resolveValidDerivWSToken();
+                const token = await resolveValidDerivWSToken(this.account_id || getAccountId() || '');
                 
                 if (token) {
                     try {
                         const res = await this.api.authorize(token);
                         if (res?.authorize) {
-                            authResult = { balance: res.authorize, account_list: res.authorize.account_list };
+                            const expectedId = this.account_id || getAccountId();
+                            if (!expectedId || res.authorize.loginid === expectedId) {
+                                authResult = { balance: res.authorize, account_list: res.authorize.account_list };
+                            } else {
+                                console.warn(`[APIBase] Token authorized for ${res.authorize.loginid}, expected ${expectedId}`);
+                            }
                         } else if (res?.error) {
                             console.warn('[APIBase] Token authorize returned error:', res.error.message || res.error);
                             if (res.error.code === 'InvalidToken') {

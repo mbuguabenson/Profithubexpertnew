@@ -507,6 +507,31 @@ const ElitePro = observer(() => {
     }, []);
 
     // ── Subscribe to real-time ticks for all / selected markets ──
+    const [streamRefreshKey, setStreamRefreshKey] = useState(0);
+
+    // Listen to account switch, WebSocket re-auth, and visibility change to refresh live streams
+    useEffect(() => {
+        const handleRefresh = () => {
+            setStreamRefreshKey(k => k + 1);
+        };
+
+        const handleVisibility = () => {
+            if (!document.hidden) {
+                setStreamRefreshKey(k => k + 1);
+            }
+        };
+
+        window.addEventListener('account_switched', handleRefresh);
+        document.addEventListener('visibilitychange', handleVisibility);
+        globalObserver.register('api.authorize', handleRefresh);
+
+        return () => {
+            window.removeEventListener('account_switched', handleRefresh);
+            document.removeEventListener('visibilitychange', handleVisibility);
+            globalObserver.unregister('api.authorize', handleRefresh);
+        };
+    }, []);
+
     const isBotIdle = autoState === 'IDLE';
     useEffect(() => {
         const shouldSubscribe = showElitePro || !isBotIdle;
@@ -541,27 +566,31 @@ const ElitePro = observer(() => {
             if (!api_base.api || unmountedRef.current) return;
 
             try {
-                const res = await api_base.api.send({
-                    ticks_history: sym,
-                    end: 'latest',
-                    count: MAX_DIGITS,
-                    style: 'ticks',
-                });
-                if (!isEffectActive || unmountedRef.current) return;
-
                 const market = marketsRef.current.get(sym);
-                if (market && res?.history?.prices) {
-                    const prices: number[] = res.history.prices || [];
-                    const newDigits = prices.map(p => extractDigitFromPrice(p));
-                    market.digits = newDigits.slice(-MAX_DIGITS);
-                    if (prices.length > 0) {
-                        const lastPrice = prices[prices.length - 1];
-                        market.currentPrice = String(lastPrice);
-                        market.lastDigit = extractDigitFromPrice(lastPrice);
+                // Only fetch history if we don't already have sufficient digits
+                if (!market || market.digits.length < 20) {
+                    const res = await api_base.api.send({
+                        ticks_history: sym,
+                        end: 'latest',
+                        count: MAX_DIGITS,
+                        style: 'ticks',
+                    });
+                    if (!isEffectActive || unmountedRef.current) return;
+
+                    if (market && res?.history?.prices) {
+                        const prices: number[] = res.history.prices || [];
+                        const newDigits = prices.map(p => extractDigitFromPrice(p));
+                        market.digits = newDigits.slice(-MAX_DIGITS);
+                        if (prices.length > 0) {
+                            const lastPrice = prices[prices.length - 1];
+                            market.currentPrice = String(lastPrice);
+                            market.lastDigit = extractDigitFromPrice(lastPrice);
+                        }
+                        throttleRender();
                     }
-                    throttleRender();
                 }
 
+                // Always establish / renew live tick observable
                 const tickObservable = api_base.api.subscribe({ ticks: sym });
                 const sub = safeSubscribe(tickObservable, (data: Record<string, unknown>) => {
                     if (unmountedRef.current) return;
@@ -596,14 +625,8 @@ const ElitePro = observer(() => {
             }
             for (const sym of symbolsToSubscribe) {
                 if (!isEffectActive || unmountedRef.current) break;
-                // If already subscribed and has data, skip re-fetching history
-                const existing = activeSubs.get(sym);
-                const market = marketsRef.current.get(sym);
-                if (existing && market && market.digits.length > 20) {
-                    continue;
-                }
                 await startSubscription(sym);
-                await new Promise(r => setTimeout(r, 180)); // Throttle to prevent Deriv WS rate limiting
+                await new Promise(r => setTimeout(r, 120)); // Gentle throttle to prevent Deriv WS rate limiting
             }
         };
 
@@ -620,7 +643,7 @@ const ElitePro = observer(() => {
             isEffectActive = false;
             if (retryTimeout) clearTimeout(retryTimeout);
         };
-    }, [selectedSymbol, scanAll, showElitePro, client?.loginid, isBotIdle, throttleRender]);
+    }, [selectedSymbol, scanAll, showElitePro, client?.loginid, isBotIdle, throttleRender, streamRefreshKey]);
 
     // ── Active Market Data & Analysis ──
     const activeData = getActiveData();

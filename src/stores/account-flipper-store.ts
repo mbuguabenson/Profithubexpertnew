@@ -1,5 +1,6 @@
-import { action, makeObservable, observable, runInAction, computed } from 'mobx';
-import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+import { action, makeObservable, observable, runInAction, computed, reaction } from 'mobx';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
+import { safeSubscribe } from '@/utils/websocket-handler';
 import RootStore from './root-store';
 
 export type TThresholdKey = '3-6' | '2-7' | '1-8';
@@ -76,12 +77,25 @@ export interface EntryRecommendation {
 export default class AccountFlipperStore {
     root_store: RootStore;
 
+    @observable accessor symbol: string = 'R_100';
     @observable accessor recent_digits: number[] = [];
-    @observable accessor current_price: string | number = 0;
+    @observable accessor current_price: number = 0;
+    @observable accessor is_auto_trading: boolean = false;
+    @observable accessor selected_threshold: TThresholdKey = '3-6';
     @observable accessor selected_threshold_key: TThresholdKey = '3-6';
     @observable accessor timeframe: 50 | 100 | 200 = 100;
+    @observable accessor stake: number = 0.35;
     @observable accessor base_stake: number = 0.35;
-    @observable accessor symbol = 'R_100';
+    @observable accessor max_stake: number = 100;
+    @observable accessor target_profit: number = 10;
+    @observable accessor stop_loss: number = 50;
+    @observable accessor total_profit: number = 0;
+    @observable accessor win_count: number = 0;
+    @observable accessor loss_count: number = 0;
+    @observable accessor current_streak: number = 0;
+    @observable accessor max_streak: number = 0;
+    @observable accessor trade_history: any[] = [];
+    @observable accessor is_executing: boolean = false;
 
     private tick_subscription: any = null;
 
@@ -89,9 +103,31 @@ export default class AccountFlipperStore {
         makeObservable(this);
         this.root_store = root_store;
         this.init();
+
+        reaction(
+            () => this.root_store.common?.is_socket_opened,
+            is_socket_opened => {
+                if (is_socket_opened) {
+                    this.subscribeToTicks();
+                }
+            }
+        );
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                this.subscribeToTicks();
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && (!this.recent_digits || this.recent_digits.length === 0)) {
+                    this.subscribeToTicks();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            this.subscribeToTicks();
+        });
     }
 
-    @action
     private init() {
         this.waitForApiAndConnect();
     }
@@ -110,46 +146,65 @@ export default class AccountFlipperStore {
 
     @action
     private subscribeToTicks() {
-        if (!api_base.api || this.tick_subscription) return;
+        if (!api_base.api) return;
 
-        this.tick_subscription = api_base.api.onMessage().subscribe((msg: any) => {
-            const data = msg?.data || msg;
-            if (data?.msg_type === 'tick' && data?.tick?.symbol === this.symbol) {
-                const digit = parseInt(data.tick.quote.toString().slice(-1), 10);
-                const price = data.tick.quote;
-                runInAction(() => {
-                    this.current_price = price;
-                    this.recent_digits = [...this.recent_digits, digit].slice(-200);
-                });
-            }
-        });
+        if (this.tick_subscription) {
+            try {
+                this.tick_subscription.unsubscribe();
+            } catch (e) {}
+            this.tick_subscription = null;
+        }
 
-        // Request historical data + subscribe to live ticks
+        const sym = this.symbol;
+
+        // Request historical data
         api_base.api.send({
-            ticks_history: this.symbol,
+            ticks_history: sym,
             adjust_start_time: 1,
             count: 200,
             end: 'latest',
             style: 'ticks',
-            subscribe: 1,
         }).then((res: any) => {
-            if (res?.error) {
-                console.warn('[AccountFlipper] Ticks history notice:', res.error.message || res.error);
-                return;
-            }
+            if (this.symbol !== sym) return;
             const hist = res?.history || res?.ticks_history;
             if (hist?.prices) {
                 const digits = hist.prices.map((p: any) => parseInt(p.toString().slice(-1), 10));
                 runInAction(() => {
                     this.recent_digits = digits;
                     if (hist.prices.length > 0) {
-                        this.current_price = hist.prices[hist.prices.length - 1];
+                        this.current_price = Number(hist.prices[hist.prices.length - 1]);
                     }
                 });
             }
-        }).catch((err: any) => {
-            console.warn('[AccountFlipper] Ticks history fetch notice:', err?.error?.message || err?.message || err);
-        });
+        }).catch(() => {});
+
+        // Direct RxJS stream via safeSubscribe
+        const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+        const subscription = safeSubscribe(
+            tickObservable,
+            (msg: any) => {
+                if (this.symbol !== sym) return;
+                if (msg?.tick && msg.tick.symbol === sym) {
+                    const digit = parseInt(msg.tick.quote.toString().slice(-1), 10);
+                    const price = Number(msg.tick.quote);
+                    runInAction(() => {
+                        this.current_price = price;
+                        this.recent_digits = [...this.recent_digits, digit].slice(-200);
+                    });
+                }
+            },
+            (err: any) => {
+                console.warn(`[AccountFlipper] Stream error for ${sym}:`, err);
+            }
+        );
+
+        this.tick_subscription = {
+            unsubscribe: () => {
+                try {
+                    subscription?.unsubscribe?.();
+                } catch (e) {}
+            },
+        };
     }
 
     @action

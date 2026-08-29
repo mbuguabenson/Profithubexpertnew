@@ -1682,3 +1682,341 @@
     animation: ep-border-pulse-blue 2s infinite ease-in-out;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN SYSTEM (MOBILE & TABLET BREAKPOINTS)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1080px) {
+    .elite-pro {
+        padding: 16px 14px 70px;
+
+        .ep-layout {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .ep-sidebar {
+            width: 100% !important;
+            min-width: 100% !important;
+
+            &.collapsed {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+
+            &__market-list {
+                max-height: 280px;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 8px;
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .elite-pro {
+        padding: 12px 10px 80px;
+
+        .ep-glass {
+            padding: 16px 12px;
+            border-radius: 16px;
+        }
+
+        .ep-sidebar {
+            padding: 14px 12px;
+            border-radius: 16px;
+
+            &__market-list {
+                grid-template-columns: 1fr;
+                max-height: 240px;
+            }
+        }
+
+        .ep-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+
+            &__title {
+                gap: 10px;
+
+                .ep-crown {
+                    font-size: 26px;
+                }
+
+                .ep-title-text {
+                    font-size: 1.35rem;
+                }
+
+                .ep-title-sub {
+                    font-size: 0.68rem;
+                }
+            }
+
+            &__actions {
+                width: 100%;
+                justify-content: space-between;
+                gap: 8px;
+
+                .ep-best-market-badge {
+                    flex: 1;
+                    text-align: center;
+                    padding: 6px 10px;
+                    font-size: 0.72rem;
+                }
+
+                .ep-engine-status-badge {
+                    flex-shrink: 0;
+                    padding: 6px 12px;
+                    font-size: 0.7rem;
+                }
+            }
+        }
+
+        .ep-market-bar {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 12px 14px;
+            gap: 10px;
+
+            .select-container {
+                width: 100%;
+                min-width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+
+                .ep-market-select {
+                    width: 100%;
+                    padding: 8px 12px;
+                    font-size: 0.85rem;
+                }
+            }
+
+            .market-meta-tags {
+                width: 100%;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+
+                .meta-tag {
+                    font-size: 0.72rem;
+                    padding: 6px 8px;
+                    text-align: center;
+                    justify-content: center;
+                }
+            }
+        }
+
+        .ep-hero-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+
+            .ep-hero-card {
+                padding: 12px 14px;
+            }
+
+            .ep-price-card {
+                .ep-price-value-row {
+                    .ep-price-value {
+                        font-size: 1.45rem;
+                    }
+                }
+            }
+
+            .ep-digit-card {
+                .ep-digit-orb-wrapper {
+                    .ep-digit-orb {
+                        width: 44px;
+                        height: 44px;
+
+                        .digit-number {
+                            font-size: 1.4rem;
+                        }
+                    }
+                }
+            }
+        }
+
+        .ep-chart-card {
+            padding: 14px 12px;
+
+            &__header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .ep-chart-wrap {
+                padding: 8px 6px;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .ep-stats-card {
+            gap: 14px;
+
+            &__header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .ep-ratio-block {
+                padding: 12px;
+
+                &__head {
+                    .side {
+                        strong { font-size: 0.88rem; }
+                    }
+                }
+            }
+
+            .ep-entry-digits-container {
+                grid-template-columns: 1fr;
+                gap: 10px;
+
+                .ep-entry-card {
+                    padding: 14px;
+
+                    .ep-glowing-digit-badge {
+                        padding: 8px 16px;
+
+                        .digit { font-size: 1.8rem; }
+                        .pct { font-size: 0.95rem; }
+                    }
+                }
+            }
+
+            .ep-checklist-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        .ep-auto-panel {
+            gap: 14px;
+
+            &__header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .ep-mode-selector {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+
+                .ep-mode-btn {
+                    padding: 10px 12px;
+                    font-size: 0.76rem;
+                }
+            }
+
+            .ep-inputs-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+
+                .ep-input-card {
+                    padding: 10px 12px;
+
+                    input, select {
+                        font-size: 0.88rem;
+                        padding: 6px 8px;
+                    }
+                }
+            }
+
+            .ep-actions-row {
+                gap: 8px;
+
+                .ep-action-btn {
+                    padding: 12px 14px;
+                    font-size: 0.88rem;
+                    min-height: 46px;
+                }
+            }
+
+            .ep-pnl-summary {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+
+                .ep-pnl-card {
+                    padding: 10px 8px;
+
+                    .pnl-val {
+                        font-size: 1rem;
+                    }
+                }
+            }
+        }
+
+        .ep-logs-card {
+            .ep-logs-list {
+                max-height: 200px;
+
+                .ep-log-row {
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    padding: 8px 10px;
+
+                    .time { font-size: 0.7rem; }
+                    .type { font-size: 0.7rem; }
+                    .market { font-size: 0.7rem; }
+                    .details {
+                        flex: 1 1 100%;
+                        font-size: 0.72rem;
+                        word-break: break-word;
+                    }
+                    .result { font-size: 0.7rem; }
+                    .profit { font-size: 0.75rem; min-width: auto; }
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .elite-pro {
+        padding: 8px 6px 90px;
+
+        .ep-glass {
+            padding: 12px 10px;
+            border-radius: 12px;
+        }
+
+        .ep-header {
+            &__title {
+                .ep-crown { font-size: 22px; }
+                .ep-title-text { font-size: 1.18rem; }
+                .ep-title-sub { font-size: 0.62rem; }
+            }
+
+            &__actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .ep-auto-panel {
+            .ep-mode-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .ep-inputs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ep-actions-row {
+                flex-direction: column;
+
+                .ep-action-btn {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}
+
+

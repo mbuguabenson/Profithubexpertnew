@@ -1,5 +1,6 @@
-import { action, makeObservable, observable, runInAction, computed } from 'mobx';
-import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+import { action, makeObservable, observable, runInAction, computed, reaction } from 'mobx';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
+import { safeSubscribe } from '@/utils/websocket-handler';
 import RootStore from './root-store';
 
 export type TPrediction = 'UNDER' | 'OVER' | 'CURRENT' | 'WAIT';
@@ -34,22 +35,49 @@ export interface Streak {
 export default class OverUnderStore {
     root_store: RootStore;
 
+    @observable accessor symbol: string = 'R_100';
     @observable accessor recent_digits: number[] = [];
-    @observable accessor selected_digit: number = 5;
-    @observable accessor symbol = 'R_100';
     @observable accessor current_price: string = '0.0000';
-    @observable accessor is_connected = false;
+    @observable accessor phase: 1 | 2 = 1;
+    @observable accessor is_connected: boolean = false;
+    @observable accessor is_bot_running: boolean = false;
+    @observable accessor last_confidence: number = 0;
     @observable accessor active_symbols: { symbol: string; display_name: string }[] = [];
     @observable accessor confirmed_ticks: number = 0;
-    @observable accessor phase: 1 | 2 = 1;
     @observable accessor phase2_ticks: number = 0;
-    @observable accessor last_confidence: number = 0;
+    @observable accessor selected_digit: number = 5;
+
     private _tick_sub: any = null;
 
     constructor(root_store: RootStore) {
         makeObservable(this);
         this.root_store = root_store;
         this.init();
+
+        reaction(
+            () => this.root_store.common?.is_socket_opened,
+            is_socket_opened => {
+                this.is_connected = !!is_socket_opened;
+                if (is_socket_opened) {
+                    this.fetchActiveSymbols();
+                    this.subscribeToTicks();
+                }
+            }
+        );
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                this.subscribeToTicks();
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && (!this.recent_digits || this.recent_digits.length === 0)) {
+                    this.subscribeToTicks();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            this.subscribeToTicks();
+        });
     }
 
     @action
@@ -97,43 +125,54 @@ export default class OverUnderStore {
     @action
     private subscribeToTicks() {
         if (!this.isApiReady()) {
-            // API not ready yet — wait and retry
             setTimeout(() => this.subscribeToTicks(), 2000);
             return;
         }
 
-        // Unsubscribe from previous if exists
         if (this._tick_sub) {
-            this._tick_sub.unsubscribe();
+            try {
+                this._tick_sub.unsubscribe();
+            } catch (e) {}
             this._tick_sub = null;
         }
 
-        const doSubscribe = () => {
-            if (!api_base.api) return;
+        const sym = this.symbol;
 
-            this._tick_sub = api_base.api.onMessage().subscribe((msg: any) => {
-                // Handle wrapped messages from new API mode
-                const data = msg?.data || msg;
-                if (!data) return;
-                
-                if (data.error) {
-                    const isForThisSymbol = data.echo_req?.ticks === this.symbol || data.echo_req?.ticks_history === this.symbol;
-                    if (!isForThisSymbol) return;
-                    if (data.error.code === 'AlreadySubscribed' || data.error.code === 'InputValidationFailed') return;
-                    console.warn('[OverUnderStore] Stream notice:', data.error.message);
-                    return;
-                }
+        // 1. Initial historical data
+        api_base.api.send({
+            ticks_history: sym,
+            count: 100,
+            end: 'latest',
+            style: 'ticks',
+        }).then((res: any) => {
+            if (this.symbol !== sym) return;
+            const hist = res?.history || res?.ticks_history;
+            if (hist?.prices && Array.isArray(hist.prices) && hist.prices.length > 0) {
+                const digits = hist.prices.map((p: any) => parseInt(String(p).slice(-1)));
+                const lastPrice = hist.prices[hist.prices.length - 1];
+                runInAction(() => {
+                    this.recent_digits = digits;
+                    if (lastPrice != null) this.current_price = typeof lastPrice === 'number' ? lastPrice.toFixed(4) : String(lastPrice);
+                });
+            }
+        }).catch(() => {});
 
-                if (data.msg_type === 'tick' && data.tick?.symbol === this.symbol) {
-                    const tick = data.tick;
+        // 2. Direct RxJS Observable stream
+        const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+        const subscription = safeSubscribe(
+            tickObservable,
+            (tickRes: any) => {
+                if (this.symbol !== sym) return;
+                if (tickRes?.tick && tickRes.tick.symbol === sym) {
+                    const tick = tickRes.tick;
                     const quote = tick.quote.toString();
                     const digit = parseInt(quote.slice(-1));
-                    
+
                     runInAction(() => {
-                        this.current_price = tick.quote.toFixed(tick.pip_size || 2);
+                        this.current_price = typeof tick.quote === 'number' ? tick.quote.toFixed(tick.pip_size || 2) : quote;
                         this.recent_digits = [...this.recent_digits, digit].slice(-100);
                         this.confirmed_ticks++;
-                        
+
                         if (this.phase === 2) {
                             this.phase2_ticks++;
                             if (this.phase2_ticks >= 20) {
@@ -147,41 +186,19 @@ export default class OverUnderStore {
                         this.last_confidence = this.confidence.maxPercent;
                     });
                 }
+            },
+            (err: any) => {
+                console.warn(`[OverUnderStore] Stream error for ${sym}:`, err);
+            }
+        );
 
-                if (data.msg_type === 'history' && data.echo_req?.ticks_history === this.symbol) {
-                    const digits = (data.history?.prices || []).map((p: any) => parseInt(p.toString().slice(-1)));
-                    const lastPrice = data.history?.prices?.[data.history.prices.length - 1];
-                    runInAction(() => {
-                        this.recent_digits = digits;
-                        if (lastPrice != null) this.current_price = lastPrice.toFixed(4);
-                    });
-                }
-            });
-
-            // Start real-time stream
-            api_base.api.send({ ticks: this.symbol, subscribe: 1 }).catch((e: any) => {
-                if (e?.error?.code !== 'AlreadySubscribed') {
-                    // handled quietly
-                }
-            });
-
-            // Initial historical data
-            api_base.api.send({
-                ticks_history: this.symbol,
-                count: 100,
-                end: 'latest',
-                style: 'ticks',
-            }).catch(() => {});
-
-            // Auto-retry: if no data arrives within 8 seconds, re-subscribe
-            setTimeout(() => {
-                if (this.recent_digits.length < 5 && this.isApiReady()) {
-                    this.subscribeToTicks();
-                }
-            }, 8000);
+        this._tick_sub = {
+            unsubscribe: () => {
+                try {
+                    subscription?.unsubscribe?.();
+                } catch (e) {}
+            },
         };
-
-        doSubscribe();
     }
 
     @computed

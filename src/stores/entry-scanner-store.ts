@@ -1,5 +1,5 @@
-import { action, makeObservable, observable, runInAction, computed } from 'mobx';
-import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+import { action, makeObservable, observable, runInAction, computed, reaction } from 'mobx';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import { DBOT_TABS } from '@/constants/bot-contents';
 
@@ -30,6 +30,17 @@ export interface TScanResult {
     confidence: number;      // percentage
     waitDescription: string; // Human-readable description
     triggerDigit: number;    // The digit we're waiting for to trigger entry
+    payout?: number;
+    reason?: string;
+    tradeType?: string;
+    contractType?: string;
+    entryCriteria?: {
+        condition: string;
+        currentValue: number;
+        targetValue: number;
+    };
+    suggestedStake?: number;
+    suggestedDuration?: number;
 }
 
 export default class EntryScannerStore {
@@ -40,23 +51,12 @@ export default class EntryScannerStore {
     @observable accessor selected_strategies: TStrategyType[] = ['over_under', 'even_odd', 'differs', 'matches', 'rise_fall'];
     @observable accessor scan_mode: 'all' | 'single' = 'all';
     @observable accessor target_single_symbol: string = '1HZ100V';
+    @observable accessor min_confidence: number = 65; // %
+    @observable accessor tick_sample_size: number = 1000;
     @observable accessor auto_load_on_match: boolean = true;
-    @observable accessor scan_phase: TScanPhase = 'idle';
-    @observable accessor scan_status: string = 'Select strategies and click Scan Markets to begin.';
-    @observable accessor is_scanning: boolean = false;
 
-    // Progress & Tick Tracking
-    @observable accessor scan_progress: number = 0; // 0 to 100
-    @observable accessor ticks_collected: number = 0;
-    @observable accessor total_target_ticks: number = 1000;
-
-    // Scan Results
-    @observable accessor selected_market: string = '';
-    @observable accessor selected_symbol: string = '';
-    @observable accessor trade_type: string = '';
-    @observable accessor scan_result: TScanResult | null = null;
-
-    // Parameters & Input Instructions
+    // Auto Trading State
+    @observable accessor auto_trade_enabled: boolean = false;
     @observable accessor stake: number = 0.5;
     @observable accessor initial_stake: number = 0.5;
     @observable accessor duration: number = 1; // ticks
@@ -64,8 +64,13 @@ export default class EntryScannerStore {
     @observable accessor use_martingale: boolean = true;
     @observable accessor take_profit: number = 10;
     @observable accessor stop_loss: number = 50;
+    @observable accessor max_loss: number = 50;
+    @observable accessor max_runs: number = 10;
     @observable accessor max_runs_before_pause: number = 5;
+    @observable accessor current_runs: number = 0;
     @observable accessor custom_prediction: number | null = null;
+    @observable accessor cooldown_seconds: number = 5;
+    @observable accessor cooldown_remaining: number = 0;
 
     // Deriv Automation API State
     @observable accessor use_automation_api: boolean = true;
@@ -75,8 +80,23 @@ export default class EntryScannerStore {
     @observable accessor is_in_recovery_mode: boolean = false;
     @observable accessor primary_strategy: TStrategyType = 'differs';
 
-    // Trading State
-    @observable accessor current_runs: number = 0;
+    // Live Scanner Status
+    @observable accessor is_scanning: boolean = false;
+    @observable accessor scan_phase: TScanPhase = 'idle';
+    @observable accessor scan_progress: number = 0;
+    @observable accessor scan_status: string = 'Select strategies and click Scan Markets to begin.';
+    @observable accessor ticks_collected: number = 0;
+    @observable accessor total_target_ticks: number = 1000;
+
+    // Results & Automation
+    @observable accessor scan_result: TScanResult | null = null;
+    @observable accessor selected_market: string = '';
+    @observable accessor selected_symbol: string = '';
+    @observable accessor trade_type: string = '';
+
+    // Analytics / Logging
+    @observable accessor wins: number = 0;
+    @observable accessor losses: number = 0;
     @observable accessor total_profit: number = 0;
     @observable accessor is_executing_trade: boolean = false;
     @observable accessor trade_log: { time: string; market: string; direction: string; prediction: number; result: string; profit: number }[] = [];
@@ -95,6 +115,33 @@ export default class EntryScannerStore {
     constructor(root_store: any) {
         makeObservable(this);
         this.root_store = root_store;
+
+        reaction(
+            () => this.root_store.common?.is_socket_opened,
+            is_socket_opened => {
+                if (is_socket_opened && this.is_scanning) {
+                    this.fetchActiveSymbols();
+                }
+            }
+        );
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                if (this.is_scanning) {
+                    this.fetchActiveSymbols();
+                }
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && this.is_scanning) {
+                    this.fetchActiveSymbols();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            if (this.is_scanning) {
+                this.fetchActiveSymbols();
+            }
+        });
     }
 
     // ─── Actions ──────────────────────────────────────────────

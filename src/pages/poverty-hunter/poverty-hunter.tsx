@@ -155,6 +155,31 @@ const PovertyHunter: React.FC = observer(() => {
         }
     }, []);
 
+    const [streamRefreshKey, setStreamRefreshKey] = useState(0);
+
+    // Listen to account switch, WebSocket re-auth, and visibility change to refresh live streams
+    useEffect(() => {
+        const handleRefresh = () => {
+            setStreamRefreshKey(k => k + 1);
+        };
+
+        const handleVisibility = () => {
+            if (!document.hidden) {
+                setStreamRefreshKey(k => k + 1);
+            }
+        };
+
+        window.addEventListener('account_switched', handleRefresh);
+        document.addEventListener('visibilitychange', handleVisibility);
+        globalObserver.register('api.authorize', handleRefresh);
+
+        return () => {
+            window.removeEventListener('account_switched', handleRefresh);
+            document.removeEventListener('visibilitychange', handleVisibility);
+            globalObserver.unregister('api.authorize', handleRefresh);
+        };
+    }, []);
+
     // ── Manage Subscriptions for All Synthetic Markets ──
     useEffect(() => {
         isMountedRef.current = true;
@@ -162,31 +187,33 @@ const PovertyHunter: React.FC = observer(() => {
         const symbolsToStream = scanAllMarkets ? MARKETS.map(m => m.symbol) : [selectedSymbol];
 
         const subscribeSymbol = async (sym: string) => {
-            if (!api_base.api) return;
+            if (!api_base.api || !isMountedRef.current) return;
             const pip = MARKETS.find(m => m.symbol === sym)?.pip || 2;
 
             try {
-                // 1. Fetch initial tick history (50 ticks)
-                const res = await api_base.api.send({
-                    ticks_history: sym,
-                    end: 'latest',
-                    count: MAX_TICKS_STORED,
-                    style: 'ticks',
-                });
-
-                if (!isMountedRef.current) return;
-
                 const mData = marketsDataRef.current.get(sym);
-                if (mData && res?.history?.prices) {
-                    const prices: number[] = res.history.prices || [];
-                    const digits = prices.map(p => extractLastDigit(p, pip));
-                    mData.digits = digits.slice(-MAX_TICKS_STORED);
-                    if (prices.length > 0) {
-                        const lastPrice = prices[prices.length - 1];
-                        mData.currentPrice = Number(lastPrice).toFixed(pip);
-                        mData.lastDigit = extractLastDigit(lastPrice, pip);
+                // 1. Fetch initial tick history (50 ticks) if empty or few
+                if (!mData || mData.digits.length < 20) {
+                    const res = await api_base.api.send({
+                        ticks_history: sym,
+                        end: 'latest',
+                        count: MAX_TICKS_STORED,
+                        style: 'ticks',
+                    });
+
+                    if (!isMountedRef.current) return;
+
+                    if (mData && res?.history?.prices) {
+                        const prices: number[] = res.history.prices || [];
+                        const digits = prices.map(p => extractLastDigit(p, pip));
+                        mData.digits = digits.slice(-MAX_TICKS_STORED);
+                        if (prices.length > 0) {
+                            const lastPrice = prices[prices.length - 1];
+                            mData.currentPrice = Number(lastPrice).toFixed(pip);
+                            mData.lastDigit = extractLastDigit(lastPrice, pip);
+                        }
+                        throttleRender();
                     }
-                    throttleRender();
                 }
 
                 // 2. Subscribe to real-time live ticks
@@ -223,7 +250,7 @@ const PovertyHunter: React.FC = observer(() => {
             for (const sym of symbolsToStream) {
                 if (!isMountedRef.current) break;
                 await subscribeSymbol(sym);
-                await new Promise(r => setTimeout(r, 180)); // Rate-limiting guard
+                await new Promise(r => setTimeout(r, 120)); // Rate-limiting guard
             }
         };
 
@@ -244,7 +271,7 @@ const PovertyHunter: React.FC = observer(() => {
             });
             activeSubs.clear();
         };
-    }, [scanAllMarkets, selectedSymbol, throttleRender]);
+    }, [scanAllMarkets, selectedSymbol, throttleRender, streamRefreshKey]);
 
     // ── Current Active Market Data ──
     const currentMarket = useMemo(() => {

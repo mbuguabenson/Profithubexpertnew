@@ -1,8 +1,9 @@
-import { action, makeObservable, observable, runInAction } from 'mobx';
-import { api_base } from '@/external/bot-skeleton';
+import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import { DigitStatsEngine } from '@/lib/digit-stats-engine';
 import { DigitTradeEngine } from '@/lib/digit-trade-engine';
 import { getGroupedMarkets } from '@/constants/markets';
+import { safeSubscribe } from '@/utils/websocket-handler';
 import RootStore from './root-store';
 
 export type TDigitStat = {
@@ -95,6 +96,33 @@ export default class DigitCrackerStore {
 
         // Wait for API to be ready then connect
         this.waitForApiAndConnect();
+
+        reaction(
+            () => this.root_store.common?.is_socket_opened,
+            is_socket_opened => {
+                this.is_connected = !!is_socket_opened;
+                if (is_socket_opened) {
+                    this.fetchMarkets();
+                    this.subscribeToTicks();
+                } else {
+                    this.unsubscribeFromTicks();
+                }
+            }
+        );
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('account_switched', () => {
+                this.subscribeToTicks();
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && (!this.ticks || this.ticks.length === 0)) {
+                    this.subscribeToTicks();
+                }
+            });
+        }
+        globalObserver.register('api.authorize', () => {
+            this.subscribeToTicks();
+        });
     }
 
     @action
@@ -236,7 +264,10 @@ export default class DigitCrackerStore {
 
         try {
             if (!api_base.api) {
-                throw new Error('API not initialized');
+                if (retry_count < 10) {
+                    setTimeout(() => this.subscribeToTicks(retry_count + 1), 1000);
+                }
+                return;
             }
 
             // Clear previous subscription
@@ -248,64 +279,27 @@ export default class DigitCrackerStore {
             if (this.active_stream_id && api_base.api) {
                 try {
                     await api_base.api.send({ forget: this.active_stream_id });
-                } catch (e) {
-                    // Ignore forget errors
-                }
+                } catch (e) {}
                 this.active_stream_id = null;
             }
 
             this.is_subscribing = true;
-            
+            const sym = this.symbol;
             const safeCount = Math.min(this.total_ticks || 5000, 5000);
 
-            let response: any;
+            // 1. Initial history
             try {
-                response = await api_base.api.send({
-                    ticks_history: this.symbol,
+                const history_res: any = await api_base.api.send({
+                    ticks_history: sym,
                     count: safeCount,
                     end: 'latest',
                     style: 'ticks',
-                    subscribe: 1,
                 });
 
-                if (response?.error?.code === 'AlreadySubscribed') {
-                    response = await api_base.api.send({
-                        ticks_history: this.symbol,
-                        count: safeCount,
-                        end: 'latest',
-                        style: 'ticks',
-                    });
-                } else if (response?.error) {
-                    console.warn('[DigitCrackerStore] ticks_history response error:', response.error);
-                    return;
-                }
-            } catch (err: any) {
-                if (err?.error?.code === 'AlreadySubscribed') {
-                    try {
-                        response = await api_base.api.send({
-                            ticks_history: this.symbol,
-                            count: safeCount,
-                            end: 'latest',
-                            style: 'ticks',
-                        });
-                    } catch (retryErr) {
-                        console.warn('[DigitCrackerStore] ticks_history retry failed:', retryErr);
-                        return;
-                    }
-                } else {
-                    console.warn('[DigitCrackerStore] ticks_history subscription warning:', err);
-                    return;
-                }
-            }
+                if (this.symbol !== sym) return;
 
-            if (response?.subscription?.id) {
-                this.active_stream_id = response.subscription.id;
-            }
-
-            // Handle initial history
-            if (response && (response.history || response.ticks_history)) {
-                const history = response.history || response.ticks_history;
-                if (history.prices) {
+                const history = history_res?.history || history_res?.ticks_history;
+                if (history?.prices && Array.isArray(history.prices) && history.prices.length > 0) {
                     runInAction(() => {
                         const last_digits = history.prices.map((p: any) =>
                             this.stats_engine.extractLastDigit(Number(p))
@@ -316,34 +310,45 @@ export default class DigitCrackerStore {
                         this.updateFromEngine();
                     });
                 }
+            } catch (histErr) {
+                console.warn('[DigitCrackerStore] ticks_history error:', histErr);
             }
+
+            if (this.symbol !== sym) return;
+
+            // 2. Direct RxJS observable via safeSubscribe
+            const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
+            const subscription = safeSubscribe(
+                tickObservable,
+                (tickRes: any) => {
+                    if (this.symbol !== sym) return;
+                    if (tickRes?.tick && tickRes.tick.symbol === sym) {
+                        this.handleTick(tickRes.tick);
+                    }
+                },
+                (err: any) => {
+                    console.warn(`[DigitCrackerStore] Stream error for ${sym}:`, err);
+                }
+            );
+
+            this.unsubscribe_ticks = () => {
+                try {
+                    subscription?.unsubscribe?.();
+                } catch (e) {}
+            };
 
             runInAction(() => {
                 this.is_subscribing = false;
             });
 
-            // Setup real-time listener
-            console.log(`[DigitCrackerStore] Attempting to hook into onMessage for ${this.symbol}`);
-            const subscription = api_base.api.onMessage().subscribe((msg: any) => {
-                const data = msg.data || msg;
-                if (data.msg_type === 'tick') {
-                    // console.log(`[DigitCrackerStore] Raw msg tick for ${data.tick?.symbol}`);
-                    if (data.tick && data.tick.symbol === this.symbol) {
-                        this.handleTick(data.tick);
-                    }
-                }
-            });
-
-            this.unsubscribe_ticks = () => subscription.unsubscribe();
-
-            console.log(`[DigitCrackerStore] Successfully Subscribed to ${this.symbol} via direct API`);
+            console.log(`[DigitCrackerStore] Subscribed to ${sym}`);
         } catch (e) {
             console.error('[DigitCrackerStore] Subscription failed:', e);
             runInAction(() => {
                 this.is_subscribing = false;
             });
 
-            if (retry_count < 3) {
+            if (retry_count < 5) {
                 setTimeout(() => this.subscribeToTicks(retry_count + 1), 2000);
             }
         }

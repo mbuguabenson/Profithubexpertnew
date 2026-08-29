@@ -119,16 +119,16 @@ export const getActiveToken = (specificLoginId?: string): string | null => {
                 return list[key];
             }
         }
-    }
 
-    const storedToken =
-        localStorage.getItem('token') ||
-        localStorage.getItem('active_token') ||
-        localStorage.getItem('authToken') ||
-        localStorage.getItem('token1') ||
-        localStorage.getItem('deriv_api_token');
-    if (storedToken && !isInvalidBearerToken(storedToken)) {
-        return storedToken;
+        const storedToken =
+            localStorage.getItem('token') ||
+            localStorage.getItem('active_token') ||
+            localStorage.getItem('authToken') ||
+            localStorage.getItem('token1') ||
+            localStorage.getItem('deriv_api_token');
+        if (storedToken && !isInvalidBearerToken(storedToken)) {
+            return storedToken;
+        }
     }
 
     return null;

@@ -33,15 +33,15 @@ const EasyTool = observer(() => {
     const [selected_digit, setSelectedDigit] = useState<number | null>(null);
     const [history_count, setHistoryCount] = useState<15 | 50>(15);
 
-    // Fetch active markets on mount (idempotent, safe to call)
-    // NOTE: Tick subscription is handled by the smart_trading store's MobX reaction
-    // in the constructor — do NOT call subscribeToActiveSymbol() here as it creates
-    // duplicate overlapping subscriptions that race and kill the stream after 1-2 ticks.
+    // Fetch active markets on mount and ensure tick stream is active
     useEffect(() => {
         if (!markets || markets.length === 0) {
             fetchMarkets();
         }
-    }, [markets, fetchMarkets]);
+        if (!ticks || ticks.length === 0) {
+            smart_trading.subscribeToActiveSymbol();
+        }
+    }, [markets, fetchMarkets, ticks, smart_trading]);
 
     // Update selected digit when last_digit changes if none selected
     useEffect(() => {

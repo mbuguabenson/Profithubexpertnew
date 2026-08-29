@@ -43,7 +43,7 @@ export class AccountSwitcherService {
             const accountsList = getAccountsList();
             let targetToken = accountsList[targetLoginId] || '';
             if (!targetToken) {
-                targetToken = getActiveToken(targetLoginId) || getActiveToken() || '';
+                targetToken = getActiveToken(targetLoginId) || '';
             }
 
             if (targetToken) {
@@ -126,7 +126,7 @@ export class AccountSwitcherService {
 
                 try {
                     const res: any = await Promise.race([authorizePromise, timeoutPromise]);
-                    if (res?.authorize) {
+                    if (res?.authorize && res.authorize.loginid === targetLoginId) {
                         console.log('[AccountSwitcherService] WebSocket authorized successfully for:', res.authorize.loginid);
                         api_base.account_info = {
                             balance: res.authorize.balance,
@@ -155,6 +155,8 @@ export class AccountSwitcherService {
                         // Subscribe to live balance & transaction stream on new account
                         api_base.api.send({ balance: 1, subscribe: 1 }).catch(() => {});
                         api_base.api.send({ transaction: 1, subscribe: 1 }).catch(() => {});
+                    } else if (res?.authorize && res.authorize.loginid !== targetLoginId) {
+                        console.warn(`[AccountSwitcherService] Fast authorize returned ${res.authorize.loginid}, expected ${targetLoginId}; reconnecting socket...`);
                     }
                 } catch (timeoutOrWsErr: any) {
                     console.warn('[AccountSwitcherService] Fast authorize notice, falling back to background socket refresh:', timeoutOrWsErr?.message);
@@ -163,7 +165,7 @@ export class AccountSwitcherService {
 
             // If not authorized over existing connection (e.g. PKCE OAuth OTP or token mismatch), reinitialize socket in background
             if (!authorized) {
-                api_base.init(true).catch(() => {});
+                await api_base.init(true).catch(() => {});
             }
 
             return true;

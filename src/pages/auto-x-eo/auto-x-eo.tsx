@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { TradingMilestoneModal } from '@/components/shared';
-import { api_base } from '@/external/bot-skeleton';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import { SUPPORTED_VOLATILITY_MARKETS } from '@/utils/digit-strategy';
 import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
@@ -207,37 +207,65 @@ const AutoXEo: React.FC = observer(() => {
     }, []);
 
     // ── Manage Subscriptions for All Synthetic Markets ──
+    const [streamRefreshKey, setStreamRefreshKey] = useState<number>(0);
+
+    // Listen to account switch, WebSocket re-auth, and visibility change to refresh live streams
+    useEffect(() => {
+        const handleRefresh = () => {
+            setStreamRefreshKey(k => k + 1);
+        };
+
+        const handleVisibility = () => {
+            if (!document.hidden) {
+                setStreamRefreshKey(k => k + 1);
+            }
+        };
+
+        window.addEventListener('account_switched', handleRefresh);
+        document.addEventListener('visibilitychange', handleVisibility);
+        globalObserver.register('api.authorize', handleRefresh);
+
+        return () => {
+            window.removeEventListener('account_switched', handleRefresh);
+            document.removeEventListener('visibilitychange', handleVisibility);
+            globalObserver.unregister('api.authorize', handleRefresh);
+        };
+    }, []);
+
+    // ── Manage Subscriptions for All Synthetic Markets ──
     useEffect(() => {
         isMountedRef.current = true;
         const activeSubs = subscriptionsRef.current;
         const symbolsToStream = scanAllMarkets ? MARKETS.map(m => m.symbol) : [selectedSymbol];
 
         const subscribeSymbol = async (sym: string) => {
-            if (!api_base.api) return;
+            if (!api_base.api || !isMountedRef.current) return;
             const pip = MARKETS.find(m => m.symbol === sym)?.pip || 2;
 
             try {
-                // Fetch initial tick history
-                const res = await api_base.api.send({
-                    ticks_history: sym,
-                    end: 'latest',
-                    count: MAX_TICKS_STORED,
-                    style: 'ticks',
-                });
-
-                if (!isMountedRef.current) return;
-
                 const mData = marketsDataRef.current.get(sym);
-                if (mData && res?.history?.prices) {
-                    const prices: number[] = res.history.prices || [];
-                    const digits = prices.map(p => extractLastDigit(p, pip));
-                    mData.digits = digits;
-                    if (prices.length > 0) {
-                        const lastP = prices[prices.length - 1];
-                        mData.currentPrice = Number(lastP).toFixed(pip);
-                        mData.lastDigit = digits[digits.length - 1];
+                // Fetch initial tick history if missing or short
+                if (!mData || mData.digits.length < 20) {
+                    const res = await api_base.api.send({
+                        ticks_history: sym,
+                        end: 'latest',
+                        count: MAX_TICKS_STORED,
+                        style: 'ticks',
+                    });
+
+                    if (!isMountedRef.current) return;
+
+                    if (mData && res?.history?.prices) {
+                        const prices: number[] = res.history.prices || [];
+                        const digits = prices.map(p => extractLastDigit(p, pip));
+                        mData.digits = digits;
+                        if (prices.length > 0) {
+                            const lastP = prices[prices.length - 1];
+                            mData.currentPrice = Number(lastP).toFixed(pip);
+                            mData.lastDigit = digits[digits.length - 1];
+                        }
+                        throttleRender();
                     }
-                    throttleRender();
                 }
 
                 // Subscribe to real-time live ticks via observable
@@ -266,12 +294,20 @@ const AutoXEo: React.FC = observer(() => {
             }
         };
 
-        // Subscribe missing
-        symbolsToStream.forEach(sym => {
-            if (!activeSubs.has(sym)) {
-                subscribeSymbol(sym);
+        // Subscribe symbols
+        const initAll = async () => {
+            if (!api_base.api) {
+                setTimeout(initAll, 1000);
+                return;
             }
-        });
+            for (const sym of symbolsToStream) {
+                if (!isMountedRef.current) break;
+                await subscribeSymbol(sym);
+                await new Promise(r => setTimeout(r, 120)); // Rate-limiting guard
+            }
+        };
+
+        void initAll();
 
         // Unsubscribe removed if single market mode
         if (!scanAllMarkets) {
@@ -288,7 +324,7 @@ const AutoXEo: React.FC = observer(() => {
         return () => {
             // Keep active streams alive
         };
-    }, [scanAllMarkets, selectedSymbol, throttleRender]);
+    }, [scanAllMarkets, selectedSymbol, throttleRender, streamRefreshKey]);
 
     // Cleanup on component unmount
     useEffect(() => {
