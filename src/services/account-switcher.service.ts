@@ -40,12 +40,17 @@ export class AccountSwitcherService {
             // 1. Update localStorage identifiers immediately
             localStorage.setItem('active_loginid', targetLoginId);
             localStorage.setItem('client.loginid', targetLoginId);
+            api_base.account_id = targetLoginId;
 
             // 2. Resolve token for the target account
             const accountsList = getAccountsList();
             let targetToken = accountsList[targetLoginId] || '';
             if (!targetToken) {
                 targetToken = getActiveToken(targetLoginId) || '';
+            }
+            if (!targetToken) {
+                const { resolveValidDerivWSToken } = await import('@/utils/token-bridge');
+                targetToken = await resolveValidDerivWSToken(targetLoginId);
             }
 
             if (targetToken) {

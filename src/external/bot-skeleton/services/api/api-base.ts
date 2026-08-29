@@ -262,13 +262,14 @@ class APIBase {
 
         try {
             let authResult: any = null;
+            const expectedId = this.account_id || getAccountId();
 
-            // 1. Check if the WebSocket is already authenticated via an OTP in the connection URL.
+            // 1. Check if the WebSocket is already authenticated via an OTP in the connection URL for the EXPECTED account
             try {
                 const balanceRes = await (this.api as any).send({ balance: 1 });
-                if (balanceRes?.balance) {
+                if (balanceRes?.balance && (!expectedId || balanceRes.balance.loginid === expectedId)) {
                     authResult = balanceRes;
-                    console.log('[APIBase] WebSocket authorized via OTP connection URL');
+                    console.log('[APIBase] WebSocket authorized via OTP connection URL for:', balanceRes.balance.loginid);
                 }
             } catch (authCheckErr: any) {
                 // If it fails with AuthorizationRequired or on public socket, proceed
@@ -276,13 +277,12 @@ class APIBase {
 
             // 2. If not already authenticated, proceed with token authorization if available
             if (!authResult) {
-                const token = await resolveValidDerivWSToken(this.account_id || getAccountId() || '');
+                const token = await resolveValidDerivWSToken(expectedId || '');
                 
                 if (token) {
                     try {
                         const res = await this.api.authorize(token);
                         if (res?.authorize) {
-                            const expectedId = this.account_id || getAccountId();
                             if (!expectedId || res.authorize.loginid === expectedId) {
                                 authResult = { balance: res.authorize, account_list: res.authorize.account_list };
                             } else {
@@ -307,11 +307,13 @@ class APIBase {
                 }
             }
 
-            // 3. Ensure we have authResult populated
+            // 3. Ensure we have authResult populated (only if matching expected account)
             if (!authResult) {
                 try {
                     const res = await (this.api as any).send({ balance: 1 });
-                    authResult = res;
+                    if (res?.balance && (!expectedId || res.balance.loginid === expectedId)) {
+                        authResult = res;
+                    }
                 } catch {
                     // Unauthenticated
                 }
