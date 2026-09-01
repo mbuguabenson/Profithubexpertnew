@@ -99,18 +99,17 @@ export const getAccountsList = (): Record<string, string> => {
 
 /** Returns the active loginid (e.g. "CR123456" or "VRTC1234") */
 export const getActiveLoginId = (): string =>
-    localStorage.getItem('active_loginid') ||
-    localStorage.getItem('client.loginid') ||
-    '';
+    localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
 
 export const isInvalidBearerToken = (token: string | null | undefined): boolean =>
     !token ||
+    typeof token !== 'string' ||
+    token.trim() === '' ||
     token === 'null' ||
     token === 'undefined' ||
     token === 'a1-guest' ||
     token === 'guest' ||
-    token.includes('.') || // Disallow JWT / Bearer tokens which cause 'Input validation failed: authorize'
-    token.length > 64;
+    token.length > 512;
 
 /** Synchronously checks if a valid token is available in storage or URL */
 export const getActiveToken = (specificLoginId?: string): string | null => {
@@ -189,12 +188,10 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
 };
 
 /** Returns true if the user is logged in (has any accounts) */
-export const isLoggedIn = (): boolean =>
-    Object.keys(getAccountsList()).length > 0;
+export const isLoggedIn = (): boolean => Object.keys(getAccountsList()).length > 0;
 
 /** Returns all tokens from the logged-in session */
-export const getAllSessionTokens = (): string[] =>
-    Object.values(getAccountsList()).filter(Boolean);
+export const getAllSessionTokens = (): string[] => Object.values(getAccountsList()).filter(Boolean);
 
 /** Sanitize accountsList in-place */
 export const sanitizeAccountsList = (): void => {
@@ -245,6 +242,4 @@ export const formatLoginDisplay = (): string => {
 };
 
 export const truncateToken = (token: string, visibleChars = 6): string =>
-    token.length > visibleChars * 2
-        ? `${token.slice(0, visibleChars)}••••${token.slice(-4)}`
-        : token;
+    token.length > visibleChars * 2 ? `${token.slice(0, visibleChars)}••••${token.slice(-4)}` : token;

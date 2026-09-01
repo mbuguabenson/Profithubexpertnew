@@ -100,7 +100,7 @@ export default class RunPanelStore {
         });
 
         this.root_store = root_store;
-        this.dbot = this.root_store.dbot;
+        this.dbot = this.root_store?.dbot;
         this.core = core;
         this.disposeReactionsFn = this.registerReactions();
         this.timer = null;
@@ -140,7 +140,8 @@ export default class RunPanelStore {
     is_sell_requested = false;
     show_bot_stop_message = false;
     is_contract_buying_in_progress = false;
-    is_every_tick_mode = typeof localStorage !== 'undefined' ? localStorage.getItem('dbot_every_tick_mode') === 'true' : false;
+    is_every_tick_mode =
+        typeof localStorage !== 'undefined' ? localStorage.getItem('dbot_every_tick_mode') === 'true' : false;
 
     toggleEveryTickMode = () => {
         this.is_every_tick_mode = !this.is_every_tick_mode;
@@ -229,7 +230,14 @@ export default class RunPanelStore {
         if (this.dbot?.unHighlightAllBlocks) {
             this.dbot.unHighlightAllBlocks();
         }
-        const hasAuth = client.is_logged_in || Boolean(localStorage.getItem('active_loginid') || localStorage.getItem('token') || localStorage.getItem('active_token') || localStorage.getItem('deriv_api_token'));
+        const hasAuth =
+            client.is_logged_in ||
+            Boolean(
+                localStorage.getItem('active_loginid') ||
+                localStorage.getItem('token') ||
+                localStorage.getItem('active_token') ||
+                localStorage.getItem('deriv_api_token')
+            );
         if (!hasAuth) {
             this.showLoginDialog();
             return;
@@ -248,7 +256,11 @@ export default class RunPanelStore {
             this.unregisterBotListeners();
             this.setIsRunning(false);
             this.setContractStage(contract_stages.NOT_RUNNING);
-            this.showErrorMessage(localize('Please load or configure a trading bot strategy in Bot Builder or Quick Strategy before running.'));
+            this.showErrorMessage(
+                localize(
+                    'Please load or configure a trading bot strategy in Bot Builder or Quick Strategy before running.'
+                )
+            );
             return;
         }
 
@@ -658,7 +670,7 @@ export default class RunPanelStore {
             if (isRegisteredFlag) {
                 return;
             }
-            
+
             // TODO: fix notifications
             if (common.is_socket_opened) {
                 isRegisteredFlag = true;
@@ -718,7 +730,7 @@ export default class RunPanelStore {
             if (typeof disposeStopBotListener === 'function') {
                 disposeStopBotListener();
             }
-            
+
             isRegisteredFlag = false;
         };
     };
@@ -740,7 +752,7 @@ export default class RunPanelStore {
     onBotStopEvent = () => {
         const { summary_card } = this.root_store;
         const { ui } = this.core;
-        
+
         this.error_type = undefined;
         this.is_sell_requested = false;
         this.is_contract_buying_in_progress = false;

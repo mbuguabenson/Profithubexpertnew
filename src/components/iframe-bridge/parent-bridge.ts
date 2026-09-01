@@ -27,7 +27,7 @@ export class ParentBridgeClient {
     private instanceId: string;
     private logger: ReturnType<typeof makeBridgeLogger>;
     private retryIntervalId: any = null;
-    
+
     // Diagnostics
     private diagnostics: BridgeDiagnosticInfo = {
         state: BridgeState.IDLE,
@@ -39,9 +39,9 @@ export class ParentBridgeClient {
         lastError: null,
         reconnects: 0,
         pendingMessages: 0,
-        messageHistory: []
+        messageHistory: [],
     };
-    
+
     private listeners: Set<() => void> = new Set();
     private sessionUnsubscribe: (() => void) | null = null;
 
@@ -50,15 +50,18 @@ export class ParentBridgeClient {
         this.diagnostics.state = this.stateMachine.getState();
         this.instanceId = generateInstanceId();
         this.logger = makeBridgeLogger(this.instanceId);
-        this.logger.debug('BRIDGE_INIT', { appId: this.diagnostics.appId, parentOrigin: this.diagnostics.parentOrigin });
-        
-        this.stateMachine.subscribe((state) => {
+        this.logger.debug('BRIDGE_INIT', {
+            appId: this.diagnostics.appId,
+            parentOrigin: this.diagnostics.parentOrigin,
+        });
+
+        this.stateMachine.subscribe(state => {
             const previous = this.diagnostics.state;
             this.diagnostics.state = state;
             this.logger.stateChange(previous, state as string, 'stateMachine.subscribe');
             this.notifyDiagnosticListeners();
         });
-        
+
         if (typeof window !== 'undefined') {
             window.addEventListener('message', this.handleMessage);
         }
@@ -69,10 +72,10 @@ export class ParentBridgeClient {
         this.iframeOrigin = expectedOrigin;
         this.diagnostics.iframeOrigin = expectedOrigin;
         this.logger.debug('IFRAME_ATTACH', { iframeOrigin: expectedOrigin });
-        
+
         this.stateMachine.transitionTo(BridgeState.LOADING_IFRAME);
-        
-        this.sessionUnsubscribe = sessionManager.subscribe((session) => {
+
+        this.sessionUnsubscribe = sessionManager.subscribe(session => {
             this.handleSessionChange(session);
         });
 
@@ -86,31 +89,50 @@ export class ParentBridgeClient {
         }, 500);
     }
 
-    private sendAuthPayloadToWindow(targetWindow: Window, tok: string, loginid: string, currency: string, appIdStr: string) {
+    private sendAuthPayloadToWindow(
+        targetWindow: Window,
+        tok: string,
+        loginid: string,
+        currency: string,
+        appIdStr: string
+    ) {
         if (!targetWindow || targetWindow === window) return;
         try {
-            const hasToken = !!tok && tok !== 'null' && tok !== 'undefined' && tok !== 'a1-guest' && tok !== 'dummy_token';
+            const hasToken =
+                !!tok && tok !== 'null' && tok !== 'undefined' && tok !== 'a1-guest' && tok !== 'dummy_token';
             const authMode = hasToken ? 'derivws_otp' : 'none';
             const effectiveToken = hasToken ? tok : '';
 
             const accountsList = getAccountsList();
-            const isDemo = loginid.startsWith('VR') || loginid.startsWith('VRT') || loginid.startsWith('DOT') || loginid.startsWith('DEM');
+            const isDemo =
+                loginid.startsWith('VR') ||
+                loginid.startsWith('VRT') ||
+                loginid.startsWith('DOT') ||
+                loginid.startsWith('DEM');
 
-            const accounts = Object.keys(accountsList).length > 0
-                ? Object.entries(accountsList).map(([id]) => ({
-                    account_id: id,
-                    account_type: (id.startsWith('VR') || id.startsWith('VRT') || id.startsWith('DOT') || id.startsWith('DEM') ? 'demo' : 'real') as 'demo' | 'real',
-                    currency: currency || 'USD',
-                    balance: '10000.00',
-                    status: 'active',
-                }))
-                : [{
-                    account_id: loginid || 'DOT100000',
-                    account_type: isDemo ? ('demo' as const) : ('real' as const),
-                    currency: currency || 'USD',
-                    balance: '10000.00',
-                    status: 'active',
-                }];
+            const accounts =
+                Object.keys(accountsList).length > 0
+                    ? Object.entries(accountsList).map(([id]) => ({
+                          account_id: id,
+                          account_type: (id.startsWith('VR') ||
+                          id.startsWith('VRT') ||
+                          id.startsWith('DOT') ||
+                          id.startsWith('DEM')
+                              ? 'demo'
+                              : 'real') as 'demo' | 'real',
+                          currency: currency || 'USD',
+                          balance: '10000.00',
+                          status: 'active',
+                      }))
+                    : [
+                          {
+                              account_id: loginid || 'DOT100000',
+                              account_type: isDemo ? ('demo' as const) : ('real' as const),
+                              currency: currency || 'USD',
+                              balance: '10000.00',
+                              status: 'active',
+                          },
+                      ];
 
             const activeAccId = loginid || accounts[0].account_id;
             const profileCountry =
@@ -141,7 +163,6 @@ export class ParentBridgeClient {
                 apiBase: 'https://ws.derivws.com/websockets/v3',
                 authBase: 'https://oauth.deriv.com',
             };
-
 
             const legacyV2AuthMsg = {
                 ...v2AuthMsg,
@@ -179,9 +200,10 @@ export class ParentBridgeClient {
 
             const postBoth = (msg: any) => {
                 try {
-                    targetWindow.postMessage(msg, '*');
+                    const targetOrigin = this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : new URL(window.location.href).origin;
+                    targetWindow.postMessage(msg, targetOrigin);
                     if (typeof msg === 'object') {
-                        targetWindow.postMessage(JSON.stringify(msg), '*');
+                        targetWindow.postMessage(JSON.stringify(msg), targetOrigin);
                     }
                 } catch (e) {
                     // ignore
@@ -211,7 +233,6 @@ export class ParentBridgeClient {
         }
     }
 
-
     private startProactiveAuthLoop() {
         if (this.retryIntervalId) {
             clearInterval(this.retryIntervalId);
@@ -224,7 +245,11 @@ export class ParentBridgeClient {
             if (!this.iframeWindow) return;
             try {
                 const session = sessionManager.getSession();
-                let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || 'DOT100000';
+                let loginid =
+                    session?.loginid ||
+                    localStorage.getItem('active_loginid') ||
+                    localStorage.getItem('client.loginid') ||
+                    'DOT100000';
                 const syncToken = getActiveToken() || '';
                 const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
                 const appIdStr = String(session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ');
@@ -255,7 +280,6 @@ export class ParentBridgeClient {
         }, 250);
     }
 
-
     public detach() {
         if (this.retryIntervalId) {
             clearInterval(this.retryIntervalId);
@@ -279,12 +303,18 @@ export class ParentBridgeClient {
 
     public subscribeDiagnostics(listener: () => void) {
         this.listeners.add(listener);
-        return () => { this.listeners.delete(listener); };
+        return () => {
+            this.listeners.delete(listener);
+        };
     }
 
     private notifyDiagnosticListeners() {
         this.listeners.forEach(listener => {
-            try { listener(); } catch (e) { console.error(e); }
+            try {
+                listener();
+            } catch (e) {
+                console.error(e);
+            }
         });
     }
 
@@ -299,7 +329,7 @@ export class ParentBridgeClient {
 
     private sendMessage<T>(type: BridgeEvent | string, payload: T) {
         if (!this.iframeWindow) return;
-        
+
         const session = sessionManager.getSession();
         const appId = session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
         this.diagnostics.appId = appId;
@@ -308,7 +338,7 @@ export class ParentBridgeClient {
         this.logMessage('out', msg);
         this.logger.messageSent(this.iframeOrigin, msg.type as string);
         try {
-            this.iframeWindow.postMessage(msg, '*');
+            this.iframeWindow.postMessage(msg, this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : '*');
         } catch (error) {
             console.error('[ParentBridge] Failed to send message', error);
         }
@@ -326,8 +356,8 @@ export class ParentBridgeClient {
             'https://app.deriv.com',
         ];
 
-        const isAllowed = allowedOrigins.some(o => event.origin.startsWith(o)) ||
-            /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
+        const isAllowed =
+            allowedOrigins.some(o => event.origin.startsWith(o)) || /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
 
         if (!isAllowed) {
             return;
@@ -352,7 +382,11 @@ export class ParentBridgeClient {
             (async () => {
                 try {
                     const session = sessionManager.getSession();
-                    let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+                    let loginid =
+                        session?.loginid ||
+                        localStorage.getItem('active_loginid') ||
+                        localStorage.getItem('client.loginid') ||
+                        '';
                     const syncToken = getActiveToken() || '';
                     const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
                     const appIdStr = String(session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ');
@@ -416,7 +450,8 @@ export class ParentBridgeClient {
 
     private handleSessionRequest = () => {
         const session = sessionManager.getSession();
-        let loginid = session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+        let loginid =
+            session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
         let token = session?.token || getActiveToken() || localStorage.getItem('token') || '';
         const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
         const appIdStr = String(session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ');
@@ -453,7 +488,7 @@ export class ParentBridgeClient {
         if (this.reconnectAttempts < this.maxReconnects) {
             this.reconnectAttempts++;
             this.stateMachine.transitionTo(BridgeState.RECOVERING);
-            
+
             const backoff = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
             setTimeout(() => {
                 this.stateMachine.transitionTo(BridgeState.WAITING_READY);
