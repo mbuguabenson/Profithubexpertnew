@@ -695,8 +695,9 @@ export default class RunPanelStore {
                         }
                     }
                 );
-            } else if (typeof disposeLogoutListener === 'function') {
-                disposeLogoutListener();
+            } else if (typeof disposeIsSocketOpenedListener === 'function') {
+                disposeIsSocketOpenedListener();
+                disposeIsSocketOpenedListener = undefined;
             }
         };
 

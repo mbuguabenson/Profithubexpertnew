@@ -117,7 +117,7 @@ class DBot {
             }
         };
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             __webpack_public_path__ = public_path; // eslint-disable-line no-global-assign
             ApiHelpers.setInstance(api_helpers_store);
             DBotStore.setInstance(store);
@@ -199,8 +199,10 @@ class DBot {
 
                         window.Blockly.JavaScript.variableDB_ = varDB;
                         if (window.Blockly?.JavaScript?.javascriptGenerator) {
-                            window.Blockly.JavaScript.workspaceToCode = (ws) =>
-                                window.Blockly.JavaScript.javascriptGenerator.workspaceToCode(ws || window.Blockly.derivWorkspace);
+                            window.Blockly.JavaScript.workspaceToCode = ws =>
+                                window.Blockly.JavaScript.javascriptGenerator.workspaceToCode(
+                                    ws || window.Blockly.derivWorkspace
+                                );
                         }
 
                         this.addBeforeRunFunction(this.unselectBlocks.bind(this));
@@ -231,6 +233,17 @@ class DBot {
                             window.Blockly.utils.xml.textToDom(window.Blockly.derivWorkspace.strategy_to_load),
                             this.workspace
                         );
+                        const tradeTypeBlocks = this.workspace
+                            .getAllBlocks()
+                            .filter(block => block.type === 'trade_definition_tradetype');
+                        tradeTypeBlocks.forEach(block => {
+                            block.onchange?.({
+                                type: window.Blockly.Events.BLOCK_CHANGE,
+                                name: 'SYMBOL_LIST',
+                                blockId: block.id,
+                                group: event_group,
+                            });
+                        });
                         const { save_modal } = DBotStore.instance;
 
                         save_modal.updateBotName(file_name);
@@ -316,14 +329,20 @@ class DBot {
     async runBot() {
         api_base.is_stopping = false;
 
+        if (this.is_bot_running) {
+            return;
+        }
+
         try {
-            // Ensure api connection is active
+            // Reuse a healthy, already-authorized connection instead of force-resetting the socket
+            // on every bot start. This prevents the 3-second startup stall caused by redundant init/auth churn.
             if (!api_base.api || api_base.api?.connection?.readyState !== 1) {
                 await api_base.init();
             }
 
-            // Always initialize a fresh Interpreter session for current active account
-            this.interpreter = Interpreter();
+            if (!this.interpreter || !this.interpreter.bot?.tradeEngine) {
+                this.interpreter = Interpreter();
+            }
 
             const code = this.generateCode();
             if (this.symbol && !this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) {
@@ -357,7 +376,9 @@ class DBot {
             '';
 
         if (!workspaceCode.trim()) {
-            throw new Error('No strategy blocks found in workspace. Please load a strategy in Bot Builder or Quick Strategy.');
+            throw new Error(
+                'No strategy blocks found in workspace. Please load a strategy in Bot Builder or Quick Strategy.'
+            );
         }
 
         return `

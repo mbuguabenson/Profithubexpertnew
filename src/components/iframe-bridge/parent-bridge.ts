@@ -2,7 +2,7 @@ import { BridgeStateMachine, BridgeState } from './bridge-state-machine';
 import { SessionManager as _SessionManager, sessionManager } from './session-manager';
 import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage } from './protocol';
 import { getActiveToken, resolveValidDerivWSToken, getAccountsList } from '@/utils/token-bridge';
-import { getClientId } from '@/components/shared/utils/config/config';
+import { getAppId } from '@/components/shared/utils/config/config';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
 
 export interface BridgeDiagnosticInfo {
@@ -31,7 +31,7 @@ export class ParentBridgeClient {
     // Diagnostics
     private diagnostics: BridgeDiagnosticInfo = {
         state: BridgeState.IDLE,
-        appId: getClientId() || '33Mmq9JHMrJaUKT2KIhKZ',
+        appId: getAppId() || '121856',
         parentOrigin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
         iframeOrigin: 'unknown',
         sessionStatus: 'none',
@@ -252,7 +252,7 @@ export class ParentBridgeClient {
                     'DOT100000';
                 const syncToken = getActiveToken() || '';
                 const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
-                const appIdStr = String(session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ');
+                const appIdStr = String(session?.appId || getAppId() || '121856');
 
                 // Send synchronous payload immediately (<1ms)
                 this.sendAuthPayloadToWindow(this.iframeWindow, syncToken, loginid, currency, appIdStr);
@@ -331,7 +331,7 @@ export class ParentBridgeClient {
         if (!this.iframeWindow) return;
 
         const session = sessionManager.getSession();
-        const appId = session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
+            const appId = session?.appId || getAppId() || '121856';
         this.diagnostics.appId = appId;
 
         const msg = createMessage(type, appId, 'parent', payload);
@@ -389,7 +389,7 @@ export class ParentBridgeClient {
                         '';
                     const syncToken = getActiveToken() || '';
                     const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
-                    const appIdStr = String(session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ');
+                    const appIdStr = String(session?.appId || getAppId() || '121856');
                     const targetWin = event.source as Window;
 
                     this.sendAuthPayloadToWindow(targetWin, syncToken, loginid, currency, appIdStr);
@@ -454,7 +454,7 @@ export class ParentBridgeClient {
             session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
         let token = session?.token || getActiveToken() || localStorage.getItem('token') || '';
         const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
-        const appIdStr = String(session?.appId || getClientId() || '33Mmq9JHMrJaUKT2KIhKZ');
+        const appIdStr = String(session?.appId || getAppId() || '121856');
 
         this.diagnostics.sessionStatus = 'valid';
         this.diagnostics.appId = appIdStr;

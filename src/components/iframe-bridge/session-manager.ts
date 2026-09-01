@@ -1,6 +1,6 @@
 import { SessionPayload } from './protocol';
 import { V2GetActiveToken, V2GetActiveAccountId } from '@/external/bot-skeleton/services/api/appId';
-import { getClientId } from '@/components/shared/utils/config/config';
+import { getAppId } from '@/components/shared/utils/config/config';
 import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 
 const isInvalidToken = (token: string | null | undefined): boolean =>
@@ -22,15 +22,16 @@ export class SessionManager {
      * Does NOT override active loginid with demo account during login / session check.
      */
     public getSession(): SessionPayload | null {
-        let loginid = V2GetActiveAccountId() || 
-                      localStorage.getItem('active_loginid') || 
-                      localStorage.getItem('client.loginid') || '';
-        
+        let loginid =
+            V2GetActiveAccountId() ||
+            localStorage.getItem('active_loginid') ||
+            localStorage.getItem('client.loginid') ||
+            '';
+
         const accountsList = getAccountsList();
 
-        let token = (loginid && accountsList[loginid] && !isInvalidToken(accountsList[loginid]))
-            ? accountsList[loginid]
-            : null;
+        let token =
+            loginid && accountsList[loginid] && !isInvalidToken(accountsList[loginid]) ? accountsList[loginid] : null;
 
         if (!token) {
             const activeToken = getActiveToken() || V2GetActiveToken();
@@ -40,7 +41,10 @@ export class SessionManager {
         }
 
         if (!token) {
-            const storedToken = localStorage.getItem('token') || localStorage.getItem('active_token') || localStorage.getItem('authToken');
+            const storedToken =
+                localStorage.getItem('token') ||
+                localStorage.getItem('active_token') ||
+                localStorage.getItem('authToken');
             if (!isInvalidToken(storedToken)) {
                 token = storedToken || null;
             }
@@ -57,7 +61,7 @@ export class SessionManager {
             }
         }
 
-        const appId = getClientId() || '33Mmq9JHMrJaUKT2KIhKZ';
+        const appId = getAppId() || '121856';
 
         // Fallback loginid if empty
         if (!loginid && Object.keys(accountsList).length > 0) {
@@ -69,7 +73,7 @@ export class SessionManager {
             loginid: loginid || '',
             currency: localStorage.getItem('client.currency') || 'USD',
             isDemo: isDemoAccount(loginid),
-            appId
+            appId,
         };
     }
 
