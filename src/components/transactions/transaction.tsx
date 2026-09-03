@@ -197,7 +197,13 @@ const Transaction = ({ contract, active_transaction_id, onClickTransaction }: TT
                             <TransactionIconWithText
                                 icon={<TradeTypeIcon type={contract.contract_type || ''} size='sm' />}
                                 title={getContractTypeName(contract)}
-                                message={(contract as any).is_bulk_group ? <span style={{ marginLeft: 4, fontWeight: 'bold' }}>{`(x${(contract as any).bulk_count})`}</span> : null}
+                                message={
+                                    (contract as any).is_bulk_group ? (
+                                        <span
+                                            style={{ marginLeft: 4, fontWeight: 'bold' }}
+                                        >{`(x${(contract as any).bulk_count})`}</span>
+                                    ) : null
+                                }
                             />
                         ) : (
                             <TransactionIconLoader />

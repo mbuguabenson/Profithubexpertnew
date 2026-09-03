@@ -1,5 +1,5 @@
 import React from 'react';
-import { Redirect, withRouter } from 'react-router';
+import { Redirect, withRouter } from 'withRouterShim';
 import { RouteComponentProps } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 import { routes } from '@deriv/shared';

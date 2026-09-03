@@ -559,7 +559,7 @@ export default class FreeBotsStore {
                 duration: cfg.ticks,
                 duration_unit: 't',
                 symbol: this.symbol,
-                ...( !['DIGITEVEN', 'DIGITODD'].includes(contract_type) ? { barrier: String(prediction) } : {}),
+                ...(!['DIGITEVEN', 'DIGITODD'].includes(contract_type) ? { barrier: String(prediction) } : {}),
             });
 
             const proposal = (await api.send(proposal_data)) as any;

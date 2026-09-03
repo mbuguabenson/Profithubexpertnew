@@ -1,4 +1,12 @@
-import { SiteConfig, MpesaTransaction, MarkupCommission, SystemLogItem, UploadedBot, PlatformNotification, CopyRequest } from './supabase-copy';
+import {
+    SiteConfig,
+    MpesaTransaction,
+    MarkupCommission,
+    SystemLogItem,
+    UploadedBot,
+    PlatformNotification,
+    CopyRequest,
+} from './supabase-copy';
 
 const API_BASE = '/api/admin';
 
@@ -42,7 +50,10 @@ export const fetchSystemHealth = async (): Promise<SystemHealthData | null> => {
 };
 
 // ─── Admin Authentication ─────────────────────────────────────────────────────
-export const loginAdminApi = async (username: string, password: string): Promise<{ success: boolean; token?: string; error?: string }> => {
+export const loginAdminApi = async (
+    username: string,
+    password: string
+): Promise<{ success: boolean; token?: string; error?: string }> => {
     const res = await safeApiCall<{ success: boolean; token?: string; error?: string }>(`${API_BASE}/auth`, {
         method: 'POST',
         body: JSON.stringify({ action: 'login', username, password }),
@@ -81,12 +92,17 @@ export const saveSiteConfigApi = async (config: Partial<SiteConfig>): Promise<Si
 
 // ─── Copy Requests API ────────────────────────────────────────────────────────
 export const fetchCopyRequestsApi = async (providerLoginid?: string): Promise<CopyRequest[]> => {
-    const url = providerLoginid ? `${API_BASE}/copy-requests?provider_loginid=${providerLoginid}` : `${API_BASE}/copy-requests`;
+    const url = providerLoginid
+        ? `${API_BASE}/copy-requests?provider_loginid=${providerLoginid}`
+        : `${API_BASE}/copy-requests`;
     const res = await safeApiCall<CopyRequest[]>(url);
     return res || [];
 };
 
-export const updateCopyRequestStatusApi = async (id: string, status: 'accepted' | 'rejected' | 'stopped'): Promise<boolean> => {
+export const updateCopyRequestStatusApi = async (
+    id: string,
+    status: 'accepted' | 'rejected' | 'stopped'
+): Promise<boolean> => {
     const res = await safeApiCall<{ success: boolean }>(`${API_BASE}/copy-requests?id=${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ id, status }),
@@ -100,7 +116,11 @@ export const fetchSystemLogsApi = async (): Promise<SystemLogItem[]> => {
     return res || [];
 };
 
-export const pushSystemLogApi = async (level: 'info' | 'warn' | 'error', message: string, component: string): Promise<boolean> => {
+export const pushSystemLogApi = async (
+    level: 'info' | 'warn' | 'error',
+    message: string,
+    component: string
+): Promise<boolean> => {
     const res = await safeApiCall<{ success: boolean }>(`${API_BASE}/logs`, {
         method: 'POST',
         body: JSON.stringify({ level, message, component }),

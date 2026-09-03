@@ -1,208 +1,314 @@
 export type TAltTradeType = {
-  purchaseType: string;
-  entryOp: string;
-  entryThreshold: number;
-  prediction: number;
-  tradeTypeCat: string;
-  tradeType: string;
-  hasPrediction: boolean;
+    purchaseType: string;
+    entryOp: string;
+    entryThreshold: number;
+    prediction: number;
+    tradeTypeCat: string;
+    tradeType: string;
+    hasPrediction: boolean;
 };
 
 export const mapAltTradeType = (tradeTypeId: string): TAltTradeType => {
-  switch (tradeTypeId) {
-    case 'even_odd':
-      return { purchaseType: 'DIGITEVEN', entryOp: 'EQ', entryThreshold: 1, prediction: 0, tradeTypeCat: 'digits', tradeType: 'evenodd', hasPrediction: false };
-    case 'over_under':
-      return { purchaseType: 'DIGITOVER', entryOp: 'LTE', entryThreshold: 2, prediction: 2, tradeTypeCat: 'digits', tradeType: 'overunder', hasPrediction: true };
-    case 'matches':
-      return { purchaseType: 'DIGITMATCH', entryOp: 'EQ', entryThreshold: 5, prediction: 5, tradeTypeCat: 'digits', tradeType: 'matchesdiffers', hasPrediction: true };
-    case 'differs':
-      return { purchaseType: 'DIGITDIFF', entryOp: 'NEQ', entryThreshold: 5, prediction: 5, tradeTypeCat: 'digits', tradeType: 'matchesdiffers', hasPrediction: true };
-    case 'rise_fall':
-      return { purchaseType: 'CALL', entryOp: 'GTE', entryThreshold: 5, prediction: 0, tradeTypeCat: 'callput', tradeType: 'risefall', hasPrediction: false };
-    default:
-      return { purchaseType: 'DIGITEVEN', entryOp: 'EQ', entryThreshold: 1, prediction: 0, tradeTypeCat: 'digits', tradeType: 'evenodd', hasPrediction: false };
-  }
+    switch (tradeTypeId) {
+        case 'even_odd':
+            return {
+                purchaseType: 'DIGITEVEN',
+                entryOp: 'EQ',
+                entryThreshold: 1,
+                prediction: 0,
+                tradeTypeCat: 'digits',
+                tradeType: 'evenodd',
+                hasPrediction: false,
+            };
+        case 'over_under':
+            return {
+                purchaseType: 'DIGITOVER',
+                entryOp: 'LTE',
+                entryThreshold: 2,
+                prediction: 2,
+                tradeTypeCat: 'digits',
+                tradeType: 'overunder',
+                hasPrediction: true,
+            };
+        case 'matches':
+            return {
+                purchaseType: 'DIGITMATCH',
+                entryOp: 'EQ',
+                entryThreshold: 5,
+                prediction: 5,
+                tradeTypeCat: 'digits',
+                tradeType: 'matchesdiffers',
+                hasPrediction: true,
+            };
+        case 'differs':
+            return {
+                purchaseType: 'DIGITDIFF',
+                entryOp: 'NEQ',
+                entryThreshold: 5,
+                prediction: 5,
+                tradeTypeCat: 'digits',
+                tradeType: 'matchesdiffers',
+                hasPrediction: true,
+            };
+        case 'rise_fall':
+            return {
+                purchaseType: 'CALL',
+                entryOp: 'GTE',
+                entryThreshold: 5,
+                prediction: 0,
+                tradeTypeCat: 'callput',
+                tradeType: 'risefall',
+                hasPrediction: false,
+            };
+        default:
+            return {
+                purchaseType: 'DIGITEVEN',
+                entryOp: 'EQ',
+                entryThreshold: 1,
+                prediction: 0,
+                tradeTypeCat: 'digits',
+                tradeType: 'evenodd',
+                hasPrediction: false,
+            };
+    }
 };
 
 export const mapSignalToBestSignal = (sig: any) => {
-  if (!sig) return null;
-  const strat = sig.strategy;
-  const targetDigit = sig.details?.targetDigit ?? sig.targetDigit;
-  let tradeDirection = '';
+    if (!sig) return null;
+    const strat = sig.strategy;
+    const targetDigit = sig.details?.targetDigit ?? sig.targetDigit;
+    let tradeDirection = '';
 
-  if (strat === 'even_odd' || strat === 'pro_even_odd' || strat === 'super') {
-    const rec = (sig.details?.recommendation ?? sig.recommendation ?? '').toLowerCase();
-    if (rec.includes('even')) tradeDirection = 'EVEN';
-    else if (rec.includes('odd')) tradeDirection = 'ODD';
-  } else if (strat === 'over_under' || strat === 'pro_over_under') {
-    const bias = sig.details?.signalDetails?.bias ?? sig.signalDetails?.bias;
-    const digit = targetDigit ?? 5;
-    const rec = (sig.details?.recommendation ?? sig.recommendation ?? '').toLowerCase();
-    if (bias === 'high' || rec.includes('over')) {
-      tradeDirection = `OVER ${digit}`;
-    } else {
-      tradeDirection = `UNDER ${digit}`;
+    if (strat === 'even_odd' || strat === 'pro_even_odd' || strat === 'super') {
+        const rec = (sig.details?.recommendation ?? sig.recommendation ?? '').toLowerCase();
+        if (rec.includes('even')) tradeDirection = 'EVEN';
+        else if (rec.includes('odd')) tradeDirection = 'ODD';
+    } else if (strat === 'over_under' || strat === 'pro_over_under') {
+        const bias = sig.details?.signalDetails?.bias ?? sig.signalDetails?.bias;
+        const digit = targetDigit ?? 5;
+        const rec = (sig.details?.recommendation ?? sig.recommendation ?? '').toLowerCase();
+        if (bias === 'high' || rec.includes('over')) {
+            tradeDirection = `OVER ${digit}`;
+        } else {
+            tradeDirection = `UNDER ${digit}`;
+        }
+    } else if (strat === 'under_7') {
+        tradeDirection = 'UNDER 7';
+    } else if (strat === 'over_2') {
+        tradeDirection = 'OVER 2';
+    } else if (strat === 'matches') {
+        tradeDirection = `MATCHES ${targetDigit ?? 5}`;
+    } else if (strat === 'differs' || strat === 'pro_differs') {
+        tradeDirection = `DIFFERS ${targetDigit ?? 5}`;
+    } else if (strat === 'rise_fall') {
+        const trend =
+            sig.details?.signalDetails?.trend ??
+            sig.signalDetails?.trend ??
+            ((sig.details?.recommendation ?? sig.recommendation ?? '').toLowerCase().includes('rise')
+                ? 'rise'
+                : 'fall');
+        tradeDirection = trend.toUpperCase();
     }
-  } else if (strat === 'under_7') {
-    tradeDirection = 'UNDER 7';
-  } else if (strat === 'over_2') {
-    tradeDirection = 'OVER 2';
-  } else if (strat === 'matches') {
-    tradeDirection = `MATCHES ${targetDigit ?? 5}`;
-  } else if (strat === 'differs' || strat === 'pro_differs') {
-    tradeDirection = `DIFFERS ${targetDigit ?? 5}`;
-  } else if (strat === 'rise_fall') {
-    const trend = sig.details?.signalDetails?.trend ?? sig.signalDetails?.trend ?? ((sig.details?.recommendation ?? sig.recommendation ?? '').toLowerCase().includes('rise') ? 'rise' : 'fall');
-    tradeDirection = trend.toUpperCase();
-  }
 
-  return {
-    ...(sig.details || sig),
-    tradeDirection,
-    targetDigit,
-    entryDigits: targetDigit !== undefined ? [targetDigit] : [],
-  };
+    return {
+        ...(sig.details || sig),
+        tradeDirection,
+        targetDigit,
+        entryDigits: targetDigit !== undefined ? [targetDigit] : [],
+    };
 };
 
 export function generateBotXML(opts: {
-  stake: string | number;
-  takeProfit: string | number;
-  stopLoss: string | number;
-  martingale: string | number;
-  symbol: string;
-  tradeTypeLabel: string;
-  bestSignal: any;
-  entryDigit?: number;
-  recovery?: { lossThreshold: number; altTradeTypeId: string };
+    stake: string | number;
+    takeProfit: string | number;
+    stopLoss: string | number;
+    martingale: string | number;
+    symbol: string;
+    tradeTypeLabel: string;
+    bestSignal: any;
+    entryDigit?: number;
+    recovery?: { lossThreshold: number; altTradeTypeId: string };
 }): string {
-  const { stake: rawStake, takeProfit: rawTakeProfit, stopLoss: rawStopLoss, martingale: rawMartingale, symbol, tradeTypeLabel, bestSignal, entryDigit, recovery } = opts;
-  const stake = String(rawStake);
-  const takeProfit = String(rawTakeProfit);
-  const stopLoss = String(rawStopLoss);
-  const martingale = String(rawMartingale);
+    const {
+        stake: rawStake,
+        takeProfit: rawTakeProfit,
+        stopLoss: rawStopLoss,
+        martingale: rawMartingale,
+        symbol,
+        tradeTypeLabel,
+        bestSignal,
+        entryDigit,
+        recovery,
+    } = opts;
+    const stake = String(rawStake);
+    const takeProfit = String(rawTakeProfit);
+    const stopLoss = String(rawStopLoss);
+    const martingale = String(rawMartingale);
 
-  let tradeTypeCat = 'digits';
-  let tradeType = 'overunder';
-  let predictionNum = 7;
-  let underDigitNum = 7;
-  let overDigitNum = 2;
-  let singleMode = false;
-  let singlePurchaseType = 'DIGITUNDER';
-  let singleEntryOp = 'GTE';
-  let singleEntryThreshold = 6;
-  let singlePrediction = 7;
+    let tradeTypeCat = 'digits';
+    let tradeType = 'overunder';
+    let predictionNum = 7;
+    let underDigitNum = 7;
+    let overDigitNum = 2;
+    let singleMode = false;
+    let singlePurchaseType = 'DIGITUNDER';
+    let singleEntryOp = 'GTE';
+    let singleEntryThreshold = 6;
+    let singlePrediction = 7;
 
-  if (bestSignal) {
-    const dir = (bestSignal.tradeDirection ?? '').toUpperCase();
-    const overMatch = dir.match(/^OVER\s+(\d+)$/);
-    const underMatch = dir.match(/^UNDER\s+(\d+)$/);
-    const matchesMatch = dir.match(/^MATCHES\s+(\d+)$/);
-    const differsMatch = dir.match(/^DIFFERS\s+(\d+)$/);
+    if (bestSignal) {
+        const dir = (bestSignal.tradeDirection ?? '').toUpperCase();
+        const overMatch = dir.match(/^OVER\s+(\d+)$/);
+        const underMatch = dir.match(/^UNDER\s+(\d+)$/);
+        const matchesMatch = dir.match(/^MATCHES\s+(\d+)$/);
+        const differsMatch = dir.match(/^DIFFERS\s+(\d+)$/);
 
-    if (underMatch) {
-      const underDigit = parseInt(underMatch[1], 10);
-      tradeTypeCat = 'digits'; tradeType = 'overunder';
-      singleMode = true; singlePurchaseType = 'DIGITUNDER';
-      singlePrediction = underDigit;
-      singleEntryOp = 'GTE'; singleEntryThreshold = underDigit;
-    } else if (overMatch) {
-      const overDigit = parseInt(overMatch[1], 10);
-      tradeTypeCat = 'digits'; tradeType = 'overunder';
-      singleMode = true; singlePurchaseType = 'DIGITOVER';
-      singlePrediction = overDigit;
-      singleEntryOp = 'LTE'; singleEntryThreshold = overDigit;
-    } else if (dir === 'EVEN') {
-      tradeTypeCat = 'digits'; tradeType = 'evenodd';
-      singleMode = true; singlePurchaseType = 'DIGITEVEN';
-      singlePrediction = 0; singleEntryOp = 'EQ'; singleEntryThreshold = 1;
-    } else if (dir === 'ODD') {
-      tradeTypeCat = 'digits'; tradeType = 'evenodd';
-      singleMode = true; singlePurchaseType = 'DIGITODD';
-      singlePrediction = 0; singleEntryOp = 'EQ'; singleEntryThreshold = 0;
-    } else if (matchesMatch) {
-      const matchDigit = parseInt(matchesMatch[1], 10);
-      tradeTypeCat = 'digits'; tradeType = 'matchesdiffers';
-      singleMode = true; singlePurchaseType = 'DIGITMATCH';
-      singlePrediction = matchDigit; singleEntryOp = 'EQ'; singleEntryThreshold = matchDigit;
-    } else if (differsMatch) {
-      const differsDigit = parseInt(differsMatch[1], 10);
-      tradeTypeCat = 'digits'; tradeType = 'matchesdiffers';
-      singleMode = true; singlePurchaseType = 'DIGITDIFF';
-      singlePrediction = differsDigit; singleEntryOp = 'NEQ'; singleEntryThreshold = differsDigit;
-    } else if (dir === 'RISE') {
-      tradeTypeCat = 'callput'; tradeType = 'risefall';
-      singleMode = true; singlePurchaseType = 'CALL';
-      singlePrediction = 0; singleEntryOp = 'GTE'; singleEntryThreshold = 5;
-    } else if (dir === 'FALL') {
-      tradeTypeCat = 'callput'; tradeType = 'risefall';
-      singleMode = true; singlePurchaseType = 'PUT';
-      singlePrediction = 0; singleEntryOp = 'LTE'; singleEntryThreshold = 4;
+        if (underMatch) {
+            const underDigit = parseInt(underMatch[1], 10);
+            tradeTypeCat = 'digits';
+            tradeType = 'overunder';
+            singleMode = true;
+            singlePurchaseType = 'DIGITUNDER';
+            singlePrediction = underDigit;
+            singleEntryOp = 'GTE';
+            singleEntryThreshold = underDigit;
+        } else if (overMatch) {
+            const overDigit = parseInt(overMatch[1], 10);
+            tradeTypeCat = 'digits';
+            tradeType = 'overunder';
+            singleMode = true;
+            singlePurchaseType = 'DIGITOVER';
+            singlePrediction = overDigit;
+            singleEntryOp = 'LTE';
+            singleEntryThreshold = overDigit;
+        } else if (dir === 'EVEN') {
+            tradeTypeCat = 'digits';
+            tradeType = 'evenodd';
+            singleMode = true;
+            singlePurchaseType = 'DIGITEVEN';
+            singlePrediction = 0;
+            singleEntryOp = 'EQ';
+            singleEntryThreshold = 1;
+        } else if (dir === 'ODD') {
+            tradeTypeCat = 'digits';
+            tradeType = 'evenodd';
+            singleMode = true;
+            singlePurchaseType = 'DIGITODD';
+            singlePrediction = 0;
+            singleEntryOp = 'EQ';
+            singleEntryThreshold = 0;
+        } else if (matchesMatch) {
+            const matchDigit = parseInt(matchesMatch[1], 10);
+            tradeTypeCat = 'digits';
+            tradeType = 'matchesdiffers';
+            singleMode = true;
+            singlePurchaseType = 'DIGITMATCH';
+            singlePrediction = matchDigit;
+            singleEntryOp = 'EQ';
+            singleEntryThreshold = matchDigit;
+        } else if (differsMatch) {
+            const differsDigit = parseInt(differsMatch[1], 10);
+            tradeTypeCat = 'digits';
+            tradeType = 'matchesdiffers';
+            singleMode = true;
+            singlePurchaseType = 'DIGITDIFF';
+            singlePrediction = differsDigit;
+            singleEntryOp = 'NEQ';
+            singleEntryThreshold = differsDigit;
+        } else if (dir === 'RISE') {
+            tradeTypeCat = 'callput';
+            tradeType = 'risefall';
+            singleMode = true;
+            singlePurchaseType = 'CALL';
+            singlePrediction = 0;
+            singleEntryOp = 'GTE';
+            singleEntryThreshold = 5;
+        } else if (dir === 'FALL') {
+            tradeTypeCat = 'callput';
+            tradeType = 'risefall';
+            singleMode = true;
+            singlePurchaseType = 'PUT';
+            singlePrediction = 0;
+            singleEntryOp = 'LTE';
+            singleEntryThreshold = 4;
+        }
+
+        if (entryDigit !== undefined) {
+            if (overMatch || underMatch) {
+                singlePrediction = entryDigit;
+                if (overMatch) {
+                    singleEntryOp = 'LTE';
+                    singleEntryThreshold = entryDigit;
+                } else {
+                    singleEntryOp = 'GTE';
+                    singleEntryThreshold = entryDigit;
+                }
+            } else if (matchesMatch || differsMatch) {
+                singlePrediction = entryDigit;
+                singleEntryThreshold = entryDigit;
+            }
+        }
+    } else {
+        // Fallback manual configurations
+        singleMode = true;
+        const strategy = tradeTypeLabel.toLowerCase().replace(/[\s/]/g, '_');
+        if (strategy.includes('over_under') || strategy.includes('under_7')) {
+            tradeTypeCat = 'digits';
+            tradeType = 'overunder';
+            singlePurchaseType = 'DIGITUNDER';
+            singlePrediction = entryDigit ?? 7;
+            singleEntryOp = 'GTE';
+            singleEntryThreshold = singlePrediction;
+        } else if (strategy.includes('over_2')) {
+            tradeTypeCat = 'digits';
+            tradeType = 'overunder';
+            singlePurchaseType = 'DIGITOVER';
+            singlePrediction = entryDigit ?? 2;
+            singleEntryOp = 'LTE';
+            singleEntryThreshold = singlePrediction;
+        } else if (strategy.includes('even_odd')) {
+            tradeTypeCat = 'digits';
+            tradeType = 'evenodd';
+            singlePurchaseType = 'DIGITEVEN';
+            singlePrediction = 0;
+            singleEntryOp = 'EQ';
+            singleEntryThreshold = 1;
+        } else if (strategy.includes('matches')) {
+            tradeTypeCat = 'digits';
+            tradeType = 'matchesdiffers';
+            singlePurchaseType = 'DIGITMATCH';
+            singlePrediction = entryDigit ?? 5;
+            singleEntryOp = 'EQ';
+            singleEntryThreshold = singlePrediction;
+        } else if (strategy.includes('differs')) {
+            tradeTypeCat = 'digits';
+            tradeType = 'matchesdiffers';
+            singlePurchaseType = 'DIGITDIFF';
+            singlePrediction = entryDigit ?? 5;
+            singleEntryOp = 'NEQ';
+            singleEntryThreshold = singlePrediction;
+        } else if (strategy.includes('rise_fall')) {
+            tradeTypeCat = 'callput';
+            tradeType = 'risefall';
+            singlePurchaseType = 'CALL';
+            singlePrediction = 0;
+            singleEntryOp = 'GTE';
+            singleEntryThreshold = 5;
+        }
     }
 
-    if (entryDigit !== undefined) {
-      if (overMatch || underMatch) {
-        singlePrediction = entryDigit;
-        if (overMatch) { singleEntryOp = 'LTE'; singleEntryThreshold = entryDigit; }
-        else { singleEntryOp = 'GTE'; singleEntryThreshold = entryDigit; }
-      } else if (matchesMatch || differsMatch) {
-        singlePrediction = entryDigit;
-        singleEntryThreshold = entryDigit;
-      }
-    }
-  } else {
-    // Fallback manual configurations
-    singleMode = true;
-    const strategy = tradeTypeLabel.toLowerCase().replace(/[\s/]/g, '_');
-    if (strategy.includes('over_under') || strategy.includes('under_7')) {
-      tradeTypeCat = 'digits'; tradeType = 'overunder';
-      singlePurchaseType = 'DIGITUNDER';
-      singlePrediction = entryDigit ?? 7;
-      singleEntryOp = 'GTE';
-      singleEntryThreshold = singlePrediction;
-    } else if (strategy.includes('over_2')) {
-      tradeTypeCat = 'digits'; tradeType = 'overunder';
-      singlePurchaseType = 'DIGITOVER';
-      singlePrediction = entryDigit ?? 2;
-      singleEntryOp = 'LTE';
-      singleEntryThreshold = singlePrediction;
-    } else if (strategy.includes('even_odd')) {
-      tradeTypeCat = 'digits'; tradeType = 'evenodd';
-      singlePurchaseType = 'DIGITEVEN';
-      singlePrediction = 0;
-      singleEntryOp = 'EQ';
-      singleEntryThreshold = 1;
-    } else if (strategy.includes('matches')) {
-      tradeTypeCat = 'digits'; tradeType = 'matchesdiffers';
-      singlePurchaseType = 'DIGITMATCH';
-      singlePrediction = entryDigit ?? 5;
-      singleEntryOp = 'EQ';
-      singleEntryThreshold = singlePrediction;
-    } else if (strategy.includes('differs')) {
-      tradeTypeCat = 'digits'; tradeType = 'matchesdiffers';
-      singlePurchaseType = 'DIGITDIFF';
-      singlePrediction = entryDigit ?? 5;
-      singleEntryOp = 'NEQ';
-      singleEntryThreshold = singlePrediction;
-    } else if (strategy.includes('rise_fall')) {
-      tradeTypeCat = 'callput'; tradeType = 'risefall';
-      singlePurchaseType = 'CALL';
-      singlePrediction = 0;
-      singleEntryOp = 'GTE';
-      singleEntryThreshold = 5;
-    }
-  }
+    const noPredictionTypes = ['CALL', 'PUT', 'DIGITEVEN', 'DIGITODD'];
+    const hasPrediction = singleMode ? !noPredictionTypes.includes(singlePurchaseType) : true;
+    const predVal = singleMode ? singlePrediction : predictionNum;
 
-  const noPredictionTypes = ['CALL', 'PUT', 'DIGITEVEN', 'DIGITODD'];
-  const hasPrediction = singleMode ? !noPredictionTypes.includes(singlePurchaseType) : true;
-  const predVal = singleMode ? singlePrediction : predictionNum;
+    const isEvenOddParity = singlePurchaseType === 'DIGITEVEN' || singlePurchaseType === 'DIGITODD';
+    const parityRemainder = singlePurchaseType === 'DIGITEVEN' ? 1 : 0;
 
-  const isEvenOddParity = singlePurchaseType === 'DIGITEVEN' || singlePurchaseType === 'DIGITODD';
-  const parityRemainder = singlePurchaseType === 'DIGITEVEN' ? 1 : 0;
+    const altMap = recovery ? mapAltTradeType(recovery.altTradeTypeId) : null;
 
-  const altMap = recovery ? mapAltTradeType(recovery.altTradeTypeId) : null;
-
-  const altPurchaseXml = recovery && altMap ? `
+    const altPurchaseXml =
+        recovery && altMap
+            ? `
       <block type="controls_if" id="bp_rec_if">
         <value name="IF0">
           <block type="variables_get" id="bp_rec_get">
@@ -220,7 +326,9 @@ export function generateBotXML(opts: {
               <block type="logic_compare" id="bp_cmp1">
                 <field name="OP">${isEvenOddParity ? 'EQ' : singleEntryOp}</field>
                 <value name="A">
-                  ${isEvenOddParity ? `<block type="math_arithmetic" id="bp_mod_arith">
+                  ${
+                      isEvenOddParity
+                          ? `<block type="math_arithmetic" id="bp_mod_arith">
                     <field name="OP">MODULO</field>
                     <value name="A">
                       <shadow type="math_number" id="bp_mod_a_sh"><field name="NUM">0</field></shadow>
@@ -230,7 +338,9 @@ export function generateBotXML(opts: {
                       <shadow type="math_number" id="bp_mod_b_sh"><field name="NUM">2</field></shadow>
                       <block type="math_number" id="bp_mod_b"><field name="NUM">2</field></block>
                     </value>
-                  </block>` : `<block type="last_digit" id="bp_ld1"></block>`}
+                  </block>`
+                          : `<block type="last_digit" id="bp_ld1"></block>`
+                  }
                 </value>
                 <value name="B">
                   <block type="math_number" id="bp_mn1">
@@ -246,13 +356,14 @@ export function generateBotXML(opts: {
             </statement>
           </block>
         </statement>
-      </block>` : '';
+      </block>`
+            : '';
 
-  const beforePurchaseStack = recovery
-    ? altPurchaseXml
-    : singleMode
-      ? isEvenOddParity
-        ? `
+    const beforePurchaseStack = recovery
+        ? altPurchaseXml
+        : singleMode
+          ? isEvenOddParity
+              ? `
       <block type="controls_if" id="bp_if1">
         <value name="IF0">
           <block type="logic_compare" id="bp_cmp1">
@@ -283,7 +394,7 @@ export function generateBotXML(opts: {
           </block>
         </statement>
       </block>`
-        : `
+              : `
       <block type="controls_if" id="bp_if1">
         <value name="IF0">
           <block type="logic_compare" id="bp_cmp1">
@@ -304,7 +415,7 @@ export function generateBotXML(opts: {
           </block>
         </statement>
       </block>`
-      : `
+          : `
       <block type="controls_if" id="bp_if1">
         <value name="IF0">
           <block type="logic_compare" id="bp_cmp1">
@@ -326,9 +437,10 @@ export function generateBotXML(opts: {
         </statement>
       </block>`;
 
-  const recLossThreshold = recovery?.lossThreshold ?? 3;
+    const recLossThreshold = recovery?.lossThreshold ?? 3;
 
-  const winRecResetXml = recovery ? `
+    const winRecResetXml = recovery
+        ? `
                         <next>
                           <block type="variables_set" id="ap_win_rec_rst">
                             <field name="VAR" id="v_rec_mode">Recovery Mode</field>
@@ -336,13 +448,17 @@ export function generateBotXML(opts: {
                               <block type="logic_boolean" id="lb_win_rec">
                                 <field name="BOOL">FALSE</field>
                               </block>
-                            </value>` : '';
+                            </value>`
+        : '';
 
-  const winRecCloseXml = recovery ? `
+    const winRecCloseXml = recovery
+        ? `
                           </block>
-                        </next>` : '';
+                        </next>`
+        : '';
 
-  const lossRecCheckXml = recovery ? `
+    const lossRecCheckXml = recovery
+        ? `
                         <next>
                           <block type="controls_if" id="ap_loss_rec_chk">
                             <value name="IF0">
@@ -369,14 +485,17 @@ export function generateBotXML(opts: {
                                   </block>
                                 </value>
                               </block>
-                            </statement>` : '';
+                            </statement>`
+        : '';
 
-  const lossRecCloseXml = recovery ? `
+    const lossRecCloseXml = recovery
+        ? `
                           </block>
-                        </next>` : '';
+                        </next>`
+        : '';
 
-  const afterPurchaseWinLoss = singleMode
-    ? `
+    const afterPurchaseWinLoss = singleMode
+        ? `
               <block type="controls_if" id="ap_wl">
                 <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
                 <value name="IF0">
@@ -447,7 +566,7 @@ export function generateBotXML(opts: {
                   </block>
                 </statement>
               </block>`
-    : `
+        : `
               <block type="controls_if" id="ap_wl">
                 <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
                 <value name="IF0">
@@ -519,14 +638,15 @@ export function generateBotXML(opts: {
                 </statement>
               </block>`;
 
-  const extraVars = singleMode
-    ? ''
-    : `
+    const extraVars = singleMode
+        ? ''
+        : `
     <variable id="v_pred">Prediction</variable>
     <variable id="v_under_digit">Under Digit</variable>
     <variable id="v_over_digit">Over Digit</variable>`;
 
-  const recoveryInitXml = recovery ? `
+    const recoveryInitXml = recovery
+        ? `
                                 <next>
                                   <block type="variables_set" id="vs_rec_mode">
                                     <field name="VAR" id="v_rec_mode">Recovery Mode</field>
@@ -536,10 +656,12 @@ export function generateBotXML(opts: {
                                       </block>
                                     </value>
                                   </block>
-                                </next>` : '';
+                                </next>`
+        : '';
 
-  const extraInit = singleMode
-    ? recovery ? `
+    const extraInit = singleMode
+        ? recovery
+            ? `
                         <next>
                           <block type="variables_set" id="vs_rec_mode">
                             <field name="VAR" id="v_rec_mode">Recovery Mode</field>
@@ -549,8 +671,9 @@ export function generateBotXML(opts: {
                               </block>
                             </value>
                           </block>
-                        </next>` : ''
-    : `
+                        </next>`
+            : ''
+        : `
                         <next>
                           <block type="variables_set" id="vs_under">
                             <field name="VAR" id="v_under_digit">Under Digit</field>
@@ -582,16 +705,16 @@ export function generateBotXML(opts: {
                           </block>
                         </next>`;
 
-  const predictionBlock = hasPrediction
-    ? `
+    const predictionBlock = hasPrediction
+        ? `
         <value name="PREDICTION">
           <block type="math_number_positive" id="pred_block">
             <field name="NUM">${predVal}</field>
           </block>
         </value>`
-    : '';
+        : '';
 
-  return `<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+    return `<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
   <variables>
     <variable id="v_stake">Stake</variable>
     <variable id="v_init_stake">Initial Stake</variable>

@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useHistory } from 'withRouterShim';
 import { Div100vhContainer, PageOverlay, SwipeableWrapper, FadeWrapper } from '@deriv/components';
 import {
     getContractTypeFeatureFlag,

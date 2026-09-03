@@ -107,8 +107,74 @@ export const standalone_routes = {
     signup: `${getDerivDomain('derivHome')}/dashboard/signup`,
     deriv_com: getDerivDomain('derivCom'),
     deriv_app: `${getDerivDomain('derivHome')}/dashboard/home`,
-    account_limits: `${getDerivDomain('derivDtrader')}/account/account-limits`,
-    help_center: `${getDerivDomain('derivCom')}/help-centre/`,
-    responsible: `${getDerivDomain('derivCom')}/responsible/`,
-    transfer: `${getDerivDomain('derivHome')}/dashboard/transfer?acc=options&from=home&source=options`,
+};
+
+export const routes = {
+    callback_page: '/callback',
+    reset_password: '/',
+    error404: '/404',
+    index: '/index',
+    redirect: '/redirect',
+    endpoint: '/endpoint',
+    complaints_policy: '/complaints-policy',
+    contract: '/contract/:contract_id',
+
+    // platforms
+    mt5: '/mt5',
+    dxtrade: '/derivx',
+    bot: '/bot',
+    trade: '/dtrader',
+    trader_positions: '/dtrader/positions',
+    smarttrader: 'https://smarttrader.deriv.com',
+
+    // account
+    account: '/account',
+    trading_assessment: '/account/trading-assessment',
+    languages: '/account/languages',
+    financial_assessment: '/account/financial-assessment',
+    personal_details: '/account/personal-details',
+    proof_of_identity: '/account/proof-of-identity',
+    proof_of_address: '/account/proof-of-address',
+    proof_of_ownership: '/account/proof-of-ownership',
+    proof_of_income: '/account/proof-of-income',
+    passwords: '/account/passwords',
+    passkeys: '/account/passkeys',
+    phone_verification: '/account/personal-details/phone-verification',
+    closing_account: '/account/closing-account',
+    deactivate_account: '/account/deactivate-account',
+    account_closed: '/account-closed',
+    account_limits: '/account/account-limits',
+    connected_apps: '/account/connected-apps',
+    api_token: '/account/api-token',
+    login_history: '/account/login-history',
+    two_factor_authentication: '/account/two-factor-authentication',
+    self_exclusion: '/account/self-exclusion',
+
+    // settings
+    settings: '/settings',
+    account_password: '/settings/account_password',
+    apps: '/settings/apps',
+
+    // reports
+    reports: '/reports',
+    positions: '/reports/positions',
+    profit: '/reports/profit',
+    statement: '/reports/statement',
+
+    // cashier
+    cashier: '/cashier',
+    cashier_deposit: '/cashier/deposit',
+    cashier_withdrawal: '/cashier/withdrawal',
+    cashier_pa: '/cashier/payment-agent',
+    cashier_acc_transfer: '/cashier/account-transfer',
+    cashier_pa_transfer: '/cashier/payment-agent-transfer',
+    cashier_p2p: '/cashier/p2p',
+    cashier_onramp: '/cashier/on-ramp',
+    cashier_p2p_verification: '/cashier/p2p/verification',
+    wallets_transfer: '/wallet/account-transfer',
+    wallets_deposit: '/wallet/deposit',
+    wallets_withdrawal: '/wallet/withdrawal',
+    wallets_transactions: '/wallet/transactions',
+
+    root: '/',
 };

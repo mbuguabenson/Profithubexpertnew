@@ -31,7 +31,11 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         if (!iframe) return;
 
         const iframeOrigin = (() => {
-            try { return new URL(src).origin; } catch { return '*'; }
+            try {
+                return new URL(src).origin;
+            } catch {
+                return '*';
+            }
         })();
 
         const allowedOrigins = [
@@ -76,8 +80,7 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         // Third-party bot event handling (Hyperbot, Diffbot, etc.)
         const handleMessage = (event: MessageEvent) => {
             const isAllowed =
-                allowedOrigins.includes(event.origin) ||
-                /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
+                allowedOrigins.includes(event.origin) || /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
             if (!isAllowed) return;
             if (!event.data) return;
 
@@ -99,7 +102,8 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                                 buy: tradeData.transaction_id || tradeData.buy_transaction_id,
                                 sell: tradeData.sell_transaction_id || tradeData.transaction_ids?.sell,
                             },
-                            buy_price: tradeData.buy_price || tradeData.price || tradeData.stake || tradeData.amount || 0,
+                            buy_price:
+                                tradeData.buy_price || tradeData.price || tradeData.stake || tradeData.amount || 0,
                             currency: tradeData.currency || client?.currency || 'USD',
                             contract_type:
                                 tradeData.contract_type ||
@@ -214,7 +218,14 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
                     }}
                 >
                     <p style={{ fontWeight: 'bold', marginBottom: '1rem' }}>Failed to load {title}</p>
-                    <p style={{ fontSize: '1rem', marginTop: '1rem', color: 'var(--text-less-prominent)', marginBottom: '1.5rem' }}>
+                    <p
+                        style={{
+                            fontSize: '1rem',
+                            marginTop: '1rem',
+                            color: 'var(--text-less-prominent)',
+                            marginBottom: '1.5rem',
+                        }}
+                    >
                         The external site may be blocking iframe embedding.
                     </p>
                     <a

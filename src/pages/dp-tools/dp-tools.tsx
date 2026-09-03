@@ -8,13 +8,13 @@ const LEGACY_APP_ID = '134249';
 
 const DpTools: React.FC = observer(() => {
     const { client } = useStore() ?? {};
-    
+
     const token = V2GetActiveToken() || (client as any)?.token || localStorage.getItem('token') || '';
     const loginid = V2GetActiveAccountId() || client?.loginid || localStorage.getItem('active_loginid') || '';
 
     const baseUrl = 'https://xenontool.netlify.app/';
     const params = new URLSearchParams();
-    
+
     // Do NOT include legacy tokens or login ids in the iframe URL querystring.
     // Auth and session data are sent securely via the iframe bridge (postMessage).
     params.set('app_id', LEGACY_APP_ID);
@@ -23,14 +23,7 @@ const DpTools: React.FC = observer(() => {
 
     const dpToolsUrl = `${baseUrl}?${params.toString()}`;
 
-    return (
-        <IframeWrapper
-            src={dpToolsUrl}
-            title='Bot Analysis Tool'
-            className='dp-tools-container'
-        />
-    );
+    return <IframeWrapper src={dpToolsUrl} title='Bot Analysis Tool' className='dp-tools-container' />;
 });
 
 export default DpTools;
-

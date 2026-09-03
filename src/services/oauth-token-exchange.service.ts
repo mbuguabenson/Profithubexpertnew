@@ -85,7 +85,8 @@ export class OAuthTokenExchangeService {
 
             if (isExpired && !authInfo.refresh_token) {
                 // If legacy tokens or active account exist, do not abruptly destroy session
-                const hasLegacyAccount = !!localStorage.getItem('accountsList') || !!localStorage.getItem('active_loginid');
+                const hasLegacyAccount =
+                    !!localStorage.getItem('accountsList') || !!localStorage.getItem('active_loginid');
                 if (!hasLegacyAccount) {
                     this.clearAuthInfo();
                     return null;

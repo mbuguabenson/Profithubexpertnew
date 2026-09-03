@@ -10,3 +10,6 @@ export * from './market-underlying';
 export * from './portfolio-notifications';
 export * from './start-date';
 export * from './validation-rules';
+export * from './dtrader-v2-helpers';
+export * from './chart-barrier-store';
+export * from './limit-orders';

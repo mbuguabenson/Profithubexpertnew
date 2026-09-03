@@ -50,7 +50,10 @@ export default Engine =>
                 this.sessionProfit = getRoundedNumber(Number(this.sessionProfit) + Number(profit), currency);
                 accountStat.totalProfit = getRoundedNumber(Number(accountStat.totalProfit) + Number(profit), currency);
                 accountStat.totalStake = getRoundedNumber(Number(accountStat.totalStake) + Number(buyPrice), currency);
-                accountStat.totalPayout = getRoundedNumber(Number(accountStat.totalPayout) + Number(sellPrice), currency);
+                accountStat.totalPayout = getRoundedNumber(
+                    Number(accountStat.totalPayout) + Number(sellPrice),
+                    currency
+                );
 
                 info({
                     profit,
@@ -93,7 +96,8 @@ export default Engine =>
                         '1HZ90V',
                         '1HZ100V',
                     ];
-                    const currentSymbol = (this.tradeOptions && this.tradeOptions.symbol) || this.options?.symbol || 'R_100';
+                    const currentSymbol =
+                        (this.tradeOptions && this.tradeOptions.symbol) || this.options?.symbol || 'R_100';
                     const idx = availableSymbols.indexOf(currentSymbol);
                     const nextSymbol = availableSymbols[(idx + 1) % availableSymbols.length];
 

@@ -55,28 +55,44 @@ export const TopBarTradeController: React.FC<TopBarTradeControllerProps> = ({ cu
         // 2. DOM fallback trigger in case page hasn't mounted listener yet
         setTimeout(() => {
             if (normalizedTab === 'elite_pro') {
-                const btn = document.querySelector('.ep-btn--start, .ep-btn--stop, button[data-testid="elite_pro_toggle"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.ep-btn--start, .ep-btn--stop, button[data-testid="elite_pro_toggle"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             } else if (normalizedTab === 'poverty_hunter') {
-                const btn = document.querySelector('.ph-btn--start, .ph-btn--stop, button[data-testid="poverty_hunter_toggle"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.ph-btn--start, .ph-btn--stop, button[data-testid="poverty_hunter_toggle"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             } else if (normalizedTab === 'auto_x_eo') {
-                const btn = document.querySelector('.btn-start-auto, .btn-stop-auto, button[data-testid="auto_x_eo_toggle"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.btn-start-auto, .btn-stop-auto, button[data-testid="auto_x_eo_toggle"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             } else if (normalizedTab === 'marketkiller') {
-                const btn = document.querySelector('.strike-btn, .mkill-btn, button[data-testid="marketkiller_strike"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.strike-btn, .mkill-btn, button[data-testid="marketkiller_strike"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             } else if (normalizedTab === 'market_hunter_pro') {
-                const btn = document.querySelector('.mhp-auto-btn, .proai-btn-load, button[data-testid="market_hunter_start"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.mhp-auto-btn, .proai-btn-load, button[data-testid="market_hunter_start"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             } else if (normalizedTab === 'ai_trading_engine') {
-                const btn = document.querySelector('.entry-scanner-start, .ai-engine-run-btn, button[data-testid="ai_engine_start"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.entry-scanner-start, .ai-engine-run-btn, button[data-testid="ai_engine_start"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             } else if (normalizedTab === 'scanner') {
-                const btn = document.querySelector('.scanner-auto-btn, .scanner-run-btn, button[data-testid="scanner_start"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.scanner-auto-btn, .scanner-run-btn, button[data-testid="scanner_start"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             } else if (normalizedTab === 'manual_trading') {
-                const btn = document.querySelector('.manual-trade-btn, .smart-trading-buy, button[data-testid="manual_trade_buy"]') as HTMLElement;
+                const btn = document.querySelector(
+                    '.manual-trade-btn, .smart-trading-buy, button[data-testid="manual_trade_buy"]'
+                ) as HTMLElement;
                 if (btn) btn.click();
             }
         }, 10);
@@ -161,28 +177,28 @@ export const TopBarTradeController: React.FC<TopBarTradeControllerProps> = ({ cu
     const isRunning = Boolean(currentStatus.isRunning);
 
     return (
-        <div className="topbar-trade-controller">
+        <div className='topbar-trade-controller'>
             <button
                 className={`topbar-trade-btn ${isRunning ? 'topbar-trade-btn--running' : 'topbar-trade-btn--idle'}`}
                 onClick={handleTriggerAction}
                 title={`${isRunning ? 'Stop' : 'Start'} ${tabConfig.name}`}
             >
-                <div className="topbar-trade-btn__pulse" />
-                <div className="topbar-trade-btn__icon-box">
+                <div className='topbar-trade-btn__pulse' />
+                <div className='topbar-trade-btn__icon-box'>
                     {isRunning ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="4" y="4" width="16" height="16" rx="3" />
+                        <svg width='14' height='14' viewBox='0 0 24 24' fill='currentColor'>
+                            <rect x='4' y='4' width='16' height='16' rx='3' />
                         </svg>
                     ) : (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3" />
+                        <svg width='14' height='14' viewBox='0 0 24 24' fill='currentColor'>
+                            <polygon points='5 3 19 12 5 21 5 3' />
                         </svg>
                     )}
                 </div>
-                <span className="topbar-trade-btn__label">
+                <span className='topbar-trade-btn__label'>
                     {isRunning ? tabConfig.stopLabel : tabConfig.startLabel}
                 </span>
-                <span className="topbar-trade-btn__tag">{tabConfig.icon}</span>
+                <span className='topbar-trade-btn__tag'>{tabConfig.icon}</span>
             </button>
         </div>
     );

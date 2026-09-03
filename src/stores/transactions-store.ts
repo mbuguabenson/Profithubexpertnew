@@ -108,7 +108,9 @@ export default class TransactionsStore {
             run_id,
             date_start: formatDate(data.date_start, 'YYYY-M-D HH:mm:ss [GMT]'),
             entry_tick: data.entry_spot ?? undefined,
-            entry_tick_time: data.entry_tick_time ? formatDate(data.entry_tick_time, 'YYYY-M-D HH:mm:ss [GMT]') : undefined,
+            entry_tick_time: data.entry_tick_time
+                ? formatDate(data.entry_tick_time, 'YYYY-M-D HH:mm:ss [GMT]')
+                : undefined,
             exit_tick: (data as any).exit_spot ?? data.exit_tick ?? undefined,
             exit_tick_time: data.exit_tick_time && formatDate(data.exit_tick_time, 'YYYY-M-D HH:mm:ss [GMT]'),
             profit: is_completed ? data.profit : 0,
@@ -128,7 +130,8 @@ export default class TransactionsStore {
         const same_contract_index = account_elements.findIndex(c => {
             if (typeof c.data === 'string' || c.type !== transaction_elements.CONTRACT) return false;
             const cData = c.data as TContractInfo;
-            const existing_contract_id = (cData as any).contract_id || (cData as any).id || (cData as any).transaction_id;
+            const existing_contract_id =
+                (cData as any).contract_id || (cData as any).id || (cData as any).transaction_id;
             const existing_buy_id = cData.transaction_ids?.buy;
 
             if (incoming_contract_id && existing_contract_id) {
@@ -186,7 +189,7 @@ export default class TransactionsStore {
         } else {
             // Update existing contract data in-place
             const existing = account_elements[same_contract_index];
-            const existingData = typeof existing.data === 'object' ? existing.data as TContractInfo : null;
+            const existingData = typeof existing.data === 'object' ? (existing.data as TContractInfo) : null;
             const wasAlreadyCompleted = existingData?.is_completed;
 
             account_elements[same_contract_index] = {
@@ -246,7 +249,9 @@ export default class TransactionsStore {
                 if (storageDebounceTimer) clearTimeout(storageDebounceTimer);
                 storageDebounceTimer = setTimeout(() => {
                     const stored_transactions = getStoredItemsByKey(this.TRANSACTION_CACHE, {});
-                    stored_transactions[client.loginid as string] = (this.elements[client?.loginid as string] ?? []).slice(0, 200);
+                    stored_transactions[client.loginid as string] = (
+                        this.elements[client?.loginid as string] ?? []
+                    ).slice(0, 200);
                     setStoredItemsByKey(this.TRANSACTION_CACHE, stored_transactions);
                 }, 500);
             }

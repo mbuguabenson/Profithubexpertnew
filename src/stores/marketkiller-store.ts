@@ -35,10 +35,19 @@ export default class MarketkillerStore {
     @observable accessor live_market_ribbon: TMarketState[] = [];
 
     // Digit Analytics (0-9)
-    @observable accessor digit_stats: { digit: number; count: number; percentage: number; rank: number; is_increasing: boolean }[] = Array.from(
-        { length: 10 },
-        (_, i) => ({ digit: i, count: 0, percentage: 0, rank: i + 1, is_increasing: false })
-    );
+    @observable accessor digit_stats: {
+        digit: number;
+        count: number;
+        percentage: number;
+        rank: number;
+        is_increasing: boolean;
+    }[] = Array.from({ length: 10 }, (_, i) => ({
+        digit: i,
+        count: 0,
+        percentage: 0,
+        rank: i + 1,
+        is_increasing: false,
+    }));
     @observable accessor digit_power_scores: number[] = Array(10).fill(0);
 
     // Global Execution State
@@ -118,7 +127,11 @@ export default class MarketkillerStore {
         // Deriv rejects with { error: { code, message } }
         if (e?.error?.message) return `[${e.error.code}] ${e.error.message}`;
         if (e?.message) return e.message;
-        try { return JSON.stringify(e); } catch { return String(e); }
+        try {
+            return JSON.stringify(e);
+        } catch {
+            return String(e);
+        }
     };
 
     /**
@@ -137,7 +150,8 @@ export default class MarketkillerStore {
 
         let buyRes: any;
         try {
-            const rawBarrier = config.barrier !== undefined && config.barrier !== null ? config.barrier : config.prediction;
+            const rawBarrier =
+                config.barrier !== undefined && config.barrier !== null ? config.barrier : config.prediction;
             const currency = this.root_store?.client?.currency || 'USD';
             const parameters: Record<string, any> = {
                 amount: safeStake,
@@ -159,7 +173,10 @@ export default class MarketkillerStore {
             });
         } catch (e: any) {
             const msg = this.extractErrorMsg(e);
-            const isRateLimit = msg.includes('429') || msg.toLowerCase().includes('ratelimit') || msg.toLowerCase().includes('rate limit');
+            const isRateLimit =
+                msg.includes('429') ||
+                msg.toLowerCase().includes('ratelimit') ||
+                msg.toLowerCase().includes('rate limit');
             if (isRateLimit && attempt < this.MAX_RETRIES) {
                 const backoff = (attempt + 1) * 700;
                 console.warn(`[Marketkiller] Buy rate-limited for digit ${config.barrier}. Retrying in ${backoff}ms`);
@@ -192,9 +209,25 @@ export default class MarketkillerStore {
 
         // Initial ribbon markets - covering all core volatility and jump indices
         const initialMarkets = [
-            'R_10', '1HZ10V', 'R_25', '1HZ25V', 'R_50', '1HZ50V',
-            'R_75', '1HZ75V', 'R_100', '1HZ100V', '1HZ150V', '1HZ200V',
-            '1HZ250V', '1HZ300V', 'JD10', 'JD25', 'JD50', 'JD75', 'JD100'
+            'R_10',
+            '1HZ10V',
+            'R_25',
+            '1HZ25V',
+            'R_50',
+            '1HZ50V',
+            'R_75',
+            '1HZ75V',
+            'R_100',
+            '1HZ100V',
+            '1HZ150V',
+            '1HZ200V',
+            '1HZ250V',
+            '1HZ300V',
+            'JD10',
+            'JD25',
+            'JD50',
+            'JD75',
+            'JD100',
         ];
         initialMarkets.forEach(sym => {
             this.live_market_ribbon.push({ symbol: sym, price: '0.00', digit: null, is_up: true });
@@ -296,7 +329,9 @@ export default class MarketkillerStore {
         if (this.tick_subscription) {
             try {
                 await api_base.api.send({ forget: this.tick_subscription });
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+                /* ignore */
+            }
             this.tick_subscription = null;
         }
 
@@ -304,7 +339,9 @@ export default class MarketkillerStore {
         if (this.tick_listener_sub) {
             try {
                 this.tick_listener_sub.unsubscribe();
-            } catch(e) { /* ignore */ }
+            } catch (e) {
+                /* ignore */
+            }
             this.tick_listener_sub = null;
         }
 
@@ -332,10 +369,12 @@ export default class MarketkillerStore {
 
                 if (response?.history?.prices && Array.isArray(response.history.prices)) {
                     const prices: number[] = response.history.prices;
-                    const digits = prices.map(p => {
-                        const priceStr = parseFloat(String(p)).toFixed(2);
-                        return parseInt(priceStr.slice(-1), 10);
-                    }).filter(d => !isNaN(d));
+                    const digits = prices
+                        .map(p => {
+                            const priceStr = parseFloat(String(p)).toFixed(2);
+                            return parseInt(priceStr.slice(-1), 10);
+                        })
+                        .filter(d => !isNaN(d));
 
                     runInAction(() => {
                         this.ticks = digits.slice(-120);
@@ -343,7 +382,10 @@ export default class MarketkillerStore {
                             const lastPrice = prices[prices.length - 1];
                             this.current_price = parseFloat(String(lastPrice)).toFixed(2);
                             this.last_digit = parseInt(this.current_price.slice(-1), 10);
-                            this.stats_engine.updateWithHistory(this.ticks.slice(-this.matches_settings.check_ticks), parseFloat(String(this.current_price)));
+                            this.stats_engine.updateWithHistory(
+                                this.ticks.slice(-this.matches_settings.check_ticks),
+                                parseFloat(String(this.current_price))
+                            );
                             this.updateDigitAnalytics();
                         }
                     });
@@ -429,7 +471,10 @@ export default class MarketkillerStore {
             this.ticks = [...this.ticks, last_digit].slice(-120);
 
             // Feed DigitStatsEngine
-            this.stats_engine.updateWithHistory(this.ticks.slice(-this.matches_settings.check_ticks), parseFloat(String(this.current_price)));
+            this.stats_engine.updateWithHistory(
+                this.ticks.slice(-this.matches_settings.check_ticks),
+                parseFloat(String(this.current_price))
+            );
 
             // Track recent power scores for Rule 3
             const currentPowers = this.stats_engine.digit_stats.map(s => s.power);
@@ -539,7 +584,13 @@ export default class MarketkillerStore {
         this.executeConcurrentTrades(tradesToExecute);
         runInAction(() => {
             this.signal_detected = true;
-            setTimeout(() => runInAction(() => { this.signal_detected = false; }), 2000);
+            setTimeout(
+                () =>
+                    runInAction(() => {
+                        this.signal_detected = false;
+                    }),
+                2000
+            );
         });
         // Halt to prevent rapid-fire while evaluating execution resolution
         this.is_running = false;
@@ -554,14 +605,16 @@ export default class MarketkillerStore {
         if (most === null || second === null || least === null) return;
 
         const enabled = this.matches_settings.enabled_conditions;
-        
+
         // Use sorted digits by count for Auto-Discovery
         const sortedDigits = [...this.digit_stats].sort((a, b) => b.count - a.count).map(s => s.digit);
-        
+
         // Strictly map to simultaneous_trades, using 0 as fallback for unedited manual slots
-        const final_targets: number[] = this.matches_settings.is_auto 
+        const final_targets: number[] = this.matches_settings.is_auto
             ? sortedDigits.slice(0, this.matches_settings.simultaneous_trades || 1)
-            : Array.from({ length: this.matches_settings.simultaneous_trades || 1 }).map((_, i) => this.matches_settings.predictions[i] ?? 0);
+            : Array.from({ length: this.matches_settings.simultaneous_trades || 1 }).map(
+                  (_, i) => this.matches_settings.predictions[i] ?? 0
+              );
 
         const shouldTradeDigit = (digit: number) => {
             const stat = this.digit_stats.find(s => s.digit === digit);
@@ -622,13 +675,19 @@ export default class MarketkillerStore {
 
             console.log(`[Marketkiller] Placing ${trades.length} simultaneous trades for digits:`, valid_targets);
             this.executeConcurrentTrades(trades);
-            
+
             runInAction(() => {
                 this.signal_detected = true;
-                setTimeout(() => runInAction(() => { this.signal_detected = false; }), 2000);
+                setTimeout(
+                    () =>
+                        runInAction(() => {
+                            this.signal_detected = false;
+                        }),
+                    2000
+                );
             });
 
-            // If NOT in auto-mode, shut down engine after one burst. 
+            // If NOT in auto-mode, shut down engine after one burst.
             // In AUTO-MODE, we keep it running but rely on is_executing to prevent overlaps.
             if (!this.matches_settings.is_auto) {
                 this.is_running = false;
@@ -647,9 +706,14 @@ export default class MarketkillerStore {
     @action
     private executeConcurrentTrades = async (tradeConfigs: any[]) => {
         if (tradeConfigs.length === 0) return;
-        runInAction(() => { this.is_executing = true; });
+        runInAction(() => {
+            this.is_executing = true;
+        });
 
-        console.log(`[Marketkiller] ⚡ Atomic burst: ${tradeConfigs.length} trade(s) — digits:`, tradeConfigs.map(c => c.barrier));
+        console.log(
+            `[Marketkiller] ⚡ Atomic burst: ${tradeConfigs.length} trade(s) — digits:`,
+            tradeConfigs.map(c => c.barrier)
+        );
 
         // ── ZERO-GAP SYNCHRONOUS FIRE ─────────────────────────────────────────
         // All api.send() calls are started in a plain synchronous .map() loop
@@ -659,7 +723,8 @@ export default class MarketkillerStore {
         // contracts open on the same entry tick → same entry AND exit spot.
         const sendPromises: Promise<any>[] = tradeConfigs.map(config => {
             const safeStake = Number(Math.max(config.stake || 0.35, 0.35).toFixed(2));
-            const rawBarrier = config.barrier !== undefined && config.barrier !== null ? config.barrier : config.prediction;
+            const rawBarrier =
+                config.barrier !== undefined && config.barrier !== null ? config.barrier : config.prediction;
             const currency = this.root_store?.client?.currency || 'USD';
             const parameters: Record<string, any> = {
                 amount: safeStake,
@@ -697,7 +762,9 @@ export default class MarketkillerStore {
                     console.warn(`[Marketkiller] ❌ Digit ${tradeConfigs[i]?.barrier}: no contract_id`, trade);
                     return;
                 }
-                console.log(`[Marketkiller] ✅ Digit ${tradeConfigs[i]?.barrier} confirmed | Contract ${trade.buy.contract_id}`);
+                console.log(
+                    `[Marketkiller] ✅ Digit ${tradeConfigs[i]?.barrier} confirmed | Contract ${trade.buy.contract_id}`
+                );
                 successfulTrades.push({ trade, config: tradeConfigs[i] });
             } else {
                 const msg = this.extractErrorMsg(result.reason);
@@ -705,7 +772,9 @@ export default class MarketkillerStore {
             }
         });
 
-        console.log(`[Marketkiller] Burst complete: ${successfulTrades.length}/${tradeConfigs.length} confirmed on same tick.`);
+        console.log(
+            `[Marketkiller] Burst complete: ${successfulTrades.length}/${tradeConfigs.length} confirmed on same tick.`
+        );
 
         // ── Journal & Settlement Tracking ─────────────────────────────────────
         successfulTrades.forEach(({ trade, config }) => {
@@ -730,11 +799,7 @@ export default class MarketkillerStore {
             const sub = api_base.api.onMessage().subscribe((res: any) => {
                 const data = res?.data || res;
                 const poc = data?.proposal_open_contract;
-                if (
-                    data?.msg_type === 'proposal_open_contract' &&
-                    poc?.contract_id === contractId &&
-                    poc?.is_sold
-                ) {
+                if (data?.msg_type === 'proposal_open_contract' && poc?.contract_id === contractId && poc?.is_sold) {
                     runInAction(() => {
                         if (poc.status === 'won') {
                             this.wins++;
@@ -748,28 +813,36 @@ export default class MarketkillerStore {
                         const jIdx = this.trades_journal.findIndex(j => j.id === contractId);
                         if (jIdx !== -1) {
                             this.trades_journal[jIdx].status = poc.status.toUpperCase();
-                            this.trades_journal[jIdx].exit   = poc.exit_tick_display_value  ?? poc.exit_tick;
-                            this.trades_journal[jIdx].entry  = poc.entry_tick_display_value ?? poc.entry_tick;
+                            this.trades_journal[jIdx].exit = poc.exit_tick_display_value ?? poc.exit_tick;
+                            this.trades_journal[jIdx].entry = poc.entry_tick_display_value ?? poc.entry_tick;
                             this.trades_journal[jIdx].profit = poc.profit;
                         }
                     });
-                    try { sub.unsubscribe(); } catch (_) { /* ignore */ }
+                    try {
+                        sub.unsubscribe();
+                    } catch (_) {
+                        /* ignore */
+                    }
                 }
             });
 
-            api_base.api.send({
-                proposal_open_contract: 1,
-                contract_id: contractId,
-                subscribe: 1,
-            }).catch((e: any) => {
-                console.warn(`[Marketkiller] POC subscribe failed for ${contractId}:`, e?.error?.message || e);
-            });
+            api_base.api
+                .send({
+                    proposal_open_contract: 1,
+                    contract_id: contractId,
+                    subscribe: 1,
+                })
+                .catch((e: any) => {
+                    console.warn(`[Marketkiller] POC subscribe failed for ${contractId}:`, e?.error?.message || e);
+                });
         });
 
         // Release execution lock after trades are initiated and settled (or timeout)
         // We wait a small buffer to ensure the socket isn't flooded and ticks have progressed.
         setTimeout(() => {
-            runInAction(() => { this.is_executing = false; });
+            runInAction(() => {
+                this.is_executing = false;
+            });
         }, 1500);
     };
 
@@ -787,11 +860,13 @@ export default class MarketkillerStore {
     @action
     public executeOneShot = async () => {
         const sortedDigits = [...this.digit_stats].sort((a, b) => b.count - a.count).map(s => s.digit);
-        
+
         // Ensure we fetch EXACTLY the number of active slots chosen by the user. Unedited slots will default to '0'.
-        const targets: number[] = this.matches_settings.is_auto 
+        const targets: number[] = this.matches_settings.is_auto
             ? sortedDigits.slice(0, this.matches_settings.simultaneous_trades || 1)
-            : Array.from({ length: this.matches_settings.simultaneous_trades || 1 }).map((_, i) => this.matches_settings.predictions[i] ?? 0);
+            : Array.from({ length: this.matches_settings.simultaneous_trades || 1 }).map(
+                  (_, i) => this.matches_settings.predictions[i] ?? 0
+              );
 
         if (targets.length === 0) return;
 

@@ -319,7 +319,11 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition_multipli
             'AMOUNT',
             window.Blockly.JavaScript.javascriptGenerator.ORDER_ATOMIC
         ) || '0';
-    const currency = DBotStore.instance?.client?.currency || localStorage.getItem('currency') || localStorage.getItem('active_currency') || 'USD';
+    const currency =
+        DBotStore.instance?.client?.currency ||
+        localStorage.getItem('currency') ||
+        localStorage.getItem('active_currency') ||
+        'USD';
     const { setContractUpdateConfig } = DBotStore.instance;
     const multiplier_value = block.getFieldValue('MULTIPLIERTYPE_LIST') || '1';
     const stop_loss =

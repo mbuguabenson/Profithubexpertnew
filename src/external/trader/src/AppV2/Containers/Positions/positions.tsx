@@ -9,7 +9,7 @@ import { useModulesStore } from 'Stores/useModulesStores';
 import { setPositionURLParams, TAB_NAME } from 'AppV2/Utils/positions-utils';
 import BottomNav from 'AppV2/Components/BottomNav';
 import PositionsContent from './positions-content';
-import { useHistory } from 'react-router-dom';
+import { useHistory } from '../../../withRouterShim';
 import OnboardingGuide from 'AppV2/Components/OnboardingGuide/GuideForPages';
 
 const Positions = observer(() => {

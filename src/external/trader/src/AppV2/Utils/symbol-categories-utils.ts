@@ -50,28 +50,34 @@ export const categorizeSymbols = (symbols: ActiveSymbols): Record<string, Market
             const submarkets = categorizedSymbols[market].subgroups[subgroup].submarkets;
             const sortedSubmarkets = Object.entries(submarkets)
                 .sort(([, a], [, b]) => a.submarket_display_name.localeCompare(b.submarket_display_name))
-                .reduce((sortedAcc, [key, value]) => {
-                    sortedAcc[key] = value;
-                    return sortedAcc;
-                }, {} as Record<string, SubmarketGroup>);
+                .reduce(
+                    (sortedAcc, [key, value]) => {
+                        sortedAcc[key] = value;
+                        return sortedAcc;
+                    },
+                    {} as Record<string, SubmarketGroup>
+                );
             categorizedSymbols[market].subgroups[subgroup].submarkets = sortedSubmarkets;
         });
     });
 
     //format the all submarkets into a single subgroup objects, renaming keys, and subgroup_display_name if they are 'none'
-    const allCategory = Object.values(categorizedSymbols).reduce((result, item) => {
-        Object.keys(item.subgroups).forEach(key => {
-            const newKey = key === 'none' ? item.market : key;
-            const newName = key === 'none' ? item.market_display_name : item.subgroups[key].subgroup_display_name;
+    const allCategory = Object.values(categorizedSymbols).reduce(
+        (result, item) => {
+            Object.keys(item.subgroups).forEach(key => {
+                const newKey = key === 'none' ? item.market : key;
+                const newName = key === 'none' ? item.market_display_name : item.subgroups[key].subgroup_display_name;
 
-            result[newKey] = {
-                subgroup_display_name: newName,
-                submarkets: item.subgroups[key].submarkets,
-            };
-        });
+                result[newKey] = {
+                    subgroup_display_name: newName,
+                    submarkets: item.subgroups[key].submarkets,
+                };
+            });
 
-        return result;
-    }, {} as Record<string, SubgroupGroup>);
+            return result;
+        },
+        {} as Record<string, SubgroupGroup>
+    );
 
     // Assign a new category called 'all' with the same data shape as the rest of the categories for rendering
     categorizedSymbols = {

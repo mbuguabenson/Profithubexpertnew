@@ -158,7 +158,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background-color 0.2s ease-out, transform 0.1s ease-out;
+            transition:
+                background-color 0.2s ease-out,
+                transform 0.1s ease-out;
 
             &--selected {
                 background-color: var(--general-main-2);
@@ -369,7 +371,9 @@
             width: 5px;
             height: 5px;
             position: absolute;
-            transition: transform 0.5s ease, opacity 0.5s linear 0.5s;
+            transition:
+                transform 0.5s ease,
+                opacity 0.5s linear 0.5s;
         }
         &--explode {
             opacity: 1;

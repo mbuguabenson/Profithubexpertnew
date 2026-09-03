@@ -115,7 +115,9 @@
         &--active {
             border-color: var(--ph-primary, #f5c542);
             background: linear-gradient(135deg, rgba(245, 197, 66, 0.08) 0%, rgba(245, 197, 66, 0.02) 100%);
-            box-shadow: 0 4px 18px rgba(245, 197, 66, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            box-shadow:
+                0 4px 18px rgba(245, 197, 66, 0.12),
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
         }
     }
 
@@ -206,7 +208,9 @@
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.05);
         text-decoration: none;
-        transition: border-color 0.2s, background 0.2s;
+        transition:
+            border-color 0.2s,
+            background 0.2s;
 
         &:hover {
             border-color: rgba(255, 255, 255, 0.15);
@@ -219,7 +223,6 @@
         font-weight: 700;
         color: #3b82f6;
     }
-
 }
 
 .account-api-grid {
@@ -238,7 +241,9 @@
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    transition: border-color 0.2s, background 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s;
 
     &:hover {
         border-color: rgba(59, 130, 246, 0.4);
@@ -290,7 +295,9 @@
         border: none;
         border-radius: 6px;
         cursor: pointer;
-        transition: opacity 0.2s, transform 0.1s;
+        transition:
+            opacity 0.2s,
+            transform 0.1s;
 
         &:hover:not(:disabled) {
             opacity: 0.9;

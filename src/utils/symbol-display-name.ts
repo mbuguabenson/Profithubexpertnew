@@ -17,7 +17,10 @@ export const getSymbolDisplayName = async (underlying_symbol: string): Promise<s
         for (const market of trading_times.markets || []) {
             for (const submarket of market.submarkets || []) {
                 for (const symbol of submarket.symbols || []) {
-                    if ((symbol as any).underlying_symbol === underlying_symbol || symbol.symbol === underlying_symbol) {
+                    if (
+                        (symbol as any).underlying_symbol === underlying_symbol ||
+                        symbol.symbol === underlying_symbol
+                    ) {
                         return symbol.display_name || underlying_symbol;
                     }
                 }

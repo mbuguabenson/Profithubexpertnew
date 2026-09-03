@@ -168,7 +168,9 @@
     .dc-modal {
         &__container_trade-params {
             border-radius: 2px;
-            box-shadow: 0 16px 16px 0 var(--shadow-menu-2), 0 0 16px 0 var(--shadow-menu-2);
+            box-shadow:
+                0 16px 16px 0 var(--shadow-menu-2),
+                0 0 16px 0 var(--shadow-menu-2);
             overflow-y: scroll;
 
             /* postcss-bem-linter: ignore */
@@ -190,7 +192,9 @@
         }
         &__container_barrier {
             border-radius: $BORDER_RADIUS * 2;
-            box-shadow: 0 16px 16px 0 var(--shadow-menu-2), 0 0 16px 0 var(--shadow-menu-2);
+            box-shadow:
+                0 16px 16px 0 var(--shadow-menu-2),
+                0 0 16px 0 var(--shadow-menu-2);
             overflow-y: scroll;
         }
         &-header {

@@ -62,12 +62,16 @@
     // ── Idle / Start State (Vibrant Emerald / Cyan Gradient) ──
     &--idle {
         background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        box-shadow:
+            0 4px 14px rgba(16, 185, 129, 0.35),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
 
         &:hover {
             transform: translateY(-1px);
             background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            box-shadow:
+                0 6px 20px rgba(16, 185, 129, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         &:active {
@@ -79,7 +83,9 @@
     // ── Running / Stop State (Pulsing Ruby Red / Crimson Gradient) ──
     &--running {
         background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
-        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        box-shadow:
+            0 4px 16px rgba(239, 68, 68, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
         animation: topbar-running-glow 1.8s infinite alternate;
 
         .topbar-trade-btn__pulse {
@@ -105,7 +111,9 @@
         box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
     }
     100% {
-        box-shadow: 0 6px 24px rgba(239, 68, 68, 0.65), 0 0 10px rgba(239, 68, 68, 0.4);
+        box-shadow:
+            0 6px 24px rgba(239, 68, 68, 0.65),
+            0 0 10px rgba(239, 68, 68, 0.4);
     }
 }
 

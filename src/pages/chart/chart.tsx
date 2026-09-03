@@ -115,11 +115,14 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 barriers={barriers}
                 bottomWidgets={
                     show_digits_stats
-                        ? ((props: any) => (
-                              <div className='bottom-widgets' style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                        ? (((props: any) => (
+                              <div
+                                  className='bottom-widgets'
+                                  style={{ display: 'flex', justifyContent: 'center', width: '100%' }}
+                              >
                                   <DigitDistributionCircles digits={props?.digits} tick={props?.tick} />
                               </div>
-                          )) as any
+                          )) as any)
                         : undefined
                 }
                 showLastDigitStats={show_digits_stats}

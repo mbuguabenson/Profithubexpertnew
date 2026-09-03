@@ -159,7 +159,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         loginid: a.loginid,
                         currency: a.currency || 'USD',
                         balance: a.balance ?? 0,
-                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : isDemoAccount(a.loginid) ? 1 : 0,
                     };
                 }
             });
@@ -174,7 +174,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         loginid: a.loginid,
                         currency: a.currency || accountsMap[a.loginid]?.currency || 'USD',
                         balance: a.balance ?? accountsMap[a.loginid]?.balance ?? 0,
-                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : isDemoAccount(a.loginid) ? 1 : 0,
                     };
                 }
             });
@@ -212,7 +212,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                 loginid: id,
                                 currency: a.currency || accountsMap[id]?.currency || 'USD',
                                 balance: a.balance ?? accountsMap[id]?.balance ?? 0,
-                                is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(id) ? 1 : 0),
+                                is_virtual: a.is_virtual !== undefined ? a.is_virtual : isDemoAccount(id) ? 1 : 0,
                             };
                         }
                     });
@@ -360,7 +360,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                 } else {
                     setResetMessage({
                         type: 'error',
-                        text: errorMessage || localize('Could not reset demo balance. Only virtual accounts can be reset.'),
+                        text:
+                            errorMessage ||
+                            localize('Could not reset demo balance. Only virtual accounts can be reset.'),
                     });
                     setTimeout(() => setResetMessage(null), 4000);
                 }
@@ -424,21 +426,26 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                     }}
                 >
                     {/* Currency / Avatar circle icon */}
-                    <div className={classNames('acc-chip__currency-icon', {
-                        'acc-chip__currency-icon--demo': isVirtual,
-                        'acc-chip__currency-icon--real': !isVirtual,
-                    })}>
+                    <div
+                        className={classNames('acc-chip__currency-icon', {
+                            'acc-chip__currency-icon--demo': isVirtual,
+                            'acc-chip__currency-icon--real': !isVirtual,
+                        })}
+                    >
                         {isVirtual ? (
-                            <span className='acc-icon__text-demo' style={{ display: 'flex', alignItems: 'baseline', gap: '0.5px' }}>
-                                <span style={{ fontSize: 13, fontWeight: 900, color: '#ffffff', lineHeight: 1 }}>D</span>
-                                <span style={{ fontSize: 9.5, fontWeight: 800, color: '#f5c542', lineHeight: 1 }}>$</span>
+                            <span
+                                className='acc-icon__text-demo'
+                                style={{ display: 'flex', alignItems: 'baseline', gap: '0.5px' }}
+                            >
+                                <span style={{ fontSize: 13, fontWeight: 900, color: '#ffffff', lineHeight: 1 }}>
+                                    D
+                                </span>
+                                <span style={{ fontSize: 9.5, fontWeight: 800, color: '#f5c542', lineHeight: 1 }}>
+                                    $
+                                </span>
                             </span>
                         ) : (
-                            <img
-                                src={realAccountImg}
-                                alt='Real Account'
-                                className='acc-chip__real-img'
-                            />
+                            <img src={realAccountImg} alt='Real Account' className='acc-chip__real-img' />
                         )}
                         <span className='acc-chip__online-dot'></span>
                     </div>
@@ -446,13 +453,17 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                     {/* Two-line text block */}
                     <div className='acc-chip__text-block'>
                         <div className='acc-chip__label-row'>
-                            <span className={classNames('acc-chip__type-badge', {
-                                'acc-chip__type-badge--demo': isVirtual,
-                                'acc-chip__type-badge--real': !isVirtual,
-                            })}>
+                            <span
+                                className={classNames('acc-chip__type-badge', {
+                                    'acc-chip__type-badge--demo': isVirtual,
+                                    'acc-chip__type-badge--real': !isVirtual,
+                                })}
+                            >
                                 {isVirtual ? 'DEMO' : 'REAL'}
                             </span>
-                            {currency && <span className='acc-chip__currency-tag'>{getCurrencyDisplayCode(currency)}</span>}
+                            {currency && (
+                                <span className='acc-chip__currency-tag'>{getCurrencyDisplayCode(currency)}</span>
+                            )}
                         </div>
 
                         {/* Balance */}
@@ -486,12 +497,30 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             title={isBalanceVisible ? 'Hide balance' : 'Show balance'}
                         >
                             {isBalanceVisible ? (
-                                <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+                                <svg
+                                    width='13'
+                                    height='13'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    strokeWidth='2.2'
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                >
                                     <path d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z' />
                                     <circle cx='12' cy='12' r='3' />
                                 </svg>
                             ) : (
-                                <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+                                <svg
+                                    width='13'
+                                    height='13'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    strokeWidth='2.2'
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                >
                                     <path d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24' />
                                     <line x1='1' y1='1' x2='23' y2='23' />
                                 </svg>
@@ -541,7 +570,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             id='acc-tab-real'
                         >
                             <Localize i18n_default_text='Real' />
-                            {activeTab === 'real' && <span className='acc-panel__tab-underline acc-panel__tab-underline--real' />}
+                            {activeTab === 'real' && (
+                                <span className='acc-panel__tab-underline acc-panel__tab-underline--real' />
+                            )}
                         </button>
                         <button
                             type='button'
@@ -556,7 +587,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             id='acc-tab-demo'
                         >
                             <Localize i18n_default_text='Demo' />
-                            {activeTab === 'demo' && <span className='acc-panel__tab-underline acc-panel__tab-underline--demo' />}
+                            {activeTab === 'demo' && (
+                                <span className='acc-panel__tab-underline acc-panel__tab-underline--demo' />
+                            )}
                         </button>
                     </div>
 
@@ -569,7 +602,10 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         </p>
 
                         {tabAccounts.length === 0 ? (
-                            <div className='acc-panel__empty-container' style={{ padding: '16px 8px', textAlign: 'center' }}>
+                            <div
+                                className='acc-panel__empty-container'
+                                style={{ padding: '16px 8px', textAlign: 'center' }}
+                            >
                                 <p className='acc-panel__empty' style={{ margin: '0 0 10px' }}>
                                     {activeTab === 'real'
                                         ? localize('No real accounts linked')
@@ -615,11 +651,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         }}
                                     >
                                         <div className='acc-panel__account-icon'>
-                                            {account.isVirtual ? (
-                                                <DemoIcon />
-                                            ) : (
-                                                <RealIcon src={realAccountImg} />
-                                            )}
+                                            {account.isVirtual ? <DemoIcon /> : <RealIcon src={realAccountImg} />}
                                         </div>
                                         <div className='acc-panel__account-info'>
                                             <span className='acc-panel__account-name'>
@@ -627,9 +659,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                                     ? localize('Demo Account')
                                                     : getCurrencyLabel(account.rawCurrency)}
                                             </span>
-                                            <span className='acc-panel__account-id'>
-                                                {account.loginid}
-                                            </span>
+                                            <span className='acc-panel__account-id'>{account.loginid}</span>
                                         </div>
                                         <div className='acc-panel__account-right'>
                                             <span className='acc-panel__account-balance'>
@@ -637,7 +667,16 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                             </span>
                                             {account.isActive && (
                                                 <span className='acc-panel__account-check'>
-                                                    <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='3' strokeLinecap='round' strokeLinejoin='round'>
+                                                    <svg
+                                                        width='12'
+                                                        height='12'
+                                                        viewBox='0 0 24 24'
+                                                        fill='none'
+                                                        stroke='currentColor'
+                                                        strokeWidth='3'
+                                                        strokeLinecap='round'
+                                                        strokeLinejoin='round'
+                                                    >
                                                         <polyline points='20 6 9 17 4 12' />
                                                     </svg>
                                                 </span>
@@ -661,12 +700,29 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                 title={localize('Reset virtual balance to $10,000')}
                             >
                                 {isResettingBalance ? (
-                                    <svg className='acc-panel__reset-spinner' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'>
+                                    <svg
+                                        className='acc-panel__reset-spinner'
+                                        width='12'
+                                        height='12'
+                                        viewBox='0 0 24 24'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        strokeWidth='2.5'
+                                    >
                                         <circle cx='12' cy='12' r='10' strokeOpacity='0.25' />
                                         <path d='M12 2a10 10 0 0 1 10 10' />
                                     </svg>
                                 ) : (
-                                    <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'>
+                                    <svg
+                                        width='12'
+                                        height='12'
+                                        viewBox='0 0 24 24'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        strokeWidth='2.5'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                    >
                                         <path d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8' />
                                         <path d='M21 3v5h-5' />
                                         <path d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16' />
@@ -705,7 +761,17 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                     }
                                 }}
                             >
-                                <svg className='acc-panel__logout-icon' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'>
+                                <svg
+                                    className='acc-panel__logout-icon'
+                                    width='12'
+                                    height='12'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    strokeWidth='2.5'
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                >
                                     <path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />
                                     <polyline points='16 17 21 12 16 7' />
                                     <line x1='21' y1='12' x2='9' y2='12' />

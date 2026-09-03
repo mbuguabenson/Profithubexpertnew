@@ -12,7 +12,8 @@ import {
 } from '@deriv/quill-icons';
 import { Navigation, Text } from '@deriv-com/quill-ui';
 import { useStore } from '@deriv/stores';
-import { useHistory, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
+import { useHistory } from '../../../../withRouterShim';
 
 type BottomNavProps = {
     children: React.ReactNode;

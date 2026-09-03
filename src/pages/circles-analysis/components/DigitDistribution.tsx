@@ -11,14 +11,14 @@ const DigitDistribution: React.FC<TDigitDistributionProps> = ({ digit_stats, las
     // Find highest, second highest, and lowest counts for color coding
     const colorRanking = useMemo(() => {
         if (!digit_stats || digit_stats.length === 0) return { highest: -1, second: -1, lowest: -1 };
-        
+
         const sorted = [...digit_stats].sort((a, b) => b.count - a.count);
         const uniqueCounts = Array.from(new Set(sorted.map(s => s.count))).filter(c => c > 0);
-        
+
         const highest = uniqueCounts[0] ?? -1;
         const second = uniqueCounts[1] ?? -1;
         const lowest = uniqueCounts[uniqueCounts.length - 1] ?? -1;
-        
+
         return { highest, second, lowest };
     }, [digit_stats]);
 
@@ -31,22 +31,30 @@ const DigitDistribution: React.FC<TDigitDistributionProps> = ({ digit_stats, las
     }, [digit_stats]);
 
     return (
-        <div className="digit-distribution-card glass-card">
-            <div className="card-header">
+        <div className='digit-distribution-card glass-card'>
+            <div className='card-header'>
                 <h4>Digit Frequency Distribution</h4>
-                <div className="legend">
-                    <span className="legend-item"><span className="dot highest" /> Highest</span>
-                    <span className="legend-item"><span className="dot second" /> 2nd Highest</span>
-                    <span className="legend-item"><span className="dot lowest" /> Lowest</span>
-                    <span className="legend-item"><span className="dot current" /> Live</span>
+                <div className='legend'>
+                    <span className='legend-item'>
+                        <span className='dot highest' /> Highest
+                    </span>
+                    <span className='legend-item'>
+                        <span className='dot second' /> 2nd Highest
+                    </span>
+                    <span className='legend-item'>
+                        <span className='dot lowest' /> Lowest
+                    </span>
+                    <span className='legend-item'>
+                        <span className='dot current' /> Live
+                    </span>
                 </div>
             </div>
-            <div className="distribution-chart-wrapper">
-                <div className="bars-container">
+            <div className='distribution-chart-wrapper'>
+                <div className='bars-container'>
                     {completeStats.map(stat => {
                         const isCurrent = stat.digit === last_digit;
                         const { highest, second, lowest } = colorRanking;
-                        
+
                         let rankClass = '';
                         if (stat.count > 0) {
                             if (stat.count === highest) rankClass = 'highest';
@@ -55,24 +63,21 @@ const DigitDistribution: React.FC<TDigitDistributionProps> = ({ digit_stats, las
                         }
 
                         return (
-                            <div 
-                                key={stat.digit} 
-                                className={classNames('bar-column', { 
+                            <div
+                                key={stat.digit}
+                                className={classNames('bar-column', {
                                     'is-current': isCurrent,
-                                    [rankClass]: rankClass && !isCurrent
+                                    [rankClass]: rankClass && !isCurrent,
                                 })}
                             >
-                                <div className="bar-track">
-                                    <div 
-                                        className="bar-fill" 
-                                        style={{ height: `${Math.max(4, stat.percentage)}%` }}
-                                    >
-                                        <span className="percentage-label">{stat.percentage.toFixed(0)}%</span>
+                                <div className='bar-track'>
+                                    <div className='bar-fill' style={{ height: `${Math.max(4, stat.percentage)}%` }}>
+                                        <span className='percentage-label'>{stat.percentage.toFixed(0)}%</span>
                                     </div>
                                 </div>
-                                <div className="digit-label-wrapper">
-                                    <span className="digit-number">{stat.digit}</span>
-                                    {isCurrent && <span className="active-arrow-indicator">▲</span>}
+                                <div className='digit-label-wrapper'>
+                                    <span className='digit-number'>{stat.digit}</span>
+                                    {isCurrent && <span className='active-arrow-indicator'>▲</span>}
                                 </div>
                             </div>
                         );

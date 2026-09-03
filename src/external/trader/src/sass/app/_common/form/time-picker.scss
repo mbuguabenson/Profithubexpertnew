@@ -27,7 +27,9 @@
         top: 0;
         transform-origin: right;
         transform: scale(1, 0) translate3d(0, 0, 0);
-        transition: transform 0.25s ease, opacity 0.25s linear;
+        transition:
+            transform 0.25s ease,
+            opacity 0.25s linear;
         width: 231px;
         z-index: 2;
         background-color: var(--general-main-2);

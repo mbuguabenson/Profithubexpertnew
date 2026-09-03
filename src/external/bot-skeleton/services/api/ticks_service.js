@@ -235,30 +235,30 @@ export default class TicksService {
                     }
                 }
 
-                    if (data.msg_type === 'ohlc') {
-                        const { ohlc } = data;
-                        if (!ohlc || typeof ohlc !== 'object') {
-                            try {
-                                console.warn('[TicksService] Ignoring malformed ohlc message', {
-                                    msg_type: data.msg_type,
-                                    raw: data?.ohlc ?? null,
-                                });
-                            } catch (e) {
-                                /* noop */
-                            }
-                            return;
+                if (data.msg_type === 'ohlc') {
+                    const { ohlc } = data;
+                    if (!ohlc || typeof ohlc !== 'object') {
+                        try {
+                            console.warn('[TicksService] Ignoring malformed ohlc message', {
+                                msg_type: data.msg_type,
+                                raw: data?.ohlc ?? null,
+                            });
+                        } catch (e) {
+                            /* noop */
                         }
-
-                        const { symbol, granularity, id } = ohlc;
-                        if (this.candles.hasIn([symbol, Number(granularity)])) {
-                            this.subscriptions = this.subscriptions.setIn(['ohlc', symbol, Number(granularity)], id);
-                            const address = [symbol, Number(granularity)];
-                            this.updateCandlesAndCallListeners(
-                                address,
-                                updateCandles(this.candles.getIn(address), parseOhlc(ohlc))
-                            );
-                        }
+                        return;
                     }
+
+                    const { symbol, granularity, id } = ohlc;
+                    if (this.candles.hasIn([symbol, Number(granularity)])) {
+                        this.subscriptions = this.subscriptions.setIn(['ohlc', symbol, Number(granularity)], id);
+                        const address = [symbol, Number(granularity)];
+                        this.updateCandlesAndCallListeners(
+                            address,
+                            updateCandles(this.candles.getIn(address), parseOhlc(ohlc))
+                        );
+                    }
+                }
             });
             api_base.pushSubscription(subscription);
         }
@@ -272,10 +272,15 @@ export default class TicksService {
             // Check if we already have a promise for these exact options
             if (!this.ticks_history_promise || this.ticks_history_promise.stringified_options !== stringified_options) {
                 this.ticks_history_promise = {
-                    promise: this.requestPipSizes().then(() => this.requestTicks(options)).catch(err => {
-                        console.warn('[TicksService] ticks_history stream notice:', err?.error?.message || err?.message || err);
-                        return this.ticks.get(options.symbol) || [];
-                    }),
+                    promise: this.requestPipSizes()
+                        .then(() => this.requestTicks(options))
+                        .catch(err => {
+                            console.warn(
+                                '[TicksService] ticks_history stream notice:',
+                                err?.error?.message || err?.message || err
+                            );
+                            return this.ticks.get(options.symbol) || [];
+                        }),
                     stringified_options,
                 };
             }
@@ -287,10 +292,15 @@ export default class TicksService {
             // Check if we already have a promise for these exact options
             if (!this.candles_promise || this.candles_promise.stringified_options !== stringified_options) {
                 this.candles_promise = {
-                    promise: this.requestPipSizes().then(() => this.requestTicks(options)).catch(err => {
-                        console.warn('[TicksService] candles stream notice:', err?.error?.message || err?.message || err);
-                        return this.candles.getIn([options.symbol, Number(options.granularity)]) || [];
-                    }),
+                    promise: this.requestPipSizes()
+                        .then(() => this.requestTicks(options))
+                        .catch(err => {
+                            console.warn(
+                                '[TicksService] candles stream notice:',
+                                err?.error?.message || err?.message || err
+                            );
+                            return this.candles.getIn([options.symbol, Number(options.granularity)]) || [];
+                        }),
                     stringified_options,
                 };
             }

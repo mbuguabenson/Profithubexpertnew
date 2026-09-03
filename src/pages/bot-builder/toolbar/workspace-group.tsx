@@ -21,7 +21,8 @@ import ToolbarIcon from './toolbar-icon';
 
 const WorkspaceGroup = observer(() => {
     const { dashboard, toolbar, load_modal, save_modal, scanner, entry_scanner } = useStore();
-    const { setPreviewOnPopup, setChartModalVisibility, setTradingViewModalVisibility, setProfihubModalVisibility } = dashboard;
+    const { setPreviewOnPopup, setChartModalVisibility, setTradingViewModalVisibility, setProfihubModalVisibility } =
+        dashboard;
     const { has_redo_stack, has_undo_stack, onResetClick, onSortClick, onUndoClick, onZoomInOutClick } = toolbar;
     const { toggleSaveModal } = save_modal;
     const { toggleLoadModal } = load_modal;
@@ -126,17 +127,39 @@ const WorkspaceGroup = observer(() => {
                                 id='db-toolbar__analysis-button'
                                 onClick={() => setProfihubModalVisibility()}
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ verticalAlign: 'middle', filter: 'drop-shadow(0 0 4px rgba(56,189,248,0.5))' }}>
+                                <svg
+                                    width='20'
+                                    height='20'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    style={{
+                                        verticalAlign: 'middle',
+                                        filter: 'drop-shadow(0 0 4px rgba(56,189,248,0.5))',
+                                    }}
+                                >
                                     <defs>
-                                        <linearGradient id="ph_analysis_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#38bdf8" />
-                                            <stop offset="100%" stopColor="#6366f1" />
+                                        <linearGradient id='ph_analysis_grad' x1='0%' y1='0%' x2='100%' y2='100%'>
+                                            <stop offset='0%' stopColor='#38bdf8' />
+                                            <stop offset='100%' stopColor='#6366f1' />
                                         </linearGradient>
                                     </defs>
-                                    <circle cx="11" cy="11" r="7" stroke="url(#ph_analysis_grad)" strokeWidth="2" strokeDasharray="32" strokeDashoffset="0" />
-                                    <path d="M11 7v4l3 2" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
-                                    <path d="M16 16l4.5 4.5" stroke="url(#ph_analysis_grad)" strokeWidth="2.5" strokeLinecap="round" />
-                                    <circle cx="11" cy="11" r="2" fill="#38bdf8" />
+                                    <circle
+                                        cx='11'
+                                        cy='11'
+                                        r='7'
+                                        stroke='url(#ph_analysis_grad)'
+                                        strokeWidth='2'
+                                        strokeDasharray='32'
+                                        strokeDashoffset='0'
+                                    />
+                                    <path d='M11 7v4l3 2' stroke='#38bdf8' strokeWidth='2' strokeLinecap='round' />
+                                    <path
+                                        d='M16 16l4.5 4.5'
+                                        stroke='url(#ph_analysis_grad)'
+                                        strokeWidth='2.5'
+                                        strokeLinecap='round'
+                                    />
+                                    <circle cx='11' cy='11' r='2' fill='#38bdf8' />
                                 </svg>
                             </span>
                         }
@@ -154,17 +177,43 @@ const WorkspaceGroup = observer(() => {
                                     setScannerVisibility();
                                 }}
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ verticalAlign: 'middle', filter: 'drop-shadow(0 0 4px rgba(52,211,153,0.5))' }}>
+                                <svg
+                                    width='20'
+                                    height='20'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    style={{
+                                        verticalAlign: 'middle',
+                                        filter: 'drop-shadow(0 0 4px rgba(52,211,153,0.5))',
+                                    }}
+                                >
                                     <defs>
-                                        <linearGradient id="ph_scanner_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#34d399" />
-                                            <stop offset="100%" stopColor="#10b981" />
+                                        <linearGradient id='ph_scanner_grad' x1='0%' y1='0%' x2='100%' y2='100%'>
+                                            <stop offset='0%' stopColor='#34d399' />
+                                            <stop offset='100%' stopColor='#10b981' />
                                         </linearGradient>
                                     </defs>
-                                    <path d="M12 3a9 9 0 0 1 9 9" stroke="url(#ph_scanner_grad)" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
-                                    <path d="M12 7a5 5 0 0 1 5 5" stroke="url(#ph_scanner_grad)" strokeWidth="2" strokeLinecap="round" />
-                                    <circle cx="12" cy="12" r="2.5" fill="#34d399" />
-                                    <path d="M3 17l4-4 3 3 6-7" stroke="#f5c542" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path
+                                        d='M12 3a9 9 0 0 1 9 9'
+                                        stroke='url(#ph_scanner_grad)'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                        opacity='0.4'
+                                    />
+                                    <path
+                                        d='M12 7a5 5 0 0 1 5 5'
+                                        stroke='url(#ph_scanner_grad)'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                    />
+                                    <circle cx='12' cy='12' r='2.5' fill='#34d399' />
+                                    <path
+                                        d='M3 17l4-4 3 3 6-7'
+                                        stroke='#f5c542'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                    />
                                 </svg>
                             </span>
                         }
@@ -185,15 +234,43 @@ const WorkspaceGroup = observer(() => {
                                     }
                                 }}
                             >
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ verticalAlign: 'middle', filter: 'drop-shadow(0 0 5px rgba(16,185,129,0.7))' }}>
+                                <svg
+                                    width='22'
+                                    height='22'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    style={{
+                                        verticalAlign: 'middle',
+                                        filter: 'drop-shadow(0 0 5px rgba(16,185,129,0.7))',
+                                    }}
+                                >
                                     <defs>
-                                        <linearGradient id="ph_ai_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#10b981" />
-                                            <stop offset="100%" stopColor="#059669" />
+                                        <linearGradient id='ph_ai_grad' x1='0%' y1='0%' x2='100%' y2='100%'>
+                                            <stop offset='0%' stopColor='#10b981' />
+                                            <stop offset='100%' stopColor='#059669' />
                                         </linearGradient>
                                     </defs>
-                                    <rect x="2" y="4" width="20" height="16" rx="4" fill="url(#ph_ai_grad)" stroke="#34d399" strokeWidth="1" />
-                                    <text x="12" y="15.5" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold" fontFamily="sans-serif">AI</text>
+                                    <rect
+                                        x='2'
+                                        y='4'
+                                        width='20'
+                                        height='16'
+                                        rx='4'
+                                        fill='url(#ph_ai_grad)'
+                                        stroke='#34d399'
+                                        strokeWidth='1'
+                                    />
+                                    <text
+                                        x='12'
+                                        y='15.5'
+                                        textAnchor='middle'
+                                        fill='#ffffff'
+                                        fontSize='10'
+                                        fontWeight='bold'
+                                        fontFamily='sans-serif'
+                                    >
+                                        AI
+                                    </text>
                                 </svg>
                             </span>
                         }
@@ -210,15 +287,36 @@ const WorkspaceGroup = observer(() => {
                                     entry_scanner.is_scanner_open = !entry_scanner.is_scanner_open;
                                 }}
                             >
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ verticalAlign: 'middle', filter: entry_scanner.is_scanner_open ? 'drop-shadow(0 0 5px #0ea5e9)' : 'drop-shadow(0 0 4px rgba(14,165,233,0.3))' }}>
-                                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" />
-                                    <path d="M12 12v9" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" />
-                                    <path d="m8 17 4 4 4-4" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <svg
+                                    width='22'
+                                    height='22'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    style={{
+                                        verticalAlign: 'middle',
+                                        filter: entry_scanner.is_scanner_open
+                                            ? 'drop-shadow(0 0 5px #0ea5e9)'
+                                            : 'drop-shadow(0 0 4px rgba(14,165,233,0.3))',
+                                    }}
+                                >
+                                    <path
+                                        d='M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242'
+                                        stroke='#0ea5e9'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                    />
+                                    <path d='M12 12v9' stroke='#0ea5e9' strokeWidth='2' strokeLinecap='round' />
+                                    <path
+                                        d='m8 17 4 4 4-4'
+                                        stroke='#0ea5e9'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                    />
                                 </svg>
                             </span>
                         }
                     />
-
                 </>
                 <div className='vertical-divider' />
                 <ToolbarIcon

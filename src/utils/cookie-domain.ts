@@ -2,7 +2,9 @@
  * Robust cookie domain utility that accounts for multi-part country TLDs (e.g., .co.ke, .com.au, .co.uk).
  * Returns undefined for localhost or IP addresses so the cookie is set on the current origin without rejection.
  */
-export const getCookieDomain = (hostname: string = typeof window !== 'undefined' ? window.location.hostname : ''): string | undefined => {
+export const getCookieDomain = (
+    hostname: string = typeof window !== 'undefined' ? window.location.hostname : ''
+): string | undefined => {
     if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1' || /^(\d+\.){3}\d+$/.test(hostname)) {
         return undefined;
     }

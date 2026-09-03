@@ -98,29 +98,33 @@ const SaveModalForm: React.FC<TSaveModalForm> = ({
                                 >
                                     <RadioGroup.Item
                                         id='local'
-                                    label={
-                                        <IconRadio
-                                            text={localize('Local')}
-                                            icon={
-                                                is_mobile ? (
-                                                    <DerivLightLocalDeviceIcon height='48px' width='48px' />
-                                                ) : (
-                                                    <DerivLightMyComputerIcon height='48px' width='48px' />
-                                                )
-                                            }
-                                        /> as any
-                                    }
+                                        label={
+                                            (
+                                                <IconRadio
+                                                    text={localize('Local')}
+                                                    icon={
+                                                        is_mobile ? (
+                                                            <DerivLightLocalDeviceIcon height='48px' width='48px' />
+                                                        ) : (
+                                                            <DerivLightMyComputerIcon height='48px' width='48px' />
+                                                        )
+                                                    }
+                                                />
+                                            ) as any
+                                        }
                                         value={save_types.LOCAL}
                                     />
                                     <RadioGroup.Item
                                         id='drive'
                                         label={
-                                            <IconRadio
-                                                text={'Google Drive'}
-                                                icon={<DerivLightGoogleDriveIcon height='48px' width='48px' />}
-                                                google_drive_connected={is_authorised}
-                                                onDriveConnect={onDriveConnect}
-                                            /> as any
+                                            (
+                                                <IconRadio
+                                                    text={'Google Drive'}
+                                                    icon={<DerivLightGoogleDriveIcon height='48px' width='48px' />}
+                                                    google_drive_connected={is_authorised}
+                                                    onDriveConnect={onDriveConnect}
+                                                />
+                                            ) as any
                                         }
                                         value={save_types.GOOGLE_DRIVE}
                                         disabled={!is_authorised}

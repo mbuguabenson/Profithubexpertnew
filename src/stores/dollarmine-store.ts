@@ -34,34 +34,41 @@ export default class DollarmineStore {
     @observable accessor active_symbols: { symbol: string; display_name: string; is1s: boolean }[] = [];
     @observable accessor market_stats: Map<string, MarketStats> = new Map();
     @observable accessor is_scanning = false;
-    
+
     // Trading config
     @observable accessor viewing_market: string | null = null;
     @observable accessor stake = 1;
     @observable accessor max_runs = 5;
-    
+
     // Strategy State: OVER_UNDER
     @observable accessor ou_active_market: string | null = null;
     @observable accessor ou_is_auto_trading = false;
     @observable accessor ou_runs = 0;
     @observable accessor ou_cooldown_until: number | null = null;
     @observable accessor ou_last_prediction: string | null = null;
-    
+
     // Strategy State: EVEN_ODD
     @observable accessor eo_active_market: string | null = null;
     @observable accessor eo_is_auto_trading = false;
     @observable accessor eo_runs = 0;
     @observable accessor eo_cooldown_until: number | null = null;
     @observable accessor eo_last_prediction: string | null = null;
-    
+
     // Strategy State: DIFFERS
     @observable accessor diff_active_market: string | null = null;
     @observable accessor diff_is_auto_trading = false;
     @observable accessor diff_runs = 0;
     @observable accessor diff_prediction: number | null = null;
-    
+
     // Trade Log
-    @observable accessor trade_log: { time: string; strategy: string; market: string; contract: string; result: 'WIN' | 'LOSS' | 'PENDING'; profit: number }[] = [];
+    @observable accessor trade_log: {
+        time: string;
+        strategy: string;
+        market: string;
+        contract: string;
+        result: 'WIN' | 'LOSS' | 'PENDING';
+        profit: number;
+    }[] = [];
 
     private _tick_subs: Map<string, any> = new Map();
     private _execution_lock: Map<TStrategy, boolean> = new Map();
@@ -129,21 +136,24 @@ export default class DollarmineStore {
     @action
     private fetchActiveSymbols() {
         if (!api_base.api) return;
-        api_base.api.send({ active_symbols: 'brief' }).then((res: any) => {
-            if (res?.active_symbols) {
-                const filtered = res.active_symbols
-                    .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
-                    .map((s: any) => ({ 
-                        symbol: s.symbol, 
-                        display_name: s.display_name,
-                        is1s: s.symbol ? s.symbol.includes('1S') : false
-                    }));
-                runInAction(() => {
-                    this.active_symbols = filtered;
-                    this.subscribeToAllMarkets();
-                });
-            }
-        }).catch(() => {});
+        api_base.api
+            .send({ active_symbols: 'brief' })
+            .then((res: any) => {
+                if (res?.active_symbols) {
+                    const filtered = res.active_symbols
+                        .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
+                        .map((s: any) => ({
+                            symbol: s.symbol,
+                            display_name: s.display_name,
+                            is1s: s.symbol ? s.symbol.includes('1S') : false,
+                        }));
+                    runInAction(() => {
+                        this.active_symbols = filtered;
+                        this.subscribeToAllMarkets();
+                    });
+                }
+            })
+            .catch(() => {});
     }
 
     @action
@@ -153,20 +163,23 @@ export default class DollarmineStore {
             if (!this._tick_subs.has(market.symbol)) {
                 const sym = market.symbol;
                 // Initial history
-                api_base.api!.send({
-                    ticks_history: sym,
-                    count: 100,
-                    end: 'latest',
-                    style: 'ticks',
-                }).then((res: any) => {
-                     const hist = res?.history || res?.ticks_history;
-                     if (hist?.prices && Array.isArray(hist.prices) && hist.prices.length > 0) {
-                         const prices = hist.prices || [];
-                         const digits = prices.map((p: any) => parseInt(p.toString().slice(-1)));
-                         const lastPrice = prices[prices.length - 1]?.toString() || '0';
-                         this.updateMarketStats(sym, market.display_name, market.is1s, digits, lastPrice);
-                     }
-                }).catch(() => {});
+                api_base
+                    .api!.send({
+                        ticks_history: sym,
+                        count: 100,
+                        end: 'latest',
+                        style: 'ticks',
+                    })
+                    .then((res: any) => {
+                        const hist = res?.history || res?.ticks_history;
+                        if (hist?.prices && Array.isArray(hist.prices) && hist.prices.length > 0) {
+                            const prices = hist.prices || [];
+                            const digits = prices.map((p: any) => parseInt(p.toString().slice(-1)));
+                            const lastPrice = prices[prices.length - 1]?.toString() || '0';
+                            this.updateMarketStats(sym, market.display_name, market.is1s, digits, lastPrice);
+                        }
+                    })
+                    .catch(() => {});
 
                 // Stream via safeSubscribe
                 const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
@@ -191,12 +204,12 @@ export default class DollarmineStore {
     @action
     private handleNewTick(symbol: string, digit: number, quote: string) {
         if (!this.market_stats.has(symbol)) return;
-        
+
         const stats = this.market_stats.get(symbol)!;
-        const newDigits = [...stats.recentDigits, digit].slice(-1000); 
-        
+        const newDigits = [...stats.recentDigits, digit].slice(-1000);
+
         this.updateMarketStats(symbol, stats.displayName, stats.is1s, newDigits, quote);
-        
+
         if (this.is_scanning) {
             this.evaluateOverUnder(symbol);
             this.evaluateEvenOdd(symbol);
@@ -209,33 +222,42 @@ export default class DollarmineStore {
         const prevStats = this.market_stats.get(symbol);
         const prevPrice = prevStats ? Number(prevStats.currentPrice) : Number(quote);
         const currentPrice = Number(quote);
-        const priceDirection = currentPrice > prevPrice ? 'UP' : currentPrice < prevPrice ? 'DOWN' : (prevStats?.priceDirection || 'FLAT');
+        const priceDirection =
+            currentPrice > prevPrice ? 'UP' : currentPrice < prevPrice ? 'DOWN' : prevStats?.priceDirection || 'FLAT';
 
         if (digits.length < 60) {
             this.market_stats.set(symbol, {
-                symbol, displayName, recentDigits: digits, is1s,
-                currentPrice: quote, priceDirection,
-                underPercent: 0, overPercent: 0, isOverUnderIncreasing: false,
-                evenPercent: 0, oddPercent: 0, isEvenOddIncreasing: false,
-                digitFrequencies: Array(10).fill(0)
+                symbol,
+                displayName,
+                recentDigits: digits,
+                is1s,
+                currentPrice: quote,
+                priceDirection,
+                underPercent: 0,
+                overPercent: 0,
+                isOverUnderIncreasing: false,
+                evenPercent: 0,
+                oddPercent: 0,
+                isEvenOddIncreasing: false,
+                digitFrequencies: Array(10).fill(0),
             });
             return;
         }
 
         const last60 = digits.slice(-60);
-        
+
         // Over/Under stats
         const underCount = last60.filter(d => d < 5).length;
         const overCount = last60.filter(d => d >= 5).length;
         const underPercent = (underCount / 60) * 100;
         const overPercent = (overCount / 60) * 100;
-        
+
         // Trend tracking (compare last 60 with previous 60)
         let isOuIncreasing = false;
         if (digits.length >= 120) {
             const prev60 = digits.slice(-120, -60);
-            const prevUnder = prev60.filter(d => d < 5).length / 60 * 100;
-            const prevOver = prev60.filter(d => d >= 5).length / 60 * 100;
+            const prevUnder = (prev60.filter(d => d < 5).length / 60) * 100;
+            const prevOver = (prev60.filter(d => d >= 5).length / 60) * 100;
             isOuIncreasing = Math.max(underPercent, overPercent) > Math.max(prevUnder, prevOver);
         }
 
@@ -244,12 +266,12 @@ export default class DollarmineStore {
         const oddCount = last60.filter(d => d % 2 !== 0).length;
         const evenPercent = (evenCount / 60) * 100;
         const oddPercent = (oddCount / 60) * 100;
-        
+
         let isEoIncreasing = false;
         if (digits.length >= 120) {
             const prev60 = digits.slice(-120, -60);
-            const prevEven = prev60.filter(d => d % 2 === 0).length / 60 * 100;
-            const prevOdd = prev60.filter(d => d % 2 !== 0).length / 60 * 100;
+            const prevEven = (prev60.filter(d => d % 2 === 0).length / 60) * 100;
+            const prevOdd = (prev60.filter(d => d % 2 !== 0).length / 60) * 100;
             isEoIncreasing = Math.max(evenPercent, oddPercent) > Math.max(prevEven, prevOdd);
         }
 
@@ -259,11 +281,19 @@ export default class DollarmineStore {
         const digitFrequencies = freqs.map(f => (f / 60) * 100);
 
         this.market_stats.set(symbol, {
-            symbol, displayName, recentDigits: digits, is1s,
-            currentPrice: quote, priceDirection,
-            underPercent, overPercent, isOverUnderIncreasing: isOuIncreasing,
-            evenPercent, oddPercent, isEvenOddIncreasing: isEoIncreasing,
-            digitFrequencies
+            symbol,
+            displayName,
+            recentDigits: digits,
+            is1s,
+            currentPrice: quote,
+            priceDirection,
+            underPercent,
+            overPercent,
+            isOverUnderIncreasing: isOuIncreasing,
+            evenPercent,
+            oddPercent,
+            isEvenOddIncreasing: isEoIncreasing,
+            digitFrequencies,
         });
     }
 
@@ -276,7 +306,11 @@ export default class DollarmineStore {
 
         // Auto market switch - find best market
         // let bestMarket = symbol;
-        if (!this.ou_active_market || (this.market_stats.get(symbol)?.underPercent || 0) > (this.market_stats.get(this.ou_active_market)?.underPercent || 0)) {
+        if (
+            !this.ou_active_market ||
+            (this.market_stats.get(symbol)?.underPercent || 0) >
+                (this.market_stats.get(this.ou_active_market)?.underPercent || 0)
+        ) {
             // Very simplified auto-selection
             // this.ou_active_market = symbol;
         }
@@ -317,7 +351,7 @@ export default class DollarmineStore {
             // Find highest under digit based on frequencies
             const underDigits = sortedFreqs.filter(d => d.i < 5);
             const highestUnderDigit = underDigits.length > 0 ? underDigits[0].i : 0;
-            
+
             // Wait for highest to appear for entry
             if (last15[last15.length - 1] === highestUnderDigit) {
                 this.executeTrade('OVER_UNDER', stats.symbol, 'DIGITUNDER', highestUnderDigit); // Under highest
@@ -330,7 +364,7 @@ export default class DollarmineStore {
         if (last15.every(d => d >= 5)) {
             const overFreqs = stats.digitFrequencies.slice(5);
             const highestOverIdx = overFreqs.indexOf(Math.max(...overFreqs)) + 5;
-            
+
             if (last15[last15.length - 1] === highestOverIdx) {
                 const underTotal = stats.digitFrequencies.slice(0, 5).reduce((a, b) => a + b, 0);
                 if (underTotal < 10) {
@@ -357,18 +391,20 @@ export default class DollarmineStore {
             const recent = stats.recentDigits;
             // Check last 7 were even (before the trigger pattern)
             const seq = recent.slice(-10); // Look at last 10
-            
+
             // Pattern: 7 Even -> 2+ Odd -> 1 Even
-            if (seq[seq.length-1] % 2 === 0) { // last is even
-                if (seq[seq.length-2] % 2 !== 0 && seq[seq.length-3] % 2 !== 0) { // prev 2 were odd
+            if (seq[seq.length - 1] % 2 === 0) {
+                // last is even
+                if (seq[seq.length - 2] % 2 !== 0 && seq[seq.length - 3] % 2 !== 0) {
+                    // prev 2 were odd
                     this.executeTrade('EVEN_ODD', stats.symbol, 'DIGITEVEN');
                 }
             }
         } else if (stats.oddPercent >= 60 && stats.isEvenOddIncreasing) {
             const seq = stats.recentDigits.slice(-10);
             // Pattern: 7 Odd -> 2+ Even -> 1 Odd
-            if (seq[seq.length-1] % 2 !== 0) {
-                if (seq[seq.length-2] % 2 === 0 && seq[seq.length-3] % 2 === 0) {
+            if (seq[seq.length - 1] % 2 !== 0) {
+                if (seq[seq.length - 2] % 2 === 0 && seq[seq.length - 3] % 2 === 0) {
                     this.executeTrade('EVEN_ODD', stats.symbol, 'DIGITODD');
                 }
             }
@@ -389,10 +425,11 @@ export default class DollarmineStore {
 
         // Find constant digit: < 10%, not highest, not 2nd highest, not least
         const freqs = stats.digitFrequencies;
-        const sorted = [...freqs].map((v, i) => ({v, i})).sort((a, b) => b.v - a.v);
-        
+        const sorted = [...freqs].map((v, i) => ({ v, i })).sort((a, b) => b.v - a.v);
+
         let targetDigit: number | null = null;
-        for (let i = 2; i < sorted.length - 1; i++) { // Skip 1st, 2nd, and last
+        for (let i = 2; i < sorted.length - 1; i++) {
+            // Skip 1st, 2nd, and last
             if (sorted[i].v > 0 && sorted[i].v < 10) {
                 targetDigit = sorted[i].i;
                 break;
@@ -427,7 +464,7 @@ export default class DollarmineStore {
             market: symbol,
             contract: contract_type,
             result: 'PENDING',
-            profit: 0
+            profit: 0,
         };
 
         runInAction(() => {
@@ -466,7 +503,7 @@ export default class DollarmineStore {
             const buy = await buyContractForUi({
                 parameters: params,
                 price: this.stake,
-                source: `Dollarmine_${strategy}`
+                source: `Dollarmine_${strategy}`,
             });
 
             if (buy?.contract_id) {
@@ -474,7 +511,7 @@ export default class DollarmineStore {
                 streamContractUntilSettled({
                     contractId: buy.contract_id,
                     source: `Dollarmine_${strategy}`,
-                    onUpdate: (snapshot) => {
+                    onUpdate: snapshot => {
                         runInAction(() => {
                             if (snapshot.is_sold) {
                                 const status = String(snapshot.status || '').toLowerCase();
@@ -482,8 +519,8 @@ export default class DollarmineStore {
                                 logEntry.profit = Number(snapshot.profit || 0);
                             }
                         });
-                    }
-                }).catch((err) => {
+                    },
+                }).catch(err => {
                     console.error('[Dollarmine] Stream error:', err);
                     runInAction(() => {
                         logEntry.result = 'LOSS' as const;
@@ -497,7 +534,6 @@ export default class DollarmineStore {
             setTimeout(() => {
                 runInAction(() => this._execution_lock.set(strategy, false));
             }, 3000);
-
         } catch (error) {
             console.error('[Dollarmine] Trade Execution Error:', error);
             runInAction(() => {

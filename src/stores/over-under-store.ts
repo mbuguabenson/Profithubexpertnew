@@ -95,7 +95,7 @@ export default class OverUnderStore {
         const tryConnect = () => {
             attempts++;
             if (this.isApiReady()) {
-                runInAction(() => this.is_connected = true);
+                runInAction(() => (this.is_connected = true));
                 this.fetchActiveSymbols();
                 this.subscribeToTicks();
             } else if (attempts < 30) {
@@ -110,16 +110,19 @@ export default class OverUnderStore {
     @action
     private fetchActiveSymbols() {
         if (!this.isApiReady()) return;
-        api_base.api!.send({ active_symbols: 'brief' }).then((res: any) => {
-            if (res?.active_symbols) {
-                const filtered = res.active_symbols
-                    .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
-                    .map((s: any) => ({ symbol: s.symbol, display_name: s.display_name }));
-                runInAction(() => {
-                    this.active_symbols = filtered;
-                });
-            }
-        }).catch((e: any) => console.warn('[OverUnderStore] fetchActiveSymbols error:', e));
+        api_base
+            .api!.send({ active_symbols: 'brief' })
+            .then((res: any) => {
+                if (res?.active_symbols) {
+                    const filtered = res.active_symbols
+                        .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
+                        .map((s: any) => ({ symbol: s.symbol, display_name: s.display_name }));
+                    runInAction(() => {
+                        this.active_symbols = filtered;
+                    });
+                }
+            })
+            .catch((e: any) => console.warn('[OverUnderStore] fetchActiveSymbols error:', e));
     }
 
     @action
@@ -139,23 +142,28 @@ export default class OverUnderStore {
         const sym = this.symbol;
 
         // 1. Initial historical data
-        api_base.api.send({
-            ticks_history: sym,
-            count: 100,
-            end: 'latest',
-            style: 'ticks',
-        }).then((res: any) => {
-            if (this.symbol !== sym) return;
-            const hist = res?.history || res?.ticks_history;
-            if (hist?.prices && Array.isArray(hist.prices) && hist.prices.length > 0) {
-                const digits = hist.prices.map((p: any) => parseInt(String(p).slice(-1)));
-                const lastPrice = hist.prices[hist.prices.length - 1];
-                runInAction(() => {
-                    this.recent_digits = digits;
-                    if (lastPrice != null) this.current_price = typeof lastPrice === 'number' ? lastPrice.toFixed(4) : String(lastPrice);
-                });
-            }
-        }).catch(() => {});
+        api_base.api
+            .send({
+                ticks_history: sym,
+                count: 100,
+                end: 'latest',
+                style: 'ticks',
+            })
+            .then((res: any) => {
+                if (this.symbol !== sym) return;
+                const hist = res?.history || res?.ticks_history;
+                if (hist?.prices && Array.isArray(hist.prices) && hist.prices.length > 0) {
+                    const digits = hist.prices.map((p: any) => parseInt(String(p).slice(-1)));
+                    const lastPrice = hist.prices[hist.prices.length - 1];
+                    runInAction(() => {
+                        this.recent_digits = digits;
+                        if (lastPrice != null)
+                            this.current_price =
+                                typeof lastPrice === 'number' ? lastPrice.toFixed(4) : String(lastPrice);
+                    });
+                }
+            })
+            .catch(() => {});
 
         // 2. Direct RxJS Observable stream
         const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
@@ -169,7 +177,8 @@ export default class OverUnderStore {
                     const digit = parseInt(quote.slice(-1));
 
                     runInAction(() => {
-                        this.current_price = typeof tick.quote === 'number' ? tick.quote.toFixed(tick.pip_size || 2) : quote;
+                        this.current_price =
+                            typeof tick.quote === 'number' ? tick.quote.toFixed(tick.pip_size || 2) : quote;
                         this.recent_digits = [...this.recent_digits, digit].slice(-100);
                         this.confirmed_ticks++;
 
@@ -213,20 +222,20 @@ export default class OverUnderStore {
         // Volatility: Avg difference between consecutive digits
         let totalDiff = 0;
         for (let i = 1; i < digits.length; i++) {
-            totalDiff += Math.abs(digits[i] - digits[i-1]);
+            totalDiff += Math.abs(digits[i] - digits[i - 1]);
         }
         const volatility = digits.length > 1 ? totalDiff / (digits.length - 1) : 0;
 
         // Change Rate: % of times the type changed
         let changes = 0;
         for (let i = 1; i < digits.length; i++) {
-            const prevType = digits[i-1] < threshold ? 'U' : 'O';
+            const prevType = digits[i - 1] < threshold ? 'U' : 'O';
             const currType = digits[i] < threshold ? 'U' : 'O';
             if (prevType !== currType) changes++;
         }
         const changeRate = digits.length > 1 ? (changes / (digits.length - 1)) * 100 : 0;
 
-        const marketPower = Math.max(underDigits.length, overDigits.length) / total * 100;
+        const marketPower = (Math.max(underDigits.length, overDigits.length) / total) * 100;
 
         return {
             underPercent: (underDigits.length / total) * 100,
@@ -237,7 +246,7 @@ export default class OverUnderStore {
             currentCount: 0,
             volatility,
             changeRate,
-            marketPower
+            marketPower,
         };
     }
 
@@ -258,7 +267,7 @@ export default class OverUnderStore {
 
         // Multi-Phase Signal Logic
         const isIncreasing = conf.maxPercent > this.last_confidence;
-        
+
         let signal: TPrediction = 'WAIT';
         let reason = 'Market is currently balanced. Awaiting statistical divergence.';
 
@@ -271,13 +280,13 @@ export default class OverUnderStore {
             reason = 'Initial conditions met. Entering Phase 2 validation...';
         }
 
-        // Store last confidence for trend tracking (side-effect in getter is usually bad, 
+        // Store last confidence for trend tracking (side-effect in getter is usually bad,
         // but MobX handles computed dependencies; however, it's better to update last_confidence in the tick observer)
-        
+
         return {
             prediction: signal,
             confidence: conf.level,
-            reasoning: reason
+            reasoning: reason,
         };
     }
 
@@ -303,13 +312,13 @@ export default class OverUnderStore {
 
         const streaks: Streak[] = [];
         let currentLength = 1;
-        let currentType: 'UNDER' | 'OVER' | 'CURRENT' = 
+        let currentType: 'UNDER' | 'OVER' | 'CURRENT' =
             digits[0] < threshold ? 'UNDER' : digits[0] > threshold ? 'OVER' : 'CURRENT';
 
         for (let i = 1; i < digits.length; i++) {
-            const type: 'UNDER' | 'OVER' | 'CURRENT' = 
+            const type: 'UNDER' | 'OVER' | 'CURRENT' =
                 digits[i] < threshold ? 'UNDER' : digits[i] > threshold ? 'OVER' : 'CURRENT';
-            
+
             if (type === currentType) {
                 currentLength++;
             } else {
@@ -350,7 +359,7 @@ export default class OverUnderStore {
             currentPercent: (current.length / total) * 100,
             underCount: under.length,
             overCount: over.length,
-            currentCount: current.length
+            currentCount: current.length,
         };
     }
 
@@ -360,12 +369,20 @@ export default class OverUnderStore {
         const under = dist.slice(0, 5);
         const over = dist.slice(5, 10);
 
-        const highestUnder = [...under].sort((a, b) => (b.count || 0) - (a.count || 0))[0] || { digit: 0, count: 0, percent: 0 };
-        const highestOver = [...over].sort((a, b) => (b.count || 0) - (a.count || 0))[0] || { digit: 9, count: 0, percent: 0 };
+        const highestUnder = [...under].sort((a, b) => (b.count || 0) - (a.count || 0))[0] || {
+            digit: 0,
+            count: 0,
+            percent: 0,
+        };
+        const highestOver = [...over].sort((a, b) => (b.count || 0) - (a.count || 0))[0] || {
+            digit: 9,
+            count: 0,
+            percent: 0,
+        };
 
         return {
             highestUnder,
-            highestOver
+            highestOver,
         };
     }
 
@@ -374,15 +391,15 @@ export default class OverUnderStore {
         if (digits.length === 0) return { frequency: 0, momentum: 0, gap: 0, powerScore: 0, strength: 'WEAK' };
 
         const frequency = (digits.filter(d => d === digit).length / digits.length) * 100;
-        
+
         const recent = digits.slice(-25);
         const momentum = (recent.filter(d => d === digit).length / (recent.length || 1)) * 100;
-        
+
         const lastIndex = digits.lastIndexOf(digit);
         const gap = lastIndex === -1 ? digits.length : digits.length - lastIndex - 1;
-        
-        const powerScore = (frequency * 0.5) + (momentum * 0.4) - (gap * 0.1);
-        
+
+        const powerScore = frequency * 0.5 + momentum * 0.4 - gap * 0.1;
+
         let strength: TDigitStrength = 'WEAK';
         if (powerScore >= 15) strength = 'VERY STRONG';
         else if (powerScore >= 10) strength = 'STRONG';

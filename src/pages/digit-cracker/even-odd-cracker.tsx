@@ -1,4 +1,4 @@
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import './even-odd-cracker.scss';

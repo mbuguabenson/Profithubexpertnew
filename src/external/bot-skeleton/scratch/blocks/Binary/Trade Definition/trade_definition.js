@@ -180,17 +180,19 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition = block 
     const trade_type = trade_type_block?.getFieldValue('TRADETYPE_LIST') || 'callput';
     const contract_type = contract_type_block?.getFieldValue('TYPE_LIST') || 'both';
     const candle_interval = candle_interval_block?.getFieldValue('CANDLEINTERVAL_LIST') || 'FALSE';
-    const should_restart_on_error = restart_on_error_block ? restart_on_error_block.getFieldValue('RESTARTONERROR') !== 'FALSE' : true;
-    const should_restart_on_buy_sell = restart_on_buy_sell_block ? restart_on_buy_sell_block.getFieldValue('TIME_MACHINE_ENABLED') !== 'FALSE' : true;
+    const should_restart_on_error = restart_on_error_block
+        ? restart_on_error_block.getFieldValue('RESTARTONERROR') !== 'FALSE'
+        : true;
+    const should_restart_on_buy_sell = restart_on_buy_sell_block
+        ? restart_on_buy_sell_block.getFieldValue('TIME_MACHINE_ENABLED') !== 'FALSE'
+        : true;
 
     const { opposites } = config();
     const raw_tt = (trade_type || '').toUpperCase();
     const stripped_tt = (trade_type || '').replace(/_/g, '').toUpperCase();
     const opp_list = opposites[raw_tt] || opposites[stripped_tt] || opposites['CALLPUT'] || [];
     const contract_type_list =
-        contract_type === 'both'
-            ? opp_list.map(opposite => Object.keys(opposite)[0])
-            : [contract_type];
+        contract_type === 'both' ? opp_list.map(opposite => Object.keys(opposite)[0]) : [contract_type];
 
     const initialization = window.Blockly.JavaScript.javascriptGenerator.statementToCode(block, 'INITIALIZATION');
     const trade_options_statement = window.Blockly.JavaScript.javascriptGenerator.statementToCode(block, 'SUBMARKET');

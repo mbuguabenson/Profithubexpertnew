@@ -2,14 +2,14 @@ import { action, makeObservable, observable, runInAction } from 'mobx';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
 
-export type TTradeCategory = 
-    | 'rise_fall' 
-    | 'high_low' 
-    | 'digits_match_diff' 
-    | 'digits_over_under' 
-    | 'digits_even_odd' 
-    | 'touch_no_touch' 
-    | 'accumulator' 
+export type TTradeCategory =
+    | 'rise_fall'
+    | 'high_low'
+    | 'digits_match_diff'
+    | 'digits_over_under'
+    | 'digits_even_odd'
+    | 'touch_no_touch'
+    | 'accumulator'
     | 'multiplier';
 
 export interface TProposalData {
@@ -276,7 +276,7 @@ export default class TraderStore {
             ...(this.category === 'digits_match_diff' || this.category === 'digits_over_under'
                 ? { barrier: String(this.prediction) }
                 : {}),
-            ...((this.category === 'high_low' || this.category === 'touch_no_touch') ? { barrier: this.barrier } : {}),
+            ...(this.category === 'high_low' || this.category === 'touch_no_touch' ? { barrier: this.barrier } : {}),
         });
     }
 

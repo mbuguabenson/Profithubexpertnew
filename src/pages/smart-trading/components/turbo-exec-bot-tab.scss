@@ -1,6 +1,5 @@
 @use '@/components/shared/styles/_mixins.scss' as *;
 
-
 .turbo-exec-bot-tab {
     display: flex;
     flex-direction: column;
@@ -348,4 +347,3 @@
         transform: translate(0);
     }
 }
-

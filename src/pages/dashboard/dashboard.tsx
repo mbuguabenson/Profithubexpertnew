@@ -34,7 +34,8 @@ const DashboardComponent = observer(({ handleTabChange }: TMobileIconGuide) => {
                         {/* Top Hub Welcome Notice */}
                         <div className='dash-hub-header-notice'>
                             <p className='notice-text'>
-                                Welcome to <strong>Legacy Trading Hub</strong> — Institutional algorithmic trading suite with next-generation automated bots, AI intelligence, and precision execution.
+                                Welcome to <strong>Legacy Trading Hub</strong> — Institutional algorithmic trading suite
+                                with next-generation automated bots, AI intelligence, and precision execution.
                             </p>
                         </div>
 

@@ -27,8 +27,8 @@ const DigitCracker = observer(() => {
         return (
             <div className='digit-cracker-hud-page'>
                 <Hub360LoadingScreen
-                    title="Digit Cracker 360"
-                    subtitle="Initializing algorithmic trade engine & security keys..."
+                    title='Digit Cracker 360'
+                    subtitle='Initializing algorithmic trade engine & security keys...'
                 />
             </div>
         );
@@ -165,7 +165,9 @@ const DigitCracker = observer(() => {
                             step='0.1'
                             min='0.35'
                             value={config.stake}
-                            onChange={e => trade_engine.updateConfig(activeStrategy, 'stake', parseFloat(e.target.value) || 0.35)}
+                            onChange={e =>
+                                trade_engine.updateConfig(activeStrategy, 'stake', parseFloat(e.target.value) || 0.35)
+                            }
                             className='num'
                         />
                     </div>
@@ -191,7 +193,9 @@ const DigitCracker = observer(() => {
                             type='number'
                             step='1'
                             value={config.max_loss}
-                            onChange={e => trade_engine.updateConfig(activeStrategy, 'max_loss', parseFloat(e.target.value) || 5)}
+                            onChange={e =>
+                                trade_engine.updateConfig(activeStrategy, 'max_loss', parseFloat(e.target.value) || 5)
+                            }
                             className='num'
                         />
                     </div>
@@ -201,7 +205,13 @@ const DigitCracker = observer(() => {
                             type='number'
                             step='1'
                             value={config.take_profit || 10}
-                            onChange={e => trade_engine.updateConfig(activeStrategy, 'take_profit', parseFloat(e.target.value) || 10)}
+                            onChange={e =>
+                                trade_engine.updateConfig(
+                                    activeStrategy,
+                                    'take_profit',
+                                    parseFloat(e.target.value) || 10
+                                )
+                            }
                             className='num'
                         />
                     </div>
@@ -211,7 +221,9 @@ const DigitCracker = observer(() => {
                             type='number'
                             step='1'
                             value={config.max_stake || 25}
-                            onChange={e => trade_engine.updateConfig(activeStrategy, 'max_stake', parseFloat(e.target.value) || 25)}
+                            onChange={e =>
+                                trade_engine.updateConfig(activeStrategy, 'max_stake', parseFloat(e.target.value) || 25)
+                            }
                             className='num'
                         />
                     </div>
@@ -223,7 +235,13 @@ const DigitCracker = observer(() => {
                                 min='0'
                                 max='9'
                                 value={config.prediction}
-                                onChange={e => trade_engine.updateConfig(activeStrategy, 'prediction', parseInt(e.target.value) || 0)}
+                                onChange={e =>
+                                    trade_engine.updateConfig(
+                                        activeStrategy,
+                                        'prediction',
+                                        parseInt(e.target.value) || 0
+                                    )
+                                }
                                 className='num'
                             />
                         </div>
@@ -239,7 +257,9 @@ const DigitCracker = observer(() => {
                     </button>
                     <button
                         className='btn-manual-launch'
-                        onClick={() => trade_engine.executeManualTrade(activeStrategy, symbol, client.currency || 'USD', bulkRuns)}
+                        onClick={() =>
+                            trade_engine.executeManualTrade(activeStrategy, symbol, client.currency || 'USD', bulkRuns)
+                        }
                         disabled={is_executing}
                     >
                         <span>⚡ {bulkRuns > 1 ? `EXECUTE ${bulkRuns} BULK RUNS` : 'EXECUTE SINGLE TRADE'}</span>
@@ -324,7 +344,9 @@ const DigitCracker = observer(() => {
                 <div className='deck-header'>
                     <div className='title-area'>
                         <h3>10-Digit Reactor Spectrum</h3>
-                        <span className='meta-tag'>{symbol} • {digit_cracker.ticks.length} Samples</span>
+                        <span className='meta-tag'>
+                            {symbol} • {digit_cracker.ticks.length} Samples
+                        </span>
                     </div>
                     <span className='hint-txt'>Click core to assign target digit</span>
                 </div>
@@ -378,10 +400,7 @@ const DigitCracker = observer(() => {
                             >
                                 METRIC SUMMARY
                             </button>
-                            <button
-                                className='clear-j-btn'
-                                onClick={() => trade_engine.clearLogs()}
-                            >
+                            <button className='clear-j-btn' onClick={() => trade_engine.clearLogs()}>
                                 CLEAR
                             </button>
                         </div>
@@ -393,7 +412,9 @@ const DigitCracker = observer(() => {
                                 ) : (
                                     logs.map((log, i) => (
                                         <div key={i} className={classNames('journal-entry', log.type)}>
-                                            <span className='time num'>[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+                                            <span className='time num'>
+                                                [{new Date(log.timestamp).toLocaleTimeString()}]
+                                            </span>
                                             <span className='msg'>{log.message}</span>
                                         </div>
                                     ))

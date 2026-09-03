@@ -1,21 +1,34 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
-import { 
-    Zap, 
-    TrendingUp,
-    TrendingDown,
-    Clock
-} from 'lucide-react';
+import { Zap, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import LastDigitsLineChart from '@/pages/circles-analysis/components/LastDigitsLineChart';
 import { useStore } from '@/hooks/useStore';
 import './over-under.scss';
 
 const DIGIT_COLORS = [
-    '#9333ea', '#ef4444', '#6366f1', '#10b981', '#ec4899', // 0-4
-    '#3b82f6', '#488cfb', '#22d3ee', '#8b5cf6', '#d946ef'  // 5-9
+    '#9333ea',
+    '#ef4444',
+    '#6366f1',
+    '#10b981',
+    '#ec4899', // 0-4
+    '#3b82f6',
+    '#488cfb',
+    '#22d3ee',
+    '#8b5cf6',
+    '#d946ef', // 5-9
 ];
 
-const DigitDistributionCircle = ({ item, color, isActive, onClick }: { item: any; color: string; isActive: boolean; onClick: () => void }) => {
+const DigitDistributionCircle = ({
+    item,
+    color,
+    isActive,
+    onClick,
+}: {
+    item: any;
+    color: string;
+    isActive: boolean;
+    onClick: () => void;
+}) => {
     const radius = 22;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (item.percent / 100) * circumference;
@@ -25,12 +38,23 @@ const DigitDistributionCircle = ({ item, color, isActive, onClick }: { item: any
             {item.digit === 9 && <div className='now-badge'>NOW</div>}
             <div className='svg-wrap'>
                 <svg width='56' height='56' viewBox='0 0 60 60'>
-                    <circle className='bg' cx='30' cy='30' r={radius} fill='none' stroke='rgba(255,255,255,0.05)' strokeWidth='4' />
-                    <circle 
-                        className='progress' 
-                        cx='30' cy='30' r={radius} 
-                        fill='none' stroke={color} 
-                        strokeWidth='4' 
+                    <circle
+                        className='bg'
+                        cx='30'
+                        cy='30'
+                        r={radius}
+                        fill='none'
+                        stroke='rgba(255,255,255,0.05)'
+                        strokeWidth='4'
+                    />
+                    <circle
+                        className='progress'
+                        cx='30'
+                        cy='30'
+                        r={radius}
+                        fill='none'
+                        stroke={color}
+                        strokeWidth='4'
                         strokeDasharray={circumference}
                         strokeDashoffset={offset}
                         strokeLinecap='round'
@@ -60,11 +84,11 @@ const OverUnderTab = observer(() => {
         return () => clearTimeout(timer);
     }, [over_under.recent_digits.length]);
 
-    const { 
-        recent_digits, 
+    const {
+        recent_digits,
         selected_digit,
-        analysis, 
-        prediction, 
+        analysis,
+        prediction,
         digit_distribution,
         group_stats,
         symbol,
@@ -76,7 +100,7 @@ const OverUnderTab = observer(() => {
         phase,
         phase2_ticks,
         selected_digit_power,
-        selected_digit_analysis
+        selected_digit_analysis,
     } = over_under;
 
     const chartData = useMemo(() => {
@@ -91,12 +115,14 @@ const OverUnderTab = observer(() => {
                 <div className='loading-hud'>
                     <div className='circle-outer' />
                     <div className='circle-inner' />
-                    <div className='icon-wrap'><Zap size={32} /></div>
+                    <div className='icon-wrap'>
+                        <Zap size={32} />
+                    </div>
                 </div>
                 <h3>CONSOLIDATING ANALYTICS</h3>
                 <p>Merging high-fidelity data streams...</p>
                 {isStuck && (
-                    <button 
+                    <button
                         className='force-refresh-btn'
                         onClick={() => {
                             setIsStuck(false);
@@ -112,7 +138,6 @@ const OverUnderTab = observer(() => {
 
     return (
         <div className='over-under-tab comprehensive-dashboard'>
-            
             {/* 1. Header Section (Image Layout) */}
             <section className='replica-card header-card'>
                 <div className='header-top'>
@@ -129,13 +154,15 @@ const OverUnderTab = observer(() => {
                         </div>
                     )}
                     <div className='market-switch-wrap'>
-                        <select 
-                            value={symbol} 
-                            onChange={(e) => setSymbol(e.target.value)}
+                        <select
+                            value={symbol}
+                            onChange={e => setSymbol(e.target.value)}
                             className='symbol-select-minimal'
                         >
                             {active_symbols.map(s => (
-                                <option key={s.symbol} value={s.symbol}>{s.display_name}</option>
+                                <option key={s.symbol} value={s.symbol}>
+                                    {s.display_name}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -147,10 +174,10 @@ const OverUnderTab = observer(() => {
                 <h4 className='card-title'>Digits Distribution (0–9)</h4>
                 <div className='dist-row'>
                     {digit_distribution.map((item, i) => (
-                        <DigitDistributionCircle 
-                            key={i} 
-                            item={item} 
-                            color={DIGIT_COLORS[i]} 
+                        <DigitDistributionCircle
+                            key={i}
+                            item={item}
+                            color={DIGIT_COLORS[i]}
                             isActive={selected_digit === i}
                             onClick={() => setSelectedDigit(i)}
                         />
@@ -163,11 +190,7 @@ const OverUnderTab = observer(() => {
                 <h4 className='card-title'>Last 20 Digits Feed</h4>
                 <div className='digits-strip'>
                     {recent_digits.slice(-20).map((d, i) => (
-                        <div 
-                            key={i} 
-                            className='digit-box'
-                            style={{ background: DIGIT_COLORS[d] }}
-                        >
+                        <div key={i} className='digit-box' style={{ background: DIGIT_COLORS[d] }}>
                             {d}
                         </div>
                     ))}
@@ -176,7 +199,6 @@ const OverUnderTab = observer(() => {
 
             {/* 4. MAIN DASHBOARD GRID */}
             <div className='main-dashboard-grid'>
-                
                 {/* LEFT: Analysis & Charts */}
                 <div className='grid-col col-main'>
                     {/* Analysis Split Section */}
@@ -189,7 +211,9 @@ const OverUnderTab = observer(() => {
                                     <span className='label'>Under (0-4)</span>
                                     <TrendingDown size={14} className='icon-slant' />
                                 </div>
-                                <div className='strongest'>Strongest Digit: {group_stats?.highestUnder?.digit ?? 'N/A'}</div>
+                                <div className='strongest'>
+                                    Strongest Digit: {group_stats?.highestUnder?.digit ?? 'N/A'}
+                                </div>
                                 <div className='progress-track'>
                                     <div className='fill' style={{ width: `${analysis?.underPercent ?? 0}%` }} />
                                 </div>
@@ -210,7 +234,9 @@ const OverUnderTab = observer(() => {
                                     <span className='label'>Over (5-9)</span>
                                     <TrendingUp size={14} className='icon-slant' />
                                 </div>
-                                <div className='strongest'>Strongest Digit: {group_stats?.highestOver?.digit ?? 'N/A'}</div>
+                                <div className='strongest'>
+                                    Strongest Digit: {group_stats?.highestOver?.digit ?? 'N/A'}
+                                </div>
                                 <div className='progress-track'>
                                     <div className='fill' style={{ width: `${analysis?.overPercent ?? 0}%` }} />
                                 </div>
@@ -237,11 +263,11 @@ const OverUnderTab = observer(() => {
                 <div className='grid-col col-side'>
                     <section className='replica-card prediction-power-card'>
                         <h4 className='power-title'>Digit {selected_digit} Power Analysis</h4>
-                        
+
                         <div className='power-digit-selector-mini'>
                             {Array.from({ length: 10 }).map((_, i) => (
-                                <button 
-                                    key={i} 
+                                <button
+                                    key={i}
                                     className={`sel-btn-mini ${selected_digit === i ? 'active' : ''}`}
                                     onClick={() => setSelectedDigit(i)}
                                     style={{ '--color': DIGIT_COLORS[i] } as React.CSSProperties}
@@ -264,14 +290,26 @@ const OverUnderTab = observer(() => {
 
                         <div className='group-bars-mini-replica'>
                             <div className='bar over'>
-                                <div className='fill' style={{ width: `${selected_digit_analysis?.overPercent || 0}%` }} />
+                                <div
+                                    className='fill'
+                                    style={{ width: `${selected_digit_analysis?.overPercent || 0}%` }}
+                                />
                                 <span className='label'>Over ({selected_digit + 1}-9)</span>
-                                <span className='val'>{selected_digit_analysis?.overPercent?.toFixed(1) || '0.0'}%</span>
+                                <span className='val'>
+                                    {selected_digit_analysis?.overPercent?.toFixed(1) || '0.0'}%
+                                </span>
                             </div>
                             <div className='bar under'>
-                                <div className='fill' style={{ width: `${selected_digit_analysis?.underPercent || 0}%` }} />
-                                <span className='label'>Under (0-{selected_digit - 1 >= 0 ? selected_digit - 1 : 0})</span>
-                                <span className='val'>{selected_digit_analysis?.underPercent?.toFixed(1) || '0.0'}%</span>
+                                <div
+                                    className='fill'
+                                    style={{ width: `${selected_digit_analysis?.underPercent || 0}%` }}
+                                />
+                                <span className='label'>
+                                    Under (0-{selected_digit - 1 >= 0 ? selected_digit - 1 : 0})
+                                </span>
+                                <span className='val'>
+                                    {selected_digit_analysis?.underPercent?.toFixed(1) || '0.0'}%
+                                </span>
                             </div>
                         </div>
 
@@ -280,7 +318,9 @@ const OverUnderTab = observer(() => {
                                 let type = d < 5 ? 'U' : 'O';
                                 if (d === selected_digit) type = 'C';
                                 return (
-                                    <div key={i} className={`pat-square pat--${type}`}>{type}</div>
+                                    <div key={i} className={`pat-square pat--${type}`}>
+                                        {type}
+                                    </div>
                                 );
                             })}
                         </div>
@@ -310,7 +350,7 @@ const OverUnderTab = observer(() => {
                 </div>
                 <div className='metric-card orange'>
                     <span className='title'>Volatility</span>
-                    <span className='value'>{ ((analysis?.volatility || 0) * 10).toFixed(1) }%</span>
+                    <span className='value'>{((analysis?.volatility || 0) * 10).toFixed(1)}%</span>
                 </div>
                 <div className='metric-card blue'>
                     <span className='title'>Confirmed Ticks</span>
@@ -321,7 +361,9 @@ const OverUnderTab = observer(() => {
             {/* 6. Info Footer Section (Image Layout) */}
             <section className='replica-card info-card'>
                 <p className='info-text'>
-                    <strong>Advanced Intelligence Engine:</strong> Analyzing market sentiment across all digits. High frequency signals trigger orange "RUN NOW" indicators. Trade confidence is calculated from over/under dominance and digit momentum.
+                    <strong>Advanced Intelligence Engine:</strong> Analyzing market sentiment across all digits. High
+                    frequency signals trigger orange "RUN NOW" indicators. Trade confidence is calculated from
+                    over/under dominance and digit momentum.
                 </p>
                 <div className='meta-footer'>
                     <span>Price: {current_price}</span>

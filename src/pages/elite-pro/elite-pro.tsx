@@ -94,8 +94,8 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
     const slice = digits.slice(-CHART_DIGITS);
     if (slice.length < 2) {
         return (
-            <div className="ep-chart-empty">
-                <span className="ep-chart-empty__icon">📊</span>
+            <div className='ep-chart-empty'>
+                <span className='ep-chart-empty__icon'>📊</span>
                 Waiting for tick stream...
             </div>
         );
@@ -117,22 +117,22 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
     const pathD = getBezierPath(points);
 
     return (
-        <div className="ep-chart-inner-scroll">
+        <div className='ep-chart-inner-scroll'>
             <svg
-                width="100%"
+                width='100%'
                 height={H}
                 viewBox={`0 0 ${W} ${H}`}
-                preserveAspectRatio="none"
+                preserveAspectRatio='none'
                 style={{ display: 'block', minWidth: `${W}px` }}
             >
                 <defs>
-                    <linearGradient id="epLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.7" />
-                        <stop offset="50%" stopColor="#a855f7" stopOpacity="1" />
-                        <stop offset="100%" stopColor="#c084fc" stopOpacity="0.9" />
+                    <linearGradient id='epLineGrad' x1='0%' y1='0%' x2='100%' y2='0%'>
+                        <stop offset='0%' stopColor='#8b5cf6' stopOpacity='0.7' />
+                        <stop offset='50%' stopColor='#a855f7' stopOpacity='1' />
+                        <stop offset='100%' stopColor='#c084fc' stopOpacity='0.9' />
                     </linearGradient>
-                    <filter id="epGlow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#9333ea" floodOpacity="0.6" />
+                    <filter id='epGlow' x='-20%' y='-20%' width='140%' height='140%'>
+                        <feDropShadow dx='0' dy='2' stdDeviation='3' floodColor='#9333ea' floodOpacity='0.6' />
                     </filter>
                 </defs>
 
@@ -140,23 +140,17 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
                 {[0, 3, 6, 9].map(level => {
                     const y = padTop + usableH - (level / 9) * usableH;
                     return (
-                        <g key={level} className="ep-chart-grid-line">
+                        <g key={level} className='ep-chart-grid-line'>
                             <line
-                                x1="0"
+                                x1='0'
                                 y1={y}
                                 x2={W}
                                 y2={y}
-                                stroke="var(--ep-svg-line-stroke)"
-                                strokeWidth="1"
+                                stroke='var(--ep-svg-line-stroke)'
+                                strokeWidth='1'
                                 strokeDasharray={level === 3 || level === 6 ? '3 3' : undefined}
                             />
-                            <text
-                                x="4"
-                                y={y - 3}
-                                fill="var(--ep-svg-text-fill)"
-                                fontSize="9"
-                                fontFamily="monospace"
-                            >
+                            <text x='4' y={y - 3} fill='var(--ep-svg-text-fill)' fontSize='9' fontFamily='monospace'>
                                 {level}
                             </text>
                         </g>
@@ -167,12 +161,12 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
                 {pathD && (
                     <path
                         d={pathD}
-                        fill="none"
-                        stroke="url(#epLineGrad)"
+                        fill='none'
+                        stroke='url(#epLineGrad)'
                         strokeWidth={2.4}
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                        filter="url(#epGlow)"
+                        strokeLinejoin='round'
+                        strokeLinecap='round'
+                        filter='url(#epGlow)'
                     />
                 )}
 
@@ -188,18 +182,24 @@ const DigitLineChart: React.FC<{ digits: number[] }> = ({ digits }) => {
                                 width={6}
                                 height={6}
                                 rx={1.5}
-                                fill={isLatest ? 'var(--ep-svg-orb-fill)' : isUnder ? 'var(--ep-accent-green)' : 'var(--ep-accent-orange)'}
-                                stroke="var(--ep-accent-purple)"
+                                fill={
+                                    isLatest
+                                        ? 'var(--ep-svg-orb-fill)'
+                                        : isUnder
+                                          ? 'var(--ep-accent-green)'
+                                          : 'var(--ep-accent-orange)'
+                                }
+                                stroke='var(--ep-accent-purple)'
                                 strokeWidth={1.5}
                             />
                             <text
                                 x={p.x}
                                 y={p.y - 8}
-                                textAnchor="middle"
+                                textAnchor='middle'
                                 fill={isLatest ? 'var(--ep-svg-orb-text)' : 'var(--ep-svg-orb-text-muted)'}
                                 fontSize={isLatest ? 12 : 11}
                                 fontWeight={800}
-                                fontFamily="system-ui, -apple-system, sans-serif"
+                                fontFamily='system-ui, -apple-system, sans-serif'
                             >
                                 {p.d}
                             </text>
@@ -265,7 +265,10 @@ const ElitePro = observer(() => {
     const [totalProfit, setTotalProfit] = useState(0);
     const [wins, setWins] = useState(0);
     const [losses, setLosses] = useState(0);
-    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({ isOpen: false, type: null });
+    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({
+        isOpen: false,
+        type: null,
+    });
 
     const currentStakeRef = useRef(0.35);
     const autoAbortRef = useRef<AbortController | null>(null);
@@ -278,31 +281,49 @@ const ElitePro = observer(() => {
     const lossesRef = useRef(0);
 
     // Sync refs with state
-    useEffect(() => { autoStateRef.current = autoState; }, [autoState]);
-    useEffect(() => { currentStakeRef.current = parseFloat(stake) || 0.35; }, [stake]);
-    useEffect(() => { totalProfitRef.current = totalProfit; }, [totalProfit]);
-    useEffect(() => { winsRef.current = wins; }, [wins]);
-    useEffect(() => { lossesRef.current = losses; }, [losses]);
+    useEffect(() => {
+        autoStateRef.current = autoState;
+    }, [autoState]);
+    useEffect(() => {
+        currentStakeRef.current = parseFloat(stake) || 0.35;
+    }, [stake]);
+    useEffect(() => {
+        totalProfitRef.current = totalProfit;
+    }, [totalProfit]);
+    useEffect(() => {
+        winsRef.current = wins;
+    }, [wins]);
+    useEffect(() => {
+        lossesRef.current = losses;
+    }, [losses]);
 
     // ── Handle manual market selection (Seamless market transition without stopping bot) ──
-    const handleManualMarketSelect = useCallback((sym: string) => {
-        setSelectedSymbol(sym);
-        selectedSymbolRef.current = sym;
-        if (autoInputBestMarket) setAutoInputBestMarket(false);
+    const handleManualMarketSelect = useCallback(
+        (sym: string) => {
+            setSelectedSymbol(sym);
+            selectedSymbolRef.current = sym;
+            if (autoInputBestMarket) setAutoInputBestMarket(false);
 
-        if (autoStateRef.current !== 'IDLE') {
-            const label = MARKETS.find(m => m.symbol === sym)?.label || sym;
-            setTradeLog(prev => [{
-                id: `EP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                time: new Date().toLocaleTimeString(),
-                type: 'MARKET SWITCHED',
-                market: label,
-                result: 'PENDING' as const,
-                profit: 0,
-                details: `Focused trading on ${label}`,
-            }, ...prev].slice(0, 100));
-        }
-    }, [autoInputBestMarket]);
+            if (autoStateRef.current !== 'IDLE') {
+                const label = MARKETS.find(m => m.symbol === sym)?.label || sym;
+                setTradeLog(prev =>
+                    [
+                        {
+                            id: `EP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                            time: new Date().toLocaleTimeString(),
+                            type: 'MARKET SWITCHED',
+                            market: label,
+                            result: 'PENDING' as const,
+                            profit: 0,
+                            details: `Focused trading on ${label}`,
+                        },
+                        ...prev,
+                    ].slice(0, 100)
+                );
+            }
+        },
+        [autoInputBestMarket]
+    );
 
     // ── Fetch Deriv Automation strategies if in server mode ──
     useEffect(() => {
@@ -353,7 +374,9 @@ const ElitePro = observer(() => {
 
         // 4. Frequency distribution & Highest Digits
         const freq = new Array(10).fill(0);
-        slice.forEach(d => { if (d >= 0 && d <= 9) freq[d]++; });
+        slice.forEach(d => {
+            if (d >= 0 && d <= 9) freq[d]++;
+        });
 
         // Highest Entry Digit in Under (0-5)
         const underFreq = freq.slice(0, 6);
@@ -409,8 +432,7 @@ const ElitePro = observer(() => {
         // Trend flip detection
         const recent3 = slice.slice(-3);
         const recentTrendFlip =
-            (bias === 'under' && recent3.every(d => d >= 7)) ||
-            (bias === 'over' && recent3.every(d => d <= 2));
+            (bias === 'under' && recent3.every(d => d >= 7)) || (bias === 'over' && recent3.every(d => d <= 2));
 
         return {
             under04,
@@ -447,51 +469,74 @@ const ElitePro = observer(() => {
     }, []);
 
     // ── Check entry signal based on exact user trading conditions ──
-    const checkEntrySignal = useCallback((digits: number[]): { direction: 'UNDER' | 'OVER'; prediction: number; triggerDigit: number; reason: string; status: 'WAITING' | 'TRIGGERED' } | null => {
-        if (digits.length < 30) return null;
-        const a = computeAnalysis(digits);
-        const currentLastDigit = digits[digits.length - 1];
+    const checkEntrySignal = useCallback(
+        (
+            digits: number[]
+        ): {
+            direction: 'UNDER' | 'OVER';
+            prediction: number;
+            triggerDigit: number;
+            reason: string;
+            status: 'WAITING' | 'TRIGGERED';
+        } | null => {
+            if (digits.length < 30) return null;
+            const a = computeAnalysis(digits);
+            const currentLastDigit = digits[digits.length - 1];
 
-        // 1. UNDER 6 Conditions (Digits 0-5)
-        const underRatioMet = a.pctUnder05 >= 62; // ~31/50
-        const underIncreasingMet = a.underIncreasing;
-        const under50TicksMet = a.under05 >= 32;
-        const underRecentTicksMet = a.last15Under && a.last10Under && a.last7Under;
+            // 1. UNDER 6 Conditions (Digits 0-5)
+            const underRatioMet = a.pctUnder05 >= 62; // ~31/50
+            const underIncreasingMet = a.underIncreasing;
+            const under50TicksMet = a.under05 >= 32;
+            const underRecentTicksMet = a.last15Under && a.last10Under && a.last7Under;
 
-        // ALL conditions must align perfectly
-        const isUnderValid = underRatioMet && underIncreasingMet && under50TicksMet && underRecentTicksMet && !a.isUnderTrendFlipped && !a.recentTrendFlip;
+            // ALL conditions must align perfectly
+            const isUnderValid =
+                underRatioMet &&
+                underIncreasingMet &&
+                under50TicksMet &&
+                underRecentTicksMet &&
+                !a.isUnderTrendFlipped &&
+                !a.recentTrendFlip;
 
-        if (isUnderValid) {
-            return {
-                direction: 'UNDER',
-                prediction: 6,
-                triggerDigit: a.highestUnderDigit,
-                reason: `Strict Under setup aligned (U0-5: ${a.under05}/50). Trigger: [${a.highestUnderDigit}]`,
-                status: currentLastDigit === a.highestUnderDigit ? 'TRIGGERED' : 'WAITING',
-            };
-        }
+            if (isUnderValid) {
+                return {
+                    direction: 'UNDER',
+                    prediction: 6,
+                    triggerDigit: a.highestUnderDigit,
+                    reason: `Strict Under setup aligned (U0-5: ${a.under05}/50). Trigger: [${a.highestUnderDigit}]`,
+                    status: currentLastDigit === a.highestUnderDigit ? 'TRIGGERED' : 'WAITING',
+                };
+            }
 
-        // 2. OVER 3 Conditions (Digits 4-9)
-        const overRatioMet = a.pctOver49 >= 62; // ~31/50
-        const overIncreasingMet = a.overIncreasing;
-        const over50TicksMet = a.over49 >= 32;
-        const overRecentTicksMet = a.last15Over && a.last10Over && a.last7Over;
+            // 2. OVER 3 Conditions (Digits 4-9)
+            const overRatioMet = a.pctOver49 >= 62; // ~31/50
+            const overIncreasingMet = a.overIncreasing;
+            const over50TicksMet = a.over49 >= 32;
+            const overRecentTicksMet = a.last15Over && a.last10Over && a.last7Over;
 
-        // ALL conditions must align perfectly
-        const isOverValid = overRatioMet && overIncreasingMet && over50TicksMet && overRecentTicksMet && !a.isOverTrendFlipped && !a.recentTrendFlip;
+            // ALL conditions must align perfectly
+            const isOverValid =
+                overRatioMet &&
+                overIncreasingMet &&
+                over50TicksMet &&
+                overRecentTicksMet &&
+                !a.isOverTrendFlipped &&
+                !a.recentTrendFlip;
 
-        if (isOverValid) {
-            return {
-                direction: 'OVER',
-                prediction: 3,
-                triggerDigit: a.highestOverDigit,
-                reason: `Strict Over setup aligned (O4-9: ${a.over49}/50). Trigger: [${a.highestOverDigit}]`,
-                status: currentLastDigit === a.highestOverDigit ? 'TRIGGERED' : 'WAITING',
-            };
-        }
+            if (isOverValid) {
+                return {
+                    direction: 'OVER',
+                    prediction: 3,
+                    triggerDigit: a.highestOverDigit,
+                    reason: `Strict Over setup aligned (O4-9: ${a.over49}/50). Trigger: [${a.highestOverDigit}]`,
+                    status: currentLastDigit === a.highestOverDigit ? 'TRIGGERED' : 'WAITING',
+                };
+            }
 
-        return null;
-    }, [computeAnalysis]);
+            return null;
+        },
+        [computeAnalysis]
+    );
 
     // ── Get active market data ──
     const getActiveData = useCallback((): MarketDigitData | null => {
@@ -539,7 +584,11 @@ const ElitePro = observer(() => {
 
         if (!shouldSubscribe) {
             activeSubs.forEach(sub => {
-                try { sub.unsubscribe(); } catch { /* ignore */ }
+                try {
+                    sub.unsubscribe();
+                } catch {
+                    /* ignore */
+                }
             });
             activeSubs.clear();
             return;
@@ -634,7 +683,11 @@ const ElitePro = observer(() => {
 
         activeSubs.forEach((sub, sym) => {
             if (!symbolsToSubscribe.includes(sym)) {
-                try { sub.unsubscribe(); } catch { /* ignore */ }
+                try {
+                    sub.unsubscribe();
+                } catch {
+                    /* ignore */
+                }
                 activeSubs.delete(sym);
             }
         });
@@ -689,7 +742,12 @@ const ElitePro = observer(() => {
             if (entrySignal) {
                 if (entrySignal.status === 'TRIGGERED') radarStatus = 'green';
                 else radarStatus = 'yellow';
-            } else if (a.recentTrendFlip || a.isUnderTrendFlipped || a.isOverTrendFlipped || (a.pctUnder05 >= 45 && a.pctUnder05 <= 55 && a.pctOver49 >= 45 && a.pctOver49 <= 55)) {
+            } else if (
+                a.recentTrendFlip ||
+                a.isUnderTrendFlipped ||
+                a.isOverTrendFlipped ||
+                (a.pctUnder05 >= 45 && a.pctUnder05 <= 55 && a.pctOver49 >= 45 && a.pctOver49 <= 55)
+            ) {
                 radarStatus = 'blue';
             } else if (strength < 58) {
                 radarStatus = 'red'; // Less than 58% strength is considered not safe enough for an imminent signal
@@ -741,199 +799,224 @@ const ElitePro = observer(() => {
     }, [autoInputBestMarket, bestMarket, selectedSymbol, autoState]);
 
     // ── Push trade updates to Transaction Drawer & Run Panel ──
-    const pushContract = useCallback((data: Record<string, unknown>) => {
-        try {
-            transactions.pushTransaction({ ...data, run_id: run_panel.run_id });
-            run_panel.onBotContractEvent(data);
-            summary_card.onBotContractEvent(data);
-        } catch {
-            // ignore
-        }
-    }, [run_panel, summary_card, transactions]);
+    const pushContract = useCallback(
+        (data: Record<string, unknown>) => {
+            try {
+                transactions.pushTransaction({ ...data, run_id: run_panel.run_id });
+                run_panel.onBotContractEvent(data);
+                summary_card.onBotContractEvent(data);
+            } catch {
+                // ignore
+            }
+        },
+        [run_panel, summary_card, transactions]
+    );
 
     // ── Log entry helper ──
-    const addLogEntry = useCallback((
-        type: string,
-        market: string,
-        result: 'WIN' | 'LOSS' | 'PENDING' | 'ABORTED',
-        profit: number,
-        details?: string,
-    ) => {
-        setTradeLog(prev => [{
-            id: `EP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            time: new Date().toLocaleTimeString(),
-            type,
-            market,
-            result,
-            profit,
-            details,
-        }, ...prev].slice(0, 100));
-    }, []);
+    const addLogEntry = useCallback(
+        (
+            type: string,
+            market: string,
+            result: 'WIN' | 'LOSS' | 'PENDING' | 'ABORTED',
+            profit: number,
+            details?: string
+        ) => {
+            setTradeLog(prev =>
+                [
+                    {
+                        id: `EP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                        time: new Date().toLocaleTimeString(),
+                        type,
+                        market,
+                        result,
+                        profit,
+                        details,
+                    },
+                    ...prev,
+                ].slice(0, 100)
+            );
+        },
+        []
+    );
 
     // ── Execute Single Trade (Local Engine) ──
-    const executeTrade = useCallback(async (
-        symbol: string,
-        direction: 'UNDER' | 'OVER',
-        prediction: number,
-        stakeAmount: number,
-    ): Promise<number> => {
-        const contractType = direction === 'UNDER' ? 'DIGITUNDER' : 'DIGITOVER';
-        const dur = parseInt(tickDuration) || 1;
-        const params: Record<string, unknown> = {
-            amount: stakeAmount,
-            basis: 'stake',
-            contract_type: contractType,
-            currency: currency || 'USD',
-            duration: dur,
-            duration_unit: 't',
-            symbol,
-            barrier: String(prediction),
-        };
-
-        const tradeStartTime = Math.floor(Date.now() / 1000);
-        const verificationId = `EP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        const marketLabel = MARKETS.find(m => m.symbol === symbol)?.label || symbol;
-
-        try {
-            const buy = await buyContractForUi({ parameters: params, price: stakeAmount, source: 'ElitePro' });
-            const { contract_id, buy_price, transaction_id } = buy;
-
-            const initialContractSnapshot = {
-                buy_price,
-                contract_id,
-                transaction_ids: { buy: transaction_id },
-                date_start: tradeStartTime,
-                display_name: marketLabel,
-                underlying_symbol: symbol,
-                shortcode: `ELITE_${contractType}_${symbol}`,
+    const executeTrade = useCallback(
+        async (
+            symbol: string,
+            direction: 'UNDER' | 'OVER',
+            prediction: number,
+            stakeAmount: number
+        ): Promise<number> => {
+            const contractType = direction === 'UNDER' ? 'DIGITUNDER' : 'DIGITOVER';
+            const dur = parseInt(tickDuration) || 1;
+            const params: Record<string, unknown> = {
+                amount: stakeAmount,
+                basis: 'stake',
                 contract_type: contractType,
                 currency: currency || 'USD',
-                verification_id: verificationId,
+                duration: dur,
+                duration_unit: 't',
+                symbol,
                 barrier: String(prediction),
             };
 
-            pushContract(initialContractSnapshot);
+            const tradeStartTime = Math.floor(Date.now() / 1000);
+            const verificationId = `EP-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+            const marketLabel = MARKETS.find(m => m.symbol === symbol)?.label || symbol;
 
-            const abortController = new AbortController();
-            contractStreamAbortRef.current.add(abortController);
+            try {
+                const buy = await buyContractForUi({ parameters: params, price: stakeAmount, source: 'ElitePro' });
+                const { contract_id, buy_price, transaction_id } = buy;
 
-            const settledContract = await streamContractUntilSettled({
-                contractId: contract_id,
-                fallback: initialContractSnapshot,
-                onUpdate: snapshot => {
-                    if (!unmountedRef.current) pushContract(snapshot);
-                },
-                signal: abortController.signal,
-                source: 'ElitePro',
-            });
+                const initialContractSnapshot = {
+                    buy_price,
+                    contract_id,
+                    transaction_ids: { buy: transaction_id },
+                    date_start: tradeStartTime,
+                    display_name: marketLabel,
+                    underlying_symbol: symbol,
+                    shortcode: `ELITE_${contractType}_${symbol}`,
+                    contract_type: contractType,
+                    currency: currency || 'USD',
+                    verification_id: verificationId,
+                    barrier: String(prediction),
+                };
 
-            contractStreamAbortRef.current.delete(abortController);
-            return Number(settledContract.profit ?? 0);
-        } catch (err) {
-            const msg = err instanceof Error ? err.message : String(err);
-            console.error('[ElitePro] Trade execution error:', msg);
-            throw err;
-        }
-    }, [tickDuration, currency, pushContract]);
+                pushContract(initialContractSnapshot);
+
+                const abortController = new AbortController();
+                contractStreamAbortRef.current.add(abortController);
+
+                const settledContract = await streamContractUntilSettled({
+                    contractId: contract_id,
+                    fallback: initialContractSnapshot,
+                    onUpdate: snapshot => {
+                        if (!unmountedRef.current) pushContract(snapshot);
+                    },
+                    signal: abortController.signal,
+                    source: 'ElitePro',
+                });
+
+                contractStreamAbortRef.current.delete(abortController);
+                return Number(settledContract.profit ?? 0);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                console.error('[ElitePro] Trade execution error:', msg);
+                throw err;
+            }
+        },
+        [tickDuration, currency, pushContract]
+    );
 
     // ── Subscribe to Server-Side Deriv Automation ──
-    const subscribeToServerRun = useCallback((runId: string) => {
-        if (!api_base.api) return;
-        try {
-            const observable = api_base.api.subscribe({ auto_get: 1, run_id: runId });
-            const sub = safeSubscribe(observable, (data: Record<string, unknown>) => {
-                if (unmountedRef.current) return;
+    const subscribeToServerRun = useCallback(
+        (runId: string) => {
+            if (!api_base.api) return;
+            try {
+                const observable = api_base.api.subscribe({ auto_get: 1, run_id: runId });
+                const sub = safeSubscribe(observable, (data: Record<string, unknown>) => {
+                    if (unmountedRef.current) return;
 
-                const runDetails = (data?.auto_get || data?.auto_start) as {
-                    status?: string;
-                    stop_reason?: string;
-                    total_stake?: number;
-                    total_payout?: number;
-                    contracts?: Array<{
-                        contract_id?: number;
-                        stake?: number;
-                        buy_price?: number;
-                        transaction_id?: number;
-                        start_time?: number;
-                        contract_type?: string;
-                        profit?: number;
-                        barrier?: string;
-                        status?: string;
-                    }>;
-                } | undefined;
+                    const runDetails = (data?.auto_get || data?.auto_start) as
+                        | {
+                              status?: string;
+                              stop_reason?: string;
+                              total_stake?: number;
+                              total_payout?: number;
+                              contracts?: Array<{
+                                  contract_id?: number;
+                                  stake?: number;
+                                  buy_price?: number;
+                                  transaction_id?: number;
+                                  start_time?: number;
+                                  contract_type?: string;
+                                  profit?: number;
+                                  barrier?: string;
+                                  status?: string;
+                              }>;
+                          }
+                        | undefined;
 
-                if (!runDetails) return;
+                    if (!runDetails) return;
 
-                const status = runDetails.status || 'idle';
-                setServerRunStatus(status);
+                    const status = runDetails.status || 'idle';
+                    setServerRunStatus(status);
 
-                if (status === 'stopped') {
-                    setAutoState('IDLE');
-                    setActiveRunId(null);
-                    addLogEntry('SERVER STOPPED', `Reason: ${runDetails.stop_reason || 'user_stopped'}`, 'PENDING', 0);
-                } else if (status === 'paused') {
-                    setAutoState('PAUSED');
-                } else if (status === 'running') {
-                    setAutoState('TRADING');
-                }
+                    if (status === 'stopped') {
+                        setAutoState('IDLE');
+                        setActiveRunId(null);
+                        addLogEntry(
+                            'SERVER STOPPED',
+                            `Reason: ${runDetails.stop_reason || 'user_stopped'}`,
+                            'PENDING',
+                            0
+                        );
+                    } else if (status === 'paused') {
+                        setAutoState('PAUSED');
+                    } else if (status === 'running') {
+                        setAutoState('TRADING');
+                    }
 
-                const totalSpent = Number(runDetails.total_stake || 0);
-                const totalPayout = Number(runDetails.total_payout || 0);
-                const profit = Number((totalPayout - totalSpent).toFixed(2));
+                    const totalSpent = Number(runDetails.total_stake || 0);
+                    const totalPayout = Number(runDetails.total_payout || 0);
+                    const profit = Number((totalPayout - totalSpent).toFixed(2));
 
-                setTotalProfit(profit);
-                totalProfitRef.current = profit;
+                    setTotalProfit(profit);
+                    totalProfitRef.current = profit;
 
-                const contracts = runDetails.contracts || [];
-                let winsCount = 0;
-                let lossesCount = 0;
+                    const contracts = runDetails.contracts || [];
+                    let winsCount = 0;
+                    let lossesCount = 0;
 
-                contracts.forEach(c => {
-                    const p = Number(c.profit || 0);
-                    if (c.status === 'won' || p > 0) winsCount++;
-                    else if (c.status === 'lost' || p < 0) lossesCount++;
+                    contracts.forEach(c => {
+                        const p = Number(c.profit || 0);
+                        if (c.status === 'won' || p > 0) winsCount++;
+                        else if (c.status === 'lost' || p < 0) lossesCount++;
 
-                    if (c.contract_id) {
-                        pushContract({
-                            buy_price: c.buy_price || c.stake,
-                            contract_id: c.contract_id,
-                            transaction_ids: { buy: c.transaction_id },
-                            date_start: c.start_time,
-                            display_name: selectedSymbol,
-                            underlying_symbol: selectedSymbol,
-                            shortcode: `AUTO_SERVER_${selectedStrategy.toUpperCase()}_${c.contract_id}`,
-                            contract_type: c.contract_type || (analysis?.bias === 'over' ? 'DIGITOVER' : 'DIGITUNDER'),
-                            currency: currency || 'USD',
-                            profit: c.profit,
-                            barrier: c.barrier,
-                            is_completed: c.status === 'won' || c.status === 'lost',
-                        });
+                        if (c.contract_id) {
+                            pushContract({
+                                buy_price: c.buy_price || c.stake,
+                                contract_id: c.contract_id,
+                                transaction_ids: { buy: c.transaction_id },
+                                date_start: c.start_time,
+                                display_name: selectedSymbol,
+                                underlying_symbol: selectedSymbol,
+                                shortcode: `AUTO_SERVER_${selectedStrategy.toUpperCase()}_${c.contract_id}`,
+                                contract_type:
+                                    c.contract_type || (analysis?.bias === 'over' ? 'DIGITOVER' : 'DIGITUNDER'),
+                                currency: currency || 'USD',
+                                profit: c.profit,
+                                barrier: c.barrier,
+                                is_completed: c.status === 'won' || c.status === 'lost',
+                            });
+                        }
+                    });
+
+                    setWins(winsCount);
+                    winsRef.current = winsCount;
+                    setLosses(lossesCount);
+                    lossesRef.current = lossesCount;
+
+                    if (contracts.length > 0) {
+                        const latest = contracts[contracts.length - 1];
+                        const latestProfit = Number(latest.profit || 0);
+                        const isWon = latest.status === 'won' || latestProfit > 0;
+                        addLogEntry(
+                            `SERVER ${latest.contract_type || 'TRADE'}`,
+                            selectedSymbol,
+                            isWon ? 'WIN' : 'LOSS',
+                            latestProfit
+                        );
                     }
                 });
 
-                setWins(winsCount);
-                winsRef.current = winsCount;
-                setLosses(lossesCount);
-                lossesRef.current = lossesCount;
-
-                if (contracts.length > 0) {
-                    const latest = contracts[contracts.length - 1];
-                    const latestProfit = Number(latest.profit || 0);
-                    const isWon = latest.status === 'won' || latestProfit > 0;
-                    addLogEntry(
-                        `SERVER ${latest.contract_type || 'TRADE'}`,
-                        selectedSymbol,
-                        isWon ? 'WIN' : 'LOSS',
-                        latestProfit,
-                    );
-                }
-            });
-
-            serverSubscriptionRef.current = sub;
-        } catch (err) {
-            console.error('[ElitePro] Server subscription error:', err);
-        }
-    }, [selectedSymbol, selectedStrategy, analysis?.bias, currency, pushContract, addLogEntry]);
+                serverSubscriptionRef.current = sub;
+            } catch (err) {
+                console.error('[ElitePro] Server subscription error:', err);
+            }
+        },
+        [selectedSymbol, selectedStrategy, analysis?.bias, currency, pushContract, addLogEntry]
+    );
 
     // ── Launch Full Auto-Trading Engine ──
     const startAutoTrading = useCallback(async () => {
@@ -1021,7 +1104,7 @@ const ElitePro = observer(() => {
                                     candidateWithSignal.label,
                                     'PENDING',
                                     0,
-                                    `Auto-switched to market with active ${candidateWithSignal.signalDirection} signal`,
+                                    `Auto-switched to market with active ${candidateWithSignal.signalDirection} signal`
                                 );
                                 scanningCycles = 0;
                                 await new Promise(r => setTimeout(r, 800));
@@ -1068,14 +1151,14 @@ const ElitePro = observer(() => {
                             currentData.label,
                             'PENDING',
                             0,
-                            `Stake: ${stakeToUse.toFixed(2)} ${currency} | ${entrySignal.reason}`,
+                            `Stake: ${stakeToUse.toFixed(2)} ${currency} | ${entrySignal.reason}`
                         );
 
                         const profit = await executeTrade(
                             targetSym,
                             entrySignal.direction,
                             entrySignal.prediction,
-                            stakeToUse,
+                            stakeToUse
                         );
 
                         const isWin = profit > 0;
@@ -1085,7 +1168,7 @@ const ElitePro = observer(() => {
                             currentData.label,
                             resultStr,
                             profit,
-                            `Return: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ${currency}`,
+                            `Return: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ${currency}`
                         );
 
                         const nextProfit = Number((totalProfitRef.current + profit).toFixed(2));
@@ -1107,16 +1190,30 @@ const ElitePro = observer(() => {
                         if (tradeRuns >= maxRuns) {
                             tradeRuns = 0;
                             if (autoSwitchMarkets) {
-                                const nextBest = allMarketsData.find(m => m.symbol !== targetSym && (m.hasSignal || m.strength >= 55));
+                                const nextBest = allMarketsData.find(
+                                    m => m.symbol !== targetSym && (m.hasSignal || m.strength >= 55)
+                                );
                                 if (nextBest) {
                                     setSelectedSymbol(nextBest.symbol);
                                     selectedSymbolRef.current = nextBest.symbol;
-                                    addLogEntry('SMART SWITCH', nextBest.label, 'PENDING', 0, `Auto-switched market to ${nextBest.label} after ${maxRuns} runs`);
+                                    addLogEntry(
+                                        'SMART SWITCH',
+                                        nextBest.label,
+                                        'PENDING',
+                                        0,
+                                        `Auto-switched market to ${nextBest.label} after ${maxRuns} runs`
+                                    );
                                 }
                             }
                             setAutoState('SCANNING');
                             autoStateRef.current = 'SCANNING';
-                            addLogEntry('RE-ANALYZING', selectedSymbolRef.current, 'PENDING', 0, `Re-evaluating signals after ${maxRuns} runs...`);
+                            addLogEntry(
+                                'RE-ANALYZING',
+                                selectedSymbolRef.current,
+                                'PENDING',
+                                0,
+                                `Re-evaluating signals after ${maxRuns} runs...`
+                            );
                             await new Promise(r => setTimeout(r, 2500)); // Brief settling cooldown
                         } else {
                             setAutoState('SCANNING');
@@ -1182,7 +1279,9 @@ const ElitePro = observer(() => {
                 console.warn('[ElitePro] Server mode rejected, switching to local neural engine:', msg);
                 addLogEntry('SERVER RUN REJECTED', 'Falling back to Local Neural Engine...', 'PENDING', 0, msg);
                 setExecutionMode('local');
-                setTimeout(() => { startLocalEngineLoop(); }, 100);
+                setTimeout(() => {
+                    startLocalEngineLoop();
+                }, 100);
             }
             return;
         }
@@ -1351,38 +1450,41 @@ const ElitePro = observer(() => {
     }, [activeSignal, analysis?.bias]);
 
     return (
-        <div className="elite-pro">
-            <div className="ep-background-blobs">
-                <div className="blob blob-1" />
-                <div className="blob blob-2" />
-                <div className="blob blob-3" />
+        <div className='elite-pro'>
+            <div className='ep-background-blobs'>
+                <div className='blob blob-1' />
+                <div className='blob blob-2' />
+                <div className='blob blob-3' />
             </div>
 
             {!logged_in && (
-                <div className="ep-login-overlay">
-                    <div className="ep-login-overlay__panel">
-                        <span className="ep-login-overlay__icon">👑</span>
+                <div className='ep-login-overlay'>
+                    <div className='ep-login-overlay__panel'>
+                        <span className='ep-login-overlay__icon'>👑</span>
                         <h3>ProfitHub Elite Pro</h3>
-                        <p>Authenticate with your Deriv account to unlock advanced scanners, real-time digit statistics, and the automated neural trading engine.</p>
-                        <button className="ep-login-overlay__btn" onClick={handleLogin}>
+                        <p>
+                            Authenticate with your Deriv account to unlock advanced scanners, real-time digit
+                            statistics, and the automated neural trading engine.
+                        </p>
+                        <button className='ep-login-overlay__btn' onClick={handleLogin}>
                             Connect Deriv Account
                         </button>
                     </div>
                 </div>
             )}
 
-            <div className="ep-layout">
+            <div className='ep-layout'>
                 {/* ══════════════════════════════════════════════════════════════════
                     LEFT / SIDE PANEL: ALL MARKETS SCANNER
                     ══════════════════════════════════════════════════════════════════ */}
                 <aside className={`ep-sidebar ${marketsSideExpanded ? 'expanded' : 'collapsed'}`}>
-                    <div className="ep-sidebar__header">
-                        <div className="title-wrap">
-                            <span className="icon">📡</span>
+                    <div className='ep-sidebar__header'>
+                        <div className='title-wrap'>
+                            <span className='icon'>📡</span>
                             <h3>Derived Synthetics ({allMarketsData.length})</h3>
                         </div>
                         <button
-                            className="ep-sidebar__collapse-btn"
+                            className='ep-sidebar__collapse-btn'
                             onClick={() => setMarketsSideExpanded(!marketsSideExpanded)}
                             title={marketsSideExpanded ? 'Collapse Scanner Tray' : 'Expand Scanner Tray'}
                         >
@@ -1391,31 +1493,27 @@ const ElitePro = observer(() => {
                     </div>
 
                     {marketsSideExpanded && (
-                        <div className="ep-sidebar__controls">
-                            <label className="ep-checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    checked={scanAll}
-                                    onChange={e => setScanAll(e.target.checked)}
-                                />
-                                <span className="ep-checkbox-custom" />
+                        <div className='ep-sidebar__controls'>
+                            <label className='ep-checkbox-label'>
+                                <input type='checkbox' checked={scanAll} onChange={e => setScanAll(e.target.checked)} />
+                                <span className='ep-checkbox-custom' />
                                 <span>Scan All Markets</span>
                             </label>
 
-                            <label className="ep-checkbox-label">
+                            <label className='ep-checkbox-label'>
                                 <input
-                                    type="checkbox"
+                                    type='checkbox'
                                     checked={autoInputBestMarket}
                                     onChange={e => setAutoInputBestMarket(e.target.checked)}
                                 />
-                                <span className="ep-checkbox-custom" />
+                                <span className='ep-checkbox-custom' />
                                 <span>Auto-Select Best Market</span>
                             </label>
                         </div>
                     )}
 
                     {marketsSideExpanded && (
-                        <div className="ep-sidebar__market-list">
+                        <div className='ep-sidebar__market-list'>
                             {allMarketsData.map(m => {
                                 const isSelected = m.symbol === selectedSymbol;
                                 const isBest = bestMarket?.symbol === m.symbol;
@@ -1427,42 +1525,59 @@ const ElitePro = observer(() => {
                                             handleManualMarketSelect(m.symbol);
                                         }}
                                     >
-                                        <div className="ep-side-market-card__top">
-                                            <div className="name-box" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                <span className="label" style={{ marginRight: '4px' }}>{m.label}</span>
-                                                {isBest && <span className="best-tag">TOP</span>}
+                                        <div className='ep-side-market-card__top'>
+                                            <div
+                                                className='name-box'
+                                                style={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                <span className='label' style={{ marginRight: '4px' }}>
+                                                    {m.label}
+                                                </span>
+                                                {isBest && <span className='best-tag'>TOP</span>}
                                                 {m.hasSignal && (
-                                                    <span className={`signal-tag signal-tag--${m.signalDirection?.toLowerCase()}`}>
+                                                    <span
+                                                        className={`signal-tag signal-tag--${m.signalDirection?.toLowerCase()}`}
+                                                    >
                                                         {m.signalDirection}
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="price-box">
-                                                {m.currentPrice}
-                                            </div>
-                                            <div className="last-digit-badge" style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                                                <strong className={m.lastDigit < 5 ? 'digit-under' : 'digit-over'} style={{ fontSize: '12px' }}>
+                                            <div className='price-box'>{m.currentPrice}</div>
+                                            <div
+                                                className='last-digit-badge'
+                                                style={{ marginLeft: 'auto', flexShrink: 0 }}
+                                            >
+                                                <strong
+                                                    className={m.lastDigit < 5 ? 'digit-under' : 'digit-over'}
+                                                    style={{ fontSize: '12px' }}
+                                                >
                                                     {m.lastDigit}
                                                 </strong>
                                             </div>
                                         </div>
 
-                                        <div className="ep-side-market-card__stats" style={{ marginTop: '6px' }}>
-                                            <div className="ratio-mini-bar">
-                                                <div className="u-part" style={{ width: `${m.pctUnder05}%` }} />
-                                                <div className="o-part" style={{ width: `${m.pctOver49}%` }} />
+                                        <div className='ep-side-market-card__stats' style={{ marginTop: '6px' }}>
+                                            <div className='ratio-mini-bar'>
+                                                <div className='u-part' style={{ width: `${m.pctUnder05}%` }} />
+                                                <div className='o-part' style={{ width: `${m.pctOver49}%` }} />
                                             </div>
-                                            <div className="stat-labels">
-                                                <span className="u-text">U (0-5): {m.pctUnder05.toFixed(0)}%</span>
-                                                <span className="o-text">O (4-9): {m.pctOver49.toFixed(0)}%</span>
+                                            <div className='stat-labels'>
+                                                <span className='u-text'>U (0-5): {m.pctUnder05.toFixed(0)}%</span>
+                                                <span className='o-text'>O (4-9): {m.pctOver49.toFixed(0)}%</span>
                                             </div>
                                         </div>
 
-                                        <div className="ep-side-market-card__footer">
+                                        <div className='ep-side-market-card__footer'>
                                             <span className={`bias-pill bias-pill--${m.bias}`}>
                                                 {m.bias.toUpperCase()} ({m.under05}U / {m.over49}O)
                                             </span>
-                                            <span className="best-digits">
+                                            <span className='best-digits'>
                                                 U*:{m.highestUnderDigit} | O*:{m.highestOverDigit}
                                             </span>
                                         </div>
@@ -1476,250 +1591,328 @@ const ElitePro = observer(() => {
                 {/* ══════════════════════════════════════════════════════════════════
                     MAIN WORKSPACE CONTENT
                     ══════════════════════════════════════════════════════════════════ */}
-                <main className={`ep-main-content ${activeData ? `radar-${allMarketsData.find(m => m.symbol === activeData.symbol)?.radarStatus || 'normal'}` : ''}`}>
+                <main
+                    className={`ep-main-content ${activeData ? `radar-${allMarketsData.find(m => m.symbol === activeData.symbol)?.radarStatus || 'normal'}` : ''}`}
+                >
                     {/* ── Top Header ── */}
-                    <div className="ep-glass ep-header">
-                        <div className="ep-header__title">
-                            <span className="ep-crown">👑</span>
-                            <div className="ep-title-meta">
-                                <span className="ep-title-text">Elite Pro</span>
-                                <span className="ep-title-sub">Neural Multi-Market Scanner &amp; Automated Trader</span>
+                    <div className='ep-glass ep-header'>
+                        <div className='ep-header__title'>
+                            <span className='ep-crown'>👑</span>
+                            <div className='ep-title-meta'>
+                                <span className='ep-title-text'>Elite Pro</span>
+                                <span className='ep-title-sub'>Neural Multi-Market Scanner &amp; Automated Trader</span>
                             </div>
                         </div>
 
-                        <div className="ep-header__actions">
+                        <div className='ep-header__actions'>
                             {bestMarket && (
                                 <div
-                                    className="ep-best-market-badge"
+                                    className='ep-best-market-badge'
                                     onClick={() => handleManualMarketSelect(bestMarket.symbol)}
-                                    title="Click to focus best market"
+                                    title='Click to focus best market'
                                 >
-                                    🏆 Best Market: <strong>{bestMarket.label}</strong> ({bestMarket.bias.toUpperCase()})
+                                    🏆 Best Market: <strong>{bestMarket.label}</strong> ({bestMarket.bias.toUpperCase()}
+                                    )
                                 </div>
                             )}
-                            <span className={`ep-engine-status-badge ep-engine-status-badge--${autoState.toLowerCase()}`}>
+                            <span
+                                className={`ep-engine-status-badge ep-engine-status-badge--${autoState.toLowerCase()}`}
+                            >
                                 {autoState === 'IDLE' && '● ENGINE IDLE'}
                                 {autoState === 'SCANNING' && '⚡ SCANNING CRITERIA'}
                                 {autoState === 'WAITING_TRIGGER' && '🎯 WAITING TRIGGER DIGIT'}
                                 {autoState === 'TRADING' && '🚀 EXECUTING TRADE'}
                                 {autoState === 'PAUSED' && '⏸ ENGINE PAUSED'}
-                                {executionMode === 'deriv_server' && serverRunStatus !== 'idle' && ` (Server: ${serverRunStatus})`}
+                                {executionMode === 'deriv_server' &&
+                                    serverRunStatus !== 'idle' &&
+                                    ` (Server: ${serverRunStatus})`}
                             </span>
                         </div>
                     </div>
 
                     {/* ── Quick Market Switch Dropdown & Top Controls ── */}
-                    <div className="ep-glass ep-market-bar">
-                        <div className="select-container">
-                            <span className="label">Active Market:</span>
+                    <div className='ep-glass ep-market-bar'>
+                        <div className='select-container'>
+                            <span className='label'>Active Market:</span>
                             <select
-                                className="ep-market-select"
+                                className='ep-market-select'
                                 value={selectedSymbol}
                                 onChange={e => {
                                     handleManualMarketSelect(e.target.value);
                                 }}
                             >
                                 {MARKETS.map(m => (
-                                    <option key={m.symbol} value={m.symbol}>{m.label}</option>
+                                    <option key={m.symbol} value={m.symbol}>
+                                        {m.label}
+                                    </option>
                                 ))}
                             </select>
                         </div>
 
-                        <div className="market-meta-tags">
-                            <span className="meta-tag">
-                                📈 Input Market: <strong>{MARKETS.find(m => m.symbol === selectedSymbol)?.label}</strong>
+                        <div className='market-meta-tags'>
+                            <span className='meta-tag'>
+                                📈 Input Market:{' '}
+                                <strong>{MARKETS.find(m => m.symbol === selectedSymbol)?.label}</strong>
                             </span>
-                            <span className="meta-tag">
+                            <span className='meta-tag'>
                                 🎯 Trade Type: <strong>{currentTradeType}</strong>
                             </span>
-                            <span className="meta-tag">
-                                🔮 Prediction Set: <strong>{currentTradeType === 'DIGITOVER' ? `Over ${currentPrediction}` : `Under ${currentPrediction}`}</strong>
+                            <span className='meta-tag'>
+                                🔮 Prediction Set:{' '}
+                                <strong>
+                                    {currentTradeType === 'DIGITOVER'
+                                        ? `Over ${currentPrediction}`
+                                        : `Under ${currentPrediction}`}
+                                </strong>
                             </span>
                         </div>
                     </div>
 
                     {/* ── Live Price & Last Digit Orb Cards ── */}
-                    <div className="ep-hero-grid">
-                        <div className="ep-glass ep-hero-card ep-price-card">
-                            <span className="ep-hero-label">CURRENT LIVE QUOTE</span>
-                            <div className="ep-price-value-row">
-                                <span className="ep-price-value">{activeData?.currentPrice ?? '—'}</span>
-                                <span className="ep-live-pulse-dot" />
+                    <div className='ep-hero-grid'>
+                        <div className='ep-glass ep-hero-card ep-price-card'>
+                            <span className='ep-hero-label'>CURRENT LIVE QUOTE</span>
+                            <div className='ep-price-value-row'>
+                                <span className='ep-price-value'>{activeData?.currentPrice ?? '—'}</span>
+                                <span className='ep-live-pulse-dot' />
                             </div>
-                            <span className="ep-price-sub">{MARKETS.find(m => m.symbol === selectedSymbol)?.label}</span>
+                            <span className='ep-price-sub'>
+                                {MARKETS.find(m => m.symbol === selectedSymbol)?.label}
+                            </span>
                         </div>
 
-                        <div className="ep-glass ep-hero-card ep-digit-card">
-                            <span className="ep-hero-label">LAST TICK DIGIT</span>
-                            <div className={`ep-digit-orb-wrapper ep-digit-orb-wrapper--${(activeData?.lastDigit ?? 0) < 5 ? 'under' : 'over'}`}>
-                                <div className="ep-digit-orb">
-                                    {activeData?.lastDigit ?? '—'}
-                                </div>
+                        <div className='ep-glass ep-hero-card ep-digit-card'>
+                            <span className='ep-hero-label'>LAST TICK DIGIT</span>
+                            <div
+                                className={`ep-digit-orb-wrapper ep-digit-orb-wrapper--${(activeData?.lastDigit ?? 0) < 5 ? 'under' : 'over'}`}
+                            >
+                                <div className='ep-digit-orb'>{activeData?.lastDigit ?? '—'}</div>
                             </div>
-                            <span className="ep-digit-sub">
+                            <span className='ep-digit-sub'>
                                 {(activeData?.lastDigit ?? 0) < 5 ? 'Under Digit (0-4)' : 'Over Digit (5-9)'}
                             </span>
                         </div>
                     </div>
 
                     {/* ── 50-Ticks Spline Line Chart ── */}
-                    <div className="ep-glass ep-chart-card">
-                        <div className="ep-chart-card__header">
-                            <span className="title">
-                                📊 50-Ticks Digit Trend Line Chart — {MARKETS.find(m => m.symbol === selectedSymbol)?.label}
+                    <div className='ep-glass ep-chart-card'>
+                        <div className='ep-chart-card__header'>
+                            <span className='title'>
+                                📊 50-Ticks Digit Trend Line Chart —{' '}
+                                {MARKETS.find(m => m.symbol === selectedSymbol)?.label}
                             </span>
-                            <span className="subtitle">Real-Time Spline with Digit Markers (0–9)</span>
+                            <span className='subtitle'>Real-Time Spline with Digit Markers (0–9)</span>
                         </div>
-                        <div className="ep-chart-wrap">
+                        <div className='ep-chart-wrap'>
                             <DigitLineChart digits={activeData?.digits || []} />
                         </div>
                     </div>
 
                     {/* ── Deep Statistical Analysis Ratios ── */}
                     {analysis && (
-                        <div className="ep-glass ep-stats-card">
-                            <div className="ep-stats-card__header">
-                                <div className="title-group">
-                                    <span className="title">Statistical Ratio &amp; Probability Analysis</span>
-                                    <span className="sample-count">(Last 50 Ticks Sample)</span>
+                        <div className='ep-glass ep-stats-card'>
+                            <div className='ep-stats-card__header'>
+                                <div className='title-group'>
+                                    <span className='title'>Statistical Ratio &amp; Probability Analysis</span>
+                                    <span className='sample-count'>(Last 50 Ticks Sample)</span>
                                 </div>
                                 <span className={`ep-bias-badge ep-bias-badge--${analysis.bias}`}>
-                                    {analysis.bias === 'under' ? '📉 UNDER DOMINANT MARKET' : analysis.bias === 'over' ? '📈 OVER DOMINANT MARKET' : '⚖️ BALANCED / NEUTRAL'}
+                                    {analysis.bias === 'under'
+                                        ? '📉 UNDER DOMINANT MARKET'
+                                        : analysis.bias === 'over'
+                                          ? '📈 OVER DOMINANT MARKET'
+                                          : '⚖️ BALANCED / NEUTRAL'}
                                 </span>
                             </div>
 
                             {/* Ratio 1: Under 0-4 vs Over 5-9 */}
-                            <div className="ep-ratio-block">
-                                <div className="ep-ratio-block__head">
-                                    <div className="side side--under">
-                                        <span className="tag">Under (0-4)</span>
-                                        <strong>{analysis.under04} Ticks ({analysis.pctUnder04.toFixed(1)}%)</strong>
+                            <div className='ep-ratio-block'>
+                                <div className='ep-ratio-block__head'>
+                                    <div className='side side--under'>
+                                        <span className='tag'>Under (0-4)</span>
+                                        <strong>
+                                            {analysis.under04} Ticks ({analysis.pctUnder04.toFixed(1)}%)
+                                        </strong>
                                     </div>
-                                    <span className="vs">VS</span>
-                                    <div className="side side--over">
-                                        <span className="tag">Over (5-9)</span>
-                                        <strong>{analysis.over59} Ticks ({analysis.pctOver59.toFixed(1)}%)</strong>
+                                    <span className='vs'>VS</span>
+                                    <div className='side side--over'>
+                                        <span className='tag'>Over (5-9)</span>
+                                        <strong>
+                                            {analysis.over59} Ticks ({analysis.pctOver59.toFixed(1)}%)
+                                        </strong>
                                     </div>
                                 </div>
-                                <div className="ep-progress-track">
-                                    <div className="ep-progress-bar ep-progress-bar--under" style={{ width: `${analysis.pctUnder04}%` }} />
-                                    <div className="ep-progress-bar ep-progress-bar--over" style={{ width: `${analysis.pctOver59}%` }} />
+                                <div className='ep-progress-track'>
+                                    <div
+                                        className='ep-progress-bar ep-progress-bar--under'
+                                        style={{ width: `${analysis.pctUnder04}%` }}
+                                    />
+                                    <div
+                                        className='ep-progress-bar ep-progress-bar--over'
+                                        style={{ width: `${analysis.pctOver59}%` }}
+                                    />
                                 </div>
-                                <div className="ep-ratio-momentum">
+                                <div className='ep-ratio-momentum'>
                                     {analysis.underIncreasing && analysis.pctUnder04 > 55 && (
-                                        <span className="tip tip--green">⚡ Under Momentum is above 55% and INCREASING (Condition 1 Met)</span>
+                                        <span className='tip tip--green'>
+                                            ⚡ Under Momentum is above 55% and INCREASING (Condition 1 Met)
+                                        </span>
                                     )}
                                     {analysis.overIncreasing && analysis.pctOver59 > 55 && (
-                                        <span className="tip tip--orange">⚡ Over Momentum is above 55% and INCREASING (Condition 1 Met)</span>
+                                        <span className='tip tip--orange'>
+                                            ⚡ Over Momentum is above 55% and INCREASING (Condition 1 Met)
+                                        </span>
                                     )}
                                     {!analysis.underIncreasing && !analysis.overIncreasing && (
-                                        <span className="tip tip--neutral">⚖️ Momentum consolidating</span>
+                                        <span className='tip tip--neutral'>⚖️ Momentum consolidating</span>
                                     )}
                                 </div>
                             </div>
 
                             {/* Ratio 2: Under 0-5 vs Over 4-9 */}
-                            <div className="ep-ratio-block">
-                                <div className="ep-ratio-block__head">
-                                    <div className="side side--under">
-                                        <span className="tag">Under (0-5)</span>
-                                        <strong>{analysis.under05} Ticks ({analysis.pctUnder05.toFixed(1)}%)</strong>
+                            <div className='ep-ratio-block'>
+                                <div className='ep-ratio-block__head'>
+                                    <div className='side side--under'>
+                                        <span className='tag'>Under (0-5)</span>
+                                        <strong>
+                                            {analysis.under05} Ticks ({analysis.pctUnder05.toFixed(1)}%)
+                                        </strong>
                                     </div>
-                                    <span className="vs">VS</span>
-                                    <div className="side side--over">
-                                        <span className="tag">Over (4-9)</span>
-                                        <strong>{analysis.over49} Ticks ({analysis.pctOver49.toFixed(1)}%)</strong>
+                                    <span className='vs'>VS</span>
+                                    <div className='side side--over'>
+                                        <span className='tag'>Over (4-9)</span>
+                                        <strong>
+                                            {analysis.over49} Ticks ({analysis.pctOver49.toFixed(1)}%)
+                                        </strong>
                                     </div>
                                 </div>
-                                <div className="ep-progress-track">
-                                    <div className="ep-progress-bar ep-progress-bar--under" style={{ width: `${analysis.pctUnder05}%` }} />
-                                    <div className="ep-progress-bar ep-progress-bar--over" style={{ width: `${analysis.pctOver49}%` }} />
+                                <div className='ep-progress-track'>
+                                    <div
+                                        className='ep-progress-bar ep-progress-bar--under'
+                                        style={{ width: `${analysis.pctUnder05}%` }}
+                                    />
+                                    <div
+                                        className='ep-progress-bar ep-progress-bar--over'
+                                        style={{ width: `${analysis.pctOver49}%` }}
+                                    />
                                 </div>
-                                <div className="ep-market-tendency-note">
+                                <div className='ep-market-tendency-note'>
                                     {analysis.under05 >= 34 && analysis.over49 <= 25 ? (
-                                        <span className="note note--under">
-                                            🔥 Market is strongly favoring <strong>UNDER</strong> ({analysis.under05} Under vs {analysis.over49} Over). Clear Under signal criteria qualified!
+                                        <span className='note note--under'>
+                                            🔥 Market is strongly favoring <strong>UNDER</strong> ({analysis.under05}{' '}
+                                            Under vs {analysis.over49} Over). Clear Under signal criteria qualified!
                                         </span>
                                     ) : analysis.over49 >= 34 && analysis.under05 <= 25 ? (
-                                        <span className="note note--over">
-                                            🔥 Market is strongly favoring <strong>OVER</strong> ({analysis.over49} Over vs {analysis.under05} Under). Clear Over signal criteria qualified!
+                                        <span className='note note--over'>
+                                            🔥 Market is strongly favoring <strong>OVER</strong> ({analysis.over49} Over
+                                            vs {analysis.under05} Under). Clear Over signal criteria qualified!
                                         </span>
                                     ) : (
-                                        <span className="note note--neutral">
-                                            ℹ️ Market digits are shifting ({analysis.under05} Under 0-5 vs {analysis.over49} Over 4-9). Bot will auto-pause until high probability edge is detected.
+                                        <span className='note note--neutral'>
+                                            ℹ️ Market digits are shifting ({analysis.under05} Under 0-5 vs{' '}
+                                            {analysis.over49} Over 4-9). Bot will auto-pause until high probability edge
+                                            is detected.
                                         </span>
                                     )}
                                 </div>
                             </div>
 
                             {/* Glowing Highest Entry Digit Cards */}
-                            <div className="ep-entry-digits-container">
-                                <div className={`ep-entry-card ep-entry-card--under ${analysis.highestUnderPct >= analysis.highestOverPct ? 'ep-entry-card--dominant' : ''}`}>
-                                    <div className="ep-entry-card__top">
-                                        <span className="title">Under Entry Trigger Digit</span>
-                                        <span className="range">(Range 0 – 5)</span>
+                            <div className='ep-entry-digits-container'>
+                                <div
+                                    className={`ep-entry-card ep-entry-card--under ${analysis.highestUnderPct >= analysis.highestOverPct ? 'ep-entry-card--dominant' : ''}`}
+                                >
+                                    <div className='ep-entry-card__top'>
+                                        <span className='title'>Under Entry Trigger Digit</span>
+                                        <span className='range'>(Range 0 – 5)</span>
                                     </div>
-                                    <div className="ep-glowing-digit-badge ep-glowing-digit-badge--under">
-                                        <span className="digit">{analysis.highestUnderDigit}</span>
-                                        <span className="pct">{analysis.highestUnderPct.toFixed(0)}%</span>
+                                    <div className='ep-glowing-digit-badge ep-glowing-digit-badge--under'>
+                                        <span className='digit'>{analysis.highestUnderDigit}</span>
+                                        <span className='pct'>{analysis.highestUnderPct.toFixed(0)}%</span>
                                     </div>
-                                    <span className="frequency-sub">
+                                    <span className='frequency-sub'>
                                         Appeared <strong>{analysis.highestUnderCount}</strong> times in 50 ticks
                                     </span>
                                 </div>
 
-                                <div className={`ep-entry-card ep-entry-card--over ${analysis.highestOverPct >= analysis.highestUnderPct ? 'ep-entry-card--dominant' : ''}`}>
-                                    <div className="ep-entry-card__top">
-                                        <span className="title">Over Entry Trigger Digit</span>
-                                        <span className="range">(Range 4 – 9)</span>
+                                <div
+                                    className={`ep-entry-card ep-entry-card--over ${analysis.highestOverPct >= analysis.highestUnderPct ? 'ep-entry-card--dominant' : ''}`}
+                                >
+                                    <div className='ep-entry-card__top'>
+                                        <span className='title'>Over Entry Trigger Digit</span>
+                                        <span className='range'>(Range 4 – 9)</span>
                                     </div>
-                                    <div className="ep-glowing-digit-badge ep-glowing-digit-badge--over">
-                                        <span className="digit">{analysis.highestOverDigit}</span>
-                                        <span className="pct">{analysis.highestOverPct.toFixed(0)}%</span>
+                                    <div className='ep-glowing-digit-badge ep-glowing-digit-badge--over'>
+                                        <span className='digit'>{analysis.highestOverDigit}</span>
+                                        <span className='pct'>{analysis.highestOverPct.toFixed(0)}%</span>
                                     </div>
-                                    <span className="frequency-sub">
+                                    <span className='frequency-sub'>
                                         Appeared <strong>{analysis.highestOverCount}</strong> times in 50 ticks
                                     </span>
                                 </div>
                             </div>
 
                             {/* Market Dynamics & Trend Recognition Checklist */}
-                            <div className="ep-checklist-grid">
-                                <div className="ep-checklist-col">
-                                    <span className="col-title">Under 6 Entry Checklist</span>
-                                    <div className={`check-row ${analysis.pctUnder04 >= 53 && analysis.underIncreasing ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Under 0-4 &gt; 55% &amp; Increasing ({analysis.pctUnder04.toFixed(1)}%)
+                            <div className='ep-checklist-grid'>
+                                <div className='ep-checklist-col'>
+                                    <span className='col-title'>Under 6 Entry Checklist</span>
+                                    <div
+                                        className={`check-row ${analysis.pctUnder04 >= 53 && analysis.underIncreasing ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Under 0-4 &gt; 55% &amp; Increasing (
+                                        {analysis.pctUnder04.toFixed(1)}%)
                                     </div>
-                                    <div className={`check-row ${analysis.under05 >= 32 && analysis.over49 <= 27 ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Under 0-5 &gt;= 34 &amp; Over 4-9 &lt;= 25 (U:{analysis.under05} / O:{analysis.over49})
+                                    <div
+                                        className={`check-row ${analysis.under05 >= 32 && analysis.over49 <= 27 ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Under 0-5 &gt;= 34 &amp; Over 4-9 &lt;= 25 (U:
+                                        {analysis.under05} / O:{analysis.over49})
                                     </div>
-                                    <div className={`check-row ${analysis.last10Under || analysis.last7Under ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Last 10/7 Ticks Favoring Under ({analysis.last10UnderCount}/10 under)
+                                    <div
+                                        className={`check-row ${analysis.last10Under || analysis.last7Under ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Last 10/7 Ticks Favoring Under (
+                                        {analysis.last10UnderCount}/10 under)
                                     </div>
                                     <div className={`check-row ${!analysis.isUnderTrendFlipped ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Trend Stabilized (Max 3 Over digits in last 7)
+                                        <span className='mark'>✓</span> Trend Stabilized (Max 3 Over digits in last 7)
                                     </div>
-                                    <div className={`check-row ${activeData?.lastDigit === analysis.highestUnderDigit ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Current Tick is Under Trigger Digit [{analysis.highestUnderDigit}] (Current: {activeData?.lastDigit})
+                                    <div
+                                        className={`check-row ${activeData?.lastDigit === analysis.highestUnderDigit ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Current Tick is Under Trigger Digit [
+                                        {analysis.highestUnderDigit}] (Current: {activeData?.lastDigit})
                                     </div>
                                 </div>
 
-                                <div className="ep-checklist-col">
-                                    <span className="col-title">Over 3 Entry Checklist</span>
-                                    <div className={`check-row ${analysis.pctOver59 >= 53 && analysis.overIncreasing ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Over 5-9 &gt; 55% &amp; Increasing ({analysis.pctOver59.toFixed(1)}%)
+                                <div className='ep-checklist-col'>
+                                    <span className='col-title'>Over 3 Entry Checklist</span>
+                                    <div
+                                        className={`check-row ${analysis.pctOver59 >= 53 && analysis.overIncreasing ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Over 5-9 &gt; 55% &amp; Increasing (
+                                        {analysis.pctOver59.toFixed(1)}%)
                                     </div>
-                                    <div className={`check-row ${analysis.over49 >= 32 && analysis.under05 <= 27 ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Over 4-9 &gt;= 34 &amp; Under 0-5 &lt;= 25 (O:{analysis.over49} / U:{analysis.under05})
+                                    <div
+                                        className={`check-row ${analysis.over49 >= 32 && analysis.under05 <= 27 ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Over 4-9 &gt;= 34 &amp; Under 0-5 &lt;= 25 (O:
+                                        {analysis.over49} / U:{analysis.under05})
                                     </div>
-                                    <div className={`check-row ${analysis.last10Over || analysis.last7Over ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Last 10/7 Ticks Favoring Over ({analysis.last10OverCount}/10 over)
+                                    <div
+                                        className={`check-row ${analysis.last10Over || analysis.last7Over ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Last 10/7 Ticks Favoring Over (
+                                        {analysis.last10OverCount}/10 over)
                                     </div>
                                     <div className={`check-row ${!analysis.isOverTrendFlipped ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Trend Stabilized (Max 3 Under digits in last 7)
+                                        <span className='mark'>✓</span> Trend Stabilized (Max 3 Under digits in last 7)
                                     </div>
-                                    <div className={`check-row ${activeData?.lastDigit === analysis.highestOverDigit ? 'valid' : ''}`}>
-                                        <span className="mark">✓</span> Current Tick is Over Trigger Digit [{analysis.highestOverDigit}] (Current: {activeData?.lastDigit})
+                                    <div
+                                        className={`check-row ${activeData?.lastDigit === analysis.highestOverDigit ? 'valid' : ''}`}
+                                    >
+                                        <span className='mark'>✓</span> Current Tick is Over Trigger Digit [
+                                        {analysis.highestOverDigit}] (Current: {activeData?.lastDigit})
                                     </div>
                                 </div>
                             </div>
@@ -1727,32 +1920,37 @@ const ElitePro = observer(() => {
                     )}
 
                     {/* ── Automated Trading Control Panel ── */}
-                    <div className="ep-glass ep-auto-panel">
-                        <div className="ep-auto-panel__header">
-                            <div className="title-wrap">
-                                <span className="icon">🤖</span>
+                    <div className='ep-glass ep-auto-panel'>
+                        <div className='ep-auto-panel__header'>
+                            <div className='title-wrap'>
+                                <span className='icon'>🤖</span>
                                 <h3>Automated Trading Strategy Engine</h3>
                             </div>
 
                             {activeSignal && executionMode === 'local' && (
-                                <span className="ep-signal-active-pill">
-                                    ⚡ {activeSignal.direction} {activeSignal.prediction} TRIGGERED (Digit {activeSignal.triggerDigit})
+                                <span className='ep-signal-active-pill'>
+                                    ⚡ {activeSignal.direction} {activeSignal.prediction} TRIGGERED (Digit{' '}
+                                    {activeSignal.triggerDigit})
                                 </span>
                             )}
                         </div>
 
                         {/* Mode Selector */}
-                        <div className="ep-mode-selector">
+                        <div className='ep-mode-selector'>
                             <button
                                 className={`ep-mode-btn ${executionMode === 'local' ? 'active' : ''}`}
-                                onClick={() => { if (autoState === 'IDLE') setExecutionMode('local'); }}
+                                onClick={() => {
+                                    if (autoState === 'IDLE') setExecutionMode('local');
+                                }}
                                 disabled={autoState !== 'IDLE'}
                             >
                                 🧠 Neural Local Engine (Full Auto Under 6 / Over 3)
                             </button>
                             <button
                                 className={`ep-mode-btn ${executionMode === 'deriv_server' ? 'active' : ''}`}
-                                onClick={() => { if (autoState === 'IDLE') setExecutionMode('deriv_server'); }}
+                                onClick={() => {
+                                    if (autoState === 'IDLE') setExecutionMode('deriv_server');
+                                }}
                                 disabled={autoState !== 'IDLE'}
                             >
                                 ☁️ Deriv Cloud Server Automation
@@ -1760,7 +1958,7 @@ const ElitePro = observer(() => {
                         </div>
 
                         {executionMode === 'deriv_server' && (
-                            <div className="ep-server-strat-select">
+                            <div className='ep-server-strat-select'>
                                 <span>Predefined Server Strategy:</span>
                                 <select
                                     value={selectedStrategy}
@@ -1768,105 +1966,109 @@ const ElitePro = observer(() => {
                                     disabled={autoState !== 'IDLE'}
                                 >
                                     {strategies.map(s => (
-                                        <option key={s.id} value={s.id}>{s.name || s.id}</option>
+                                        <option key={s.id} value={s.id}>
+                                            {s.name || s.id}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
                         )}
 
                         {/* Parameter Inputs Grid */}
-                        <div className="ep-inputs-grid">
-                            <div className="ep-input-card">
-                                <span className="label">Base Stake ({currency})</span>
+                        <div className='ep-inputs-grid'>
+                            <div className='ep-input-card'>
+                                <span className='label'>Base Stake ({currency})</span>
                                 <input
-                                    type="text"
+                                    type='text'
                                     value={stake}
                                     onChange={e => setStake(cleanMoneyInput(e.target.value))}
                                     disabled={autoState !== 'IDLE'}
                                 />
                             </div>
 
-                            <div className="ep-input-card">
-                                <span className="label">Martingale Multiplier</span>
+                            <div className='ep-input-card'>
+                                <span className='label'>Martingale Multiplier</span>
                                 <input
-                                    type="text"
+                                    type='text'
                                     value={martingale}
                                     onChange={e => setMartingale(cleanMoneyInput(e.target.value))}
                                     disabled={autoState !== 'IDLE'}
                                 />
                             </div>
 
-                            <div className="ep-input-card">
-                                <span className="label">Take Profit ({currency})</span>
+                            <div className='ep-input-card'>
+                                <span className='label'>Take Profit ({currency})</span>
                                 <input
-                                    type="text"
+                                    type='text'
                                     value={takeProfit}
                                     onChange={e => setTakeProfit(cleanMoneyInput(e.target.value))}
                                     disabled={autoState !== 'IDLE'}
                                 />
                             </div>
 
-                            <div className="ep-input-card">
-                                <span className="label">Stop Loss ({currency})</span>
+                            <div className='ep-input-card'>
+                                <span className='label'>Stop Loss ({currency})</span>
                                 <input
-                                    type="text"
+                                    type='text'
                                     value={stopLoss}
                                     onChange={e => setStopLoss(cleanMoneyInput(e.target.value))}
                                     disabled={autoState !== 'IDLE'}
                                 />
                             </div>
 
-                            <div className="ep-input-card">
-                                <span className="label">Number of Ticks</span>
+                            <div className='ep-input-card'>
+                                <span className='label'>Number of Ticks</span>
                                 <select
                                     value={tickDuration}
                                     onChange={e => setTickDuration(e.target.value)}
                                     disabled={autoState !== 'IDLE'}
                                 >
-                                    <option value="1">1 Tick (Recommended)</option>
-                                    <option value="2">2 Ticks</option>
+                                    <option value='1'>1 Tick (Recommended)</option>
+                                    <option value='2'>2 Ticks</option>
                                 </select>
                             </div>
 
-                            <div className="ep-input-card">
-                                <span className="label">Auto-Switch Market Runs</span>
+                            <div className='ep-input-card'>
+                                <span className='label'>Auto-Switch Market Runs</span>
                                 <input
-                                    type="number"
-                                    min="1"
-                                    max="50"
+                                    type='number'
+                                    min='1'
+                                    max='50'
                                     value={maxRunsBeforeSwitch}
                                     onChange={e => setMaxRunsBeforeSwitch(e.target.value)}
                                     disabled={autoState !== 'IDLE'}
                                 />
                             </div>
 
-                            <div className="ep-input-card">
-                                <span className="label">Smart Market Switch</span>
+                            <div className='ep-input-card'>
+                                <span className='label'>Smart Market Switch</span>
                                 <select
                                     value={autoSwitchMarkets ? 'true' : 'false'}
                                     onChange={e => setAutoSwitchMarkets(e.target.value === 'true')}
                                     disabled={autoState !== 'IDLE'}
                                 >
-                                    <option value="true">Enabled (Auto-Hunt)</option>
-                                    <option value="false">Disabled (Single Market)</option>
+                                    <option value='true'>Enabled (Auto-Hunt)</option>
+                                    <option value='false'>Disabled (Single Market)</option>
                                 </select>
                             </div>
                         </div>
 
                         {/* Execution Action Buttons */}
-                        <div className="ep-actions-row">
+                        <div className='ep-actions-row'>
                             {autoState === 'IDLE' && (
-                                <button className="ep-action-btn ep-action-btn--start" onClick={startAutoTrading}>
+                                <button className='ep-action-btn ep-action-btn--start' onClick={startAutoTrading}>
                                     ▶ Start Automated Bot
                                 </button>
                             )}
 
-                            {(autoState === 'SCANNING' || autoState === 'WAITING_TRIGGER' || autoState === 'TRADING') && (
+                            {(autoState === 'SCANNING' ||
+                                autoState === 'WAITING_TRIGGER' ||
+                                autoState === 'TRADING') && (
                                 <>
-                                    <button className="ep-action-btn ep-action-btn--pause" onClick={pauseAutoTrading}>
+                                    <button className='ep-action-btn ep-action-btn--pause' onClick={pauseAutoTrading}>
                                         ⏸ Auto Pause Engine
                                     </button>
-                                    <button className="ep-action-btn ep-action-btn--stop" onClick={stopAutoTrading}>
+                                    <button className='ep-action-btn ep-action-btn--stop' onClick={stopAutoTrading}>
                                         ⏹ Stop Engine
                                     </button>
                                 </>
@@ -1874,10 +2076,10 @@ const ElitePro = observer(() => {
 
                             {autoState === 'PAUSED' && (
                                 <>
-                                    <button className="ep-action-btn ep-action-btn--start" onClick={resumeAutoTrading}>
+                                    <button className='ep-action-btn ep-action-btn--start' onClick={resumeAutoTrading}>
                                         ▶ Auto Resume Engine
                                     </button>
-                                    <button className="ep-action-btn ep-action-btn--stop" onClick={stopAutoTrading}>
+                                    <button className='ep-action-btn ep-action-btn--stop' onClick={stopAutoTrading}>
                                         ⏹ Stop Engine
                                     </button>
                                 </>
@@ -1885,43 +2087,49 @@ const ElitePro = observer(() => {
                         </div>
 
                         {/* Live P&L Performance Metrics */}
-                        <div className="ep-pnl-summary">
-                            <div className="ep-pnl-card">
-                                <span className="pnl-label">TOTAL PROFIT / LOSS</span>
+                        <div className='ep-pnl-summary'>
+                            <div className='ep-pnl-card'>
+                                <span className='pnl-label'>TOTAL PROFIT / LOSS</span>
                                 <span className={`pnl-val ${totalProfit >= 0 ? 'pnl-val--win' : 'pnl-val--loss'}`}>
-                                    {totalProfit >= 0 ? '+' : ''}{totalProfit.toFixed(2)} {currency}
+                                    {totalProfit >= 0 ? '+' : ''}
+                                    {totalProfit.toFixed(2)} {currency}
                                 </span>
                             </div>
 
-                            <div className="ep-pnl-card">
-                                <span className="pnl-label">WINS</span>
-                                <span className="pnl-val pnl-val--win">{wins}</span>
+                            <div className='ep-pnl-card'>
+                                <span className='pnl-label'>WINS</span>
+                                <span className='pnl-val pnl-val--win'>{wins}</span>
                             </div>
 
-                            <div className="ep-pnl-card">
-                                <span className="pnl-label">LOSSES</span>
-                                <span className="pnl-val pnl-val--loss">{losses}</span>
+                            <div className='ep-pnl-card'>
+                                <span className='pnl-label'>LOSSES</span>
+                                <span className='pnl-val pnl-val--loss'>{losses}</span>
                             </div>
 
-                            <div className="ep-pnl-card">
-                                <span className="pnl-label">NEXT STAKE (MG 2.6)</span>
-                                <span className="pnl-val">{currentStakeRef.current.toFixed(2)} {currency}</span>
+                            <div className='ep-pnl-card'>
+                                <span className='pnl-label'>NEXT STAKE (MG 2.6)</span>
+                                <span className='pnl-val'>
+                                    {currentStakeRef.current.toFixed(2)} {currency}
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     {/* ── Engine Execution Logs ── */}
-                    <div className="ep-glass ep-logs-card">
-                        <div className="ep-logs-card__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className='ep-glass ep-logs-card'>
+                        <div
+                            className='ep-logs-card__header'
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                        >
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span className="title">📋 Live Engine Execution Logs</span>
-                                <span className="sync-note">Synced to Global Transaction Drawer</span>
+                                <span className='title'>📋 Live Engine Execution Logs</span>
+                                <span className='sync-note'>Synced to Global Transaction Drawer</span>
                             </div>
                             {tradeLog.length > 0 && (
-                                <button 
+                                <button
                                     onClick={() => setTradeLog([])}
-                                    className="ep-btn-clear-logs"
-                                    title="Clear execution logs"
+                                    className='ep-btn-clear-logs'
+                                    title='Clear execution logs'
                                 >
                                     Clear Logs
                                 </button>
@@ -1929,22 +2137,23 @@ const ElitePro = observer(() => {
                         </div>
 
                         {tradeLog.length === 0 ? (
-                            <div className="ep-logs-empty">
+                            <div className='ep-logs-empty'>
                                 Bot is idle. Start the bot to begin live automated logging and contract streaming.
                             </div>
                         ) : (
-                            <div className="ep-logs-list">
+                            <div className='ep-logs-list'>
                                 {tradeLog.map(entry => (
-                                    <div key={entry.id} className="ep-log-row">
-                                        <span className="time">{entry.time}</span>
-                                        <span className="type">{entry.type}</span>
-                                        <span className="market">{entry.market}</span>
-                                        {entry.details && <span className="details">{entry.details}</span>}
+                                    <div key={entry.id} className='ep-log-row'>
+                                        <span className='time'>{entry.time}</span>
+                                        <span className='type'>{entry.type}</span>
+                                        <span className='market'>{entry.market}</span>
+                                        {entry.details && <span className='details'>{entry.details}</span>}
                                         <span className={`result result--${entry.result.toLowerCase()}`}>
                                             {entry.result}
                                         </span>
                                         <span className={`profit ${entry.profit >= 0 ? 'profit--pos' : 'profit--neg'}`}>
-                                            {entry.profit >= 0 ? '+' : ''}{entry.profit.toFixed(2)} {currency}
+                                            {entry.profit >= 0 ? '+' : ''}
+                                            {entry.profit.toFixed(2)} {currency}
                                         </span>
                                     </div>
                                 ))}
@@ -1959,7 +2168,7 @@ const ElitePro = observer(() => {
                 amount={totalProfit}
                 targetAmount={milestone.type === 'tp' ? parseFloat(takeProfit) || 10 : parseFloat(stopLoss) || 5}
                 currency={currency}
-                botName="Elite Pro AI Engine"
+                botName='Elite Pro AI Engine'
                 winsCount={wins}
                 lossesCount={losses}
                 onClose={() => setMilestone({ isOpen: false, type: null })}

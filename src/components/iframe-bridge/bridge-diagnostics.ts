@@ -33,8 +33,7 @@ export const makeBridgeLogger = (instanceId: string) => {
         debug: bridgeDebug,
         messageReceived: (origin: string, type?: string, action?: string) =>
             bridgeDebug('MESSAGE_RECEIVED', { origin, type, action }),
-        messageSent: (targetOrigin: string, type?: string) =>
-            bridgeDebug('MESSAGE_SENT', { targetOrigin, type }),
+        messageSent: (targetOrigin: string, type?: string) => bridgeDebug('MESSAGE_SENT', { targetOrigin, type }),
         stateChange: (previousState: string, nextState: string, reason?: string) =>
             bridgeDebug('STATE_CHANGE', { previousState, nextState, reason }),
     };

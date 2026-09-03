@@ -44,8 +44,10 @@ const sortSymbols = (symbolsList: ActiveSymbols) => {
     // This ensures immutability and prevents side effects in calling code
     return symbolsList.slice().sort((a, b) => {
         if (!a || !b) return 0;
-        const marketOrderA = a.market && marketOrderMap[a.market] !== undefined ? marketOrderMap[a.market] : symbolsList.length;
-        const marketOrderB = b.market && marketOrderMap[b.market] !== undefined ? marketOrderMap[b.market] : symbolsList.length;
+        const marketOrderA =
+            a.market && marketOrderMap[a.market] !== undefined ? marketOrderMap[a.market] : symbolsList.length;
+        const marketOrderB =
+            b.market && marketOrderMap[b.market] !== undefined ? marketOrderMap[b.market] : symbolsList.length;
         if (marketOrderA !== marketOrderB) {
             return marketOrderA - marketOrderB;
         }

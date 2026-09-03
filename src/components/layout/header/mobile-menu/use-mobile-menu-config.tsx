@@ -5,7 +5,6 @@ import { LegacyLogout1pxIcon, LegacyTheme1pxIcon } from '@deriv/quill-icons/Lega
 import { useTranslations } from '@deriv-com/translations';
 import { ToggleSwitch } from '@deriv-com/ui';
 
-
 export type TSubmenuSection = 'accountSettings' | 'cashier' | 'reports';
 
 type TMenuConfig = {
@@ -34,8 +33,6 @@ const UserIcon = ({ className }: { className?: string }) => (
         <path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z' />
     </svg>
 );
-
-
 
 // WhatsApp icon for mobile menu
 const WhatsAppIcon = ({ className, iconSize: _iconSize }: { className?: string; iconSize?: string }) => (
@@ -129,14 +126,7 @@ const useMobileMenuConfig = (
                     },
             ].filter(Boolean) as TMenuConfig,
         ].filter(section => section.length > 0);
-    }, [
-        client,
-        onLogout,
-        is_dark_mode_on,
-        toggleTheme,
-        localize,
-        enableThemeToggle,
-    ]);
+    }, [client, onLogout, is_dark_mode_on, toggleTheme, localize, enableThemeToggle]);
 
     // Check if menu has any items to determine if mobile menu should be shown
     const hasMenuItems = menuConfig.some(section => section.length > 0);

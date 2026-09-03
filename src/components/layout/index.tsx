@@ -11,9 +11,7 @@ import AppHeader from './header';
 import Body from './main-body';
 import { RiskDisclaimer } from '../shared_ui/risk-disclaimer/risk-disclaimer';
 import AccountInfoModal from './footer/AccountInfoModal';
-import {
-    getSiteConfig, SiteConfig, sendChatMessage, getChatMessages, ChatMessage,
-} from '@/utils/supabase-copy';
+import { getSiteConfig, SiteConfig, sendChatMessage, getChatMessages, ChatMessage } from '@/utils/supabase-copy';
 import './layout.scss';
 
 // ─── Floating Chat Widget ─────────────────────────────────────────────────────
@@ -42,7 +40,9 @@ const FloatingChat = () => {
             const accts = JSON.parse(localStorage.getItem('accountsList') || '{}');
             const keys = Object.keys(accts);
             return keys.length > 0 ? keys[0] : 'guest';
-        } catch { return 'guest'; }
+        } catch {
+            return 'guest';
+        }
     })();
 
     const refreshMessages = useCallback(() => {
@@ -78,7 +78,18 @@ const FloatingChat = () => {
                     <span>ProfitHub Support</span>
                 </div>
                 <button onClick={handleClose} className='ph-chat-panel__close' type='button'>
-                    <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>
+                    <svg
+                        width='14'
+                        height='14'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='currentColor'
+                        strokeWidth='2.5'
+                        strokeLinecap='round'
+                    >
+                        <line x1='18' y1='6' x2='6' y2='18' />
+                        <line x1='6' y1='6' x2='18' y2='18' />
+                    </svg>
                 </button>
             </div>
             <div className='ph-chat-panel__body' ref={scrollRef}>
@@ -91,7 +102,9 @@ const FloatingChat = () => {
                 {messages.map(m => (
                     <div key={m.id} className={`ph-chat-bubble ph-chat-bubble--${m.sender}`}>
                         <span className='ph-chat-bubble__text'>{m.text}</span>
-                        <span className='ph-chat-bubble__time'>{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className='ph-chat-bubble__time'>
+                            {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                     </div>
                 ))}
             </div>
@@ -104,7 +117,19 @@ const FloatingChat = () => {
                     onKeyDown={e => e.key === 'Enter' && handleSend()}
                 />
                 <button onClick={handleSend} type='button' className='ph-chat-panel__send'>
-                    <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'><line x1='22' y1='2' x2='11' y2='13'/><polygon points='22 2 15 22 11 13 2 9 22 2'/></svg>
+                    <svg
+                        width='16'
+                        height='16'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='currentColor'
+                        strokeWidth='2.5'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                    >
+                        <line x1='22' y1='2' x2='11' y2='13' />
+                        <polygon points='22 2 15 22 11 13 2 9 22 2' />
+                    </svg>
                 </button>
             </div>
         </div>
@@ -164,12 +189,12 @@ const DynamicThemeStyle = () => {
 
     const tabColor = cfg.tabColor || 'rgba(255,255,255,0.6)';
     const activeTabColor = cfg.activeTabColor || '#ffffff';
-    
+
     const loginBg = cfg.loginBtnBg || 'transparent';
     const loginText = cfg.loginBtnText || '#ffffff';
     const signupBg = cfg.signupBtnBg || primary;
     const signupText = cfg.signupBtnText || '#000000';
-    
+
     const runPanelBg = cfg.runPanelBg || '#0e0e0e';
     const runPanelText = cfg.runPanelText || '#ffffff';
 
@@ -245,7 +270,6 @@ const DynamicThemeStyle = () => {
     return <style dangerouslySetInnerHTML={{ __html: css }} />;
 };
 
-
 // ─── Maintenance Mode Overlay ─────────────────────────────────────────────────
 const MaintenanceOverlay = () => {
     const [cfg, setCfg] = useState<SiteConfig>(getSiteConfig());
@@ -274,14 +298,24 @@ const MaintenanceOverlay = () => {
             </div>
             <div className='ph-maintenance__card'>
                 <div className='ph-maintenance__icon'>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#maint-grad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        width='48'
+                        height='48'
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='url(#maint-grad)'
+                        strokeWidth='1.5'
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                    >
                         <defs>
-                            <linearGradient id="maint-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#3b82f6" />
-                                <stop offset="100%" stopColor="#8b5cf6" />
+                            <linearGradient id='maint-grad' x1='0%' y1='0%' x2='100%' y2='100%'>
+                                <stop offset='0%' stopColor='#3b82f6' />
+                                <stop offset='100%' stopColor='#8b5cf6' />
                             </linearGradient>
                         </defs>
-                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        <path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z' />
                     </svg>
                 </div>
                 <h1 className='ph-maintenance__title'>Under Maintenance</h1>

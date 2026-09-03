@@ -59,31 +59,42 @@ export class TabErrorBoundary extends React.Component<Props, State> {
                 /failed to fetch dynamically imported module/i.test(this.state.error?.message || '');
 
             return (
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    width: '100%',
-                    padding: '2rem',
-                    background: 'rgba(255,0,0,0.05)',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,0,0,0.2)'
-                }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                        width: '100%',
+                        padding: '2rem',
+                        background: 'rgba(255,0,0,0.05)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255,0,0,0.2)',
+                    }}
+                >
                     <h2 style={{ color: '#ff4d4f', marginBottom: '1rem' }}>
                         {isChunkError ? 'New Update Available' : `Module Crashed: ${this.props.tabName}`}
                     </h2>
-                    <p style={{ color: 'var(--text-general)', marginBottom: '2rem', textAlign: 'center', maxWidth: '600px' }}>
+                    <p
+                        style={{
+                            color: 'var(--text-general)',
+                            marginBottom: '2rem',
+                            textAlign: 'center',
+                            maxWidth: '600px',
+                        }}
+                    >
                         {isChunkError ? (
                             <>
-                                A new platform update was recently deployed. Your browser was loading an older cached version of this module.
+                                A new platform update was recently deployed. Your browser was loading an older cached
+                                version of this module.
                                 <br />
                                 Please reload to load the latest release.
                             </>
                         ) : (
                             <>
-                                The System Operations Center isolated a critical failure in this module to prevent the entire application from crashing.
+                                The System Operations Center isolated a critical failure in this module to prevent the
+                                entire application from crashing.
                                 <br />
                                 <br />
                                 <strong>Error:</strong> {this.state.error?.message}
@@ -91,7 +102,7 @@ export class TabErrorBoundary extends React.Component<Props, State> {
                         )}
                     </p>
                     <div style={{ display: 'flex', gap: '1rem' }}>
-                        <button 
+                        <button
                             onClick={this.handleRestart}
                             style={{
                                 padding: '10px 24px',
@@ -101,13 +112,13 @@ export class TabErrorBoundary extends React.Component<Props, State> {
                                 borderRadius: '8px',
                                 cursor: 'pointer',
                                 fontWeight: 'bold',
-                                boxShadow: '0 4px 12px rgba(30, 58, 138, 0.4)'
+                                boxShadow: '0 4px 12px rgba(30, 58, 138, 0.4)',
                             }}
                         >
                             {isChunkError ? 'Reload Page to Update' : 'Restart Module'}
                         </button>
                         {isChunkError && (
-                            <button 
+                            <button
                                 onClick={() => window.location.reload()}
                                 style={{
                                     padding: '10px 24px',
@@ -117,7 +128,7 @@ export class TabErrorBoundary extends React.Component<Props, State> {
                                     borderRadius: '8px',
                                     cursor: 'pointer',
                                     fontWeight: 'bold',
-                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)'
+                                    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)',
                                 }}
                             >
                                 Force Refresh

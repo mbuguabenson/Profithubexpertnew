@@ -12,14 +12,17 @@ function useDraggable(initialPos: { x: number; y: number }) {
     const offset = useRef({ x: 0, y: 0 });
     const ref = useRef<HTMLDivElement>(null);
 
-    const onMouseDown = useCallback((e: React.MouseEvent) => {
-        dragging.current = true;
-        offset.current = {
-            x: e.clientX - pos.x,
-            y: e.clientY - pos.y,
-        };
-        e.preventDefault();
-    }, [pos]);
+    const onMouseDown = useCallback(
+        (e: React.MouseEvent) => {
+            dragging.current = true;
+            offset.current = {
+                x: e.clientX - pos.x,
+                y: e.clientY - pos.y,
+            };
+            e.preventDefault();
+        },
+        [pos]
+    );
 
     useEffect(() => {
         const onMove = (e: MouseEvent) => {
@@ -28,7 +31,9 @@ function useDraggable(initialPos: { x: number; y: number }) {
             const newY = Math.max(0, Math.min(window.innerHeight - 60, e.clientY - offset.current.y));
             setPos({ x: newX, y: newY });
         };
-        const onUp = () => { dragging.current = false; };
+        const onUp = () => {
+            dragging.current = false;
+        };
 
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
@@ -48,14 +53,17 @@ const FloatingMarketHunter = () => {
     // FAB button position
     const fab = useDraggable({ x: window.innerWidth - 80, y: window.innerHeight - 160 });
 
-    const handleFabClick = useCallback((e: React.MouseEvent) => {
-        // Only toggle if not dragging
-        const dx = Math.abs(e.clientX - (fab.pos.x + 28));
-        const dy = Math.abs(e.clientY - (fab.pos.y + 28));
-        if (dx < 10 && dy < 10) {
-            setIsOpen(prev => !prev);
-        }
-    }, [fab.pos]);
+    const handleFabClick = useCallback(
+        (e: React.MouseEvent) => {
+            // Only toggle if not dragging
+            const dx = Math.abs(e.clientX - (fab.pos.x + 28));
+            const dy = Math.abs(e.clientY - (fab.pos.y + 28));
+            if (dx < 10 && dy < 10) {
+                setIsOpen(prev => !prev);
+            }
+        },
+        [fab.pos]
+    );
 
     const handleClosePanel = useCallback(() => {
         setIsOpen(false);
@@ -74,7 +82,9 @@ const FloatingMarketHunter = () => {
                 role='button'
                 aria-label='Open AI Scanner'
                 tabIndex={0}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setIsOpen(p => !p); }}
+                onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') setIsOpen(p => !p);
+                }}
             >
                 <div className='fmh-fab__ai-gloss'>
                     <span className='fmh-fab__ai-text'>AI</span>
@@ -95,12 +105,14 @@ const FloatingMarketHunter = () => {
                     enableResizing={true}
                 >
                     <div className='fmh-dialog-body'>
-                        <Suspense fallback={
-                            <div className='fmh-dialog-loading'>
-                                <Orbit size={32} strokeWidth={1} className='fmh-dialog-loading-icon' />
-                                <span>Loading AI Scanner...</span>
-                            </div>
-                        }>
+                        <Suspense
+                            fallback={
+                                <div className='fmh-dialog-loading'>
+                                    <Orbit size={32} strokeWidth={1} className='fmh-dialog-loading-icon' />
+                                    <span>Loading AI Scanner...</span>
+                                </div>
+                            }
+                        >
                             <MarketHunterPro />
                         </Suspense>
                     </div>
@@ -111,4 +123,3 @@ const FloatingMarketHunter = () => {
 };
 
 export default FloatingMarketHunter;
-

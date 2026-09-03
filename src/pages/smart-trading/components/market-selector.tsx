@@ -42,4 +42,3 @@ const MarketSelector = observer(() => {
 });
 
 export default MarketSelector;
-

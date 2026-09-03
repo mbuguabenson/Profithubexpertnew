@@ -256,7 +256,10 @@ export class DigitTradeEngine {
             const max_stake = config.max_stake || 10;
             const final_stake = Math.max(0.35, Math.min(stake, max_stake));
 
-            this.addLog(`🚀 Placing ${count} Bulk Trade(s) (${contract_type} on ${symbol} @ $${final_stake}) simultaneously...`, 'info');
+            this.addLog(
+                `🚀 Placing ${count} Bulk Trade(s) (${contract_type} on ${symbol} @ $${final_stake}) simultaneously...`,
+                'info'
+            );
 
             const proposal_data: any = {
                 proposal: 1,
@@ -281,10 +284,12 @@ export class DigitTradeEngine {
 
             // Trigger parallel buy requests for bulk execution
             const buyPromises = Array.from({ length: count }, () =>
-                api.send({
-                    buy: proposal.proposal.id,
-                    price: buy_price,
-                }).catch(err => ({ error: err }))
+                api
+                    .send({
+                        buy: proposal.proposal.id,
+                        price: buy_price,
+                    })
+                    .catch(err => ({ error: err }))
             );
 
             const buyResults = await Promise.all(buyPromises);
@@ -297,7 +302,10 @@ export class DigitTradeEngine {
                 throw new Error(firstErr);
             }
 
-            this.addLog(`✅ Successfully placed ${successfulContracts.length} bulk contract(s)! Monitoring outcomes...`, 'trade');
+            this.addLog(
+                `✅ Successfully placed ${successfulContracts.length} bulk contract(s)! Monitoring outcomes...`,
+                'trade'
+            );
             this.monitorBulkTrades(successfulContracts, config);
         } catch (e: any) {
             const message = e.message || 'Bulk trade failed';
@@ -359,12 +367,7 @@ export class DigitTradeEngine {
     };
 
     @action
-    private handleBulkResult = (
-        totalProfit: number,
-        wins: number,
-        losses: number,
-        config: TTradeConfig
-    ) => {
+    private handleBulkResult = (totalProfit: number, wins: number, losses: number, config: TTradeConfig) => {
         const isWin = totalProfit > 0;
         this.last_result = isWin ? 'WIN' : 'LOSS';
         this.session_profit += totalProfit;
@@ -389,7 +392,7 @@ export class DigitTradeEngine {
             }
         }
 
-        if (config.runs_count !== undefined) config.runs_count += (wins + losses);
+        if (config.runs_count !== undefined) config.runs_count += wins + losses;
         this.trade_status = 'IDLE';
     };
 
@@ -478,12 +481,7 @@ export class DigitTradeEngine {
         }
     };
 
-    private checkDiffers = (
-        digit_stats: TDigitStat[],
-        config: TTradeConfig,
-        symbol: string,
-        currency: string
-    ) => {
+    private checkDiffers = (digit_stats: TDigitStat[], config: TTradeConfig, symbol: string, currency: string) => {
         const leastFrequent = [...digit_stats].sort((a, b) => a.count - b.count)[0];
         if (leastFrequent && leastFrequent.percentage < 8) {
             this.executeTrade('differs', symbol, 'DIGITDIFF', leastFrequent.digit, currency);
@@ -683,7 +681,7 @@ export class DigitTradeEngine {
         if (this.last_result === 'LOSS') {
             const isMatch = this.active_strategy === 'matches';
             const martingaleEnabled = isMatch ? config.martingale_enabled : config.use_martingale;
-            const multiplier = isMatch ? (config.martingale_multiplier || 11) : (config.multiplier || 2.1);
+            const multiplier = isMatch ? config.martingale_multiplier || 11 : config.multiplier || 2.1;
 
             if (martingaleEnabled) {
                 stake = stake * Math.pow(multiplier, this.current_streak);

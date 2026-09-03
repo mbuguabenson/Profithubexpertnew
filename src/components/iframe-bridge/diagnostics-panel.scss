@@ -10,8 +10,8 @@
     border-radius: 4px;
     font-size: 12px;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
     &:hover {
         background: var(--button-primary-hover, #1d4ed8);
     }
@@ -29,7 +29,7 @@
     z-index: 1001;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     font-family: monospace;
     font-size: 12px;
 
@@ -55,7 +55,7 @@
             cursor: pointer;
             padding: 0;
             line-height: 1;
-            
+
             &:hover {
                 color: var(--brand-red, #ff444f);
             }
@@ -78,23 +78,28 @@
         .diag-label {
             color: var(--text-less-prominent, #aaa);
         }
-        
+
         .diag-value {
             font-weight: bold;
-            
-            &.state-connected, &.state-ready, &.state-authenticated {
+
+            &.state-connected,
+            &.state-ready,
+            &.state-authenticated {
                 color: var(--brand-green, #4caf50);
             }
-            &.state-failed, &.error {
+            &.state-failed,
+            &.error {
                 color: var(--brand-red, #ff444f);
             }
-            &.state-idle, &.state-logged_out {
+            &.state-idle,
+            &.state-logged_out {
                 color: var(--text-less-prominent, #aaa);
             }
             &.session-valid {
                 color: var(--brand-green, #4caf50);
             }
-            &.session-invalid, &.session-none {
+            &.session-invalid,
+            &.session-none {
                 color: var(--brand-red, #ff444f);
             }
         }
@@ -115,27 +120,27 @@
         gap: 4px;
         max-height: 200px;
         overflow-y: auto;
-        
+
         .diag-msg {
             display: flex;
             gap: 8px;
-            
+
             &.empty {
                 color: var(--text-less-prominent, #aaa);
                 font-style: italic;
             }
-            
+
             &.out {
                 color: #60a5fa; // blue
             }
             &.in {
                 color: #34d399; // green
             }
-            
+
             .diag-time {
                 color: var(--text-less-prominent, #aaa);
             }
-            
+
             .diag-dir {
                 font-weight: bold;
             }

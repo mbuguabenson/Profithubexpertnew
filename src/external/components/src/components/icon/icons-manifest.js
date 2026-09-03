@@ -1,0 +1,17 @@
+module.exports = {
+    appstore: 'appstore.svg',
+    brand: 'brand.svg',
+    cashier: 'cashier.svg',
+    common: 'common.svg',
+    contract: 'contract.svg',
+    currency: 'currency.svg',
+    ctrader: 'ctrader.svg',
+    dxtrade: 'dxtrade.svg',
+    mt5: 'mt5.svg',
+    option: 'option.svg',
+    rebranding: 'rebranding.svg',
+    stock: 'stock.svg',
+    tradetype: 'tradetype.svg',
+    underlying: 'underlying.svg',
+    wallet: 'wallet.svg',
+};

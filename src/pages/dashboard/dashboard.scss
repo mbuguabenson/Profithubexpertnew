@@ -5,37 +5,48 @@
 // ✦ DASHBOARD UI — VIBRANT NEON SPECTRUM & LUXURY BLACK DESIGN
 // ═══════════════════════════════════════════════════════════════
 
-:root, .theme--light, body.theme--dark, .theme--dark {
-    --dash-bg:               #050811;
-    --dash-card-bg:          #0c1222;
-    --dash-card-border:      #1a243a;
-    --dash-shadow-soft:      0 8px 24px rgba(0, 0, 0, 0.45);
-    --dash-shadow-raised:    0 16px 36px rgba(0, 0, 0, 0.6);
-    --dash-text-main:        #ffffff;
-    --dash-text-sub:         #94a3b8;
+:root,
+.theme--light,
+body.theme--dark,
+.theme--dark {
+    --dash-bg: #050811;
+    --dash-card-bg: #0c1222;
+    --dash-card-border: #1a243a;
+    --dash-shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --dash-shadow-raised: 0 16px 36px rgba(0, 0, 0, 0.6);
+    --dash-text-main: #ffffff;
+    --dash-text-sub: #94a3b8;
 
     /* Spectrum Gradient Tokens */
-    --neon-spectrum:         linear-gradient(135deg, #00d2ff 0%, #7928ca 25%, #ff007a 48%, #ff7a00 70%, #ffd600 86%, #00ff87 100%);
-    --neon-blue:             #00d2ff;
-    --neon-purple:           #9333ea;
-    --neon-magenta:          #ff007a;
-    --neon-orange:           #ff7a00;
-    --neon-yellow:           #ffd600;
-    --neon-lime:             #00ff87;
+    --neon-spectrum: linear-gradient(
+        135deg,
+        #00d2ff 0%,
+        #7928ca 25%,
+        #ff007a 48%,
+        #ff7a00 70%,
+        #ffd600 86%,
+        #00ff87 100%
+    );
+    --neon-blue: #00d2ff;
+    --neon-purple: #9333ea;
+    --neon-magenta: #ff007a;
+    --neon-orange: #ff7a00;
+    --neon-yellow: #ffd600;
+    --neon-lime: #00ff87;
 
-    --gold-banner-bg:        #0f1422;
-    --gold-banner-border:    #3d2e14;
-    --gold-btn-bg:           linear-gradient(135deg, #ff7a00 0%, #ffd600 100%);
-    --gold-btn-hover:        linear-gradient(135deg, #ff9500 0%, #ffea00 100%);
+    --gold-banner-bg: #0f1422;
+    --gold-banner-border: #3d2e14;
+    --gold-btn-bg: linear-gradient(135deg, #ff7a00 0%, #ffd600 100%);
+    --gold-btn-hover: linear-gradient(135deg, #ff9500 0%, #ffea00 100%);
 
-    --wa-card-bg:            #0c1622;
-    --wa-card-border:        #13332a;
-    --wa-btn-bg:             linear-gradient(135deg, #00ff87 0%, #10b981 100%);
-    --wa-btn-hover:          linear-gradient(135deg, #22c55e 0%, #059669 100%);
+    --wa-card-bg: #0c1622;
+    --wa-card-border: #13332a;
+    --wa-btn-bg: linear-gradient(135deg, #00ff87 0%, #10b981 100%);
+    --wa-btn-hover: linear-gradient(135deg, #22c55e 0%, #059669 100%);
 
-    --glass-card-bg:         #0c1222;
-    --glass-card-border:     #1a243a;
-    --glass-card-shadow:     0 8px 24px rgba(0, 0, 0, 0.5);
+    --glass-card-bg: #0c1222;
+    --glass-card-border: #1a243a;
+    --glass-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .bot-dashboard {
@@ -137,7 +148,9 @@
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
         font-size: 0.84rem;
         color: #94a3b8;
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            border-color 0.2s ease;
 
         &:hover {
             transform: translateY(-2px);
@@ -149,9 +162,15 @@
             font-weight: 800;
         }
 
-        .text-emerald { color: #00ff87; }
-        .text-blue { color: #00d2ff; }
-        .text-purple { color: #d946ef; }
+        .text-emerald {
+            color: #00ff87;
+        }
+        .text-blue {
+            color: #00d2ff;
+        }
+        .text-purple {
+            color: #d946ef;
+        }
     }
 }
 
@@ -180,7 +199,9 @@
         letter-spacing: 0.05em;
         cursor: pointer;
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
 
         &:hover {
             transform: translateY(-2px);
@@ -202,7 +223,10 @@
         letter-spacing: 0.04em;
         cursor: pointer;
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            border-color 0.2s ease,
+            background 0.2s ease;
 
         &:hover {
             transform: translateY(-2px);
@@ -284,7 +308,9 @@
         letter-spacing: 0.02em;
         box-shadow: 0 4px 14px rgba(255, 122, 0, 0.35);
         flex-shrink: 0;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
 
         &:hover {
             transform: translateY(-2px);
@@ -324,7 +350,10 @@
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         cursor: pointer;
         overflow: hidden;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease;
 
         // Subtle ambient back-glow
         .glass-card-glow {
@@ -336,13 +365,19 @@
             border-radius: 50%;
             opacity: 0.15;
             filter: blur(25px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition:
+                opacity 0.3s ease,
+                transform 0.3s ease;
             pointer-events: none;
         }
 
         // ── Color Theme Variants (Inspired by Neon Spectrum Palette) ──
         &.glass-purple {
-            .glass-badge { background: #1f122e; color: #ff007a; border-color: #4a1945; }
+            .glass-badge {
+                background: #1f122e;
+                color: #ff007a;
+                border-color: #4a1945;
+            }
             &:hover {
                 border-color: #ff007a;
                 box-shadow: 0 10px 30px rgba(255, 0, 122, 0.25);
@@ -350,7 +385,11 @@
         }
 
         &.glass-emerald {
-            .glass-badge { background: #0b221d; color: #00ff87; border-color: #14493b; }
+            .glass-badge {
+                background: #0b221d;
+                color: #00ff87;
+                border-color: #14493b;
+            }
             &:hover {
                 border-color: #00ff87;
                 box-shadow: 0 10px 30px rgba(0, 255, 135, 0.25);
@@ -358,7 +397,11 @@
         }
 
         &.glass-blue {
-            .glass-badge { background: #0b1c2e; color: #00d2ff; border-color: #133e5e; }
+            .glass-badge {
+                background: #0b1c2e;
+                color: #00d2ff;
+                border-color: #133e5e;
+            }
             &:hover {
                 border-color: #00d2ff;
                 box-shadow: 0 10px 30px rgba(0, 210, 255, 0.25);
@@ -366,7 +409,11 @@
         }
 
         &.glass-amber {
-            .glass-badge { background: #261b0c; color: #ffd600; border-color: #523b16; }
+            .glass-badge {
+                background: #261b0c;
+                color: #ffd600;
+                border-color: #523b16;
+            }
             &:hover {
                 border-color: #ffd600;
                 box-shadow: 0 10px 30px rgba(255, 214, 0, 0.25);
@@ -454,7 +501,9 @@
 
             .glass-explore-arrow {
                 color: #94a3b8;
-                transition: transform 0.2s ease, color 0.2s ease;
+                transition:
+                    transform 0.2s ease,
+                    color 0.2s ease;
             }
         }
     }
@@ -524,7 +573,9 @@
         font-weight: 800;
         text-decoration: none;
         box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
 
         &:hover {
             transform: translateY(-2px);

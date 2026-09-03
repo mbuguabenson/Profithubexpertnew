@@ -150,7 +150,8 @@ const AllAnalysis: React.FC = () => {
                         if (data.active_symbols && Array.isArray(data.active_symbols)) {
                             // Filter for continuous synthetic indices (both 1s and standard)
                             const syntheticSymbols = data.active_symbols.filter(
-                                (symbol: any) => symbol.market === 'synthetic_index' && symbol.submarket === 'random_index'
+                                (symbol: any) =>
+                                    symbol.market === 'synthetic_index' && symbol.submarket === 'random_index'
                             );
 
                             syntheticSymbols.forEach((symbolData: any) => {

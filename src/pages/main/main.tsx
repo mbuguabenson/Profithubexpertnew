@@ -15,8 +15,19 @@ import { CONNECTION_STATUS } from '@/external/bot-skeleton/services/api/observab
 import { isDbotRTL } from '@/external/bot-skeleton/utils/workspace';
 import { useApiBase } from '@/hooks/useApiBase';
 import { useStore } from '@/hooks/useStore';
-import { disableUrlParameterApplication, enableUrlParameterApplication, setupTradeTypeChangeListener } from '@/utils/blockly-url-param-handler';
-import { checkAndShowTradeTypeModal, getModalState, handleTradeTypeCancel, handleTradeTypeConfirm, resetUrlParamProcessing, setModalStateChangeCallback } from '@/utils/trade-type-modal-handler';
+import {
+    disableUrlParameterApplication,
+    enableUrlParameterApplication,
+    setupTradeTypeChangeListener,
+} from '@/utils/blockly-url-param-handler';
+import {
+    checkAndShowTradeTypeModal,
+    getModalState,
+    handleTradeTypeCancel,
+    handleTradeTypeConfirm,
+    resetUrlParamProcessing,
+    setModalStateChangeCallback,
+} from '@/utils/trade-type-modal-handler';
 import TradeTypeConfirmationModal from '@/components/trade-type-confirmation-modal';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -44,12 +55,16 @@ const SignalCentrePage = lazyRetry(() => import('../smart-trading/components/sig
 const Marketkiller = lazyRetry(() => import('../marketkiller'), 'marketkiller');
 const MarketHunterPro = lazyRetry(() => import('../market-hunter-pro'), 'market_hunter_pro');
 const TradingBots = lazyRetry(() => import('../free-bots/trading-bots'), 'trading_bots');
-const EntryScanner = lazyRetry(() => import('../entry-scanner/entry-scanner').then(m => ({ default: m.EntryScanner })), 'entry_scanner');
+const EntryScanner = lazyRetry(
+    () => import('../entry-scanner/entry-scanner').then(m => ({ default: m.EntryScanner })),
+    'entry_scanner'
+);
 const DigitFlowPage = lazyRetry(() => import('../digitflow/digitflow'), 'digitflow');
 const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pro');
 const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
 const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
 const DTraderPage = lazyRetry(() => import('../dtrader'), 'dtrader');
+const OverlordAiPage = lazyRetry(() => import('../overlord-ai'), 'overlord_ai');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -85,7 +100,14 @@ const AppWrapper = observer(() => {
         onOkButtonClick,
     } = run_panel || {};
     const { is_open = false } = quick_strategy || {};
-    const { cancel_button_text = '', ok_button_text = '', title = '', message = '', dismissable = false, is_closed_on_cancel = false } = (dialog_options as {
+    const {
+        cancel_button_text = '',
+        ok_button_text = '',
+        title = '',
+        message = '',
+        dismissable = false,
+        is_closed_on_cancel = false,
+    } = (dialog_options as {
         [key: string]: string;
     }) || {};
 
@@ -113,6 +135,7 @@ const AppWrapper = observer(() => {
         'poverty_hunter',
         'auto_x_eo',
         'dtrader',
+        'overlord_ai',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -173,7 +196,7 @@ const AppWrapper = observer(() => {
         window.addEventListener('profithub_config_changed', handler);
         window.addEventListener('open_system_center', handleOpenSystemCenter);
         window.addEventListener('close_system_center', handleCloseSystemCenter);
-        
+
         return () => {
             window.removeEventListener('profithub_config_changed', handler);
             window.removeEventListener('open_system_center', handleOpenSystemCenter);
@@ -385,236 +408,267 @@ const AppWrapper = observer(() => {
         }
     };
 
-    const allTabDescriptors = useMemo(() => [
-        {
-            key: 'dashboard',
-            id: 'id-dbot-dashboard',
-            label: <TabIcon iconKey='dashboard' label='Dashboard' />,
-            content: <TabErrorBoundary tabId='id-dbot-dashboard' tabName='Dashboard'><Dashboard handleTabChange={handleTabChange} /></TabErrorBoundary>
-        },
-        {
-            key: 'bot_builder',
-            id: 'id-bot-builder',
-            label: <TabIcon iconKey='bot_builder' label='Bot Builder' />,
-            content: null
-        },
-        {
-            key: 'chart',
-            id: is_chart_modal_visible || is_trading_view_modal_visible ? 'id-charts--disabled' : 'id-charts',
-            label: <TabIcon iconKey='chart' label='Charts' />,
-            content: (
-                <TabErrorBoundary tabId='id-charts' tabName='Charts'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}>
-                        <ChartWrapper show_digits_stats={true} />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'trading_bots',
-            id: 'id-trading-bots',
-            label: <TabIcon iconKey='trading_bots' label='Trading Bots' />,
-            content: (
-                <TabErrorBoundary tabId='id-trading-bots' tabName='Trading Bots'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Trading Bots...')} />}>
-                        <TradingBots />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'analysis_tool',
-            id: 'id-analysis-tool',
-            label: <TabIcon iconKey='analysis_tool' label='Analysis Tool' />,
-            content: (
-                <TabErrorBoundary tabId='id-analysis-tool' tabName='Analysis Tool'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Analysis Tool...')} />}>
-                        <AnalysisTools />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'tradingview',
-            id: 'id-tradingview',
-            label: <TabIcon iconKey='tradingview' label='TradingView' />,
-            content: (
-                <TabErrorBoundary tabId='id-tradingview' tabName='TradingView'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading TradingView...')} />}>
-                        <TradingView />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'signals',
-            id: 'id-signals',
-            label: <TabIcon iconKey='signals' label='Signals' />,
-            content: (
-                <TabErrorBoundary tabId='id-signals' tabName='Signals'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signals...')} />}>
-                        <Signals />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'scanner',
-            id: 'id-scanner',
-            label: <TabIcon iconKey='scanner' label='AI Strategy Scanner' />,
-            content: (
-                <TabErrorBoundary tabId='id-scanner' tabName='AI Strategy Scanner'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Scanner...')} />}>
-                        <ScannerPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'manual_trading',
-            id: 'id-manual-trading',
-            label: <TabIcon iconKey='manual_trading' label='Manual Trading' />,
-            content: (
-                <TabErrorBoundary tabId='id-manual-trading' tabName='Manual Trading'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Manual Trading...')} />}>
-                        <ManualTrading />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'easy_tool',
-            id: 'id-easy-tool',
-            label: <TabIcon iconKey='easy_tool' label='Easy Tool' />,
-            content: (
-                <TabErrorBoundary tabId='id-easy-tool' tabName='Easy Tool'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Easy Tool...')} />}>
-                        <EasyTool />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'signal_centre',
-            id: 'id-signal-centre',
-            label: <TabIcon iconKey='signal_centre' label='Signal Centre' />,
-            content: (
-                <TabErrorBoundary tabId='id-signal-centre' tabName='Signal Centre'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signal Centre...')} />}>
-                        <SignalCentrePage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'marketkiller',
-            id: 'id-marketkiller',
-            label: <TabIcon iconKey='marketkiller' label='Marketkiller' />,
-            content: (
-                <TabErrorBoundary tabId='id-marketkiller' tabName='Marketkiller'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Marketkiller...')} />}>
-                        <Marketkiller />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'multi_trader',
-            id: 'id-multi-trader',
-            label: <TabIcon iconKey='multi_trader' label='Multi Trader' />,
-            content: (
-                <TabErrorBoundary tabId='id-multi-trader' tabName='Multi Trader'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Multi Trader...')} />}>
-                        <MultiTrader />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'market_hunter_pro',
-            id: 'id-market-hunter-pro',
-            label: <TabIcon iconKey='market_hunter_pro' label='Market Hunter Pro' />,
-            content: (
-                <TabErrorBoundary tabId='id-market-hunter-pro' tabName='Market Hunter Pro'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Market Hunter Pro...')} />}>
-                        <MarketHunterPro />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'ai_trading_engine',
-            id: 'id-ai-trading-engine',
-            label: <TabIcon iconKey='ai_trading_engine' label='AI Trading Engine' />,
-            content: (
-                <TabErrorBoundary tabId='id-ai-trading-engine' tabName='AI Trading Engine'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AI Trading Engine...')} />}>
-                        <EntryScanner />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'digitflow',
-            id: 'id-digitflow',
-            label: <TabIcon iconKey='digitflow' label='DigitFlow' />,
-            content: (
-                <TabErrorBoundary tabId='id-digitflow' tabName='DigitFlow'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DigitFlow...')} />}>
-                        <DigitFlowPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'elite_pro',
-            id: 'id-elite-pro',
-            label: <TabIcon iconKey='elite_pro' label='Elite Pro' />,
-            content: (
-                <TabErrorBoundary tabId='id-elite-pro' tabName='Elite Pro'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Elite Pro...')} />}>
-                        <EliteProPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'poverty_hunter',
-            id: 'id-poverty-hunter',
-            label: <TabIcon iconKey='poverty_hunter' label='Poverty Hunter' />,
-            content: (
-                <TabErrorBoundary tabId='id-poverty-hunter' tabName='Poverty Hunter'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Poverty Hunter...')} />}>
-                        <PovertyHunterPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'auto_x_eo',
-            id: 'id-auto-x-eo',
-            label: <TabIcon iconKey='auto_x_eo' label='AUTO X E/O' />,
-            content: (
-                <TabErrorBoundary tabId='id-auto-x-eo' tabName='AUTO X E/O'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AUTO X E/O...')} />}>
-                        <AutoXEoPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-        {
-            key: 'dtrader',
-            id: 'id-dtrader',
-            label: <TabIcon iconKey='dtrader' label='DTrader' />,
-            content: (
-                <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
-                    <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
-                        <DTraderPage />
-                    </Suspense>
-                </TabErrorBoundary>
-            )
-        },
-    ], [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]);
+    const allTabDescriptors = useMemo(
+        () => [
+            {
+                key: 'dashboard',
+                id: 'id-dbot-dashboard',
+                label: <TabIcon iconKey='dashboard' label='Dashboard' />,
+                content: (
+                    <TabErrorBoundary tabId='id-dbot-dashboard' tabName='Dashboard'>
+                        <Dashboard handleTabChange={handleTabChange} />
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'bot_builder',
+                id: 'id-bot-builder',
+                label: <TabIcon iconKey='bot_builder' label='Bot Builder' />,
+                content: null,
+            },
+            {
+                key: 'chart',
+                id: is_chart_modal_visible || is_trading_view_modal_visible ? 'id-charts--disabled' : 'id-charts',
+                label: <TabIcon iconKey='chart' label='Charts' />,
+                content: (
+                    <TabErrorBoundary tabId='id-charts' tabName='Charts'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}>
+                            <ChartWrapper show_digits_stats={true} />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'trading_bots',
+                id: 'id-trading-bots',
+                label: <TabIcon iconKey='trading_bots' label='Trading Bots' />,
+                content: (
+                    <TabErrorBoundary tabId='id-trading-bots' tabName='Trading Bots'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Trading Bots...')} />}>
+                            <TradingBots />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'analysis_tool',
+                id: 'id-analysis-tool',
+                label: <TabIcon iconKey='analysis_tool' label='Analysis Tool' />,
+                content: (
+                    <TabErrorBoundary tabId='id-analysis-tool' tabName='Analysis Tool'>
+                        <Suspense
+                            fallback={<ChunkLoader message={localize('Please wait, loading Analysis Tool...')} />}
+                        >
+                            <AnalysisTools />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'tradingview',
+                id: 'id-tradingview',
+                label: <TabIcon iconKey='tradingview' label='TradingView' />,
+                content: (
+                    <TabErrorBoundary tabId='id-tradingview' tabName='TradingView'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading TradingView...')} />}>
+                            <TradingView />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'signals',
+                id: 'id-signals',
+                label: <TabIcon iconKey='signals' label='Signals' />,
+                content: (
+                    <TabErrorBoundary tabId='id-signals' tabName='Signals'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Signals...')} />}>
+                            <Signals />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'scanner',
+                id: 'id-scanner',
+                label: <TabIcon iconKey='scanner' label='AI Strategy Scanner' />,
+                content: (
+                    <TabErrorBoundary tabId='id-scanner' tabName='AI Strategy Scanner'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Scanner...')} />}>
+                            <ScannerPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'manual_trading',
+                id: 'id-manual-trading',
+                label: <TabIcon iconKey='manual_trading' label='Manual Trading' />,
+                content: (
+                    <TabErrorBoundary tabId='id-manual-trading' tabName='Manual Trading'>
+                        <Suspense
+                            fallback={<ChunkLoader message={localize('Please wait, loading Manual Trading...')} />}
+                        >
+                            <ManualTrading />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'easy_tool',
+                id: 'id-easy-tool',
+                label: <TabIcon iconKey='easy_tool' label='Easy Tool' />,
+                content: (
+                    <TabErrorBoundary tabId='id-easy-tool' tabName='Easy Tool'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Easy Tool...')} />}>
+                            <EasyTool />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'signal_centre',
+                id: 'id-signal-centre',
+                label: <TabIcon iconKey='signal_centre' label='Signal Centre' />,
+                content: (
+                    <TabErrorBoundary tabId='id-signal-centre' tabName='Signal Centre'>
+                        <Suspense
+                            fallback={<ChunkLoader message={localize('Please wait, loading Signal Centre...')} />}
+                        >
+                            <SignalCentrePage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'marketkiller',
+                id: 'id-marketkiller',
+                label: <TabIcon iconKey='marketkiller' label='Marketkiller' />,
+                content: (
+                    <TabErrorBoundary tabId='id-marketkiller' tabName='Marketkiller'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Marketkiller...')} />}>
+                            <Marketkiller />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'multi_trader',
+                id: 'id-multi-trader',
+                label: <TabIcon iconKey='multi_trader' label='Multi Trader' />,
+                content: (
+                    <TabErrorBoundary tabId='id-multi-trader' tabName='Multi Trader'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Multi Trader...')} />}>
+                            <MultiTrader />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'market_hunter_pro',
+                id: 'id-market-hunter-pro',
+                label: <TabIcon iconKey='market_hunter_pro' label='Market Hunter Pro' />,
+                content: (
+                    <TabErrorBoundary tabId='id-market-hunter-pro' tabName='Market Hunter Pro'>
+                        <Suspense
+                            fallback={<ChunkLoader message={localize('Please wait, loading Market Hunter Pro...')} />}
+                        >
+                            <MarketHunterPro />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'ai_trading_engine',
+                id: 'id-ai-trading-engine',
+                label: <TabIcon iconKey='ai_trading_engine' label='AI Trading Engine' />,
+                content: (
+                    <TabErrorBoundary tabId='id-ai-trading-engine' tabName='AI Trading Engine'>
+                        <Suspense
+                            fallback={<ChunkLoader message={localize('Please wait, loading AI Trading Engine...')} />}
+                        >
+                            <EntryScanner />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'digitflow',
+                id: 'id-digitflow',
+                label: <TabIcon iconKey='digitflow' label='DigitFlow' />,
+                content: (
+                    <TabErrorBoundary tabId='id-digitflow' tabName='DigitFlow'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DigitFlow...')} />}>
+                            <DigitFlowPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'elite_pro',
+                id: 'id-elite-pro',
+                label: <TabIcon iconKey='elite_pro' label='Elite Pro' />,
+                content: (
+                    <TabErrorBoundary tabId='id-elite-pro' tabName='Elite Pro'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Elite Pro...')} />}>
+                            <EliteProPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'poverty_hunter',
+                id: 'id-poverty-hunter',
+                label: <TabIcon iconKey='poverty_hunter' label='Poverty Hunter' />,
+                content: (
+                    <TabErrorBoundary tabId='id-poverty-hunter' tabName='Poverty Hunter'>
+                        <Suspense
+                            fallback={<ChunkLoader message={localize('Please wait, loading Poverty Hunter...')} />}
+                        >
+                            <PovertyHunterPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'auto_x_eo',
+                id: 'id-auto-x-eo',
+                label: <TabIcon iconKey='auto_x_eo' label='AUTO X E/O' />,
+                content: (
+                    <TabErrorBoundary tabId='id-auto-x-eo' tabName='AUTO X E/O'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading AUTO X E/O...')} />}>
+                            <AutoXEoPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'dtrader',
+                id: 'id-dtrader',
+                label: <TabIcon iconKey='dtrader' label='DTrader' />,
+                content: (
+                    <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
+                            <DTraderPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'overlord_ai',
+                id: 'id-overlord-ai',
+                label: <TabIcon iconKey='overlord_ai' label='OVERLORD AI' />,
+                content: (
+                    <TabErrorBoundary tabId='id-overlord-ai' tabName='OVERLORD AI'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading OVERLORD AI...')} />}>
+                            <OverlordAiPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+        ],
+        [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]
+    );
 
     const activeTabsList = useMemo(() => {
         const list = [...allTabDescriptors];
@@ -636,8 +690,16 @@ const AppWrapper = observer(() => {
             });
     }, [siteConfig, allTabDescriptors]);
 
-    const currentTabKey = (hash[active_hash_tab] ?? location.hash?.replace('#', '') ?? hash[0] ?? 'dashboard').toLowerCase();
-    const filteredActiveIndex = Math.max(0, activeTabsList.findIndex(t => t.key.toLowerCase() === currentTabKey));
+    const currentTabKey = (
+        hash[active_hash_tab] ??
+        location.hash?.replace('#', '') ??
+        hash[0] ??
+        'dashboard'
+    ).toLowerCase();
+    const filteredActiveIndex = Math.max(
+        0,
+        activeTabsList.findIndex(t => t.key.toLowerCase() === currentTabKey)
+    );
 
     const handleFilteredTabChange = React.useCallback(
         (filteredIndex: number) => {
@@ -664,7 +726,14 @@ const AppWrapper = observer(() => {
     if (!store) return null;
 
     // 1. Remove run panel and drawer from dashboard, dtrader, reports, and trading bots
-    const shouldHideRunPanelAndDrawer = ['dashboard', 'dtrader', 'reports', 'trading_bots', 'free_bots', 'trading-bots'].includes(currentTabKey);
+    const shouldHideRunPanelAndDrawer = [
+        'dashboard',
+        'dtrader',
+        'reports',
+        'trading_bots',
+        'free_bots',
+        'trading-bots',
+    ].includes(currentTabKey);
 
     return (
         <React.Fragment>
@@ -675,7 +744,13 @@ const AppWrapper = observer(() => {
                         'main__container--drawer-open': isDesktop && is_drawer_open && !shouldHideRunPanelAndDrawer,
                     })}
                 >
-                    <Tabs active_index={filteredActiveIndex} className='main__tabs' onTabItemClick={handleFilteredTabChange} history={window.history as any} top>
+                    <Tabs
+                        active_index={filteredActiveIndex}
+                        className='main__tabs'
+                        onTabItemClick={handleFilteredTabChange}
+                        history={window.history as any}
+                        top
+                    >
                         {activeTabsList.map(tab => (
                             <div key={tab.key} label={tab.label} id={tab.id}>
                                 {tab.content}
@@ -688,20 +763,22 @@ const AppWrapper = observer(() => {
             {isDesktop ? (
                 <>
                     {!shouldHideRunPanelAndDrawer && (
-                        <div style={{
-                            position: 'fixed',
-                            top: '5rem',
-                            right: 0,
-                            width: '35rem',
-                            height: '5rem',
-                            zIndex: 1100,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'var(--general-main-2)',
-                            borderBottom: '1px solid var(--general-section-1)',
-                            padding: '0 1.6rem',
-                        }}>
+                        <div
+                            style={{
+                                position: 'fixed',
+                                top: '5rem',
+                                right: 0,
+                                width: '35rem',
+                                height: '5rem',
+                                zIndex: 1100,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: 'var(--general-main-2)',
+                                borderBottom: '1px solid var(--general-section-1)',
+                                padding: '0 1.6rem',
+                            }}
+                        >
                             <TopBarTradeController currentTabKey={currentTabKey} />
                         </div>
                     )}

@@ -47,47 +47,47 @@ type TSignalRecord = {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const MAX_TICKS = 1000;           // rolling tick buffer
-const SCAN_WINDOW = 120;          // ticks analysed for main signal
-const CONFIRM_TICKS = 15;         // short momentum confirmation window
-const CANDLE_GRANULARITY = 1800;  // 30-min candle (seconds)
+const MAX_TICKS = 1000; // rolling tick buffer
+const SCAN_WINDOW = 120; // ticks analysed for main signal
+const CONFIRM_TICKS = 15; // short momentum confirmation window
+const CANDLE_GRANULARITY = 1800; // 30-min candle (seconds)
 const DEFAULT_STAKE = '1';
 const DEFAULT_STOP_LOSS = '50';
 const DEFAULT_TAKE_PROFIT = '100';
 const TIMER_SOUND_URL = 'https://www.fesliyanstudios.com/play-mp3/4386';
 
 const MARKETS = [
-    { label: 'Volatility 10 Index',     symbol: 'R_10',     group: 'Volatility' },
-    { label: 'Volatility 25 Index',     symbol: 'R_25',     group: 'Volatility' },
-    { label: 'Volatility 50 Index',     symbol: 'R_50',     group: 'Volatility' },
-    { label: 'Volatility 75 Index',     symbol: 'R_75',     group: 'Volatility' },
-    { label: 'Volatility 100 Index',    symbol: 'R_100',    group: 'Volatility' },
-    { label: 'Volatility 10 (1s) Index', symbol: '1HZ10V',   group: 'Volatility 1s' },
-    { label: 'Volatility 15 (1s) Index', symbol: '1HZ15V',   group: 'Volatility 1s' },
-    { label: 'Volatility 25 (1s) Index', symbol: '1HZ25V',   group: 'Volatility 1s' },
-    { label: 'Volatility 30 (1s) Index', symbol: '1HZ30V',   group: 'Volatility 1s' },
-    { label: 'Volatility 50 (1s) Index', symbol: '1HZ50V',   group: 'Volatility 1s' },
-    { label: 'Volatility 75 (1s) Index', symbol: '1HZ75V',   group: 'Volatility 1s' },
-    { label: 'Volatility 90 (1s) Index', symbol: '1HZ90V',   group: 'Volatility 1s' },
-    { label: 'Volatility 100 (1s) Index',symbol: '1HZ100V',  group: 'Volatility 1s' },
-    { label: 'Volatility 150 (1s) Index',symbol: '1HZ150V',  group: 'Volatility 1s' },
-    { label: 'Volatility 200 (1s) Index',symbol: '1HZ200V',  group: 'Volatility 1s' },
-    { label: 'Volatility 250 (1s) Index',symbol: '1HZ250V',  group: 'Volatility 1s' },
-    { label: 'Volatility 300 (1s) Index',symbol: '1HZ300V',  group: 'Volatility 1s' },
-    { label: 'Jump 10 Index',           symbol: 'JD10',     group: 'Jump' },
-    { label: 'Jump 25 Index',           symbol: 'JD25',     group: 'Jump' },
-    { label: 'Jump 50 Index',           symbol: 'JD50',     group: 'Jump' },
-    { label: 'Jump 75 Index',           symbol: 'JD75',     group: 'Jump' },
-    { label: 'Jump 100 Index',          symbol: 'JD100',    group: 'Jump' },
-    { label: 'Step Index',              symbol: 'STPIND',   group: 'Step' },
-    { label: 'Step 100 Index',          symbol: 'STEP100',  group: 'Step' },
-    { label: 'Step 200 Index',          symbol: 'STEP200',  group: 'Step' },
-    { label: 'Step 500 Index',          symbol: 'STEP500',  group: 'Step' },
-    { label: 'Range Break 100 Index',   symbol: 'RDBEAR',   group: 'Range Break' },
-    { label: 'Range Break 200 Index',   symbol: 'RDBULL',   group: 'Range Break' },
-    { label: 'Drift Switch 10 Index',   symbol: 'DSI10',    group: 'Drift Switch' },
-    { label: 'Drift Switch 20 Index',   symbol: 'DSI20',    group: 'Drift Switch' },
-    { label: 'Drift Switch 30 Index',   symbol: 'DSI30',    group: 'Drift Switch' },
+    { label: 'Volatility 10 Index', symbol: 'R_10', group: 'Volatility' },
+    { label: 'Volatility 25 Index', symbol: 'R_25', group: 'Volatility' },
+    { label: 'Volatility 50 Index', symbol: 'R_50', group: 'Volatility' },
+    { label: 'Volatility 75 Index', symbol: 'R_75', group: 'Volatility' },
+    { label: 'Volatility 100 Index', symbol: 'R_100', group: 'Volatility' },
+    { label: 'Volatility 10 (1s) Index', symbol: '1HZ10V', group: 'Volatility 1s' },
+    { label: 'Volatility 15 (1s) Index', symbol: '1HZ15V', group: 'Volatility 1s' },
+    { label: 'Volatility 25 (1s) Index', symbol: '1HZ25V', group: 'Volatility 1s' },
+    { label: 'Volatility 30 (1s) Index', symbol: '1HZ30V', group: 'Volatility 1s' },
+    { label: 'Volatility 50 (1s) Index', symbol: '1HZ50V', group: 'Volatility 1s' },
+    { label: 'Volatility 75 (1s) Index', symbol: '1HZ75V', group: 'Volatility 1s' },
+    { label: 'Volatility 90 (1s) Index', symbol: '1HZ90V', group: 'Volatility 1s' },
+    { label: 'Volatility 100 (1s) Index', symbol: '1HZ100V', group: 'Volatility 1s' },
+    { label: 'Volatility 150 (1s) Index', symbol: '1HZ150V', group: 'Volatility 1s' },
+    { label: 'Volatility 200 (1s) Index', symbol: '1HZ200V', group: 'Volatility 1s' },
+    { label: 'Volatility 250 (1s) Index', symbol: '1HZ250V', group: 'Volatility 1s' },
+    { label: 'Volatility 300 (1s) Index', symbol: '1HZ300V', group: 'Volatility 1s' },
+    { label: 'Jump 10 Index', symbol: 'JD10', group: 'Jump' },
+    { label: 'Jump 25 Index', symbol: 'JD25', group: 'Jump' },
+    { label: 'Jump 50 Index', symbol: 'JD50', group: 'Jump' },
+    { label: 'Jump 75 Index', symbol: 'JD75', group: 'Jump' },
+    { label: 'Jump 100 Index', symbol: 'JD100', group: 'Jump' },
+    { label: 'Step Index', symbol: 'STPIND', group: 'Step' },
+    { label: 'Step 100 Index', symbol: 'STEP100', group: 'Step' },
+    { label: 'Step 200 Index', symbol: 'STEP200', group: 'Step' },
+    { label: 'Step 500 Index', symbol: 'STEP500', group: 'Step' },
+    { label: 'Range Break 100 Index', symbol: 'RDBEAR', group: 'Range Break' },
+    { label: 'Range Break 200 Index', symbol: 'RDBULL', group: 'Range Break' },
+    { label: 'Drift Switch 10 Index', symbol: 'DSI10', group: 'Drift Switch' },
+    { label: 'Drift Switch 20 Index', symbol: 'DSI20', group: 'Drift Switch' },
+    { label: 'Drift Switch 30 Index', symbol: 'DSI30', group: 'Drift Switch' },
 ] as const;
 
 const STRATEGIES: TScannerStrategy[] = [
@@ -142,7 +142,10 @@ export const findLeastCommonDigit = (digits: number[]) => {
     let leastCommon: number | null = null;
     let minCount = Infinity;
     for (const d in counts) {
-        if (counts[d] < minCount) { minCount = counts[d]; leastCommon = Number(d); }
+        if (counts[d] < minCount) {
+            minCount = counts[d];
+            leastCommon = Number(d);
+        }
     }
     return leastCommon ?? digits[0] ?? 0;
 };
@@ -156,7 +159,8 @@ const getQuoteFromTick = (data: any): TTickPoint | null => {
 /** Returns 1 for bullish, -1 for bearish, 0 for neutral */
 const getMomentumDirection = (ticks: TTickPoint[]): 1 | -1 | 0 => {
     if (ticks.length < 2) return 0;
-    let ups = 0, downs = 0;
+    let ups = 0,
+        downs = 0;
     for (let i = 1; i < ticks.length; i++) {
         if (ticks[i].quote > ticks[i - 1].quote) ups++;
         else if (ticks[i].quote < ticks[i - 1].quote) downs++;
@@ -185,22 +189,22 @@ const computeAccuracy = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol
     }
     if (strategy === 'Even & Odd') {
         const evenCount = digits.filter(d => d % 2 === 0).length;
-        return Number((Math.max(evenCount, total - evenCount) / total * 100).toFixed(1));
+        return Number(((Math.max(evenCount, total - evenCount) / total) * 100).toFixed(1));
     }
     if (strategy === 'Over & Under') {
         const last7 = digits.slice(-7);
         if (last7.length < 7) return 0;
         const allUnder = last7.every(d => d <= 4);
         const allOver = last7.every(d => d >= 5);
-        if (allUnder) return Number((digits.filter(d => d <= 4).length / total * 100).toFixed(1));
-        if (allOver) return Number((digits.filter(d => d >= 5).length / total * 100).toFixed(1));
+        if (allUnder) return Number(((digits.filter(d => d <= 4).length / total) * 100).toFixed(1));
+        if (allOver) return Number(((digits.filter(d => d >= 5).length / total) * 100).toFixed(1));
         return 0;
     }
     // Directional
     let ups = 0;
     for (let i = 1; i < window.length; i++) if (window[i].quote > window[i - 1].quote) ups++;
     const downs = window.length - 1 - ups;
-    return Number((Math.max(ups, downs) / (window.length - 1) * 100).toFixed(1));
+    return Number(((Math.max(ups, downs) / (window.length - 1)) * 100).toFixed(1));
 };
 
 // ─── Signal analysis (120-tick window) ────────────────────────────────────────
@@ -217,20 +221,29 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
     if (strategy === 'Matches') {
         const digitCounts: Record<number, number> = {};
         for (const d of digits) digitCounts[d] = (digitCounts[d] || 0) + 1;
-        let mostCommon = 0, maxCount = 0;
+        let mostCommon = 0,
+            maxCount = 0;
         for (const d in digitCounts) {
-            if (digitCounts[d] > maxCount) { maxCount = digitCounts[d]; mostCommon = Number(d); }
+            if (digitCounts[d] > maxCount) {
+                maxCount = digitCounts[d];
+                mostCommon = Number(d);
+            }
         }
         const matchPct = ((maxCount / sampleSize) * 100).toFixed(1);
         lines.push(`MATCH with ${mostCommon} → ${matchPct}%`);
-        signal = { barrier: String(mostCommon), contractType: 'DIGITMATCH', label: `Matches ${mostCommon}`, confidence: Number(matchPct) };
+        signal = {
+            barrier: String(mostCommon),
+            contractType: 'DIGITMATCH',
+            label: `Matches ${mostCommon}`,
+            confidence: Number(matchPct),
+        };
     } else if (strategy === 'Differs') {
         const digitCounts: Record<number, number> = {};
         for (const d of digits) digitCounts[d] = (digitCounts[d] || 0) + 1;
-        
+
         const entries = Object.entries(digitCounts).map(([d, c]) => ({ digit: Number(d), count: c }));
         entries.sort((a, b) => b.count - a.count);
-        
+
         const mostAppearing = entries[0]?.digit ?? 0;
         const secondMostAppearing = entries[1]?.digit ?? 1;
         const leastAppearing = entries[entries.length - 1]?.digit ?? 9;
@@ -249,11 +262,16 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
                 break;
             }
         }
-        
+
         if (targetDigit !== -1) {
             lines.push(`DIFFERS with ${targetDigit} → ${targetConfidence.toFixed(1)}%`);
             lines.push(`Excluded digits: [${excludedDigits.join(', ')}]`);
-            signal = { barrier: String(targetDigit), contractType: 'DIGITDIFF', label: `Differs ${targetDigit}`, confidence: targetConfidence };
+            signal = {
+                barrier: String(targetDigit),
+                contractType: 'DIGITDIFF',
+                label: `Differs ${targetDigit}`,
+                confidence: targetConfidence,
+            };
         } else {
             lines.push(`Waiting for Differs conditions...`);
             signal = { barrier: '0', contractType: 'DIGITDIFF', label: `Differs (Waiting)`, confidence: 0 };
@@ -274,12 +292,12 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
         const last7 = digits.slice(-7);
         const allUnder = last7.length === 7 && last7.every(d => d <= 4);
         const allOver = last7.length === 7 && last7.every(d => d >= 5);
-        
+
         const underCount = digits.filter(d => d <= 4).length;
         const overCount = sampleSize - underCount;
         const underPct = ((underCount / sampleSize) * 100).toFixed(1);
         const overPct = ((overCount / sampleSize) * 100).toFixed(1);
-        
+
         if (allUnder) {
             // Highest digit in the under sequence determines barrier
             // 4 → Under 6, 3 → Under 7, ≤2 → Under 8
@@ -287,7 +305,12 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
             const barrierMap: Record<number, number> = { 4: 6, 3: 7, 2: 8, 1: 8, 0: 8 };
             const barrier = barrierMap[maxUnder] ?? 6;
             lines.push(`UNDER sequence detected → ${underPct}% | Entry: Under ${barrier}`);
-            signal = { barrier: String(barrier), contractType: 'DIGITUNDER', label: `Under ${barrier}`, confidence: Number(underPct) };
+            signal = {
+                barrier: String(barrier),
+                contractType: 'DIGITUNDER',
+                label: `Under ${barrier}`,
+                confidence: Number(underPct),
+            };
         } else if (allOver) {
             // Lowest digit in the over sequence determines barrier
             // 5 → Over 3, 6 → Over 2, ≥7 → Over 1
@@ -295,7 +318,12 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
             const barrierMap: Record<number, number> = { 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 };
             const barrier = barrierMap[minOver] ?? 3;
             lines.push(`OVER sequence detected → ${overPct}% | Entry: Over ${barrier}`);
-            signal = { barrier: String(barrier), contractType: 'DIGITOVER', label: `Over ${barrier}`, confidence: Number(overPct) };
+            signal = {
+                barrier: String(barrier),
+                contractType: 'DIGITOVER',
+                label: `Over ${barrier}`,
+                confidence: Number(overPct),
+            };
         } else {
             lines.push(`UNDER/OVER sequence waiting...`);
             signal = { barrier: '5', contractType: 'DIGITOVER', label: 'Over/Under (Waiting)', confidence: 0 };
@@ -314,7 +342,8 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
         signal = { contractType: 'PUT', label: 'Only Downs (Fall)', confidence: Number(pct) };
     } else {
         // Rise & Fall
-        let ups = 0, downs = 0;
+        let ups = 0,
+            downs = 0;
         for (let i = 1; i < window.length; i++) {
             if (window[i].quote > window[i - 1].quote) ups++;
             else if (window[i].quote < window[i - 1].quote) downs++;
@@ -443,19 +472,37 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     const differsPostDecreaseTicksRef = useRef<number[]>([]);
 
     // ── Sync refs ───────────────────────────────────────────────────────────
-    useEffect(() => { strategyRef.current = strategy; }, [strategy]);
-    useEffect(() => { selectedSymbolRef.current = selectedSymbol; }, [selectedSymbol]);
+    useEffect(() => {
+        strategyRef.current = strategy;
+    }, [strategy]);
+    useEffect(() => {
+        selectedSymbolRef.current = selectedSymbol;
+    }, [selectedSymbol]);
     useEffect(() => {
         const found = MARKETS.find(m => m.symbol === selectedSymbol) ?? MARKETS[0];
         selectedMarketRef.current = found;
     }, [selectedSymbol]);
-    useEffect(() => { martingaleRef.current = martingale; }, [martingale]);
-    useEffect(() => { alternateEnabledRef.current = alternateEnabled; }, [alternateEnabled]);
-    useEffect(() => { alternateStrategyRef.current = alternateStrategy; }, [alternateStrategy]);
-    useEffect(() => { alternateAfterLossesRef.current = Number(alternateAfterLosses) || 3; }, [alternateAfterLosses]);
-    useEffect(() => { candleDirectionRef.current = candleDirection; }, [candleDirection]);
-    useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
-    useEffect(() => { confirmedSignalRef.current = confirmedSignal; }, [confirmedSignal]);
+    useEffect(() => {
+        martingaleRef.current = martingale;
+    }, [martingale]);
+    useEffect(() => {
+        alternateEnabledRef.current = alternateEnabled;
+    }, [alternateEnabled]);
+    useEffect(() => {
+        alternateStrategyRef.current = alternateStrategy;
+    }, [alternateStrategy]);
+    useEffect(() => {
+        alternateAfterLossesRef.current = Number(alternateAfterLosses) || 3;
+    }, [alternateAfterLosses]);
+    useEffect(() => {
+        candleDirectionRef.current = candleDirection;
+    }, [candleDirection]);
+    useEffect(() => {
+        isPausedRef.current = isPaused;
+    }, [isPaused]);
+    useEffect(() => {
+        confirmedSignalRef.current = confirmedSignal;
+    }, [confirmedSignal]);
 
     const currency = client.currency || 'USD';
     const showScanner = forceShow || active_tab === DBOT_TABS.SCANNER;
@@ -484,19 +531,24 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         timerSoundRef.current = new Audio(TIMER_SOUND_URL);
         timerSoundRef.current.preload = 'auto';
         timerSoundRef.current.loop = true;
-        return () => { timerSoundRef.current?.pause(); timerSoundRef.current = null; };
+        return () => {
+            timerSoundRef.current?.pause();
+            timerSoundRef.current = null;
+        };
     }, []);
 
     const stopTimerSound = useCallback(() => {
         const s = timerSoundRef.current;
         if (!s) return;
-        s.pause(); s.currentTime = 0;
+        s.pause();
+        s.currentTime = 0;
     }, []);
 
     const playTimerSound = useCallback(() => {
         const s = timerSoundRef.current;
         if (!s) return;
-        s.currentTime = 0; s.loop = true;
+        s.currentTime = 0;
+        s.loop = true;
         const p = s.play();
         if (p) p.catch(() => document.addEventListener('click', () => s.play().catch(() => undefined), { once: true }));
     }, []);
@@ -527,7 +579,10 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                 style: 'candles',
             });
             const candles = res?.candles;
-            if (!Array.isArray(candles) || candles.length === 0) { setCandleDirection(0); return; }
+            if (!Array.isArray(candles) || candles.length === 0) {
+                setCandleDirection(0);
+                return;
+            }
             const last = candles[candles.length - 1];
             if (Number(last.close) > Number(last.open)) setCandleDirection(1);
             else if (Number(last.close) < Number(last.open)) setCandleDirection(-1);
@@ -539,7 +594,11 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
 
     // ── Subscriptions ────────────────────────────────────────────────────────
     const unsubscribe = useCallback(() => {
-        try { subscriptionRef.current?.unsubscribe?.(); } catch { /* closed */ }
+        try {
+            subscriptionRef.current?.unsubscribe?.();
+        } catch {
+            /* closed */
+        }
         subscriptionRef.current = null;
     }, []);
 
@@ -553,7 +612,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         try {
             run_panel.setIsRunning(false);
             run_panel.setContractStage?.(contract_stages.NOT_RUNNING);
-        } catch { /* unavailable */ }
+        } catch {
+            /* unavailable */
+        }
         dashboard.setActiveTradingModule(null);
     }, [dashboard, run_panel, stopTimerSound]);
 
@@ -576,7 +637,10 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
             const current = confirmedSignalRef.current;
 
             if (aligned) {
-                const isNew = !current || current.contractType !== analysis.signal.contractType || current.barrier !== analysis.signal.barrier;
+                const isNew =
+                    !current ||
+                    current.contractType !== analysis.signal.contractType ||
+                    current.barrier !== analysis.signal.barrier;
                 if (isNew) {
                     confirmedSignalRef.current = analysis.signal;
                     setConfirmedSignal(analysis.signal);
@@ -594,7 +658,7 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                 } else if (current) {
                     // Update confidence
                     confirmedSignalRef.current = { ...current, confidence: analysis.signal.confidence };
-                    setConfirmedSignal(s => s ? { ...s, confidence: analysis.signal.confidence } : null);
+                    setConfirmedSignal(s => (s ? { ...s, confidence: analysis.signal.confidence } : null));
                 }
             } else if (!tradeActiveRef.current && current) {
                 confirmedSignalRef.current = null;
@@ -676,7 +740,10 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     useEffect(() => {
         void loadMarketData();
         void fetchCandleDirection(selectedSymbol);
-        return () => { requestVersionRef.current += 1; unsubscribe(); };
+        return () => {
+            requestVersionRef.current += 1;
+            unsubscribe();
+        };
     }, [loadMarketData, unsubscribe, fetchCandleDirection, selectedSymbol]);
 
     useEffect(() => {
@@ -685,272 +752,346 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         globalObserver.register('bot.manual_stop', stopTrading);
         return () => {
             dashboard.unregisterTradingStopHandler('scanner');
-            if (globalObserver.isRegistered('bot.manual_stop')) globalObserver.unregister('bot.manual_stop', stopTrading);
+            if (globalObserver.isRegistered('bot.manual_stop'))
+                globalObserver.unregister('bot.manual_stop', stopTrading);
             shouldStopRef.current = true;
             tradeActiveRef.current = false;
         };
     }, [dashboard, showScanner, stopTrading]);
 
     // ── Trade helpers ────────────────────────────────────────────────────────
-    const pushContract = useCallback((data: any) => {
-        try {
-            transactions.pushTransaction({ ...data, run_id: run_panel.run_id });
-            run_panel.onBotContractEvent(data);
-            summary_card.onBotContractEvent(data);
-        } catch { /* side panel may be unavailable */ }
-    }, [run_panel, summary_card, transactions]);
+    const pushContract = useCallback(
+        (data: any) => {
+            try {
+                transactions.pushTransaction({ ...data, run_id: run_panel.run_id });
+                run_panel.onBotContractEvent(data);
+                summary_card.onBotContractEvent(data);
+            } catch {
+                /* side panel may be unavailable */
+            }
+        },
+        [run_panel, summary_card, transactions]
+    );
 
-    const buildTradeParameters = useCallback((signal: TScannerSignal, stake: number) => {
-        const params: Record<string, number | string> = {
-            amount: stake,
-            basis: 'stake',
-            contract_type: signal.contractType,
-            currency,
-            duration: 1,
-            duration_unit: 't',
-            underlying_symbol: selectedSymbol,
-        };
-        if (signal.barrier) params.barrier = signal.barrier;
-        return params;
-    }, [currency, selectedSymbol]);
+    const buildTradeParameters = useCallback(
+        (signal: TScannerSignal, stake: number) => {
+            const params: Record<string, number | string> = {
+                amount: stake,
+                basis: 'stake',
+                contract_type: signal.contractType,
+                currency,
+                duration: 1,
+                duration_unit: 't',
+                underlying_symbol: selectedSymbol,
+            };
+            if (signal.barrier) params.barrier = signal.barrier;
+            return params;
+        },
+        [currency, selectedSymbol]
+    );
 
-    const runSingleTrade = useCallback(async (signal: TScannerSignal, stake: number) => {
-        const startTime = Math.floor(Date.now() / 1000);
-        const fallback = {
-            buy_price: stake,
-            date_start: startTime,
-            display_name: selectedMarket.label,
-            underlying_symbol: selectedSymbol,
-            shortcode: `SCANNER_${signal.contractType}_${selectedSymbol}`,
-            contract_type: signal.contractType,
-            currency,
-        };
-        setTerminalDashboard(prev => [...prev, `→ Buying ${signal.label} @ ${stake.toFixed(2)} ${currency}`]);
-        const buy = await buyContractForUi({ parameters: buildTradeParameters(signal, stake), price: stake, source: 'Scanner' });
-        const buySnap = { ...fallback, buy_price: buy.buy_price, contract_id: buy.contract_id, transaction_ids: { buy: buy.transaction_id } };
-        pushContract(buySnap);
-        const settled = await streamContractUntilSettled({ contractId: buy.contract_id, fallback: buySnap, onUpdate: s => pushContract(s), source: 'Scanner' });
-        const profit = Number(settled.profit ?? 0);
-        return { profit, won: profit >= 0 };
-    }, [buildTradeParameters, currency, pushContract, selectedMarket.label, selectedSymbol]);
+    const runSingleTrade = useCallback(
+        async (signal: TScannerSignal, stake: number) => {
+            const startTime = Math.floor(Date.now() / 1000);
+            const fallback = {
+                buy_price: stake,
+                date_start: startTime,
+                display_name: selectedMarket.label,
+                underlying_symbol: selectedSymbol,
+                shortcode: `SCANNER_${signal.contractType}_${selectedSymbol}`,
+                contract_type: signal.contractType,
+                currency,
+            };
+            setTerminalDashboard(prev => [...prev, `→ Buying ${signal.label} @ ${stake.toFixed(2)} ${currency}`]);
+            const buy = await buyContractForUi({
+                parameters: buildTradeParameters(signal, stake),
+                price: stake,
+                source: 'Scanner',
+            });
+            const buySnap = {
+                ...fallback,
+                buy_price: buy.buy_price,
+                contract_id: buy.contract_id,
+                transaction_ids: { buy: buy.transaction_id },
+            };
+            pushContract(buySnap);
+            const settled = await streamContractUntilSettled({
+                contractId: buy.contract_id,
+                fallback: buySnap,
+                onUpdate: s => pushContract(s),
+                source: 'Scanner',
+            });
+            const profit = Number(settled.profit ?? 0);
+            return { profit, won: profit >= 0 };
+        },
+        [buildTradeParameters, currency, pushContract, selectedMarket.label, selectedSymbol]
+    );
 
-    const executeTradeFromTick = useCallback(async (currentTicks: TTickPoint[]) => {
-        if (!tradeActiveRef.current || tradeInFlightRef.current || shouldStopRef.current || currentTicks.length < SCAN_WINDOW) return;
-        if (isPausedRef.current) return;
+    const executeTradeFromTick = useCallback(
+        async (currentTicks: TTickPoint[]) => {
+            if (
+                !tradeActiveRef.current ||
+                tradeInFlightRef.current ||
+                shouldStopRef.current ||
+                currentTicks.length < SCAN_WINDOW
+            )
+                return;
+            if (isPausedRef.current) return;
 
-        const sl = stopLossRef.current;
-        const tp = takeProfitRef.current;
-        if (sessionProfitRef.current <= -sl || sessionProfitRef.current >= tp) {
-            const msg = sessionProfitRef.current >= tp ? `TP reached: +${sessionProfitRef.current.toFixed(2)} ${currency}` : `SL reached: ${sessionProfitRef.current.toFixed(2)} ${currency}`;
-            setTerminalDashboard(prev => [...prev, msg]);
-            stopTrading();
-            return;
-        }
-
-        // Decide which strategy to use (alternate if threshold hit)
-        const useAlternate = alternateEnabledRef.current && consecutiveLossesRef.current >= alternateAfterLossesRef.current;
-        const effectiveStrategy = useAlternate ? alternateStrategyRef.current : strategyRef.current;
-        activeStrategyRef.current = effectiveStrategy;
-
-        const analysis = buildAnalysis(effectiveStrategy, currentTicks, selectedSymbolRef.current);
-        const aligned = isSignalAligned(analysis.signal, effectiveStrategy, currentTicks, candleDirectionRef.current);
-        if (!aligned) return;
-
-        // ── Differs waiting logic ──────────────────────────────────────────
-        if (effectiveStrategy === 'Differs' && analysis.signal.confidence > 0) {
-            const lastDigit = getLastDigitFromQuote(currentTicks[currentTicks.length - 1].quote, selectedSymbolRef.current);
-
-            // First time entering Differs mode: initialize tracking
-            if (!differsWaitingForDecreaseRef.current && differsTargetDigitRef.current === -1) {
-                differsTargetDigitRef.current = Number(analysis.signal.barrier);
-                differsExcludedDigitsRef.current = analysis.excludedDigits;
-                differsTargetPrevCountRef.current = analysis.differsTargetPrevCount;
-                differsWaitingForDecreaseRef.current = true;
-                differsPostDecreaseTicksRef.current = [];
-                setTerminalDashboard(prev => [
-                    ...prev,
-                    `⏳ Differs ${differsTargetDigitRef.current}: Waiting for frequency to decrease...`,
-                    `   Excluded digits: [${differsExcludedDigitsRef.current.join(', ')}]`,
-                ]);
+            const sl = stopLossRef.current;
+            const tp = takeProfitRef.current;
+            if (sessionProfitRef.current <= -sl || sessionProfitRef.current >= tp) {
+                const msg =
+                    sessionProfitRef.current >= tp
+                        ? `TP reached: +${sessionProfitRef.current.toFixed(2)} ${currency}`
+                        : `SL reached: ${sessionProfitRef.current.toFixed(2)} ${currency}`;
+                setTerminalDashboard(prev => [...prev, msg]);
+                stopTrading();
                 return;
             }
 
-            // Check if target digit frequency has decreased
-            if (differsWaitingForDecreaseRef.current) {
-                const digits = currentTicks.slice(-SCAN_WINDOW).map(t => getLastDigitFromQuote(t.quote, selectedSymbolRef.current));
-                const currentCount = digits.filter(d => d === differsTargetDigitRef.current).length;
-                if (currentCount < differsTargetPrevCountRef.current) {
-                    // Frequency decreased — now watch the next 3 ticks for excluded digits
-                    differsWaitingForDecreaseRef.current = false;
+            // Decide which strategy to use (alternate if threshold hit)
+            const useAlternate =
+                alternateEnabledRef.current && consecutiveLossesRef.current >= alternateAfterLossesRef.current;
+            const effectiveStrategy = useAlternate ? alternateStrategyRef.current : strategyRef.current;
+            activeStrategyRef.current = effectiveStrategy;
+
+            const analysis = buildAnalysis(effectiveStrategy, currentTicks, selectedSymbolRef.current);
+            const aligned = isSignalAligned(
+                analysis.signal,
+                effectiveStrategy,
+                currentTicks,
+                candleDirectionRef.current
+            );
+            if (!aligned) return;
+
+            // ── Differs waiting logic ──────────────────────────────────────────
+            if (effectiveStrategy === 'Differs' && analysis.signal.confidence > 0) {
+                const lastDigit = getLastDigitFromQuote(
+                    currentTicks[currentTicks.length - 1].quote,
+                    selectedSymbolRef.current
+                );
+
+                // First time entering Differs mode: initialize tracking
+                if (!differsWaitingForDecreaseRef.current && differsTargetDigitRef.current === -1) {
+                    differsTargetDigitRef.current = Number(analysis.signal.barrier);
+                    differsExcludedDigitsRef.current = analysis.excludedDigits;
+                    differsTargetPrevCountRef.current = analysis.differsTargetPrevCount;
+                    differsWaitingForDecreaseRef.current = true;
                     differsPostDecreaseTicksRef.current = [];
                     setTerminalDashboard(prev => [
                         ...prev,
-                        `📉 Digit ${differsTargetDigitRef.current} frequency decreased (${differsTargetPrevCountRef.current} → ${currentCount}). Watching next 3 ticks...`,
+                        `⏳ Differs ${differsTargetDigitRef.current}: Waiting for frequency to decrease...`,
+                        `   Excluded digits: [${differsExcludedDigitsRef.current.join(', ')}]`,
                     ]);
-                } else {
-                    differsTargetPrevCountRef.current = currentCount;
+                    return;
                 }
-                return;
+
+                // Check if target digit frequency has decreased
+                if (differsWaitingForDecreaseRef.current) {
+                    const digits = currentTicks
+                        .slice(-SCAN_WINDOW)
+                        .map(t => getLastDigitFromQuote(t.quote, selectedSymbolRef.current));
+                    const currentCount = digits.filter(d => d === differsTargetDigitRef.current).length;
+                    if (currentCount < differsTargetPrevCountRef.current) {
+                        // Frequency decreased — now watch the next 3 ticks for excluded digits
+                        differsWaitingForDecreaseRef.current = false;
+                        differsPostDecreaseTicksRef.current = [];
+                        setTerminalDashboard(prev => [
+                            ...prev,
+                            `📉 Digit ${differsTargetDigitRef.current} frequency decreased (${differsTargetPrevCountRef.current} → ${currentCount}). Watching next 3 ticks...`,
+                        ]);
+                    } else {
+                        differsTargetPrevCountRef.current = currentCount;
+                    }
+                    return;
+                }
+
+                // Post-decrease: watch 3 ticks for excluded digit appearance
+                differsPostDecreaseTicksRef.current.push(lastDigit);
+                const excluded = differsExcludedDigitsRef.current;
+                const foundExcluded = excluded.includes(lastDigit);
+
+                if (foundExcluded) {
+                    setTerminalDashboard(prev => [
+                        ...prev,
+                        `✅ Excluded digit ${lastDigit} appeared! Executing Differs ${differsTargetDigitRef.current} trade...`,
+                    ]);
+                    // Reset Differs tracking state
+                    differsTargetDigitRef.current = -1;
+                    differsExcludedDigitsRef.current = [];
+                    differsWaitingForDecreaseRef.current = false;
+                    differsPostDecreaseTicksRef.current = [];
+                    // Fall through to execute the trade below
+                } else if (differsPostDecreaseTicksRef.current.length >= 3) {
+                    // 3 ticks passed without excluded digit — reset and re-scan
+                    setTerminalDashboard(prev => [...prev, `⏳ 3 ticks passed without excluded digit. Re-scanning...`]);
+                    differsTargetDigitRef.current = -1;
+                    differsExcludedDigitsRef.current = [];
+                    differsWaitingForDecreaseRef.current = false;
+                    differsPostDecreaseTicksRef.current = [];
+                    return;
+                } else {
+                    setTerminalDashboard(prev => [
+                        ...prev,
+                        `👁 Tick ${differsPostDecreaseTicksRef.current.length}/3: digit ${lastDigit} (waiting for [${excluded.join(', ')}])`,
+                    ]);
+                    return;
+                }
             }
 
-            // Post-decrease: watch 3 ticks for excluded digit appearance
-            differsPostDecreaseTicksRef.current.push(lastDigit);
-            const excluded = differsExcludedDigitsRef.current;
-            const foundExcluded = excluded.includes(lastDigit);
-
-            if (foundExcluded) {
-                setTerminalDashboard(prev => [
-                    ...prev,
-                    `✅ Excluded digit ${lastDigit} appeared! Executing Differs ${differsTargetDigitRef.current} trade...`,
-                ]);
-                // Reset Differs tracking state
-                differsTargetDigitRef.current = -1;
-                differsExcludedDigitsRef.current = [];
-                differsWaitingForDecreaseRef.current = false;
-                differsPostDecreaseTicksRef.current = [];
-                // Fall through to execute the trade below
-            } else if (differsPostDecreaseTicksRef.current.length >= 3) {
-                // 3 ticks passed without excluded digit — reset and re-scan
-                setTerminalDashboard(prev => [
-                    ...prev,
-                    `⏳ 3 ticks passed without excluded digit. Re-scanning...`,
-                ]);
-                differsTargetDigitRef.current = -1;
-                differsExcludedDigitsRef.current = [];
-                differsWaitingForDecreaseRef.current = false;
-                differsPostDecreaseTicksRef.current = [];
-                return;
-            } else {
-                setTerminalDashboard(prev => [
-                    ...prev,
-                    `👁 Tick ${differsPostDecreaseTicksRef.current.length}/3: digit ${lastDigit} (waiting for [${excluded.join(', ')}])`,
-                ]);
-                return;
-            }
-        }
-
-        tradeInFlightRef.current = true;
-        if (useAlternate) setTerminalDashboard(prev => [...prev, `⚡ Alternate strategy: ${effectiveStrategy}`]);
-        setTerminalDashboard(prev => [...prev, `Signal: ${analysis.signal.label} (${analysis.signal.confidence}%)`]);
-
-        try {
-            const { profit, won } = await runSingleTrade(analysis.signal, currentStakeRef.current);
-            const total = Number((sessionProfitRef.current + profit).toFixed(8));
-            completedRunsRef.current += 1;
-            sessionProfitRef.current = total;
-            setSessionProfit(total);
-
-            // Martingale / reset
-            if (won) {
-                consecutiveLossesRef.current = 0;
-                currentStakeRef.current = stakeRef.current;
-            } else {
-                consecutiveLossesRef.current += 1;
-                currentStakeRef.current = Number((currentStakeRef.current * martingaleRef.current).toFixed(2));
-            }
-
-            // Update oldest pending signal record outcome
-            setSignalStats(prev => {
-                const copy = [...prev];
-                const idx = copy.findIndex(r => r.outcome === 'Pending');
-                if (idx >= 0) copy[idx] = { ...copy[idx], outcome: won ? 'Win' : 'Loss', profit };
-                return copy;
-            });
-
+            tradeInFlightRef.current = true;
+            if (useAlternate) setTerminalDashboard(prev => [...prev, `⚡ Alternate strategy: ${effectiveStrategy}`]);
             setTerminalDashboard(prev => [
                 ...prev,
-                `${won ? '✅ WIN' : '❌ LOSS'} Run ${completedRunsRef.current}: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ${currency}`,
-                `Session P/L: ${total >= 0 ? '+' : ''}${total.toFixed(2)} ${currency}`,
-                ...(martingaleRef.current > 1 && !won ? [`Next stake: ${currentStakeRef.current.toFixed(2)} ${currency} (${martingaleRef.current}×)`] : []),
+                `Signal: ${analysis.signal.label} (${analysis.signal.confidence}%)`,
             ]);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Trade failed.';
-            setTerminalDashboard(prev => [...prev, `Error: ${message}`]);
-            stopTrading();
-        } finally {
-            tradeInFlightRef.current = false;
-            if (tradeActiveRef.current && !shouldStopRef.current) {
-                setTimeout(() => handleTradeTickRef.current(ticksRef.current), 100);
+
+            try {
+                const { profit, won } = await runSingleTrade(analysis.signal, currentStakeRef.current);
+                const total = Number((sessionProfitRef.current + profit).toFixed(8));
+                completedRunsRef.current += 1;
+                sessionProfitRef.current = total;
+                setSessionProfit(total);
+
+                // Martingale / reset
+                if (won) {
+                    consecutiveLossesRef.current = 0;
+                    currentStakeRef.current = stakeRef.current;
+                } else {
+                    consecutiveLossesRef.current += 1;
+                    currentStakeRef.current = Number((currentStakeRef.current * martingaleRef.current).toFixed(2));
+                }
+
+                // Update oldest pending signal record outcome
+                setSignalStats(prev => {
+                    const copy = [...prev];
+                    const idx = copy.findIndex(r => r.outcome === 'Pending');
+                    if (idx >= 0) copy[idx] = { ...copy[idx], outcome: won ? 'Win' : 'Loss', profit };
+                    return copy;
+                });
+
+                setTerminalDashboard(prev => [
+                    ...prev,
+                    `${won ? '✅ WIN' : '❌ LOSS'} Run ${completedRunsRef.current}: ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} ${currency}`,
+                    `Session P/L: ${total >= 0 ? '+' : ''}${total.toFixed(2)} ${currency}`,
+                    ...(martingaleRef.current > 1 && !won
+                        ? [`Next stake: ${currentStakeRef.current.toFixed(2)} ${currency} (${martingaleRef.current}×)`]
+                        : []),
+                ]);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Trade failed.';
+                setTerminalDashboard(prev => [...prev, `Error: ${message}`]);
+                stopTrading();
+            } finally {
+                tradeInFlightRef.current = false;
+                if (tradeActiveRef.current && !shouldStopRef.current) {
+                    setTimeout(() => handleTradeTickRef.current(ticksRef.current), 100);
+                }
             }
-        }
-    }, [currency, runSingleTrade, stopTrading]);
+        },
+        [currency, runSingleTrade, stopTrading]
+    );
 
     useEffect(() => {
-        handleTradeTickRef.current = currentTicks => { void executeTradeFromTick(currentTicks); };
+        handleTradeTickRef.current = currentTicks => {
+            void executeTradeFromTick(currentTicks);
+        };
     }, [executeTradeFromTick]);
 
-    const startScannerTrading = useCallback((signal: TScannerSignal, stake: number, stopLoss: number, takeProfit: number) => {
-        stakeRef.current = stake;
-        currentStakeRef.current = stake;
-        stopLossRef.current = stopLoss;
-        takeProfitRef.current = takeProfit;
-        sessionProfitRef.current = 0;
-        completedRunsRef.current = 0;
-        consecutiveLossesRef.current = 0;
-        shouldStopRef.current = false;
-        tradeActiveRef.current = true;
-        tradeInFlightRef.current = false;
-        activeStrategyRef.current = strategyRef.current;
-        setSessionProfit(0);
-        setIsWorking(true);
-        setIsPaused(false);
-        isPausedRef.current = false;
-        // Reset Differs waiting state
-        differsTargetDigitRef.current = -1;
-        differsExcludedDigitsRef.current = [];
-        differsWaitingForDecreaseRef.current = false;
-        differsPostDecreaseTicksRef.current = [];
-        differsTargetPrevCountRef.current = 0;
+    const startScannerTrading = useCallback(
+        (signal: TScannerSignal, stake: number, stopLoss: number, takeProfit: number) => {
+            stakeRef.current = stake;
+            currentStakeRef.current = stake;
+            stopLossRef.current = stopLoss;
+            takeProfitRef.current = takeProfit;
+            sessionProfitRef.current = 0;
+            completedRunsRef.current = 0;
+            consecutiveLossesRef.current = 0;
+            shouldStopRef.current = false;
+            tradeActiveRef.current = true;
+            tradeInFlightRef.current = false;
+            activeStrategyRef.current = strategyRef.current;
+            setSessionProfit(0);
+            setIsWorking(true);
+            setIsPaused(false);
+            isPausedRef.current = false;
+            // Reset Differs waiting state
+            differsTargetDigitRef.current = -1;
+            differsExcludedDigitsRef.current = [];
+            differsWaitingForDecreaseRef.current = false;
+            differsPostDecreaseTicksRef.current = [];
+            differsTargetPrevCountRef.current = 0;
 
-        try {
-            run_panel.setRunId(`scanner-${Date.now()}`);
-            run_panel.setIsRunning(true);
-            run_panel.setContractStage?.(contract_stages.RUNNING);
-            run_panel.toggleDrawer(true);
-        } catch { /* unavailable */ }
+            try {
+                run_panel.setRunId(`scanner-${Date.now()}`);
+                run_panel.setIsRunning(true);
+                run_panel.setContractStage?.(contract_stages.RUNNING);
+                run_panel.toggleDrawer(true);
+            } catch {
+                /* unavailable */
+            }
 
-        dashboard.setActiveTradingModule('scanner');
-        setTerminalDashboard(prev => [
-            ...prev,
-            `▶ Auto Trade ACTIVE — ${signal.label}`,
-            `Stake: ${stake} ${currency} | TP: +${takeProfit} | SL: -${stopLoss} | Martingale: ${martingaleRef.current}×`,
-            alternateEnabledRef.current ? `Alternate: ${alternateStrategyRef.current} after ${alternateAfterLossesRef.current} losses` : 'No alternate strategy',
-        ]);
-        void executeTradeFromTick(ticksRef.current);
-    }, [currency, dashboard, executeTradeFromTick, run_panel]);
-
-    const startFastMovingCodes = useCallback((stake: number, stopLoss: number, takeProfit: number) => {
-        playTimerSound();
-        setTerminalBody(prev => [...prev, `Scanning ${SCAN_WINDOW}-tick window...`]);
-        const codeInterval = setInterval(() => {
-            if (shouldStopRef.current) { clearInterval(codeInterval); return; }
-            setTerminalBody(prev => [...prev.slice(-49), generateRandomCode()]);
-        }, 50);
-
-        setTimeout(() => {
-            clearInterval(codeInterval);
-            stopTimerSound();
-            if (shouldStopRef.current) { setIsWorking(false); return; }
-
-            const analysis = buildAnalysis(strategyRef.current, ticksRef.current, selectedSymbolRef.current);
-            const aligned = isSignalAligned(analysis.signal, strategyRef.current, ticksRef.current, candleDirectionRef.current);
+            dashboard.setActiveTradingModule('scanner');
             setTerminalDashboard(prev => [
                 ...prev,
-                ...analysis.lines,
-                aligned
-                    ? `✅ Signal CONFIRMED: ${analysis.signal.label} (${analysis.signal.confidence}%) — all 3 layers aligned`
-                    : `⏳ Signal not fully aligned. Confidence: ${analysis.signal.confidence}%. Scanning live ticks...`,
+                `▶ Auto Trade ACTIVE — ${signal.label}`,
+                `Stake: ${stake} ${currency} | TP: +${takeProfit} | SL: -${stopLoss} | Martingale: ${martingaleRef.current}×`,
+                alternateEnabledRef.current
+                    ? `Alternate: ${alternateStrategyRef.current} after ${alternateAfterLossesRef.current} losses`
+                    : 'No alternate strategy',
             ]);
+            void executeTradeFromTick(ticksRef.current);
+        },
+        [currency, dashboard, executeTradeFromTick, run_panel]
+    );
 
-            if (aligned) {
-                confirmedSignalRef.current = analysis.signal;
-                setConfirmedSignal(analysis.signal);
-                startScannerTrading(analysis.signal, stake, stopLoss, takeProfit);
-            } else {
-                setIsWorking(false);
-            }
-        }, 5000);
-    }, [playTimerSound, startScannerTrading, stopTimerSound]);
+    const startFastMovingCodes = useCallback(
+        (stake: number, stopLoss: number, takeProfit: number) => {
+            playTimerSound();
+            setTerminalBody(prev => [...prev, `Scanning ${SCAN_WINDOW}-tick window...`]);
+            const codeInterval = setInterval(() => {
+                if (shouldStopRef.current) {
+                    clearInterval(codeInterval);
+                    return;
+                }
+                setTerminalBody(prev => [...prev.slice(-49), generateRandomCode()]);
+            }, 50);
+
+            setTimeout(() => {
+                clearInterval(codeInterval);
+                stopTimerSound();
+                if (shouldStopRef.current) {
+                    setIsWorking(false);
+                    return;
+                }
+
+                const analysis = buildAnalysis(strategyRef.current, ticksRef.current, selectedSymbolRef.current);
+                const aligned = isSignalAligned(
+                    analysis.signal,
+                    strategyRef.current,
+                    ticksRef.current,
+                    candleDirectionRef.current
+                );
+                setTerminalDashboard(prev => [
+                    ...prev,
+                    ...analysis.lines,
+                    aligned
+                        ? `✅ Signal CONFIRMED: ${analysis.signal.label} (${analysis.signal.confidence}%) — all 3 layers aligned`
+                        : `⏳ Signal not fully aligned. Confidence: ${analysis.signal.confidence}%. Scanning live ticks...`,
+                ]);
+
+                if (aligned) {
+                    confirmedSignalRef.current = analysis.signal;
+                    setConfirmedSignal(analysis.signal);
+                    startScannerTrading(analysis.signal, stake, stopLoss, takeProfit);
+                } else {
+                    setIsWorking(false);
+                }
+            }, 5000);
+        },
+        [playTimerSound, startScannerTrading, stopTimerSound]
+    );
 
     // ── User action handlers ─────────────────────────────────────────────────
     const handleAutoTrade = () => {
@@ -959,13 +1100,26 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         const takeProfit = Number(takeProfitInput);
 
         if (!strategy || !selectedSymbol) {
-            setTerminalDashboard(['Error: Please select a strategy and market.']); setPopupOpen(true); return;
+            setTerminalDashboard(['Error: Please select a strategy and market.']);
+            setPopupOpen(true);
+            return;
         }
-        if (!Number.isFinite(stake) || stake <= 0 || !Number.isFinite(stopLoss) || stopLoss <= 0 || !Number.isFinite(takeProfit) || takeProfit <= 0) {
-            setTerminalDashboard(['Error: Enter valid Stake, SL and TP values.']); setPopupOpen(true); return;
+        if (
+            !Number.isFinite(stake) ||
+            stake <= 0 ||
+            !Number.isFinite(stopLoss) ||
+            stopLoss <= 0 ||
+            !Number.isFinite(takeProfit) ||
+            takeProfit <= 0
+        ) {
+            setTerminalDashboard(['Error: Enter valid Stake, SL and TP values.']);
+            setPopupOpen(true);
+            return;
         }
         if (!canScan) {
-            setTerminalDashboard([`Loading… ${ticks.length}/${SCAN_WINDOW} ticks buffered.`]); setPopupOpen(true); return;
+            setTerminalDashboard([`Loading… ${ticks.length}/${SCAN_WINDOW} ticks buffered.`]);
+            setPopupOpen(true);
+            return;
         }
 
         shouldStopRef.current = false;
@@ -983,19 +1137,33 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         ];
         let index = 0;
         const interval = setInterval(() => {
-            if (shouldStopRef.current) { clearInterval(interval); setIsWorking(false); return; }
-            if (index < messages.length) { setTerminalBody(prev => [...prev, messages[index]]); index++; }
-            else { clearInterval(interval); startFastMovingCodes(stake, stopLoss, takeProfit); }
+            if (shouldStopRef.current) {
+                clearInterval(interval);
+                setIsWorking(false);
+                return;
+            }
+            if (index < messages.length) {
+                setTerminalBody(prev => [...prev, messages[index]]);
+                index++;
+            } else {
+                clearInterval(interval);
+                startFastMovingCodes(stake, stopLoss, takeProfit);
+            }
         }, 1000);
     };
 
     const handleScan = () => {
         if (!canScan) {
-            setTerminalDashboard([`Loading… ${ticks.length}/${SCAN_WINDOW} ticks needed.`]); setPopupOpen(true); return;
+            setTerminalDashboard([`Loading… ${ticks.length}/${SCAN_WINDOW} ticks needed.`]);
+            setPopupOpen(true);
+            return;
         }
         const analysis = buildAnalysis(strategy, ticksRef.current, selectedSymbol);
         const aligned = isSignalAligned(analysis.signal, strategy, ticksRef.current, candleDirectionRef.current);
-        if (aligned) { confirmedSignalRef.current = analysis.signal; setConfirmedSignal(analysis.signal); }
+        if (aligned) {
+            confirmedSignalRef.current = analysis.signal;
+            setConfirmedSignal(analysis.signal);
+        }
         setTerminalDashboard([
             `Scan — ${strategy} on ${selectedMarket.label}`,
             ...analysis.lines,
@@ -1096,14 +1264,20 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         }, 1000);
                     } catch (e) {
                         console.error('[Scanner] Build error inside interval:', e);
-                        setTerminalDashboard(prev => [...prev, `❌ Error: ${e instanceof Error ? e.message : String(e)}`]);
+                        setTerminalDashboard(prev => [
+                            ...prev,
+                            `❌ Error: ${e instanceof Error ? e.message : String(e)}`,
+                        ]);
                     }
-                } else if (attempts >= 50) { // 5 seconds timeout
+                } else if (attempts >= 50) {
+                    // 5 seconds timeout
                     clearInterval(checkInterval);
-                    setTerminalDashboard(prev => [...prev, '❌ Timeout waiting for Bot Builder workspace. Please load the Bot Builder manually first.']);
+                    setTerminalDashboard(prev => [
+                        ...prev,
+                        '❌ Timeout waiting for Bot Builder workspace. Please load the Bot Builder manually first.',
+                    ]);
                 }
             }, 100);
-
         } catch (e) {
             console.error('[Scanner] Auto Build error:', e);
             setTerminalDashboard(prev => [...prev, `❌ Error: ${e instanceof Error ? e.message : String(e)}`]);
@@ -1142,9 +1316,19 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     // ── Render ───────────────────────────────────────────────────────────────
     if (isEmbed) {
         return (
-            <div className="scanner-embed-wrap">
+            <div className='scanner-embed-wrap'>
                 {/* Sub-tabs */}
-                <div className='scanner-tabs' style={{ position: 'sticky', top: 0, zIndex: 30, background: 'var(--general-main-1, #0f172a)', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <div
+                    className='scanner-tabs'
+                    style={{
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 30,
+                        background: 'var(--general-main-1, #0f172a)',
+                        padding: '10px 0',
+                        borderBottom: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                >
                     <button
                         type='button'
                         className={`scanner-tab${activeTab === 'scanner' ? ' scanner-tab--active' : ''}`}
@@ -1157,13 +1341,24 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         className={`scanner-tab${activeTab === 'stats' ? ' scanner-tab--active' : ''}`}
                         onClick={() => setActiveTab('stats')}
                     >
-                        📊 Signal Stats {signalStats.length > 0 && <span className='scanner-tab__badge'>{signalStats.length}</span>}
+                        📊 Signal Stats{' '}
+                        {signalStats.length > 0 && <span className='scanner-tab__badge'>{signalStats.length}</span>}
                     </button>
                 </div>
 
                 {/* ── SCANNER TAB ── */}
                 {activeTab === 'scanner' && (
-                    <div className='container' style={{ width: '100%', maxWidth: '100%', border: 'none', boxShadow: 'none', background: 'transparent', padding: '10px 0 20px' }}>
+                    <div
+                        className='container'
+                        style={{
+                            width: '100%',
+                            maxWidth: '100%',
+                            border: 'none',
+                            boxShadow: 'none',
+                            background: 'transparent',
+                            padding: '10px 0 20px',
+                        }}
+                    >
                         <h1>⚡ Signal Analyzer</h1>
 
                         {/* Strategy chips — 2 columns */}
@@ -1194,7 +1389,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                             {MARKET_GROUPS.map(grp => (
                                 <optgroup key={grp} label={`${grp} Indices`}>
                                     {MARKETS.filter(m => m.group === grp).map(m => (
-                                        <option key={m.symbol} value={m.symbol}>{m.label}</option>
+                                        <option key={m.symbol} value={m.symbol}>
+                                            {m.label}
+                                        </option>
                                     ))}
                                 </optgroup>
                             ))}
@@ -1204,13 +1401,38 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         <div className='market-info-bar'>
                             <span className='market-info-bar__name'>{selectedMarket.label}</span>
                             <span className='market-info-bar__sep'>│</span>
-                            <span>Price: <strong className='digit-highlight'>{latestTick ? latestTick.quote.toFixed(selectedMarket.symbol.startsWith('1HZ') ? 3 : 2) : '—'}</strong></span>
+                            <span>
+                                Price:{' '}
+                                <strong className='digit-highlight'>
+                                    {latestTick
+                                        ? latestTick.quote.toFixed(selectedMarket.symbol.startsWith('1HZ') ? 3 : 2)
+                                        : '—'}
+                                </strong>
+                            </span>
                             <span className='market-info-bar__sep'>│</span>
-                            <span>Digit: <strong className='digit-highlight'>{latestDigit !== null ? latestDigit : '—'}</strong></span>
+                            <span>
+                                Digit:{' '}
+                                <strong className='digit-highlight'>{latestDigit !== null ? latestDigit : '—'}</strong>
+                            </span>
                             <span className='market-info-bar__sep'>│</span>
-                            <span>Candle: <span className={candleDirection === 1 ? 'col-green' : candleDirection === -1 ? 'col-red' : 'col-gray'}>{candleLabel}</span></span>
+                            <span>
+                                Candle:{' '}
+                                <span
+                                    className={
+                                        candleDirection === 1
+                                            ? 'col-green'
+                                            : candleDirection === -1
+                                              ? 'col-red'
+                                              : 'col-gray'
+                                    }
+                                >
+                                    {candleLabel}
+                                </span>
+                            </span>
                             <span className='market-info-bar__sep'>│</span>
-                            <span>Accuracy: <strong className='accuracy-highlight'>{accuracy}%</strong></span>
+                            <span>
+                                Accuracy: <strong className='accuracy-highlight'>{accuracy}%</strong>
+                            </span>
                         </div>
 
                         {/* Scanning Progress bar */}
@@ -1281,7 +1503,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                                         disabled={isWorking}
                                     >
                                         {MARTINGALE_OPTIONS.map(opt => (
-                                            <option key={opt} value={opt}>{opt}x</option>
+                                            <option key={opt} value={opt}>
+                                                {opt}x
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
@@ -1316,7 +1540,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                                         disabled={isWorking}
                                     >
                                         {STRATEGIES.filter(s => s !== strategy).map(s => (
-                                            <option key={s} value={s}>{s}</option>
+                                            <option key={s} value={s}>
+                                                {s}
+                                            </option>
                                         ))}
                                     </select>
                                 )}
@@ -1326,8 +1552,10 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         {/* Live stats strip */}
                         <div className='contain'>
                             <div className='latest-tick'>
-                                P/L: <span className={sessionProfit >= 0 ? 'col-green' : 'col-red'}>
-                                    {sessionProfit >= 0 ? '+' : ''}{sessionProfit.toFixed(2)} {currency}
+                                P/L:{' '}
+                                <span className={sessionProfit >= 0 ? 'col-green' : 'col-red'}>
+                                    {sessionProfit >= 0 ? '+' : ''}
+                                    {sessionProfit.toFixed(2)} {currency}
                                 </span>
                             </div>
                             {isWorking && (
@@ -1393,7 +1621,17 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
 
                 {/* ── SIGNAL STATS TAB ── */}
                 {activeTab === 'stats' && (
-                    <div className='container container--stats' style={{ width: '100%', maxWidth: '100%', border: 'none', boxShadow: 'none', background: 'transparent', padding: '10px 0 20px' }}>
+                    <div
+                        className='container container--stats'
+                        style={{
+                            width: '100%',
+                            maxWidth: '100%',
+                            border: 'none',
+                            boxShadow: 'none',
+                            background: 'transparent',
+                            padding: '10px 0 20px',
+                        }}
+                    >
                         <h1>📊 Signal Stats</h1>
 
                         {/* Volatility market overview */}
@@ -1420,7 +1658,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         <div className='stats-header'>
                             <span>Signal Log ({signalStats.length})</span>
                             {signalStats.length > 0 && (
-                                <button className='btn-clear' type='button' onClick={() => setSignalStats([])}>Clear</button>
+                                <button className='btn-clear' type='button' onClick={() => setSignalStats([])}>
+                                    Clear
+                                </button>
                             )}
                         </div>
                         <div className='stats-table-wrap'>
@@ -1444,7 +1684,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                                             <td className='font-mono'>{s.confidence}%</td>
                                             <td className='font-mono'>{new Date(s.timestamp).toLocaleTimeString()}</td>
                                             <td>
-                                                <span className={`outcome-badge outcome-badge--${s.outcome.toLowerCase()}`}>
+                                                <span
+                                                    className={`outcome-badge outcome-badge--${s.outcome.toLowerCase()}`}
+                                                >
                                                     {s.outcome}
                                                 </span>
                                             </td>
@@ -1452,7 +1694,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                                     ))}
                                     {signalStats.length === 0 && (
                                         <tr>
-                                            <td colSpan={6} style={{ textAlign: 'center', color: '#999' }}>No signals recorded yet.</td>
+                                            <td colSpan={6} style={{ textAlign: 'center', color: '#999' }}>
+                                                No signals recorded yet.
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -1466,15 +1710,21 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                     <div className='terminal-popup'>
                         <div className='terminal-popup__header'>
                             <span className='terminal-popup__title'>🤖 Replicator Terminal</span>
-                            <button className='terminal-popup__close' type='button' onClick={handleClosePopup}>✕</button>
+                            <button className='terminal-popup__close' type='button' onClick={handleClosePopup}>
+                                ✕
+                            </button>
                         </div>
                         <div className='terminal-popup__body'>
                             {terminalDashboard.map((line, i) => (
-                                <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`dash-${i}`}>{line ?? ''}</p>
+                                <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`dash-${i}`}>
+                                    {line ?? ''}
+                                </p>
                             ))}
                             <div className='terminal-popup__divider' />
                             {terminalBody.map((line, i) => (
-                                <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`body-${i}`}>{line ?? ''}</p>
+                                <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`body-${i}`}>
+                                    {line ?? ''}
+                                </p>
                             ))}
                         </div>
                     </div>
@@ -1486,7 +1736,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     return (
         <div className={`scanner-page${isCoveredByMobileRunPanel ? ' scanner-page--run-panel-open' : ''}`}>
             {/* Matrix background */}
-            <div className='background'><div className='scrolling-text'>{scrollingText}</div></div>
+            <div className='background'>
+                <div className='scrolling-text'>{scrollingText}</div>
+            </div>
 
             {/* Account banner */}
             {sessionConnected && (
@@ -1513,7 +1765,8 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                     className={`scanner-tab${activeTab === 'stats' ? ' scanner-tab--active' : ''}`}
                     onClick={() => setActiveTab('stats')}
                 >
-                    📊 Signal Stats {signalStats.length > 0 && <span className='scanner-tab__badge'>{signalStats.length}</span>}
+                    📊 Signal Stats{' '}
+                    {signalStats.length > 0 && <span className='scanner-tab__badge'>{signalStats.length}</span>}
                 </button>
             </div>
 
@@ -1550,7 +1803,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         {MARKET_GROUPS.map(group => (
                             <optgroup key={group} label={group}>
                                 {MARKETS.filter(m => m.group === group).map(m => (
-                                    <option key={m.symbol} value={m.symbol}>{m.label}</option>
+                                    <option key={m.symbol} value={m.symbol}>
+                                        {m.label}
+                                    </option>
                                 ))}
                             </optgroup>
                         ))}
@@ -1562,13 +1817,26 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                             {selectedMarket.label.replace('Volatility ', 'Vol ').replace(' Index', '')}
                         </span>
                         <span className='market-info-bar__sep'>│</span>
-                        <span>Price: <strong>{latestTick ? latestTick.quote.toFixed(4) : '—'}</strong></span>
+                        <span>
+                            Price: <strong>{latestTick ? latestTick.quote.toFixed(4) : '—'}</strong>
+                        </span>
                         <span className='market-info-bar__sep'>│</span>
-                        <span>Digit: <strong className='digit-highlight'>{latestDigit ?? '—'}</strong></span>
+                        <span>
+                            Digit: <strong className='digit-highlight'>{latestDigit ?? '—'}</strong>
+                        </span>
                         <span className='market-info-bar__sep'>│</span>
-                        <span>Accuracy: <strong className={accuracy >= 55 ? 'col-green' : accuracy >= 50 ? 'col-yellow' : 'col-red'}>{accuracy}%</strong></span>
+                        <span>
+                            Accuracy:{' '}
+                            <strong
+                                className={accuracy >= 55 ? 'col-green' : accuracy >= 50 ? 'col-yellow' : 'col-red'}
+                            >
+                                {accuracy}%
+                            </strong>
+                        </span>
                         <span className='market-info-bar__sep'>│</span>
-                        <span className={candleDirection === 1 ? 'col-green' : candleDirection === -1 ? 'col-red' : ''}>{candleLabel}</span>
+                        <span className={candleDirection === 1 ? 'col-green' : candleDirection === -1 ? 'col-red' : ''}>
+                            {candleLabel}
+                        </span>
                     </div>
 
                     {/* Tick buffer progress */}
@@ -1637,7 +1905,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                                     disabled={isWorking}
                                 >
                                     {MARTINGALE_OPTIONS.map(m => (
-                                        <option key={m} value={m}>{m === 1 ? '1× (Off)' : `${m}×`}</option>
+                                        <option key={m} value={m}>
+                                            {m === 1 ? '1× (Off)' : `${m}×`}
+                                        </option>
                                     ))}
                                 </select>
                             </div>
@@ -1672,7 +1942,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                                     disabled={isWorking}
                                 >
                                     {STRATEGIES.filter(s => s !== strategy).map(s => (
-                                        <option key={s} value={s}>{s}</option>
+                                        <option key={s} value={s}>
+                                            {s}
+                                        </option>
                                     ))}
                                 </select>
                             )}
@@ -1682,8 +1954,10 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                     {/* Live stats strip */}
                     <div className='contain'>
                         <div className='latest-tick'>
-                            P/L: <span className={sessionProfit >= 0 ? 'col-green' : 'col-red'}>
-                                {sessionProfit >= 0 ? '+' : ''}{sessionProfit.toFixed(2)} {currency}
+                            P/L:{' '}
+                            <span className={sessionProfit >= 0 ? 'col-green' : 'col-red'}>
+                                {sessionProfit >= 0 ? '+' : ''}
+                                {sessionProfit.toFixed(2)} {currency}
                             </span>
                         </div>
                         {isWorking && (
@@ -1776,7 +2050,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                     <div className='stats-header'>
                         <span>Signal Log ({signalStats.length})</span>
                         {signalStats.length > 0 && (
-                            <button className='btn-clear' type='button' onClick={() => setSignalStats([])}>Clear</button>
+                            <button className='btn-clear' type='button' onClick={() => setSignalStats([])}>
+                                Clear
+                            </button>
                         )}
                     </div>
                     <div className='stats-table-wrap'>
@@ -1799,23 +2075,53 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                                             No signals yet — run a scan or start Auto Trade on the Scanner tab.
                                         </td>
                                     </tr>
-                                ) : signalStats.map(rec => (
-                                    <tr key={rec.id} className={`stats-row stats-row--${rec.outcome.toLowerCase()}`}>
-                                        <td title={rec.market}>{rec.market.replace('Volatility ', 'V').replace(' Index', '').replace('Jump ', 'J')}</td>
-                                        <td>{rec.strategy.split(' & ')[0]}</td>
-                                        <td><span className='stats-signal-pill'>{rec.signal}</span></td>
-                                        <td className={rec.confidence >= 55 ? 'col-green' : 'col-yellow'}>{rec.confidence}%</td>
-                                        <td>{new Date(rec.timestamp).toLocaleTimeString()}</td>
-                                        <td>
-                                            <span className={`stats-outcome stats-outcome--${rec.outcome.toLowerCase()}`}>
-                                                {rec.outcome === 'Win' ? '✅ Win' : rec.outcome === 'Loss' ? '❌ Loss' : '⏳ …'}
-                                            </span>
-                                        </td>
-                                        <td className={rec.profit !== undefined ? (rec.profit >= 0 ? 'col-green' : 'col-red') : ''}>
-                                            {rec.profit !== undefined ? `${rec.profit >= 0 ? '+' : ''}${rec.profit.toFixed(2)}` : '—'}
-                                        </td>
-                                    </tr>
-                                ))}
+                                ) : (
+                                    signalStats.map(rec => (
+                                        <tr
+                                            key={rec.id}
+                                            className={`stats-row stats-row--${rec.outcome.toLowerCase()}`}
+                                        >
+                                            <td title={rec.market}>
+                                                {rec.market
+                                                    .replace('Volatility ', 'V')
+                                                    .replace(' Index', '')
+                                                    .replace('Jump ', 'J')}
+                                            </td>
+                                            <td>{rec.strategy.split(' & ')[0]}</td>
+                                            <td>
+                                                <span className='stats-signal-pill'>{rec.signal}</span>
+                                            </td>
+                                            <td className={rec.confidence >= 55 ? 'col-green' : 'col-yellow'}>
+                                                {rec.confidence}%
+                                            </td>
+                                            <td>{new Date(rec.timestamp).toLocaleTimeString()}</td>
+                                            <td>
+                                                <span
+                                                    className={`stats-outcome stats-outcome--${rec.outcome.toLowerCase()}`}
+                                                >
+                                                    {rec.outcome === 'Win'
+                                                        ? '✅ Win'
+                                                        : rec.outcome === 'Loss'
+                                                          ? '❌ Loss'
+                                                          : '⏳ …'}
+                                                </span>
+                                            </td>
+                                            <td
+                                                className={
+                                                    rec.profit !== undefined
+                                                        ? rec.profit >= 0
+                                                            ? 'col-green'
+                                                            : 'col-red'
+                                                        : ''
+                                                }
+                                            >
+                                                {rec.profit !== undefined
+                                                    ? `${rec.profit >= 0 ? '+' : ''}${rec.profit.toFixed(2)}`
+                                                    : '—'}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -1825,20 +2131,28 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
             {/* ── Terminal popup ── */}
             <div className='popup' style={{ display: popupOpen ? 'block' : 'none' }}>
                 <div className='popup-content'>
-                    <button className='close-btn' type='button' onClick={handleClosePopup}>✕</button>
+                    <button className='close-btn' type='button' onClick={handleClosePopup}>
+                        ✕
+                    </button>
                     <div className='terminal-header'>
-                        <span className='dot' /><span className='dot' /><span className='dot' />
+                        <span className='dot' />
+                        <span className='dot' />
+                        <span className='dot' />
                         <span className='terminal-title'>Signal Analyzer — Terminal</span>
                     </div>
                     <div className='terminal-dashboard'>
                         {terminalDashboard.map((line, i) => (
-                            <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`dash-${i}`}>{line ?? ''}</p>
+                            <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`dash-${i}`}>
+                                {line ?? ''}
+                            </p>
                         ))}
                     </div>
                     <div className='terminal-scroll'>
                         <div className='terminal-scroll-content'>
                             {terminalBody.map((line, i) => (
-                                <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`body-${i}`}>{line ?? ''}</p>
+                                <p className={(line ?? '').startsWith('Error') ? 'red' : 'green'} key={`body-${i}`}>
+                                    {line ?? ''}
+                                </p>
                             ))}
                         </div>
                     </div>

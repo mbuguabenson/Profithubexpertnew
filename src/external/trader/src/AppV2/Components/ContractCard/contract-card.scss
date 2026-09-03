@@ -98,7 +98,8 @@
                 display: grid;
                 border-radius: 50%;
                 mask: radial-gradient(farthest-side, #0000 50%, var(--component-textIcon-static-prominentDark) 51%);
-                background: linear-gradient(
+                background:
+                    linear-gradient(
                             0deg,
                             rgba(255, 255, 255, 0.5) 50%,
                             var(--component-button-bg-sell-primary-loading) 0
@@ -174,7 +175,9 @@
         &.deleted {
             opacity: var(--core-opacity-50);
             max-height: 0;
-            transition: max-height 0.3s, opacity 0.1s;
+            transition:
+                max-height 0.3s,
+                opacity 0.1s;
             transition-timing-function: var(--motion-easing-out);
         }
     }

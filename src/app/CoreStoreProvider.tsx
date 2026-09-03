@@ -135,10 +135,7 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
             const { msg_type, error } = data;
 
             // Handle auth errors by attempting refresh first, preventing accidental logouts
-            if (
-                error?.code === 'DisabledClient' ||
-                (error?.code === 'InvalidToken' && msg_type === 'authorize')
-            ) {
+            if (error?.code === 'DisabledClient' || (error?.code === 'InvalidToken' && msg_type === 'authorize')) {
                 try {
                     const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
                     const authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });

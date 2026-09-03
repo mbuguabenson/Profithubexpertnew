@@ -33,26 +33,30 @@ const TokenDebugPanel: React.FC = () => {
     }, []);
 
     return (
-        <div style={{
-            position: 'absolute',
-            right: '1rem',
-            top: '1rem',
-            zIndex: 2000,
-            background: 'rgba(0,0,0,0.75)',
-            color: 'white',
-            padding: '0.6rem 0.8rem',
-            borderRadius: '6px',
-            fontSize: '12px',
-            lineHeight: '1.2',
-            maxWidth: '360px',
-        }}>
+        <div
+            style={{
+                position: 'absolute',
+                right: '1rem',
+                top: '1rem',
+                zIndex: 2000,
+                background: 'rgba(0,0,0,0.75)',
+                color: 'white',
+                padding: '0.6rem 0.8rem',
+                borderRadius: '6px',
+                fontSize: '12px',
+                lineHeight: '1.2',
+                maxWidth: '360px',
+            }}
+        >
             <div style={{ fontWeight: 700, marginBottom: 6 }}>DEBUG: Token / Accounts</div>
             <div>active_loginid: {mask(getActiveLoginId() || '')}</div>
             <div>accountsList keys: {accountsListKeys.length ? accountsListKeys.join(', ') : 'none'}</div>
             <div>deriv_accounts (session): {storedDerivAccountsCount ?? 'unknown'}</div>
             <div>auth_info present: {authInfoPresent === null ? 'loading' : authInfoPresent ? 'yes' : 'no'}</div>
             <div>resolved token prefix: {resolvedTokenPrefix || 'none'}</div>
-            <div style={{ marginTop: 6, opacity: 0.9, fontSize: 11 }}>Temporary debug panel — remove after diagnosing</div>
+            <div style={{ marginTop: 6, opacity: 0.9, fontSize: 11 }}>
+                Temporary debug panel — remove after diagnosing
+            </div>
         </div>
     );
 };

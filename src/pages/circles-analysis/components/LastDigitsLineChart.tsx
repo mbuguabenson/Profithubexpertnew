@@ -124,29 +124,21 @@ const LastDigitsLineChart: React.FC<TLastDigitsLineChartProps> = ({
     const chartContent = (
         <div className={`exact-line-chart-viewport ${className}`}>
             {points.length === 0 ? (
-                <div className="no-data-placeholder">Waiting for tick stream...</div>
+                <div className='no-data-placeholder'>Waiting for tick stream...</div>
             ) : (
                 <svg
                     viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                    preserveAspectRatio="none"
-                    className="exact-line-chart-svg"
+                    preserveAspectRatio='none'
+                    className='exact-line-chart-svg'
                 >
                     {/* The Smooth Connected Spline Line */}
-                    <path
-                        d={splinePath}
-                        className="exact-chart-spline"
-                        fill="none"
-                    />
+                    <path d={splinePath} className='exact-chart-spline' fill='none' />
 
                     {/* Data Points and Value Labels */}
                     {points.map((pt, i) => (
-                        <g key={i} className="exact-point-group">
+                        <g key={i} className='exact-point-group'>
                             {/* Value Label above point */}
-                            <text
-                                x={pt.x}
-                                y={pt.y - 8}
-                                className="exact-point-label"
-                            >
+                            <text x={pt.x} y={pt.y - 8} className='exact-point-label'>
                                 {pt.digit}
                             </text>
                             {/* Square Point Dot with White Center */}
@@ -156,7 +148,7 @@ const LastDigitsLineChart: React.FC<TLastDigitsLineChartProps> = ({
                                 width={5}
                                 height={5}
                                 rx={1}
-                                className="exact-point-marker"
+                                className='exact-point-marker'
                             />
                         </g>
                     ))}
@@ -170,11 +162,11 @@ const LastDigitsLineChart: React.FC<TLastDigitsLineChartProps> = ({
     }
 
     return (
-        <div className="last-digits-line-chart-card">
+        <div className='last-digits-line-chart-card'>
             {title && (
-                <div className="card-header">
+                <div className='card-header'>
                     <h4>{title}</h4>
-                    <span className="live-status">LIVE</span>
+                    <span className='live-status'>LIVE</span>
                 </div>
             )}
             {chartContent}

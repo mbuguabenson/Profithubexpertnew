@@ -38,18 +38,10 @@ export const BrandLogo = observer(({ height = 36, className = '', showTagline = 
                 )}
                 <div className='lth-brand-logo__text-col'>
                     <div className='lth-brand-logo__title-row'>
-                        <span className='lth-brand-logo__legacy'>
-                            LEGACY
-                        </span>
+                        <span className='lth-brand-logo__legacy'>LEGACY</span>
                     </div>
-                    <span className='lth-brand-logo__trading-hub'>
-                        TRADING HUB
-                    </span>
-                    {showTagline && (
-                        <span className='lth-brand-logo__subtitle'>
-                            WHERE STRATEGY MEETS PRECISION.
-                        </span>
-                    )}
+                    <span className='lth-brand-logo__trading-hub'>TRADING HUB</span>
+                    {showTagline && <span className='lth-brand-logo__subtitle'>WHERE STRATEGY MEETS PRECISION.</span>}
                 </div>
             </div>
         </div>

@@ -87,7 +87,9 @@
     border-radius: 6px;
     color: var(--text-prominent);
     text-decoration: none;
-    transition: color 0.18s, background-color 0.18s;
+    transition:
+        color 0.18s,
+        background-color 0.18s;
 
     &:hover {
         color: #25d366;

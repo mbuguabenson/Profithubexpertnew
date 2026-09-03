@@ -6,14 +6,20 @@ import { getAppId } from '@/components/shared/utils/config/config';
 
 const ProfihubAnalysis: React.FC = observer(() => {
     const { client } = useStore() ?? {};
-    
-    const token = (client as any)?.token || localStorage.getItem('active_token') || localStorage.getItem('token') || localStorage.getItem('deriv_api_token') || '';
-    const loginid = client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
+
+    const token =
+        (client as any)?.token ||
+        localStorage.getItem('active_token') ||
+        localStorage.getItem('token') ||
+        localStorage.getItem('deriv_api_token') ||
+        '';
+    const loginid =
+        client?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
     const appId = getAppId() || '1089';
 
     const baseUrl = 'https://analysisprofithub.vercel.app/';
     const params = new URLSearchParams();
-    
+
     // Do NOT include legacy tokens or login ids in the iframe URL querystring.
     // Auth and session data are sent securely via the iframe bridge (postMessage).
     params.set('app_id', appId);
@@ -21,13 +27,7 @@ const ProfihubAnalysis: React.FC = observer(() => {
 
     const url = `${baseUrl}?${params.toString()}`;
 
-    return (
-        <IframeWrapper
-            src={url}
-            title='Profihub'
-            className='profihub-analysis-container'
-        />
-    );
+    return <IframeWrapper src={url} title='Profihub' className='profihub-analysis-container' />;
 });
 
 export default ProfihubAnalysis;

@@ -47,7 +47,11 @@ function parseLegacyAccounts(urlParams: URLSearchParams): LegacyAccount[] {
         const token = urlParams.get(`token${i}`) || '';
         const currency = urlParams.get(`cur${i}`) || '';
         if (token) {
-            accounts.push({ loginid: loginid || (i === 1 ? (urlParams.get('account') || '') : ''), token, currency: currency || 'USD' });
+            accounts.push({
+                loginid: loginid || (i === 1 ? urlParams.get('account') || '' : ''),
+                token,
+                currency: currency || 'USD',
+            });
         }
         i++;
     }
@@ -97,13 +101,21 @@ export const useOAuthCallback = (): OAuthCallbackResult => {
         url.searchParams.delete('token1');
         // Legacy Deriv OAuth params
         let i = 1;
-        while (url.searchParams.has(`acct${i}`) || url.searchParams.has(`token${i}`) || url.searchParams.has(`cur${i}`)) {
+        while (
+            url.searchParams.has(`acct${i}`) ||
+            url.searchParams.has(`token${i}`) ||
+            url.searchParams.has(`cur${i}`)
+        ) {
             url.searchParams.delete(`acct${i}`);
             url.searchParams.delete(`token${i}`);
             url.searchParams.delete(`cur${i}`);
             i++;
         }
-        window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash);
+        window.history.replaceState(
+            {},
+            '',
+            url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash
+        );
     }, []);
 
     useEffect(() => {
@@ -219,4 +231,3 @@ export const useOAuthCallback = (): OAuthCallbackResult => {
         cleanupURL,
     };
 };
-

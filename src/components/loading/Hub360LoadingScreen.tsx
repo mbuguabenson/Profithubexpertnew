@@ -11,7 +11,7 @@ interface Hub360LoadingScreenProps {
 export const Hub360LoadingScreen: React.FC<Hub360LoadingScreenProps> = ({
     title = '360 Trading Hub',
     subtitle = 'Initializing Deriv Bot account...',
-    onComplete
+    onComplete,
 }) => {
     const [progress, setProgress] = useState(20);
     const [statusText, setStatusText] = useState(subtitle);
@@ -35,56 +35,56 @@ export const Hub360LoadingScreen: React.FC<Hub360LoadingScreenProps> = ({
     }, [onComplete]);
 
     return (
-        <div className="hub-360-loading-overlay">
+        <div className='hub-360-loading-overlay'>
             {/* Ambient Radial Orbs */}
-            <div className="ambient-orb ambient-orb--cyan" />
-            <div className="ambient-orb ambient-orb--amber" />
-            <div className="ambient-orb ambient-orb--emerald" />
+            <div className='ambient-orb ambient-orb--cyan' />
+            <div className='ambient-orb ambient-orb--amber' />
+            <div className='ambient-orb ambient-orb--emerald' />
 
-            <div className="hub-360-container">
+            <div className='hub-360-container'>
                 {/* Central 360 Radial Radar */}
-                <div className="hub-360-radar-wrap">
-                    <div className="radar-ring-outer" />
-                    <div className="radar-ring-spin" />
-                    <div className="radar-dot radar-dot--amber" />
-                    <div className="radar-dot radar-dot--cyan" />
-                    <div className="radar-dot radar-dot--white" />
-                    <div className="hub-360-center-badge">
-                        <span className="num-360">360</span>
+                <div className='hub-360-radar-wrap'>
+                    <div className='radar-ring-outer' />
+                    <div className='radar-ring-spin' />
+                    <div className='radar-dot radar-dot--amber' />
+                    <div className='radar-dot radar-dot--cyan' />
+                    <div className='radar-dot radar-dot--white' />
+                    <div className='hub-360-center-badge'>
+                        <span className='num-360'>360</span>
                     </div>
                 </div>
 
                 {/* Title & Subtitle */}
-                <div className="hub-360-text-group">
-                    <span className="powered-by-tag">POWERED BY DERIV</span>
-                    <h2 className="hub-360-title">{title}</h2>
-                    <p className="hub-360-sub">{statusText}</p>
+                <div className='hub-360-text-group'>
+                    <span className='powered-by-tag'>POWERED BY DERIV</span>
+                    <h2 className='hub-360-title'>{title}</h2>
+                    <p className='hub-360-sub'>{statusText}</p>
                 </div>
 
                 {/* Status Pills */}
-                <div className="hub-360-pills-row">
-                    <div className="hub-pill">
-                        <Lock size={12} className="pill-icon text-cyan" />
+                <div className='hub-360-pills-row'>
+                    <div className='hub-pill'>
+                        <Lock size={12} className='pill-icon text-cyan' />
                         <span>Encrypted</span>
                     </div>
-                    <div className="hub-pill">
-                        <Wifi size={12} className="pill-icon text-emerald" />
+                    <div className='hub-pill'>
+                        <Wifi size={12} className='pill-icon text-emerald' />
                         <span>Connected</span>
                     </div>
-                    <div className="hub-pill">
-                        <CheckCircle2 size={12} className="pill-icon text-purple" />
+                    <div className='hub-pill'>
+                        <CheckCircle2 size={12} className='pill-icon text-purple' />
                         <span>Market Ready</span>
                     </div>
                 </div>
 
                 {/* Progress Bar & Deriv Branding */}
-                <div className="hub-360-progress-container">
-                    <div className="progress-track">
-                        <div className="progress-fill" style={{ width: `${progress}%` }} />
+                <div className='hub-360-progress-container'>
+                    <div className='progress-track'>
+                        <div className='progress-fill' style={{ width: `${progress}%` }} />
                     </div>
-                    <div className="deriv-badge-row">
-                        <div className="deriv-d-logo">d</div>
-                        <span className="deriv-brand-text">Deriv</span>
+                    <div className='deriv-badge-row'>
+                        <div className='deriv-d-logo'>d</div>
+                        <span className='deriv-brand-text'>Deriv</span>
                     </div>
                 </div>
             </div>

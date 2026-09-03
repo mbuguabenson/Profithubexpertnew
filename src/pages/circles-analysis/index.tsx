@@ -98,13 +98,19 @@ const CirclesAnalysis = observer(() => {
                 reason = `Over/Under spectrum near equilibrium. Monitor trajectory.`;
             }
         } else if (view_strategy === 'differs') {
-            const coldDigit = digit_stats.reduce((prev, curr) => (curr.count < prev.count ? curr : prev), digit_stats[0]);
+            const coldDigit = digit_stats.reduce(
+                (prev, curr) => (curr.count < prev.count ? curr : prev),
+                digit_stats[0]
+            );
             prediction = `DIFFERS ${coldDigit?.digit ?? 0}`;
             confidence = Math.min(100 - (coldDigit?.percentage ?? 10) + 15, 96);
             status = 'HIGH CONFIDENCE';
             reason = `Digit ${coldDigit?.digit} has lowest occurrence (${coldDigit?.percentage.toFixed(1)}%). Ideal Differs target.`;
         } else if (view_strategy === 'matches') {
-            const hotDigit = digit_stats.reduce((prev, curr) => (curr.count > prev.count ? curr : prev), digit_stats[0]);
+            const hotDigit = digit_stats.reduce(
+                (prev, curr) => (curr.count > prev.count ? curr : prev),
+                digit_stats[0]
+            );
             prediction = `MATCHES ${hotDigit?.digit ?? 0}`;
             confidence = Math.min((hotDigit?.percentage ?? 10) * 3.2, 88);
             status = 'SPECULATIVE';
@@ -134,14 +140,7 @@ const CirclesAnalysis = observer(() => {
         else if (view_strategy === 'rise_fall') historySource = rise_fall_history;
 
         return (historySource || []).slice(-60).map((item: any) => item?.type ?? item);
-    }, [
-        even_odd_history,
-        over_under_history,
-        differs_history,
-        matches_history,
-        rise_fall_history,
-        view_strategy,
-    ]);
+    }, [even_odd_history, over_under_history, differs_history, matches_history, rise_fall_history, view_strategy]);
 
     // Current Streak Tracker
     const currentStreak = useMemo(() => {
@@ -159,8 +158,8 @@ const CirclesAnalysis = observer(() => {
         return (
             <div className='circles-analysis-hud'>
                 <Hub360LoadingScreen
-                    title="Circles Analysis 360"
-                    subtitle="Connecting to Deriv WebSocket live tick stream..."
+                    title='Circles Analysis 360'
+                    subtitle='Connecting to Deriv WebSocket live tick stream...'
                 />
             </div>
         );
@@ -246,7 +245,9 @@ const CirclesAnalysis = observer(() => {
                     <div className='glass-card signal-radar-card'>
                         <div className='card-header'>
                             <h4>Algorithmic Signal Radar</h4>
-                            <span className={classNames('status-pill', signalData.status.toLowerCase().replace(' ', '-'))}>
+                            <span
+                                className={classNames('status-pill', signalData.status.toLowerCase().replace(' ', '-'))}
+                            >
                                 {signalData.status}
                             </span>
                         </div>
@@ -292,8 +293,12 @@ const CirclesAnalysis = observer(() => {
                                 </div>
                             </div>
                             <div className='hot-tags'>
-                                <span>HOT EVEN: <strong className='ev num'>{highestEven}</strong></span>
-                                <span>HOT ODD: <strong className='od num'>{highestOdd}</strong></span>
+                                <span>
+                                    HOT EVEN: <strong className='ev num'>{highestEven}</strong>
+                                </span>
+                                <span>
+                                    HOT ODD: <strong className='od num'>{highestOdd}</strong>
+                                </span>
                             </div>
                         </div>
 
@@ -308,8 +313,12 @@ const CirclesAnalysis = observer(() => {
                                 </div>
                             </div>
                             <div className='hot-tags'>
-                                <span>HOT OVER: <strong className='ov num'>{highestOver}</strong></span>
-                                <span>HOT UNDER: <strong className='un num'>{highestUnder}</strong></span>
+                                <span>
+                                    HOT OVER: <strong className='ov num'>{highestOver}</strong>
+                                </span>
+                                <span>
+                                    HOT UNDER: <strong className='un num'>{highestUnder}</strong>
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -343,7 +352,7 @@ const CirclesAnalysis = observer(() => {
                     </div>
 
                     {/* TRADING ENGINE CONSOLE */}
-                    <div className="engine-card-wrapper">
+                    <div className='engine-card-wrapper'>
                         <TradingEngine />
                     </div>
                 </div>

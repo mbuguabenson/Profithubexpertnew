@@ -123,7 +123,9 @@ const TradingEngine = observer(() => {
                         type='number'
                         step='1'
                         value={config.take_profit || 10}
-                        onChange={e => smart_auto.updateConfig(activeTab, 'take_profit', parseFloat(e.target.value) || 10)}
+                        onChange={e =>
+                            smart_auto.updateConfig(activeTab, 'take_profit', parseFloat(e.target.value) || 10)
+                        }
                         className='num'
                     />
                 </div>
@@ -133,7 +135,9 @@ const TradingEngine = observer(() => {
                         type='number'
                         step='1'
                         value={config.max_stake || 25}
-                        onChange={e => smart_auto.updateConfig(activeTab, 'max_stake', parseFloat(e.target.value) || 25)}
+                        onChange={e =>
+                            smart_auto.updateConfig(activeTab, 'max_stake', parseFloat(e.target.value) || 25)
+                        }
                         className='num'
                     />
                 </div>
@@ -145,7 +149,9 @@ const TradingEngine = observer(() => {
                             min='0'
                             max='9'
                             value={config.prediction ?? 4}
-                            onChange={e => smart_auto.updateConfig(activeTab, 'prediction', parseInt(e.target.value) || 0)}
+                            onChange={e =>
+                                smart_auto.updateConfig(activeTab, 'prediction', parseInt(e.target.value) || 0)
+                            }
                             className='num'
                         />
                     </div>
@@ -160,7 +166,9 @@ const TradingEngine = observer(() => {
                 >
                     <span className='btn-icon'>{config.is_running && config.is_auto ? '⏹' : '▶'}</span>
                     <span className='btn-text'>
-                        {config.is_running && config.is_auto ? 'TERMINATE AUTONOMOUS ENGINE' : 'START AUTONOMOUS ENGINE'}
+                        {config.is_running && config.is_auto
+                            ? 'TERMINATE AUTONOMOUS ENGINE'
+                            : 'START AUTONOMOUS ENGINE'}
                     </span>
                 </button>
 
@@ -193,7 +201,9 @@ const TradingEngine = observer(() => {
                     </button>
                 </div>
                 <div className='telemetry-stream' ref={logRef}>
-                    {logs.length === 0 && <div className='empty-state'>Waiting for next tick or trade execution...</div>}
+                    {logs.length === 0 && (
+                        <div className='empty-state'>Waiting for next tick or trade execution...</div>
+                    )}
                     {logs.map((log, i) => (
                         <div key={i} className={`telemetry-item ${log.type}`}>
                             <span className='timestamp num'>[{new Date(log.timestamp).toLocaleTimeString()}]</span>

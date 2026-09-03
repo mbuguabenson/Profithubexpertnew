@@ -66,19 +66,19 @@ export class TickSubscriber {
         allPro.sort((a, b) => b.probability - a.probability);
         allSuper.sort((a, b) => b.probability - a.probability);
 
-        const state = { 
-            analysis: primaryAnalysis, 
-            standard: allStandard, 
-            pro: allPro, 
-            super: allSuper 
+        const state = {
+            analysis: primaryAnalysis,
+            standard: allStandard,
+            pro: allPro,
+            super: allSuper,
         };
-        
+
         this.callbacks.forEach(cb => cb(state));
     }
 
     public async startStreaming(symbol: string = 'R_100') {
         if (this.isStreaming && this.currentMode === symbol) return;
-        
+
         this.stopStreaming();
         this.currentMode = symbol;
         this.engines.clear();
@@ -92,15 +92,36 @@ export class TickSubscriber {
                         if (!s.symbol && !s.underlying_symbol) return false;
                         const sym = (s.symbol || s.underlying_symbol).toUpperCase();
                         if (sym.includes('BOOM') || sym.includes('CRASH')) return false;
-                        return sym.includes('1HZ') || sym.startsWith('R_') || sym.includes('JD') || sym.includes('JUMP');
+                        return (
+                            sym.includes('1HZ') || sym.startsWith('R_') || sym.includes('JD') || sym.includes('JUMP')
+                        );
                     })
                     .map((s: any) => s.symbol || s.underlying_symbol);
             } else {
                 this.activeSymbols = [
-                    'R_10', '1HZ10V', '1HZ15V', 'R_25', '1HZ25V', '1HZ30V',
-                    'R_50', '1HZ50V', 'R_75', '1HZ75V', '1HZ90V', 'R_100',
-                    '1HZ100V', '1HZ150V', '1HZ200V', '1HZ250V', '1HZ300V',
-                    'JD10', 'JD25', 'JD50', 'JD75', 'JD100', 'STPIND'
+                    'R_10',
+                    '1HZ10V',
+                    '1HZ15V',
+                    'R_25',
+                    '1HZ25V',
+                    '1HZ30V',
+                    'R_50',
+                    '1HZ50V',
+                    'R_75',
+                    '1HZ75V',
+                    '1HZ90V',
+                    'R_100',
+                    '1HZ100V',
+                    '1HZ150V',
+                    '1HZ200V',
+                    '1HZ250V',
+                    '1HZ300V',
+                    'JD10',
+                    'JD25',
+                    'JD50',
+                    'JD75',
+                    'JD100',
+                    'STPIND',
                 ];
             }
         } else {
@@ -147,22 +168,27 @@ export class TickSubscriber {
             if (!this.isStreaming) return;
 
             try {
-                const response = await api_base.api.send({
-                    ticks_history: sym,
-                    adjust_start_time: 1,
-                    count: 100,
-                    end: 'latest',
-                    style: 'ticks',
-                    subscribe: 1,
-                }).catch((err: any) => {
-                    // Handle AlreadySubscribed gracefully
-                    if (err?.error?.code === 'AlreadySubscribed') return err;
-                    return { error: err?.error || err };
-                });
+                const response = await api_base.api
+                    .send({
+                        ticks_history: sym,
+                        adjust_start_time: 1,
+                        count: 100,
+                        end: 'latest',
+                        style: 'ticks',
+                        subscribe: 1,
+                    })
+                    .catch((err: any) => {
+                        // Handle AlreadySubscribed gracefully
+                        if (err?.error?.code === 'AlreadySubscribed') return err;
+                        return { error: err?.error || err };
+                    });
 
                 if (response?.error) {
                     if (response.error.code !== 'AlreadySubscribed') {
-                        console.warn(`[SignalCentre] Subscription note for ${sym}:`, response.error.message || response.error);
+                        console.warn(
+                            `[SignalCentre] Subscription note for ${sym}:`,
+                            response.error.message || response.error
+                        );
                     }
                 }
 
@@ -215,7 +241,9 @@ export class TickSubscriber {
         if (this.tickListenerSub) {
             try {
                 this.tickListenerSub.unsubscribe();
-            } catch (e) { /* ignore */ }
+            } catch (e) {
+                /* ignore */
+            }
             this.tickListenerSub = null;
         }
 
@@ -224,7 +252,9 @@ export class TickSubscriber {
             this.streamSubscriptionIds.forEach(id => {
                 try {
                     api_base.api.send({ forget: id });
-                } catch (e) { /* ignore */ }
+                } catch (e) {
+                    /* ignore */
+                }
             });
         }
         this.streamSubscriptionIds = [];

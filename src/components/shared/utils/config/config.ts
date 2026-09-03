@@ -959,9 +959,7 @@ export const getSocketURL = async (): Promise<string> => {
     try {
         let authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
         const tokenNeedsRefresh =
-            !!authInfo?.refresh_token &&
-            !!authInfo.expires_at &&
-            Date.now() >= authInfo.expires_at - 300000;
+            !!authInfo?.refresh_token && !!authInfo.expires_at && Date.now() >= authInfo.expires_at - 300000;
 
         if (tokenNeedsRefresh && authInfo?.refresh_token) {
             const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(authInfo.refresh_token);
@@ -981,10 +979,10 @@ export const getSocketURL = async (): Promise<string> => {
             }
         }
 
-        // Try default public WS first. We do not test it here to avoid 
+        // Try default public WS first. We do not test it here to avoid
         // connection rate limits or slowing down the initial connect.
         const defaultUrl = getDefaultServerURL();
-        
+
         return defaultUrl;
     } catch (error) {
         console.error('[DerivWS] Error in getSocketURL:', error);
@@ -1068,7 +1066,9 @@ const storeCodeVerifier = (verifier: string): void => {
 export const getCodeVerifier = (): string | null => {
     try {
         const verifier = sessionStorage.getItem('oauth_code_verifier') || localStorage.getItem('oauth_code_verifier');
-        const timestamp = sessionStorage.getItem('oauth_code_verifier_timestamp') || localStorage.getItem('oauth_code_verifier_timestamp');
+        const timestamp =
+            sessionStorage.getItem('oauth_code_verifier_timestamp') ||
+            localStorage.getItem('oauth_code_verifier_timestamp');
 
         if (!verifier) {
             return null;
@@ -1076,7 +1076,8 @@ export const getCodeVerifier = (): string | null => {
 
         if (timestamp) {
             const verifierAge = Date.now() - parseInt(timestamp, 10);
-            if (verifierAge > 1800000) { // 30 minutes
+            if (verifierAge > 1800000) {
+                // 30 minutes
                 clearCodeVerifier();
                 return null;
             }
@@ -1123,7 +1124,8 @@ const storeCSRFToken = (token: string): void => {
 export const validateCSRFToken = (token: string): boolean => {
     try {
         const storedToken = sessionStorage.getItem('oauth_csrf_token') || localStorage.getItem('oauth_csrf_token');
-        const timestamp = sessionStorage.getItem('oauth_csrf_token_timestamp') || localStorage.getItem('oauth_csrf_token_timestamp');
+        const timestamp =
+            sessionStorage.getItem('oauth_csrf_token_timestamp') || localStorage.getItem('oauth_csrf_token_timestamp');
 
         // If storedToken is found, check match
         if (storedToken) {
@@ -1226,5 +1228,3 @@ export const getClientId = (): string => {
     }
     return process.env.CLIENT_ID || '33Mmq9JHMrJaUKT2KIhKZ';
 };
-
-

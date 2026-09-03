@@ -116,7 +116,8 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
 
     loginAndGetBalance(token) {
         const activeLoginId =
-            (typeof localStorage !== 'undefined' && (localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid'))) ||
+            (typeof localStorage !== 'undefined' &&
+                (localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid'))) ||
             '';
 
         this.accountInfo = {
@@ -140,7 +141,10 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
                             const is_open_contract = contract?.status === 'open';
                             if (is_same_contract && is_open_contract) {
                                 doUntilDone(() => {
-                                    api_base.api?.send({ proposal_open_contract: 1, contract_id: contract.contract_id });
+                                    api_base.api?.send({
+                                        proposal_open_contract: 1,
+                                        contract_id: contract.contract_id,
+                                    });
                                 }, ['PriceMoved']);
                             }
                         }, 1500);
@@ -172,7 +176,7 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
     makeDirectPurchaseDecision() {
         const { has_payout_block, is_basis_payout } = checkBlocksForProposalRequest();
         const isEveryTickMode = localStorage.getItem('dbot_every_tick_mode') === 'true';
-        const speed = isEveryTickMode ? '2' : (localStorage.getItem('bot_execution_speed') || '1');
+        const speed = isEveryTickMode ? '2' : localStorage.getItem('bot_execution_speed') || '1';
         const isSpeedMode = speed !== '1' || isEveryTickMode;
         this.is_proposal_subscription_required = !isSpeedMode && (has_payout_block || is_basis_payout);
 

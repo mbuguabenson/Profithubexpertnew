@@ -35,8 +35,6 @@
     --text-align-right: right;
     --text-align-center: center;
 
-
-
     /* Brand colors - dynamically generated from brand.config.json */
     --brand-white: #ffffff;
     --brand-dark-grey: #060911;
@@ -54,7 +52,8 @@
     --brand-neutral: #64748b;
 
     /* Brand typography - dynamically generated from brand.config.json */
-    --brand-font-primary: -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif;
+    --brand-font-primary:
+        -apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Roboto, sans-serif;
     --brand-font-secondary: Georgia, 'Times New Roman', Times, serif;
     --brand-font-monospace: 'JetBrains Mono', 'Courier New', Courier, monospace;
 

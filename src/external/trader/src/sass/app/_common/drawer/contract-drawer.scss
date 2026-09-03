@@ -8,7 +8,9 @@ $header-height: 4em;
     padding: 0 0.8rem;
     box-sizing: border-box;
     will-change: transform, opacity;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
     border-radius: $BORDER_RADIUS;
     border: 1px solid var(--general-section-1);
     background: var(--general-section-1);
@@ -116,7 +118,9 @@ $header-height: 4em;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: transform 0.25s ease, opacity 0.25s linear;
+        transition:
+            transform 0.25s ease,
+            opacity 0.25s linear;
         border-top: 1px solid var(--general-section-1);
 
         .dc-btn--sell,

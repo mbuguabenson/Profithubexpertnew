@@ -18,18 +18,18 @@ export interface TEntryScannerMarketStats {
     risePercent?: number;
     fallPercent?: number;
     digitFrequencies: number[]; // percentage for each digit 0-9
-    digitCounts: number[];     // raw counts for each digit 0-9
+    digitCounts: number[]; // raw counts for each digit 0-9
 }
 
 export interface TScanResult {
     symbol: string;
     displayName: string;
     strategy: TStrategyType;
-    direction: string;       // 'UNDER' | 'OVER' | 'EVEN' | 'ODD' | 'DIFFERS' | 'MATCHES' | 'RISE' | 'FALL'
-    prediction: number;      // The barrier/prediction number
-    confidence: number;      // percentage
+    direction: string; // 'UNDER' | 'OVER' | 'EVEN' | 'ODD' | 'DIFFERS' | 'MATCHES' | 'RISE' | 'FALL'
+    prediction: number; // The barrier/prediction number
+    confidence: number; // percentage
     waitDescription: string; // Human-readable description
-    triggerDigit: number;    // The digit we're waiting for to trigger entry
+    triggerDigit: number; // The digit we're waiting for to trigger entry
     payout?: number;
     reason?: string;
     tradeType?: string;
@@ -48,7 +48,13 @@ export default class EntryScannerStore {
 
     // UI & Strategy State
     @observable accessor is_scanner_open: boolean = false;
-    @observable accessor selected_strategies: TStrategyType[] = ['over_under', 'even_odd', 'differs', 'matches', 'rise_fall'];
+    @observable accessor selected_strategies: TStrategyType[] = [
+        'over_under',
+        'even_odd',
+        'differs',
+        'matches',
+        'rise_fall',
+    ];
     @observable accessor scan_mode: 'all' | 'single' = 'all';
     @observable accessor target_single_symbol: string = '1HZ100V';
     @observable accessor min_confidence: number = 65; // %
@@ -99,7 +105,14 @@ export default class EntryScannerStore {
     @observable accessor losses: number = 0;
     @observable accessor total_profit: number = 0;
     @observable accessor is_executing_trade: boolean = false;
-    @observable accessor trade_log: { time: string; market: string; direction: string; prediction: number; result: string; profit: number }[] = [];
+    @observable accessor trade_log: {
+        time: string;
+        market: string;
+        direction: string;
+        prediction: number;
+        result: string;
+        profit: number;
+    }[] = [];
 
     // Internal State
     @observable accessor active_symbols: { symbol: string; display_name: string; is1s: boolean }[] = [];
@@ -227,10 +240,22 @@ export default class EntryScannerStore {
             void this.stopDerivAutomationRun();
         }
 
-        if (this._scan_interval) { clearInterval(this._scan_interval); this._scan_interval = null; }
-        if (this._cooldown_timer) { clearTimeout(this._cooldown_timer); this._cooldown_timer = null; }
-        if (this._buy_sub) { this._buy_sub.unsubscribe(); this._buy_sub = null; }
-        if (this._main_sub) { this._main_sub.unsubscribe(); this._main_sub = null; }
+        if (this._scan_interval) {
+            clearInterval(this._scan_interval);
+            this._scan_interval = null;
+        }
+        if (this._cooldown_timer) {
+            clearTimeout(this._cooldown_timer);
+            this._cooldown_timer = null;
+        }
+        if (this._buy_sub) {
+            this._buy_sub.unsubscribe();
+            this._buy_sub = null;
+        }
+        if (this._main_sub) {
+            this._main_sub.unsubscribe();
+            this._main_sub = null;
+        }
     }
 
     // ─── Fetch Symbols ────────────────────────────────────────
@@ -253,9 +278,8 @@ export default class EntryScannerStore {
 
     @action private fetchActiveSymbols() {
         const applySymbols = (allList: { symbol: string; display_name: string; is1s: boolean }[]) => {
-            const finalSymbols = this.scan_mode === 'single'
-                ? allList.filter(s => s.symbol === this.target_single_symbol)
-                : allList;
+            const finalSymbols =
+                this.scan_mode === 'single' ? allList.filter(s => s.symbol === this.target_single_symbol) : allList;
 
             runInAction(() => {
                 this.active_symbols = finalSymbols.length > 0 ? finalSymbols : allList.slice(0, 1);
@@ -275,23 +299,26 @@ export default class EntryScannerStore {
         };
 
         if (this.isApiReady()) {
-            api_base.api!.send({ active_symbols: 'brief' }).then((res: any) => {
-                if (!res?.active_symbols || !Array.isArray(res.active_symbols)) {
-                    applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
-                    return;
-                }
-                const filtered = res.active_symbols
-                    .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
-                    .map((s: any) => ({
-                        symbol: s.symbol,
-                        display_name: s.display_name,
-                        is1s: s.symbol.includes('1HZ') || s.symbol.includes('1S'),
-                    }));
+            api_base
+                .api!.send({ active_symbols: 'brief' })
+                .then((res: any) => {
+                    if (!res?.active_symbols || !Array.isArray(res.active_symbols)) {
+                        applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
+                        return;
+                    }
+                    const filtered = res.active_symbols
+                        .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
+                        .map((s: any) => ({
+                            symbol: s.symbol,
+                            display_name: s.display_name,
+                            is1s: s.symbol.includes('1HZ') || s.symbol.includes('1S'),
+                        }));
 
-                applySymbols(filtered.length > 0 ? filtered : this.DEFAULT_FALLBACK_SYMBOLS);
-            }).catch(() => {
-                applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
-            });
+                    applySymbols(filtered.length > 0 ? filtered : this.DEFAULT_FALLBACK_SYMBOLS);
+                })
+                .catch(() => {
+                    applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
+                });
         } else {
             applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
         }
@@ -336,7 +363,10 @@ export default class EntryScannerStore {
                         if (autoData.id) this.active_auto_run_id = autoData.id;
                         if (autoData.contracts && Array.isArray(autoData.contracts)) {
                             this.current_runs = autoData.contracts.length;
-                            const totalProfit = autoData.contracts.reduce((sum: number, c: any) => sum + Number(c.profit || 0), 0);
+                            const totalProfit = autoData.contracts.reduce(
+                                (sum: number, c: any) => sum + Number(c.profit || 0),
+                                0
+                            );
                             this.total_profit = Number(totalProfit.toFixed(2));
                             const lastContract = autoData.contracts[autoData.contracts.length - 1];
                             if (lastContract && lastContract.profit !== undefined) {
@@ -360,13 +390,15 @@ export default class EntryScannerStore {
         // Send tick history request WITH subscribe: 1
         this.active_symbols.forEach(market => {
             if (this.isApiReady()) {
-                api_base.api!.send({
-                    ticks_history: market.symbol,
-                    end: 'latest',
-                    count: 1000,
-                    style: 'ticks',
-                    subscribe: 1,
-                }).catch(() => {});
+                api_base
+                    .api!.send({
+                        ticks_history: market.symbol,
+                        end: 'latest',
+                        count: 1000,
+                        style: 'ticks',
+                        subscribe: 1,
+                    })
+                    .catch(() => {});
             }
         });
 
@@ -460,7 +492,8 @@ export default class EntryScannerStore {
 
     @action private runAnalysis(excludedSymbol?: string) {
         if (!this.is_scanning) return;
-        if (this.scan_phase === 'waiting_entry' || this.scan_phase === 'trading' || this.scan_phase === 'cooldown') return;
+        if (this.scan_phase === 'waiting_entry' || this.scan_phase === 'trading' || this.scan_phase === 'cooldown')
+            return;
 
         this.scan_phase = 'analyzing';
         let bestMatch: TScanResult | null = null;
@@ -688,7 +721,12 @@ export default class EntryScannerStore {
                 if (digit === targetColdDigit) {
                     triggered = true;
                     this.scan_status = `🎯 [Entry Triggered] Cold digit ${targetColdDigit} just printed. Statistically optimal to execute Differs now!`;
-                } else if (len >= 3 && seq[len - 1] !== targetColdDigit && seq[len - 2] !== targetColdDigit && seq[len - 3] !== targetColdDigit) {
+                } else if (
+                    len >= 3 &&
+                    seq[len - 1] !== targetColdDigit &&
+                    seq[len - 2] !== targetColdDigit &&
+                    seq[len - 3] !== targetColdDigit
+                ) {
                     triggered = true;
                     this.scan_status = `🎯 [Entry Triggered] 3 consecutive safe ticks without digit ${targetColdDigit}. Executing Differs trade on ${result.displayName}!`;
                 }
@@ -804,7 +842,9 @@ export default class EntryScannerStore {
                 },
                 strategy_id: 'martingale',
                 strategy_parameters: {
-                    multiplier: this.is_in_recovery_mode ? Math.max(2.5, Number(this.martingale) || 2.0) : (Number(this.martingale) || 2.0),
+                    multiplier: this.is_in_recovery_mode
+                        ? Math.max(2.5, Number(this.martingale) || 2.0)
+                        : Number(this.martingale) || 2.0,
                     take_profit: Number(this.take_profit) || 10,
                     stop_loss: Number(this.stop_loss) || 50,
                     max_stake: Number(this.stop_loss) || 100,
@@ -812,10 +852,13 @@ export default class EntryScannerStore {
                 subscribe: 1,
             };
 
-            const res = await api_base.api!.send(autoRequest) as any;
+            const res = (await api_base.api!.send(autoRequest)) as any;
 
             if (res?.error) {
-                console.warn('[EntryScannerStore] Deriv auto_start rejected. Falling back to local execution engine:', res.error);
+                console.warn(
+                    '[EntryScannerStore] Deriv auto_start rejected. Falling back to local execution engine:',
+                    res.error
+                );
                 this.executeDirectTrade();
                 return;
             }
@@ -826,7 +869,6 @@ export default class EntryScannerStore {
                 this.scan_status = `⚡ Deriv Server Automation Running (Run #${autoId}). Live tracking enabled.`;
                 this.is_executing_trade = false;
             });
-
         } catch (err: any) {
             console.warn('[EntryScannerStore] Deriv Automation API error, falling back to direct executor:', err);
             this.executeDirectTrade();
@@ -910,7 +952,7 @@ export default class EntryScannerStore {
 
         (async () => {
             try {
-                const proposalRes = await api_base.api!.send(proposal_request) as any;
+                const proposalRes = (await api_base.api!.send(proposal_request)) as any;
                 if (proposalRes?.error) {
                     throw new Error(proposalRes.error.message || 'Proposal failed');
                 }
@@ -919,10 +961,10 @@ export default class EntryScannerStore {
 
                 if (!proposalId) throw new Error('No proposal id returned');
 
-                const buyRes = await api_base.api!.send({
+                const buyRes = (await api_base.api!.send({
                     buy: proposalId,
                     price: askPrice,
-                }) as any;
+                })) as any;
 
                 if (buyRes?.error) {
                     throw new Error(buyRes.error.message || 'Buy failed');
@@ -932,71 +974,75 @@ export default class EntryScannerStore {
                 if (!contractId) throw new Error('No contract id returned');
 
                 // Wait for contract result
-                setTimeout(async () => {
-                    try {
-                        const pocRes = await api_base.api!.send({
-                            proposal_open_contract: 1,
-                            contract_id: contractId,
-                        }) as any;
+                setTimeout(
+                    async () => {
+                        try {
+                            const pocRes = (await api_base.api!.send({
+                                proposal_open_contract: 1,
+                                contract_id: contractId,
+                            })) as any;
 
-                        const poc = pocRes?.proposal_open_contract;
-                        const profit = Number(poc?.profit || 0);
-                        const isWin = profit > 0;
+                            const poc = pocRes?.proposal_open_contract;
+                            const profit = Number(poc?.profit || 0);
+                            const isWin = profit > 0;
 
-                        runInAction(() => {
-                            this.current_runs++;
-                            this.total_profit = Number((this.total_profit + profit).toFixed(2));
-                            this.is_executing_trade = false;
-                            this.trade_log.unshift({
-                                time: new Date().toLocaleTimeString(),
-                                market: result.displayName,
-                                direction: this.is_in_recovery_mode ? 'RECOVERY (Under 7)' : result.direction,
-                                prediction: barrier !== null ? barrier : 0,
-                                result: isWin ? 'WIN' : 'LOSS',
-                                profit,
+                            runInAction(() => {
+                                this.current_runs++;
+                                this.total_profit = Number((this.total_profit + profit).toFixed(2));
+                                this.is_executing_trade = false;
+                                this.trade_log.unshift({
+                                    time: new Date().toLocaleTimeString(),
+                                    market: result.displayName,
+                                    direction: this.is_in_recovery_mode ? 'RECOVERY (Under 7)' : result.direction,
+                                    prediction: barrier !== null ? barrier : 0,
+                                    result: isWin ? 'WIN' : 'LOSS',
+                                    profit,
+                                });
+
+                                if (!isWin) {
+                                    // If Differs lost (or already recovering), switch to Over/Under (Under 7)
+                                    if (result.strategy === 'differs' || this.primary_strategy === 'differs') {
+                                        this.is_in_recovery_mode = true;
+                                        this.primary_strategy = 'differs';
+                                        this.scan_status = `🛡️ Differs loss detected (-$${this.stake.toFixed(2)}). Strategy switched to Over/Under (Under 7) for Martingale recovery...`;
+                                    }
+                                    if (this.use_martingale) {
+                                        const mult = this.is_in_recovery_mode
+                                            ? Math.max(2.5, this.martingale)
+                                            : this.martingale;
+                                        this.stake = Number((this.stake * mult).toFixed(2));
+                                    }
+                                } else {
+                                    if (this.is_in_recovery_mode) {
+                                        this.is_in_recovery_mode = false;
+                                        this.scan_status = `✅ Recovery win (+$${profit.toFixed(2)})! Reverted to initial Differs strategy.`;
+                                    }
+                                    this.stake = this.initial_stake;
+                                }
+
+                                if (this.total_profit >= this.take_profit) {
+                                    this.scan_status = `🎉 Take profit reached (+$${this.total_profit.toFixed(2)} USD)!`;
+                                    this.stopScanning();
+                                } else if (this.total_profit <= -this.stop_loss) {
+                                    this.scan_status = `🛑 Stop loss reached (-$${Math.abs(this.total_profit).toFixed(2)} USD).`;
+                                    this.stopScanning();
+                                } else if (this.current_runs >= this.max_runs_before_pause) {
+                                    this.pauseAndReanalyze();
+                                } else {
+                                    // Strictly wait for the next confirmed entry trigger on this market
+                                    this.scan_phase = 'waiting_entry';
+                                    this.wait_sequence = [];
+                                    this.scan_status = `⏳ Trade completed. Strictly waiting for next confirmed entry trigger on ${result.displayName}...`;
+                                }
                             });
-
-                            if (!isWin) {
-                                // If Differs lost (or already recovering), switch to Over/Under (Under 7)
-                                if (result.strategy === 'differs' || this.primary_strategy === 'differs') {
-                                    this.is_in_recovery_mode = true;
-                                    this.primary_strategy = 'differs';
-                                    this.scan_status = `🛡️ Differs loss detected (-$${this.stake.toFixed(2)}). Strategy switched to Over/Under (Under 7) for Martingale recovery...`;
-                                }
-                                if (this.use_martingale) {
-                                    const mult = this.is_in_recovery_mode ? Math.max(2.5, this.martingale) : this.martingale;
-                                    this.stake = Number((this.stake * mult).toFixed(2));
-                                }
-                            } else {
-                                if (this.is_in_recovery_mode) {
-                                    this.is_in_recovery_mode = false;
-                                    this.scan_status = `✅ Recovery win (+$${profit.toFixed(2)})! Reverted to initial Differs strategy.`;
-                                }
-                                this.stake = this.initial_stake;
-                            }
-
-                            if (this.total_profit >= this.take_profit) {
-                                this.scan_status = `🎉 Take profit reached (+$${this.total_profit.toFixed(2)} USD)!`;
-                                this.stopScanning();
-                            } else if (this.total_profit <= -this.stop_loss) {
-                                this.scan_status = `🛑 Stop loss reached (-$${Math.abs(this.total_profit).toFixed(2)} USD).`;
-                                this.stopScanning();
-                            } else if (this.current_runs >= this.max_runs_before_pause) {
-                                this.pauseAndReanalyze();
-                            } else {
-                                // Strictly wait for the next confirmed entry trigger on this market
-                                this.scan_phase = 'waiting_entry';
-                                this.wait_sequence = [];
-                                this.scan_status = `⏳ Trade completed. Strictly waiting for next confirmed entry trigger on ${result.displayName}...`;
-                            }
-                        });
-                    } catch (e: any) {
-                        runInAction(() => {
-                            this.is_executing_trade = false;
-                        });
-                    }
-                }, (this.duration * 1000) + 1500);
-
+                        } catch (e: any) {
+                            runInAction(() => {
+                                this.is_executing_trade = false;
+                            });
+                        }
+                    },
+                    this.duration * 1000 + 1500
+                );
             } catch (err: any) {
                 runInAction(() => {
                     this.scan_status = `⚠️ Execution notice: ${err?.message || err}. Retrying in 3s...`;
@@ -1055,7 +1101,10 @@ export default class EntryScannerStore {
         if (this.active_auto_run_id) {
             void this.stopDerivAutomationRun();
         }
-        if (this._buy_sub) { this._buy_sub.unsubscribe(); this._buy_sub = null; }
+        if (this._buy_sub) {
+            this._buy_sub.unsubscribe();
+            this._buy_sub = null;
+        }
 
         this._cooldown_timer = setTimeout(() => {
             runInAction(() => {
@@ -1130,14 +1179,22 @@ export default class EntryScannerStore {
 
     @computed get phase_color(): string {
         switch (this.scan_phase) {
-            case 'idle': return '#94a3b8';
-            case 'scanning': return '#06b6d4';
-            case 'analyzing': return '#f59e0b';
-            case 'waiting_entry': return '#8b5cf6';
-            case 'trading': return '#10b981';
-            case 'cooldown': return '#ef4444';
-            case 'paused': return '#f97316';
-            default: return '#94a3b8';
+            case 'idle':
+                return '#94a3b8';
+            case 'scanning':
+                return '#06b6d4';
+            case 'analyzing':
+                return '#f59e0b';
+            case 'waiting_entry':
+                return '#8b5cf6';
+            case 'trading':
+                return '#10b981';
+            case 'cooldown':
+                return '#ef4444';
+            case 'paused':
+                return '#f97316';
+            default:
+                return '#94a3b8';
         }
     }
 }

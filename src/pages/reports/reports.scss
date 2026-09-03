@@ -149,7 +149,7 @@
 
         @media (max-width: 480px) {
             padding: 0.7rem;
-            
+
             .reports-page__refresh-label {
                 display: none;
             }
@@ -915,6 +915,10 @@
 
 // ── Animations ──
 @keyframes reports-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }

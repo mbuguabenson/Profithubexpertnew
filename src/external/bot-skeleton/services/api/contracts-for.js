@@ -215,9 +215,14 @@ export default class ContractsFor {
                 }
 
                 // If api_base send didn't yield contracts, fetch immediately from public WebSocket
-                if (!response || !response.contracts_for || !Array.isArray(response.contracts_for.available) || response.error) {
+                if (
+                    !response ||
+                    !response.contracts_for ||
+                    !Array.isArray(response.contracts_for.available) ||
+                    response.error
+                ) {
                     try {
-                        response = await new Promise((resolve) => {
+                        response = await new Promise(resolve => {
                             const wsUrl = isProduction()
                                 ? 'wss://api.derivws.com/trading/v1/options/ws/public'
                                 : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
@@ -225,7 +230,7 @@ export default class ContractsFor {
                             ws.onopen = () => {
                                 ws.send(JSON.stringify({ contracts_for: symbol }));
                             };
-                            ws.onmessage = (event) => {
+                            ws.onmessage = event => {
                                 try {
                                     const data = JSON.parse(event.data);
                                     ws.close();
@@ -270,9 +275,10 @@ export default class ContractsFor {
                 // Filter out forward-starting contracts if any
                 const filtered_contracts = contracts.filter(c => !c.start_type || c.start_type !== 'forward');
 
-                const currentTimestamp = (typeof this.server_time?.unix === 'function')
-                    ? this.server_time.unix()
-                    : Math.floor(Date.now() / 1000);
+                const currentTimestamp =
+                    typeof this.server_time?.unix === 'function'
+                        ? this.server_time.unix()
+                        : Math.floor(Date.now() / 1000);
 
                 this.contracts_for[symbol] = {
                     contracts: filtered_contracts,

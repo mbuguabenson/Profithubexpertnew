@@ -28,19 +28,17 @@ const ErrorComponentWrapper = observer(() => {
     };
 
     return (
-        <div className="error-wrapper-backdrop">
-            <div className="error-wrapper-modal">
-                <h3 className="error-wrapper-title">
-                    {common.error?.header || 'Notice'}
-                </h3>
-                <p className="error-wrapper-msg">
+        <div className='error-wrapper-backdrop'>
+            <div className='error-wrapper-modal'>
+                <h3 className='error-wrapper-title'>{common.error?.header || 'Notice'}</h3>
+                <p className='error-wrapper-msg'>
                     {common.error?.message || 'A temporary connection update occurred.'}
                 </p>
-                <div className="error-wrapper-actions">
-                    <button onClick={handleClearError} className="btn-primary">
+                <div className='error-wrapper-actions'>
+                    <button onClick={handleClearError} className='btn-primary'>
                         Continue to Trading
                     </button>
-                    <button onClick={() => window.location.reload()} className="btn-secondary">
+                    <button onClick={() => window.location.reload()} className='btn-secondary'>
                         Refresh Page
                     </button>
                 </div>
@@ -142,117 +140,114 @@ const WelcomeScreen = ({
     return (
         <div className={`welcome-screen ${exiting ? 'welcome-screen--zoom-out' : 'welcome-screen--visible'}`}>
             {/* Background Candlestick Atmosphere */}
-            <div className="ws-candlesticks-bg" aria-hidden="true">
+            <div className='ws-candlesticks-bg' aria-hidden='true'>
                 {CANDLESTICKS.map((candle, idx) => (
                     <div
                         key={idx}
                         className={`candle-item ${candle.isBull ? 'candle--bull' : 'candle--bear'}`}
                         style={{ height: `${candle.height}px` }}
                     >
-                        <div className="candle-wick candle-wick--top" style={{ height: `${candle.wickTop}px` }} />
-                        <div className="candle-body" />
-                        <div className="candle-wick candle-wick--bottom" style={{ height: `${candle.wickBottom}px` }} />
+                        <div className='candle-wick candle-wick--top' style={{ height: `${candle.wickTop}px` }} />
+                        <div className='candle-body' />
+                        <div className='candle-wick candle-wick--bottom' style={{ height: `${candle.wickBottom}px` }} />
                     </div>
                 ))}
             </div>
 
             {/* Subtle Vignette & Neon Glows */}
-            <div className="ws-vignette-overlay" aria-hidden="true" />
-            <div className="ws-ambient-glow ws-ambient-glow-cyan" aria-hidden="true" />
-            <div className="ws-ambient-glow ws-ambient-glow-gold" aria-hidden="true" />
+            <div className='ws-vignette-overlay' aria-hidden='true' />
+            <div className='ws-ambient-glow ws-ambient-glow-cyan' aria-hidden='true' />
+            <div className='ws-ambient-glow ws-ambient-glow-gold' aria-hidden='true' />
 
             {/* Glowing Glass Hero Card */}
-            <div className="welcome-screen__card">
+            <div className='welcome-screen__card'>
                 {/* 1. Glowing Dual-Tone Brand Logo */}
-                <div className="ws-brand-header">
-                    <div className="ws-logo-crest-wrapper">
-                        <img src="/logo_icon.svg" alt="Legacy" className="ws-logo-crest" />
+                <div className='ws-brand-header'>
+                    <div className='ws-logo-crest-wrapper'>
+                        <img src='/logo_icon.svg' alt='Legacy' className='ws-logo-crest' />
                     </div>
-                    <div className="ws-brand-title">
-                        <span className="brand-left">{leftBrand}</span>
-                        <span className="brand-right">{rightBrand}</span>
+                    <div className='ws-brand-title'>
+                        <span className='brand-left'>{leftBrand}</span>
+                        <span className='brand-right'>{rightBrand}</span>
                     </div>
-                    <div className="ws-hub-sub">
-                        <span className="hub-text">INSTITUTIONAL QUANTUM SUITE</span>
-                        <span className="hub-live-badge">
-                            <span className="dot-live" />
+                    <div className='ws-hub-sub'>
+                        <span className='hub-text'>INSTITUTIONAL QUANTUM SUITE</span>
+                        <span className='hub-live-badge'>
+                            <span className='dot-live' />
                             <span>LIVE</span>
                         </span>
                     </div>
                 </div>
 
-                <div className="ws-card-divider" />
+                <div className='ws-card-divider' />
 
                 {/* 2. Welcome Subtitle */}
-                <div className="ws-greetings">
-                    <h2 className="greeting-title">Welcome to {brandLabel}</h2>
-                    <p className="greeting-sub">High-Performance Algorithmic Trading & AI Analytics</p>
+                <div className='ws-greetings'>
+                    <h2 className='greeting-title'>Welcome to {brandLabel}</h2>
+                    <p className='greeting-sub'>High-Performance Algorithmic Trading & AI Analytics</p>
                 </div>
 
                 {/* 3. Sleek Progress Bar with Percentage */}
-                <div className="ws-progress-block">
-                    <div className="progress-row">
-                        <div className="ws-progress-track">
-                            <div className="ws-progress-fill" style={{ width: `${roundedProgress}%` }} />
+                <div className='ws-progress-block'>
+                    <div className='progress-row'>
+                        <div className='ws-progress-track'>
+                            <div className='ws-progress-fill' style={{ width: `${roundedProgress}%` }} />
                         </div>
-                        <span className="ws-progress-pct">{roundedProgress}%</span>
+                        <span className='ws-progress-pct'>{roundedProgress}%</span>
                     </div>
 
                     {/* Step Status with Animated Spinner */}
-                    <div className="ws-status-row">
-                        <Loader2 size={13} className="status-spinner" />
-                        <span className="status-text">{statusMessage || INIT_STEPS[activeStep]}</span>
+                    <div className='ws-status-row'>
+                        <Loader2 size={13} className='status-spinner' />
+                        <span className='status-text'>{statusMessage || INIT_STEPS[activeStep]}</span>
                     </div>
                 </div>
 
                 {/* 4. Dots / Step Carousel Indicators */}
-                <div className="ws-dots-row">
+                <div className='ws-dots-row'>
                     {INIT_STEPS.map((_, idx) => (
-                        <span
-                            key={idx}
-                            className={`dot-pill ${idx === activeStep ? 'dot-pill--active' : ''}`}
-                        />
+                        <span key={idx} className={`dot-pill ${idx === activeStep ? 'dot-pill--active' : ''}`} />
                     ))}
                 </div>
 
                 {/* 5. 3 Feature Icon Orbs with Labels */}
-                <div className="ws-orbs-grid">
-                    <div className="feature-orb-item">
-                        <div className="orb-circle orb-blue">
-                            <BarChart3 size={20} className="orb-icon text-cyan" />
+                <div className='ws-orbs-grid'>
+                    <div className='feature-orb-item'>
+                        <div className='orb-circle orb-blue'>
+                            <BarChart3 size={20} className='orb-icon text-cyan' />
                         </div>
-                        <span className="orb-label">Advanced Charts</span>
+                        <span className='orb-label'>Advanced Charts</span>
                     </div>
 
-                    <div className="feature-orb-item">
-                        <div className="orb-circle orb-gold">
-                            <Bot size={20} className="orb-icon text-gold" />
+                    <div className='feature-orb-item'>
+                        <div className='orb-circle orb-gold'>
+                            <Bot size={20} className='orb-icon text-gold' />
                         </div>
-                        <span className="orb-label">Quantum Bots</span>
+                        <span className='orb-label'>Quantum Bots</span>
                     </div>
 
-                    <div className="feature-orb-item">
-                        <div className="orb-circle orb-teal">
-                            <Copy size={20} className="orb-icon text-teal" />
+                    <div className='feature-orb-item'>
+                        <div className='orb-circle orb-teal'>
+                            <Copy size={20} className='orb-icon text-teal' />
                         </div>
-                        <span className="orb-label">Copy Trading</span>
+                        <span className='orb-label'>Copy Trading</span>
                     </div>
                 </div>
 
                 {/* 6. Footer Caption inside Card */}
-                <div className="ws-card-footer-caption">
-                    <ShieldCheck size={13} className="text-emerald" />
+                <div className='ws-card-footer-caption'>
+                    <ShieldCheck size={13} className='text-emerald' />
                     <span>Protected by Legacy Quantum Security Infrastructure</span>
                 </div>
             </div>
 
             {/* Bottom Real-Time Market Ticker Bar */}
-            <div className="ws-bottom-ticker-bar">
-                <div className="ticker-track">
+            <div className='ws-bottom-ticker-bar'>
+                <div className='ticker-track'>
                     {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, idx) => (
-                        <div key={idx} className="ticker-item">
-                            <span className="ticker-symbol">{item.symbol}</span>
-                            <span className="ticker-price">{item.price}</span>
+                        <div key={idx} className='ticker-item'>
+                            <span className='ticker-symbol'>{item.symbol}</span>
+                            <span className='ticker-price'>{item.price}</span>
                             <span className={`ticker-change ${item.isUp ? 'change-up' : 'change-down'}`}>
                                 {item.change}
                             </span>

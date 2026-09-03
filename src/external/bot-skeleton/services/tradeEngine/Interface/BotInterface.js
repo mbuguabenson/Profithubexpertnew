@@ -22,17 +22,42 @@ const getBotInterface = tradeEngine => {
         isResult: result => getDetail(10) === result,
         isTradeAgain: result => globalObserver.emit('bot.trade_again', result),
         readDetails: i => getDetail(i - 1),
-        isDemoAccount: (id) => {
-            const loginid = id || tradeEngine.accountInfo?.loginid || (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') || '';
-            return loginid.startsWith('VR') || loginid.startsWith('VRT') || loginid.startsWith('VRTC') || loginid.startsWith('VRW') || loginid.startsWith('DEM') || loginid.startsWith('DOT');
+        isDemoAccount: id => {
+            const loginid =
+                id ||
+                tradeEngine.accountInfo?.loginid ||
+                (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') ||
+                '';
+            return (
+                loginid.startsWith('VR') ||
+                loginid.startsWith('VRT') ||
+                loginid.startsWith('VRTC') ||
+                loginid.startsWith('VRW') ||
+                loginid.startsWith('DEM') ||
+                loginid.startsWith('DOT')
+            );
         },
-        isRealAccount: (id) => {
-            const loginid = id || tradeEngine.accountInfo?.loginid || (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') || '';
-            const isDemo = loginid.startsWith('VR') || loginid.startsWith('VRT') || loginid.startsWith('VRTC') || loginid.startsWith('VRW') || loginid.startsWith('DEM') || loginid.startsWith('DOT');
+        isRealAccount: id => {
+            const loginid =
+                id ||
+                tradeEngine.accountInfo?.loginid ||
+                (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') ||
+                '';
+            const isDemo =
+                loginid.startsWith('VR') ||
+                loginid.startsWith('VRT') ||
+                loginid.startsWith('VRTC') ||
+                loginid.startsWith('VRW') ||
+                loginid.startsWith('DEM') ||
+                loginid.startsWith('DOT');
             return !isDemo && Boolean(loginid);
         },
-        isVirtualAccount: function (id) { return this.isDemoAccount(id); },
-        isVirtual: function (id) { return this.isDemoAccount(id); },
+        isVirtualAccount: function (id) {
+            return this.isDemoAccount(id);
+        },
+        isVirtual: function (id) {
+            return this.isDemoAccount(id);
+        },
     };
 };
 

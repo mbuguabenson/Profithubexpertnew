@@ -849,7 +849,11 @@ export default class SmartTradingStore {
             try {
                 if (api_base?.api && api_base.api?.connection?.readyState === 1) {
                     const response = await api_base.api.send({ active_symbols: 'brief' });
-                    if (response?.active_symbols && Array.isArray(response.active_symbols) && response.active_symbols.length > 0) {
+                    if (
+                        response?.active_symbols &&
+                        Array.isArray(response.active_symbols) &&
+                        response.active_symbols.length > 0
+                    ) {
                         symbols = response.active_symbols;
                     }
                 }
@@ -1005,7 +1009,11 @@ export default class SmartTradingStore {
                 const market_name = s.market_display_name || s.market || 'Synthetic Indices';
                 if (!groups[market_name]) groups[market_name] = { group: market_name, items: [] };
                 groups[market_name].items.push({ value: s.symbol, label: s.display_name || s.symbol });
-                symbolData[s.symbol] = { pip: s.pip || 0.01, symbol: s.symbol, display_name: s.display_name || s.symbol };
+                symbolData[s.symbol] = {
+                    pip: s.pip || 0.01,
+                    symbol: s.symbol,
+                    display_name: s.display_name || s.symbol,
+                };
             });
             this.markets = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
             this.active_symbols_data = symbolData;
@@ -1079,7 +1087,8 @@ export default class SmartTradingStore {
                         return parseInt(s.slice(-1), 10);
                     });
                     const last_price = history.prices[history.prices.length - 1];
-                    const formatted_price = typeof last_price === 'number' ? last_price.toFixed(pip) : String(last_price);
+                    const formatted_price =
+                        typeof last_price === 'number' ? last_price.toFixed(pip) : String(last_price);
                     this.updateDigitStats(digits, formatted_price);
                 }
             } catch (histErr) {
@@ -1506,8 +1515,15 @@ export default class SmartTradingStore {
         }
 
         // Check TP/SL
-        if (this.enable_tp_sl || (this.take_profit > 0 && this.session_pl >= this.take_profit) || (this.stop_loss > 0 && this.session_pl <= -this.stop_loss)) {
-            if ((this.take_profit > 0 && this.session_pl >= this.take_profit) || (this.stop_loss > 0 && this.session_pl <= -this.stop_loss)) {
+        if (
+            this.enable_tp_sl ||
+            (this.take_profit > 0 && this.session_pl >= this.take_profit) ||
+            (this.stop_loss > 0 && this.session_pl <= -this.stop_loss)
+        ) {
+            if (
+                (this.take_profit > 0 && this.session_pl >= this.take_profit) ||
+                (this.stop_loss > 0 && this.session_pl <= -this.stop_loss)
+            ) {
                 runInAction(() => {
                     this.is_speedbot_running = false;
                     this.is_bulk_trading = false;
@@ -2169,8 +2185,9 @@ export default class SmartTradingStore {
                         duration: strategy.ticks,
                         duration_unit: 't',
                         symbol: this.symbol,
-                        ...( ['DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'].includes(trade_type || '') &&
-                        prediction !== undefined && prediction !== null
+                        ...(['DIGITOVER', 'DIGITUNDER', 'DIGITMATCH', 'DIGITDIFF'].includes(trade_type || '') &&
+                        prediction !== undefined &&
+                        prediction !== null
                             ? { barrier: String(prediction) }
                             : {}),
                     })
@@ -2888,7 +2905,9 @@ export default class SmartTradingStore {
                     duration: 1,
                     duration_unit: 't',
                     symbol: this.symbol,
-                    ...(trade.prediction !== undefined && trade.prediction !== null ? { barrier: String(trade.prediction) } : {}),
+                    ...(trade.prediction !== undefined && trade.prediction !== null
+                        ? { barrier: String(trade.prediction) }
+                        : {}),
                 })
             );
 

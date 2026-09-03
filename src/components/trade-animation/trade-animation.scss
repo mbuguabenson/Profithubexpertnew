@@ -93,7 +93,10 @@
         font-weight: 700;
         cursor: pointer;
         flex-shrink: 0;
-        transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        transition:
+            border-color 0.2s,
+            background 0.2s,
+            box-shadow 0.2s;
         white-space: nowrap;
 
         &:hover {

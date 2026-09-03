@@ -34,12 +34,48 @@ const getBotIcon = (name: string): string => {
 };
 
 const BOT_META: Record<string, { tags: string[]; win: string; type: string; risk: string; speed: string }> = {
-    'OVER DESTROYER': { tags: ['Over Market', 'R32'], win: '82%', type: 'Aggressive', risk: 'Medium Risk', speed: 'Ultra Fast' },
-    'OVER DESTRYER 2 PRO BOT': { tags: ['Over Market', 'R43'], win: '78%', type: 'Pro', risk: 'Low Risk', speed: 'High Speed' },
-    'EVEN ODD SPEEDY': { tags: ['Even/Odd', 'Speed'], win: '74%', type: 'Speed', risk: 'Medium Risk', speed: '1-Tick Speedy' },
-    'OVER UNDER PRO BOT': { tags: ['Over/Under', 'Blast'], win: '80%', type: 'Pro', risk: 'Low Risk', speed: 'Instant' },
-    'UNDER DESTROYER PRO BOT': { tags: ['Under Market', 'R56'], win: '77%', type: 'Pro', risk: 'Low Risk', speed: 'High Speed' },
-    'UNDER DESTROYER': { tags: ['Under Market', 'R67'], win: '75%', type: 'Standard', risk: 'Low Risk', speed: 'Normal' },
+    'OVER DESTROYER': {
+        tags: ['Over Market', 'R32'],
+        win: '82%',
+        type: 'Aggressive',
+        risk: 'Medium Risk',
+        speed: 'Ultra Fast',
+    },
+    'OVER DESTRYER 2 PRO BOT': {
+        tags: ['Over Market', 'R43'],
+        win: '78%',
+        type: 'Pro',
+        risk: 'Low Risk',
+        speed: 'High Speed',
+    },
+    'EVEN ODD SPEEDY': {
+        tags: ['Even/Odd', 'Speed'],
+        win: '74%',
+        type: 'Speed',
+        risk: 'Medium Risk',
+        speed: '1-Tick Speedy',
+    },
+    'OVER UNDER PRO BOT': {
+        tags: ['Over/Under', 'Blast'],
+        win: '80%',
+        type: 'Pro',
+        risk: 'Low Risk',
+        speed: 'Instant',
+    },
+    'UNDER DESTROYER PRO BOT': {
+        tags: ['Under Market', 'R56'],
+        win: '77%',
+        type: 'Pro',
+        risk: 'Low Risk',
+        speed: 'High Speed',
+    },
+    'UNDER DESTROYER': {
+        tags: ['Under Market', 'R67'],
+        win: '75%',
+        type: 'Standard',
+        risk: 'Low Risk',
+        speed: 'Normal',
+    },
 };
 
 const getBotMeta = (name: string) => {
@@ -90,25 +126,29 @@ const BotCard = ({
 
     const getTypeClass = (type: string) => {
         switch (type.toLowerCase()) {
-            case 'aggressive': return 'type-tag--aggressive';
-            case 'pro': return 'type-tag--pro';
-            case 'speed': return 'type-tag--speed';
-            default: return 'type-tag--standard';
+            case 'aggressive':
+                return 'type-tag--aggressive';
+            case 'pro':
+                return 'type-tag--pro';
+            case 'speed':
+                return 'type-tag--speed';
+            default:
+                return 'type-tag--standard';
         }
     };
 
     return (
         <div className={`pro-bot-card ${!isLoaded ? 'pro-bot-card--loading' : ''}`}>
-            <div className="pro-bot-card__top-glow" />
+            <div className='pro-bot-card__top-glow' />
 
-            <div className="pro-bot-card__inner">
+            <div className='pro-bot-card__inner'>
                 {/* Header: Icon + Category Badge */}
-                <div className="pro-bot-card__header">
-                    <div className="pro-bot-card__icon-box">
-                        <span className="icon-emoji">{icon}</span>
+                <div className='pro-bot-card__header'>
+                    <div className='pro-bot-card__icon-box'>
+                        <span className='icon-emoji'>{icon}</span>
                     </div>
 
-                    <div className="pro-bot-card__badges">
+                    <div className='pro-bot-card__badges'>
                         <span className={`type-tag ${getTypeClass(meta.type)}`}>
                             {meta.type === 'Aggressive' && <Flame size={13} />}
                             {meta.type === 'Pro' && <Sparkles size={13} />}
@@ -119,43 +159,45 @@ const BotCard = ({
                 </div>
 
                 {/* Bot Title & Sub-tags */}
-                <div className="pro-bot-card__title-group">
-                    <h3 className="pro-bot-card__name">{bot.name}</h3>
-                    <div className="pro-bot-card__sub-tags">
+                <div className='pro-bot-card__title-group'>
+                    <h3 className='pro-bot-card__name'>{bot.name}</h3>
+                    <div className='pro-bot-card__sub-tags'>
                         {meta.tags.map((tag, idx) => (
-                            <span key={idx} className="sub-tag">{tag}</span>
+                            <span key={idx} className='sub-tag'>
+                                {tag}
+                            </span>
                         ))}
                     </div>
                 </div>
 
                 {/* Description */}
-                <p className="pro-bot-card__desc">{bot.description}</p>
+                <p className='pro-bot-card__desc'>{bot.description}</p>
 
                 {/* Win Rate Performance Meter */}
-                <div className="pro-bot-card__meter-box">
-                    <div className="meter-label-row">
-                        <span className="meter-title">
+                <div className='pro-bot-card__meter-box'>
+                    <div className='meter-label-row'>
+                        <span className='meter-title'>
                             <BarChart3 size={14} /> Target Win Rate
                         </span>
-                        <span className="meter-val">{meta.win}</span>
+                        <span className='meter-val'>{meta.win}</span>
                     </div>
-                    <div className="meter-track">
-                        <div className="meter-fill" style={{ width: `${winNumeric}%` }} />
+                    <div className='meter-track'>
+                        <div className='meter-fill' style={{ width: `${winNumeric}%` }} />
                     </div>
                 </div>
 
                 {/* Key Specs Row */}
-                <div className="pro-bot-card__specs-grid">
-                    <div className="spec-item">
-                        <span className="spec-label">Execution</span>
-                        <span className="spec-val">{meta.speed}</span>
+                <div className='pro-bot-card__specs-grid'>
+                    <div className='spec-item'>
+                        <span className='spec-label'>Execution</span>
+                        <span className='spec-val'>{meta.speed}</span>
                     </div>
-                    <div className="spec-item">
-                        <span className="spec-label">Capital Risk</span>
-                        <span className="spec-val spec-val--risk">{meta.risk}</span>
+                    <div className='spec-item'>
+                        <span className='spec-label'>Capital Risk</span>
+                        <span className='spec-val spec-val--risk'>{meta.risk}</span>
                     </div>
-                    <div className="spec-item">
-                        <span className="spec-label">Engine Status</span>
+                    <div className='spec-item'>
+                        <span className='spec-label'>Engine Status</span>
                         <span className={`spec-val ${isLoaded ? 'spec-val--ready' : 'spec-val--pending'}`}>
                             {isLoaded ? '● Ready' : '⏳ Syncing'}
                         </span>
@@ -163,24 +205,19 @@ const BotCard = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="pro-bot-card__actions">
+                <div className='pro-bot-card__actions'>
                     <button
-                        type="button"
-                        className="btn-preview"
+                        type='button'
+                        className='btn-preview'
                         onClick={() => onPreview(bot)}
-                        title="View strategy breakdown"
+                        title='View strategy breakdown'
                     >
                         Preview
                     </button>
-                    <button
-                        type="button"
-                        className="btn-load-bot"
-                        onClick={() => onLoad(bot)}
-                        disabled={!isLoaded}
-                    >
+                    <button type='button' className='btn-load-bot' onClick={() => onLoad(bot)} disabled={!isLoaded}>
                         {isLoaded ? (
                             <>
-                                <Play size={15} className="btn-icon" /> Load Strategy ⚡
+                                <Play size={15} className='btn-icon' /> Load Strategy ⚡
                             </>
                         ) : (
                             'Preparing Bot…'
@@ -206,47 +243,49 @@ const BotPreviewModal = ({
     const icon = getBotIcon(bot.name);
 
     return (
-        <div className="bot-preview-overlay" onClick={onClose}>
-            <div className="bot-preview-dialog" onClick={e => e.stopPropagation()}>
-                <button type="button" className="dialog-close-btn" onClick={onClose}>
+        <div className='bot-preview-overlay' onClick={onClose}>
+            <div className='bot-preview-dialog' onClick={e => e.stopPropagation()}>
+                <button type='button' className='dialog-close-btn' onClick={onClose}>
                     <X size={18} />
                 </button>
 
-                <div className="dialog-header">
-                    <div className="dialog-icon-wrap">{icon}</div>
+                <div className='dialog-header'>
+                    <div className='dialog-icon-wrap'>{icon}</div>
                     <div>
-                        <h3 className="dialog-title">{bot.name}</h3>
-                        <span className="dialog-type-badge">{meta.type} Strategy • {meta.win} Target Win</span>
+                        <h3 className='dialog-title'>{bot.name}</h3>
+                        <span className='dialog-type-badge'>
+                            {meta.type} Strategy • {meta.win} Target Win
+                        </span>
                     </div>
                 </div>
 
-                <div className="dialog-body">
-                    <div className="info-block">
+                <div className='dialog-body'>
+                    <div className='info-block'>
                         <h4>Strategy Overview</h4>
                         <p>{bot.description}</p>
                     </div>
 
-                    <div className="info-grid">
-                        <div className="info-card">
-                            <span className="info-card__lbl">Target Win Rate</span>
-                            <span className="info-card__val text-green">{meta.win}</span>
+                    <div className='info-grid'>
+                        <div className='info-card'>
+                            <span className='info-card__lbl'>Target Win Rate</span>
+                            <span className='info-card__val text-green'>{meta.win}</span>
                         </div>
-                        <div className="info-card">
-                            <span className="info-card__lbl">Risk Profile</span>
-                            <span className="info-card__val text-yellow">{meta.risk}</span>
+                        <div className='info-card'>
+                            <span className='info-card__lbl'>Risk Profile</span>
+                            <span className='info-card__val text-yellow'>{meta.risk}</span>
                         </div>
-                        <div className="info-card">
-                            <span className="info-card__lbl">Execution Speed</span>
-                            <span className="info-card__val text-cyan">{meta.speed}</span>
+                        <div className='info-card'>
+                            <span className='info-card__lbl'>Execution Speed</span>
+                            <span className='info-card__val text-cyan'>{meta.speed}</span>
                         </div>
                     </div>
 
-                    <div className="features-list">
+                    <div className='features-list'>
                         <h4>Key Features Included</h4>
                         <ul>
                             {DEFAULT_FEATURES.map((feat, idx) => (
                                 <li key={idx}>
-                                    <CheckCircle2 size={16} className="check-icon" />
+                                    <CheckCircle2 size={16} className='check-icon' />
                                     <span>{feat}</span>
                                 </li>
                             ))}
@@ -254,13 +293,13 @@ const BotPreviewModal = ({
                     </div>
                 </div>
 
-                <div className="dialog-footer">
-                    <button type="button" className="btn-cancel" onClick={onClose}>
+                <div className='dialog-footer'>
+                    <button type='button' className='btn-cancel' onClick={onClose}>
                         Close
                     </button>
                     <button
-                        type="button"
-                        className="btn-confirm-load"
+                        type='button'
+                        className='btn-confirm-load'
                         onClick={() => {
                             onClose();
                             onLoad(bot);
@@ -353,7 +392,7 @@ const FreeBots = observer(() => {
             difficulty: 'Custom',
             strategy: 'User Uploaded',
             features: ['Custom Bot', 'Automated Execution'],
-            xml: b.xml
+            xml: b.xml,
         }));
         return [...uploaded, ...defaultBots];
     }, [defaultBots]);
@@ -371,28 +410,27 @@ const FreeBots = observer(() => {
     }, [combinedBots, searchQuery]);
 
     return (
-        <div className="trading-bots-view">
-            <div className="trading-bots-container">
-
+        <div className='trading-bots-view'>
+            <div className='trading-bots-container'>
                 {/* Clean Top Header & Search Bar */}
-                <div className="tb-controls-bar">
-                    <div className="tb-header-title-box">
-                        <h2 className="tb-page-title">Trading Bots</h2>
-                        <span className="tb-count-badge">{combinedBots.length} Strategies Available</span>
+                <div className='tb-controls-bar'>
+                    <div className='tb-header-title-box'>
+                        <h2 className='tb-page-title'>Trading Bots</h2>
+                        <span className='tb-count-badge'>{combinedBots.length} Strategies Available</span>
                     </div>
 
                     {/* Search Input Box */}
-                    <div className="tb-search-box">
-                        <Search size={18} className="search-icon" />
+                    <div className='tb-search-box'>
+                        <Search size={18} className='search-icon' />
                         <input
-                            type="text"
-                            placeholder="Search strategy by name or market..."
+                            type='text'
+                            placeholder='Search strategy by name or market...'
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            className="search-input"
+                            className='search-input'
                         />
                         {searchQuery && (
-                            <button type="button" className="clear-search-btn" onClick={() => setSearchQuery('')}>
+                            <button type='button' className='clear-search-btn' onClick={() => setSearchQuery('')}>
                                 <X size={16} />
                             </button>
                         )}
@@ -401,32 +439,28 @@ const FreeBots = observer(() => {
 
                 {/* Bot Cards Grid View */}
                 {isLoading ? (
-                    <div className="tb-status-box">
-                        <div className="tb-spinner" />
+                    <div className='tb-status-box'>
+                        <div className='tb-spinner' />
                         <span>Loading Trading Bots Library…</span>
                     </div>
                 ) : error ? (
-                    <div className="tb-status-box tb-status-box--error">
+                    <div className='tb-status-box tb-status-box--error'>
                         <p>{error}</p>
-                        <button type="button" onClick={() => window.location.reload()} className="btn-retry">
+                        <button type='button' onClick={() => window.location.reload()} className='btn-retry'>
                             Retry Loading
                         </button>
                     </div>
                 ) : filteredBots.length === 0 ? (
-                    <div className="tb-status-box tb-status-box--empty">
-                        <Filter size={36} className="empty-icon" />
+                    <div className='tb-status-box tb-status-box--empty'>
+                        <Filter size={36} className='empty-icon' />
                         <h3>No Trading Bots Match Your Search</h3>
                         <p>Try clearing your search query to view all available strategies.</p>
-                        <button
-                            type="button"
-                            onClick={() => setSearchQuery('')}
-                            className="btn-reset-filter"
-                        >
+                        <button type='button' onClick={() => setSearchQuery('')} className='btn-reset-filter'>
                             Show All Bots
                         </button>
                     </div>
                 ) : (
-                    <div className="tb-cards-grid">
+                    <div className='tb-cards-grid'>
                         {filteredBots.map((bot, index) => (
                             <BotCard
                                 key={index}
@@ -441,11 +475,7 @@ const FreeBots = observer(() => {
 
             {/* Quick Strategy Preview Modal */}
             {previewBot && (
-                <BotPreviewModal
-                    bot={previewBot}
-                    onClose={() => setPreviewBot(null)}
-                    onLoad={loadBotIntoBuilder}
-                />
+                <BotPreviewModal bot={previewBot} onClose={() => setPreviewBot(null)} onLoad={loadBotIntoBuilder} />
             )}
         </div>
     );

@@ -3,7 +3,9 @@
     position: relative;
     z-index: 2;
     border-radius: 4px;
-    transition: transform 0.3s, opacity 0.3s;
+    transition:
+        transform 0.3s,
+        opacity 0.3s;
     color: var(--text-prominent);
     background: var(--fill-normal);
     border: 1px solid var(--fill-normal);

@@ -31,7 +31,9 @@
     flex-direction: column;
     justify-content: space-between;
     min-height: 180px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15);
     position: relative;
     overflow: hidden;
 
@@ -496,7 +498,9 @@
 }
 
 .pa-donut-slice {
-    transition: stroke-width 0.2s ease, opacity 0.2s ease;
+    transition:
+        stroke-width 0.2s ease,
+        opacity 0.2s ease;
 
     &:hover {
         opacity: 0.9;

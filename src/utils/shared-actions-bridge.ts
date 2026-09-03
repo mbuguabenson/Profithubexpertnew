@@ -9,7 +9,14 @@
  */
 
 export interface SharedActionMessage<T = any> {
-    action: 'SWITCH_ACCOUNT' | 'THEME_CHANGE' | 'CURRENCY_CHANGE' | 'SYMBOL_CHANGE' | 'BALANCE_UPDATE' | 'POPUP_ACTIONS' | 'INITIALIZE_AUTH';
+    action:
+        | 'SWITCH_ACCOUNT'
+        | 'THEME_CHANGE'
+        | 'CURRENCY_CHANGE'
+        | 'SYMBOL_CHANGE'
+        | 'BALANCE_UPDATE'
+        | 'POPUP_ACTIONS'
+        | 'INITIALIZE_AUTH';
     payload: T;
     source?: string;
 }
@@ -27,7 +34,7 @@ export class SharedActionsBridge {
         if (!this.channel && 'BroadcastChannel' in window) {
             try {
                 this.channel = new BroadcastChannel('deriv_shared_actions_channel');
-                this.channel.onmessage = (event) => {
+                this.channel.onmessage = event => {
                     if (event.data?.action) {
                         this.notifyListeners(event.data);
                     }
@@ -37,7 +44,7 @@ export class SharedActionsBridge {
             }
         }
 
-        window.addEventListener('message', (event) => {
+        window.addEventListener('message', event => {
             if (event.data && typeof event.data === 'object' && event.data.action) {
                 this.notifyListeners(event.data);
             }
@@ -47,7 +54,11 @@ export class SharedActionsBridge {
     /**
      * Send shared action to embedded iframes and other tabs
      */
-    static dispatch<T = any>(action: SharedActionMessage<T>['action'], payload: T, targetIframe?: HTMLIFrameElement | null): void {
+    static dispatch<T = any>(
+        action: SharedActionMessage<T>['action'],
+        payload: T,
+        targetIframe?: HTMLIFrameElement | null
+    ): void {
         const message: SharedActionMessage<T> = {
             action,
             payload,
@@ -85,7 +96,7 @@ export class SharedActionsBridge {
     }
 
     private static notifyListeners(message: SharedActionMessage): void {
-        this.listeners.forEach((listener) => {
+        this.listeners.forEach(listener => {
             try {
                 listener(message);
             } catch {}

@@ -27,14 +27,7 @@ const LastDigitStat = ({ is_max, is_min, is_selected, percentage }: TLastDigitSt
             })}
         >
             <svg className='digits__pie-progress' width='120' height='120' viewBox='0 0 120 120'>
-                <circle
-                    className='progress__bg'
-                    cx='60'
-                    cy='60'
-                    r='54'
-                    fill='none'
-                    strokeWidth='12'
-                />
+                <circle className='progress__bg' cx='60' cy='60' r='54' fill='none' strokeWidth='12' />
                 {percentage && (
                     <circle
                         className={classNames('progress__value', {

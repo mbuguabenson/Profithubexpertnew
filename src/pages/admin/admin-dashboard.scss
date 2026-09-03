@@ -17,7 +17,7 @@
         --bg-topbar: rgba(3, 6, 12, 0.65);
         --bg-card: rgba(13, 17, 28, 0.65);
         --bg-card-hover: rgba(20, 27, 43, 0.8);
-        
+
         // Colorful KPI Card Backgrounds (from screenshot reference)
         --bg-kpi-blue: linear-gradient(135deg, #091326 0%, #0d1e3a 100%);
         --bg-kpi-green: linear-gradient(135deg, #061c16 0%, #092a20 100%);
@@ -26,11 +26,11 @@
 
         --border-subtle: rgba(255, 255, 255, 0.04);
         --border-active: rgba(99, 102, 241, 0.25);
-        
+
         --text-primary: #f9fafb;
         --text-secondary: #9ca3af;
         --text-muted: #6b7280;
-        
+
         --bg-input: rgba(0, 0, 0, 0.3);
         --border-input: rgba(255, 255, 255, 0.06);
 
@@ -44,7 +44,7 @@
         --bg-topbar: rgba(248, 250, 252, 0.65);
         --bg-card: #ffffff;
         --bg-card-hover: #f1f5f9;
-        
+
         // Colorful Light KPI Card Backgrounds (Premium Pastel)
         --bg-kpi-blue: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
         --bg-kpi-green: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
@@ -53,11 +53,11 @@
 
         --border-subtle: rgba(0, 0, 0, 0.04);
         --border-active: rgba(99, 102, 241, 0.4);
-        
+
         --text-primary: #0f172a;
         --text-secondary: #475569;
         --text-muted: #94a3b8;
-        
+
         --bg-input: #ffffff;
         --border-input: rgba(0, 0, 0, 0.08);
 
@@ -68,10 +68,15 @@
     min-height: 100vh;
     background-color: var(--bg-app);
     color: var(--text-primary);
-    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    font-family:
+        'Plus Jakarta Sans',
+        -apple-system,
+        sans-serif;
     overflow-x: hidden;
     letter-spacing: -0.01em;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
 
     &--collapsed {
         .adm-sidebar {
@@ -98,7 +103,10 @@
     display: flex;
     flex-direction: column;
     padding: 24px 16px;
-    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease;
+    transition:
+        width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 0.3s ease,
+        border-color 0.3s ease;
     flex-shrink: 0;
 
     &__brand {
@@ -225,7 +233,9 @@
     padding: 0 32px;
     z-index: 10;
     flex-shrink: 0;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease;
 
     &__left {
         display: flex;
@@ -495,7 +505,10 @@
     align-items: center;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, border-color 0.3s ease;
+    transition:
+        all 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 0.3s ease,
+        border-color 0.3s ease;
 
     &::before {
         content: '';
@@ -504,7 +517,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(180deg, rgba(255,255,255,0.015) 0%, transparent 100%);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 100%);
         pointer-events: none;
     }
 
@@ -625,7 +638,9 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease;
 
     &::before {
         content: '';
@@ -634,7 +649,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(180deg, rgba(255,255,255,0.015) 0%, transparent 100%);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 100%);
         border-radius: 20px;
         pointer-events: none;
     }
@@ -943,7 +958,8 @@
         color: var(--color-green);
     }
 
-    &--rejected, &--stopped {
+    &--rejected,
+    &--stopped {
         background-color: rgba(244, 63, 94, 0.12);
         color: var(--color-rose);
     }
@@ -975,25 +991,33 @@
     &--green {
         border-color: rgba(16, 185, 129, 0.25);
         color: var(--color-green);
-        &:hover { background-color: rgba(16, 185, 129, 0.12); }
+        &:hover {
+            background-color: rgba(16, 185, 129, 0.12);
+        }
     }
 
     &--red {
         border-color: rgba(244, 63, 94, 0.25);
         color: var(--color-rose);
-        &:hover { background-color: rgba(244, 63, 94, 0.12); }
+        &:hover {
+            background-color: rgba(244, 63, 94, 0.12);
+        }
     }
 
     &--orange {
         border-color: rgba(245, 158, 11, 0.25);
         color: var(--color-amber);
-        &:hover { background-color: rgba(245, 158, 11, 0.12); }
+        &:hover {
+            background-color: rgba(245, 158, 11, 0.12);
+        }
     }
 
     &--blue {
         border-color: rgba(59, 130, 246, 0.25);
         color: var(--color-blue);
-        &:hover { background-color: rgba(59, 130, 246, 0.12); }
+        &:hover {
+            background-color: rgba(59, 130, 246, 0.12);
+        }
     }
 }
 
@@ -1255,7 +1279,9 @@
         color: #ffffff;
         font-size: 13px;
         outline: none;
-        transition: border-color 0.25s, box-shadow 0.25s;
+        transition:
+            border-color 0.25s,
+            box-shadow 0.25s;
 
         &:focus {
             border-color: rgba(59, 130, 246, 0.5);
@@ -1285,7 +1311,9 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition:
+            transform 0.2s,
+            box-shadow 0.2s;
 
         &:hover {
             transform: translateY(-1px);
@@ -1343,7 +1371,7 @@
     align-items: center;
     gap: 12px;
 
-    input[type="color"] {
+    input[type='color'] {
         width: 44px;
         height: 38px;
         border: 1px solid var(--border-subtle);
@@ -1417,7 +1445,9 @@
         height: 8px;
         border-radius: 50%;
         background: var(--text-muted);
-        transition: background-color 0.2s, box-shadow 0.2s;
+        transition:
+            background-color 0.2s,
+            box-shadow 0.2s;
 
         &--on {
             background: var(--color-green);
@@ -1455,7 +1485,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.15s, border-color 0.15s;
+            transition:
+                background-color 0.15s,
+                border-color 0.15s;
 
             &:hover {
                 background: rgba(255, 255, 255, 0.08);
@@ -1600,8 +1632,15 @@
         color: var(--text-muted);
         gap: 8px;
 
-        p { font-size: 14px; margin: 0; }
-        svg { opacity: 0.3; width: 32px; height: 32px; }
+        p {
+            font-size: 14px;
+            margin: 0;
+        }
+        svg {
+            opacity: 0.3;
+            width: 32px;
+            height: 32px;
+        }
     }
 
     &__chat-hdr {
@@ -1728,5 +1767,3 @@
         }
     }
 }
-
-

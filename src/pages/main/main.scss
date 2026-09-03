@@ -2,7 +2,14 @@
 @use 'components/shared/styles/mixins' as *;
 
 /* Global Scrollbar Suppression & Viewport Lock Rules */
-html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
+html,
+body,
+#root,
+#app,
+.app-root,
+.bot,
+.bot-dashboard,
+.main {
     height: 100% !important;
     height: 100vh !important;
     max-height: 100vh !important;
@@ -16,7 +23,13 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
     overscroll-behavior-y: none !important;
 }
 
-*, html, body, div, section, article, main {
+*,
+html,
+body,
+div,
+section,
+article,
+main {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
 
@@ -60,7 +73,7 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
-        
+
         > div {
             height: 100% !important;
             flex: 1 !important;
@@ -202,8 +215,13 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                     stroke: #94a3b8 !important;
                     color: #94a3b8 !important;
                     transition: stroke 0.18s ease;
-                    
-                    path, circle, rect, polygon, line, polyline {
+
+                    path,
+                    circle,
+                    rect,
+                    polygon,
+                    line,
+                    polyline {
                         stroke: #94a3b8 !important;
                     }
                 }
@@ -218,7 +236,12 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                         stroke: #ffffff !important;
                         color: #ffffff !important;
 
-                        path, circle, rect, polygon, line, polyline {
+                        path,
+                        circle,
+                        rect,
+                        polygon,
+                        line,
+                        polyline {
                             stroke: #ffffff !important;
                         }
                     }
@@ -249,11 +272,16 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                         stroke: #00d2ff !important;
                         color: #00d2ff !important;
 
-                        path, circle, rect, polygon, line, polyline {
+                        path,
+                        circle,
+                        rect,
+                        polygon,
+                        line,
+                        polyline {
                             stroke: #00d2ff !important;
                         }
                     }
-                    
+
                     :global(.theme--light) & {
                         background: #111a2e !important;
                         color: #ffffff !important;
@@ -262,7 +290,12 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
                             stroke: #00d2ff !important;
                             color: #00d2ff !important;
 
-                            path, circle, rect, polygon, line, polyline {
+                            path,
+                            circle,
+                            rect,
+                            polygon,
+                            line,
+                            polyline {
                                 stroke: #00d2ff !important;
                             }
                         }
@@ -1010,5 +1043,3 @@ html, body, #root, #app, .app-root, .bot, .bot-dashboard, .main {
         line-height: 1;
     }
 }
-
-

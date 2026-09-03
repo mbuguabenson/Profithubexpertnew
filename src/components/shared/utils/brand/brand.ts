@@ -45,3 +45,7 @@ export const getPlatformConfig = (): TPlatform => {
 
     return allowed_config_data;
 };
+
+export const getDomainName = () => {
+    return window.location.hostname;
+};

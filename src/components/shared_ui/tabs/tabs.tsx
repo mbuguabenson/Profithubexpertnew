@@ -88,11 +88,14 @@ const Tabs = ({
         }
     }, []);
 
-    React.useEffect(() => () => {
-        if (active_line_retry_timeout.current) {
-            clearTimeout(active_line_retry_timeout.current);
-        }
-    }, []);
+    React.useEffect(
+        () => () => {
+            if (active_line_retry_timeout.current) {
+                clearTimeout(active_line_retry_timeout.current);
+            }
+        },
+        []
+    );
 
     let initial_index_to_show = 0;
     let tab_width: string;

@@ -3,7 +3,13 @@
 // Removed IBM Plex Sans Google Font import - now using brand font from brand.config.json
 // Third-party developers can add their own font imports if needed
 
-html, body, #root, #app, .app-root, .bot, .bot-dashboard {
+html,
+body,
+#root,
+#app,
+.app-root,
+.bot,
+.bot-dashboard {
     height: 100% !important;
     height: 100vh !important;
     max-height: 100vh !important;

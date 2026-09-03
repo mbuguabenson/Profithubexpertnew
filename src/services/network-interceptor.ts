@@ -14,12 +14,12 @@ export const initNetworkInterceptor = () => {
     window.fetch = async (...args) => {
         const start = performance.now();
         const requestUrl = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url;
-        const method = typeof args[0] === 'string' ? (args[1]?.method || 'GET') : ((args[0] as Request).method || 'GET');
+        const method = typeof args[0] === 'string' ? args[1]?.method || 'GET' : (args[0] as Request).method || 'GET';
 
         try {
             const response = await originalFetch(...args);
             const duration = performance.now() - start;
-            
+
             // Clone response to get size without consuming original body
             let size = 0;
             try {
@@ -38,9 +38,9 @@ export const initNetworkInterceptor = () => {
                 duration: Math.round(duration),
                 size,
                 timestamp: Date.now(),
-                type: 'REST'
+                type: 'REST',
             };
-            
+
             systemCenterStore.logApiRequest(reqLog);
             return response;
         } catch (error: any) {
@@ -54,7 +54,7 @@ export const initNetworkInterceptor = () => {
                 size: 0,
                 timestamp: Date.now(),
                 error: error?.message || 'Network Failure',
-                type: 'REST'
+                type: 'REST',
             };
             systemCenterStore.logApiRequest(reqLog);
             throw error;
@@ -66,16 +66,16 @@ export const initNetworkInterceptor = () => {
     const originalOpen = XHR.open;
     const originalSend = XHR.send;
 
-    XHR.open = function(method: string, url: string | URL, ...rest: any[]) {
+    XHR.open = function (method: string, url: string | URL, ...rest: any[]) {
         (this as any)._method = method;
         (this as any)._url = url.toString();
         return originalOpen.apply(this, [method, url, ...rest] as any);
     };
 
-    XHR.send = function(body?: Document | XMLHttpRequestBodyInit | null) {
+    XHR.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
         (this as any)._startTime = performance.now();
 
-        this.addEventListener('load', function() {
+        this.addEventListener('load', function () {
             const duration = performance.now() - (this as any)._startTime;
             const reqLog: TApiRequest = {
                 id: Math.random().toString(36).substr(2, 9),
@@ -85,12 +85,12 @@ export const initNetworkInterceptor = () => {
                 duration: Math.round(duration),
                 size: this.responseText ? new Blob([this.responseText]).size : 0,
                 timestamp: Date.now(),
-                type: 'REST'
+                type: 'REST',
             };
             systemCenterStore.logApiRequest(reqLog);
         });
 
-        this.addEventListener('error', function() {
+        this.addEventListener('error', function () {
             const duration = performance.now() - (this as any)._startTime;
             const reqLog: TApiRequest = {
                 id: Math.random().toString(36).substr(2, 9),
@@ -101,12 +101,12 @@ export const initNetworkInterceptor = () => {
                 size: 0,
                 timestamp: Date.now(),
                 error: 'XHR Network Error',
-                type: 'REST'
+                type: 'REST',
             };
             systemCenterStore.logApiRequest(reqLog);
         });
 
-        this.addEventListener('timeout', function() {
+        this.addEventListener('timeout', function () {
             const duration = performance.now() - (this as any)._startTime;
             const reqLog: TApiRequest = {
                 id: Math.random().toString(36).substr(2, 9),
@@ -117,7 +117,7 @@ export const initNetworkInterceptor = () => {
                 size: 0,
                 timestamp: Date.now(),
                 error: 'XHR Timeout',
-                type: 'REST'
+                type: 'REST',
             };
             systemCenterStore.logApiRequest(reqLog);
         });

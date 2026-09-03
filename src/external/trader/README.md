@@ -4,7 +4,7 @@ This repository contains the static HTML, Javascript, CSS, and images content of
 
 ## Style Guide
 
--   [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript/blob/master/README.md) is partially being followed in our dtrader code base.
+- [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript/blob/master/README.md) is partially being followed in our dtrader code base.
 
 ### Naming Conventions
 

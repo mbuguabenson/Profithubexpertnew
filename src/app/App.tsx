@@ -37,9 +37,7 @@ const router = createBrowserRouter(
         <Route
             path='/'
             element={
-                <Suspense
-                    fallback={<ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={false} />}
-                >
+                <Suspense fallback={<ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={false} />}>
                     <TranslationProvider defaultLang='EN' i18nInstance={i18nInstance}>
                         <LanguageHandler>
                             <StoreProvider>
@@ -136,11 +134,13 @@ function App() {
         if (!isProcessing && legacyAccounts && legacyAccounts.length > 0) {
             storeLegacyAccounts(legacyAccounts);
             cleanupURL();
-            import('@/external/bot-skeleton').then(({ api_base }) => {
-                api_base.init(true);
-            }).catch(err => {
-                console.error('[App] Failed to initialize api_base after login:', err);
-            });
+            import('@/external/bot-skeleton')
+                .then(({ api_base }) => {
+                    api_base.init(true);
+                })
+                .catch(err => {
+                    console.error('[App] Failed to initialize api_base after login:', err);
+                });
         }
     }, [isProcessing, legacyAccounts, cleanupURL]);
 
@@ -170,4 +170,3 @@ function App() {
 }
 
 export default App;
-

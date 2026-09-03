@@ -291,7 +291,7 @@
             left: -100%;
             width: 50%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
             transform: skewX(-20deg);
             animation: auth-lightstreak 3s infinite;
         }
@@ -319,7 +319,7 @@
             left: -100%;
             width: 50%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
             transform: skewX(-20deg);
             animation: auth-lightstreak 3s infinite 1.5s;
         }
@@ -339,9 +339,15 @@
 }
 
 @keyframes auth-lightstreak {
-    0% { left: -100%; }
-    20% { left: 200%; }
-    100% { left: 200%; }
+    0% {
+        left: -100%;
+    }
+    20% {
+        left: 200%;
+    }
+    100% {
+        left: 200%;
+    }
 }
 
 .deriv-accordion--underline {
@@ -368,7 +374,9 @@
     padding: 0 10px 0 12px;
     height: 32px;
     cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
 
     &:hover,
     &:focus-within {
@@ -408,8 +416,6 @@
     }
 }
 
-
-
 /* Shared Premium Button Foundation */
 .app-header__login-btn,
 .app-header__signup-btn,
@@ -444,7 +450,12 @@
             transition: left 0.8s ease-in-out;
         }
 
-        span, p, a, div, .dc-btn__text, svg {
+        span,
+        p,
+        a,
+        div,
+        .dc-btn__text,
+        svg {
             color: #ffffff !important;
             fill: #ffffff !important;
         }
@@ -452,30 +463,30 @@
 }
 
 @keyframes glowing-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
 
-  70% {
-    box-shadow: 0 0 0 30px rgba(255, 255, 255, 0);
-  }
+    70% {
+        box-shadow: 0 0 0 30px rgba(255, 255, 255, 0);
+    }
 
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
-  }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
 }
 @keyframes glowing-pulse-green {
-  0% {
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
-  }
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
 
-  70% {
-    box-shadow: 0 0 0 15px rgba(76, 175, 80, 0);
-  }
+    70% {
+        box-shadow: 0 0 0 15px rgba(76, 175, 80, 0);
+    }
 
-  100% {
-    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
-  }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
 }
 
 /* 1. Run Button (Vibrant Green Gradient matching image with Lightstreak effect) */
@@ -507,7 +518,7 @@
     }
 
     &::before {
-        content: "" !important;
+        content: '' !important;
         position: absolute !important;
         top: -5px !important;
         left: -5px !important;
@@ -636,7 +647,9 @@
         height: 20px;
         color: var(--text-prominent);
         fill: var(--text-prominent);
-        transition: color 0.2s ease, fill 0.2s ease;
+        transition:
+            color 0.2s ease,
+            fill 0.2s ease;
     }
 
     &__toggle:hover svg,
@@ -719,7 +732,9 @@
         border-radius: 6px;
         background: rgba(255, 255, 255, 0.22);
         position: relative;
-        transition: background 0.25s ease, box-shadow 0.25s ease;
+        transition:
+            background 0.25s ease,
+            box-shadow 0.25s ease;
     }
 
     .speed-toggle__thumb {
@@ -791,11 +806,11 @@
 }
 
 @keyframes headerSpeedPulse {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
     }
     50% {
         transform: scale(1.3);
     }
 }
-

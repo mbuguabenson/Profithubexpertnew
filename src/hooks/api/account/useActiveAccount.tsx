@@ -24,7 +24,7 @@ const useActiveAccount = ({
 
     const activeAccount = useMemo(() => {
         if (!resolvedLoginId) return undefined;
-        
+
         const found = accountList?.find(account => account.loginid === resolvedLoginId);
         if (found) return found;
 

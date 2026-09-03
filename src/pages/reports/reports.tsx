@@ -316,7 +316,7 @@ export const ReportsPage: React.FC = () => {
             totalProfit += net;
             if (net >= 0) wins++;
             else losses++;
-            totalPayout += (t.sell_price || 0);
+            totalPayout += t.sell_price || 0;
         });
 
         const totalTrades = profitList.length;
@@ -398,20 +398,24 @@ export const ReportsPage: React.FC = () => {
     };
 
     return (
-        <div className="reports-page">
+        <div className='reports-page'>
             {/* ── Top Header Banner (Deriv Official Style) ── */}
-            <div className="reports-page__header">
-                <div className="reports-page__title-box">
-                    <h1 className="reports-page__title">{localize('Reports')}</h1>
-                    <div className="reports-page__account-badge">
-                        <span className={`reports-page__account-dot ${isVirtual ? 'reports-page__account-dot--demo' : 'reports-page__account-dot--real'}`} />
-                        <span className="reports-page__account-id">{currentLoginId || (isVirtual ? 'Demo' : 'Real')}</span>
-                        <span className="reports-page__account-type-tag">{isVirtual ? 'DEMO' : 'REAL'}</span>
+            <div className='reports-page__header'>
+                <div className='reports-page__title-box'>
+                    <h1 className='reports-page__title'>{localize('Reports')}</h1>
+                    <div className='reports-page__account-badge'>
+                        <span
+                            className={`reports-page__account-dot ${isVirtual ? 'reports-page__account-dot--demo' : 'reports-page__account-dot--real'}`}
+                        />
+                        <span className='reports-page__account-id'>
+                            {currentLoginId || (isVirtual ? 'Demo' : 'Real')}
+                        </span>
+                        <span className='reports-page__account-type-tag'>{isVirtual ? 'DEMO' : 'REAL'}</span>
                     </div>
                 </div>
 
                 {/* Header Action / Refresh Icon Button (Mobile & Desktop) */}
-                <div className="reports-page__actions">
+                <div className='reports-page__actions'>
                     <button
                         className={`reports-page__refresh-btn ${isLoading ? 'reports-page__refresh-btn--loading' : ''}`}
                         onClick={() => {
@@ -419,25 +423,36 @@ export const ReportsPage: React.FC = () => {
                         }}
                         disabled={isLoading}
                         title={localize('Refresh reports data')}
-                        aria-label="Refresh"
+                        aria-label='Refresh'
                     >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                        <svg
+                            width='16'
+                            height='16'
+                            viewBox='0 0 24 24'
+                            fill='none'
+                            stroke='currentColor'
+                            strokeWidth='2.2'
+                        >
+                            <path d='M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67' />
                         </svg>
-                        <span className="reports-page__refresh-label">{isLoading ? localize('Refreshing...') : localize('Refresh')}</span>
+                        <span className='reports-page__refresh-label'>
+                            {isLoading ? localize('Refreshing...') : localize('Refresh')}
+                        </span>
                     </button>
                 </div>
             </div>
 
             {/* ── Deriv Official Segmented Sub-Tabs Bar ── */}
-            <div className="reports-nav-bar">
+            <div className='reports-nav-bar'>
                 <button
                     className={`reports-nav-item ${activeSubTab === 'positions' ? 'reports-nav-item--active' : ''}`}
                     onClick={() => setActiveSubTab('positions')}
                 >
-                    <span className="reports-nav-item__label">{localize('Open Positions')}</span>
+                    <span className='reports-nav-item__label'>{localize('Open Positions')}</span>
                     {openPositions.length > 0 && (
-                        <span className="reports-nav-item__badge reports-nav-item__badge--active">{openPositions.length}</span>
+                        <span className='reports-nav-item__badge reports-nav-item__badge--active'>
+                            {openPositions.length}
+                        </span>
                     )}
                 </button>
 
@@ -445,68 +460,78 @@ export const ReportsPage: React.FC = () => {
                     className={`reports-nav-item ${activeSubTab === 'profit_table' ? 'reports-nav-item--active' : ''}`}
                     onClick={() => setActiveSubTab('profit_table')}
                 >
-                    <span className="reports-nav-item__label">{localize('Profit Table')}</span>
-                    <span className="reports-nav-item__badge">{filteredProfitList.length}</span>
+                    <span className='reports-nav-item__label'>{localize('Profit Table')}</span>
+                    <span className='reports-nav-item__badge'>{filteredProfitList.length}</span>
                 </button>
 
                 <button
                     className={`reports-nav-item ${activeSubTab === 'statement' ? 'reports-nav-item--active' : ''}`}
                     onClick={() => setActiveSubTab('statement')}
                 >
-                    <span className="reports-nav-item__label">{localize('Statement')}</span>
-                    <span className="reports-nav-item__badge">{filteredStatementList.length}</span>
+                    <span className='reports-nav-item__label'>{localize('Statement')}</span>
+                    <span className='reports-nav-item__badge'>{filteredStatementList.length}</span>
                 </button>
 
                 <button
                     className={`reports-nav-item ${activeSubTab === 'portfolio' ? 'reports-nav-item--active' : ''}`}
                     onClick={() => setActiveSubTab('portfolio')}
                 >
-                    <span className="reports-nav-item__label">{localize('Analytics')}</span>
+                    <span className='reports-nav-item__label'>{localize('Analytics')}</span>
                 </button>
 
                 <button
                     className={`reports-nav-item ${activeSubTab === 'wallets' ? 'reports-nav-item--active' : ''}`}
                     onClick={() => setActiveSubTab('wallets')}
                 >
-                    <span className="reports-nav-item__label">{localize('Wallets')}</span>
+                    <span className='reports-nav-item__label'>{localize('Wallets')}</span>
                 </button>
 
                 <button
                     className={`reports-nav-item ${activeSubTab === 'account' ? 'reports-nav-item--active' : ''}`}
                     onClick={() => setActiveSubTab('account')}
                 >
-                    <span className="reports-nav-item__label">{localize('Settings')}</span>
+                    <span className='reports-nav-item__label'>{localize('Settings')}</span>
                 </button>
             </div>
 
             {/* ── Compact Summary KPI Strip ── */}
             {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
-                <div className="reports-summary-strip">
-                    <div className="reports-summary-card">
-                        <span className="reports-summary-card__label">{localize('Net Realized P&L')}</span>
-                        <div className={`reports-summary-card__value ${metrics.totalProfit >= 0 ? 'reports-summary-card__value--profit' : 'reports-summary-card__value--loss'}`}>
-                            {metrics.totalProfit >= 0 ? `+${formatMoney(currency, metrics.totalProfit, true)}` : formatMoney(currency, metrics.totalProfit, true)} {currency}
+                <div className='reports-summary-strip'>
+                    <div className='reports-summary-card'>
+                        <span className='reports-summary-card__label'>{localize('Net Realized P&L')}</span>
+                        <div
+                            className={`reports-summary-card__value ${metrics.totalProfit >= 0 ? 'reports-summary-card__value--profit' : 'reports-summary-card__value--loss'}`}
+                        >
+                            {metrics.totalProfit >= 0
+                                ? `+${formatMoney(currency, metrics.totalProfit, true)}`
+                                : formatMoney(currency, metrics.totalProfit, true)}{' '}
+                            {currency}
                         </div>
                     </div>
 
-                    <div className="reports-summary-card">
-                        <span className="reports-summary-card__label">{localize('Win Rate')}</span>
-                        <div className="reports-summary-card__value">
-                            {metrics.winRate.toFixed(1)}% <span className="reports-summary-card__sub">({metrics.wins}W / {metrics.losses}L)</span>
+                    <div className='reports-summary-card'>
+                        <span className='reports-summary-card__label'>{localize('Win Rate')}</span>
+                        <div className='reports-summary-card__value'>
+                            {metrics.winRate.toFixed(1)}%{' '}
+                            <span className='reports-summary-card__sub'>
+                                ({metrics.wins}W / {metrics.losses}L)
+                            </span>
                         </div>
                     </div>
 
-                    <div className="reports-summary-card">
-                        <span className="reports-summary-card__label">{localize('Total Executed')}</span>
-                        <div className="reports-summary-card__value">
+                    <div className='reports-summary-card'>
+                        <span className='reports-summary-card__label'>{localize('Total Executed')}</span>
+                        <div className='reports-summary-card__value'>
                             {addComma(metrics.totalTrades)}
-                            {openPositions.length > 0 && <span className="reports-summary-card__live-tag">{openPositions.length} LIVE</span>}
+                            {openPositions.length > 0 && (
+                                <span className='reports-summary-card__live-tag'>{openPositions.length} LIVE</span>
+                            )}
                         </div>
                     </div>
 
-                    <div className="reports-summary-card">
-                        <span className="reports-summary-card__label">{localize('Total Payout')}</span>
-                        <div className="reports-summary-card__value">
+                    <div className='reports-summary-card'>
+                        <span className='reports-summary-card__label'>{localize('Total Payout')}</span>
+                        <div className='reports-summary-card__value'>
                             {formatMoney(currency, metrics.totalPayout, true)} {currency}
                         </div>
                     </div>
@@ -514,51 +539,62 @@ export const ReportsPage: React.FC = () => {
             )}
 
             {/* ── Main Tab Content ── */}
-            <div className="reports-content">
+            <div className='reports-content'>
                 {/* 1. PORTFOLIO & ANALYTICS */}
                 {activeSubTab === 'portfolio' && (
                     <PortfolioAnalytics currency={currency} activeLoginid={currentLoginId} />
                 )}
 
                 {/* 2. WALLETS MANAGER */}
-                {activeSubTab === 'wallets' && (
-                    <WalletsManager currency={currency} activeLoginid={currentLoginId} />
-                )}
+                {activeSubTab === 'wallets' && <WalletsManager currency={currency} activeLoginid={currentLoginId} />}
 
                 {/* 3. ACCOUNT SETTINGS */}
-                {activeSubTab === 'account' && (
-                    <AccountManagement currency={currency} activeLoginid={currentLoginId} />
-                )}
+                {activeSubTab === 'account' && <AccountManagement currency={currency} activeLoginid={currentLoginId} />}
 
                 {/* 4. TABLES & POSITIONS */}
                 {!['portfolio', 'wallets', 'account'].includes(activeSubTab) && (
-                    <div className="reports-panel">
+                    <div className='reports-panel'>
                         {/* Filter Bar (Search & Date Range) */}
-                        <div className="reports-filter-bar">
-                            <div className="reports-search-input-box">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <div className='reports-filter-bar'>
+                            <div className='reports-search-input-box'>
+                                <svg
+                                    width='15'
+                                    height='15'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    strokeWidth='2.2'
+                                >
+                                    <circle cx='11' cy='11' r='8' />
+                                    <line x1='21' y1='21' x2='16.65' y2='16.65' />
                                 </svg>
                                 <input
-                                    type="text"
+                                    type='text'
                                     placeholder={localize('Search by ID or contract...')}
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
                                 />
                                 {searchQuery && (
-                                    <button className="reports-clear-search" onClick={() => setSearchQuery('')}>✕</button>
+                                    <button className='reports-clear-search' onClick={() => setSearchQuery('')}>
+                                        ✕
+                                    </button>
                                 )}
                             </div>
 
-                            <div className="reports-date-filter">
+                            <div className='reports-date-filter'>
                                 {(['today', '7d', '30d', 'all'] as const).map(range => (
                                     <button
                                         key={range}
                                         className={`reports-date-filter-btn ${dateRange === range ? 'reports-date-filter-btn--active' : ''}`}
                                         onClick={() => setDateRange(range)}
                                     >
-                                        {range === 'today' ? localize('Today') : range === '7d' ? localize('7 Days') : range === '30d' ? localize('30 Days') : localize('All')}
+                                        {range === 'today'
+                                            ? localize('Today')
+                                            : range === '7d'
+                                              ? localize('7 Days')
+                                              : range === '30d'
+                                                ? localize('30 Days')
+                                                : localize('All')}
                                     </button>
                                 ))}
                             </div>
@@ -566,62 +602,88 @@ export const ReportsPage: React.FC = () => {
 
                         {/* OPEN POSITIONS */}
                         {activeSubTab === 'positions' && (
-                            <div className="reports-table-card">
+                            <div className='reports-table-card'>
                                 {openPositions.length === 0 ? (
-                                    <div className="reports-empty-state">
-                                        <div className="reports-empty-state__icon">⚡</div>
+                                    <div className='reports-empty-state'>
+                                        <div className='reports-empty-state__icon'>⚡</div>
                                         <h3>{localize('No open positions')}</h3>
-                                        <p>{localize('Active running trades and bot orders will appear here in real-time.')}</p>
+                                        <p>
+                                            {localize(
+                                                'Active running trades and bot orders will appear here in real-time.'
+                                            )}
+                                        </p>
                                     </div>
                                 ) : (
-                                    <div className="reports-positions-grid">
+                                    <div className='reports-positions-grid'>
                                         {openPositions.map(pos => {
-                                            const pnl = pos.profit || ((pos.bid_price || pos.buy_price) - pos.buy_price);
+                                            const pnl = pos.profit || (pos.bid_price || pos.buy_price) - pos.buy_price;
                                             const isWin = pnl >= 0;
                                             return (
-                                                <div key={pos.contract_id} className={`reports-pos-item ${isWin ? 'reports-pos-item--win' : 'reports-pos-item--loss'}`}>
-                                                    <div className="reports-pos-item__header">
-                                                        <div className="reports-pos-item__tags">
-                                                            <span className="reports-pos-item__symbol">{pos.underlying || 'Market'}</span>
-                                                            <span className="reports-pos-item__type">{pos.contract_type || 'Contract'}</span>
-                                                            <span className="reports-pos-item__live-dot">LIVE</span>
+                                                <div
+                                                    key={pos.contract_id}
+                                                    className={`reports-pos-item ${isWin ? 'reports-pos-item--win' : 'reports-pos-item--loss'}`}
+                                                >
+                                                    <div className='reports-pos-item__header'>
+                                                        <div className='reports-pos-item__tags'>
+                                                            <span className='reports-pos-item__symbol'>
+                                                                {pos.underlying || 'Market'}
+                                                            </span>
+                                                            <span className='reports-pos-item__type'>
+                                                                {pos.contract_type || 'Contract'}
+                                                            </span>
+                                                            <span className='reports-pos-item__live-dot'>LIVE</span>
                                                         </div>
-                                                        <span className="reports-badge-id">#{pos.contract_id}</span>
+                                                        <span className='reports-badge-id'>#{pos.contract_id}</span>
                                                     </div>
 
-                                                    <div className="reports-pos-item__desc">
+                                                    <div className='reports-pos-item__desc'>
                                                         {pos.longcode || 'Active running contract'}
                                                     </div>
 
-                                                    <div className="reports-pos-item__stats">
+                                                    <div className='reports-pos-item__stats'>
                                                         <div>
-                                                            <span className="label">{localize('Buy Price')}</span>
-                                                            <span className="val">{formatMoney(currency, pos.buy_price, true)} {currency}</span>
+                                                            <span className='label'>{localize('Buy Price')}</span>
+                                                            <span className='val'>
+                                                                {formatMoney(currency, pos.buy_price, true)} {currency}
+                                                            </span>
                                                         </div>
                                                         <div>
-                                                            <span className="label">{localize('Current Spot')}</span>
-                                                            <span className="val">{pos.current_spot || pos.entry_spot || '—'}</span>
+                                                            <span className='label'>{localize('Current Spot')}</span>
+                                                            <span className='val'>
+                                                                {pos.current_spot || pos.entry_spot || '—'}
+                                                            </span>
                                                         </div>
                                                         <div>
-                                                            <span className="label">{localize('Potential Payout')}</span>
-                                                            <span className="val">{formatMoney(currency, pos.payout, true)} {currency}</span>
+                                                            <span className='label'>
+                                                                {localize('Potential Payout')}
+                                                            </span>
+                                                            <span className='val'>
+                                                                {formatMoney(currency, pos.payout, true)} {currency}
+                                                            </span>
                                                         </div>
                                                     </div>
 
-                                                    <div className="reports-pos-item__footer">
-                                                        <div className="reports-pos-item__pnl">
-                                                            <span className="label">{localize('Profit/Loss')}</span>
+                                                    <div className='reports-pos-item__footer'>
+                                                        <div className='reports-pos-item__pnl'>
+                                                            <span className='label'>{localize('Profit/Loss')}</span>
                                                             <span className={`val ${isWin ? 'val--win' : 'val--loss'}`}>
-                                                                {isWin ? `+${formatMoney(currency, pnl, true)}` : formatMoney(currency, pnl, true)} {currency}
+                                                                {isWin
+                                                                    ? `+${formatMoney(currency, pnl, true)}`
+                                                                    : formatMoney(currency, pnl, true)}{' '}
+                                                                {currency}
                                                             </span>
                                                         </div>
                                                         {pos.is_valid_to_sell ? (
                                                             <button
-                                                                className="reports-pos-item__sell-btn"
-                                                                onClick={() => handleSellContract(pos.contract_id, pos.bid_price)}
+                                                                className='reports-pos-item__sell-btn'
+                                                                onClick={() =>
+                                                                    handleSellContract(pos.contract_id, pos.bid_price)
+                                                                }
                                                                 disabled={sellingId === pos.contract_id}
                                                             >
-                                                                {sellingId === pos.contract_id ? localize('Selling...') : `${localize('Sell')} (${formatMoney(currency, pos.bid_price || 0, true)})`}
+                                                                {sellingId === pos.contract_id
+                                                                    ? localize('Selling...')
+                                                                    : `${localize('Sell')} (${formatMoney(currency, pos.bid_price || 0, true)})`}
                                                             </button>
                                                         ) : null}
                                                     </div>
@@ -635,16 +697,20 @@ export const ReportsPage: React.FC = () => {
 
                         {/* PROFIT TABLE */}
                         {activeSubTab === 'profit_table' && (
-                            <div className="reports-table-card">
+                            <div className='reports-table-card'>
                                 {filteredProfitList.length === 0 ? (
-                                    <div className="reports-empty-state">
-                                        <div className="reports-empty-state__icon">📊</div>
+                                    <div className='reports-empty-state'>
+                                        <div className='reports-empty-state__icon'>📊</div>
                                         <h3>{localize('No completed trades found')}</h3>
-                                        <p>{localize('Completed contracts will automatically appear in your profit table.')}</p>
+                                        <p>
+                                            {localize(
+                                                'Completed contracts will automatically appear in your profit table.'
+                                            )}
+                                        </p>
                                     </div>
                                 ) : (
-                                    <div className="reports-table-responsive">
-                                        <table className="reports-table">
+                                    <div className='reports-table-responsive'>
+                                        <table className='reports-table'>
                                             <thead>
                                                 <tr>
                                                     <th>{localize('Contract ID')}</th>
@@ -661,18 +727,39 @@ export const ReportsPage: React.FC = () => {
                                                     const isWin = net >= 0;
                                                     return (
                                                         <tr key={item.transaction_id}>
-                                                            <td><span className="reports-badge-id">#{item.contract_id}</span></td>
-                                                            <td className="reports-cell-desc">
-                                                                <div className="reports-desc-text" title={item.longcode}>
-                                                                    {item.longcode || item.shortcode || 'Deriv Contract'}
+                                                            <td>
+                                                                <span className='reports-badge-id'>
+                                                                    #{item.contract_id}
+                                                                </span>
+                                                            </td>
+                                                            <td className='reports-cell-desc'>
+                                                                <div
+                                                                    className='reports-desc-text'
+                                                                    title={item.longcode}
+                                                                >
+                                                                    {item.longcode ||
+                                                                        item.shortcode ||
+                                                                        'Deriv Contract'}
                                                                 </div>
                                                             </td>
-                                                            <td className="reports-cell-date">{formatDate(item.purchase_time)}</td>
-                                                            <td>{formatMoney(currency, item.buy_price, true)} {currency}</td>
-                                                            <td>{formatMoney(currency, item.sell_price, true)} {currency}</td>
+                                                            <td className='reports-cell-date'>
+                                                                {formatDate(item.purchase_time)}
+                                                            </td>
                                                             <td>
-                                                                <span className={`reports-pnl-tag ${isWin ? 'reports-pnl-tag--win' : 'reports-pnl-tag--loss'}`}>
-                                                                    {isWin ? `+${formatMoney(currency, net, true)}` : formatMoney(currency, net, true)} {currency}
+                                                                {formatMoney(currency, item.buy_price, true)} {currency}
+                                                            </td>
+                                                            <td>
+                                                                {formatMoney(currency, item.sell_price, true)}{' '}
+                                                                {currency}
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    className={`reports-pnl-tag ${isWin ? 'reports-pnl-tag--win' : 'reports-pnl-tag--loss'}`}
+                                                                >
+                                                                    {isWin
+                                                                        ? `+${formatMoney(currency, net, true)}`
+                                                                        : formatMoney(currency, net, true)}{' '}
+                                                                    {currency}
                                                                 </span>
                                                             </td>
                                                         </tr>
@@ -687,17 +774,23 @@ export const ReportsPage: React.FC = () => {
 
                         {/* STATEMENT */}
                         {activeSubTab === 'statement' && (
-                            <div className="reports-statement-section">
+                            <div className='reports-statement-section'>
                                 {/* Archived Statements Official Notice Banner */}
-                                <div className="reports-archive-banner">
-                                    <div className="reports-archive-banner__left">
-                                        <span className="reports-archive-banner__icon">ℹ️</span>
-                                        <div className="reports-archive-banner__text">
-                                            <strong>{localize('Statements generated before the system upgrade are archived separately.')}</strong>
-                                            <span>{localize('View pre-upgrade financial ledgers and historical logs.')}</span>
+                                <div className='reports-archive-banner'>
+                                    <div className='reports-archive-banner__left'>
+                                        <span className='reports-archive-banner__icon'>ℹ️</span>
+                                        <div className='reports-archive-banner__text'>
+                                            <strong>
+                                                {localize(
+                                                    'Statements generated before the system upgrade are archived separately.'
+                                                )}
+                                            </strong>
+                                            <span>
+                                                {localize('View pre-upgrade financial ledgers and historical logs.')}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="reports-archive-banner__actions">
+                                    <div className='reports-archive-banner__actions'>
                                         <button
                                             className={`reports-btn reports-btn--sm ${showArchived ? 'reports-btn--primary' : 'reports-btn--secondary'}`}
                                             onClick={() => {
@@ -708,29 +801,45 @@ export const ReportsPage: React.FC = () => {
                                                 }
                                             }}
                                         >
-                                            {isFetchingArchive ? localize('Loading Archive...') : showArchived ? localize('View Current Statements') : localize('View Archived Statements')}
+                                            {isFetchingArchive
+                                                ? localize('Loading Archive...')
+                                                : showArchived
+                                                  ? localize('View Current Statements')
+                                                  : localize('View Archived Statements')}
                                         </button>
                                         <a
-                                            href="https://app.deriv.com/reports/statement"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="reports-btn reports-btn--sm reports-btn--outline"
+                                            href='https://app.deriv.com/reports/statement'
+                                            target='_blank'
+                                            rel='noopener noreferrer'
+                                            className='reports-btn reports-btn--sm reports-btn--outline'
                                         >
                                             {localize('Deriv Archive Portal ↗')}
                                         </a>
                                     </div>
                                 </div>
 
-                                <div className="reports-table-card">
-                                    {((showArchived ? archivedList : filteredStatementList).length === 0) ? (
-                                        <div className="reports-empty-state">
-                                            <div className="reports-empty-state__icon">📜</div>
-                                            <h3>{showArchived ? localize('No archived transactions') : localize('No transactions found')}</h3>
-                                            <p>{showArchived ? localize('Historical transactions prior to system upgrades will show here.') : localize('Account deposits, withdrawals, and trades will appear here.')}</p>
+                                <div className='reports-table-card'>
+                                    {(showArchived ? archivedList : filteredStatementList).length === 0 ? (
+                                        <div className='reports-empty-state'>
+                                            <div className='reports-empty-state__icon'>📜</div>
+                                            <h3>
+                                                {showArchived
+                                                    ? localize('No archived transactions')
+                                                    : localize('No transactions found')}
+                                            </h3>
+                                            <p>
+                                                {showArchived
+                                                    ? localize(
+                                                          'Historical transactions prior to system upgrades will show here.'
+                                                      )
+                                                    : localize(
+                                                          'Account deposits, withdrawals, and trades will appear here.'
+                                                      )}
+                                            </p>
                                         </div>
                                     ) : (
-                                        <div className="reports-table-responsive">
-                                            <table className="reports-table">
+                                        <div className='reports-table-responsive'>
+                                            <table className='reports-table'>
                                                 <thead>
                                                     <tr>
                                                         <th>{localize('Ref ID')}</th>
@@ -746,25 +855,48 @@ export const ReportsPage: React.FC = () => {
                                                         const isCredit = item.amount >= 0;
                                                         return (
                                                             <tr key={item.transaction_id}>
-                                                                <td><span className="reports-badge-id">#{item.transaction_id}</span></td>
                                                                 <td>
-                                                                    <span className={`reports-action-badge reports-action-badge--${item.action_type.toLowerCase()}`}>
+                                                                    <span className='reports-badge-id'>
+                                                                        #{item.transaction_id}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    <span
+                                                                        className={`reports-action-badge reports-action-badge--${item.action_type.toLowerCase()}`}
+                                                                    >
                                                                         {item.action_type.toUpperCase()}
                                                                     </span>
                                                                 </td>
-                                                                <td className="reports-cell-date">{formatDate(item.transaction_time)}</td>
-                                                                <td className="reports-cell-desc">
-                                                                    <div className="reports-desc-text" title={item.longcode}>
-                                                                        {item.longcode || item.shortcode || `${item.action_type} transaction`}
+                                                                <td className='reports-cell-date'>
+                                                                    {formatDate(item.transaction_time)}
+                                                                </td>
+                                                                <td className='reports-cell-desc'>
+                                                                    <div
+                                                                        className='reports-desc-text'
+                                                                        title={item.longcode}
+                                                                    >
+                                                                        {item.longcode ||
+                                                                            item.shortcode ||
+                                                                            `${item.action_type} transaction`}
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <span className={`reports-amount ${isCredit ? 'reports-amount--credit' : 'reports-amount--debit'}`}>
-                                                                        {isCredit ? `+${formatMoney(currency, item.amount, true)}` : formatMoney(currency, item.amount, true)} {currency}
+                                                                    <span
+                                                                        className={`reports-amount ${isCredit ? 'reports-amount--credit' : 'reports-amount--debit'}`}
+                                                                    >
+                                                                        {isCredit
+                                                                            ? `+${formatMoney(currency, item.amount, true)}`
+                                                                            : formatMoney(
+                                                                                  currency,
+                                                                                  item.amount,
+                                                                                  true
+                                                                              )}{' '}
+                                                                        {currency}
                                                                     </span>
                                                                 </td>
-                                                                <td className="reports-cell-balance">
-                                                                    {formatMoney(currency, item.balance_after, true)} {currency}
+                                                                <td className='reports-cell-balance'>
+                                                                    {formatMoney(currency, item.balance_after, true)}{' '}
+                                                                    {currency}
                                                                 </td>
                                                             </tr>
                                                         );

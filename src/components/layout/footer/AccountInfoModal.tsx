@@ -25,8 +25,8 @@ const ACCOUNT_API_ENDPOINTS = [
         desc: 'Application markup earnings, active client counts & turnover volume statistics.',
         testHandler: async () => {
             const stats = await DerivAccountWalletService.getMarkupStatistics();
-            return `Total Turnover: $${stats.total_turnover || 148520.50}\nTotal Markup: $${stats.total_markup || 2970.41}`;
-        }
+            return `Total Turnover: $${stats.total_turnover || 148520.5}\nTotal Markup: $${stats.total_markup || 2970.41}`;
+        },
     },
     {
         id: 'account_nickname',
@@ -40,7 +40,7 @@ const ACCOUNT_API_ENDPOINTS = [
             const nickname = typeof info === 'string' ? info : (info as any)?.nickname || 'Client';
             const clientId = typeof info === 'object' ? (info as any)?.client_id || 'Active' : 'Active';
             return `Holder Name: ${nickname}\nBrand: ProfitHub\nClient ID: ${clientId}`;
-        }
+        },
     },
     {
         id: 'balance',
@@ -52,7 +52,7 @@ const ACCOUNT_API_ENDPOINTS = [
         testHandler: async () => {
             const bal = await DerivAccountWalletService.getAccountBalance();
             return `Balance: $${(bal.balance ?? 0).toFixed(2)} ${bal.currency || 'USD'}`;
-        }
+        },
     },
     {
         id: 'portfolio',
@@ -64,7 +64,7 @@ const ACCOUNT_API_ENDPOINTS = [
         testHandler: async () => {
             const positions = await DerivAccountWalletService.getPortfolio();
             return `Active Open Positions: ${positions.length} contracts`;
-        }
+        },
     },
     {
         id: 'profit_table',
@@ -76,7 +76,7 @@ const ACCOUNT_API_ENDPOINTS = [
         testHandler: async () => {
             const history = await DerivAccountWalletService.getProfitTable(10);
             return `Closed Trades Fetched: ${history.length} records`;
-        }
+        },
     },
     {
         id: 'statement',
@@ -88,7 +88,7 @@ const ACCOUNT_API_ENDPOINTS = [
         testHandler: async () => {
             const stmt = await DerivAccountWalletService.getStatement(10);
             return `Ledger Transactions: ${stmt.length} entries`;
-        }
+        },
     },
     {
         id: 'transaction',
@@ -99,8 +99,8 @@ const ACCOUNT_API_ENDPOINTS = [
         desc: 'Real-time subscription stream for all contract purchases, sales & balance movements.',
         testHandler: async () => {
             return `Transaction Stream: Active & Subscribed`;
-        }
-    }
+        },
+    },
 ];
 
 const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) => {
@@ -168,7 +168,9 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
                                                 <span className='account-info-modal__account-id'>{acc.loginid}</span>
                                                 <span
                                                     className={`account-info-modal__badge ${
-                                                        isDemo ? 'account-info-modal__badge--demo' : 'account-info-modal__badge--real'
+                                                        isDemo
+                                                            ? 'account-info-modal__badge--demo'
+                                                            : 'account-info-modal__badge--real'
                                                     }`}
                                                 >
                                                     {isDemo ? 'DOT (DEMO)' : 'ROT (REAL)'}
@@ -211,11 +213,20 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
                         </div>
 
                         {testResult && (
-                            <div style={{
-                                background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
-                                padding: 10, borderRadius: 8, fontSize: 12, color: '#10b981', whiteSpace: 'pre-wrap'
-                            }}>
-                                <strong>✅ Deriv API Response:</strong>{'\n'}{testResult}
+                            <div
+                                style={{
+                                    background: 'rgba(16,185,129,0.1)',
+                                    border: '1px solid rgba(16,185,129,0.3)',
+                                    padding: 10,
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    color: '#10b981',
+                                    whiteSpace: 'pre-wrap',
+                                }}
+                            >
+                                <strong>✅ Deriv API Response:</strong>
+                                {'\n'}
+                                {testResult}
                             </div>
                         )}
 
@@ -225,7 +236,12 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
                                     <div className='account-api-card__header'>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                             <span style={{ fontSize: 16 }}>{api.icon}</span>
-                                            <a href={api.url} target='_blank' rel='noopener noreferrer' className='account-api-card__title'>
+                                            <a
+                                                href={api.url}
+                                                target='_blank'
+                                                rel='noopener noreferrer'
+                                                className='account-api-card__title'
+                                            >
                                                 {api.title} ↗
                                             </a>
                                         </div>

@@ -12,15 +12,7 @@
 
     // Premium Profithub Prism Tokens
     --accent-glow: 0 0 30px rgba(72, 140, 251, 0.4);
-    --prism-gradient: conic-gradient(
-        #488cfb,
-        #29dbbc,
-        #ddf505,
-        #ff9f0e,
-        #e440bb,
-        #655adc,
-        #488cfb
-    );
+    --prism-gradient: conic-gradient(#488cfb, #29dbbc, #ddf505, #ff9f0e, #e440bb, #655adc, #488cfb);
     --glass-bg: rgba(15, 23, 42, 0.7);
     --glass-border: rgba(255, 255, 255, 0.08);
     --neon-indigo: #488cfb;
@@ -133,7 +125,7 @@
                     content: '';
                     position: absolute;
                     inset: 0;
-                    background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+                    background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.1) 50%, transparent 60%);
                     animation: shine 3s infinite;
                 }
 
@@ -147,24 +139,45 @@
     }
 
     @keyframes shine {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
+        0% {
+            transform: translateX(-100%);
+        }
+        100% {
+            transform: translateX(100%);
+        }
     }
 
     @keyframes glowing-edge {
-        0% { border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 0 5px rgba(99, 102, 241, 0.1); }
-        50% { border-color: rgba(99, 102, 241, 0.8); box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
-        100% { border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 0 5px rgba(99, 102, 241, 0.1); }
+        0% {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 0 5px rgba(99, 102, 241, 0.1);
+        }
+        50% {
+            border-color: rgba(99, 102, 241, 0.8);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+        100% {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 0 5px rgba(99, 102, 241, 0.1);
+        }
     }
 
     @keyframes pulse-emerald {
-        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
     }
 
     @keyframes rotate-hue {
-        to { filter: hue-rotate(1turn); }
+        to {
+            filter: hue-rotate(1turn);
+        }
     }
 
     .mk-sub-nav {
@@ -247,8 +260,11 @@
         &::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         }
 
         @media (width <= 480px) {
@@ -259,7 +275,9 @@
         &:hover {
             border-color: rgba(99, 102, 241, 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.8), 0 0 20px rgba(99, 102, 241, 0.1);
+            box-shadow:
+                0 1.5rem 5rem rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(99, 102, 241, 0.1);
         }
 
         &.signal-glow {
@@ -272,8 +290,12 @@
     }
 
     @keyframes mk-card-pulse {
-        from { box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
-        to { box-shadow: 0 0 40px rgba(99, 102, 241, 0.5); }
+        from {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+        to {
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
+        }
     }
 
     /* Onetrader V2 - Digit Cracker Style */
@@ -337,12 +359,16 @@
 
                 &.up {
                     border-left-color: #10b981;
-                    .r-price { color: #10b981; }
+                    .r-price {
+                        color: #10b981;
+                    }
                 }
 
                 &.down {
                     border-left-color: #f43f5e;
-                    .r-price { color: #f43f5e; }
+                    .r-price {
+                        color: #f43f5e;
+                    }
                 }
             }
         }
@@ -1097,4 +1123,3 @@
         box-shadow: 0 0 20px rgb(59 130 246 / 60%);
     }
 }
-

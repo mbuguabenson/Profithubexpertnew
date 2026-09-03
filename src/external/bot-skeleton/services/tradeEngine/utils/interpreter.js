@@ -82,7 +82,8 @@ const Interpreter = () => {
                 })
                 .catch(e => {
                     const err = e?.error || e;
-                    const msg = err?.message || err?.error?.message || (typeof err === 'string' ? err : 'Operation failed');
+                    const msg =
+                        err?.message || err?.error?.message || (typeof err === 'string' ? err : 'Operation failed');
                     globalObserver.emit('ui.log.error', msg);
                     $scope.observer.emit('Error', err);
                 });
@@ -110,13 +111,32 @@ const Interpreter = () => {
             js_interpreter.nativeToPseudo(bot_interface.getPurchaseReference)
         );
 
-        const checkIsDemo = (loginid) => {
-            const id = (typeof loginid === 'string' ? loginid : '') || (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') || '';
-            return id.startsWith('VR') || id.startsWith('VRT') || id.startsWith('VRTC') || id.startsWith('VRW') || id.startsWith('DEM') || id.startsWith('DOT');
+        const checkIsDemo = loginid => {
+            const id =
+                (typeof loginid === 'string' ? loginid : '') ||
+                (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') ||
+                '';
+            return (
+                id.startsWith('VR') ||
+                id.startsWith('VRT') ||
+                id.startsWith('VRTC') ||
+                id.startsWith('VRW') ||
+                id.startsWith('DEM') ||
+                id.startsWith('DOT')
+            );
         };
-        const checkIsReal = (loginid) => {
-            const id = (typeof loginid === 'string' ? loginid : '') || (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') || '';
-            const isDemo = id.startsWith('VR') || id.startsWith('VRT') || id.startsWith('VRTC') || id.startsWith('VRW') || id.startsWith('DEM') || id.startsWith('DOT');
+        const checkIsReal = loginid => {
+            const id =
+                (typeof loginid === 'string' ? loginid : '') ||
+                (typeof localStorage !== 'undefined' ? localStorage.getItem('active_loginid') : '') ||
+                '';
+            const isDemo =
+                id.startsWith('VR') ||
+                id.startsWith('VRT') ||
+                id.startsWith('VRTC') ||
+                id.startsWith('VRW') ||
+                id.startsWith('DEM') ||
+                id.startsWith('DOT');
             return !isDemo && Boolean(id);
         };
 
@@ -288,7 +308,10 @@ const Interpreter = () => {
                     return;
                 }
                 const errObj = e?.error || e;
-                const errMsg = errObj?.message || errObj?.error?.message || (typeof errObj === 'string' ? errObj : 'Trading Error');
+                const errMsg =
+                    errObj?.message ||
+                    errObj?.error?.message ||
+                    (typeof errObj === 'string' ? errObj : 'Trading Error');
 
                 // Always log the error to Journal so user sees the notification
                 globalObserver.emit('ui.log.error', errMsg);

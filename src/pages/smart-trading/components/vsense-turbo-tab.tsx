@@ -197,12 +197,12 @@ const VSenseTurboTab = observer(() => {
                                 </div>
                             ))}
                         </div>
-                     <div className='card trend-card'>
-                        <h3>Real-time Digit Trend</h3>
-                        <div className='chart-container-premium' style={{ height: 'auto', minHeight: '120px' }}>
-                            <LastDigitsLineChart ticks={ticks} count={50} showCardWrapper={false} />
+                        <div className='card trend-card'>
+                            <h3>Real-time Digit Trend</h3>
+                            <div className='chart-container-premium' style={{ height: 'auto', minHeight: '120px' }}>
+                                <LastDigitsLineChart ticks={ticks} count={50} showCardWrapper={false} />
+                            </div>
                         </div>
-                    </div>
                     </div>
 
                     <div className='vsense-signals-dashboard'>

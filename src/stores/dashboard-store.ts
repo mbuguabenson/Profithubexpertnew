@@ -192,7 +192,9 @@ export default class DashboardStore implements IDashboardStore {
 
         const getQuickStrategyContent = quick_strategy_content().map(item => {
             const qs_card_content = item.content.join(' ')?.toLowerCase();
-            const qs_description_content = getQSDescriptionContent((strategy_description as any)?.[item.qs_name]).join(' ')?.toLowerCase();
+            const qs_description_content = getQSDescriptionContent((strategy_description as any)?.[item.qs_name])
+                .join(' ')
+                ?.toLowerCase();
             return `${item.search_id}# ${item.type?.toLowerCase()} ${qs_description_content + qs_card_content}`;
         });
 

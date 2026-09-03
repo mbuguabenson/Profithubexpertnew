@@ -12,7 +12,13 @@
     height: 100%;
     margin-right: 0.8rem;
     user-select: none;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family:
+        'Inter',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        sans-serif;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
 }
@@ -33,7 +39,9 @@
     box-shadow: none;
     overflow: visible;
     cursor: default;
-    transition: opacity 0.2s ease, background-color 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        background-color 0.2s ease;
 
     // ── Account text block (label + balance stacked) ──────────
     &__text-block {
@@ -125,7 +133,9 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        transition: box-shadow 0.25s ease, transform 0.2s ease;
+        transition:
+            box-shadow 0.25s ease,
+            transform 0.2s ease;
 
         &--demo {
             background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
@@ -136,7 +146,9 @@
 
         &--real {
             background: transparent;
-            box-shadow: 0 0 0 1.5px rgba(245, 197, 66, 0.7), 0 2px 8px rgba(0, 0, 0, 0.4);
+            box-shadow:
+                0 0 0 1.5px rgba(245, 197, 66, 0.7),
+                0 2px 8px rgba(0, 0, 0, 0.4);
             border: none;
             overflow: hidden;
         }
@@ -215,7 +227,9 @@
         background: transparent;
         color: #cbd5e1;
         cursor: pointer;
-        transition: color 0.15s ease, background-color 0.15s ease;
+        transition:
+            color 0.15s ease,
+            background-color 0.15s ease;
         flex-shrink: 0;
 
         &:hover {
@@ -273,7 +287,9 @@
 
     &--real {
         background: transparent;
-        box-shadow: 0 0 0 1.5px rgba(245, 197, 66, 0.6), 0 2px 6px rgba(0, 0, 0, 0.35);
+        box-shadow:
+            0 0 0 1.5px rgba(245, 197, 66, 0.6),
+            0 2px 6px rgba(0, 0, 0, 0.35);
         overflow: hidden;
     }
 
@@ -364,7 +380,9 @@
         border: none;
         background: transparent;
         cursor: pointer;
-        transition: color 0.15s ease, background-color 0.15s ease;
+        transition:
+            color 0.15s ease,
+            background-color 0.15s ease;
         line-height: 1;
 
         body:not(.theme--dark) & {
@@ -524,7 +542,11 @@
     }
 
     &__account-id {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, monospace;
+        font-family:
+            'Inter',
+            -apple-system,
+            BlinkMacSystemFont,
+            monospace;
         font-size: 11px;
         color: #cbd5e1;
         font-weight: 600;
@@ -721,7 +743,8 @@
 }
 
 @keyframes acc-chip-pulse {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 0.55;
     }
     50% {

@@ -63,7 +63,9 @@
     &__wrapper {
         margin: 0.8rem;
         border-radius: $BORDER_RADIUS;
-        transition: transform 0.25s ease, opacity 0.25s linear;
+        transition:
+            transform 0.25s ease,
+            opacity 0.25s linear;
         position: relative;
         background: var(--general-main-1);
         border: 1px solid var(--border-disabled);

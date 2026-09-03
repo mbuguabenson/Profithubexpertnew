@@ -1,5 +1,6 @@
 import React from 'react';
-import { withRouter, matchPath, RouteComponentProps } from 'react-router';
+import { matchPath, RouteComponentProps } from 'react-router';
+import { withRouter } from 'withRouterShim';
 import Loadable from 'react-loadable';
 import { UILoader } from '@deriv/components';
 import { routes } from '@deriv/shared';

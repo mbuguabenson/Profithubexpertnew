@@ -89,7 +89,7 @@ const playSoundCue = (type: 'win' | 'loss' | 'signal') => {
             osc.start(now);
             osc.stop(now + 0.35);
         } else if (type === 'loss') {
-            osc.frequency.setValueAtTime(392.00, now); // G4
+            osc.frequency.setValueAtTime(392.0, now); // G4
             osc.frequency.exponentialRampToValueAtTime(220, now + 0.2); // A3
             gain.gain.setValueAtTime(0.15, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
@@ -152,7 +152,7 @@ const AutoXEo: React.FC = observer(() => {
 
     // ── Strategy Configuration & Inputs ──
     const [initialStake, setInitialStake] = useState<string>('0.50');
-    const [currentStake, setCurrentStake] = useState<number>(0.50);
+    const [currentStake, setCurrentStake] = useState<number>(0.5);
     const [martingale, setMartingale] = useState<string>('2.6');
     const [takeProfit, setTakeProfit] = useState<string>('10.00');
     const [stopLoss, setStopLoss] = useState<string>('25.00');
@@ -171,7 +171,10 @@ const AutoXEo: React.FC = observer(() => {
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [accumulatedLoss, setAccumulatedLoss] = useState<number>(0);
     const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
-    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({ isOpen: false, type: null });
+    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({
+        isOpen: false,
+        type: null,
+    });
 
     // ── Active Market Data Map & Subscriptions ──
     const marketsDataRef = useRef<Map<string, MarketDigitState>>(new Map());
@@ -315,7 +318,9 @@ const AutoXEo: React.FC = observer(() => {
                 if (sym !== selectedSymbol) {
                     try {
                         sub?.unsubscribe?.();
-                    } catch { /* ignore */ }
+                    } catch {
+                        /* ignore */
+                    }
                     activeSubs.delete(sym);
                 }
             });
@@ -333,7 +338,9 @@ const AutoXEo: React.FC = observer(() => {
             subscriptionsRef.current.forEach(sub => {
                 try {
                     sub?.unsubscribe?.();
-                } catch { /* ignore */ }
+                } catch {
+                    /* ignore */
+                }
             });
             subscriptionsRef.current.clear();
         };
@@ -592,174 +599,183 @@ const AutoXEo: React.FC = observer(() => {
     }, [selectedSymbol, renderTrigger]);
 
     // ── Log and Drawer Contract Emitter ──
-    const pushContractToDrawer = useCallback((contractSnapshot: Record<string, unknown>) => {
-        try {
-            transactions?.pushTransaction?.({ ...contractSnapshot, run_id: run_panel?.run_id });
-            run_panel?.onBotContractEvent?.(contractSnapshot);
-            summary_card?.onBotContractEvent?.(contractSnapshot);
-        } catch {
-            // Ignore if core stores aren't initialized
-        }
-    }, [run_panel, summary_card, transactions]);
+    const pushContractToDrawer = useCallback(
+        (contractSnapshot: Record<string, unknown>) => {
+            try {
+                transactions?.pushTransaction?.({ ...contractSnapshot, run_id: run_panel?.run_id });
+                run_panel?.onBotContractEvent?.(contractSnapshot);
+                summary_card?.onBotContractEvent?.(contractSnapshot);
+            } catch {
+                // Ignore if core stores aren't initialized
+            }
+        },
+        [run_panel, summary_card, transactions]
+    );
 
-    const addLogEntry = useCallback((
-        market: string,
-        strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
-        contractType: string,
-        prediction: number | undefined,
-        stake: number,
-        result: 'WIN' | 'LOSS' | 'PENDING',
-        profit: number
-    ) => {
-        const item: TradeLogItem = {
-            id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-            time: new Date().toLocaleTimeString(),
-            market,
-            strategy,
-            contractType,
-            prediction,
-            stake,
-            result,
-            profit,
-        };
-        setTradeLog(prev => [item, ...prev.slice(0, 49)]);
-        return item.id;
-    }, []);
+    const addLogEntry = useCallback(
+        (
+            market: string,
+            strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
+            contractType: string,
+            prediction: number | undefined,
+            stake: number,
+            result: 'WIN' | 'LOSS' | 'PENDING',
+            profit: number
+        ) => {
+            const item: TradeLogItem = {
+                id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                time: new Date().toLocaleTimeString(),
+                market,
+                strategy,
+                contractType,
+                prediction,
+                stake,
+                result,
+                profit,
+            };
+            setTradeLog(prev => [item, ...prev.slice(0, 49)]);
+            return item.id;
+        },
+        []
+    );
 
     const updateLogResult = useCallback((id: string, result: 'WIN' | 'LOSS', profit: number) => {
         setTradeLog(prev => prev.map(item => (item.id === id ? { ...item, result, profit } : item)));
     }, []);
 
     // ── Execute Trade Order ──
-    const executeTradeOrder = useCallback(async (
-        market: string,
-        strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
-        contractType: 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER',
-        barrier: number | undefined,
-        stake: number
-    ) => {
-        if (executionLockRef.current) return;
-        executionLockRef.current = true;
-        setBotState('TRADING');
-        playSoundCue('signal');
+    const executeTradeOrder = useCallback(
+        async (
+            market: string,
+            strategy: 'EVEN_ODD' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
+            contractType: 'DIGITEVEN' | 'DIGITODD' | 'DIGITOVER' | 'DIGITUNDER',
+            barrier: number | undefined,
+            stake: number
+        ) => {
+            if (executionLockRef.current) return;
+            executionLockRef.current = true;
+            setBotState('TRADING');
+            playSoundCue('signal');
 
-        const logId = addLogEntry(market, strategy, contractType, barrier, stake, 'PENDING', 0);
+            const logId = addLogEntry(market, strategy, contractType, barrier, stake, 'PENDING', 0);
 
-        try {
-            const duration = parseInt(tickDuration, 10) || 1;
-            const params: Record<string, any> = {
-                amount: stake,
-                basis: 'stake',
-                contract_type: contractType,
-                currency,
-                duration,
-                duration_unit: 't',
-                symbol: market,
-            };
+            try {
+                const duration = parseInt(tickDuration, 10) || 1;
+                const params: Record<string, any> = {
+                    amount: stake,
+                    basis: 'stake',
+                    contract_type: contractType,
+                    currency,
+                    duration,
+                    duration_unit: 't',
+                    symbol: market,
+                };
 
-            if (barrier !== undefined && (contractType === 'DIGITOVER' || contractType === 'DIGITUNDER')) {
-                params.barrier = String(barrier);
-            }
-
-            const buyResult = await buyContractForUi({
-                parameters: params,
-                price: stake,
-                source: 'AUTO X E/O',
-            });
-
-            if (!buyResult?.contract_id) {
-                throw new Error('No contract ID returned');
-            }
-
-            const contractId = buyResult.contract_id;
-            const transactionId = buyResult.transaction_id || contractId;
-            const startTime = Math.floor(Date.now() / 1000);
-            const marketLabel = MARKETS.find(m => m.symbol === market)?.label || market;
-
-            const initSnapshot = {
-                contract_id: contractId,
-                transaction_ids: { buy: transactionId },
-                buy_price: stake,
-                underlying: market,
-                underlying_symbol: market,
-                display_name: marketLabel,
-                shortcode: `AUTO_X_${contractType}`,
-                contract_type: contractType,
-                currency: currency || 'USD',
-                date_start: startTime,
-                status: 'open',
-                ...(barrier !== undefined ? { barrier: String(barrier) } : {}),
-            };
-            pushContractToDrawer(initSnapshot);
-
-            // Stream until settled
-            const settledSnapshot = await streamContractUntilSettled({
-                contractId,
-                fallback: initSnapshot,
-                onUpdate: snapshot => {
-                    pushContractToDrawer(snapshot);
-                },
-                source: 'AUTO X E/O',
-            });
-
-            pushContractToDrawer(settledSnapshot);
-            const profitVal = Number(settledSnapshot?.profit || 0);
-            const isWin = profitVal > 0;
-
-            if (isWin) {
-                playSoundCue('win');
-                updateLogResult(logId, 'WIN', profitVal);
-                setWinsCount(w => w + 1);
-                setSessionProfit(p => p + profitVal);
-
-                if (isInRecovery) {
-                    // Recovered! Reset back to initial stake and exit recovery
-                    setIsInRecovery(false);
-                    setAccumulatedLoss(0);
-                    setCurrentStake(parseFloat(initialStake) || 0.50);
-                } else {
-                    // Normal win -> reset stake
-                    setCurrentStake(parseFloat(initialStake) || 0.50);
+                if (barrier !== undefined && (contractType === 'DIGITOVER' || contractType === 'DIGITUNDER')) {
+                    params.barrier = String(barrier);
                 }
-            } else {
-                playSoundCue('loss');
-                updateLogResult(logId, 'LOSS', profitVal);
-                setLossesCount(l => l + 1);
-                setSessionProfit(p => p + profitVal);
 
-                if (autoRecoveryMode) {
-                    setIsInRecovery(true);
-                    const martMult = parseFloat(martingale) || 2.6;
-                    const nextStake = Math.round(stake * martMult * 100) / 100;
-                    setCurrentStake(nextStake);
-                    setAccumulatedLoss(prev => prev + Math.abs(profitVal));
-                } else {
-                    // Standard martingale
-                    const martMult = parseFloat(martingale) || 2.0;
-                    const nextStake = Math.round(stake * martMult * 100) / 100;
-                    setCurrentStake(nextStake);
+                const buyResult = await buyContractForUi({
+                    parameters: params,
+                    price: stake,
+                    source: 'AUTO X E/O',
+                });
+
+                if (!buyResult?.contract_id) {
+                    throw new Error('No contract ID returned');
                 }
-            }
 
-            setConsecutiveRuns(r => r + 1);
-            executionLockRef.current = false;
-        } catch (err: any) {
-            console.error('AUTO X E/O Trade execution failed:', err);
-            updateLogResult(logId, 'LOSS', -stake);
-            executionLockRef.current = false;
-            setBotState('SCANNING');
-        }
-    }, [
-        addLogEntry,
-        updateLogResult,
-        tickDuration,
-        currency,
-        pushContractToDrawer,
-        isInRecovery,
-        initialStake,
-        autoRecoveryMode,
-        martingale,
-    ]);
+                const contractId = buyResult.contract_id;
+                const transactionId = buyResult.transaction_id || contractId;
+                const startTime = Math.floor(Date.now() / 1000);
+                const marketLabel = MARKETS.find(m => m.symbol === market)?.label || market;
+
+                const initSnapshot = {
+                    contract_id: contractId,
+                    transaction_ids: { buy: transactionId },
+                    buy_price: stake,
+                    underlying: market,
+                    underlying_symbol: market,
+                    display_name: marketLabel,
+                    shortcode: `AUTO_X_${contractType}`,
+                    contract_type: contractType,
+                    currency: currency || 'USD',
+                    date_start: startTime,
+                    status: 'open',
+                    ...(barrier !== undefined ? { barrier: String(barrier) } : {}),
+                };
+                pushContractToDrawer(initSnapshot);
+
+                // Stream until settled
+                const settledSnapshot = await streamContractUntilSettled({
+                    contractId,
+                    fallback: initSnapshot,
+                    onUpdate: snapshot => {
+                        pushContractToDrawer(snapshot);
+                    },
+                    source: 'AUTO X E/O',
+                });
+
+                pushContractToDrawer(settledSnapshot);
+                const profitVal = Number(settledSnapshot?.profit || 0);
+                const isWin = profitVal > 0;
+
+                if (isWin) {
+                    playSoundCue('win');
+                    updateLogResult(logId, 'WIN', profitVal);
+                    setWinsCount(w => w + 1);
+                    setSessionProfit(p => p + profitVal);
+
+                    if (isInRecovery) {
+                        // Recovered! Reset back to initial stake and exit recovery
+                        setIsInRecovery(false);
+                        setAccumulatedLoss(0);
+                        setCurrentStake(parseFloat(initialStake) || 0.5);
+                    } else {
+                        // Normal win -> reset stake
+                        setCurrentStake(parseFloat(initialStake) || 0.5);
+                    }
+                } else {
+                    playSoundCue('loss');
+                    updateLogResult(logId, 'LOSS', profitVal);
+                    setLossesCount(l => l + 1);
+                    setSessionProfit(p => p + profitVal);
+
+                    if (autoRecoveryMode) {
+                        setIsInRecovery(true);
+                        const martMult = parseFloat(martingale) || 2.6;
+                        const nextStake = Math.round(stake * martMult * 100) / 100;
+                        setCurrentStake(nextStake);
+                        setAccumulatedLoss(prev => prev + Math.abs(profitVal));
+                    } else {
+                        // Standard martingale
+                        const martMult = parseFloat(martingale) || 2.0;
+                        const nextStake = Math.round(stake * martMult * 100) / 100;
+                        setCurrentStake(nextStake);
+                    }
+                }
+
+                setConsecutiveRuns(r => r + 1);
+                executionLockRef.current = false;
+            } catch (err: any) {
+                console.error('AUTO X E/O Trade execution failed:', err);
+                updateLogResult(logId, 'LOSS', -stake);
+                executionLockRef.current = false;
+                setBotState('SCANNING');
+            }
+        },
+        [
+            addLogEntry,
+            updateLogResult,
+            tickDuration,
+            currency,
+            pushContractToDrawer,
+            isInRecovery,
+            initialStake,
+            autoRecoveryMode,
+            martingale,
+        ]
+    );
 
     // ── Main Automated AI Loop ──
     useEffect(() => {
@@ -798,13 +814,19 @@ const AutoXEo: React.FC = observer(() => {
             if (bias === 'UNDER') {
                 const barrier = recoveryType === 'OVER_2_UNDER_8' ? 8 : 6;
                 // Wait for high entry digit in Under to appear or last 7 ticks favor Under
-                if (currentMarket.digits.slice(-7).filter(d => d <= 4).length >= 5 || currentMarket.lastDigit === ouAnalysis.highestUnderEntryDigit) {
+                if (
+                    currentMarket.digits.slice(-7).filter(d => d <= 4).length >= 5 ||
+                    currentMarket.lastDigit === ouAnalysis.highestUnderEntryDigit
+                ) {
                     executeTradeOrder(selectedSymbol, 'RECOVERY_UNDER', 'DIGITUNDER', barrier, currentStake);
                 }
             } else if (bias === 'OVER') {
                 const barrier = recoveryType === 'OVER_2_UNDER_8' ? 2 : 3;
                 // Wait for high entry digit in Over to appear or last 7 ticks favor Over
-                if (currentMarket.digits.slice(-7).filter(d => d >= 5).length >= 5 || currentMarket.lastDigit === ouAnalysis.highestOverEntryDigit) {
+                if (
+                    currentMarket.digits.slice(-7).filter(d => d >= 5).length >= 5 ||
+                    currentMarket.lastDigit === ouAnalysis.highestOverEntryDigit
+                ) {
                     executeTradeOrder(selectedSymbol, 'RECOVERY_OVER', 'DIGITOVER', barrier, currentStake);
                 }
             } else {
@@ -859,7 +881,7 @@ const AutoXEo: React.FC = observer(() => {
 
     // ── Bot Start / Pause / Stop Handlers ──
     const handleStartBot = () => {
-        setCurrentStake(parseFloat(initialStake) || 0.50);
+        setCurrentStake(parseFloat(initialStake) || 0.5);
         setBotState('SCANNING');
     };
 
@@ -928,39 +950,42 @@ const AutoXEo: React.FC = observer(() => {
     const chartPath = useMemo(() => getBezierSplinePath(chartPoints), [chartPoints]);
 
     return (
-        <div className="auto-x-eo">
+        <div className='auto-x-eo'>
             {/* 1. Header Bar */}
-            <div className="auto-x-eo__header">
-                <div className="auto-x-eo__header-brand">
-                    <div className="brand-icon">
+            <div className='auto-x-eo__header'>
+                <div className='auto-x-eo__header-brand'>
+                    <div className='brand-icon'>
                         <Zap size={24} />
                     </div>
-                    <div className="brand-text">
+                    <div className='brand-text'>
                         <h1>AUTO X E/O</h1>
                         <span>Smart AI Parity &amp; Recovery Suite</span>
                     </div>
                 </div>
 
-                <div className="auto-x-eo__header-metrics">
-                    <div className="metric-pill">
-                        <span className="label">Session P/L</span>
+                <div className='auto-x-eo__header-metrics'>
+                    <div className='metric-pill'>
+                        <span className='label'>Session P/L</span>
                         <span className={`val ${sessionProfit >= 0 ? 'profit-pos' : 'profit-neg'}`}>
                             {sessionProfit >= 0 ? `+${sessionProfit.toFixed(2)}` : sessionProfit.toFixed(2)} {currency}
                         </span>
                     </div>
-                    <div className="metric-pill">
-                        <span className="label">Win / Loss</span>
-                        <span className="val">
-                            <span style={{ color: '#10b981' }}>{winsCount}W</span> / <span style={{ color: '#ef4444' }}>{lossesCount}L</span>
+                    <div className='metric-pill'>
+                        <span className='label'>Win / Loss</span>
+                        <span className='val'>
+                            <span style={{ color: '#10b981' }}>{winsCount}W</span> /{' '}
+                            <span style={{ color: '#ef4444' }}>{lossesCount}L</span>
                         </span>
                     </div>
-                    <div className="metric-pill">
-                        <span className="label">Current Stake</span>
-                        <span className="val gold">{currentStake.toFixed(2)} {currency}</span>
+                    <div className='metric-pill'>
+                        <span className='label'>Current Stake</span>
+                        <span className='val gold'>
+                            {currentStake.toFixed(2)} {currency}
+                        </span>
                     </div>
-                    <div className="metric-pill">
-                        <span className="label">Bot Status</span>
-                        <span className="val cyan" style={{ fontSize: '0.85rem' }}>
+                    <div className='metric-pill'>
+                        <span className='label'>Bot Status</span>
+                        <span className='val cyan' style={{ fontSize: '0.85rem' }}>
                             {botState === 'IDLE' && '⏹ IDLE'}
                             {botState === 'SCANNING' && '🔍 SCANNING'}
                             {botState === 'WAITING_SIGNAL' && '⏳ WAITING SIGNAL'}
@@ -971,18 +996,18 @@ const AutoXEo: React.FC = observer(() => {
                     </div>
                 </div>
 
-                <div className="auto-x-eo__header-controls">
+                <div className='auto-x-eo__header-controls'>
                     {botState === 'IDLE' ? (
-                        <button className="btn-start" onClick={handleStartBot}>
+                        <button className='btn-start' onClick={handleStartBot}>
                             <Play size={18} /> START AUTO TRADER
                         </button>
                     ) : (
                         <>
-                            <button className="btn-pause" onClick={handlePauseBot}>
+                            <button className='btn-pause' onClick={handlePauseBot}>
                                 {botState === 'PAUSED' ? <Play size={16} /> : <Pause size={16} />}
                                 {botState === 'PAUSED' ? 'RESUME' : 'PAUSE'}
                             </button>
-                            <button className="btn-stop" onClick={handleStopBot}>
+                            <button className='btn-stop' onClick={handleStopBot}>
                                 <Square size={16} /> STOP
                             </button>
                         </>
@@ -991,10 +1016,10 @@ const AutoXEo: React.FC = observer(() => {
             </div>
 
             {/* 2. Market Toolbar */}
-            <div className="auto-x-eo__market-toolbar">
-                <div className="market-select-group">
+            <div className='auto-x-eo__market-toolbar'>
+                <div className='market-select-group'>
                     <select
-                        className="custom-select"
+                        className='custom-select'
                         value={selectedSymbol}
                         onChange={e => setSelectedSymbol(e.target.value)}
                     >
@@ -1005,20 +1030,20 @@ const AutoXEo: React.FC = observer(() => {
                         ))}
                     </select>
 
-                    <div className="badge-live-price">
-                        <span className="dot-pulse" />
+                    <div className='badge-live-price'>
+                        <span className='dot-pulse' />
                         <span>PRICE: {currentMarket.currentPrice}</span>
                     </div>
 
-                    <div className="badge-digit-glow" title="Current Last Digit">
+                    <div className='badge-digit-glow' title='Current Last Digit'>
                         {currentMarket.lastDigit}
                     </div>
                 </div>
 
-                <div className="market-toggles">
+                <div className='market-toggles'>
                     <label className={`toggle-chip ${scanAllMarkets ? 'active' : ''}`}>
                         <input
-                            type="checkbox"
+                            type='checkbox'
                             checked={scanAllMarkets}
                             onChange={e => setScanAllMarkets(e.target.checked)}
                         />
@@ -1027,17 +1052,14 @@ const AutoXEo: React.FC = observer(() => {
 
                     <label className={`toggle-chip ${autoSwitchMarkets ? 'active' : ''}`}>
                         <input
-                            type="checkbox"
+                            type='checkbox'
                             checked={autoSwitchMarkets}
                             onChange={e => setAutoSwitchMarkets(e.target.checked)}
                         />
                         <span>Auto-Switch Market</span>
                     </label>
 
-                    <button
-                        className="btn-view-toggle"
-                        onClick={() => setShowWideView(prev => !prev)}
-                    >
+                    <button className='btn-view-toggle' onClick={() => setShowWideView(prev => !prev)}>
                         <Grid size={15} />
                         {showWideView ? 'Hide Grid View' : 'Wide Market Stats'}
                     </button>
@@ -1046,17 +1068,17 @@ const AutoXEo: React.FC = observer(() => {
 
             {/* 3. Wide View Modal Grid (Expandable) */}
             {showWideView && (
-                <div className="auto-x-eo__wide-view">
-                    <div className="wide-view-header">
+                <div className='auto-x-eo__wide-view'>
+                    <div className='wide-view-header'>
                         <h3>
                             <Activity size={18} /> All Synthetic Indices Live Scanner
                         </h3>
-                        <button className="close-btn" onClick={() => setShowWideView(false)}>
+                        <button className='close-btn' onClick={() => setShowWideView(false)}>
                             ✕
                         </button>
                     </div>
 
-                    <div className="wide-grid">
+                    <div className='wide-grid'>
                         {MARKETS.map(m => {
                             const state = marketsDataRef.current.get(m.symbol) || {
                                 digits: [],
@@ -1081,22 +1103,24 @@ const AutoXEo: React.FC = observer(() => {
                                         setShowWideView(false);
                                     }}
                                 >
-                                    <div className="card-top">
-                                        <span className="market-name">{m.label}</span>
-                                        <span className="last-digit">{state.lastDigit}</span>
+                                    <div className='card-top'>
+                                        <span className='market-name'>{m.label}</span>
+                                        <span className='last-digit'>{state.lastDigit}</span>
                                     </div>
-                                    <div className="card-stats">
-                                        <div className="stat-row">
+                                    <div className='card-stats'>
+                                        <div className='stat-row'>
                                             <span>Price</span>
                                             <span>{state.currentPrice}</span>
                                         </div>
-                                        <div className="stat-row">
+                                        <div className='stat-row'>
                                             <span>Even / Odd</span>
-                                            <span>{evenPct}% / {oddPct}%</span>
+                                            <span>
+                                                {evenPct}% / {oddPct}%
+                                            </span>
                                         </div>
-                                        <div className="mini-bar">
-                                            <div className="bar-even" style={{ width: `${evenPct}%` }} />
-                                            <div className="bar-odd" style={{ width: `${oddPct}%` }} />
+                                        <div className='mini-bar'>
+                                            <div className='bar-even' style={{ width: `${evenPct}%` }} />
+                                            <div className='bar-odd' style={{ width: `${oddPct}%` }} />
                                         </div>
                                     </div>
                                 </div>
@@ -1109,11 +1133,11 @@ const AutoXEo: React.FC = observer(() => {
             {/* 4. Main Body: Sidebar + Workspace */}
             <div className={`auto-x-eo__body ${sidebarCollapsed ? 'auto-x-eo__body--collapsed' : ''}`}>
                 {/* Left Markets Sidebar */}
-                <div className="auto-x-eo__sidebar">
-                    <div className="auto-x-eo__sidebar-header">
+                <div className='auto-x-eo__sidebar'>
+                    <div className='auto-x-eo__sidebar-header'>
                         <span>Derived Markets</span>
                         <button
-                            className="collapse-btn"
+                            className='collapse-btn'
                             onClick={() => setSidebarCollapsed(prev => !prev)}
                             title={sidebarCollapsed ? 'Expand' : 'Collapse'}
                         >
@@ -1121,7 +1145,7 @@ const AutoXEo: React.FC = observer(() => {
                         </button>
                     </div>
 
-                    <div className="auto-x-eo__sidebar-list">
+                    <div className='auto-x-eo__sidebar-list'>
                         {MARKETS.map(m => {
                             const state = marketsDataRef.current.get(m.symbol) || {
                                 digits: [],
@@ -1140,21 +1164,21 @@ const AutoXEo: React.FC = observer(() => {
                                     className={`sidebar-market-item ${isSelected ? 'active' : ''}`}
                                     onClick={() => setSelectedSymbol(m.symbol)}
                                 >
-                                    <div className="item-left">
+                                    <div className='item-left'>
                                         <div className={`digit-badge ${state.lastDigit % 2 === 0 ? 'even' : 'odd'}`}>
                                             {state.lastDigit}
                                         </div>
-                                        <div className="item-details">
-                                            <span className="title">{m.label}</span>
-                                            <span className="price">{state.currentPrice}</span>
+                                        <div className='item-details'>
+                                            <span className='title'>{m.label}</span>
+                                            <span className='price'>{state.currentPrice}</span>
                                         </div>
                                     </div>
 
-                                    <div className="item-stats">
+                                    <div className='item-stats'>
                                         <span className={`stat-tag ${evenPct >= 50 ? 'even-fav' : 'odd-fav'}`}>
                                             {evenPct >= 50 ? `E: ${evenPct}%` : `O: ${100 - evenPct}%`}
                                         </span>
-                                        <span className="stat-sub">{state.digits.length} ticks</span>
+                                        <span className='stat-sub'>{state.digits.length} ticks</span>
                                     </div>
                                 </div>
                             );
@@ -1163,45 +1187,45 @@ const AutoXEo: React.FC = observer(() => {
                 </div>
 
                 {/* Right Workspace */}
-                <div className="auto-x-eo__workspace">
+                <div className='auto-x-eo__workspace'>
                     {/* Live 50 Ticks Wave Spline Line Chart */}
-                    <div className="auto-x-eo__chart-card">
-                        <div className="chart-header">
-                            <div className="chart-title-box">
+                    <div className='auto-x-eo__chart-card'>
+                        <div className='chart-header'>
+                            <div className='chart-title-box'>
                                 <h2>Live Digit Wave Stream</h2>
-                                <span className="pill-ticks">Last 50 Ticks</span>
+                                <span className='pill-ticks'>Last 50 Ticks</span>
                             </div>
 
-                            <div className="chart-legend">
-                                <div className="legend-item">
-                                    <span className="dot even" />
+                            <div className='chart-legend'>
+                                <div className='legend-item'>
+                                    <span className='dot even' />
                                     <span>Even (0,2,4,6,8)</span>
                                 </div>
-                                <div className="legend-item">
-                                    <span className="dot odd" />
+                                <div className='legend-item'>
+                                    <span className='dot odd' />
                                     <span>Odd (1,3,5,7,9)</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="chart-container">
+                        <div className='chart-container'>
                             {chartPoints.length > 1 ? (
-                                <svg viewBox="0 0 800 150" preserveAspectRatio="none">
+                                <svg viewBox='0 0 800 150' preserveAspectRatio='none'>
                                     <defs>
-                                        <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stopColor="#00d2ff" />
-                                            <stop offset="50%" stopColor="#f5c542" />
-                                            <stop offset="100%" stopColor="#a855f7" />
+                                        <linearGradient id='lineGrad' x1='0%' y1='0%' x2='100%' y2='0%'>
+                                            <stop offset='0%' stopColor='#00d2ff' />
+                                            <stop offset='50%' stopColor='#f5c542' />
+                                            <stop offset='100%' stopColor='#a855f7' />
                                         </linearGradient>
                                     </defs>
 
                                     {/* Spline Path */}
                                     <path
                                         d={chartPath}
-                                        fill="none"
-                                        stroke="url(#lineGrad)"
-                                        strokeWidth="3.5"
-                                        strokeLinecap="round"
+                                        fill='none'
+                                        stroke='url(#lineGrad)'
+                                        strokeWidth='3.5'
+                                        strokeLinecap='round'
                                     />
 
                                     {/* Digit Nodes with numbers */}
@@ -1214,23 +1238,23 @@ const AutoXEo: React.FC = observer(() => {
                                                 {isLatest && (
                                                     <circle
                                                         r={16}
-                                                        fill="none"
+                                                        fill='none'
                                                         stroke={pt.isEven ? '#00d2ff' : '#a855f7'}
-                                                        strokeWidth="1.5"
-                                                        opacity="0.6"
+                                                        strokeWidth='1.5'
+                                                        opacity='0.6'
                                                     />
                                                 )}
                                                 <circle
                                                     r={nodeRadius}
                                                     fill={isLatest ? '#f5c542' : pt.isEven ? '#00d2ff' : '#a855f7'}
-                                                    stroke="#0f172a"
+                                                    stroke='#0f172a'
                                                     strokeWidth={isLatest ? 2 : 1.5}
                                                 />
                                                 <text
-                                                    textAnchor="middle"
+                                                    textAnchor='middle'
                                                     dy={isLatest ? 3.5 : 2.5}
                                                     fontSize={isLatest ? '9.5' : '7'}
-                                                    fontWeight="800"
+                                                    fontWeight='800'
                                                     fill={isLatest ? '#0f172a' : '#ffffff'}
                                                 >
                                                     {pt.digit}
@@ -1240,13 +1264,13 @@ const AutoXEo: React.FC = observer(() => {
                                     })}
                                 </svg>
                             ) : (
-                                <div className="chart-empty">Waiting for tick stream...</div>
+                                <div className='chart-empty'>Waiting for tick stream...</div>
                             )}
                         </div>
                     </div>
 
                     {/* Digit 0-9 Statistical Grid */}
-                    <div className="auto-x-eo__digits-grid">
+                    <div className='auto-x-eo__digits-grid'>
                         {digitStats.map(stat => {
                             const isTarget =
                                 (eoAnalysis.activeSignal === 'EVEN' && stat.isEven) ||
@@ -1257,14 +1281,14 @@ const AutoXEo: React.FC = observer(() => {
                                     key={stat.digit}
                                     className={`digit-stat-card ${stat.isEven ? 'is-even' : 'is-odd'} ${isTarget ? 'is-target' : ''}`}
                                 >
-                                    <span className="digit-num">{stat.digit}</span>
+                                    <span className='digit-num'>{stat.digit}</span>
                                     <span className={`digit-pct ${stat.percentage >= 10.5 ? 'highlight' : ''}`}>
                                         {stat.percentage}%
                                     </span>
-                                    <span className="digit-count">{stat.count} hits</span>
+                                    <span className='digit-count'>{stat.count} hits</span>
 
-                                    <div className="power-bar-wrap">
-                                        <div className="power-bar-fill" style={{ width: `${stat.power}%` }} />
+                                    <div className='power-bar-wrap'>
+                                        <div className='power-bar-fill' style={{ width: `${stat.power}%` }} />
                                     </div>
 
                                     <div className={`trend-indicator ${stat.isIncreasing ? 'up' : 'steady'}`}>
@@ -1284,70 +1308,88 @@ const AutoXEo: React.FC = observer(() => {
                     </div>
 
                     {/* Key Rankings Strip */}
-                    <div className="auto-x-eo__ranks-strip">
-                        <div className="rank-card">
-                            <div className="rank-info">
-                                <span className="title">Most Appearing Digit</span>
-                                <span className="sub">Rank #1 Frequency</span>
+                    <div className='auto-x-eo__ranks-strip'>
+                        <div className='rank-card'>
+                            <div className='rank-info'>
+                                <span className='title'>Most Appearing Digit</span>
+                                <span className='sub'>Rank #1 Frequency</span>
                             </div>
-                            <div className="rank-digit gold">{mostAppearing ?? '-'}</div>
+                            <div className='rank-digit gold'>{mostAppearing ?? '-'}</div>
                         </div>
 
-                        <div className="rank-card">
-                            <div className="rank-info">
-                                <span className="title">2nd Highest Appearing</span>
-                                <span className="sub">Rank #2 Frequency</span>
+                        <div className='rank-card'>
+                            <div className='rank-info'>
+                                <span className='title'>2nd Highest Appearing</span>
+                                <span className='sub'>Rank #2 Frequency</span>
                             </div>
-                            <div className="rank-digit silver">{secondHighest ?? '-'}</div>
+                            <div className='rank-digit silver'>{secondHighest ?? '-'}</div>
                         </div>
 
-                        <div className="rank-card">
-                            <div className="rank-info">
-                                <span className="title">Least Appearing Digit</span>
-                                <span className="sub">Coldest Digit</span>
+                        <div className='rank-card'>
+                            <div className='rank-info'>
+                                <span className='title'>Least Appearing Digit</span>
+                                <span className='sub'>Coldest Digit</span>
                             </div>
-                            <div className="rank-digit cold">{leastAppearing ?? '-'}</div>
+                            <div className='rank-digit cold'>{leastAppearing ?? '-'}</div>
                         </div>
                     </div>
 
                     {/* Dual Strategy Breakdown: Even/Odd & Over/Under */}
-                    <div className="auto-x-eo__strategy-grid">
+                    <div className='auto-x-eo__strategy-grid'>
                         {/* Even / Odd Smart AI Engine */}
-                        <div className="strategy-card">
-                            <div className="card-head">
+                        <div className='strategy-card'>
+                            <div className='card-head'>
                                 <h3>
                                     <Gauge size={18} /> Even / Odd Smart AI Engine
                                 </h3>
-                                <span className={`badge-indicator ${eoAnalysis.activeSignal !== 'NONE' ? 'ready' : 'waiting'}`}>
-                                    {eoAnalysis.activeSignal !== 'NONE' ? `SIGNAL: ${eoAnalysis.activeSignal}` : 'SCANNING MARKET'}
+                                <span
+                                    className={`badge-indicator ${eoAnalysis.activeSignal !== 'NONE' ? 'ready' : 'waiting'}`}
+                                >
+                                    {eoAnalysis.activeSignal !== 'NONE'
+                                        ? `SIGNAL: ${eoAnalysis.activeSignal}`
+                                        : 'SCANNING MARKET'}
                                 </span>
                             </div>
 
-                            <div className="eo-progress-section">
-                                <div className="eo-stats-row">
-                                    <span className="even-text">Even: {eoAnalysis.evenPct}% ({eoAnalysis.evenCount} hits)</span>
-                                    <span className="odd-text">Odd: {eoAnalysis.oddPct}% ({eoAnalysis.oddCount} hits)</span>
+                            <div className='eo-progress-section'>
+                                <div className='eo-stats-row'>
+                                    <span className='even-text'>
+                                        Even: {eoAnalysis.evenPct}% ({eoAnalysis.evenCount} hits)
+                                    </span>
+                                    <span className='odd-text'>
+                                        Odd: {eoAnalysis.oddPct}% ({eoAnalysis.oddCount} hits)
+                                    </span>
                                 </div>
-                                <div className="eo-progress-bar">
-                                    <div className="fill-even" style={{ width: `${eoAnalysis.evenPct}%` }} />
-                                    <div className="fill-odd" style={{ width: `${eoAnalysis.oddPct}%` }} />
+                                <div className='eo-progress-bar'>
+                                    <div className='fill-even' style={{ width: `${eoAnalysis.evenPct}%` }} />
+                                    <div className='fill-odd' style={{ width: `${eoAnalysis.oddPct}%` }} />
                                 </div>
                             </div>
 
-                            <div className="conditions-list">
-                                <div className={`condition-item ${eoAnalysis.evenPct >= targetProbabilityThreshold || eoAnalysis.oddPct >= targetProbabilityThreshold ? 'passed' : 'pending'}`}>
+                            <div className='conditions-list'>
+                                <div
+                                    className={`condition-item ${eoAnalysis.evenPct >= targetProbabilityThreshold || eoAnalysis.oddPct >= targetProbabilityThreshold ? 'passed' : 'pending'}`}
+                                >
                                     <CheckCircle2 size={14} />
-                                    <span>Target Probability &ge; {targetProbabilityThreshold}% &amp; Gaining Power</span>
+                                    <span>
+                                        Target Probability &ge; {targetProbabilityThreshold}% &amp; Gaining Power
+                                    </span>
                                 </div>
-                                <div className={`condition-item ${eoAnalysis.last15EvenPassed || eoAnalysis.last15OddPassed ? 'passed' : 'pending'}`}>
+                                <div
+                                    className={`condition-item ${eoAnalysis.last15EvenPassed || eoAnalysis.last15OddPassed ? 'passed' : 'pending'}`}
+                                >
                                     <CheckCircle2 size={14} />
                                     <span>Last 15 Ticks: &ge; 10 Digits Matching Direction</span>
                                 </div>
-                                <div className={`condition-item ${eoAnalysis.evenDigitsAbove10_5 >= 3 || eoAnalysis.oddDigitsAbove10_5 >= 3 ? 'passed' : 'pending'}`}>
+                                <div
+                                    className={`condition-item ${eoAnalysis.evenDigitsAbove10_5 >= 3 || eoAnalysis.oddDigitsAbove10_5 >= 3 ? 'passed' : 'pending'}`}
+                                >
                                     <CheckCircle2 size={14} />
                                     <span>&ge; 3 Target Digits &gt; 10.5% in Last 60 Ticks</span>
                                 </div>
-                                <div className={`condition-item ${eoAnalysis.evenPatternTriggered || eoAnalysis.oddPatternTriggered ? 'passed' : 'pending'}`}>
+                                <div
+                                    className={`condition-item ${eoAnalysis.evenPatternTriggered || eoAnalysis.oddPatternTriggered ? 'passed' : 'pending'}`}
+                                >
                                     <CheckCircle2 size={14} />
                                     <span>Reversal Trigger: 2+ Opposite then 1 Target Tick</span>
                                 </div>
@@ -1355,204 +1397,210 @@ const AutoXEo: React.FC = observer(() => {
                         </div>
 
                         {/* Over / Under Recovery Engine */}
-                        <div className="strategy-card">
-                            <div className="card-head">
+                        <div className='strategy-card'>
+                            <div className='card-head'>
                                 <h3>
                                     <Shield size={18} /> Over / Under Recovery Suite
                                 </h3>
-                                <span className={`badge-indicator ${ouAnalysis.bias !== 'NEUTRAL' ? 'ready' : 'waiting'}`}>
-                                    {isInRecovery ? `IN RECOVERY: -${accumulatedLoss.toFixed(2)} ${currency}` : `BIAS: ${ouAnalysis.bias}`}
+                                <span
+                                    className={`badge-indicator ${ouAnalysis.bias !== 'NEUTRAL' ? 'ready' : 'waiting'}`}
+                                >
+                                    {isInRecovery
+                                        ? `IN RECOVERY: -${accumulatedLoss.toFixed(2)} ${currency}`
+                                        : `BIAS: ${ouAnalysis.bias}`}
                                 </span>
                             </div>
 
-                            <div className="ou-splits">
-                                <div className="split-row">
-                                    <div className="split-labels">
-                                        <span>Under 0-4: {ouAnalysis.under04Pct}% ({ouAnalysis.under04})</span>
-                                        <span>Over 5-9: {ouAnalysis.over59Pct}% ({ouAnalysis.over59})</span>
+                            <div className='ou-splits'>
+                                <div className='split-row'>
+                                    <div className='split-labels'>
+                                        <span>
+                                            Under 0-4: {ouAnalysis.under04Pct}% ({ouAnalysis.under04})
+                                        </span>
+                                        <span>
+                                            Over 5-9: {ouAnalysis.over59Pct}% ({ouAnalysis.over59})
+                                        </span>
                                     </div>
-                                    <div className="split-bar">
-                                        <div className="under-part" style={{ width: `${ouAnalysis.under04Pct}%` }} />
-                                        <div className="over-part" style={{ width: `${ouAnalysis.over59Pct}%` }} />
+                                    <div className='split-bar'>
+                                        <div className='under-part' style={{ width: `${ouAnalysis.under04Pct}%` }} />
+                                        <div className='over-part' style={{ width: `${ouAnalysis.over59Pct}%` }} />
                                     </div>
                                 </div>
 
-                                <div className="split-row">
-                                    <div className="split-labels">
-                                        <span>Under 0-5: {ouAnalysis.under05Pct}% ({ouAnalysis.under05})</span>
-                                        <span>Over 4-9: {ouAnalysis.over49Pct}% ({ouAnalysis.over49})</span>
+                                <div className='split-row'>
+                                    <div className='split-labels'>
+                                        <span>
+                                            Under 0-5: {ouAnalysis.under05Pct}% ({ouAnalysis.under05})
+                                        </span>
+                                        <span>
+                                            Over 4-9: {ouAnalysis.over49Pct}% ({ouAnalysis.over49})
+                                        </span>
                                     </div>
-                                    <div className="split-bar">
-                                        <div className="under-part" style={{ width: `${ouAnalysis.under05Pct}%` }} />
-                                        <div className="over-part" style={{ width: `${ouAnalysis.over49Pct}%` }} />
+                                    <div className='split-bar'>
+                                        <div className='under-part' style={{ width: `${ouAnalysis.under05Pct}%` }} />
+                                        <div className='over-part' style={{ width: `${ouAnalysis.over49Pct}%` }} />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="entry-digits-row">
-                                <div className="entry-digit-card glowing-under">
-                                    <div className="info">
+                            <div className='entry-digits-row'>
+                                <div className='entry-digit-card glowing-under'>
+                                    <div className='info'>
                                         <span>Under Entry Digit</span>
                                         <span>Highest Under (0-4)</span>
                                     </div>
-                                    <div className="val-pill green">{ouAnalysis.highestUnderEntryDigit}</div>
+                                    <div className='val-pill green'>{ouAnalysis.highestUnderEntryDigit}</div>
                                 </div>
 
-                                <div className="entry-digit-card glowing-over">
-                                    <div className="info">
+                                <div className='entry-digit-card glowing-over'>
+                                    <div className='info'>
                                         <span>Over Entry Digit</span>
                                         <span>Highest Over (5-9)</span>
                                     </div>
-                                    <div className="val-pill amber">{ouAnalysis.highestOverEntryDigit}</div>
+                                    <div className='val-pill amber'>{ouAnalysis.highestOverEntryDigit}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Controls & Configuration Panel */}
-                    <div className="auto-x-eo__controls-grid">
-                        <div className="control-field">
+                    <div className='auto-x-eo__controls-grid'>
+                        <div className='control-field'>
                             <label>Initial Stake</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <input
-                                    type="number"
-                                    step="0.1"
+                                    type='number'
+                                    step='0.1'
                                     value={initialStake}
                                     onChange={e => setInitialStake(e.target.value)}
                                 />
-                                <span className="unit">{currency}</span>
+                                <span className='unit'>{currency}</span>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Take Profit</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <input
-                                    type="number"
-                                    step="1"
+                                    type='number'
+                                    step='1'
                                     value={takeProfit}
                                     onChange={e => setTakeProfit(e.target.value)}
                                 />
-                                <span className="unit">{currency}</span>
+                                <span className='unit'>{currency}</span>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Stop Loss</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <input
-                                    type="number"
-                                    step="1"
+                                    type='number'
+                                    step='1'
                                     value={stopLoss}
                                     onChange={e => setStopLoss(e.target.value)}
                                 />
-                                <span className="unit">{currency}</span>
+                                <span className='unit'>{currency}</span>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Martingale Multiplier</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <input
-                                    type="number"
-                                    step="0.1"
+                                    type='number'
+                                    step='0.1'
                                     value={martingale}
                                     onChange={e => setMartingale(e.target.value)}
                                 />
-                                <span className="unit">x</span>
+                                <span className='unit'>x</span>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Min Target Probability</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <input
-                                    type="number"
-                                    min="50"
-                                    max="85"
+                                    type='number'
+                                    min='50'
+                                    max='85'
                                     value={targetProbabilityThreshold}
                                     onChange={e => setTargetProbabilityThreshold(parseInt(e.target.value, 10) || 58)}
                                 />
-                                <span className="unit">%</span>
+                                <span className='unit'>%</span>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Tick Duration</label>
-                            <div className="input-box">
-                                <select
-                                    value={tickDuration}
-                                    onChange={e => setTickDuration(e.target.value)}
-                                >
-                                    <option value="1">1 Tick</option>
-                                    <option value="2">2 Ticks</option>
+                            <div className='input-box'>
+                                <select value={tickDuration} onChange={e => setTickDuration(e.target.value)}>
+                                    <option value='1'>1 Tick</option>
+                                    <option value='2'>2 Ticks</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Bulk Purchase Count</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <input
-                                    type="number"
-                                    min="1"
-                                    max="6"
+                                    type='number'
+                                    min='1'
+                                    max='6'
                                     value={bulkCount}
                                     onChange={e => setBulkCount(e.target.value)}
                                 />
-                                <span className="unit">trades</span>
+                                <span className='unit'>trades</span>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Auto Recovery Mode</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <select
                                     value={autoRecoveryMode ? 'ENABLED' : 'DISABLED'}
                                     onChange={e => setAutoRecoveryMode(e.target.value === 'ENABLED')}
                                 >
-                                    <option value="ENABLED">Enabled (2.6x O/U)</option>
-                                    <option value="DISABLED">Disabled (Standard)</option>
+                                    <option value='ENABLED'>Enabled (2.6x O/U)</option>
+                                    <option value='DISABLED'>Disabled (Standard)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Recovery Strategy</label>
-                            <div className="input-box">
-                                <select
-                                    value={recoveryType}
-                                    onChange={e => setRecoveryType(e.target.value as any)}
-                                >
-                                    <option value="OVER_2_UNDER_8">Over 2 / Under 8</option>
-                                    <option value="OVER_3_UNDER_6">Over 3 / Under 6</option>
+                            <div className='input-box'>
+                                <select value={recoveryType} onChange={e => setRecoveryType(e.target.value as any)}>
+                                    <option value='OVER_2_UNDER_8'>Over 2 / Under 8</option>
+                                    <option value='OVER_3_UNDER_6'>Over 3 / Under 6</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div className="control-field">
+                        <div className='control-field'>
                             <label>Auto-Switch Threshold</label>
-                            <div className="input-box">
+                            <div className='input-box'>
                                 <input
-                                    type="number"
-                                    min="3"
-                                    max="20"
+                                    type='number'
+                                    min='3'
+                                    max='20'
                                     value={maxRunsBeforeCheck}
                                     onChange={e => setMaxRunsBeforeCheck(parseInt(e.target.value, 10) || 6)}
                                 />
-                                <span className="unit">runs</span>
+                                <span className='unit'>runs</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Live Trade Logs */}
-                    <div className="auto-x-eo__logs-card">
-                        <div className="logs-header">
+                    <div className='auto-x-eo__logs-card'>
+                        <div className='logs-header'>
                             <h3>Real-Time Trade Stream</h3>
-                            <span className="badge-count">{tradeLog.length} Records</span>
+                            <span className='badge-count'>{tradeLog.length} Records</span>
                         </div>
 
-                        <div className="logs-table-wrap">
+                        <div className='logs-table-wrap'>
                             {tradeLog.length > 0 ? (
                                 <table>
                                     <thead>
@@ -1575,21 +1623,32 @@ const AutoXEo: React.FC = observer(() => {
                                                 <td>{item.strategy}</td>
                                                 <td>{item.contractType}</td>
                                                 <td>{item.prediction !== undefined ? item.prediction : '-'}</td>
-                                                <td>{item.stake.toFixed(2)} {currency}</td>
+                                                <td>
+                                                    {item.stake.toFixed(2)} {currency}
+                                                </td>
                                                 <td>
                                                     <span className={`badge-${item.result.toLowerCase()}`}>
                                                         {item.result}
                                                     </span>
                                                 </td>
-                                                <td style={{ color: item.profit >= 0 ? '#10b981' : '#ef4444', fontWeight: 700 }}>
-                                                    {item.profit !== 0 ? `${item.profit > 0 ? '+' : ''}${item.profit.toFixed(2)} ${currency}` : '-'}
+                                                <td
+                                                    style={{
+                                                        color: item.profit >= 0 ? '#10b981' : '#ef4444',
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    {item.profit !== 0
+                                                        ? `${item.profit > 0 ? '+' : ''}${item.profit.toFixed(2)} ${currency}`
+                                                        : '-'}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             ) : (
-                                <div className="no-logs">No trades executed yet. Click &quot;START AUTO TRADER&quot; to begin.</div>
+                                <div className='no-logs'>
+                                    No trades executed yet. Click &quot;START AUTO TRADER&quot; to begin.
+                                </div>
                             )}
                         </div>
                     </div>
@@ -1601,7 +1660,7 @@ const AutoXEo: React.FC = observer(() => {
                 amount={sessionProfit}
                 targetAmount={milestone.type === 'tp' ? parseFloat(takeProfit) || 10 : parseFloat(stopLoss) || 25}
                 currency={currency}
-                botName="AUTO X E/O Bot"
+                botName='AUTO X E/O Bot'
                 winsCount={winsCount}
                 lossesCount={lossesCount}
                 onClose={() => setMilestone({ isOpen: false, type: null })}

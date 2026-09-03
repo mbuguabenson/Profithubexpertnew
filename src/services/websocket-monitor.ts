@@ -32,7 +32,7 @@ export const initWebSocketMonitor = () => {
                 }
             });
 
-            this.addEventListener('message', (event) => {
+            this.addEventListener('message', event => {
                 let size = 0;
                 let data = event.data;
 
@@ -41,7 +41,7 @@ export const initWebSocketMonitor = () => {
                     try {
                         const parsed = JSON.parse(event.data);
                         data = parsed;
-                        
+
                         // Handle latency measurement from manual pings
                         if (parsed.msg_type === 'ping' && this.lastPingTime > 0) {
                             const latency = Math.round(performance.now() - this.lastPingTime);
@@ -53,8 +53,7 @@ export const initWebSocketMonitor = () => {
                         if (parsed.msg_type === 'time' && parsed.time) {
                             systemCenterStore.setServerTime(parsed.time);
                         }
-
-                    } catch (e) { }
+                    } catch (e) {}
                 }
 
                 const msg: TWsMessage = {
@@ -63,7 +62,7 @@ export const initWebSocketMonitor = () => {
                     type: typeof data === 'object' && data.msg_type ? data.msg_type : 'unknown',
                     size,
                     timestamp: Date.now(),
-                    data
+                    data,
                 };
                 systemCenterStore.logWsMessage(msg);
             });
@@ -77,7 +76,7 @@ export const initWebSocketMonitor = () => {
                 size = new Blob([data]).size;
                 try {
                     parsedData = JSON.parse(data);
-                } catch (e) { }
+                } catch (e) {}
             } else if (data instanceof Blob) {
                 size = data.size;
             }
@@ -85,10 +84,13 @@ export const initWebSocketMonitor = () => {
             const msg: TWsMessage = {
                 id: Math.random().toString(36).substr(2, 9),
                 direction: 'OUT',
-                type: typeof parsedData === 'object' && Object.keys(parsedData)[0] ? Object.keys(parsedData)[0] : 'unknown',
+                type:
+                    typeof parsedData === 'object' && Object.keys(parsedData)[0]
+                        ? Object.keys(parsedData)[0]
+                        : 'unknown',
                 size,
                 timestamp: Date.now(),
-                data: parsedData
+                data: parsedData,
             };
             systemCenterStore.logWsMessage(msg);
 

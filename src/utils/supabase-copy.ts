@@ -67,7 +67,9 @@ export const publishTraderProfile = async (profile: CopyTraderProfile): Promise<
 
 export const getPublicTraders = async (): Promise<CopyTraderProfile[]> => {
     try {
-        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_traders?is_public=eq.true&select=*` : `${SUPABASE_URL}/rest/v1/copy_traders?is_public=eq.true&select=*`;
+        const endpoint = USE_PROXY
+            ? `${SUPABASE_URL}copy_traders?is_public=eq.true&select=*`
+            : `${SUPABASE_URL}/rest/v1/copy_traders?is_public=eq.true&select=*`;
         const response = await safeFetch(endpoint, {
             method: 'GET',
             headers: {
@@ -85,7 +87,9 @@ export const getPublicTraders = async (): Promise<CopyTraderProfile[]> => {
 
 export const getTraderProfile = async (loginid: string): Promise<CopyTraderProfile | null> => {
     try {
-        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_traders?loginid=eq.${encodeURIComponent(loginid)}&select=*` : `${SUPABASE_URL}/rest/v1/copy_traders?loginid=eq.${encodeURIComponent(loginid)}&select=*`;
+        const endpoint = USE_PROXY
+            ? `${SUPABASE_URL}copy_traders?loginid=eq.${encodeURIComponent(loginid)}&select=*`
+            : `${SUPABASE_URL}/rest/v1/copy_traders?loginid=eq.${encodeURIComponent(loginid)}&select=*`;
         const response = await safeFetch(endpoint, {
             method: 'GET',
             headers: {
@@ -211,7 +215,9 @@ export const updateCopyRequestStatus = async (
             ...(status === 'accepted' && { accepted_at: new Date().toISOString() }),
         };
 
-        const endpoint = USE_PROXY ? `${SUPABASE_URL}copy_requests?id=eq.${requestId}` : `${SUPABASE_URL}/rest/v1/copy_requests?id=eq.${requestId}`;
+        const endpoint = USE_PROXY
+            ? `${SUPABASE_URL}copy_requests?id=eq.${requestId}`
+            : `${SUPABASE_URL}/rest/v1/copy_requests?id=eq.${requestId}`;
         const response = await fetch(endpoint, {
             method: 'PATCH',
             headers: {
@@ -244,7 +250,9 @@ export const sendChatMessage = (msg: Omit<ChatMessage, 'id'>): ChatMessage => {
         const existing: ChatMessage[] = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
         existing.push(fullMsg);
         localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(existing));
-    } catch { /* ignore */ }
+    } catch {
+        /* ignore */
+    }
     return fullMsg;
 };
 
@@ -253,14 +261,18 @@ export const getChatMessages = (loginid?: string): ChatMessage[] => {
         const all: ChatMessage[] = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
         if (!loginid) return all;
         return all.filter(m => m.loginid === loginid);
-    } catch { return []; }
+    } catch {
+        return [];
+    }
 };
 
 export const getChatSessions = (): string[] => {
     try {
         const all: ChatMessage[] = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
         return [...new Set(all.map(m => m.loginid))];
-    } catch { return []; }
+    } catch {
+        return [];
+    }
 };
 
 // ─── Frontend Site Configuration (localStorage-backed) ────────────────────────
@@ -316,10 +328,11 @@ export const getDefaultTabConfig = (): TabConfigItem[] => [
     { key: 'poverty_hunter', label: 'Poverty Hunter 🎯', enabled: true, order: 18 },
     { key: 'auto_x_eo', label: 'AUTO X E/O ⚡', enabled: true, order: 19 },
     { key: 'dtrader', label: 'DTrader 📈', enabled: true, order: 20 },
+    { key: 'overlord_ai', label: 'OVERLORD AI 👑', enabled: true, order: 21 },
 ];
 
 // Bump this when new tabs are added to force clients to pick up new defaults
-const TAB_CONFIG_VERSION = 18;
+const TAB_CONFIG_VERSION = 19;
 
 export const getSiteConfig = (): SiteConfig => {
     try {
@@ -366,7 +379,9 @@ export const getSiteConfig = (): SiteConfig => {
             }
             return stored;
         }
-    } catch { /* ignore */ }
+    } catch {
+        /* ignore */
+    }
     return {
         primaryColor: '#f5c542',
         secondaryColor: '#0e0e0e',
@@ -394,9 +409,13 @@ export const saveSiteConfig = (config: Partial<SiteConfig>): void => {
     const merged = { ...current, ...config };
     localStorage.setItem(SITE_CONFIG_KEY, JSON.stringify(merged));
     // Save to backend API asynchronously
-    import('./admin-api').then(({ saveSiteConfigApi }) => {
-        saveSiteConfigApi(merged);
-    }).catch(() => {/* ignore */});
+    import('./admin-api')
+        .then(({ saveSiteConfigApi }) => {
+            saveSiteConfigApi(merged);
+        })
+        .catch(() => {
+            /* ignore */
+        });
     // Dispatch event so the main site picks it up in real-time
     window.dispatchEvent(new CustomEvent('profithub_config_changed', { detail: merged }));
 };
@@ -413,7 +432,11 @@ export interface UploadedBot {
 const UPLOADED_BOTS_KEY = 'profithub_uploaded_bots';
 
 export const getUploadedBots = (): UploadedBot[] => {
-    try { return JSON.parse(localStorage.getItem(UPLOADED_BOTS_KEY) || '[]'); } catch { return []; }
+    try {
+        return JSON.parse(localStorage.getItem(UPLOADED_BOTS_KEY) || '[]');
+    } catch {
+        return [];
+    }
 };
 
 export const saveUploadedBot = (bot: Omit<UploadedBot, 'id' | 'uploadedAt'>): void => {
@@ -439,7 +462,11 @@ export interface PlatformNotification {
 const NOTIFICATIONS_STORAGE_KEY = 'profithub_platform_notifications';
 
 export const getPlatformNotifications = (): PlatformNotification[] => {
-    try { return JSON.parse(localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || '[]'); } catch { return []; }
+    try {
+        return JSON.parse(localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || '[]');
+    } catch {
+        return [];
+    }
 };
 
 export const pushPlatformNotification = (title: string, message: string): void => {
@@ -449,7 +476,7 @@ export const pushPlatformNotification = (title: string, message: string): void =
         title,
         message,
         timestamp: Date.now(),
-        is_read: false
+        is_read: false,
     });
     localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(items));
 };
@@ -473,15 +500,41 @@ export const getMpesaTransactions = (): MpesaTransaction[] => {
         if (!raw) {
             // Seed mock transactions
             const mocks: MpesaTransaction[] = [
-                { id: 'TXN-876251', phoneNumber: '254712345678', amount: 1500, packageName: 'Weekly Pass', timestamp: Date.now() - 3600000 * 4, status: 'completed', reference: 'MPESA-MPG87H9' },
-                { id: 'TXN-912851', phoneNumber: '254722998877', amount: 5000, packageName: 'Monthly Premium', timestamp: Date.now() - 3600000 * 24, status: 'completed', reference: 'MPESA-MPL23X2' },
-                { id: 'TXN-421764', phoneNumber: '254799001122', amount: 1500, packageName: 'Weekly Pass', timestamp: Date.now() - 3600000 * 48, status: 'failed', reference: 'MPESA-MPE12L1' }
+                {
+                    id: 'TXN-876251',
+                    phoneNumber: '254712345678',
+                    amount: 1500,
+                    packageName: 'Weekly Pass',
+                    timestamp: Date.now() - 3600000 * 4,
+                    status: 'completed',
+                    reference: 'MPESA-MPG87H9',
+                },
+                {
+                    id: 'TXN-912851',
+                    phoneNumber: '254722998877',
+                    amount: 5000,
+                    packageName: 'Monthly Premium',
+                    timestamp: Date.now() - 3600000 * 24,
+                    status: 'completed',
+                    reference: 'MPESA-MPL23X2',
+                },
+                {
+                    id: 'TXN-421764',
+                    phoneNumber: '254799001122',
+                    amount: 1500,
+                    packageName: 'Weekly Pass',
+                    timestamp: Date.now() - 3600000 * 48,
+                    status: 'failed',
+                    reference: 'MPESA-MPE12L1',
+                },
             ];
             localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(mocks));
             return mocks;
         }
         return JSON.parse(raw);
-    } catch { return []; }
+    } catch {
+        return [];
+    }
 };
 
 export const saveMpesaTransaction = (txn: MpesaTransaction): void => {
@@ -509,16 +562,50 @@ export const getCommissions = (): MarkupCommission[] => {
         if (!raw) {
             const now = new Date();
             const mocks: MarkupCommission[] = [
-                { id: 'COMM-101', date: new Date(now.getTime() - 3600000 * 2).toISOString(), clientId: 'CR4879210', volume: 1250.50, profitShare: 200.00, amount: 40.00, status: 'paid' },
-                { id: 'COMM-102', date: new Date(now.getTime() - 3600000 * 24).toISOString(), clientId: 'CR3891024', volume: 800.00, profitShare: 150.00, amount: 30.00, status: 'pending' },
-                { id: 'COMM-103', date: new Date(now.getTime() - 3600000 * 72).toISOString(), clientId: 'CR2987162', volume: 2100.00, profitShare: 450.00, amount: 90.00, status: 'unpaid' },
-                { id: 'COMM-104', date: new Date(now.getTime() - 3600000 * 120).toISOString(), clientId: 'CR5123984', volume: 450.00, profitShare: 80.00, amount: 16.00, status: 'paid' }
+                {
+                    id: 'COMM-101',
+                    date: new Date(now.getTime() - 3600000 * 2).toISOString(),
+                    clientId: 'CR4879210',
+                    volume: 1250.5,
+                    profitShare: 200.0,
+                    amount: 40.0,
+                    status: 'paid',
+                },
+                {
+                    id: 'COMM-102',
+                    date: new Date(now.getTime() - 3600000 * 24).toISOString(),
+                    clientId: 'CR3891024',
+                    volume: 800.0,
+                    profitShare: 150.0,
+                    amount: 30.0,
+                    status: 'pending',
+                },
+                {
+                    id: 'COMM-103',
+                    date: new Date(now.getTime() - 3600000 * 72).toISOString(),
+                    clientId: 'CR2987162',
+                    volume: 2100.0,
+                    profitShare: 450.0,
+                    amount: 90.0,
+                    status: 'unpaid',
+                },
+                {
+                    id: 'COMM-104',
+                    date: new Date(now.getTime() - 3600000 * 120).toISOString(),
+                    clientId: 'CR5123984',
+                    volume: 450.0,
+                    profitShare: 80.0,
+                    amount: 16.0,
+                    status: 'paid',
+                },
             ];
             localStorage.setItem(COMMISSIONS_STORAGE_KEY, JSON.stringify(mocks));
             return mocks;
         }
         return JSON.parse(raw);
-    } catch { return []; }
+    } catch {
+        return [];
+    }
 };
 
 export const addCommission = (comm: MarkupCommission): void => {
@@ -552,15 +639,35 @@ export const getSystemLogs = (): SystemLogItem[] => {
         const raw = localStorage.getItem(SYSTEM_LOGS_STORAGE_KEY);
         if (!raw) {
             const mocks: SystemLogItem[] = [
-                { id: 'LOG-001', timestamp: Date.now() - 3600000 * 5, level: 'info', message: 'Deriv API connection established successfully.', component: 'Deriv WS' },
-                { id: 'LOG-002', timestamp: Date.now() - 3600000 * 3, level: 'warn', message: 'WebSocket ping latency exceeded 350ms.', component: 'Network Monitor' },
-                { id: 'LOG-003', timestamp: Date.now() - 3600000 * 2, level: 'error', message: 'Failed to authorize client token VR129841. Error code: AuthorizationExpired.', component: 'Replicator Engine' }
+                {
+                    id: 'LOG-001',
+                    timestamp: Date.now() - 3600000 * 5,
+                    level: 'info',
+                    message: 'Deriv API connection established successfully.',
+                    component: 'Deriv WS',
+                },
+                {
+                    id: 'LOG-002',
+                    timestamp: Date.now() - 3600000 * 3,
+                    level: 'warn',
+                    message: 'WebSocket ping latency exceeded 350ms.',
+                    component: 'Network Monitor',
+                },
+                {
+                    id: 'LOG-003',
+                    timestamp: Date.now() - 3600000 * 2,
+                    level: 'error',
+                    message: 'Failed to authorize client token VR129841. Error code: AuthorizationExpired.',
+                    component: 'Replicator Engine',
+                },
             ];
             localStorage.setItem(SYSTEM_LOGS_STORAGE_KEY, JSON.stringify(mocks));
             return mocks;
         }
         return JSON.parse(raw);
-    } catch { return []; }
+    } catch {
+        return [];
+    }
 };
 
 export const addSystemLog = (level: 'info' | 'warn' | 'error', message: string, component: string): void => {
@@ -570,7 +677,7 @@ export const addSystemLog = (level: 'info' | 'warn' | 'error', message: string, 
         timestamp: Date.now(),
         level,
         message,
-        component
+        component,
     });
     if (list.length > 200) {
         list.splice(200);

@@ -154,7 +154,11 @@ export const CookieStorage = function (this: TCookieStorageThis, cookie_name: st
     this.cookie_name = cookie_name;
     this.domain =
         cookie_domain ||
-        (hostname.includes('binary.sx') ? 'binary.sx' : (hostname.includes('deriv.com') ? deriv_urls.DERIV_HOST_NAME : undefined));
+        (hostname.includes('binary.sx')
+            ? 'binary.sx'
+            : hostname.includes('deriv.com')
+              ? deriv_urls.DERIV_HOST_NAME
+              : undefined);
     this.path = '/';
     this.expires = new Date('Thu, 1 Jan 2037 12:00:00 GMT');
     this.value = {};
@@ -205,8 +209,10 @@ CookieStorage.prototype = {
 export const removeCookies = (...cookie_names: string[]) => {
     const host = typeof document !== 'undefined' ? document.domain : '';
     const parts = host ? host.split('.') : [];
-    const isCompound = parts.length >= 3 && ['co', 'com', 'org', 'net', 'edu', 'gov'].includes(parts[parts.length - 2].toLowerCase());
-    const topDomain = isCompound && parts.length >= 3 ? `.${parts.slice(-3).join('.')}` : `.${parts.slice(-2).join('.')}`;
+    const isCompound =
+        parts.length >= 3 && ['co', 'com', 'org', 'net', 'edu', 'gov'].includes(parts[parts.length - 2].toLowerCase());
+    const topDomain =
+        isCompound && parts.length >= 3 ? `.${parts.slice(-3).join('.')}` : `.${parts.slice(-2).join('.')}`;
     const domains = [topDomain, `.${host}`, host];
 
     let parent_path = typeof window !== 'undefined' ? window.location.pathname.split('/', 2)[1] : '';

@@ -1,6 +1,5 @@
 @use '@/components/shared/styles/mixins.scss' as *;
 
-
 .over-under-analysis {
     padding: to-rem(24px);
     background: linear-gradient(135deg, #020617 0%, #061028 100%);
@@ -376,4 +375,3 @@
         transform: translateY(-4px);
     }
 }
-

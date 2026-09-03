@@ -2,11 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import { localize } from '@deriv-com/translations';
-import {
-    generateDerivApiInstance,
-    getLoginId,
-    getToken,
-} from '@/external/bot-skeleton/services/api/appId';
+import { generateDerivApiInstance, getLoginId, getToken } from '@/external/bot-skeleton/services/api/appId';
 import { contract_stages } from '@/constants/contract-stage';
 import { useStore } from '@/hooks/useStore';
 import './hyperbot.css';
@@ -551,7 +547,9 @@ const Hyperbot = observer(() => {
                             duration: 1,
                             duration_unit: 't',
                             underlying_symbol: market,
-                            ...(barrierDigit !== undefined && barrierDigit !== null && barrierDigit !== '' ? { barrier: String(barrierDigit) } : {}),
+                            ...(barrierDigit !== undefined && barrierDigit !== null && barrierDigit !== ''
+                                ? { barrier: String(barrierDigit) }
+                                : {}),
                         },
                     };
 
@@ -816,7 +814,9 @@ const Hyperbot = observer(() => {
                                 duration: 1,
                                 duration_unit: 't',
                                 underlying_symbol: market,
-                                ...(barrierDigit !== undefined && barrierDigit !== null && barrierDigit !== '' ? { barrier: String(barrierDigit) } : {}),
+                                ...(barrierDigit !== undefined && barrierDigit !== null && barrierDigit !== ''
+                                    ? { barrier: String(barrierDigit) }
+                                    : {}),
                             },
                         };
 

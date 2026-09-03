@@ -226,8 +226,12 @@ const QuickStrategyForm = observer(() => {
                                         name={field.name as string}
                                         label={field.label as string}
                                         description={field.description ? String(field.description) : undefined}
-                                        isEnabledToggleSwitch={field.name === 'boolean_max_stake' ? !!isEnabledToggleSwitch : undefined}
-                                        setIsEnabledToggleSwitch={field.name === 'boolean_max_stake' ? toggleSwitch : undefined}
+                                        isEnabledToggleSwitch={
+                                            field.name === 'boolean_max_stake' ? !!isEnabledToggleSwitch : undefined
+                                        }
+                                        setIsEnabledToggleSwitch={
+                                            field.name === 'boolean_max_stake' ? toggleSwitch : undefined
+                                        }
                                     />
                                 );
                             // Dedicated components only for Quick-Strategy

@@ -318,7 +318,7 @@
                     color: #00d2ff;
                 }
 
-                input[type="checkbox"] {
+                input[type='checkbox'] {
                     accent-color: #00d2ff;
                     cursor: pointer;
                 }
@@ -1209,7 +1209,8 @@
                     box-shadow: 0 0 10px rgba(245, 197, 66, 0.25);
                 }
 
-                input, select {
+                input,
+                select {
                     width: 100%;
                     background: transparent;
                     border: none;

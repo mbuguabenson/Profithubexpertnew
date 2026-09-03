@@ -2,28 +2,32 @@
 // ✦ SIGNALS TAB — DUAL MODE (LIGHT & DARK)
 // ═══════════════════════════════════════════════════════════════
 
-:root, body.theme--light, .theme--light {
-    --sig-bg:             #f3f2f8;
-    --sig-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
-    --sig-card-border:    rgba(124, 58, 237, 0.16);
-    --sig-shadow-raised:  8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
-    --sig-shadow-hover:   12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
-    --sig-shadow-inset:   inset 4px 4px 10px #e0dcfa, inset -3px -3px 8px #ffffff;
-    --sig-text-main:      #1e1438;
-    --sig-text-sub:       #584b7a;
-    --sig-select-bg:      #f7f6fc;
+:root,
+body.theme--light,
+.theme--light {
+    --sig-bg: #f3f2f8;
+    --sig-card-bg: linear-gradient(145deg, #ffffff, #f0edf9);
+    --sig-card-border: rgba(124, 58, 237, 0.16);
+    --sig-shadow-raised: 8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
+    --sig-shadow-hover: 12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
+    --sig-shadow-inset: inset 4px 4px 10px #e0dcfa, inset -3px -3px 8px #ffffff;
+    --sig-text-main: #1e1438;
+    --sig-text-sub: #584b7a;
+    --sig-select-bg: #f7f6fc;
 }
 
-body.theme--dark, .theme--dark {
-    --sig-bg:             #0b0a1a;
-    --sig-card-bg:        linear-gradient(145deg, #161033, #100b27);
-    --sig-card-border:    rgba(168, 85, 247, 0.18);
-    --sig-shadow-raised:  12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
-    --sig-shadow-hover:   16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
-    --sig-shadow-inset:   inset 6px 6px 14px rgba(4, 2, 12, 0.8), inset -4px -4px 10px rgba(168, 85, 247, 0.06);
-    --sig-text-main:      #ffffff;
-    --sig-text-sub:       #e9d5ff;
-    --sig-select-bg:      linear-gradient(145deg, #110c28, #1c1444);
+body.theme--dark,
+.theme--dark {
+    --sig-bg: #0b0a1a;
+    --sig-card-bg: linear-gradient(145deg, #161033, #100b27);
+    --sig-card-border: rgba(168, 85, 247, 0.18);
+    --sig-shadow-raised: 12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
+    --sig-shadow-hover:
+        16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
+    --sig-shadow-inset: inset 6px 6px 14px rgba(4, 2, 12, 0.8), inset -4px -4px 10px rgba(168, 85, 247, 0.06);
+    --sig-text-main: #ffffff;
+    --sig-text-sub: #e9d5ff;
+    --sig-select-bg: linear-gradient(145deg, #110c28, #1c1444);
 }
 
 .signals-tab-wrapper {
@@ -139,7 +143,9 @@ body.theme--dark, .theme--dark {
                 text-transform: uppercase;
                 letter-spacing: 0.06em;
 
-                .lbl-icon { color: #7c3aed; }
+                .lbl-icon {
+                    color: #7c3aed;
+                }
             }
 
             .select-input-wrap {
@@ -157,7 +163,9 @@ body.theme--dark, .theme--dark {
                     font-weight: 700;
                     outline: none;
                     cursor: pointer;
-                    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                    transition:
+                        border-color 0.2s ease,
+                        box-shadow 0.2s ease;
 
                     &:focus {
                         border-color: rgba(124, 58, 237, 0.6);
@@ -214,11 +222,21 @@ body.theme--dark, .theme--dark {
             place-items: center;
             flex-shrink: 0;
 
-            &.text-cyan { color: #06b6d4; }
-            &.text-green { color: #10b981; }
-            &.text-red { color: #ef4444; }
-            &.text-purple { color: #7c3aed; }
-            &.text-amber { color: #f59e0b; }
+            &.text-cyan {
+                color: #06b6d4;
+            }
+            &.text-green {
+                color: #10b981;
+            }
+            &.text-red {
+                color: #ef4444;
+            }
+            &.text-purple {
+                color: #7c3aed;
+            }
+            &.text-amber {
+                color: #f59e0b;
+            }
         }
 
         .metric-body {
@@ -240,10 +258,18 @@ body.theme--dark, .theme--dark {
                 font-weight: 800;
                 color: var(--sig-text-main);
 
-                &.text-green { color: #10b981; }
-                &.text-red { color: #ef4444; }
-                &.text-purple { color: #7c3aed; }
-                &.text-amber { color: #f59e0b; }
+                &.text-green {
+                    color: #10b981;
+                }
+                &.text-red {
+                    color: #ef4444;
+                }
+                &.text-purple {
+                    color: #7c3aed;
+                }
+                &.text-amber {
+                    color: #f59e0b;
+                }
             }
         }
     }
@@ -283,9 +309,15 @@ body.theme--dark, .theme--dark {
                     margin: 0;
                 }
 
-                .text-purple { color: #7c3aed; }
-                .text-cyan { color: #06b6d4; }
-                .text-green { color: #10b981; }
+                .text-purple {
+                    color: #7c3aed;
+                }
+                .text-cyan {
+                    color: #06b6d4;
+                }
+                .text-green {
+                    color: #10b981;
+                }
             }
 
             .pill-badge {
@@ -336,6 +368,13 @@ body.theme--dark, .theme--dark {
 }
 
 @keyframes pulseGlow {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.85); }
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.4;
+        transform: scale(0.85);
+    }
 }

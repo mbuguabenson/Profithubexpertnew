@@ -108,7 +108,10 @@ export function createTransport(): TTransport {
                     }
                 })
                 .catch((error: any) => {
-                    logger.warn('Subscription request failed gracefully:', error?.error?.message || error?.message || error);
+                    logger.warn(
+                        'Subscription request failed gracefully:',
+                        error?.error?.message || error?.message || error
+                    );
                     // Clean up failed subscription
                     const storedSub = subscriptions.get(tempId);
                     if (storedSub?.messageSubscription) {

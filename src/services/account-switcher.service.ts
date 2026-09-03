@@ -11,12 +11,11 @@ import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import {
     setAccountList,
     setAuthData,
-    setIsAuthorized,
     setIsAuthorizing,
 } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
 import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
-import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 import { isDemoAccount } from '@/utils/account-helpers';
+import { getAccountsList, getActiveToken } from '@/utils/token-bridge';
 
 export class AccountSwitcherService {
     private static isSwitching = false;
@@ -98,13 +97,17 @@ export class AccountSwitcherService {
                             }
                         }
                     }
-                } catch {}
+                } catch (e: any) {
+                    // Silently ignore parse errors
+                    console.debug('[AccountSwitcherService] Could not parse client_account_details:', e?.message);
+                }
             }
 
             // Priority 3: Check client.accounts
             if (targetBalance === 0) {
                 try {
-                    const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+                    const rawClientAccounts =
+                        localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
                     if (rawClientAccounts) {
                         const parsed = JSON.parse(rawClientAccounts);
                         const found = parsed[targetLoginId];
@@ -113,7 +116,10 @@ export class AccountSwitcherService {
                             targetCurrency = found.currency || targetCurrency;
                         }
                     }
-                } catch {}
+                } catch (e: any) {
+                    // Silently ignore parse errors
+                    console.debug('[AccountSwitcherService] Could not parse client.accounts:', e?.message);
+                }
             }
 
             const isVirtual = isDemoAccount(targetLoginId);
@@ -121,51 +127,28 @@ export class AccountSwitcherService {
             localStorage.setItem('active_currency', targetCurrency);
             const balance = targetBalance;
 
-            // 4. INSTANT OPTIMISTIC STORE UPDATES (0ms perceived UI latency)
-            if (clientStore) {
-                if (typeof clientStore.setLoginId === 'function') clientStore.setLoginId(targetLoginId);
-                if (typeof clientStore.setCurrency === 'function') clientStore.setCurrency(targetCurrency);
-                if (typeof clientStore.setBalance === 'function') clientStore.setBalance(String(balance));
-                if (typeof clientStore.setIsVirtual === 'function') clientStore.setIsVirtual(isVirtual ? 1 : 0);
-                if (typeof clientStore.setWebSocketLoginId === 'function') clientStore.setWebSocketLoginId(targetLoginId);
-                if (typeof clientStore.setIsLoggedIn === 'function') clientStore.setIsLoggedIn(true);
-            }
-
+            // 4. Persist the target account to the socket/account state, but do not
+            // mutate the active client state until the authoritative authorize response
+            // confirms that the selected account is the one we actually switched to.
             api_base.account_info = {
                 balance,
                 currency: targetCurrency,
                 loginid: targetLoginId,
             };
-            api_base.token = targetLoginId;
+            api_base.token = targetToken || targetLoginId;
 
-            // Update RxJS connection status observables
-            setAuthData({
-                loginid: targetLoginId,
-                currency: targetCurrency,
-                balance,
-                is_virtual: isVirtual ? 1 : 0,
-                email: '',
-                fullname: '',
-                landing_company_name: 'svg',
-                user_id: 0,
-            } as any);
+            // Only flip the UI/auth state after the WS authorize confirms the target
+            // account. This prevents stale balance and account-list updates from older
+            // or still-in-flight sessions from overwriting the active account state.
+            setIsAuthorizing(true);
 
-            // Synchronize accountList observable immediately
-            try {
-                const currentList = Array.isArray(clientStore?.account_list) ? [...clientStore.account_list] : [];
-                if (currentList.length > 0) {
-                    const updated = currentList.map((a: any) =>
-                        a.loginid === targetLoginId ? { ...a, balance, currency: targetCurrency } : a
-                    );
-                    setAccountList(updated);
-                }
-            } catch {}
-
-            setIsAuthorized(true);
-            setIsAuthorizing(false);
-
-            // 5. Broadcast global instant sync events for all listening components
-            window.dispatchEvent(new CustomEvent('account_switched', { detail: { loginid: targetLoginId, currency: targetCurrency, balance, token: targetToken } }));
+            // 5. Broadcast the switch intent before the final authorize completes so
+            // other listeners can safely suspend active bot work without trusting stale data.
+            window.dispatchEvent(
+                new CustomEvent('account_switching_start', {
+                    detail: { loginid: targetLoginId, currency: targetCurrency, balance, token: targetToken },
+                })
+            );
             window.dispatchEvent(new Event('currency_changed'));
             window.dispatchEvent(new Event('storage'));
 
@@ -175,7 +158,12 @@ export class AccountSwitcherService {
 
             let authorized = false;
 
-            if (api_base.api && api_base.api.connection && api_base.api.connection.readyState === WebSocket.OPEN && targetToken) {
+            if (
+                api_base.api &&
+                api_base.api.connection &&
+                api_base.api.connection.readyState === WebSocket.OPEN &&
+                targetToken
+            ) {
                 const authorizePromise = (async () => {
                     if (targetToken && typeof api_base.api.authorize === 'function') {
                         return api_base.api.authorize(targetToken);
@@ -190,8 +178,14 @@ export class AccountSwitcherService {
                 try {
                     const res: any = await Promise.race([authorizePromise, timeoutPromise]);
                     if (res?.authorize && res.authorize.loginid === targetLoginId) {
-                        console.log('[AccountSwitcherService] WebSocket authorized successfully for:', res.authorize.loginid);
-                        const authBalance = typeof res.authorize.balance === 'number' ? res.authorize.balance : parseFloat(res.authorize.balance || '0');
+                        console.log(
+                            '[AccountSwitcherService] WebSocket authorized successfully for:',
+                            res.authorize.loginid
+                        );
+                        const authBalance =
+                            typeof res.authorize.balance === 'number'
+                                ? res.authorize.balance
+                                : parseFloat(res.authorize.balance || '0');
                         const authCurrency = res.authorize.currency || targetCurrency;
                         const authLoginid = res.authorize.loginid;
                         const authAccountList = res.authorize.account_list;
@@ -245,17 +239,31 @@ export class AccountSwitcherService {
                             },
                         });
 
-                        window.dispatchEvent(new CustomEvent('account_switched', { detail: { loginid: authLoginid, currency: authCurrency, balance: authBalance, token: targetToken } }));
+                        window.dispatchEvent(
+                            new CustomEvent('account_switched', {
+                                detail: {
+                                    loginid: authLoginid,
+                                    currency: authCurrency,
+                                    balance: authBalance,
+                                    token: targetToken,
+                                },
+                            })
+                        );
                         window.dispatchEvent(new Event('currency_changed'));
 
                         // Subscribe to live balance & transaction stream on new account
                         api_base.api.send({ balance: 1, subscribe: 1 }).catch(() => {});
                         api_base.api.send({ transaction: 1, subscribe: 1 }).catch(() => {});
                     } else if (res?.authorize && res.authorize.loginid !== targetLoginId) {
-                        console.warn(`[AccountSwitcherService] Fast authorize returned ${res.authorize.loginid}, expected ${targetLoginId}; reconnecting socket...`);
+                        console.warn(
+                            `[AccountSwitcherService] Fast authorize returned ${res.authorize.loginid}, expected ${targetLoginId}; reconnecting socket...`
+                        );
                     }
                 } catch (timeoutOrWsErr: any) {
-                    console.warn('[AccountSwitcherService] Fast authorize notice, falling back to background socket refresh:', timeoutOrWsErr?.message);
+                    console.warn(
+                        '[AccountSwitcherService] Fast authorize notice, falling back to background socket refresh:',
+                        timeoutOrWsErr?.message
+                    );
                 }
             }
 

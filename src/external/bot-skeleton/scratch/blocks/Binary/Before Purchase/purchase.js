@@ -31,7 +31,9 @@ window.Blockly.Blocks.purchase = {
             colour: window.Blockly.Colours.Special1.colour,
             colourSecondary: window.Blockly.Colours.Special1.colourSecondary,
             colourTertiary: window.Blockly.Colours.Special1.colourTertiary,
-            tooltip: localize('This block purchases contract of a specified type. Enable Fast Execution for instant zero-latency tick trading.'),
+            tooltip: localize(
+                'This block purchases contract of a specified type. Enable Fast Execution for instant zero-latency tick trading.'
+            ),
             category: window.Blockly.Categories.Before_Purchase,
         };
     },
@@ -94,7 +96,7 @@ window.Blockly.Blocks.purchase = {
 window.Blockly.JavaScript.javascriptGenerator.forBlock.purchase = block => {
     const purchaseList = block.getFieldValue('PURCHASE_LIST') || 'CALL';
     const isFast = block.getFieldValue('FAST_EXECUTION') === 'TRUE';
-    
+
     return `
         Bot.purchase('${purchaseList}', ${isFast});
     `;

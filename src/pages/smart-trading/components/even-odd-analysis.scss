@@ -1,6 +1,5 @@
 @use '@/components/shared/styles/mixins.scss' as *;
 
-
 .even-odd-analysis {
     padding: to-rem(24px);
     background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
@@ -375,4 +374,3 @@
         box-shadow: 0 0 25px rgb(16 185 129 / 100%);
     }
 }
-

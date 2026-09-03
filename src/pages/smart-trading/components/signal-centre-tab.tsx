@@ -78,11 +78,11 @@ interface MarketAnalysis {
 }
 
 function analyseMarket(
-    symbol: string, 
-    label: string, 
-    digits: number[], 
+    symbol: string,
+    label: string,
+    digits: number[],
     tradeType: string,
-    thresholds: { eo: number, ou: number, rf: number } = { eo: 7, ou: 7, rf: 8 }
+    thresholds: { eo: number; ou: number; rf: number } = { eo: 7, ou: 7, rf: 8 }
 ): MarketAnalysis {
     const last15 = digits.slice(-15);
     const prev15 = digits.slice(-30, -15);
@@ -128,7 +128,8 @@ function analyseMarket(
     const overPct = (over / total) * 100;
     const underPct = (under / total) * 100;
 
-    let rises = 0, falls = 0;
+    let rises = 0,
+        falls = 0;
     for (let i = 1; i < last.length; i++) {
         if (last[i] > last[i - 1]) rises++;
         else if (last[i] < last[i - 1]) falls++;
@@ -139,42 +140,55 @@ function analyseMarket(
 
     const freq: Record<number, number> = {};
     for (let d = 0; d < 10; d++) freq[d] = 0;
-    last.forEach((d: number) => { if (d >= 0 && d <= 9) freq[d]++; });
+    last.forEach((d: number) => {
+        if (d >= 0 && d <= 9) freq[d]++;
+    });
     const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
     const matchesBest = Number(sorted[0][0]);
     const differsBest = Number(sorted[sorted.length - 1][0]);
 
-    let deviation = 0, signal = 'STANDBY', entry = '', prediction: number | number[] | null = null, score = 0;
+    let deviation = 0,
+        signal = 'STANDBY',
+        entry = '',
+        prediction: number | number[] | null = null,
+        score = 0;
 
     switch (tradeType) {
         case 'EVENODD': {
             const dom = evenPct > oddPct ? 'EVEN' : 'ODD';
             deviation = Math.abs(evenPct - oddPct);
             score = Math.min(deviation * 3, 100);
-            if (deviation >= thresholds.eo) { signal = dom === 'EVEN' ? 'BUY EVEN' : 'BUY ODD'; entry = dom; }
+            if (deviation >= thresholds.eo) {
+                signal = dom === 'EVEN' ? 'BUY EVEN' : 'BUY ODD';
+                entry = dom;
+            }
             break;
         }
         case 'OVERUNDER': {
             // New logic for Over/Under: 15-tick based
             const overDigits = last15.filter(d => d >= 5);
             const underDigits = last15.filter(d => d < 5);
-            
+
             const ouFreq: Record<number, number> = {};
             for (let d = 0; d < 10; d++) ouFreq[d] = 0;
             last15.forEach(d => ouFreq[d]++);
-            
-            const sortedUnder = Object.entries(ouFreq).filter(([d]) => Number(d) < 5).sort((a, b) => b[1] - a[1]);
-            const sortedOver = Object.entries(ouFreq).filter(([d]) => Number(d) >= 5).sort((a, b) => b[1] - a[1]);
-            
+
+            const sortedUnder = Object.entries(ouFreq)
+                .filter(([d]) => Number(d) < 5)
+                .sort((a, b) => b[1] - a[1]);
+            const sortedOver = Object.entries(ouFreq)
+                .filter(([d]) => Number(d) >= 5)
+                .sort((a, b) => b[1] - a[1]);
+
             const highestUnderDigit = Number(sortedUnder[0][0]);
             const highestOverDigit = Number(sortedOver[0][0]);
-            
+
             const ovPct = (overDigits.length / total15) * 100;
             const unPct = (underDigits.length / total15) * 100;
-            
+
             deviation = Math.abs(ovPct - unPct);
             score = Math.min(deviation * 8, 100);
-            
+
             if (deviation >= 15) {
                 const dom = ovPct > unPct ? 'OVER' : 'UNDER';
                 signal = dom === 'OVER' ? `BUY OVER ${highestOverDigit}` : `BUY UNDER ${highestUnderDigit}`;
@@ -188,11 +202,12 @@ function analyseMarket(
             const hPct = (freq15[highestDigit] / total15) * 100;
             deviation = hPct - 10;
             score = Math.min(deviation * 10, 100);
-            
+
             // Multiple predictions: Top 3 (Highest, 2nd Highest, Most Increasing)
             const preds = Array.from(new Set([highestDigit, secondHighestDigit, mostIncreasingDigit]));
-            
-            if (hPct >= 15) { // Match probability trigger
+
+            if (hPct >= 15) {
+                // Match probability trigger
                 signal = `MATCH ${highestDigit}`;
                 entry = `Ranked: H:${highestDigit} 2nd:${secondHighestDigit} L:${lowestDigit} | Incr:${mostIncreasingDigit}`;
                 prediction = preds;
@@ -217,17 +232,42 @@ function analyseMarket(
 
     const confidence = Math.min(score * (Math.min(total, 120) / 120), 100);
 
-    const sortedUnder = Object.entries(freq15).filter(([d]) => Number(d) < 5).sort((a, b) => b[1] - a[1]);
-    const sortedOver = Object.entries(freq15).filter(([d]) => Number(d) >= 5).sort((a, b) => b[1] - a[1]);
+    const sortedUnder = Object.entries(freq15)
+        .filter(([d]) => Number(d) < 5)
+        .sort((a, b) => b[1] - a[1]);
+    const sortedOver = Object.entries(freq15)
+        .filter(([d]) => Number(d) >= 5)
+        .sort((a, b) => b[1] - a[1]);
     const highestUnderDigit = Number(sortedUnder[0][0]);
     const highestOverDigit = Number(sortedOver[0][0]);
 
     return {
-        symbol, label, ticks: last, evenPct, oddPct, overPct, underPct, risePct, fallPct,
-        differsBest, matchesBest, highestDigit, secondHighestDigit, lowestDigit, 
-        highestUnderDigit, highestOverDigit, mostIncreasingDigit,
-        freqMap: freq15, powerTrend, deviation, confidence,
-        signal: signal || 'STANDBY', entry, tradeType, prediction, score,
+        symbol,
+        label,
+        ticks: last,
+        evenPct,
+        oddPct,
+        overPct,
+        underPct,
+        risePct,
+        fallPct,
+        differsBest,
+        matchesBest,
+        highestDigit,
+        secondHighestDigit,
+        lowestDigit,
+        highestUnderDigit,
+        highestOverDigit,
+        mostIncreasingDigit,
+        freqMap: freq15,
+        powerTrend,
+        deviation,
+        confidence,
+        signal: signal || 'STANDBY',
+        entry,
+        tradeType,
+        prediction,
+        score,
     };
 }
 
@@ -279,7 +319,6 @@ const SignalCentreTab = observer(() => {
     const [nextTicksToTrade, setNextTicksToTrade] = useState(0);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
-
     const subsRef = useRef<Map<string, () => void>>(new Map());
     const scanRef = useRef(false);
     const validityRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -295,7 +334,7 @@ const SignalCentreTab = observer(() => {
                 return;
             }
             const acc: number[] = [];
-            
+
             const doRequest = async () => {
                 try {
                     const resp = await api.send({
@@ -305,7 +344,7 @@ const SignalCentreTab = observer(() => {
                         style: 'ticks',
                         subscribe: 1,
                     });
-                    
+
                     const hist = resp.history || resp.ticks_history;
                     if (hist?.prices) {
                         hist.prices.forEach((p: any) => {
@@ -333,7 +372,9 @@ const SignalCentreTab = observer(() => {
                     });
 
                     resolve([...acc]);
-                } catch (err) { resolve([]); }
+                } catch (err) {
+                    resolve([]);
+                }
             };
             doRequest();
         });
@@ -368,7 +409,7 @@ const SignalCentreTab = observer(() => {
         setBestSignal(null);
         setAnalyses([]);
         setScanPhase('SCANNING');
-        
+
         const results: MarketAnalysis[] = [];
         for (let i = 0; i < CONTINUOUS_INDICES.length; i++) {
             if (!scanRef.current) break;
@@ -379,7 +420,7 @@ const SignalCentreTab = observer(() => {
                 const analysis = analyseMarket(symbol, label, digits, tradeType, {
                     eo: evenOddThreshold,
                     ou: overUnderThreshold,
-                    rf: riseFallThreshold
+                    rf: riseFallThreshold,
                 });
                 results.push(analysis);
                 setAnalyses([...results]);
@@ -387,7 +428,8 @@ const SignalCentreTab = observer(() => {
             await new Promise(r => setTimeout(r, 600));
         }
 
-        const found = results.filter(r => r.signal !== 'STANDBY').sort((a, b) => b.confidence - a.confidence)[0] || null;
+        const found =
+            results.filter(r => r.signal !== 'STANDBY').sort((a, b) => b.confidence - a.confidence)[0] || null;
         if (found) {
             setBestSignal(found);
             setScanPhase('SIGNAL_FOUND');
@@ -426,82 +468,94 @@ const SignalCentreTab = observer(() => {
         };
     }, [tradeType, runScan, clearAllSubs]);
 
-    const executeTrade = useCallback(async (analysis: MarketAnalysis, stakeAmt: number, customPrediction?: number) => {
-        const api = api_base?.api;
-        if (!api || !is_socket_opened) return null;
-        let contractType = '';
-        let barrier: number | undefined;
+    const executeTrade = useCallback(
+        async (analysis: MarketAnalysis, stakeAmt: number, customPrediction?: number) => {
+            const api = api_base?.api;
+            if (!api || !is_socket_opened) return null;
+            let contractType = '';
+            let barrier: number | undefined;
 
-        switch (analysis.tradeType) {
-            case 'EVENODD': contractType = analysis.entry === 'EVEN' ? 'DIGITEVEN' : 'DIGITODD'; break;
-            case 'OVERUNDER': 
-                contractType = analysis.entry === 'OVER' ? 'DIGITOVER' : 'DIGITUNDER';
-                barrier = Array.isArray(analysis.prediction) ? analysis.prediction[0] : (analysis.prediction ?? 4);
-                break;
-            case 'MATCHES':
-                contractType = 'DIGITMATCH';
-                barrier = customPrediction ?? (Array.isArray(analysis.prediction) ? analysis.prediction[0] : (analysis.prediction ?? 0));
-                break;
-            case 'RISEFALL': contractType = analysis.entry === 'RISE' ? 'CALL' : 'PUT'; break;
-            case 'DIFFERS':
-                contractType = 'DIGITDIFF';
-                barrier = Array.isArray(analysis.prediction) ? analysis.prediction[0] : (analysis.prediction ?? 0);
-                break;
-        }
-
-        try {
-            const req: any = {
-                proposal: 1,
-                amount: stakeAmt,
-                basis: 'stake',
-                contract_type: contractType,
-                currency: currency || 'USD',
-                duration: ticks,
-                duration_unit: 't',
-                underlying_symbol: analysis.symbol,
-            };
-            if (barrier !== undefined && barrier !== null && barrier !== '') {
-                req.barrier = String(barrier);
+            switch (analysis.tradeType) {
+                case 'EVENODD':
+                    contractType = analysis.entry === 'EVEN' ? 'DIGITEVEN' : 'DIGITODD';
+                    break;
+                case 'OVERUNDER':
+                    contractType = analysis.entry === 'OVER' ? 'DIGITOVER' : 'DIGITUNDER';
+                    barrier = Array.isArray(analysis.prediction) ? analysis.prediction[0] : (analysis.prediction ?? 4);
+                    break;
+                case 'MATCHES':
+                    contractType = 'DIGITMATCH';
+                    barrier =
+                        customPrediction ??
+                        (Array.isArray(analysis.prediction) ? analysis.prediction[0] : (analysis.prediction ?? 0));
+                    break;
+                case 'RISEFALL':
+                    contractType = analysis.entry === 'RISE' ? 'CALL' : 'PUT';
+                    break;
+                case 'DIFFERS':
+                    contractType = 'DIGITDIFF';
+                    barrier = Array.isArray(analysis.prediction) ? analysis.prediction[0] : (analysis.prediction ?? 0);
+                    break;
             }
-            const resp = await api.send(req);
-            if (resp.error) {
-                addLog(`❌ Proposal Error: ${resp.error.message}`);
-                globalObserver.emit('Error', resp.error);
+
+            try {
+                const req: any = {
+                    proposal: 1,
+                    amount: stakeAmt,
+                    basis: 'stake',
+                    contract_type: contractType,
+                    currency: currency || 'USD',
+                    duration: ticks,
+                    duration_unit: 't',
+                    underlying_symbol: analysis.symbol,
+                };
+                if (barrier !== undefined && barrier !== null && barrier !== '') {
+                    req.barrier = String(barrier);
+                }
+                const resp = await api.send(req);
+                if (resp.error) {
+                    addLog(`❌ Proposal Error: ${resp.error.message}`);
+                    globalObserver.emit('Error', resp.error);
+                    return null;
+                }
+
+                globalObserver.emit('contract.status', { id: 'contract.purchase_sent' });
+
+                const buy = await api.send({ buy: resp.proposal.id, price: stakeAmt });
+                if (buy.error) {
+                    addLog(`❌ Buy Error: ${buy.error.message}`);
+                    globalObserver.emit('Error', buy.error);
+                    return null;
+                }
+
+                globalObserver.emit('contract.status', { id: 'contract.purchase_received', buy: buy.buy });
+                return buy.buy?.contract_id || null;
+            } catch (e: any) {
+                addLog(`❌ Execution Exception: ${e.message || e}`);
                 return null;
             }
+        },
+        [is_socket_opened, ticks, currency]
+    );
 
-            globalObserver.emit('contract.status', { id: 'contract.purchase_sent' });
-
-            const buy = await api.send({ buy: resp.proposal.id, price: stakeAmt });
-            if (buy.error) {
-                addLog(`❌ Buy Error: ${buy.error.message}`);
-                globalObserver.emit('Error', buy.error);
-                return null;
-            }
-
-            globalObserver.emit('contract.status', { id: 'contract.purchase_received', buy: buy.buy });
-            return buy.buy?.contract_id || null;
-        } catch (e: any) { 
-            addLog(`❌ Execution Exception: ${e.message || e}`);
-            return null; 
-        }
-    }, [is_socket_opened, ticks, currency]);
-
-
-
-    const waitForResult = (id: string | number): Promise<{
-        status: string, 
-        profit: number, 
-        entry?: string, 
-        exit?: string, 
-        buyId?: string, 
-        sellId?: string, 
-        lastDigit?: number | null
+    const waitForResult = (
+        id: string | number
+    ): Promise<{
+        status: string;
+        profit: number;
+        entry?: string;
+        exit?: string;
+        buyId?: string;
+        sellId?: string;
+        lastDigit?: number | null;
     } | null> => {
         return new Promise(resolve => {
             const api = api_base_ref.current || api_base?.api;
-            if (!api) { resolve(null); return; }
-            
+            if (!api) {
+                resolve(null);
+                return;
+            }
+
             // Subscribe to POC for this contract
             api.send({ proposal_open_contract: 1, contract_id: id, subscribe: 1 });
 
@@ -511,28 +565,25 @@ const SignalCentreTab = observer(() => {
                     sub.unsubscribe();
                     globalObserver.emit('bot.contract', poc);
                     globalObserver.emit('contract.status', { id: 'contract.sold', contract: poc });
-                    resolve({ 
-                        status: poc.status, 
+                    resolve({
+                        status: poc.status,
                         profit: parseFloat(poc.profit || '0'),
                         entry: poc.entry_tick_display_value,
                         exit: poc.exit_tick_display_value,
                         buyId: poc.transaction_ids?.buy,
                         sellId: poc.transaction_ids?.sell,
-                        lastDigit: poc.exit_tick_display_value ? parseInt(poc.exit_tick_display_value.slice(-1)) : null
+                        lastDigit: poc.exit_tick_display_value ? parseInt(poc.exit_tick_display_value.slice(-1)) : null,
                     });
                 }
             });
 
-
-            
             // Timeout after 30 seconds
-            setTimeout(() => { 
-                sub.unsubscribe(); 
-                resolve(null); 
+            setTimeout(() => {
+                sub.unsubscribe();
+                resolve(null);
             }, 30000);
         });
     };
-
 
     const addLog = (msg: string) => {
         const ts = new Date().toLocaleTimeString();
@@ -551,12 +602,15 @@ const SignalCentreTab = observer(() => {
             // Re-fetch digits to check for pattern/power changes
             const sym = bestSignal.symbol;
             const digits = await subscribeSymbol(sym);
-            if (digits.length < 30) { await new Promise(r => setTimeout(r, 2000)); continue; }
+            if (digits.length < 30) {
+                await new Promise(r => setTimeout(r, 2000));
+                continue;
+            }
 
             const analysis = analyseMarket(sym, bestSignal.label, digits, tradeType, {
                 eo: evenOddThreshold,
                 ou: overUnderThreshold,
-                rf: riseFallThreshold
+                rf: riseFallThreshold,
             });
 
             let shouldTrade = false;
@@ -566,8 +620,10 @@ const SignalCentreTab = observer(() => {
                 const target = manualPrediction !== null ? manualPrediction : analysis.highestDigit;
                 const isIncreasing = analysis.powerTrend[target] === 1;
                 const last5 = digits.slice(-5);
-                const patternMatch = last5.some(d => d === analysis.highestDigit || d === analysis.secondHighestDigit || d === analysis.lowestDigit);
-                
+                const patternMatch = last5.some(
+                    d => d === analysis.highestDigit || d === analysis.secondHighestDigit || d === analysis.lowestDigit
+                );
+
                 if (isIncreasing || patternMatch) shouldTrade = true;
             } else if (tradeType === 'OVERUNDER') {
                 const last5 = digits.slice(-5);
@@ -577,8 +633,9 @@ const SignalCentreTab = observer(() => {
 
                 // Trigger if highest digit appears on chosen side
                 const targetDigit = analysis.prediction as number;
-                const patternMatch = (analysis.entry.includes('OVER') && isOverDom) || (analysis.entry.includes('UNDER') && isUnderDom);
-                
+                const patternMatch =
+                    (analysis.entry.includes('OVER') && isOverDom) || (analysis.entry.includes('UNDER') && isUnderDom);
+
                 if (patternMatch && lastTick === targetDigit) {
                     shouldTrade = true;
                 }
@@ -594,10 +651,12 @@ const SignalCentreTab = observer(() => {
                 }
 
                 if (isReversal) {
-                    currentAnalysis = { 
-                        ...analysis, 
+                    currentAnalysis = {
+                        ...analysis,
                         entry: analysis.entry.includes('OVER') ? 'UNDER' : 'OVER',
-                        prediction: analysis.entry.includes('OVER') ? analysis.highestUnderDigit : analysis.highestOverDigit
+                        prediction: analysis.entry.includes('OVER')
+                            ? analysis.highestUnderDigit
+                            : analysis.highestOverDigit,
                     };
                 }
             } else {
@@ -617,11 +676,11 @@ const SignalCentreTab = observer(() => {
 
             if (alternateMarket && consecutiveLosses >= alternateAfterLosses) {
                 addLog(`🔄 Recovery Mode: Switching to ${alternateMarketSymbol} (${alternateTradeType})`);
-                currentAnalysis = { 
-                    ...analysis, 
-                    symbol: alternateMarketSymbol, 
+                currentAnalysis = {
+                    ...analysis,
+                    symbol: alternateMarketSymbol,
                     tradeType: alternateTradeType,
-                    prediction: 0
+                    prediction: 0,
                 };
             }
 
@@ -629,12 +688,14 @@ const SignalCentreTab = observer(() => {
             const ids: string[] = [];
 
             if (tradeType === 'MATCHES' && useMultipleMatches) {
-                const preds = Array.isArray(currentAnalysis.prediction) ? currentAnalysis.prediction : [currentAnalysis.prediction ?? 0];
+                const preds = Array.isArray(currentAnalysis.prediction)
+                    ? currentAnalysis.prediction
+                    : [currentAnalysis.prediction ?? 0];
                 for (const pred of preds.slice(0, 3)) {
                     for (let i = 0; i < bulkTrades; i++) {
                         const id = await executeTrade(currentAnalysis, currentStake, Number(pred));
                         if (id) ids.push(id);
-                        await new Promise(r => setTimeout(r, 300)); 
+                        await new Promise(r => setTimeout(r, 300));
                     }
                 }
             } else {
@@ -653,25 +714,33 @@ const SignalCentreTab = observer(() => {
 
             addLog(`📤 ${ids.length} Trade(s) placed on ${currentAnalysis.symbol}`);
             const results = await Promise.all(ids.map(id => waitForResult(id!)));
-            let batchP = 0, batchW = 0, batchL = 0;
+            let batchP = 0,
+                batchW = 0,
+                batchL = 0;
             results.forEach(res => {
                 if (!res) return;
                 batchP += res.profit;
-                if (res.status === 'won') batchW++; else batchL++;
-                
-                setTransactions(prev => [{
-                    id: res.buyId || Math.random().toString(36).substr(2, 9),
-                    time: new Date().toLocaleTimeString(),
-                    symbol: currentAnalysis.symbol,
-                    type: currentAnalysis.tradeType,
-                    stake: currentStake,
-                    profit: res.profit,
-                    status: res.status,
-                    entry: res.entry,
-                    exit: res.exit,
-                    lastDigit: res.lastDigit,
-                    power: currentAnalysis.confidence
-                }, ...prev].slice(0, 100));
+                if (res.status === 'won') batchW++;
+                else batchL++;
+
+                setTransactions(prev =>
+                    [
+                        {
+                            id: res.buyId || Math.random().toString(36).substr(2, 9),
+                            time: new Date().toLocaleTimeString(),
+                            symbol: currentAnalysis.symbol,
+                            type: currentAnalysis.tradeType,
+                            stake: currentStake,
+                            profit: res.profit,
+                            status: res.status,
+                            entry: res.entry,
+                            exit: res.exit,
+                            lastDigit: res.lastDigit,
+                            power: currentAnalysis.confidence,
+                        },
+                        ...prev,
+                    ].slice(0, 100)
+                );
             });
 
             runningPL += batchP;
@@ -686,10 +755,10 @@ const SignalCentreTab = observer(() => {
                     botStakeRef.current = parseFloat((botStakeRef.current + batchP).toFixed(2));
                     addLog(`📈 Compounding → Stake: ${botStakeRef.current}`);
                 } else botStakeRef.current = stake;
-                
-                if (runningPL >= tp) { 
-                    addLog(`🏆 Take Profit hit! Total P/L: ${runningPL.toFixed(2)}`); 
-                    break; 
+
+                if (runningPL >= tp) {
+                    addLog(`🏆 Take Profit hit! Total P/L: ${runningPL.toFixed(2)}`);
+                    break;
                 }
             } else {
                 setConsecutiveLosses(prev => prev + 1);
@@ -699,8 +768,8 @@ const SignalCentreTab = observer(() => {
                     addLog(`📉 Martingale → Stake: ${botStakeRef.current.toFixed(2)}`);
                 } else botStakeRef.current = stake;
 
-                if (Math.abs(runningPL) >= sl && runningPL < 0) { 
-                    addLog(`🛑 Stop Loss hit! Total P/L: ${runningPL.toFixed(2)}`); 
+                if (Math.abs(runningPL) >= sl && runningPL < 0) {
+                    addLog(`🛑 Stop Loss hit! Total P/L: ${runningPL.toFixed(2)}`);
                     break;
                 }
             }
@@ -708,27 +777,48 @@ const SignalCentreTab = observer(() => {
         }
         setIsBotRunning(false);
         botRef.current = false;
-    }, [bestSignal, isBotRunning, stake, tp, sl, martingale, martingaleMultiplier, bulkTrades, compoundStake, alternateMarket, alternateAfterLosses, alternateMarketSymbol, alternateTradeType, consecutiveLosses, executeTrade, tradeType, useMultipleMatches, matchPredictions]);
+    }, [
+        bestSignal,
+        isBotRunning,
+        stake,
+        tp,
+        sl,
+        martingale,
+        martingaleMultiplier,
+        bulkTrades,
+        compoundStake,
+        alternateMarket,
+        alternateAfterLosses,
+        alternateMarketSymbol,
+        alternateTradeType,
+        consecutiveLosses,
+        executeTrade,
+        tradeType,
+        useMultipleMatches,
+        matchPredictions,
+    ]);
 
     const handleManualTrade = useCallback(async () => {
         if (!bestSignal) return;
         const currentStake = stake;
         addLog(`⚡ Manual Trade | Strategy: ${tradeType} | Stake: ${currentStake}`);
-        
+
         let currentAnalysis = bestSignal;
         if (manualPrediction !== null) {
             currentAnalysis = { ...bestSignal, prediction: manualPrediction };
         }
-        
+
         const ids: string[] = [];
 
         if (tradeType === 'MATCHES' && useMultipleMatches) {
-            const preds = Array.isArray(currentAnalysis.prediction) ? currentAnalysis.prediction : [currentAnalysis.prediction ?? 0];
+            const preds = Array.isArray(currentAnalysis.prediction)
+                ? currentAnalysis.prediction
+                : [currentAnalysis.prediction ?? 0];
             for (const pred of preds.slice(0, 3)) {
                 for (let i = 0; i < bulkTrades; i++) {
                     const id = await executeTrade(currentAnalysis, currentStake, Number(pred));
                     if (id) ids.push(id);
-                    await new Promise(r => setTimeout(r, 300)); 
+                    await new Promise(r => setTimeout(r, 300));
                 }
             }
         } else {
@@ -746,24 +836,29 @@ const SignalCentreTab = observer(() => {
 
         addLog(`📤 ${ids.length} Manual Trade(s) placed`);
         const results = await Promise.all(ids.map(id => waitForResult(id!)));
-        
+
         let batchP = 0;
         results.forEach(res => {
             if (!res) return;
             batchP += res.profit;
-            setTransactions(prev => [{
-                id: res.buyId || Math.random().toString(36).substr(2, 9),
-                time: new Date().toLocaleTimeString(),
-                symbol: currentAnalysis.symbol,
-                type: currentAnalysis.tradeType,
-                stake: currentStake,
-                profit: res.profit,
-                status: res.status,
-                entry: res.entry,
-                exit: res.exit,
-                lastDigit: res.lastDigit,
-                power: currentAnalysis.confidence
-            }, ...prev].slice(0, 100));
+            setTransactions(prev =>
+                [
+                    {
+                        id: res.buyId || Math.random().toString(36).substr(2, 9),
+                        time: new Date().toLocaleTimeString(),
+                        symbol: currentAnalysis.symbol,
+                        type: currentAnalysis.tradeType,
+                        stake: currentStake,
+                        profit: res.profit,
+                        status: res.status,
+                        entry: res.entry,
+                        exit: res.exit,
+                        lastDigit: res.lastDigit,
+                        power: currentAnalysis.confidence,
+                    },
+                    ...prev,
+                ].slice(0, 100)
+            );
         });
 
         addLog(`✅ Manual Trade Complete | Net: ${batchP > 0 ? '+' : ''}${batchP.toFixed(2)}`);
@@ -797,7 +892,12 @@ const SignalCentreTab = observer(() => {
                             key={t.id}
                             className={classNames('sc-type-btn', { active: tradeType === t.id })}
                             style={{ '--accent': t.color } as any}
-                            onClick={() => { setTradeType(t.id); setBestSignal(null); setAnalyses([]); setScanPhase('STANDBY'); }}
+                            onClick={() => {
+                                setTradeType(t.id);
+                                setBestSignal(null);
+                                setAnalyses([]);
+                                setScanPhase('STANDBY');
+                            }}
                             disabled={isScanning}
                         >
                             <span className='sc-type-btn__icon'>{t.icon}</span>
@@ -833,10 +933,19 @@ const SignalCentreTab = observer(() => {
                         const analysis = analyses.find(a => a.symbol === m.symbol);
                         const isActive = scanningIndex === idx;
                         return (
-                            <div 
-                                key={m.symbol} 
-                                className={classNames('sc-market-card', tradeType.toLowerCase(), { active: isActive, complete: !!analysis })}
-                                onClick={() => { if (analysis) { setBestSignal(analysis); setScanPhase('SIGNAL_FOUND'); startValidity(); } }}
+                            <div
+                                key={m.symbol}
+                                className={classNames('sc-market-card', tradeType.toLowerCase(), {
+                                    active: isActive,
+                                    complete: !!analysis,
+                                })}
+                                onClick={() => {
+                                    if (analysis) {
+                                        setBestSignal(analysis);
+                                        setScanPhase('SIGNAL_FOUND');
+                                        startValidity();
+                                    }
+                                }}
                             >
                                 <div className='sc-market-card__header'>
                                     <span className='sc-market-card__name'>{m.label}</span>
@@ -847,53 +956,118 @@ const SignalCentreTab = observer(() => {
                                         {tradeType === 'EVENODD' && (
                                             <div className='sc-strategy-specific-stats'>
                                                 <div className='sc-stat-bar-group'>
-                                                    <div className='sc-stat-label'>EVEN {analysis.evenPct.toFixed(1)}%</div>
-                                                    <div className='sc-stat-progress'><div className='fill' style={{ width: `${analysis.evenPct}%` }} /></div>
+                                                    <div className='sc-stat-label'>
+                                                        EVEN {analysis.evenPct.toFixed(1)}%
+                                                    </div>
+                                                    <div className='sc-stat-progress'>
+                                                        <div
+                                                            className='fill'
+                                                            style={{ width: `${analysis.evenPct}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
                                                 <div className='sc-stat-bar-group'>
-                                                    <div className='sc-stat-label'>ODD {analysis.oddPct.toFixed(1)}%</div>
-                                                    <div className='sc-stat-progress'><div className='fill' style={{ width: `${analysis.oddPct}%` }} /></div>
+                                                    <div className='sc-stat-label'>
+                                                        ODD {analysis.oddPct.toFixed(1)}%
+                                                    </div>
+                                                    <div className='sc-stat-progress'>
+                                                        <div
+                                                            className='fill'
+                                                            style={{ width: `${analysis.oddPct}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
                                         {tradeType === 'OVERUNDER' && (
                                             <div className='sc-strategy-specific-stats'>
-                                                <div className='sc-stat-label'>UNDER (0-4): <span className='val'>{analysis.underPct.toFixed(1)}%</span></div>
-                                                <div className='sc-stat-progress'><div className='fill' style={{ width: `${analysis.underPct}%` }} /></div>
-                                                <div className='sc-stat-label mt-2'>OVER (5-9): <span className='val'>{analysis.overPct.toFixed(1)}%</span></div>
-                                                <div className='sc-stat-progress'><div className='fill' style={{ width: `${analysis.overPct}%` }} /></div>
-                                                <div className='sc-stat-label mt-2'>H-UNDER: <span className='val'>{analysis.highestUnderDigit}</span></div>
-                                                <div className='sc-stat-label'>H-OVER: <span className='val'>{analysis.highestOverDigit}</span></div>
+                                                <div className='sc-stat-label'>
+                                                    UNDER (0-4):{' '}
+                                                    <span className='val'>{analysis.underPct.toFixed(1)}%</span>
+                                                </div>
+                                                <div className='sc-stat-progress'>
+                                                    <div className='fill' style={{ width: `${analysis.underPct}%` }} />
+                                                </div>
+                                                <div className='sc-stat-label mt-2'>
+                                                    OVER (5-9):{' '}
+                                                    <span className='val'>{analysis.overPct.toFixed(1)}%</span>
+                                                </div>
+                                                <div className='sc-stat-progress'>
+                                                    <div className='fill' style={{ width: `${analysis.overPct}%` }} />
+                                                </div>
+                                                <div className='sc-stat-label mt-2'>
+                                                    H-UNDER: <span className='val'>{analysis.highestUnderDigit}</span>
+                                                </div>
+                                                <div className='sc-stat-label'>
+                                                    H-OVER: <span className='val'>{analysis.highestOverDigit}</span>
+                                                </div>
                                             </div>
                                         )}
                                         {tradeType === 'RISEFALL' && (
                                             <div className='sc-strategy-specific-stats'>
                                                 <div className='sc-stat-bar-group'>
-                                                    <div className='sc-stat-label'>RISE {analysis.risePct.toFixed(1)}%</div>
-                                                    <div className='sc-stat-progress'><div className='fill' style={{ width: `${analysis.risePct}%` }} /></div>
+                                                    <div className='sc-stat-label'>
+                                                        RISE {analysis.risePct.toFixed(1)}%
+                                                    </div>
+                                                    <div className='sc-stat-progress'>
+                                                        <div
+                                                            className='fill'
+                                                            style={{ width: `${analysis.risePct}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
                                                 <div className='sc-stat-bar-group'>
-                                                    <div className='sc-stat-label'>FALL {analysis.fallPct.toFixed(1)}%</div>
-                                                    <div className='sc-stat-progress'><div className='fill' style={{ width: `${analysis.fallPct}%` }} /></div>
+                                                    <div className='sc-stat-label'>
+                                                        FALL {analysis.fallPct.toFixed(1)}%
+                                                    </div>
+                                                    <div className='sc-stat-progress'>
+                                                        <div
+                                                            className='fill'
+                                                            style={{ width: `${analysis.fallPct}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
                                         {tradeType === 'MATCHES' && (
                                             <div className='sc-strategy-specific-stats'>
-                                                <div className='sc-stat-label'>HIGHEST: <span className='val'>{analysis.highestDigit}</span> <span className={classNames('trend', { up: analysis.powerTrend[analysis.highestDigit] === 1 })}>{analysis.powerTrend[analysis.highestDigit] === 1 ? '▲' : ''}</span></div>
-                                                <div className='sc-stat-label'>2nd HIGH: <span className='val'>{analysis.secondHighestDigit}</span></div>
-                                                <div className='sc-stat-label'>LOWEST: <span className='val'>{analysis.lowestDigit}</span></div>
-                                                <div className='sc-stat-label'>POWER: <span className='val'>{analysis.confidence.toFixed(1)}%</span></div>
+                                                <div className='sc-stat-label'>
+                                                    HIGHEST: <span className='val'>{analysis.highestDigit}</span>{' '}
+                                                    <span
+                                                        className={classNames('trend', {
+                                                            up: analysis.powerTrend[analysis.highestDigit] === 1,
+                                                        })}
+                                                    >
+                                                        {analysis.powerTrend[analysis.highestDigit] === 1 ? '▲' : ''}
+                                                    </span>
+                                                </div>
+                                                <div className='sc-stat-label'>
+                                                    2nd HIGH: <span className='val'>{analysis.secondHighestDigit}</span>
+                                                </div>
+                                                <div className='sc-stat-label'>
+                                                    LOWEST: <span className='val'>{analysis.lowestDigit}</span>
+                                                </div>
+                                                <div className='sc-stat-label'>
+                                                    POWER:{' '}
+                                                    <span className='val'>{analysis.confidence.toFixed(1)}%</span>
+                                                </div>
                                             </div>
                                         )}
                                         {tradeType === 'DIFFERS' && (
                                             <div className='sc-strategy-specific-stats'>
-                                                <div className='sc-stat-label'>SAFEST: <span className='val'>{analysis.differsBest}</span></div>
-                                                <div className='sc-stat-label'>CONFIDENCE: <span className='val'>{analysis.confidence.toFixed(1)}%</span></div>
+                                                <div className='sc-stat-label'>
+                                                    SAFEST: <span className='val'>{analysis.differsBest}</span>
+                                                </div>
+                                                <div className='sc-stat-label'>
+                                                    CONFIDENCE:{' '}
+                                                    <span className='val'>{analysis.confidence.toFixed(1)}%</span>
+                                                </div>
                                             </div>
                                         )}
                                         <div className='sc-market-card__footer'>
-                                            <div className='sc-confidence-badge'>{analysis.confidence.toFixed(0)}% POWER</div>
+                                            <div className='sc-confidence-badge'>
+                                                {analysis.confidence.toFixed(0)}% POWER
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (
@@ -903,7 +1077,9 @@ const SignalCentreTab = observer(() => {
                                                 <div />
                                                 <span>SCANNING</span>
                                             </div>
-                                        ) : 'PENDING'}
+                                        ) : (
+                                            'PENDING'
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -918,7 +1094,9 @@ const SignalCentreTab = observer(() => {
                         <span className='sc-best-signal__icon'>🚀</span>
                         <div>
                             <h2>{bestSignal.label}</h2>
-                            <p>Suggested: <strong>{bestSignal.signal}</strong></p>
+                            <p>
+                                Suggested: <strong>{bestSignal.signal}</strong>
+                            </p>
                         </div>
                         <div className='sc-best-signal__validity'>{validity}s</div>
                     </div>
@@ -929,10 +1107,15 @@ const SignalCentreTab = observer(() => {
                                 <div className='sc-manual-prediction-selector'>
                                     <span className='sc-pred-type'>{bestSignal.entry}</span>
                                     <div className='sc-digit-pills'>
-                                        {(Array.isArray(bestSignal.prediction) ? bestSignal.prediction : [bestSignal.prediction ?? 0]).map(d => (
-                                            <button 
-                                                key={d} 
-                                                className={classNames('sc-digit-pill', { active: manualPrediction === d })}
+                                        {(Array.isArray(bestSignal.prediction)
+                                            ? bestSignal.prediction
+                                            : [bestSignal.prediction ?? 0]
+                                        ).map(d => (
+                                            <button
+                                                key={d}
+                                                className={classNames('sc-digit-pill', {
+                                                    active: manualPrediction === d,
+                                                })}
                                                 onClick={() => setManualPrediction(d === manualPrediction ? null : d)}
                                             >
                                                 {d}
@@ -941,7 +1124,9 @@ const SignalCentreTab = observer(() => {
                                     </div>
                                     <small>(Click digit to lock manually)</small>
                                 </div>
-                            ) : bestSignal.entry}
+                            ) : (
+                                bestSignal.entry
+                            )}
                         </div>
                     </div>
                 </div>
@@ -956,35 +1141,70 @@ const SignalCentreTab = observer(() => {
                     <div className='sc-bot-field'>
                         <label>TP / SL</label>
                         <div className='sc-input-group'>
-                            <input type='number' value={tp} onChange={e => setTp(parseFloat(e.target.value))} placeholder='TP' />
-                            <input type='number' value={sl} onChange={e => setSl(parseFloat(e.target.value))} placeholder='SL' />
+                            <input
+                                type='number'
+                                value={tp}
+                                onChange={e => setTp(parseFloat(e.target.value))}
+                                placeholder='TP'
+                            />
+                            <input
+                                type='number'
+                                value={sl}
+                                onChange={e => setSl(parseFloat(e.target.value))}
+                                placeholder='SL'
+                            />
                         </div>
                     </div>
                     <div className='sc-bot-field'>
                         <label>Ticks</label>
                         <select value={ticks} onChange={e => setTicks(parseInt(e.target.value))}>
-                            {[1, 2, 3, 4, 5].map(t => <option key={t} value={t}>{t} Ticks</option>)}
+                            {[1, 2, 3, 4, 5].map(t => (
+                                <option key={t} value={t}>
+                                    {t} Ticks
+                                </option>
+                            ))}
                         </select>
                     </div>
                     <div className='sc-bot-field'>
                         <label>Bulk</label>
-                        <input type='number' value={bulkTrades} min='1' max='10' onChange={e => setBulkTrades(parseInt(e.target.value))} />
+                        <input
+                            type='number'
+                            value={bulkTrades}
+                            min='1'
+                            max='10'
+                            onChange={e => setBulkTrades(parseInt(e.target.value))}
+                        />
                     </div>
                 </div>
                 <div className='sc-bot-toggles'>
-                    <button className={classNames('sc-toggle-btn', { active: compoundStake })} onClick={() => setCompoundStake(!compoundStake)}>
+                    <button
+                        className={classNames('sc-toggle-btn', { active: compoundStake })}
+                        onClick={() => setCompoundStake(!compoundStake)}
+                    >
                         🔄 Compounding
                     </button>
-                    <button className={classNames('sc-toggle-btn', { active: alternateMarket })} onClick={() => setAlternateMarket(!alternateMarket)}>
+                    <button
+                        className={classNames('sc-toggle-btn', { active: alternateMarket })}
+                        onClick={() => setAlternateMarket(!alternateMarket)}
+                    >
                         🔀 Recovery Mode
                     </button>
-                    <button className={classNames('sc-toggle-btn', { active: useMultipleMatches })} onClick={() => setUseMultipleMatches(!useMultipleMatches)}>
+                    <button
+                        className={classNames('sc-toggle-btn', { active: useMultipleMatches })}
+                        onClick={() => setUseMultipleMatches(!useMultipleMatches)}
+                    >
                         🎯 Multiple Predictions
                     </button>
-                    <button className={classNames('sc-toggle-btn', { active: isReversal })} onClick={() => setIsReversal(!isReversal)}>
+                    <button
+                        className={classNames('sc-toggle-btn', { active: isReversal })}
+                        onClick={() => setIsReversal(!isReversal)}
+                    >
                         🔄 Reversal
                     </button>
-                    <button className={classNames('sc-toggle-btn', { active: showAdvanced })} onClick={() => setShowAdvanced(!showAdvanced)}>
+                    <button
+                        className={classNames('sc-toggle-btn', { active: showAdvanced })}
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                    >
                         ⚙️ Advanced
                     </button>
                 </div>
@@ -994,15 +1214,33 @@ const SignalCentreTab = observer(() => {
                         <div className='sc-bot-inputs'>
                             <div className='sc-bot-field'>
                                 <label>EO Threshold %</label>
-                                <input type='number' value={evenOddThreshold} onChange={e => setEvenOddThreshold(parseInt(e.target.value))} min={1} max={50} />
+                                <input
+                                    type='number'
+                                    value={evenOddThreshold}
+                                    onChange={e => setEvenOddThreshold(parseInt(e.target.value))}
+                                    min={1}
+                                    max={50}
+                                />
                             </div>
                             <div className='sc-bot-field'>
                                 <label>OU Threshold %</label>
-                                <input type='number' value={overUnderThreshold} onChange={e => setOverUnderThreshold(parseInt(e.target.value))} min={1} max={50} />
+                                <input
+                                    type='number'
+                                    value={overUnderThreshold}
+                                    onChange={e => setOverUnderThreshold(parseInt(e.target.value))}
+                                    min={1}
+                                    max={50}
+                                />
                             </div>
                             <div className='sc-bot-field'>
                                 <label>RF Threshold %</label>
-                                <input type='number' value={riseFallThreshold} onChange={e => setRiseFallThreshold(parseInt(e.target.value))} min={1} max={50} />
+                                <input
+                                    type='number'
+                                    value={riseFallThreshold}
+                                    onChange={e => setRiseFallThreshold(parseInt(e.target.value))}
+                                    min={1}
+                                    max={50}
+                                />
                             </div>
                         </div>
                     </div>
@@ -1013,18 +1251,37 @@ const SignalCentreTab = observer(() => {
                         <div className='sc-bot-inputs'>
                             <div className='sc-bot-field'>
                                 <label>Switch After Losses</label>
-                                <input type='number' value={alternateAfterLosses} onChange={e => setAlternateAfterLosses(parseInt(e.target.value))} min={1} />
+                                <input
+                                    type='number'
+                                    value={alternateAfterLosses}
+                                    onChange={e => setAlternateAfterLosses(parseInt(e.target.value))}
+                                    min={1}
+                                />
                             </div>
                             <div className='sc-bot-field'>
                                 <label>Recovery Market</label>
-                                <select value={alternateMarketSymbol} onChange={e => setAlternateMarketSymbol(e.target.value)}>
-                                    {CONTINUOUS_INDICES.map(m => <option key={m.symbol} value={m.symbol}>{m.label}</option>)}
+                                <select
+                                    value={alternateMarketSymbol}
+                                    onChange={e => setAlternateMarketSymbol(e.target.value)}
+                                >
+                                    {CONTINUOUS_INDICES.map(m => (
+                                        <option key={m.symbol} value={m.symbol}>
+                                            {m.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             <div className='sc-bot-field'>
                                 <label>Recovery Strategy</label>
-                                <select value={alternateTradeType} onChange={e => setAlternateTradeType(e.target.value)}>
-                                    {TRADE_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                                <select
+                                    value={alternateTradeType}
+                                    onChange={e => setAlternateTradeType(e.target.value)}
+                                >
+                                    {TRADE_TYPES.map(t => (
+                                        <option key={t.id} value={t.id}>
+                                            {t.label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -1033,22 +1290,22 @@ const SignalCentreTab = observer(() => {
 
                 {tradeType === 'MATCHES' && (
                     <div className='sc-matches-multi-panel'>
-                        <button 
-                            className={classNames('sc-toggle-btn', { active: useMultipleMatches })} 
+                        <button
+                            className={classNames('sc-toggle-btn', { active: useMultipleMatches })}
                             onClick={() => setUseMultipleMatches(!useMultipleMatches)}
                         >
                             🎯 Multiple Predictions
                         </button>
-                        
+
                         {useMultipleMatches && (
                             <div className='sc-multi-fields'>
                                 <div className='sc-bot-field'>
                                     <label>Count</label>
-                                    <input 
-                                        type='number' 
-                                        min='1' 
-                                        max='5' 
-                                        value={matchPredictions.length} 
+                                    <input
+                                        type='number'
+                                        min='1'
+                                        max='5'
+                                        value={matchPredictions.length}
                                         onChange={e => {
                                             const n = Math.max(1, Math.min(5, parseInt(e.target.value) || 1));
                                             setMatchPredictions(prev => {
@@ -1060,7 +1317,7 @@ const SignalCentreTab = observer(() => {
                                                 }
                                                 return next;
                                             });
-                                        }} 
+                                        }}
                                     />
                                 </div>
                                 <div className='sc-digit-inputs'>
@@ -1079,7 +1336,7 @@ const SignalCentreTab = observer(() => {
                                                     return next;
                                                 });
                                             }}
-                                            placeholder={`#${i+1}`}
+                                            placeholder={`#${i + 1}`}
                                         />
                                     ))}
                                 </div>
@@ -1095,13 +1352,21 @@ const SignalCentreTab = observer(() => {
                         disabled={!bestSignal && !isBotRunning}
                         style={{ flex: 1 }}
                     >
-                        {isBotRunning ? '⛔ STOP AUTO-TRADE' : bestSignal ? '🚀 START AUTO-TRADE' : '🔍 Scan for Signal'}
+                        {isBotRunning
+                            ? '⛔ STOP AUTO-TRADE'
+                            : bestSignal
+                              ? '🚀 START AUTO-TRADE'
+                              : '🔍 Scan for Signal'}
                     </button>
                     <button
                         className='sc-run-btn manual'
                         onClick={handleManualTrade}
                         disabled={!bestSignal || isBotRunning}
-                        style={{ flex: 1, background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)', boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)' }}
+                        style={{
+                            flex: 1,
+                            background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)',
+                            boxShadow: '0 4px 15px rgba(168, 85, 247, 0.3)',
+                        }}
                     >
                         ⚡ MANUAL ENTRY
                     </button>
@@ -1111,8 +1376,8 @@ const SignalCentreTab = observer(() => {
             <div className='sc-dashboard'>
                 <div className='sc-dashboard__tabs'>
                     {(['SUMMARY', 'TRANSACTIONS', 'JOURNAL'] as const).map(t => (
-                        <button 
-                            key={t} 
+                        <button
+                            key={t}
                             className={classNames('sc-dash-tab', { active: activeDashboardTab === t })}
                             onClick={() => setActiveDashboardTab(t)}
                         >
@@ -1126,7 +1391,9 @@ const SignalCentreTab = observer(() => {
                         <div className='sc-summary-grid'>
                             <div className='sc-summary-item'>
                                 <label>Total Stake</label>
-                                <span>{(botWins + botLosses) * stake} {currency}</span>
+                                <span>
+                                    {(botWins + botLosses) * stake} {currency}
+                                </span>
                             </div>
                             <div className='sc-summary-item'>
                                 <label>Contracts Won</label>
@@ -1164,7 +1431,9 @@ const SignalCentreTab = observer(() => {
                                     {transactions.map(tx => (
                                         <tr key={tx.id}>
                                             <td>{tx.type}</td>
-                                            <td>{tx.entry || '-'} / {tx.exit || '-'}</td>
+                                            <td>
+                                                {tx.entry || '-'} / {tx.exit || '-'}
+                                            </td>
                                             <td>{tx.stake.toFixed(2)}</td>
                                             <td className={tx.status}>{tx.profit.toFixed(2)}</td>
                                         </tr>
@@ -1193,10 +1462,14 @@ const SignalCentreTab = observer(() => {
                                         {transactions.map(tx => (
                                             <tr key={tx.id}>
                                                 <td>{tx.time}</td>
-                                                <td><span className='sc-digit-badge'>{tx.lastDigit ?? '-'}</span></td>
+                                                <td>
+                                                    <span className='sc-digit-badge'>{tx.lastDigit ?? '-'}</span>
+                                                </td>
                                                 <td>{tx.symbol}</td>
                                                 <td>{tx.power.toFixed(1)}%</td>
-                                                <td>{tx.entry || '-'} / {tx.exit || '-'}</td>
+                                                <td>
+                                                    {tx.entry || '-'} / {tx.exit || '-'}
+                                                </td>
                                                 <td className={tx.status}>{tx.status.toUpperCase()}</td>
                                                 <td className='sc-tx-id'>{tx.id}</td>
                                             </tr>
@@ -1205,7 +1478,11 @@ const SignalCentreTab = observer(() => {
                                 </table>
                             </div>
                             <div className='sc-log-view'>
-                                {botLog.map((log, i) => <div key={i} className='sc-log-line'>{log}</div>)}
+                                {botLog.map((log, i) => (
+                                    <div key={i} className='sc-log-line'>
+                                        {log}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps } from 'react-router';
+import { withRouter } from 'withRouterShim';
 import { CSSTransition } from 'react-transition-group';
 import classNames from 'classnames';
 

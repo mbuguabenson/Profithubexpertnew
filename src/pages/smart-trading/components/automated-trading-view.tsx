@@ -49,7 +49,14 @@ const AutomatedTradingView = observer(() => {
             if (saved) {
                 const parsed = JSON.parse(saved);
                 // Ensure all default keys exist
-                if (parsed.rise_fall && parsed.even_odd && parsed.even_odd_pattern && parsed.over_under && parsed.over_under_pattern && parsed.matches_differs) {
+                if (
+                    parsed.rise_fall &&
+                    parsed.even_odd &&
+                    parsed.even_odd_pattern &&
+                    parsed.over_under &&
+                    parsed.over_under_pattern &&
+                    parsed.matches_differs
+                ) {
                     return parsed;
                 }
             }
@@ -138,7 +145,7 @@ const AutomatedTradingView = observer(() => {
                 martingale: 1,
                 consecutive_losses: 0,
                 current_stake: 0.5,
-            }
+            },
         };
     });
 
@@ -153,8 +160,8 @@ const AutomatedTradingView = observer(() => {
                     ...prev[key],
                     [field]: value,
                     // If stake changes, also reset current_stake
-                    ...(field === 'stake' ? { current_stake: parseFloat(value) || 0.5 } : {})
-                }
+                    ...(field === 'stake' ? { current_stake: parseFloat(value) || 0.5 } : {}),
+                },
             };
             localStorage.setItem('smart_auto_configs', JSON.stringify(updated));
             return updated;
@@ -220,7 +227,9 @@ const AutomatedTradingView = observer(() => {
                 duration: config.ticks || 1,
                 duration_unit: 't',
                 underlying_symbol: symbol,
-                ...(prediction !== undefined && prediction !== null && prediction !== '' ? { barrier: String(prediction) } : {}),
+                ...(prediction !== undefined && prediction !== null && prediction !== ''
+                    ? { barrier: String(prediction) }
+                    : {}),
             });
 
             if (proposal.error) {
@@ -251,7 +260,7 @@ const AutomatedTradingView = observer(() => {
                     const contract = msg.proposal_open_contract;
                     if (contract.is_sold) {
                         subscription.unsubscribe();
-                        
+
                         const status = contract.status; // 'won' or 'lost'
                         const is_win = status === 'won';
 
@@ -262,7 +271,11 @@ const AutomatedTradingView = observer(() => {
                                 newConfig.current_stake = newConfig.stake;
                             } else {
                                 newConfig.consecutive_losses = (newConfig.consecutive_losses || 0) + 1;
-                                newConfig.current_stake = Number(((newConfig.current_stake || newConfig.stake) * (newConfig.martingale || 1)).toFixed(2));
+                                newConfig.current_stake = Number(
+                                    (
+                                        (newConfig.current_stake || newConfig.stake) * (newConfig.martingale || 1)
+                                    ).toFixed(2)
+                                );
                             }
                             const updated = { ...prev, [strategyId]: newConfig };
                             localStorage.setItem('smart_auto_configs', JSON.stringify(updated));
@@ -281,7 +294,6 @@ const AutomatedTradingView = observer(() => {
                     }
                 }
             });
-
         } catch (e) {
             console.error('[SmartAuto] Trade purchase exception:', e);
             setExecutingMap(prev => ({ ...prev, [strategyId]: false }));
@@ -298,8 +310,8 @@ const AutomatedTradingView = observer(() => {
         const rf = configs.rise_fall;
         if (rf.is_running && !executingMap.rise_fall) {
             const probVal = rf.prob_type === 'riseProb' ? probs.riseProb : probs.fallProb;
-            const probOk = rf.operator === '>' ? (probVal > (rf.threshold || 55)) : (probVal < (rf.threshold || 55));
-            
+            const probOk = rf.operator === '>' ? probVal > (rf.threshold || 55) : probVal < (rf.threshold || 55);
+
             // Check ticks streak direction
             let trendOk = false;
             const checkTicks = ticks.slice(-(rf.ticks_count || 3));
@@ -322,7 +334,7 @@ const AutomatedTradingView = observer(() => {
         const eo = configs.even_odd;
         if (eo.is_running && !executingMap.even_odd) {
             const probVal = eo.prob_type === 'even' ? probs.even : probs.odd;
-            const probOk = eo.operator === '>' ? (probVal > (eo.threshold || 60)) : (probVal < (eo.threshold || 60));
+            const probOk = eo.operator === '>' ? probVal > (eo.threshold || 60) : probVal < (eo.threshold || 60);
 
             let streakOk = false;
             const checkTicks = ticks.slice(-(eo.ticks_count || 3));
@@ -360,16 +372,16 @@ const AutomatedTradingView = observer(() => {
         if (ou.is_running && !executingMap.over_under) {
             const ouProbs = getOverUnderProbs(ou.barrier || 5);
             const probVal = ou.prob_type === 'over' ? ouProbs.over : ouProbs.under;
-            const probOk = ou.operator === '>' ? (probVal > (ou.threshold || 55)) : (probVal < (ou.threshold || 55));
+            const probOk = ou.operator === '>' ? probVal > (ou.threshold || 55) : probVal < (ou.threshold || 55);
 
             let streakOk = false;
             const checkTicks = ticks.slice(-(ou.ticks_count || 3));
             if (checkTicks.length === (ou.ticks_count || 3)) {
                 const barrierVal = ou.barrier_check ?? 5;
                 if (ou.ticks_condition === 'Over') {
-                    streakOk = checkTicks.every(v => (v % 10) > barrierVal);
+                    streakOk = checkTicks.every(v => v % 10 > barrierVal);
                 } else if (ou.ticks_condition === 'Under') {
-                    streakOk = checkTicks.every(v => (v % 10) < barrierVal);
+                    streakOk = checkTicks.every(v => v % 10 < barrierVal);
                 } else {
                     streakOk = true;
                 }
@@ -388,15 +400,19 @@ const AutomatedTradingView = observer(() => {
                 const barrierVal = oup.pattern_check_barrier ?? 5;
                 let patternOk = false;
                 if (oup.pattern_check_condition === 'Over') {
-                    patternOk = checkTicks.every(v => (v % 10) > barrierVal);
+                    patternOk = checkTicks.every(v => v % 10 > barrierVal);
                 } else if (oup.pattern_check_condition === 'Under') {
-                    patternOk = checkTicks.every(v => (v % 10) < barrierVal);
+                    patternOk = checkTicks.every(v => v % 10 < barrierVal);
                 } else if (oup.pattern_check_condition === 'Equal') {
-                    patternOk = checkTicks.every(v => (v % 10) === barrierVal);
+                    patternOk = checkTicks.every(v => v % 10 === barrierVal);
                 }
 
                 if (patternOk) {
-                    purchaseTrade('over_under_pattern', oup.pattern_action === 'Buy Over' ? 'DIGITOVER' : 'DIGITUNDER', oup.pattern_action_prediction);
+                    purchaseTrade(
+                        'over_under_pattern',
+                        oup.pattern_action === 'Buy Over' ? 'DIGITOVER' : 'DIGITUNDER',
+                        oup.pattern_action_prediction
+                    );
                 }
             }
         }
@@ -404,16 +420,19 @@ const AutomatedTradingView = observer(() => {
         // 6. Matches/Differs Bot
         const md = configs.matches_differs;
         if (md.is_running && !executingMap.matches_differs) {
-            const matchesProb = (digit_stats.find(s => s.digit === md.target_digit)?.percentage) || 0;
+            const matchesProb = digit_stats.find(s => s.digit === md.target_digit)?.percentage || 0;
             const differsProb = 100 - matchesProb;
             const probVal = md.prob_type === 'matches' ? matchesProb : differsProb;
-            const probOk = md.operator === '>' ? (probVal > (md.threshold || 55)) : (probVal < (md.threshold || 55));
+            const probOk = md.operator === '>' ? probVal > (md.threshold || 55) : probVal < (md.threshold || 55);
 
             if (probOk) {
-                purchaseTrade('matches_differs', md.action === 'Buy Matches' ? 'DIGITMATCH' : 'DIGITDIFF', md.target_digit);
+                purchaseTrade(
+                    'matches_differs',
+                    md.action === 'Buy Matches' ? 'DIGITMATCH' : 'DIGITDIFF',
+                    md.target_digit
+                );
             }
         }
-
     }, [last_digit, ticks.length]);
 
     const handleReconnect = () => {
@@ -427,9 +446,13 @@ const AutomatedTradingView = observer(() => {
                 <div className='strip-item'>
                     <label>Symbol:</label>
                     <select value={symbol} onChange={e => setSymbol(e.target.value)} className='strip-select'>
-                        {smart_trading.markets.flatMap(g => g.items).map(item => (
-                            <option key={item.value} value={item.value}>{item.label}</option>
-                        ))}
+                        {smart_trading.markets
+                            .flatMap(g => g.items)
+                            .map(item => (
+                                <option key={item.value} value={item.value}>
+                                    {item.label}
+                                </option>
+                            ))}
                     </select>
                 </div>
 
@@ -444,14 +467,18 @@ const AutomatedTradingView = observer(() => {
                 </div>
 
                 <div className='strip-item price-badge'>
-                    <span>Price: <strong>{current_price || '0.00'}</strong></span>
+                    <span>
+                        Price: <strong>{current_price || '0.00'}</strong>
+                    </span>
                 </div>
 
                 <div className='strip-item last-digit-badge'>
-                    <span className={classNames('digit-square', {
-                        even: last_digit !== null && last_digit % 2 === 0,
-                        odd: last_digit !== null && last_digit % 2 !== 0,
-                    })}>
+                    <span
+                        className={classNames('digit-square', {
+                            even: last_digit !== null && last_digit % 2 === 0,
+                            odd: last_digit !== null && last_digit % 2 !== 0,
+                        })}
+                    >
                         {last_digit ?? '-'}
                     </span>
                 </div>
@@ -474,7 +501,7 @@ const AutomatedTradingView = observer(() => {
                             <div className='switch-knob' />
                         </div>
                     </div>
-                    
+
                     <div className='card-visuals'>
                         <div className='progress-row'>
                             <span className='label'>Rise</span>
@@ -687,7 +714,9 @@ const AutomatedTradingView = observer(() => {
                         <span className='title'>Even/Odd (Pattern)</span>
                         <div
                             className={classNames('card-switch', { on: configs.even_odd_pattern.is_running })}
-                            onClick={() => updateConfig('even_odd_pattern', 'is_running', !configs.even_odd_pattern.is_running)}
+                            onClick={() =>
+                                updateConfig('even_odd_pattern', 'is_running', !configs.even_odd_pattern.is_running)
+                            }
                         >
                             <div className='switch-knob' />
                         </div>
@@ -703,7 +732,12 @@ const AutomatedTradingView = observer(() => {
                             ))}
                         </div>
                         <span className='pattern-subtext'>Recent digit pattern (E=Even, O=Odd)</span>
-                        <span className='pattern-streak-text'>Current streak: <strong>{streakInfo.count} {streakInfo.side === 'EVEN' ? 'Even' : 'Odd'}</strong></span>
+                        <span className='pattern-streak-text'>
+                            Current streak:{' '}
+                            <strong>
+                                {streakInfo.count} {streakInfo.side === 'EVEN' ? 'Even' : 'Odd'}
+                            </strong>
+                        </span>
                     </div>
 
                     <div className='trading-condition-box'>
@@ -713,7 +747,13 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.even_odd_pattern.pattern_check_count}
-                                onChange={e => updateConfig('even_odd_pattern', 'pattern_check_count', parseInt(e.target.value) || 3)}
+                                onChange={e =>
+                                    updateConfig(
+                                        'even_odd_pattern',
+                                        'pattern_check_count',
+                                        parseInt(e.target.value) || 3
+                                    )
+                                }
                                 className='inline-input short'
                             />
                             <span>digits are</span>
@@ -742,7 +782,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.even_odd_pattern.stake}
-                                onChange={e => updateConfig('even_odd_pattern', 'stake', parseFloat(e.target.value) || 0.5)}
+                                onChange={e =>
+                                    updateConfig('even_odd_pattern', 'stake', parseFloat(e.target.value) || 0.5)
+                                }
                             />
                         </div>
                         <div className='input-item'>
@@ -758,7 +800,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.even_odd_pattern.martingale}
-                                onChange={e => updateConfig('even_odd_pattern', 'martingale', parseFloat(e.target.value) || 1)}
+                                onChange={e =>
+                                    updateConfig('even_odd_pattern', 'martingale', parseFloat(e.target.value) || 1)
+                                }
                             />
                         </div>
                     </div>
@@ -784,11 +828,19 @@ const AutomatedTradingView = observer(() => {
                                 min='0'
                                 max='9'
                                 value={configs.over_under.barrier}
-                                onChange={e => updateConfig('over_under', 'barrier', Math.min(9, Math.max(0, parseInt(e.target.value) || 5)))}
+                                onChange={e =>
+                                    updateConfig(
+                                        'over_under',
+                                        'barrier',
+                                        Math.min(9, Math.max(0, parseInt(e.target.value) || 5))
+                                    )
+                                }
                                 className='barrier-field'
                             />
                             <span className='barrier-limits-text'>
-                                Under: 0-{Math.max(0, (configs.over_under.barrier || 5) - 1)}, Equals: {configs.over_under.barrier || 5}, Over: {Math.min(9, (configs.over_under.barrier || 5) + 1)}-9
+                                Under: 0-{Math.max(0, (configs.over_under.barrier || 5) - 1)}, Equals:{' '}
+                                {configs.over_under.barrier || 5}, Over:{' '}
+                                {Math.min(9, (configs.over_under.barrier || 5) + 1)}-9
                             </span>
                         </div>
 
@@ -806,7 +858,10 @@ const AutomatedTradingView = observer(() => {
                                     <div className='progress-row'>
                                         <span className='label'>Under</span>
                                         <div className='progress-bar-wrap'>
-                                            <div className='progress-fill under' style={{ width: `${ouProbs.under}%` }} />
+                                            <div
+                                                className='progress-fill under'
+                                                style={{ width: `${ouProbs.under}%` }}
+                                            />
                                         </div>
                                         <span className='percentage-text'>{ouProbs.under.toFixed(1)}%</span>
                                     </div>
@@ -857,7 +912,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under.barrier_check}
-                                onChange={e => updateConfig('over_under', 'barrier_check', parseInt(e.target.value) || 5)}
+                                onChange={e =>
+                                    updateConfig('over_under', 'barrier_check', parseInt(e.target.value) || 5)
+                                }
                                 className='inline-input short'
                             />
                             <span>, Then</span>
@@ -873,7 +930,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under.prediction_digit}
-                                onChange={e => updateConfig('over_under', 'prediction_digit', parseInt(e.target.value) || 5)}
+                                onChange={e =>
+                                    updateConfig('over_under', 'prediction_digit', parseInt(e.target.value) || 5)
+                                }
                                 className='inline-input short'
                             />
                         </div>
@@ -901,7 +960,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under.martingale}
-                                onChange={e => updateConfig('over_under', 'martingale', parseFloat(e.target.value) || 1)}
+                                onChange={e =>
+                                    updateConfig('over_under', 'martingale', parseFloat(e.target.value) || 1)
+                                }
                             />
                         </div>
                     </div>
@@ -913,7 +974,9 @@ const AutomatedTradingView = observer(() => {
                         <span className='title'>Over/Under (Pattern)</span>
                         <div
                             className={classNames('card-switch', { on: configs.over_under_pattern.is_running })}
-                            onClick={() => updateConfig('over_under_pattern', 'is_running', !configs.over_under_pattern.is_running)}
+                            onClick={() =>
+                                updateConfig('over_under_pattern', 'is_running', !configs.over_under_pattern.is_running)
+                            }
                         >
                             <div className='switch-knob' />
                         </div>
@@ -932,7 +995,11 @@ const AutomatedTradingView = observer(() => {
                                 );
                             })}
                         </div>
-                        <span className='pattern-subtext'>O=Over (&gt;{configs.over_under_pattern.barrier || 5}), E=Equal (={configs.over_under_pattern.barrier || 5}), U=Under (&lt;{configs.over_under_pattern.barrier || 5})</span>
+                        <span className='pattern-subtext'>
+                            O=Over (&gt;{configs.over_under_pattern.barrier || 5}), E=Equal (=
+                            {configs.over_under_pattern.barrier || 5}), U=Under (&lt;
+                            {configs.over_under_pattern.barrier || 5})
+                        </span>
 
                         {/* Frequency grid table */}
                         <div className='digit-frequency-grid-v2'>
@@ -955,13 +1022,21 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under_pattern.pattern_check_count}
-                                onChange={e => updateConfig('over_under_pattern', 'pattern_check_count', parseInt(e.target.value) || 3)}
+                                onChange={e =>
+                                    updateConfig(
+                                        'over_under_pattern',
+                                        'pattern_check_count',
+                                        parseInt(e.target.value) || 3
+                                    )
+                                }
                                 className='inline-input short'
                             />
                             <span>digits are</span>
                             <select
                                 value={configs.over_under_pattern.pattern_check_condition}
-                                onChange={e => updateConfig('over_under_pattern', 'pattern_check_condition', e.target.value)}
+                                onChange={e =>
+                                    updateConfig('over_under_pattern', 'pattern_check_condition', e.target.value)
+                                }
                             >
                                 <option value='Over'>Over</option>
                                 <option value='Under'>Under</option>
@@ -970,7 +1045,13 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under_pattern.pattern_check_barrier}
-                                onChange={e => updateConfig('over_under_pattern', 'pattern_check_barrier', parseInt(e.target.value) || 5)}
+                                onChange={e =>
+                                    updateConfig(
+                                        'over_under_pattern',
+                                        'pattern_check_barrier',
+                                        parseInt(e.target.value) || 5
+                                    )
+                                }
                                 className='inline-input short'
                             />
                             <span>, Then</span>
@@ -986,7 +1067,13 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under_pattern.pattern_action_prediction}
-                                onChange={e => updateConfig('over_under_pattern', 'pattern_action_prediction', parseInt(e.target.value) || 5)}
+                                onChange={e =>
+                                    updateConfig(
+                                        'over_under_pattern',
+                                        'pattern_action_prediction',
+                                        parseInt(e.target.value) || 5
+                                    )
+                                }
                                 className='inline-input short'
                             />
                         </div>
@@ -998,7 +1085,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under_pattern.stake}
-                                onChange={e => updateConfig('over_under_pattern', 'stake', parseFloat(e.target.value) || 0.5)}
+                                onChange={e =>
+                                    updateConfig('over_under_pattern', 'stake', parseFloat(e.target.value) || 0.5)
+                                }
                             />
                         </div>
                         <div className='input-item'>
@@ -1006,7 +1095,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under_pattern.ticks}
-                                onChange={e => updateConfig('over_under_pattern', 'ticks', parseInt(e.target.value) || 1)}
+                                onChange={e =>
+                                    updateConfig('over_under_pattern', 'ticks', parseInt(e.target.value) || 1)
+                                }
                             />
                         </div>
                         <div className='input-item'>
@@ -1014,7 +1105,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.over_under_pattern.martingale}
-                                onChange={e => updateConfig('over_under_pattern', 'martingale', parseFloat(e.target.value) || 1)}
+                                onChange={e =>
+                                    updateConfig('over_under_pattern', 'martingale', parseFloat(e.target.value) || 1)
+                                }
                             />
                         </div>
                     </div>
@@ -1026,36 +1119,51 @@ const AutomatedTradingView = observer(() => {
                         <span className='title'>Matches/Differs</span>
                         <div
                             className={classNames('card-switch', { on: configs.matches_differs.is_running })}
-                            onClick={() => updateConfig('matches_differs', 'is_running', !configs.matches_differs.is_running)}
+                            onClick={() =>
+                                updateConfig('matches_differs', 'is_running', !configs.matches_differs.is_running)
+                            }
                         >
                             <div className='switch-knob' />
                         </div>
                     </div>
 
                     <div className='card-visuals'>
-                        <span className='freq-header-text'>Most frequent: <strong>{statsMap.most} ({statsMap.mostPct.toFixed(1)}%)</strong></span>
-                        
+                        <span className='freq-header-text'>
+                            Most frequent:{' '}
+                            <strong>
+                                {statsMap.most} ({statsMap.mostPct.toFixed(1)}%)
+                            </strong>
+                        </span>
+
                         {(() => {
                             const targetDigit = configs.matches_differs.target_digit ?? 5;
-                            const matchesProb = (digit_stats.find(s => s.digit === targetDigit)?.percentage) || 0;
+                            const matchesProb = digit_stats.find(s => s.digit === targetDigit)?.percentage || 0;
                             const differsProb = 100 - matchesProb;
                             return (
                                 <>
                                     <div className='progress-row'>
                                         <span className='label'>Matches</span>
                                         <div className='progress-bar-wrap'>
-                                            <div className='progress-fill matches' style={{ width: `${matchesProb}%` }} />
+                                            <div
+                                                className='progress-fill matches'
+                                                style={{ width: `${matchesProb}%` }}
+                                            />
                                         </div>
                                         <span className='percentage-text'>{matchesProb.toFixed(1)}%</span>
                                     </div>
                                     <div className='progress-row'>
                                         <span className='label'>Differs</span>
                                         <div className='progress-bar-wrap'>
-                                            <div className='progress-fill differs' style={{ width: `${differsProb}%` }} />
+                                            <div
+                                                className='progress-fill differs'
+                                                style={{ width: `${differsProb}%` }}
+                                            />
                                         </div>
                                         <span className='percentage-text'>{differsProb.toFixed(1)}%</span>
                                     </div>
-                                    <span className='visual-subtext-info'>Barrier digit {targetDigit} appears {matchesProb.toFixed(1)}% of the time</span>
+                                    <span className='visual-subtext-info'>
+                                        Barrier digit {targetDigit} appears {matchesProb.toFixed(1)}% of the time
+                                    </span>
                                 </>
                             );
                         })()}
@@ -1067,7 +1175,9 @@ const AutomatedTradingView = observer(() => {
                                     <div className='bar-wrapper'>
                                         <div
                                             className='inner-bar-fill'
-                                            style={{ height: `${(stat.count / Math.max(...digit_stats.map(s => s.count), 1)) * 100}%` }}
+                                            style={{
+                                                height: `${(stat.count / Math.max(...digit_stats.map(s => s.count), 1)) * 100}%`,
+                                            }}
                                         />
                                     </div>
                                     <span className='bar-digit-num'>{stat.digit}</span>
@@ -1097,14 +1207,18 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.matches_differs.threshold}
-                                onChange={e => updateConfig('matches_differs', 'threshold', parseFloat(e.target.value) || 0)}
+                                onChange={e =>
+                                    updateConfig('matches_differs', 'threshold', parseFloat(e.target.value) || 0)
+                                }
                                 className='inline-input'
                             />
                             <span>% for</span>
                             <input
                                 type='number'
                                 value={configs.matches_differs.target_digit}
-                                onChange={e => updateConfig('matches_differs', 'target_digit', parseInt(e.target.value) || 5)}
+                                onChange={e =>
+                                    updateConfig('matches_differs', 'target_digit', parseInt(e.target.value) || 5)
+                                }
                                 className='inline-input short'
                             />
                             <span>, Then</span>
@@ -1125,7 +1239,9 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.matches_differs.stake}
-                                onChange={e => updateConfig('matches_differs', 'stake', parseFloat(e.target.value) || 0.5)}
+                                onChange={e =>
+                                    updateConfig('matches_differs', 'stake', parseFloat(e.target.value) || 0.5)
+                                }
                             />
                         </div>
                         <div className='input-item'>
@@ -1141,15 +1257,19 @@ const AutomatedTradingView = observer(() => {
                             <input
                                 type='number'
                                 value={configs.matches_differs.martingale}
-                                onChange={e => updateConfig('matches_differs', 'martingale', parseFloat(e.target.value) || 1)}
+                                onChange={e =>
+                                    updateConfig('matches_differs', 'martingale', parseFloat(e.target.value) || 1)
+                                }
                             />
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <div className='smart-auto-controls' style={{ marginTop: '40px', marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+            <div
+                className='smart-auto-controls'
+                style={{ marginTop: '40px', marginBottom: '20px', display: 'flex', justifyContent: 'center' }}
+            >
                 <button
                     className={`btn-speed-trade ${Object.values(configs).some(c => c.is_running) ? 'running' : ''}`}
                     onClick={() => {
@@ -1173,7 +1293,7 @@ const AutomatedTradingView = observer(() => {
                             ? 'linear-gradient(135deg, #ef4444, #f43f5e)'
                             : 'linear-gradient(135deg, #6366f1, #a855f7)',
                         boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                        transition: 'all 0.3s ease'
+                        transition: 'all 0.3s ease',
                     }}
                 >
                     {Object.values(configs).some(c => c.is_running) ? 'STOP ALL STRATEGIES' : 'START ALL STRATEGIES'}

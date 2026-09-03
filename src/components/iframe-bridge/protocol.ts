@@ -16,7 +16,7 @@ export enum BridgeEvent {
     PONG = 'PONG',
     HEARTBEAT = 'HEARTBEAT',
     RECONNECT = 'RECONNECT',
-    ERROR = 'ERROR'
+    ERROR = 'ERROR',
 }
 
 export interface BridgeMessage<T = any> {
@@ -69,6 +69,6 @@ export const createMessage = <T>(
         timestamp: Date.now(),
         appId,
         source,
-        payload
+        payload,
     };
 };

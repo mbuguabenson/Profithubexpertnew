@@ -1,12 +1,12 @@
 import { action, computed, makeObservable, observable } from 'mobx';
-/* [AI] - Analytics removed - utility functions moved to @/utils/account-helpers */
-import { getAccountId, isDemoAccount } from '@/utils/account-helpers';
 /* [/AI] */
 import { isEmptyObject } from '@/components/shared';
 import { isMultipliersOnly, isOptionsBlocked } from '@/components/shared/common/utility';
 import { removeCookies } from '@/components/shared/utils/storage/storage';
 import { observer as globalObserver, observer } from '@/external/bot-skeleton';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+/* [AI] - Analytics removed - utility functions moved to @/utils/account-helpers */
+import { getAccountId, isDemoAccount } from '@/utils/account-helpers';
 import { ErrorLogger } from '@/utils/error-logger';
 import type { Balance } from '@deriv/api-types';
 import {
@@ -15,7 +15,6 @@ import {
     setIsAuthorized,
 } from '../external/bot-skeleton/services/api/observables/connection-status-stream';
 import type { TAuthData } from '../types/api-types';
-
 
 export default class ClientStore {
     loginid = '';
@@ -42,18 +41,26 @@ export default class ClientStore {
         account_list?: TAuthData['account_list'];
         current_account?: { loginid: string; currency: string; is_virtual: number; balance?: number };
     }) => {
+        const currentAccountId = getAccountId() || this.loginid;
+        const incomingLoginId = data?.current_account?.loginid;
+
+        if (incomingLoginId && currentAccountId && incomingLoginId !== currentAccountId) {
+            return;
+        }
+
         if (data?.account_list) {
             this.setAccountList(data.account_list);
         }
 
-        // Update current account details from new API structure
+        // Update current account details from new API structure only for the
+        // currently selected account. Ignore stale authorize events from older
+        // account sessions that arrive after a switch.
         if (data?.current_account) {
             this.setLoginId(data.current_account.loginid);
             this.setCurrency(data.current_account.currency);
             this.setIsLoggedIn(true);
             localStorage.setItem('active_loginid', data.current_account.loginid);
 
-            // Store the login ID used for WebSocket connection
             this.setWebSocketLoginId(data.current_account.loginid);
 
             if (typeof data.current_account.balance === 'number') {
@@ -65,12 +72,16 @@ export default class ClientStore {
     constructor() {
         // FIX #3: Add cache to prevent redundant account loads
         const accountLoadingCache = new Map<string, Promise<void>>();
-        
+
         // Hydrate from localStorage cache only if a genuine active session exists
         try {
             const hasAuthInfo = !!localStorage.getItem('auth_info') || !!sessionStorage.getItem('auth_info');
             const hasAccountsList = !!localStorage.getItem('accountsList');
-            const hasTokens = !!localStorage.getItem('authToken') || !!localStorage.getItem('active_token') || !!localStorage.getItem('token1') || !!localStorage.getItem('deriv_api_token');
+            const hasTokens =
+                !!localStorage.getItem('authToken') ||
+                !!localStorage.getItem('active_token') ||
+                !!localStorage.getItem('token1') ||
+                !!localStorage.getItem('deriv_api_token');
             const cachedLoginid = localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid');
 
             if (cachedLoginid && (hasAuthInfo || hasAccountsList || hasTokens)) {
@@ -92,7 +103,7 @@ export default class ClientStore {
                                 }
                             }
                         }
-                    } catch (parseError) {
+                    } catch (parseError: any) {
                         console.error('Failed to parse cached account details:', parseError);
                         this.is_logged_in = false;
                         this.loginid = '';
@@ -102,7 +113,8 @@ export default class ClientStore {
                 this.loginid = '';
                 this.is_logged_in = false;
             }
-        } catch {
+        } catch (e: any) {
+            console.debug('[ClientStore] Initialization error:', e?.message);
             this.loginid = '';
             this.is_logged_in = false;
         }
@@ -163,7 +175,7 @@ export default class ClientStore {
             is_cr_account: computed,
             account_open_date: computed,
         });
-        
+
         // Store cache reference for this store instance
         (this as any).accountLoadingCache = accountLoadingCache;
     }
@@ -204,7 +216,9 @@ export default class ClientStore {
         if (this.loginid) {
             return isDemoAccount(this.loginid) ? 1 : 0;
         }
-        return !isEmptyObject(this.accounts) && this.accounts[this.loginid] && !!this.accounts[this.loginid].is_virtual ? 1 : 0;
+        return !isEmptyObject(this.accounts) && this.accounts[this.loginid] && !!this.accounts[this.loginid].is_virtual
+            ? 1
+            : 0;
     }
 
     get all_loginids() {
@@ -262,11 +276,18 @@ export default class ClientStore {
             this.account_list = account_list;
             try {
                 localStorage.setItem('client_account_details', JSON.stringify(account_list));
-            } catch {}
+            } catch (e: any) {
+                console.debug('[ClientStore] Could not persist account_list:', e?.message);
+            }
         }
     };
 
     setBalance = (balance: string) => {
+        const currentLoginId = getAccountId() || this.loginid;
+        if (currentLoginId && this.loginid && this.loginid !== currentLoginId) {
+            return;
+        }
+
         this.balance = balance;
         const numBal = parseFloat(balance) || 0;
         if (this.loginid) {
@@ -282,10 +303,13 @@ export default class ClientStore {
                 );
                 try {
                     localStorage.setItem('client_account_details', JSON.stringify(this.account_list));
-                } catch {}
+                } catch (e: any) {
+                    console.debug('[ClientStore] Could not update account_list in storage:', e?.message);
+                }
             }
             try {
-                const storedAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+                const storedAccounts =
+                    localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
                 if (storedAccounts) {
                     const parsed = JSON.parse(storedAccounts);
                     if (parsed[this.loginid]) {
@@ -294,7 +318,9 @@ export default class ClientStore {
                         localStorage.setItem('clientAccounts', JSON.stringify(parsed));
                     }
                 }
-            } catch {}
+            } catch (e: any) {
+                console.debug('[ClientStore] Could not update stored accounts balance:', e?.message);
+            }
         }
     };
 
@@ -452,7 +478,9 @@ export default class ClientStore {
                 if (window.Intercom) {
                     window.Intercom('shutdown');
                 }
-            } catch {}
+            } catch (e: any) {
+                console.debug('[ClientStore] Could not close chat widgets:', e?.message);
+            }
 
             // Cleanly redirect to root / login
             window.location.replace('/');
@@ -544,7 +572,11 @@ export default class ClientStore {
                 this.account_list = [];
 
                 // Preserve is_logged_in state during WebSocket regeneration if active credentials exist
-                const hasActiveCredentials = !!active_login_id && (!!localStorage.getItem('accountsList') || !!localStorage.getItem('authToken') || !!localStorage.getItem('token1'));
+                const hasActiveCredentials =
+                    !!active_login_id &&
+                    (!!localStorage.getItem('accountsList') ||
+                        !!localStorage.getItem('authToken') ||
+                        !!localStorage.getItem('token1'));
                 if (!hasActiveCredentials) {
                     this.setIsLoggedIn(false);
                 }

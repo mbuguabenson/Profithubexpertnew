@@ -628,7 +628,11 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.trade_definition_tradeopt
             'AMOUNT',
             window.Blockly.JavaScript.javascriptGenerator.ORDER_ATOMIC
         ) || '0';
-    const currency = DBotStore.instance?.client?.currency || localStorage.getItem('currency') || localStorage.getItem('active_currency') || 'USD';
+    const currency =
+        DBotStore.instance?.client?.currency ||
+        localStorage.getItem('currency') ||
+        localStorage.getItem('active_currency') ||
+        'USD';
     const duration_type = block.getFieldValue('DURATIONTYPE_LIST') || '0';
     const duration_value =
         window.Blockly.JavaScript.javascriptGenerator.valueToCode(

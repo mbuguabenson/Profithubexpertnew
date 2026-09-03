@@ -72,8 +72,6 @@ const CurrencyDropdown = () => {
     );
 };
 
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Main AppHeader
 // ─────────────────────────────────────────────────────────────────────────────
@@ -214,7 +212,16 @@ const AppHeader = observer(() => {
                                 {isDesktop ? (
                                     <Localize i18n_default_text='Transfer' />
                                 ) : (
-                                    <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+                                    <svg
+                                        width='16'
+                                        height='16'
+                                        viewBox='0 0 24 24'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        strokeWidth='2'
+                                        strokeLinecap='round'
+                                        strokeLinejoin='round'
+                                    >
                                         <path d='M17 1l4 4-4 4' />
                                         <path d='M3 11V9a4 4 0 014-4h14' />
                                         <path d='M7 23l-4-4 4-4' />
@@ -237,7 +244,11 @@ const AppHeader = observer(() => {
                         <Button tertiary className='app-header__login-btn modern-login-btn' onClick={handleLogin}>
                             <Localize i18n_default_text='Log in' />
                         </Button>
-                        <Button primary_light className='app-header__signup-btn modern-signup-btn' onClick={handleSignup}>
+                        <Button
+                            primary_light
+                            className='app-header__signup-btn modern-signup-btn'
+                            onClick={handleSignup}
+                        >
                             <Localize i18n_default_text='Sign up' />
                         </Button>
                     </div>
@@ -313,7 +324,16 @@ const AppHeader = observer(() => {
                                 title='Refresh Application'
                                 aria-label='Refresh Application'
                             >
-                                <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+                                <svg
+                                    width='16'
+                                    height='16'
+                                    viewBox='0 0 24 24'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    strokeWidth='2.2'
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                >
                                     <path d='M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67' />
                                 </svg>
                             </button>
@@ -323,16 +343,34 @@ const AppHeader = observer(() => {
                             <>
                                 {isDesktop && (
                                     <>
-                                        <button 
-                                            className="app-header__admin-btn"
-                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        <button
+                                            className='app-header__admin-btn'
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                padding: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                            }}
                                             onClick={() => window.dispatchEvent(new Event('open_system_center'))}
-                                            title="System Center (NOC Monitor)"
+                                            title='System Center (NOC Monitor)'
                                         >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-general)' }}>
-                                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                                <line x1="8" y1="21" x2="16" y2="21"></line>
-                                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                                            <svg
+                                                width='20'
+                                                height='20'
+                                                viewBox='0 0 24 24'
+                                                fill='none'
+                                                stroke='currentColor'
+                                                strokeWidth='2'
+                                                strokeLinecap='round'
+                                                strokeLinejoin='round'
+                                                style={{ color: 'var(--text-general)' }}
+                                            >
+                                                <rect x='2' y='3' width='20' height='14' rx='2' ry='2'></rect>
+                                                <line x1='8' y1='21' x2='16' y2='21'></line>
+                                                <line x1='12' y1='17' x2='12' y2='21'></line>
                                             </svg>
                                         </button>
                                     </>

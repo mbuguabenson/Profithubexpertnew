@@ -4,28 +4,32 @@
 // ✦ DIGIT CRACKER TAB — 5.0 HIGH HIERARCHY SOFT UI DESIGN
 // ═══════════════════════════════════════════════════════════════
 
-:root, body.theme--light, .theme--light {
-    --dc-bg:             #f3f2f8;
-    --dc-card-bg:        linear-gradient(145deg, #ffffff, #f0edf9);
-    --dc-card-border:    rgba(124, 58, 237, 0.18);
-    --dc-shadow-raised:  10px 10px 24px #e0dcfa, -8px -8px 20px #ffffff;
-    --dc-shadow-hover:   14px 14px 32px #d6cef7, -10px -10px 24px #ffffff, 0 0 30px rgba(124, 58, 237, 0.25);
-    --dc-shadow-inset:   inset 4px 4px 10px #e0dcfa, inset -3px -3px 8px #ffffff;
-    --dc-text-main:      #1e1438;
-    --dc-text-sub:       #584b7a;
-    --dc-input-bg:       #f7f6fc;
+:root,
+body.theme--light,
+.theme--light {
+    --dc-bg: #f3f2f8;
+    --dc-card-bg: linear-gradient(145deg, #ffffff, #f0edf9);
+    --dc-card-border: rgba(124, 58, 237, 0.18);
+    --dc-shadow-raised: 10px 10px 24px #e0dcfa, -8px -8px 20px #ffffff;
+    --dc-shadow-hover: 14px 14px 32px #d6cef7, -10px -10px 24px #ffffff, 0 0 30px rgba(124, 58, 237, 0.25);
+    --dc-shadow-inset: inset 4px 4px 10px #e0dcfa, inset -3px -3px 8px #ffffff;
+    --dc-text-main: #1e1438;
+    --dc-text-sub: #584b7a;
+    --dc-input-bg: #f7f6fc;
 }
 
-body.theme--dark, .theme--dark {
-    --dc-bg:             #0b0a1a;
-    --dc-card-bg:        linear-gradient(145deg, #161033, #100b27);
-    --dc-card-border:    rgba(168, 85, 247, 0.2);
-    --dc-shadow-raised:  14px 14px 32px rgba(4, 2, 12, 0.8), -8px -8px 24px rgba(168, 85, 247, 0.06);
-    --dc-shadow-hover:   18px 18px 40px rgba(4, 2, 12, 0.9), -12px -12px 28px rgba(168, 85, 247, 0.1), 0 0 35px rgba(124, 58, 237, 0.35);
-    --dc-shadow-inset:   inset 6px 6px 14px rgba(4, 2, 12, 0.8), inset -4px -4px 10px rgba(168, 85, 247, 0.06);
-    --dc-text-main:      #ffffff;
-    --dc-text-sub:       #e9d5ff;
-    --dc-input-bg:       linear-gradient(145deg, #110c28, #1c1444);
+body.theme--dark,
+.theme--dark {
+    --dc-bg: #0b0a1a;
+    --dc-card-bg: linear-gradient(145deg, #161033, #100b27);
+    --dc-card-border: rgba(168, 85, 247, 0.2);
+    --dc-shadow-raised: 14px 14px 32px rgba(4, 2, 12, 0.8), -8px -8px 24px rgba(168, 85, 247, 0.06);
+    --dc-shadow-hover:
+        18px 18px 40px rgba(4, 2, 12, 0.9), -12px -12px 28px rgba(168, 85, 247, 0.1), 0 0 35px rgba(124, 58, 237, 0.35);
+    --dc-shadow-inset: inset 6px 6px 14px rgba(4, 2, 12, 0.8), inset -4px -4px 10px rgba(168, 85, 247, 0.06);
+    --dc-text-main: #ffffff;
+    --dc-text-sub: #e9d5ff;
+    --dc-input-bg: linear-gradient(145deg, #110c28, #1c1444);
 }
 
 .digit-cracker-hud-page {
@@ -157,7 +161,9 @@ body.theme--dark, .theme--dark {
                 }
 
                 &.spot-card {
-                    .val { color: #7c3aed; }
+                    .val {
+                        color: #7c3aed;
+                    }
                 }
 
                 &.live-digit-box {
@@ -204,7 +210,9 @@ body.theme--dark, .theme--dark {
             flex-direction: column;
             gap: to-rem(4px);
             box-shadow: var(--dc-shadow-raised);
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            transition:
+                transform 0.25s ease,
+                box-shadow 0.25s ease;
 
             &:hover {
                 transform: translateY(-4px);
@@ -225,8 +233,12 @@ body.theme--dark, .theme--dark {
                 font-weight: 900;
                 color: var(--dc-text-main);
 
-                &.win { color: #10b981; }
-                &.loss { color: #ef4444; }
+                &.win {
+                    color: #10b981;
+                }
+                &.loss {
+                    color: #ef4444;
+                }
             }
         }
     }

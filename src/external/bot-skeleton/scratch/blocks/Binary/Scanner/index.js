@@ -3,7 +3,9 @@ import { modifyContextMenu } from '../../../utils';
 
 // 1. scanner_best_market
 window.Blockly.Blocks.scanner_best_market = {
-    init() { this.jsonInit(this.definition()); },
+    init() {
+        this.jsonInit(this.definition());
+    },
     definition() {
         return {
             message0: localize('AI Scanner Best Market'),
@@ -19,10 +21,14 @@ window.Blockly.Blocks.scanner_best_market = {
     meta() {
         return {
             display_name: localize('AI Scanner Best Market'),
-            description: localize('Returns the top recommended volatility/jump market symbol from live AI scanner analysis.'),
+            description: localize(
+                'Returns the top recommended volatility/jump market symbol from live AI scanner analysis.'
+            ),
         };
     },
-    customContextMenu(menu) { modifyContextMenu(menu); },
+    customContextMenu(menu) {
+        modifyContextMenu(menu);
+    },
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_best_market = () => [
@@ -32,7 +38,9 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_best_market = () 
 
 // 2. scanner_last_digit
 window.Blockly.Blocks.scanner_last_digit = {
-    init() { this.jsonInit(this.definition()); },
+    init() {
+        this.jsonInit(this.definition());
+    },
     definition() {
         return {
             message0: localize('AI Scanner Live Last Digit'),
@@ -51,7 +59,9 @@ window.Blockly.Blocks.scanner_last_digit = {
             description: localize('Returns the live streaming last digit for the active scanner symbol.'),
         };
     },
-    customContextMenu(menu) { modifyContextMenu(menu); },
+    customContextMenu(menu) {
+        modifyContextMenu(menu);
+    },
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_last_digit = () => [
@@ -61,7 +71,9 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_last_digit = () =
 
 // 3. scanner_signal_confidence
 window.Blockly.Blocks.scanner_signal_confidence = {
-    init() { this.jsonInit(this.definition()); },
+    init() {
+        this.jsonInit(this.definition());
+    },
     definition() {
         return {
             message0: localize('AI Scanner Signal Confidence (%)'),
@@ -80,7 +92,9 @@ window.Blockly.Blocks.scanner_signal_confidence = {
             description: localize('Returns the live signal confidence percentage.'),
         };
     },
-    customContextMenu(menu) { modifyContextMenu(menu); },
+    customContextMenu(menu) {
+        modifyContextMenu(menu);
+    },
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_signal_confidence = () => [
@@ -90,7 +104,9 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_signal_confidence
 
 // 4. scanner_over_under_bias
 window.Blockly.Blocks.scanner_over_under_bias = {
-    init() { this.jsonInit(this.definition()); },
+    init() {
+        this.jsonInit(this.definition());
+    },
     definition() {
         return {
             message0: localize('AI Scanner Over/Under Bias'),
@@ -109,7 +125,9 @@ window.Blockly.Blocks.scanner_over_under_bias = {
             description: localize('Returns OVER or UNDER depending on which side has >= 55% dominance.'),
         };
     },
-    customContextMenu(menu) { modifyContextMenu(menu); },
+    customContextMenu(menu) {
+        modifyContextMenu(menu);
+    },
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_over_under_bias = () => [
@@ -119,7 +137,9 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_over_under_bias =
 
 // 5. scanner_coldest_digit
 window.Blockly.Blocks.scanner_coldest_digit = {
-    init() { this.jsonInit(this.definition()); },
+    init() {
+        this.jsonInit(this.definition());
+    },
     definition() {
         return {
             message0: localize('AI Scanner Coldest Digit'),
@@ -138,7 +158,9 @@ window.Blockly.Blocks.scanner_coldest_digit = {
             description: localize('Returns the digit with lowest historical frequency in recent ticks.'),
         };
     },
-    customContextMenu(menu) { modifyContextMenu(menu); },
+    customContextMenu(menu) {
+        modifyContextMenu(menu);
+    },
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_coldest_digit = () => [
@@ -148,7 +170,9 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_coldest_digit = (
 
 // 6. scanner_hottest_digit
 window.Blockly.Blocks.scanner_hottest_digit = {
-    init() { this.jsonInit(this.definition()); },
+    init() {
+        this.jsonInit(this.definition());
+    },
     definition() {
         return {
             message0: localize('AI Scanner Hottest Digit'),
@@ -167,7 +191,9 @@ window.Blockly.Blocks.scanner_hottest_digit = {
             description: localize('Returns the digit with highest recurring frequency in recent ticks.'),
         };
     },
-    customContextMenu(menu) { modifyContextMenu(menu); },
+    customContextMenu(menu) {
+        modifyContextMenu(menu);
+    },
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_hottest_digit = () => [
@@ -177,7 +203,9 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_hottest_digit = (
 
 // 7. scanner_is_strong_signal
 window.Blockly.Blocks.scanner_is_strong_signal = {
-    init() { this.jsonInit(this.definition()); },
+    init() {
+        this.jsonInit(this.definition());
+    },
     definition() {
         return {
             message0: localize('AI Scanner Is Strong Signal'),
@@ -196,7 +224,9 @@ window.Blockly.Blocks.scanner_is_strong_signal = {
             description: localize('Returns true when high-confidence signal is verified by AI Scanner.'),
         };
     },
-    customContextMenu(menu) { modifyContextMenu(menu); },
+    customContextMenu(menu) {
+        modifyContextMenu(menu);
+    },
 };
 
 window.Blockly.JavaScript.javascriptGenerator.forBlock.scanner_is_strong_signal = () => [

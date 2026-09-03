@@ -63,11 +63,16 @@ export const useTokenRefresh = () => {
                         try {
                             const retryAuth = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
                             if (!retryAuth?.refresh_token) return;
-                            const retryResult = await OAuthTokenExchangeService.refreshAccessToken(retryAuth.refresh_token);
+                            const retryResult = await OAuthTokenExchangeService.refreshAccessToken(
+                                retryAuth.refresh_token
+                            );
                             if (retryResult.access_token) {
                                 scheduleRefresh();
                             } else {
-                                ErrorLogger.error('TokenRefresh', 'Retry also failed, user may be logged out on next API call');
+                                ErrorLogger.error(
+                                    'TokenRefresh',
+                                    'Retry also failed, user may be logged out on next API call'
+                                );
                             }
                         } catch (retryErr) {
                             ErrorLogger.error('TokenRefresh', 'Retry refresh threw', retryErr);

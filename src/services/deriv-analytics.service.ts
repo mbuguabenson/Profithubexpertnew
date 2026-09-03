@@ -102,13 +102,15 @@ export class DerivAnalyticsService {
     private static recordTelemetryEvent(eventName: string, details: any): void {
         try {
             const raw = localStorage.getItem(ANALYTICS_STORAGE_KEY);
-            const current: any = raw ? JSON.parse(raw) : {
-                pageViews: {},
-                devices: { desktop: 0, mobile: 0, tablet: 0 },
-                events: [],
-                trades: { count: 0, volume: 0, pnl: 0, wins: 0, losses: 0 },
-                sessions: 1,
-            };
+            const current: any = raw
+                ? JSON.parse(raw)
+                : {
+                      pageViews: {},
+                      devices: { desktop: 0, mobile: 0, tablet: 0 },
+                      events: [],
+                      trades: { count: 0, volume: 0, pnl: 0, wins: 0, losses: 0 },
+                      sessions: 1,
+                  };
 
             const isMobile = window.innerWidth <= 600;
             const isTablet = window.innerWidth > 600 && window.innerWidth <= 1024;
@@ -174,17 +176,23 @@ export class DerivAnalyticsService {
             } catch {}
 
             const tradeCount = (data?.trades?.count || 0) + tradeLogs.length;
-            const tradeVolume = (data?.trades?.volume || 0) + tradeLogs.reduce((acc, t) => acc + (Number(t.stake || t.buy_price) || 0), 0);
-            const tradePnl = (data?.trades?.pnl || 0) + tradeLogs.reduce((acc, t) => acc + (Number(t.profit || t.pnl) || 0), 0);
+            const tradeVolume =
+                (data?.trades?.volume || 0) +
+                tradeLogs.reduce((acc, t) => acc + (Number(t.stake || t.buy_price) || 0), 0);
+            const tradePnl =
+                (data?.trades?.pnl || 0) + tradeLogs.reduce((acc, t) => acc + (Number(t.profit || t.pnl) || 0), 0);
             const wins = (data?.trades?.wins || 0) + tradeLogs.filter(t => (Number(t.profit || t.pnl) || 0) > 0).length;
-            const losses = (data?.trades?.losses || 0) + tradeLogs.filter(t => (Number(t.profit || t.pnl) || 0) < 0).length;
+            const losses =
+                (data?.trades?.losses || 0) + tradeLogs.filter(t => (Number(t.profit || t.pnl) || 0) < 0).length;
             const winRate = tradeCount > 0 ? (wins / tradeCount) * 100 : 0;
 
             const pageViewsCount = Object.values(data?.pageViews || {}).reduce((a: number, b: any) => a + Number(b), 0);
-            const topPages = Object.entries(data?.pageViews || {}).map(([path, views]) => ({
-                path,
-                views: Number(views),
-            })).sort((a, b) => b.views - a.views);
+            const topPages = Object.entries(data?.pageViews || {})
+                .map(([path, views]) => ({
+                    path,
+                    views: Number(views),
+                }))
+                .sort((a, b) => b.views - a.views);
 
             return {
                 totalSessions: Math.max(1, tokensCount, topPages.length),

@@ -4,16 +4,16 @@
 // ✦ LEGACY TRADING HUB — WELCOME SCREEN & APP ROOT STYLES
 // ═══════════════════════════════════════════════════════════════
 
-$bg-dark:       #060911;
-$card-bg:       rgba(12, 19, 35, 0.88);
-$card-border:   rgba(0, 242, 254, 0.22);
-$cyan-glow:     #00f2fe;
-$gold-glow:     #f59e0b;
-$emerald-glow:  #10b981;
-$blue-glow:     #38bdf8;
-$text-white:    #f8fafc;
-$text-gray:     #94a3b8;
-$text-muted:    #64748b;
+$bg-dark: #060911;
+$card-bg: rgba(12, 19, 35, 0.88);
+$card-border: rgba(0, 242, 254, 0.22);
+$cyan-glow: #00f2fe;
+$gold-glow: #f59e0b;
+$emerald-glow: #10b981;
+$blue-glow: #38bdf8;
+$text-white: #f8fafc;
+$text-gray: #94a3b8;
+$text-muted: #64748b;
 
 .app-root {
     height: 100vh;
@@ -23,7 +23,9 @@ $text-muted:    #64748b;
     justify-content: center;
     font-size: 1.6rem;
 
-    .load-message { margin-top: 6rem; }
+    .load-message {
+        margin-top: 6rem;
+    }
 }
 
 // ─── Error Component Modal Wrapper ──────────────────────────────
@@ -47,7 +49,9 @@ $text-muted:    #64748b;
         width: 100%;
         text-align: center;
         color: #fff;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 242, 254, 0.1);
+        box-shadow:
+            0 25px 50px -12px rgba(0, 0, 0, 0.9),
+            0 0 30px rgba(0, 242, 254, 0.1);
 
         .error-wrapper-title {
             font-size: 1.25rem;
@@ -76,7 +80,9 @@ $text-muted:    #64748b;
                 font-weight: 800;
                 border: none;
                 cursor: pointer;
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
 
                 &:hover {
                     transform: translateY(-2px);
@@ -124,7 +130,9 @@ $text-muted:    #64748b;
 .welcome-screen--visible {
     opacity: 1;
     transform: scale(1);
-    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition:
+        opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 // ✦ CINEMATIC ZOOM-OUT & EXPANSION INTO TRADING SITE
@@ -133,9 +141,10 @@ $text-muted:    #64748b;
     transform: scale(1.14) translateZ(80px);
     filter: blur(20px);
     pointer-events: none;
-    transition: opacity 0.48s cubic-bezier(0.25, 1, 0.5, 1),
-                transform 0.48s cubic-bezier(0.25, 1, 0.5, 1),
-                filter 0.48s ease;
+    transition:
+        opacity 0.48s cubic-bezier(0.25, 1, 0.5, 1),
+        transform 0.48s cubic-bezier(0.25, 1, 0.5, 1),
+        filter 0.48s ease;
 
     .welcome-screen__card {
         transform: scale(1.08) translateY(-15px);
@@ -239,9 +248,10 @@ $text-muted:    #64748b;
     align-items: center;
     backdrop-filter: blur(28px);
     -webkit-backdrop-filter: blur(28px);
-    box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.95),
-                0 0 45px rgba(0, 242, 254, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 35px 70px -15px rgba(0, 0, 0, 0.95),
+        0 0 45px rgba(0, 242, 254, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transform: translateZ(0);
     transition: transform 0.4s ease;
 
@@ -456,24 +466,32 @@ $text-muted:    #64748b;
                 justify-content: center;
                 background: rgba(15, 23, 42, 0.8);
                 border: 1px solid rgba(255, 255, 255, 0.1);
-                transition: transform 0.2s ease, border-color 0.2s ease;
+                transition:
+                    transform 0.2s ease,
+                    border-color 0.2s ease;
 
                 &.orb-blue {
                     border-color: rgba(0, 242, 254, 0.3);
                     box-shadow: 0 0 14px rgba(0, 242, 254, 0.2);
-                    .text-cyan { color: #00f2fe; }
+                    .text-cyan {
+                        color: #00f2fe;
+                    }
                 }
 
                 &.orb-gold {
                     border-color: rgba(245, 158, 11, 0.3);
                     box-shadow: 0 0 14px rgba(245, 158, 11, 0.2);
-                    .text-gold { color: #f59e0b; }
+                    .text-gold {
+                        color: #f59e0b;
+                    }
                 }
 
                 &.orb-teal {
                     border-color: rgba(16, 185, 129, 0.3);
                     box-shadow: 0 0 14px rgba(16, 185, 129, 0.2);
-                    .text-teal { color: #34d399; }
+                    .text-teal {
+                        color: #34d399;
+                    }
                 }
             }
 
@@ -498,7 +516,9 @@ $text-muted:    #64748b;
         text-transform: uppercase;
         font-family: 'JetBrains Mono', monospace;
 
-        .text-emerald { color: #10b981; }
+        .text-emerald {
+            color: #10b981;
+        }
     }
 }
 
@@ -546,18 +566,28 @@ $text-muted:    #64748b;
                 font-size: 0.7rem;
                 font-weight: 700;
 
-                &.change-up { color: #10b981; }
-                &.change-down { color: #ef4444; }
+                &.change-up {
+                    color: #10b981;
+                }
+                &.change-down {
+                    color: #ef4444;
+                }
             }
         }
     }
 }
 
 @keyframes tickerScroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 @keyframes spin {
-    100% { transform: rotate(360deg); }
+    100% {
+        transform: rotate(360deg);
+    }
 }

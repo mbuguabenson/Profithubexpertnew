@@ -363,7 +363,6 @@ const RunPanel = observer(() => {
                     width={366}
                     zIndex={popover_zindex.RUN_PANEL}
                 >
-
                     {content}
                 </Drawer>
                 {!isDesktop && <MobileDrawerFooter />}

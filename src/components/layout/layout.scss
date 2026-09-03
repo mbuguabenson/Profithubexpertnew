@@ -35,7 +35,9 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 20px rgba(99, 102, 241, 0.45);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 
     &:hover {
         transform: scale(1.08);
@@ -94,7 +96,9 @@
         padding: 4px;
         display: flex;
         transition: color 0.15s;
-        &:hover { color: #fff; }
+        &:hover {
+            color: #fff;
+        }
     }
 
     &__body {
@@ -116,8 +120,14 @@
         height: 100%;
         text-align: center;
         color: rgba(255, 255, 255, 0.5);
-        p { font-size: 15px; margin-bottom: 4px; }
-        span { font-size: 11px; color: rgba(255, 255, 255, 0.3); }
+        p {
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        span {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+        }
     }
 
     &__footer {
@@ -138,8 +148,12 @@
             font-size: 13px;
             outline: none;
             transition: border-color 0.15s;
-            &:focus { border-color: rgba(99, 102, 241, 0.5); }
-            &::placeholder { color: rgba(255, 255, 255, 0.3); }
+            &:focus {
+                border-color: rgba(99, 102, 241, 0.5);
+            }
+            &::placeholder {
+                color: rgba(255, 255, 255, 0.3);
+            }
         }
     }
 
@@ -154,7 +168,9 @@
         justify-content: center;
         color: #fff;
         transition: opacity 0.15s;
-        &:hover { opacity: 0.85; }
+        &:hover {
+            opacity: 0.85;
+        }
     }
 }
 
@@ -180,7 +196,9 @@
         border-bottom-left-radius: 4px;
     }
 
-    &__text { display: block; }
+    &__text {
+        display: block;
+    }
     &__time {
         display: block;
         font-size: 10px;
@@ -191,13 +209,25 @@
 }
 
 @keyframes phChatSlideIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.96); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes phBubbleIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 /* ─── Maintenance Mode Blocker ─── */
@@ -211,7 +241,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow: hidden;
 
     &__bg {
@@ -324,12 +354,20 @@
 }
 
 @keyframes phWrenchFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-6px) rotate(8deg); }
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-6px) rotate(8deg);
+    }
 }
 
 @keyframes phMaintLoading {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(250%); }
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(250%);
+    }
 }
-

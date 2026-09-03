@@ -192,9 +192,15 @@
             border: 1px solid rgba(255, 255, 255, 0.12);
 
             .pill-icon {
-                &.text-cyan { color: #06b6d4; }
-                &.text-emerald { color: #10b981; }
-                &.text-purple { color: #a855f7; }
+                &.text-cyan {
+                    color: #06b6d4;
+                }
+                &.text-emerald {
+                    color: #10b981;
+                }
+                &.text-purple {
+                    color: #a855f7;
+                }
             }
         }
     }
@@ -251,5 +257,7 @@
 }
 
 @keyframes spinRadar {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }

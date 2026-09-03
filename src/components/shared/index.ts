@@ -32,3 +32,4 @@ export * from './utils/url';
 export * from './utils/validation';
 export * from './utils/validator';
 export * from './trading-milestone-modal';
+export { default as cacheTrackEvents } from './utils/analytics/analytics';

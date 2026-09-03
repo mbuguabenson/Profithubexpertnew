@@ -151,8 +151,12 @@
 }
 
 @keyframes dw-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 // ── Circular Action Buttons ──
@@ -178,7 +182,9 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.18s ease, filter 0.18s ease;
+    transition:
+        transform 0.18s ease,
+        filter 0.18s ease;
 
     &:hover {
         transform: translateY(-2px);
@@ -191,7 +197,8 @@
         box-shadow: 0 4px 14px rgba(255, 68, 79, 0.35);
     }
 
-    &--transfer, &--withdraw {
+    &--transfer,
+    &--withdraw {
         background: #222730;
         border: 1px solid rgba(255, 255, 255, 0.12);
         color: #ffffff;
@@ -507,7 +514,8 @@
             color: var(--text-less-prominent, #64748b);
         }
 
-        input, select {
+        input,
+        select {
             background: var(--general-main-1, #0e1117);
             border: 1px solid var(--border-normal, rgba(255, 255, 255, 0.1));
             border-radius: 8px;

@@ -4,26 +4,29 @@
 // ✦ CIRCLES ANALYSIS TAB — 5.0 HIGH HIERARCHY SOFT UI DESIGN
 // ═══════════════════════════════════════════════════════════════
 
-:root, body.theme--light, .theme--light {
-    --ca-bg:             #f8fafc;
-    --ca-card-bg:        #ffffff;
-    --ca-card-border:    #e2e8f0;
-    --ca-shadow-raised:  0 4px 20px rgba(0, 0, 0, 0.05);
-    --ca-shadow-hover:   0 10px 30px rgba(124, 58, 237, 0.12);
-    --ca-text-main:      #0f172a;
-    --ca-text-sub:       #64748b;
-    --ca-input-bg:       #f1f5f9;
+:root,
+body.theme--light,
+.theme--light {
+    --ca-bg: #f8fafc;
+    --ca-card-bg: #ffffff;
+    --ca-card-border: #e2e8f0;
+    --ca-shadow-raised: 0 4px 20px rgba(0, 0, 0, 0.05);
+    --ca-shadow-hover: 0 10px 30px rgba(124, 58, 237, 0.12);
+    --ca-text-main: #0f172a;
+    --ca-text-sub: #64748b;
+    --ca-input-bg: #f1f5f9;
 }
 
-body.theme--dark, .theme--dark {
-    --ca-bg:             #0b0a1a;
-    --ca-card-bg:        rgba(30, 41, 59, 0.4);
-    --ca-card-border:    rgba(255, 255, 255, 0.08);
-    --ca-shadow-raised:  0 10px 30px rgba(0, 0, 0, 0.2);
-    --ca-shadow-hover:   0 15px 40px rgba(124, 58, 237, 0.15);
-    --ca-text-main:      #ffffff;
-    --ca-text-sub:       #94a3b8;
-    --ca-input-bg:       rgba(255, 255, 255, 0.03);
+body.theme--dark,
+.theme--dark {
+    --ca-bg: #0b0a1a;
+    --ca-card-bg: rgba(30, 41, 59, 0.4);
+    --ca-card-border: rgba(255, 255, 255, 0.08);
+    --ca-shadow-raised: 0 10px 30px rgba(0, 0, 0, 0.2);
+    --ca-shadow-hover: 0 15px 40px rgba(124, 58, 237, 0.15);
+    --ca-text-main: #ffffff;
+    --ca-text-sub: #94a3b8;
+    --ca-input-bg: rgba(255, 255, 255, 0.03);
 }
 
 .circles-analysis-hud {
@@ -55,7 +58,10 @@ body.theme--dark, .theme--dark {
         padding: to-rem(20px);
         box-shadow: var(--ca-shadow-raised);
         backdrop-filter: blur(12px);
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+        transition:
+            transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.3s ease,
+            border-color 0.3s ease;
 
         &:hover {
             transform: translateY(-2px);
@@ -203,8 +209,12 @@ body.theme--dark, .theme--dark {
                         color: var(--ca-text-main);
                         text-align: center;
 
-                        &.even { color: #60a5fa; }
-                        &.odd { color: #a78bfa; }
+                        &.even {
+                            color: #60a5fa;
+                        }
+                        &.odd {
+                            color: #a78bfa;
+                        }
                     }
                 }
 
@@ -289,8 +299,12 @@ body.theme--dark, .theme--dark {
                 border-color: rgba(255, 255, 255, 0.2);
                 box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
 
-                .label { color: #ffffff; }
-                .desc { color: rgba(255, 255, 255, 0.8); }
+                .label {
+                    color: #ffffff;
+                }
+                .desc {
+                    color: rgba(255, 255, 255, 0.8);
+                }
             }
         }
     }
@@ -475,10 +489,18 @@ body.theme--dark, .theme--dark {
                         color: #ffffff;
                         transition: width 0.3s ease;
 
-                        &.even { background: #3b82f6; }
-                        &.odd { background: #8b5cf6; }
-                        &.over { background: #06b6d4; }
-                        &.under { background: #f59e0b; }
+                        &.even {
+                            background: #3b82f6;
+                        }
+                        &.odd {
+                            background: #8b5cf6;
+                        }
+                        &.over {
+                            background: #06b6d4;
+                        }
+                        &.under {
+                            background: #f59e0b;
+                        }
                     }
                 }
 
@@ -492,10 +514,18 @@ body.theme--dark, .theme--dark {
                         color: #ffffff;
                         font-weight: 700;
 
-                        &.ev { color: #60a5fa; }
-                        &.od { color: #c084fc; }
-                        &.ov { color: #22d3ee; }
-                        &.un { color: #fbbf24; }
+                        &.ev {
+                            color: #60a5fa;
+                        }
+                        &.od {
+                            color: #c084fc;
+                        }
+                        &.ov {
+                            color: #22d3ee;
+                        }
+                        &.un {
+                            color: #fbbf24;
+                        }
                     }
                 }
             }

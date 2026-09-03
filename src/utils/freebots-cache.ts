@@ -76,12 +76,12 @@ export const fetchXmlWithCache = async (file: string, basePath?: string): Promis
         };
 
         let primaryUrl = basePath ? resolveUrl(file, basePath) : resolveUrl(file, getXmlBase());
-        
+
         // Add cache-busting timestamp query parameter for xml-uploads
         if (isUpload) {
             primaryUrl = `${primaryUrl}?t=${Date.now()}`;
         }
-        
+
         let res = await fetch(primaryUrl, isUpload ? { cache: 'no-cache' } : undefined);
 
         // 2) Fallback: try default /xml/ if the primary fails and it isn't already the /xml/ base

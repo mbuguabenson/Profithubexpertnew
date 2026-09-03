@@ -698,9 +698,9 @@
 
             .v-item {
                 flex-shrink: 0 !important;
-                
+
                 .v {
-                    font-size: 1.3rem !important; 
+                    font-size: 1.3rem !important;
                 }
             }
         }
@@ -715,7 +715,9 @@
             width: 100% !important;
             padding: 0 10px !important;
 
-            &::-webkit-scrollbar { display: none; }
+            &::-webkit-scrollbar {
+                display: none;
+            }
 
             .digit-btn-v2 {
                 flex-shrink: 0 !important;
@@ -752,9 +754,9 @@
 
             .v-item {
                 flex-shrink: 0; // Prevent squishing
-                
+
                 .v {
-                    font-size: 1.3rem !important; 
+                    font-size: 1.3rem !important;
                 }
             }
         }
@@ -829,4 +831,3 @@
         }
     }
 }
-

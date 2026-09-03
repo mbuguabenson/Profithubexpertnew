@@ -58,7 +58,7 @@ class SystemCenterStore {
         received: 0,
         dropped: 0,
         reconnects: 0,
-        connected: false
+        connected: false,
     };
 
     // Phase 3: Tab Monitoring
@@ -170,11 +170,11 @@ class SystemCenterStore {
             rootCause,
             affectedModules: modules,
             recommendedFix: fix,
-            recoveryStatus: 'Pending'
+            recoveryStatus: 'Pending',
         };
         this.diagnostics.unshift(report);
         if (this.diagnostics.length > 50) this.diagnostics.pop();
-        
+
         // Auto-resolve mock delay for "Self Healing" UI effect
         setTimeout(() => {
             const index = this.diagnostics.findIndex(d => d.id === report.id);

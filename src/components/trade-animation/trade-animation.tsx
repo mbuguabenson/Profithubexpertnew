@@ -27,8 +27,14 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
     const { run_panel, summary_card, blockly_store, scanner } = useStore();
     const { isMobile } = useDevice();
     const { is_contract_completed, profit } = summary_card;
-    const { contract_stage, is_stop_button_visible, is_stop_button_disabled, is_paused, onRunButtonClick, onStopBotClick } =
-        run_panel;
+    const {
+        contract_stage,
+        is_stop_button_visible,
+        is_stop_button_disabled,
+        is_paused,
+        onRunButtonClick,
+        onStopBotClick,
+    } = run_panel;
     const is_unavailable_for_payment_agent = false;
 
     // Get the load_modal store to monitor strategy deletions
@@ -195,7 +201,13 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
                             ) : (
                                 <LabelPairedPauseLgFillIcon fill='var(--text-general)' width={16} height={16} />
                             )}
-                            <span>{is_paused ? <Localize i18n_default_text='Resume' /> : <Localize i18n_default_text='Pause' />}</span>
+                            <span>
+                                {is_paused ? (
+                                    <Localize i18n_default_text='Resume' />
+                                ) : (
+                                    <Localize i18n_default_text='Pause' />
+                                )}
+                            </span>
                         </button>
                     )}
                     <Button

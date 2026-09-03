@@ -58,7 +58,9 @@ export default class DataCollectionStore {
 
             this.setRunId(this.getHash(xml_hash + this.core.client.loginid + Math.random()));
             this.setRunStart(this.core.common.server_time.unix());
-        } catch { /* Blockly workspace optional */ }
+        } catch {
+            /* Blockly workspace optional */
+        }
     }
 
     async trackTransaction(contracts: any[]) {

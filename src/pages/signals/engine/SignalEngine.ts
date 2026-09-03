@@ -25,8 +25,18 @@ export type AnalysisResult = {
     totalTicks: number;
 };
 
-export type SignalType = "even_odd" | "over_under" | "matches" | "differs" | "rise_fall" | "pro_even_odd" | "pro_over_under" | "pro_differs" | "under_7" | "over_2";
-export type SignalStatus = "STRONG" | "TRADE NOW" | "WAIT" | "NEUTRAL";
+export type SignalType =
+    | 'even_odd'
+    | 'over_under'
+    | 'matches'
+    | 'differs'
+    | 'rise_fall'
+    | 'pro_even_odd'
+    | 'pro_over_under'
+    | 'pro_differs'
+    | 'under_7'
+    | 'over_2';
+export type SignalStatus = 'STRONG' | 'TRADE NOW' | 'WAIT' | 'NEUTRAL';
 
 export type Signal = {
     type: SignalType;
@@ -69,7 +79,7 @@ export class SignalEngine {
         const digitFrequencies: DigitFrequency[] = counts.map((count, digit) => ({
             digit,
             count,
-            percentage: (count / total) * 100
+            percentage: (count / total) * 100,
         }));
 
         let evenCount = 0;
@@ -138,11 +148,11 @@ export class SignalEngine {
             powerIndex: {
                 strongest,
                 weakest,
-                gap
+                gap,
             },
             missingDigits,
             streaks,
-            totalTicks: total
+            totalTicks: total,
         };
     }
 
@@ -157,7 +167,7 @@ export class SignalEngine {
                 status: 'TRADE NOW',
                 probability: maxEvenOdd,
                 recommendation: `Strong ${isEvenFavored ? 'even' : 'odd'} bias detected`,
-                entryCondition: `Wait for 2+ consecutive ${isEvenFavored ? 'odd' : 'even'}s, then trade ${isEvenFavored ? 'EVEN' : 'ODD'}`
+                entryCondition: `Wait for 2+ consecutive ${isEvenFavored ? 'odd' : 'even'}s, then trade ${isEvenFavored ? 'EVEN' : 'ODD'}`,
             });
         } else if (maxEvenOdd >= 55) {
             signals.push({
@@ -165,7 +175,7 @@ export class SignalEngine {
                 status: 'WAIT',
                 probability: maxEvenOdd,
                 recommendation: 'Moderate bias',
-                entryCondition: 'Monitor for stronger signal'
+                entryCondition: 'Monitor for stronger signal',
             });
         }
 
@@ -178,7 +188,7 @@ export class SignalEngine {
                 probability: maxHighLow,
                 recommendation: `Strong ${isHighFavored ? 'high' : 'low'} bias. Power gap ${analysis.powerIndex.gap.toFixed(1)}%`,
                 entryCondition: `Trade ${isHighFavored ? 'OVER' : 'UNDER'} when digit ${analysis.powerIndex.strongest} appears`,
-                targetDigit: analysis.powerIndex.strongest
+                targetDigit: analysis.powerIndex.strongest,
             });
         } else if (maxHighLow >= 58) {
             signals.push({
@@ -186,7 +196,7 @@ export class SignalEngine {
                 status: 'WAIT',
                 probability: maxHighLow,
                 recommendation: 'Moderate bias',
-                entryCondition: 'Wait for power gap to increase'
+                entryCondition: 'Wait for power gap to increase',
             });
         }
 
@@ -195,10 +205,10 @@ export class SignalEngine {
             signals.push({
                 type: 'matches',
                 status: 'TRADE NOW',
-                probability: strongestPercent * 3.3, 
+                probability: strongestPercent * 3.3,
                 recommendation: `Digit ${analysis.powerIndex.strongest} has strong power at ${strongestPercent.toFixed(1)}%`,
                 entryCondition: `Trade immediately when digit ${analysis.powerIndex.strongest} appears`,
-                targetDigit: analysis.powerIndex.strongest
+                targetDigit: analysis.powerIndex.strongest,
             });
         } else if (strongestPercent >= 12) {
             signals.push({
@@ -207,7 +217,7 @@ export class SignalEngine {
                 probability: strongestPercent * 3.3,
                 recommendation: `Digit ${analysis.powerIndex.strongest} showing moderate frequency`,
                 entryCondition: `Wait for frequency to increase`,
-                targetDigit: analysis.powerIndex.strongest
+                targetDigit: analysis.powerIndex.strongest,
             });
         }
 
@@ -219,7 +229,7 @@ export class SignalEngine {
                 probability: 100 - weakestPercent,
                 recommendation: `Digit ${analysis.powerIndex.weakest} appears only ${weakestPercent.toFixed(1)}%`,
                 entryCondition: `Wait for ${analysis.powerIndex.weakest} to appear, then trade DIFFERS`,
-                targetDigit: analysis.powerIndex.weakest
+                targetDigit: analysis.powerIndex.weakest,
             });
         }
 
@@ -228,14 +238,14 @@ export class SignalEngine {
             const trend = last10[9] - last10[0];
             const direction = trend > 0 ? 'RISE' : 'FALL';
             const confidence = Math.min(60 + Math.abs(trend) * 100, 75);
-            
+
             if (confidence >= 60) {
                 signals.push({
                     type: 'rise_fall',
                     status: 'TRADE NOW',
                     probability: confidence,
                     recommendation: `${direction} trend detected with ${confidence.toFixed(1)}% confidence`,
-                    entryCondition: `Trade in detected direction`
+                    entryCondition: `Trade in detected direction`,
                 });
             }
         }
@@ -249,7 +259,12 @@ export class SignalEngine {
 
         const evenDigitsAbove11 = analysis.digitFrequencies.filter(f => f.digit % 2 === 0 && f.percentage >= 11);
         const evenInLast20 = last20.filter(d => d % 2 === 0).length;
-        if (analysis.evenPercentage >= 55 && evenDigitsAbove11.length >= 2 && analysis.powerIndex.strongest % 2 === 0 && evenInLast20 >= 11) {
+        if (
+            analysis.evenPercentage >= 55 &&
+            evenDigitsAbove11.length >= 2 &&
+            analysis.powerIndex.strongest % 2 === 0 &&
+            evenInLast20 >= 11
+        ) {
             let consecOdds = 0;
             for (let i = this.ticks.length - 1; i >= 0; i--) {
                 if (this.ticks[i] % 2 !== 0) consecOdds++;
@@ -262,7 +277,7 @@ export class SignalEngine {
                     status: 'TRADE NOW',
                     probability: Math.min(analysis.evenPercentage + 15, 99),
                     recommendation: `EVEN STRATEGY: ${consecOdds} consecutive odds detected - Enter EVEN now!`,
-                    entryCondition: 'Enter EVEN immediately after first even digit appears'
+                    entryCondition: 'Enter EVEN immediately after first even digit appears',
                 });
             } else {
                 signals.push({
@@ -270,14 +285,19 @@ export class SignalEngine {
                     status: 'WAIT',
                     probability: analysis.evenPercentage + 5,
                     recommendation: 'EVEN conditions met - Waiting for 3+ consecutive ODD digits',
-                    entryCondition: 'Wait for 3+ consecutive ODD digits, then enter EVEN'
+                    entryCondition: 'Wait for 3+ consecutive ODD digits, then enter EVEN',
                 });
             }
         }
 
         const oddDigitsAbove11 = analysis.digitFrequencies.filter(f => f.digit % 2 !== 0 && f.percentage >= 11);
         const oddInLast20 = last20.filter(d => d % 2 !== 0).length;
-        if (analysis.oddPercentage >= 70 && oddDigitsAbove11.length >= 2 && analysis.powerIndex.strongest % 2 !== 0 && oddInLast20 >= 14) {
+        if (
+            analysis.oddPercentage >= 70 &&
+            oddDigitsAbove11.length >= 2 &&
+            analysis.powerIndex.strongest % 2 !== 0 &&
+            oddInLast20 >= 14
+        ) {
             let consecEvens = 0;
             for (let i = this.ticks.length - 1; i >= 0; i--) {
                 if (this.ticks[i] % 2 === 0) consecEvens++;
@@ -290,7 +310,7 @@ export class SignalEngine {
                     status: 'TRADE NOW',
                     probability: Math.min(analysis.oddPercentage + 10, 99),
                     recommendation: `ODD STRATEGY: ${consecEvens} consecutive evens detected - Enter ODD now!`,
-                    entryCondition: 'Enter ODD immediately after first odd digit appears'
+                    entryCondition: 'Enter ODD immediately after first odd digit appears',
                 });
             } else {
                 signals.push({
@@ -298,13 +318,18 @@ export class SignalEngine {
                     status: 'WAIT',
                     probability: analysis.oddPercentage,
                     recommendation: 'ODD conditions met - Waiting for 3+ consecutive EVEN digits',
-                    entryCondition: 'Wait for 3+ consecutive EVEN digits, then enter ODD'
+                    entryCondition: 'Wait for 3+ consecutive EVEN digits, then enter ODD',
                 });
             }
         }
 
         const over1DigitsAbove11 = analysis.digitFrequencies.filter(f => f.digit >= 2 && f.percentage >= 11);
-        if (analysis.digitFrequencies[0].percentage < 10 && analysis.digitFrequencies[1].percentage < 10 && over1DigitsAbove11.length >= 3 && analysis.highPercentage >= 90) {
+        if (
+            analysis.digitFrequencies[0].percentage < 10 &&
+            analysis.digitFrequencies[1].percentage < 10 &&
+            over1DigitsAbove11.length >= 3 &&
+            analysis.highPercentage >= 90
+        ) {
             if (analysis.powerIndex.weakest === 0 || analysis.powerIndex.weakest === 1) {
                 const over1InLast20 = last20.filter(d => d > 1).length;
                 if (over1InLast20 >= 18) {
@@ -313,14 +338,19 @@ export class SignalEngine {
                         status: 'TRADE NOW',
                         probability: analysis.highPercentage,
                         recommendation: 'OVER 1 STRATEGY: Strong signal - 90%+ win rate detected!',
-                        entryCondition: 'Wait for 1+ UNDER digits, then enter OVER 1 immediately'
+                        entryCondition: 'Wait for 1+ UNDER digits, then enter OVER 1 immediately',
                     });
                 }
             }
         }
 
         const under8DigitsAbove11 = analysis.digitFrequencies.filter(f => f.digit <= 7 && f.percentage >= 11);
-        if (analysis.digitFrequencies[8].percentage < 10 && analysis.digitFrequencies[9].percentage < 10 && under8DigitsAbove11.length >= 3 && analysis.lowPercentage >= 90) {
+        if (
+            analysis.digitFrequencies[8].percentage < 10 &&
+            analysis.digitFrequencies[9].percentage < 10 &&
+            under8DigitsAbove11.length >= 3 &&
+            analysis.lowPercentage >= 90
+        ) {
             if (analysis.powerIndex.weakest === 8 || analysis.powerIndex.weakest === 9) {
                 const under8InLast20 = last20.filter(d => d < 8).length;
                 if (under8InLast20 >= 18) {
@@ -329,16 +359,16 @@ export class SignalEngine {
                         status: 'TRADE NOW',
                         probability: analysis.lowPercentage,
                         recommendation: 'UNDER 8 STRATEGY: Strong signal - 90%+ win rate detected!',
-                        entryCondition: 'Wait for 1+ OVER digits, then enter UNDER 8 immediately'
+                        entryCondition: 'Wait for 1+ OVER digits, then enter UNDER 8 immediately',
                     });
                 }
             }
         }
-        
+
         const low7Count = analysis.digitFrequencies.filter(f => f.digit <= 6).reduce((sum, f) => sum + f.percentage, 0);
         const over7Weak = analysis.digitFrequencies.filter(f => f.digit >= 7 && f.percentage < 10).length;
         const triggerUnder7 = analysis.digitFrequencies.find(f => f.digit >= 7 && f.percentage > 10);
-        
+
         if (low7Count >= 70 && over7Weak >= 2 && triggerUnder7) {
             signals.push({
                 type: 'under_7',
@@ -346,11 +376,13 @@ export class SignalEngine {
                 probability: low7Count,
                 recommendation: `UNDER 7 STRATEGY: Strong bias towards 0-6.`,
                 entryCondition: `Use digit ${triggerUnder7.digit} as entry point for UNDER 7`,
-                targetDigit: triggerUnder7.digit
+                targetDigit: triggerUnder7.digit,
             });
         }
 
-        const high2Count = analysis.digitFrequencies.filter(f => f.digit >= 3).reduce((sum, f) => sum + f.percentage, 0);
+        const high2Count = analysis.digitFrequencies
+            .filter(f => f.digit >= 3)
+            .reduce((sum, f) => sum + f.percentage, 0);
         const under2Weak = analysis.digitFrequencies.filter(f => f.digit <= 2 && f.percentage < 10).length;
         const triggerOver2 = analysis.digitFrequencies.find(f => f.digit <= 2 && f.percentage > 10);
 
@@ -361,7 +393,7 @@ export class SignalEngine {
                 probability: high2Count,
                 recommendation: `OVER 2 STRATEGY: Strong bias towards 3-9.`,
                 entryCondition: `Use digit ${triggerOver2.digit} as entry point for OVER 2`,
-                targetDigit: triggerOver2.digit
+                targetDigit: triggerOver2.digit,
             });
         }
 
@@ -372,14 +404,16 @@ export class SignalEngine {
         const all = [...std, ...pro];
         const superS = all.filter(s => s.probability >= 65);
 
-        return superS.map(s => {
-            const copy = { ...s };
-            if (copy.probability >= 90) {
-                copy.status = 'STRONG';
-            } else if (copy.probability >= 65) {
-                copy.status = 'TRADE NOW';
-            }
-            return copy;
-        }).sort((a, b) => b.probability - a.probability);
+        return superS
+            .map(s => {
+                const copy = { ...s };
+                if (copy.probability >= 90) {
+                    copy.status = 'STRONG';
+                } else if (copy.probability >= 65) {
+                    copy.status = 'TRADE NOW';
+                }
+                return copy;
+            })
+            .sort((a, b) => b.probability - a.probability);
     }
 }

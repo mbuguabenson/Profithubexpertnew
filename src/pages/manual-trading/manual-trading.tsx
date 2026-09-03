@@ -1031,7 +1031,11 @@ const ManualTrading = observer(() => {
                             currency,
                             verification_id: verificationId,
                         };
-                        const buy = await buyContractForUi({ parameters, price: effectiveStake, source: 'ManualTrading' });
+                        const buy = await buyContractForUi({
+                            parameters,
+                            price: effectiveStake,
+                            source: 'ManualTrading',
+                        });
                         const buySnapshot = {
                             ...fallbackContract,
                             buy_price: buy.buy_price,
@@ -1084,7 +1088,11 @@ const ManualTrading = observer(() => {
                             currency,
                             verification_id: verificationId,
                         };
-                        const buy = await buyContractForUi({ parameters, price: effectiveStake, source: 'ManualTrading' });
+                        const buy = await buyContractForUi({
+                            parameters,
+                            price: effectiveStake,
+                            source: 'ManualTrading',
+                        });
                         const buySnapshot = {
                             ...fallbackContract,
                             buy_price: buy.buy_price,
@@ -1343,7 +1351,10 @@ const ManualTrading = observer(() => {
                             <span>runs</span>
                         </div>
                     </label>
-                    <label className='manual-trading-field manual-trading-field--checkbox' style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label
+                        className='manual-trading-field manual-trading-field--checkbox'
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
                         <input
                             type='checkbox'
                             checked={isParallelRuns}

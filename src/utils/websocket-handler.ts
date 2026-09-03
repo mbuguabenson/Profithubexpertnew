@@ -38,13 +38,13 @@ export const safeSubscribe = (
                             message: errObj.error.message,
                             echo_req: errObj.echo_req,
                             msg_type: errObj.msg_type,
-                            req_id: errObj.req_id
+                            req_id: errObj.req_id,
                         };
                     } else if (errObj.code === 'AlreadySubscribed') {
                         isAlreadySubscribed = true;
                     }
                 }
-                
+
                 if (isAlreadySubscribed) {
                     // Ignore already subscribed errors
                     return;

@@ -18,13 +18,15 @@ const CustomNotifications = () => {
             const raw = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || '[]';
             const items = JSON.parse(raw);
             // Format for @deriv-com/ui Notifications component
-            setNotifications(items.map((n: any, idx: number) => ({
-                id: n.id || String(idx),
-                header: n.title || 'Platform Update',
-                message: n.message || '',
-                timestamp: n.timestamp || Date.now(),
-                is_read: n.is_read || false,
-            })));
+            setNotifications(
+                items.map((n: any, idx: number) => ({
+                    id: n.id || String(idx),
+                    header: n.title || 'Platform Update',
+                    message: n.message || '',
+                    timestamp: n.timestamp || Date.now(),
+                    is_read: n.is_read || false,
+                }))
+            );
         } catch {
             setNotifications([]);
         }
@@ -41,7 +43,9 @@ const CustomNotifications = () => {
         try {
             localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify([]));
             setNotifications([]);
-        } catch { /* ignore */ }
+        } catch {
+            /* ignore */
+        }
     };
 
     const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -58,7 +62,9 @@ const CustomNotifications = () => {
                             const updated = notifications.map(n => ({ ...n, is_read: true }));
                             localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated));
                             setNotifications(updated);
-                        } catch { /* ignore */ }
+                        } catch {
+                            /* ignore */
+                        }
                     }
                 }}
                 tooltipContent={localize('View notifications')}
@@ -66,9 +72,7 @@ const CustomNotifications = () => {
             >
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                     <LegacyNotificationIcon iconSize='sm' />
-                    {unreadCount > 0 && (
-                        <span className="ph-notification-badge">{unreadCount}</span>
-                    )}
+                    {unreadCount > 0 && <span className='ph-notification-badge'>{unreadCount}</span>}
                 </div>
             </Tooltip>
             <Notifications
@@ -94,4 +98,3 @@ const CustomNotifications = () => {
 };
 
 export default CustomNotifications;
-

@@ -3,7 +3,8 @@ import { observer, useStore } from '@deriv/stores';
 import { Text, IconButton } from '@deriv-com/quill-ui';
 import { LabelPairedArrowLeftSmBoldIcon } from '@deriv/quill-icons';
 import { Localize } from '@deriv/translations';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useHistory } from '../../../../withRouterShim';
 import { isEmptyObject } from '@deriv/shared';
 
 const ContractDetailsHeader = observer(() => {

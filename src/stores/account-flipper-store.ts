@@ -19,22 +19,22 @@ export const THRESHOLDS: Record<TThresholdKey, ThresholdConfig> = {
         over: [6, 7, 8, 9],
         current: [4, 5],
         name: 'Over 3 / Under 6',
-        multiplier: 2.6
+        multiplier: 2.6,
     },
     '2-7': {
         under: [0, 1, 2],
         over: [7, 8, 9],
         current: [3, 4, 5, 6],
         name: 'Over 2 / Under 7',
-        multiplier: 3.5
+        multiplier: 3.5,
     },
     '1-8': {
         under: [0, 1],
         over: [8, 9],
         current: [2, 3, 4, 5, 6, 7],
         name: 'Over 1 / Under 8',
-        multiplier: 5.0
-    }
+        multiplier: 5.0,
+    },
 };
 
 export interface ThresholdAnalysis {
@@ -158,25 +158,28 @@ export default class AccountFlipperStore {
         const sym = this.symbol;
 
         // Request historical data
-        api_base.api.send({
-            ticks_history: sym,
-            adjust_start_time: 1,
-            count: 200,
-            end: 'latest',
-            style: 'ticks',
-        }).then((res: any) => {
-            if (this.symbol !== sym) return;
-            const hist = res?.history || res?.ticks_history;
-            if (hist?.prices) {
-                const digits = hist.prices.map((p: any) => parseInt(p.toString().slice(-1), 10));
-                runInAction(() => {
-                    this.recent_digits = digits;
-                    if (hist.prices.length > 0) {
-                        this.current_price = Number(hist.prices[hist.prices.length - 1]);
-                    }
-                });
-            }
-        }).catch(() => {});
+        api_base.api
+            .send({
+                ticks_history: sym,
+                adjust_start_time: 1,
+                count: 200,
+                end: 'latest',
+                style: 'ticks',
+            })
+            .then((res: any) => {
+                if (this.symbol !== sym) return;
+                const hist = res?.history || res?.ticks_history;
+                if (hist?.prices) {
+                    const digits = hist.prices.map((p: any) => parseInt(p.toString().slice(-1), 10));
+                    runInAction(() => {
+                        this.recent_digits = digits;
+                        if (hist.prices.length > 0) {
+                            this.current_price = Number(hist.prices[hist.prices.length - 1]);
+                        }
+                    });
+                }
+            })
+            .catch(() => {});
 
         // Direct RxJS stream via safeSubscribe
         const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
@@ -227,7 +230,7 @@ export default class AccountFlipperStore {
 
     @computed
     get all_analyses(): ThresholdAnalysis[] {
-        return Object.keys(THRESHOLDS).map(key => 
+        return Object.keys(THRESHOLDS).map(key =>
             this.analyzeThreshold(this.recent_digits.slice(-this.timeframe), THRESHOLDS[key as TThresholdKey])
         );
     }
@@ -235,9 +238,13 @@ export default class AccountFlipperStore {
     @computed
     get correlation_matrix(): number[][] {
         const digits = this.recent_digits.slice(-this.timeframe);
-        const matrix: number[][] = Array(10).fill(null).map(() => Array(10).fill(0));
-        const counts: number[][] = Array(10).fill(null).map(() => Array(10).fill(0));
-        
+        const matrix: number[][] = Array(10)
+            .fill(null)
+            .map(() => Array(10).fill(0));
+        const counts: number[][] = Array(10)
+            .fill(null)
+            .map(() => Array(10).fill(0));
+
         if (digits.length < 2) return matrix;
 
         for (let i = 0; i < digits.length - 1; i++) {
@@ -245,7 +252,7 @@ export default class AccountFlipperStore {
             const next = digits[i + 1];
             counts[current][next]++;
         }
-        
+
         for (let i = 0; i < 10; i++) {
             const totalTransitions = counts[i].reduce((sum, count) => sum + count, 0);
             for (let j = 0; j < 10; j++) {
@@ -263,7 +270,7 @@ export default class AccountFlipperStore {
         const fromDigit = this.current_digit;
         const transitions: { [key: number]: number } = {};
         let totalFromDigit = 0;
-        
+
         for (let i = 0; i < digits.length - 1; i++) {
             if (digits[i] === fromDigit) {
                 totalFromDigit++;
@@ -271,13 +278,13 @@ export default class AccountFlipperStore {
                 transitions[nextDigit] = (transitions[nextDigit] || 0) + 1;
             }
         }
-        
+
         return Object.entries(transitions)
             .map(([toDigit, count]) => ({
                 fromDigit,
                 toDigit: parseInt(toDigit),
                 probability: (count / totalFromDigit) * 100,
-                occurrences: count
+                occurrences: count,
             }))
             .sort((a, b) => b.probability - a.probability);
     }
@@ -286,38 +293,49 @@ export default class AccountFlipperStore {
     get risk_assessment(): RiskAssessment {
         const analyses = this.all_analyses;
         const digits = this.recent_digits;
-        
+
         if (digits.length < 50) {
-            return { volatility: 0, trendStrength: 0, confidence: 0, overallRisk: 'MEDIUM', recommendation: 'Awaiting data...' };
+            return {
+                volatility: 0,
+                trendStrength: 0,
+                confidence: 0,
+                overallRisk: 'MEDIUM',
+                recommendation: 'Awaiting data...',
+            };
         }
 
         const percentages = analyses.flatMap(a => [a.underPercent, a.overPercent]);
         const mean = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
         const variance = percentages.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / percentages.length;
         const volatility = Math.sqrt(variance) * 2;
-        
+
         const short = this.analyzeThreshold(digits.slice(-50), THRESHOLDS[this.selected_threshold_key]);
         const medium = this.analyzeThreshold(digits.slice(-100), THRESHOLDS[this.selected_threshold_key]);
         const long = this.analyzeThreshold(digits, THRESHOLDS[this.selected_threshold_key]);
-        
-        const trendConsistency = 100 - Math.abs(short.underPercent - medium.underPercent) - 
-                                        Math.abs(medium.underPercent - long.underPercent);
+
+        const trendConsistency =
+            100 -
+            Math.abs(short.underPercent - medium.underPercent) -
+            Math.abs(medium.underPercent - long.underPercent);
         const trendStrength = Math.max(0, trendConsistency);
-        
+
         const avgConfidence = analyses.reduce((sum, a) => sum + a.confidence, 0) / analyses.length;
-        const riskScore = (volatility * 0.4) + ((100 - trendStrength) * 0.3) + ((100 - avgConfidence) * 0.3);
-        
+        const riskScore = volatility * 0.4 + (100 - trendStrength) * 0.3 + (100 - avgConfidence) * 0.3;
+
         const overallRisk = riskScore < 30 ? 'LOW' : riskScore < 60 ? 'MEDIUM' : 'HIGH';
-        const recommendation = overallRisk === 'LOW' ? 'Safe to trade with recommended stakes' :
-                               overallRisk === 'MEDIUM' ? 'Trade with caution, reduce stakes' :
-                               'High risk - avoid trading or use minimum stakes';
-        
+        const recommendation =
+            overallRisk === 'LOW'
+                ? 'Safe to trade with recommended stakes'
+                : overallRisk === 'MEDIUM'
+                  ? 'Trade with caution, reduce stakes'
+                  : 'High risk - avoid trading or use minimum stakes';
+
         return {
             volatility: Math.min(volatility, 100),
             trendStrength,
             confidence: avgConfidence,
             overallRisk,
-            recommendation
+            recommendation,
         };
     }
 
@@ -325,33 +343,41 @@ export default class AccountFlipperStore {
     get entry_recommendations(): EntryRecommendation[] {
         const analyses = this.all_analyses;
         const risk = this.risk_assessment;
-        
+
         return analyses.map(analysis => {
-            const dominant = analysis.underPercent > analysis.overPercent ? 'UNDER' :
-                             analysis.overPercent > analysis.underPercent ? 'OVER' : null;
-            
+            const dominant =
+                analysis.underPercent > analysis.overPercent
+                    ? 'UNDER'
+                    : analysis.overPercent > analysis.underPercent
+                      ? 'OVER'
+                      : null;
+
             const dominanceMargin = Math.abs(analysis.underPercent - analysis.overPercent);
-            const shouldEnter = dominant !== null && dominanceMargin >= 10 && analysis.confidence >= 60 && 
-                                analysis.expectedPayout > 0 && risk.overallRisk !== 'HIGH';
-            
+            const shouldEnter =
+                dominant !== null &&
+                dominanceMargin >= 10 &&
+                analysis.confidence >= 60 &&
+                analysis.expectedPayout > 0 &&
+                risk.overallRisk !== 'HIGH';
+
             const confidenceMultiplier = analysis.confidence / 100;
             const riskMultiplier = risk.overallRisk === 'LOW' ? 1 : 0.5;
             const adjustedStake = this.base_stake * confidenceMultiplier * riskMultiplier;
-            
+
             const reasoning = [
                 `${dominant} has ${dominanceMargin.toFixed(1)}% advantage`,
                 `Confidence: ${analysis.confidence.toFixed(0)}%`,
                 `Expected value: ${analysis.expectedPayout.toFixed(2)}`,
-                `Risk level: ${risk.overallRisk}`
+                `Risk level: ${risk.overallRisk}`,
             ];
-            
+
             return {
                 threshold: analysis.threshold,
                 action: shouldEnter ? (dominant as 'UNDER' | 'OVER') : 'WAIT',
                 confidence: analysis.confidence,
                 stake: shouldEnter ? adjustedStake : 0,
                 expectedValue: analysis.expectedPayout,
-                reasoning
+                reasoning,
             };
         });
     }
@@ -361,25 +387,25 @@ export default class AccountFlipperStore {
         const underCount = digits.filter(d => config.under.includes(d)).length;
         const overCount = digits.filter(d => config.over.includes(d)).length;
         const currentCount = digits.filter(d => config.current.includes(d)).length;
-        
+
         const underPercent = (underCount / total) * 100;
         const overPercent = (overCount / total) * 100;
         const currentPercent = (currentCount / total) * 100;
-        
+
         const expectedPercent = (config.under.length / 10) * 100;
         const maxPercent = Math.max(underPercent, overPercent);
         const deviation = Math.abs(maxPercent - expectedPercent);
-        
-        const strength = deviation >= 15 ? 'VERY STRONG' : deviation >= 10 ? 'STRONG' :
-                         deviation >= 5 ? 'MODERATE' : 'WEAK';
-        
+
+        const strength =
+            deviation >= 15 ? 'VERY STRONG' : deviation >= 10 ? 'STRONG' : deviation >= 5 ? 'MODERATE' : 'WEAK';
+
         const sampleSizeConfidence = Math.min(total / 200, 1) * 100;
         const strengthConfidence = deviation * 5;
-        const confidence = (sampleSizeConfidence * 0.4) + (strengthConfidence * 0.6);
-        
+        const confidence = sampleSizeConfidence * 0.4 + strengthConfidence * 0.6;
+
         const winProbability = maxPercent / 100;
-        const expectedPayout = (winProbability * config.multiplier) - ((1 - winProbability) * 1);
-        
+        const expectedPayout = winProbability * config.multiplier - (1 - winProbability) * 1;
+
         return {
             threshold: config.name,
             underPercent,
@@ -390,7 +416,7 @@ export default class AccountFlipperStore {
             currentCount,
             strength,
             confidence: Math.min(confidence, 100),
-            expectedPayout
+            expectedPayout,
         };
     }
 

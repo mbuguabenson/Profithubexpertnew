@@ -26,115 +26,173 @@ type TDesktopFormWrapper = {
     setSelectedTradeType: (selected_trade_type: string) => void;
 };
 
-const QuickSelectionPanel = observer(({
-    selected_trade_type,
-    selected_startegy_label,
-    children,
-}: Pick<TDesktopFormWrapper, 'selected_trade_type' | 'children'> & { selected_startegy_label: string }) => {
-    const { scanner } = useStore();
-    return (
-        <>
-            <div className='qs__selected-options'>
-                <div className='qs__selected-options__item'>
-                    <Text size='xs' lineHeight='s'>
-                        {localize('Trade type')}
-                    </Text>
-                    <Text size='xs' weight='bold' lineHeight='s'>
-                        {selected_trade_type}
-                    </Text>
+const QuickSelectionPanel = observer(
+    ({
+        selected_trade_type,
+        selected_startegy_label,
+        children,
+    }: Pick<TDesktopFormWrapper, 'selected_trade_type' | 'children'> & { selected_startegy_label: string }) => {
+        const { scanner } = useStore();
+        return (
+            <>
+                <div className='qs__selected-options'>
+                    <div className='qs__selected-options__item'>
+                        <Text size='xs' lineHeight='s'>
+                            {localize('Trade type')}
+                        </Text>
+                        <Text size='xs' weight='bold' lineHeight='s'>
+                            {selected_trade_type}
+                        </Text>
+                    </div>
+                    <div className='qs__selected-options__item'>
+                        <Text size='xs' lineHeight='s'>
+                            {localize('Strategy')}
+                        </Text>
+                        <Text className='qs__selected-options__item__description' weight='bold' lineHeight='s'>
+                            {selected_startegy_label}
+                        </Text>
+                    </div>
                 </div>
-                <div className='qs__selected-options__item'>
-                    <Text size='xs' lineHeight='s'>
-                        {localize('Strategy')}
+                <StrategyTabContent formfields={children} active_tab={'TRADE_PARAMETERS'} />
+
+                {/* Bot Builder Advanced Trade Parameters (Auto Switch, Bulk Trades & Virtual Hook) */}
+                <div
+                    style={{
+                        marginTop: 16,
+                        padding: '12px 16px',
+                        background: 'rgba(255,255,255,0.03)',
+                        borderRadius: 8,
+                        border: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                >
+                    <Text size='xs' weight='bold' style={{ marginBottom: 8, display: 'block', color: '#f5c542' }}>
+                        {localize('Bot Builder Advanced Parameters')}
                     </Text>
-                    <Text className='qs__selected-options__item__description' weight='bold' lineHeight='s'>
-                        {selected_startegy_label}
-                    </Text>
-                </div>
-            </div>
-            <StrategyTabContent formfields={children} active_tab={'TRADE_PARAMETERS'} />
 
-            {/* Bot Builder Advanced Trade Parameters (Auto Switch, Bulk Trades & Virtual Hook) */}
-            <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <Text size='xs' weight='bold' style={{ marginBottom: 8, display: 'block', color: '#f5c542' }}>
-                    {localize('Bot Builder Advanced Parameters')}
-                </Text>
-
-                {/* 1. Auto Switch Markets Toggle */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <Text size='xs' color='general'>⚡ {localize('Auto Switch Markets on Loss / Strategy Shift')}</Text>
-                    <input
-                        type='checkbox'
-                        checked={scanner.auto_switch_markets}
-                        onChange={e => { scanner.auto_switch_markets = e.target.checked; }}
-                    />
-                </div>
-
-                {/* 2. Deriv Bulk Trades Engine */}
-                <div style={{ marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <Text size='xs' color='general'>📦 {localize('Deriv Bulk Trades Engine')}</Text>
+                    {/* 1. Auto Switch Markets Toggle */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Text size='xs' color='general'>
+                            ⚡ {localize('Auto Switch Markets on Loss / Strategy Shift')}
+                        </Text>
                         <input
                             type='checkbox'
-                            checked={scanner.is_bulk_trades_enabled}
-                            onChange={e => scanner.setBulkTradesEnabled(e.target.checked)}
+                            checked={scanner.auto_switch_markets}
+                            onChange={e => {
+                                scanner.auto_switch_markets = e.target.checked;
+                            }}
                         />
                     </div>
-                    {scanner.is_bulk_trades_enabled && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                            <Text size='xs' color='less-prominent'>{localize('Number of runs:')}</Text>
+
+                    {/* 2. Deriv Bulk Trades Engine */}
+                    <div
+                        style={{
+                            marginBottom: 12,
+                            paddingBottom: 10,
+                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 6,
+                            }}
+                        >
+                            <Text size='xs' color='general'>
+                                📦 {localize('Deriv Bulk Trades Engine')}
+                            </Text>
                             <input
-                                type='number'
-                                min={1}
-                                max={100}
-                                style={{
-                                    width: '65px',
-                                    background: '#1e293b',
-                                    color: '#fff',
-                                    border: '1px solid #334155',
-                                    borderRadius: 4,
-                                    padding: '3px 8px',
-                                    fontSize: 12,
-                                    outline: 'none',
-                                }}
-                                value={scanner.bulk_trades_count}
-                                onChange={e => scanner.setBulkTradesCount(parseInt(e.target.value, 10) || 1)}
+                                type='checkbox'
+                                checked={scanner.is_bulk_trades_enabled}
+                                onChange={e => scanner.setBulkTradesEnabled(e.target.checked)}
                             />
-                            <Text size='xxs' color='less-prominent'>{localize('trades at once')}</Text>
                         </div>
-                    )}
-                </div>
-
-                {/* 3. Virtual Hook Risk Filter */}
-                <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                        <Text size='xs' color='general'>🛡️ {localize('Virtual Hook Risk Filter')}</Text>
-                        <input
-                            type='checkbox'
-                            checked={scanner.is_virtual_hook_enabled}
-                            onChange={e => scanner.setVirtualHookEnabled(e.target.checked)}
-                        />
+                        {scanner.is_bulk_trades_enabled && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                                <Text size='xs' color='less-prominent'>
+                                    {localize('Number of runs:')}
+                                </Text>
+                                <input
+                                    type='number'
+                                    min={1}
+                                    max={100}
+                                    style={{
+                                        width: '65px',
+                                        background: '#1e293b',
+                                        color: '#fff',
+                                        border: '1px solid #334155',
+                                        borderRadius: 4,
+                                        padding: '3px 8px',
+                                        fontSize: 12,
+                                        outline: 'none',
+                                    }}
+                                    value={scanner.bulk_trades_count}
+                                    onChange={e => scanner.setBulkTradesCount(parseInt(e.target.value, 10) || 1)}
+                                />
+                                <Text size='xxs' color='less-prominent'>
+                                    {localize('trades at once')}
+                                </Text>
+                            </div>
+                        )}
                     </div>
-                    {scanner.is_virtual_hook_enabled && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                            <Text size='xs' color='less-prominent'>{localize('Virtual Loss Threshold:')}</Text>
-                            <select
-                                style={{ background: '#1e293b', color: '#fff', border: '1px solid #334155', borderRadius: 4, padding: '2px 8px', fontSize: 11 }}
-                                value={scanner.virtual_loss_threshold}
-                                onChange={e => scanner.setVirtualLossThreshold(parseInt(e.target.value, 10))}
-                            >
-                                <option value={1}>1 Virtual Loss First</option>
-                                <option value={2}>2 Virtual Losses First</option>
-                                <option value={3}>3 Virtual Losses First</option>
-                                <option value={5}>5 Virtual Losses First</option>
-                            </select>
+
+                    {/* 3. Virtual Hook Risk Filter */}
+                    <div>
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: 6,
+                            }}
+                        >
+                            <Text size='xs' color='general'>
+                                🛡️ {localize('Virtual Hook Risk Filter')}
+                            </Text>
+                            <input
+                                type='checkbox'
+                                checked={scanner.is_virtual_hook_enabled}
+                                onChange={e => scanner.setVirtualHookEnabled(e.target.checked)}
+                            />
                         </div>
-                    )}
+                        {scanner.is_virtual_hook_enabled && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                                <Text size='xs' color='less-prominent'>
+                                    {localize('Virtual Loss Threshold:')}
+                                </Text>
+                                <select
+                                    style={{
+                                        background: '#1e293b',
+                                        color: '#fff',
+                                        border: '1px solid #334155',
+                                        borderRadius: 4,
+                                        padding: '2px 8px',
+                                        fontSize: 11,
+                                    }}
+                                    value={scanner.virtual_loss_threshold}
+                                    onChange={e => scanner.setVirtualLossThreshold(parseInt(e.target.value, 10))}
+                                >
+                                    <option value={1}>1 Virtual Loss First</option>
+                                    <option value={2}>2 Virtual Losses First</option>
+                                    <option value={3}>3 Virtual Losses First</option>
+                                    <option value={5}>5 Virtual Losses First</option>
+                                </select>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
-        </>
-    );
-});
+            </>
+        );
+    }
+);
 
 const FormWrapper = observer(
     ({

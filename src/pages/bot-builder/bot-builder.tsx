@@ -180,13 +180,13 @@ const BotBuilder = observer(() => {
                 })}
                 style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%', overflow: 'hidden' }}
             >
-                <div 
-                    id='scratch_div' 
+                <div
+                    id='scratch_div'
                     ref={el_ref}
                     style={{
                         flex: 1,
                         minWidth: 0,
-                        width: '100%'
+                        width: '100%',
                     }}
                 >
                     <WorkspaceWrapper />
@@ -202,7 +202,15 @@ const BotBuilder = observer(() => {
                         minHeight={400}
                         enableResizing
                     >
-                        <div style={{ flex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        <div
+                            style={{
+                                flex: 1,
+                                height: '100%',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
                             <React.Suspense fallback={<div>Loading Premium Signals...</div>}>
                                 <Signals />
                             </React.Suspense>
@@ -213,14 +221,22 @@ const BotBuilder = observer(() => {
                     <DraggableResizeWrapper
                         boundary='.main'
                         header={localize('Entry Scanner')}
-                        onClose={() => entry_scanner.is_scanner_open = false}
+                        onClose={() => (entry_scanner.is_scanner_open = false)}
                         modalWidth={700}
                         modalHeight={600}
                         minWidth={500}
                         minHeight={400}
                         enableResizing
                     >
-                        <div style={{ flex: 1, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                        <div
+                            style={{
+                                flex: 1,
+                                height: '100%',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                            }}
+                        >
                             <React.Suspense fallback={<div>Loading Entry Scanner...</div>}>
                                 <EntryScanner />
                             </React.Suspense>

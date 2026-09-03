@@ -165,20 +165,18 @@ export default class AppStore {
     };
 
     setDBotEngineStores = () => {
-        const {
-            flyout,
-            toolbar,
-            save_modal,
-            dashboard,
-            load_modal,
-            run_panel,
-            blockly_store,
-            summary_card,
-        } = this.root_store || {};
+        const { flyout, toolbar, save_modal, dashboard, load_modal, run_panel, blockly_store, summary_card } =
+            this.root_store || {};
         const { client, common, ui } = this.core || {};
-        const handleFileChange = load_modal?.handleFileChange ? (event: any) => load_modal.handleFileChange(event) : () => {};
-        const setLoading = blockly_store?.setLoading ? (loading: boolean) => blockly_store.setLoading(loading) : () => {};
-        const setContractUpdateConfig = summary_card?.setContractUpdateConfig ? (config: any) => summary_card.setContractUpdateConfig(config) : () => {};
+        const handleFileChange = load_modal?.handleFileChange
+            ? (event: any) => load_modal.handleFileChange(event)
+            : () => {};
+        const setLoading = blockly_store?.setLoading
+            ? (loading: boolean) => blockly_store.setLoading(loading)
+            : () => {};
+        const setContractUpdateConfig = summary_card?.setContractUpdateConfig
+            ? (config: any) => summary_card.setContractUpdateConfig(config)
+            : () => {};
         const is_mobile = ui?.is_mobile || false;
 
         this.dbot_store = {

@@ -361,12 +361,18 @@ export default class SmartAutoStore {
 
         if (percentages.even > 55) {
             if (this.consecutive_even === 1 && this.consecutive_odd === 0) {
-                this.addLog(`[Pattern Match] EVEN Strong (${percentages.even.toFixed(1)}%) & Sequence Triggered.`, 'info');
+                this.addLog(
+                    `[Pattern Match] EVEN Strong (${percentages.even.toFixed(1)}%) & Sequence Triggered.`,
+                    'info'
+                );
                 this.executeContract('DIGITEVEN', 0, config);
             }
         } else if (percentages.odd > 55) {
             if (this.consecutive_odd === 1 && this.consecutive_even === 0) {
-                this.addLog(`[Pattern Match] ODD Strong (${percentages.odd.toFixed(1)}%) & Sequence Triggered.`, 'info');
+                this.addLog(
+                    `[Pattern Match] ODD Strong (${percentages.odd.toFixed(1)}%) & Sequence Triggered.`,
+                    'info'
+                );
                 this.executeContract('DIGITODD', 0, config);
             }
         }
@@ -381,7 +387,10 @@ export default class SmartAutoStore {
             if (prediction < 6) prediction = 8;
 
             if (this.consecutive_under === 1 && this.consecutive_over === 0) {
-                this.addLog(`[Pattern Match] UNDER Strong (${percentages.under.toFixed(1)}%) & Sequence Triggered.`, 'info');
+                this.addLog(
+                    `[Pattern Match] UNDER Strong (${percentages.under.toFixed(1)}%) & Sequence Triggered.`,
+                    'info'
+                );
                 this.executeContract('DIGITUNDER', prediction, config);
             }
         } else if (percentages.over > 55) {
@@ -389,7 +398,10 @@ export default class SmartAutoStore {
             if (prediction > 3) prediction = 1;
 
             if (this.consecutive_over === 1 && this.consecutive_under === 0) {
-                this.addLog(`[Pattern Match] OVER Strong (${percentages.over.toFixed(1)}%) & Sequence Triggered.`, 'info');
+                this.addLog(
+                    `[Pattern Match] OVER Strong (${percentages.over.toFixed(1)}%) & Sequence Triggered.`,
+                    'info'
+                );
                 this.executeContract('DIGITOVER', prediction, config);
             }
         }
@@ -490,11 +502,12 @@ export default class SmartAutoStore {
             const final_stake = Math.max(0.35, Math.min(stake, max_stake));
 
             const targetSymbol =
-                this.root_store.analysis?.symbol ||
-                (api_base.active_symbols?.[0] as any)?.symbol ||
-                '1HZ100V';
+                this.root_store.analysis?.symbol || (api_base.active_symbols?.[0] as any)?.symbol || '1HZ100V';
 
-            this.addLog(`🚀 Placing ${runs} Bulk ${contract_type} trade(s) on ${targetSymbol} @ $${final_stake.toFixed(2)} simultaneously...`, 'trade');
+            this.addLog(
+                `🚀 Placing ${runs} Bulk ${contract_type} trade(s) on ${targetSymbol} @ $${final_stake.toFixed(2)} simultaneously...`,
+                'trade'
+            );
 
             const proposal_request = normalizeTradeParameters({
                 proposal: 1,
@@ -519,10 +532,12 @@ export default class SmartAutoStore {
             const ask_price = proposal.proposal.ask_price || final_stake;
 
             const buyPromises = Array.from({ length: runs }, () =>
-                api_base.api.send({
-                    buy: proposal.proposal.id,
-                    price: ask_price,
-                }).catch(err => ({ error: err }))
+                api_base.api
+                    .send({
+                        buy: proposal.proposal.id,
+                        price: ask_price,
+                    })
+                    .catch(err => ({ error: err }))
             );
 
             const buyResults = await Promise.all(buyPromises);
@@ -536,7 +551,10 @@ export default class SmartAutoStore {
             }
 
             this.bot_status = `TRADING ${successfulContracts.length} BULK CONTRACTS`;
-            this.addLog(`✅ Successfully purchased ${successfulContracts.length} contract(s). Monitoring results...`, 'trade');
+            this.addLog(
+                `✅ Successfully purchased ${successfulContracts.length} contract(s). Monitoring results...`,
+                'trade'
+            );
 
             // Monitor parallel bulk results
             this.monitorBulkContracts(successfulContracts, config);
@@ -609,19 +627,25 @@ export default class SmartAutoStore {
         this.is_executing = false;
 
         if (config.runs_count !== undefined) {
-            config.runs_count += (wins + losses);
+            config.runs_count += wins + losses;
         }
 
         if (isWin) {
             this.current_streak = 0;
-            this.addLog(`🏆 BULK BATCH WON: +$${totalProfit.toFixed(2)} (${wins}W / ${losses}L) [Session: $${this.session_profit.toFixed(2)}]`, 'success');
+            this.addLog(
+                `🏆 BULK BATCH WON: +$${totalProfit.toFixed(2)} (${wins}W / ${losses}L) [Session: $${this.session_profit.toFixed(2)}]`,
+                'success'
+            );
             if (config.take_profit && this.session_profit >= config.take_profit) {
                 this.addLog(`Take Profit Reached ($${config.take_profit}). Stopping bot.`, 'success');
                 this.stopAllBots('TAKE PROFIT HIT');
             }
         } else {
             this.current_streak++;
-            this.addLog(`❌ BULK BATCH LOSS: -$${Math.abs(totalProfit).toFixed(2)} (${wins}W / ${losses}L) [Streak: ${this.current_streak}]`, 'error');
+            this.addLog(
+                `❌ BULK BATCH LOSS: -$${Math.abs(totalProfit).toFixed(2)} (${wins}W / ${losses}L) [Streak: ${this.current_streak}]`,
+                'error'
+            );
             const total_loss = Math.abs(this.session_profit);
             if (config.use_max_loss && total_loss >= config.max_loss) {
                 this.addLog(`Individual Stop Loss Hit ($${config.max_loss})`, 'error');
@@ -652,9 +676,7 @@ export default class SmartAutoStore {
             }
 
             const targetSymbol =
-                this.root_store.analysis?.symbol ||
-                (api_base.active_symbols?.[0] as any)?.symbol ||
-                '1HZ100V';
+                this.root_store.analysis?.symbol || (api_base.active_symbols?.[0] as any)?.symbol || '1HZ100V';
 
             this.addLog(`Buying ${contract_type} on ${targetSymbol} for $${final_stake.toFixed(2)}`, 'trade');
 
@@ -674,7 +696,10 @@ export default class SmartAutoStore {
                     : {}),
             });
 
-            const proposal = (await api_base.api.send(proposal_request)) as { error?: { message: string }; proposal?: { id: string } };
+            const proposal = (await api_base.api.send(proposal_request)) as {
+                error?: { message: string };
+                proposal?: { id: string };
+            };
 
             if (proposal.error) throw new Error(proposal.error.message);
             if (!proposal.proposal) throw new Error('Proposal failed');

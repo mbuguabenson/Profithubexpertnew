@@ -23,20 +23,20 @@ export const RiskDisclaimer = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="risk-disclaimer-float">
-            <div className="risk-disclaimer-float__card">
-                <div className="risk-disclaimer-float__header">
-                    <span className="risk-disclaimer-float__title">Risk Warning</span>
-                    <button className="risk-disclaimer-float__close" onClick={handleDismiss} aria-label="Close">
+        <div className='risk-disclaimer-float'>
+            <div className='risk-disclaimer-float__card'>
+                <div className='risk-disclaimer-float__header'>
+                    <span className='risk-disclaimer-float__title'>Risk Warning</span>
+                    <button className='risk-disclaimer-float__close' onClick={handleDismiss} aria-label='Close'>
                         ×
                     </button>
                 </div>
-                <p className="risk-disclaimer-float__text">
-                    Options trading involves significant risk and can result in the loss of your invested capital. 
+                <p className='risk-disclaimer-float__text'>
+                    Options trading involves significant risk and can result in the loss of your invested capital.
                     Please ensure that you fully understand the risks involved before trading.
                 </p>
-                <div className="risk-disclaimer-float__actions">
-                    <button className="risk-disclaimer-float__btn" onClick={handleDismiss}>
+                <div className='risk-disclaimer-float__actions'>
+                    <button className='risk-disclaimer-float__btn' onClick={handleDismiss}>
                         I Understand
                     </button>
                 </div>

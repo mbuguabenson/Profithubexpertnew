@@ -1,9 +1,9 @@
 // ─── Scanner Page ─────────────────────────────────────────────────────────────
 
 // Font roles
-$font-display  : 'Orbitron', 'Courier New', monospace;       // headings, badges, chip labels
-$font-mono     : 'Share Tech Mono', 'Courier New', monospace; // prices, digits, terminal, codes
-$font-ui       : 'Inter', Arial, sans-serif;                  // labels, buttons, table text
+$font-display: 'Orbitron', 'Courier New', monospace; // headings, badges, chip labels
+$font-mono: 'Share Tech Mono', 'Courier New', monospace; // prices, digits, terminal, codes
+$font-ui: 'Inter', Arial, sans-serif; // labels, buttons, table text
 
 .scanner-page {
     background: #000;
@@ -31,7 +31,6 @@ $font-ui       : 'Inter', Arial, sans-serif;                  // labels, buttons
         visibility: hidden;
     }
 }
-
 
 // ─── Matrix background ────────────────────────────────────────────────────────
 
@@ -89,7 +88,9 @@ $font-ui       : 'Inter', Arial, sans-serif;                  // labels, buttons
     &__text {
         font-size: 0.68rem;
         color: rgba(255, 255, 255, 0.75);
-        strong { color: #00ffc8; }
+        strong {
+            color: #00ffc8;
+        }
     }
 
     &__currency {
@@ -172,7 +173,9 @@ $font-ui       : 'Inter', Arial, sans-serif;                  // labels, buttons
     border-radius: 0 0 12px 12px;
     border: 1px solid #00ffc8;
     border-top: none;
-    box-shadow: 0 0 40px rgba(0, 255, 200, 0.12), 0 0 80px rgba(0, 255, 200, 0.04);
+    box-shadow:
+        0 0 40px rgba(0, 255, 200, 0.12),
+        0 0 80px rgba(0, 255, 200, 0.04);
     z-index: 10;
     overflow: visible;
 
@@ -188,12 +191,14 @@ $font-ui       : 'Inter', Arial, sans-serif;                  // labels, buttons
 h1 {
     font-family: $font-display;
     color: #00ffc8;
-    font-size: 1.0rem;
+    font-size: 1rem;
     font-weight: 900;
     letter-spacing: 4px;
     text-transform: uppercase;
     margin-bottom: 18px;
-    text-shadow: 0 0 20px rgba(0, 255, 200, 0.6), 0 0 60px rgba(0, 255, 200, 0.2);
+    text-shadow:
+        0 0 20px rgba(0, 255, 200, 0.6),
+        0 0 60px rgba(0, 255, 200, 0.2);
 }
 
 label {
@@ -219,7 +224,9 @@ label {
     font-size: 0.82rem;
     font-weight: 400;
     cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
     appearance: none;
 
     &:focus {
@@ -233,8 +240,14 @@ label {
         cursor: not-allowed;
     }
 
-    optgroup { color: rgba(0, 255, 200, 0.5); font-size: 0.75rem; }
-    option   { color: #00ffc8; background: #060f0f; }
+    optgroup {
+        color: rgba(0, 255, 200, 0.5);
+        font-size: 0.75rem;
+    }
+    option {
+        color: #00ffc8;
+        background: #060f0f;
+    }
 }
 
 // ─── Strategy chips (2-column) ────────────────────────────────────────────────
@@ -312,7 +325,9 @@ label {
         user-select: none;
     }
 
-    strong { color: #fff; }
+    strong {
+        color: #fff;
+    }
 
     .digit-highlight {
         font-size: 1rem;
@@ -371,7 +386,9 @@ label {
     box-shadow: 0 0 20px rgba(0, 255, 200, 0.15);
     animation: signal-pulse 2s ease-in-out infinite;
 
-    &__icon { font-size: 1.1rem; }
+    &__icon {
+        font-size: 1.1rem;
+    }
 
     &__label {
         font-family: $font-display;
@@ -460,7 +477,9 @@ label {
         font-size: 0.8rem;
         text-align: center;
 
-        &:disabled { opacity: 0.4; }
+        &:disabled {
+            opacity: 0.4;
+        }
     }
 }
 
@@ -484,16 +503,29 @@ label {
     letter-spacing: 1px;
     color: rgba(255, 255, 255, 0.7);
 
-    span { color: #fff; font-weight: 400; }
+    span {
+        color: #fff;
+        font-weight: 400;
+    }
 }
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
 
-.col-green { color: #22c87a !important; }
-.col-yellow { color: #f0c040 !important; }
-.col-red { color: #ff4d4d !important; }
-.green { color: #22c87a; }
-.red { color: #ff4d4d; }
+.col-green {
+    color: #22c87a !important;
+}
+.col-yellow {
+    color: #f0c040 !important;
+}
+.col-red {
+    color: #ff4d4d !important;
+}
+.green {
+    color: #22c87a;
+}
+.red {
+    color: #ff4d4d;
+}
 
 // ─── Action buttons ───────────────────────────────────────────────────────────
 
@@ -525,12 +557,58 @@ label {
     }
 }
 
-.btn-scan  { background: #0a5c3c; color: #00ffc8; border: 1px solid #00ffc8; &:hover:not(:disabled) { background: #0e8055; box-shadow: 0 0 12px rgba(0,255,200,0.3); } }
-.btn-build { background: #1a1a5c; color: #8888ff; border: 1px solid #5555ff; &:hover:not(:disabled) { background: #22228a; box-shadow: 0 0 12px rgba(85,85,255,0.3); } }
-.btn-trade { background: #004d00; color: #00ff44; border: 1px solid #00cc33; &:hover:not(:disabled) { background: #006600; box-shadow: 0 0 12px rgba(0,255,68,0.3); } }
-.btn-pause { background: #5c3a00; color: #f0c040; border: 1px solid #c89020; &:hover:not(:disabled) { background: #7a4e00; } }
-.btn-resume{ background: #004d00; color: #00ff44; border: 1px solid #00cc33; &:hover:not(:disabled) { background: #006600; } }
-.btn-stop  { background: #5c0000; color: #ff6666; border: 1px solid #cc0000; &:hover:not(:disabled) { background: #800000; box-shadow: 0 0 12px rgba(200,0,0,0.3); } }
+.btn-scan {
+    background: #0a5c3c;
+    color: #00ffc8;
+    border: 1px solid #00ffc8;
+    &:hover:not(:disabled) {
+        background: #0e8055;
+        box-shadow: 0 0 12px rgba(0, 255, 200, 0.3);
+    }
+}
+.btn-build {
+    background: #1a1a5c;
+    color: #8888ff;
+    border: 1px solid #5555ff;
+    &:hover:not(:disabled) {
+        background: #22228a;
+        box-shadow: 0 0 12px rgba(85, 85, 255, 0.3);
+    }
+}
+.btn-trade {
+    background: #004d00;
+    color: #00ff44;
+    border: 1px solid #00cc33;
+    &:hover:not(:disabled) {
+        background: #006600;
+        box-shadow: 0 0 12px rgba(0, 255, 68, 0.3);
+    }
+}
+.btn-pause {
+    background: #5c3a00;
+    color: #f0c040;
+    border: 1px solid #c89020;
+    &:hover:not(:disabled) {
+        background: #7a4e00;
+    }
+}
+.btn-resume {
+    background: #004d00;
+    color: #00ff44;
+    border: 1px solid #00cc33;
+    &:hover:not(:disabled) {
+        background: #006600;
+    }
+}
+.btn-stop {
+    background: #5c0000;
+    color: #ff6666;
+    border: 1px solid #cc0000;
+    &:hover:not(:disabled) {
+        background: #800000;
+        box-shadow: 0 0 12px rgba(200, 0, 0, 0.3);
+    }
+}
 
 // ─── Signal Stats tab ─────────────────────────────────────────────────────────
 
@@ -612,7 +690,9 @@ label {
     font-size: 0.72rem;
     cursor: pointer;
     transition: all 0.2s;
-    &:hover { background: rgba(200, 0, 0, 0.3); }
+    &:hover {
+        background: rgba(200, 0, 0, 0.3);
+    }
 }
 
 .stats-table-wrap {
@@ -653,15 +733,29 @@ label {
 .stats-row {
     transition: background 0.15s;
 
-    &:hover { background: rgba(0, 255, 200, 0.03); }
+    &:hover {
+        background: rgba(0, 255, 200, 0.03);
+    }
 
-    &--win   td { border-left: 2px solid #22c87a; }
-    &--loss  td { border-left: 2px solid #ff4d4d; }
-    &--pending td { border-left: 2px solid #f0c040; }
+    &--win td {
+        border-left: 2px solid #22c87a;
+    }
+    &--loss td {
+        border-left: 2px solid #ff4d4d;
+    }
+    &--pending td {
+        border-left: 2px solid #f0c040;
+    }
 
-    &--win   td:first-child { border-left: 2px solid #22c87a; }
-    &--loss  td:first-child { border-left: 2px solid #ff4d4d; }
-    &--pending td:first-child { border-left: 2px solid #f0c040; }
+    &--win td:first-child {
+        border-left: 2px solid #22c87a;
+    }
+    &--loss td:first-child {
+        border-left: 2px solid #ff4d4d;
+    }
+    &--pending td:first-child {
+        border-left: 2px solid #f0c040;
+    }
 }
 
 .stats-signal-pill {
@@ -685,9 +779,15 @@ label {
     letter-spacing: 1px;
     text-transform: uppercase;
 
-    &--win     { color: #22c87a; }
-    &--loss    { color: #ff4d4d; }
-    &--pending { color: #f0c040; }
+    &--win {
+        color: #22c87a;
+    }
+    &--loss {
+        color: #ff4d4d;
+    }
+    &--pending {
+        color: #f0c040;
+    }
 }
 
 .stats-empty {
@@ -741,8 +841,12 @@ label {
         background: #ff4d4d;
         border-radius: 50%;
         display: inline-block;
-        &:nth-child(2) { background: #f0c040; }
-        &:nth-child(3) { background: #22c87a; }
+        &:nth-child(2) {
+            background: #f0c040;
+        }
+        &:nth-child(3) {
+            background: #22c87a;
+        }
     }
 }
 
@@ -768,7 +872,9 @@ label {
     font-size: 0.75rem;
     z-index: 2001;
     transition: background 0.2s;
-    &:hover { background: #c00; }
+    &:hover {
+        background: #c00;
+    }
 }
 
 .terminal-dashboard {
@@ -803,36 +909,66 @@ label {
 // ─── Animations ───────────────────────────────────────────────────────────────
 
 @keyframes scanner-scroll {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-50%); }
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-50%);
+    }
 }
 
 @keyframes scanner-scroll-up {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-100%); }
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-100%);
+    }
 }
 
 @keyframes scanner-banner-in {
-    from { opacity: 0; transform: translateY(-8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes scanner-dot-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.35; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.35;
+    }
 }
 
 @keyframes signal-pulse {
-    0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 200, 0.15); }
-    50%       { box-shadow: 0 0 25px rgba(0, 255, 200, 0.4); }
+    0%,
+    100% {
+        box-shadow: 0 0 10px rgba(0, 255, 200, 0.15);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(0, 255, 200, 0.4);
+    }
 }
 
 // ─── Responsive ───────────────────────────────────────────────────────────────
 
 @media (min-width: 768px) {
-    .container { padding: 28px 32px 32px; }
-    .strategy-chips { gap: 10px; }
-    .stats-market-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+    .container {
+        padding: 28px 32px 32px;
+    }
+    .strategy-chips {
+        gap: 10px;
+    }
+    .stats-market-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
 }
 
 @media (max-width: 767px) {
@@ -841,14 +977,29 @@ label {
         padding-bottom: 120px;
     }
 
-    .scanner-account-banner { top: auto; bottom: 80px; right: 8px; }
+    .scanner-account-banner {
+        top: auto;
+        bottom: 80px;
+        right: 8px;
+    }
 
-    .container { max-width: 100%; border-radius: 0 0 10px 10px; }
-    .container--stats { border-radius: 10px; margin-top: 4px; }
+    .container {
+        max-width: 100%;
+        border-radius: 0 0 10px 10px;
+    }
+    .container--stats {
+        border-radius: 10px;
+        margin-top: 4px;
+    }
 
-    .market-info-bar { font-size: 0.7rem; }
+    .market-info-bar {
+        font-size: 0.7rem;
+    }
 
-    .trading-controls__row { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .trading-controls__row {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
 
     .popup {
         position: fixed;
@@ -861,10 +1012,18 @@ label {
         border-radius: 8px;
     }
 
-    .stats-market-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+    .stats-market-grid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    }
 
-    .buttons { gap: 6px; }
-    .btn { padding: 9px 12px; font-size: 0.78rem; min-width: 80px; }
+    .buttons {
+        gap: 6px;
+    }
+    .btn {
+        padding: 9px 12px;
+        font-size: 0.78rem;
+        min-width: 80px;
+    }
 }
 
 .scanner-embed-wrap {

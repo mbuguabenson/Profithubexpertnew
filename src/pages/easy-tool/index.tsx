@@ -26,7 +26,8 @@ const DIGIT_COLORS: Record<number, string> = {
 
 const EasyTool = observer(() => {
     const { smart_trading, ui } = useStore();
-    const { current_price, last_digit, ticks, stats_sample_size, setStatsSampleSize, markets, fetchMarkets } = smart_trading;
+    const { current_price, last_digit, ticks, stats_sample_size, setStatsSampleSize, markets, fetchMarkets } =
+        smart_trading;
 
     const { is_dark_mode_on } = ui;
 

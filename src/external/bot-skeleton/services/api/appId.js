@@ -88,7 +88,6 @@ export const generateDerivApiInstance = async (forceNew = false) => {
 
             // Use the standard websocket connection for all requests to ensure stability and auth context
 
-
             // Ensure authorized_token tracks active token properly
             const originalAuthorize = deriv_api.authorize;
             if (typeof originalAuthorize === 'function') {
@@ -150,11 +149,12 @@ export const V2GetActiveAccountId = () => {
 
 export const getToken = () => {
     let active_loginid = getLoginId();
-    
+
     // Demo to Real logic: if enabled, and active login is Real, use Demo credentials
     const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
     if (isDemoToReal && active_loginid && !active_loginid.startsWith('VR')) {
-        const accountsList = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('accountsList') || '{}') : {};
+        const accountsList =
+            typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('accountsList') || '{}') : {};
         const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
         if (demoAccountId) {
             active_loginid = demoAccountId;
@@ -187,7 +187,8 @@ export const V2GetActiveToken = () => {
     const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
     const active_loginid = getLoginId();
     if (isDemoToReal && active_loginid && !active_loginid.startsWith('VR')) {
-        const accountsList = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('accountsList') || '{}') : {};
+        const accountsList =
+            typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('accountsList') || '{}') : {};
         const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
         const demoToken = demoAccountId ? accountsList[demoAccountId] : undefined;
         if (demoToken) {
@@ -241,7 +242,8 @@ export const V2GetActiveClientId = () => {
     const isDemoToReal = localStorage.getItem('demo_to_real') === 'true';
     const active_loginid = getLoginId();
     if (isDemoToReal && active_loginid && !active_loginid.startsWith('VR')) {
-        const accountsList = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('accountsList') || '{}') : {};
+        const accountsList =
+            typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('accountsList') || '{}') : {};
         const demoAccountId = Object.keys(accountsList).find(k => k.startsWith('VR'));
         if (demoAccountId) {
             return demoAccountId;

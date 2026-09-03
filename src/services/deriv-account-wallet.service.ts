@@ -143,7 +143,8 @@ export class DerivAccountWalletService {
                             wallet_type: isDemo ? 'demo_fiat' : isCrypto ? 'crypto' : 'fiat',
                             currency: curr,
                             balance: typeof acc.balance === 'number' ? acc.balance : parseFloat(acc.balance || '0'),
-                            converted_balance: typeof acc.converted_amount === 'number' ? acc.converted_amount : undefined,
+                            converted_balance:
+                                typeof acc.converted_amount === 'number' ? acc.converted_amount : undefined,
                             status: 'active',
                             is_default: loginid === activeId,
                         };
@@ -213,14 +214,19 @@ export class DerivAccountWalletService {
         // 1. Try WebSocket statement API
         if (api_base.api) {
             try {
-                const stmtRes = (await api_base.api.send({ statement: 1, description: 1, limit: options.limit || 50 })) as any;
+                const stmtRes = (await api_base.api.send({
+                    statement: 1,
+                    description: 1,
+                    limit: options.limit || 50,
+                })) as any;
                 if (stmtRes?.statement?.transactions && stmtRes.statement.transactions.length > 0) {
                     const txs: DerivWalletTransaction[] = stmtRes.statement.transactions.map((t: any) => ({
                         transaction_id: String(t.transaction_id || t.id),
                         action_type: (t.action_type || 'deposit').toLowerCase(),
                         amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount || '0'),
                         currency: t.currency || 'USD',
-                        balance_after: typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
+                        balance_after:
+                            typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
                         transaction_time: (t.transaction_time || Date.now() / 1000) * 1000,
                         category: t.longcode || t.shortcode || t.action_type,
                         channel: 'Deriv Cashier',
@@ -259,7 +265,8 @@ export class DerivAccountWalletService {
                         action_type: t.action_type || 'deposit',
                         amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount || '0'),
                         currency: t.currency || 'USD',
-                        balance_after: typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
+                        balance_after:
+                            typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
                         transaction_time: t.transaction_time || t.epoch || Date.now(),
                         category: t.category,
                         channel: t.channel,
@@ -344,7 +351,10 @@ export class DerivAccountWalletService {
             const res = (await api.send({ balance: 1 })) as any;
             if (res?.balance) {
                 return {
-                    balance: typeof res.balance.balance === 'number' ? res.balance.balance : parseFloat(res.balance.balance || '0'),
+                    balance:
+                        typeof res.balance.balance === 'number'
+                            ? res.balance.balance
+                            : parseFloat(res.balance.balance || '0'),
                     currency: res.balance.currency || 'USD',
                 };
             }

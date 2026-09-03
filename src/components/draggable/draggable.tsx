@@ -275,10 +275,24 @@ const Draggable: React.FC<TDraggableProps> = ({
                     <div className={`draggable-content__header__title`}>{header}</div>
 
                     {/* Mobile & Desktop Zoom Controls */}
-                    <div className='draggable-zoom-controls' style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '8px' }}>
-                        <button type='button' className='draggable-zoom-btn' onClick={handleZoomOut} title='Zoom Out'>🔍-</button>
-                        <button type='button' className='draggable-zoom-btn' onClick={handleZoomReset} title='Reset Zoom'>{Math.round(zoomScale * 100)}%</button>
-                        <button type='button' className='draggable-zoom-btn' onClick={handleZoomIn} title='Zoom In'>🔍+</button>
+                    <div
+                        className='draggable-zoom-controls'
+                        style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '8px' }}
+                    >
+                        <button type='button' className='draggable-zoom-btn' onClick={handleZoomOut} title='Zoom Out'>
+                            🔍-
+                        </button>
+                        <button
+                            type='button'
+                            className='draggable-zoom-btn'
+                            onClick={handleZoomReset}
+                            title='Reset Zoom'
+                        >
+                            {Math.round(zoomScale * 100)}%
+                        </button>
+                        <button type='button' className='draggable-zoom-btn' onClick={handleZoomIn} title='Zoom In'>
+                            🔍+
+                        </button>
                     </div>
 
                     <div

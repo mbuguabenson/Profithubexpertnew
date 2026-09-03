@@ -144,13 +144,18 @@
     }
 
     .resizable-handle {
-        &__top, &__bottom {
+        &__top,
+        &__bottom {
             height: 16px !important;
         }
-        &__left, &__right {
+        &__left,
+        &__right {
             width: 16px !important;
         }
-        &__top-left, &__top-right, &__bottom-left, &__bottom-right {
+        &__top-left,
+        &__top-right,
+        &__bottom-left,
+        &__bottom-right {
             width: 20px !important;
             height: 20px !important;
         }

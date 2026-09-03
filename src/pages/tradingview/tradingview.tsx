@@ -39,7 +39,7 @@ const TradingView: React.FC = () => {
                         <span>Live Stream</span>
                     </div>
 
-                    <button 
+                    <button
                         type='button'
                         className='tradingview-container__action-btn'
                         onClick={handleReload}
@@ -49,7 +49,7 @@ const TradingView: React.FC = () => {
                         <span>Reload</span>
                     </button>
 
-                    <button 
+                    <button
                         type='button'
                         className='tradingview-container__action-btn active'
                         onClick={toggleFullscreen}

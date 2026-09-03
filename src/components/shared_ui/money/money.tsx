@@ -53,4 +53,3 @@ const Money = ({
 };
 
 export default React.memo(Money);
-

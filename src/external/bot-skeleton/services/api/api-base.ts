@@ -61,9 +61,11 @@ class APIBase {
             subscription_promise
                 ?.then(({ subscription }: any) => {
                     if (subscription?.id) {
-                        this.api?.send({
-                            forget: subscription.id,
-                        }).catch(() => {});
+                        this.api
+                            ?.send({
+                                forget: subscription.id,
+                            })
+                            .catch(() => {});
                     }
                 })
                 .catch(() => {});
@@ -269,7 +271,10 @@ class APIBase {
                 const balanceRes = await (this.api as any).send({ balance: 1 });
                 if (balanceRes?.balance && (!expectedId || balanceRes.balance.loginid === expectedId)) {
                     authResult = balanceRes;
-                    console.log('[APIBase] WebSocket authorized via OTP connection URL for:', balanceRes.balance.loginid);
+                    console.log(
+                        '[APIBase] WebSocket authorized via OTP connection URL for:',
+                        balanceRes.balance.loginid
+                    );
                 }
             } catch (authCheckErr: any) {
                 // If it fails with AuthorizationRequired or on public socket, proceed
@@ -278,7 +283,7 @@ class APIBase {
             // 2. If not already authenticated, proceed with token authorization if available
             if (!authResult) {
                 const token = await resolveValidDerivWSToken(expectedId || '');
-                
+
                 if (token) {
                     try {
                         const res = await this.api.authorize(token);
@@ -286,11 +291,17 @@ class APIBase {
                             if (!expectedId || res.authorize.loginid === expectedId) {
                                 authResult = { balance: res.authorize, account_list: res.authorize.account_list };
                             } else {
-                                console.warn(`[APIBase] Token authorized for ${res.authorize.loginid}, expected ${expectedId}`);
+                                console.warn(
+                                    `[APIBase] Token authorized for ${res.authorize.loginid}, expected ${expectedId}`
+                                );
                             }
                         } else if (res?.error) {
                             console.warn('[APIBase] Token authorize returned error:', res.error.message || res.error);
-                            if (res.error.code === 'InvalidToken' || res.error.code === 'InputValidationFailed' || String(res.error.message).includes('authorize')) {
+                            if (
+                                res.error.code === 'InvalidToken' ||
+                                res.error.code === 'InputValidationFailed' ||
+                                String(res.error.message).includes('authorize')
+                            ) {
                                 localStorage.removeItem('active_token');
                                 localStorage.removeItem('deriv_api_token');
                                 localStorage.removeItem('token');
@@ -301,7 +312,11 @@ class APIBase {
                         console.warn('[APIBase] Token authorize failed:', tokErr?.message || tokErr);
                         const code = tokErr?.error?.code || tokErr?.code;
                         const msg = tokErr?.error?.message || tokErr?.message || '';
-                        if (code === 'InvalidToken' || code === 'InputValidationFailed' || String(msg).includes('authorize')) {
+                        if (
+                            code === 'InvalidToken' ||
+                            code === 'InputValidationFailed' ||
+                            String(msg).includes('authorize')
+                        ) {
                             localStorage.removeItem('active_token');
                             localStorage.removeItem('deriv_api_token');
                             localStorage.removeItem('token');
@@ -328,7 +343,9 @@ class APIBase {
 
             if (error || !balance) {
                 const errorMessage = error
-                    ? (isBackendError(error) ? handleBackendError(error) : error.message || 'Unauthenticated')
+                    ? isBackendError(error)
+                        ? handleBackendError(error)
+                        : error.message || 'Unauthenticated'
                     : 'Unauthenticated session';
 
                 setIsAuthorizing(false);
@@ -380,7 +397,8 @@ class APIBase {
             } catch {}
 
             try {
-                const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
+                const rawClientAccounts =
+                    localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
                 if (rawClientAccounts) {
                     const parsed = JSON.parse(rawClientAccounts);
                     Object.keys(parsed).forEach(id => {
@@ -406,7 +424,7 @@ class APIBase {
                     return {
                         balance: bal,
                         currency: a.currency || 'USD',
-                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : isDemoAccount(a.loginid) ? 1 : 0,
                         loginid: a.loginid,
                     };
                 });
@@ -421,7 +439,7 @@ class APIBase {
                     return {
                         balance: bal,
                         currency: a.currency || 'USD',
-                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : (isDemoAccount(a.loginid) ? 1 : 0),
+                        is_virtual: a.is_virtual !== undefined ? a.is_virtual : isDemoAccount(a.loginid) ? 1 : 0,
                         loginid: a.loginid,
                     };
                 });
@@ -519,7 +537,10 @@ class APIBase {
                 clearAuthData();
                 globalObserver.emit('InvalidToken');
             } else {
-                console.warn('[APIBase] Authorization failed with transient error, preserving session:', errorCode || e);
+                console.warn(
+                    '[APIBase] Authorization failed with transient error, preserving session:',
+                    errorCode || e
+                );
             }
 
             setIsAuthorized(false);
@@ -582,17 +603,18 @@ class APIBase {
             try {
                 active_symbols = await new Promise<any[]>((resolve, reject) => {
                     const environment = isProduction() ? 'production' : 'staging';
-                    const wsURL = environment === 'production'
-                        ? 'wss://api.derivws.com/trading/v1/options/ws/public'
-                        : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
-                    
+                    const wsURL =
+                        environment === 'production'
+                            ? 'wss://api.derivws.com/trading/v1/options/ws/public'
+                            : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
+
                     const ws = new WebSocket(wsURL);
-                    
+
                     ws.onopen = () => {
                         ws.send(JSON.stringify({ active_symbols: 'brief' }));
                     };
-                    
-                    ws.onmessage = (event) => {
+
+                    ws.onmessage = event => {
                         try {
                             const response = JSON.parse(event.data);
                             if (response.active_symbols) {
@@ -607,12 +629,12 @@ class APIBase {
                             reject(e);
                         }
                     };
-                    
-                    ws.onerror = (err) => {
+
+                    ws.onerror = err => {
                         ws.close();
                         reject(err);
                     };
-                    
+
                     setTimeout(() => {
                         if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
                             ws.close();

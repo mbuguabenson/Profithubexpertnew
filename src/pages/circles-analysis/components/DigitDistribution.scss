@@ -42,10 +42,18 @@
                     border-radius: 50%;
                     display: inline-block;
 
-                    &.highest { background: #10b981; }
-                    &.second { background: #ffd700; }
-                    &.lowest { background: #ef4444; }
-                    &.current { background: #ff7c00; }
+                    &.highest {
+                        background: #10b981;
+                    }
+                    &.second {
+                        background: #ffd700;
+                    }
+                    &.lowest {
+                        background: #ef4444;
+                    }
+                    &.current {
+                        background: #ff7c00;
+                    }
                 }
             }
         }
@@ -182,11 +190,21 @@
 }
 
 @keyframes bounceArrow {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
 }
 
 @keyframes pulseBar {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.2); }
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.2);
+    }
 }

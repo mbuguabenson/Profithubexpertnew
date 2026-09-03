@@ -32,6 +32,4 @@ window.addEventListener('unhandledrejection', (ev: any) => {
 });
 
 // Render the app directly; startup splash is handled inside AppRoot
-ReactDOM.createRoot(document.getElementById('root')!).render(
-    <AuthWrapper />
-);
+ReactDOM.createRoot(document.getElementById('root')!).render(<AuthWrapper />);

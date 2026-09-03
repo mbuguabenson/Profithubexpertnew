@@ -11,7 +11,7 @@ export enum BridgeState {
     RECONNECTING = 'RECONNECTING',
     RECOVERING = 'RECOVERING',
     FAILED = 'FAILED',
-    LOGGED_OUT = 'LOGGED_OUT'
+    LOGGED_OUT = 'LOGGED_OUT',
 }
 
 type TransitionMap = Partial<Record<BridgeState, BridgeState[]>>;
@@ -19,22 +19,72 @@ type TransitionMap = Partial<Record<BridgeState, BridgeState[]>>;
 export class BridgeStateMachine {
     private state: BridgeState = BridgeState.IDLE;
     private listeners: Set<(state: BridgeState, previousState: BridgeState) => void> = new Set();
-    
+
     // Define allowed transitions for determinism
     private allowedTransitions: TransitionMap = {
-        [BridgeState.IDLE]: [BridgeState.LOADING_IFRAME, BridgeState.WAITING_READY, BridgeState.READY, BridgeState.LOGGED_OUT],
-        [BridgeState.LOADING_IFRAME]: [BridgeState.WAITING_READY, BridgeState.READY, BridgeState.REQUESTING_SESSION, BridgeState.AUTHENTICATING, BridgeState.LOGGED_OUT, BridgeState.FAILED],
-        [BridgeState.WAITING_READY]: [BridgeState.READY, BridgeState.REQUESTING_SESSION, BridgeState.AUTHENTICATING, BridgeState.LOGGED_OUT, BridgeState.FAILED, BridgeState.RECOVERING],
-        [BridgeState.READY]: [BridgeState.REQUESTING_SESSION, BridgeState.AUTHENTICATING, BridgeState.CONNECTED, BridgeState.LOGGED_OUT],
+        [BridgeState.IDLE]: [
+            BridgeState.LOADING_IFRAME,
+            BridgeState.WAITING_READY,
+            BridgeState.READY,
+            BridgeState.LOGGED_OUT,
+        ],
+        [BridgeState.LOADING_IFRAME]: [
+            BridgeState.WAITING_READY,
+            BridgeState.READY,
+            BridgeState.REQUESTING_SESSION,
+            BridgeState.AUTHENTICATING,
+            BridgeState.LOGGED_OUT,
+            BridgeState.FAILED,
+        ],
+        [BridgeState.WAITING_READY]: [
+            BridgeState.READY,
+            BridgeState.REQUESTING_SESSION,
+            BridgeState.AUTHENTICATING,
+            BridgeState.LOGGED_OUT,
+            BridgeState.FAILED,
+            BridgeState.RECOVERING,
+        ],
+        [BridgeState.READY]: [
+            BridgeState.REQUESTING_SESSION,
+            BridgeState.AUTHENTICATING,
+            BridgeState.CONNECTED,
+            BridgeState.LOGGED_OUT,
+        ],
         [BridgeState.REQUESTING_SESSION]: [BridgeState.AUTHENTICATING, BridgeState.CONNECTED, BridgeState.LOGGED_OUT],
-        [BridgeState.AUTHENTICATING]: [BridgeState.AUTHENTICATED, BridgeState.CONNECTED, BridgeState.FAILED, BridgeState.LOGGED_OUT],
+        [BridgeState.AUTHENTICATING]: [
+            BridgeState.AUTHENTICATED,
+            BridgeState.CONNECTED,
+            BridgeState.FAILED,
+            BridgeState.LOGGED_OUT,
+        ],
         [BridgeState.AUTHENTICATED]: [BridgeState.CONNECTED, BridgeState.SYNCING, BridgeState.LOGGED_OUT],
-        [BridgeState.CONNECTED]: [BridgeState.SYNCING, BridgeState.RECONNECTING, BridgeState.LOGGED_OUT, BridgeState.FAILED],
+        [BridgeState.CONNECTED]: [
+            BridgeState.SYNCING,
+            BridgeState.RECONNECTING,
+            BridgeState.LOGGED_OUT,
+            BridgeState.FAILED,
+        ],
         [BridgeState.SYNCING]: [BridgeState.CONNECTED, BridgeState.FAILED, BridgeState.LOGGED_OUT],
         [BridgeState.RECONNECTING]: [BridgeState.CONNECTED, BridgeState.FAILED, BridgeState.LOGGED_OUT],
-        [BridgeState.RECOVERING]: [BridgeState.WAITING_READY, BridgeState.READY, BridgeState.FAILED, BridgeState.LOGGED_OUT],
-        [BridgeState.FAILED]: [BridgeState.IDLE, BridgeState.LOADING_IFRAME, BridgeState.WAITING_READY, BridgeState.RECOVERING, BridgeState.LOGGED_OUT],
-        [BridgeState.LOGGED_OUT]: [BridgeState.IDLE, BridgeState.LOADING_IFRAME, BridgeState.WAITING_READY, BridgeState.READY]
+        [BridgeState.RECOVERING]: [
+            BridgeState.WAITING_READY,
+            BridgeState.READY,
+            BridgeState.FAILED,
+            BridgeState.LOGGED_OUT,
+        ],
+        [BridgeState.FAILED]: [
+            BridgeState.IDLE,
+            BridgeState.LOADING_IFRAME,
+            BridgeState.WAITING_READY,
+            BridgeState.RECOVERING,
+            BridgeState.LOGGED_OUT,
+        ],
+        [BridgeState.LOGGED_OUT]: [
+            BridgeState.IDLE,
+            BridgeState.LOADING_IFRAME,
+            BridgeState.WAITING_READY,
+            BridgeState.READY,
+        ],
     };
 
     constructor(initialState: BridgeState = BridgeState.IDLE) {
@@ -47,7 +97,7 @@ export class BridgeStateMachine {
 
     public transitionTo(newState: BridgeState): boolean {
         const allowed = this.allowedTransitions[this.state];
-        
+
         // Always allow transition to IDLE (e.g. during component unmount/detach)
         // Otherwise check if transition is allowed
         if (newState === BridgeState.IDLE || !allowed || allowed.includes(newState)) {

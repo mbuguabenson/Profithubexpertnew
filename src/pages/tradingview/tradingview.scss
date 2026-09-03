@@ -7,7 +7,11 @@
     color: #f8fafc;
     position: relative;
     overflow: hidden;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+        'Inter',
+        system-ui,
+        -apple-system,
+        sans-serif;
     margin: 0;
     padding: 0;
 
@@ -184,7 +188,8 @@
 }
 
 @keyframes tvPulse {
-    0%, 100% {
+    0%,
+    100% {
         transform: scale(1);
         opacity: 1;
     }

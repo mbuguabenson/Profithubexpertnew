@@ -1,167 +1,167 @@
 {
-  "color": {
-    "text": {
-      "$type": "color",
-      "$value": "#181c25",
-      "$description": "Frequency rank #1 (104 occurrences); token importance textCandidate: repeated text-role usage (104 hits)"
+    "color": {
+        "text": {
+            "$type": "color",
+            "$value": "#181c25",
+            "$description": "Frequency rank #1 (104 occurrences); token importance textCandidate: repeated text-role usage (104 hits)"
+        },
+        "text-2": {
+            "$type": "color",
+            "$value": "#1a1a1a",
+            "$description": "Frequency rank #2 (22 occurrences); token importance textCandidate: repeated text-role usage (22 hits)"
+        },
+        "text-3": {
+            "$type": "color",
+            "$value": "#ffffff",
+            "$description": "Frequency rank #3 (14 occurrences); token importance textCandidate: repeated text-role usage (14 hits)"
+        },
+        "local-accent": {
+            "$type": "color",
+            "$value": "#e0e0e0",
+            "$description": "Frequency rank #4 (6 occurrences); token importance localAccent: localized usage with limited global footprint"
+        },
+        "text-4": {
+            "$type": "color",
+            "$value": "#0e0e0e",
+            "$description": "Frequency rank #5 (6 occurrences); token importance textCandidate: repeated text-role usage (6 hits)"
+        },
+        "local-accent-2": {
+            "$type": "color",
+            "$value": "#11141b",
+            "$description": "Frequency rank #6 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
+        },
+        "local-accent-3": {
+            "$type": "color",
+            "$value": "#ff444f",
+            "$description": "Frequency rank #7 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
+        },
+        "local-accent-4": {
+            "$type": "color",
+            "$value": "#595959",
+            "$description": "Frequency rank #8 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
+        },
+        "local-accent-5": {
+            "$type": "color",
+            "$value": "#333333",
+            "$description": "Frequency rank #9 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
+        },
+        "local-accent-6": {
+            "$type": "color",
+            "$value": "#000000",
+            "$description": "Frequency rank #10 (1 occurrences); token importance localAccent: localized usage with limited global footprint"
+        }
     },
-    "text-2": {
-      "$type": "color",
-      "$value": "#1a1a1a",
-      "$description": "Frequency rank #2 (22 occurrences); token importance textCandidate: repeated text-role usage (22 hits)"
+    "typography": {
+        "type-1": {
+            "$type": "typography",
+            "$value": {
+                "fontFamily": "Inter",
+                "fontSize": "16px",
+                "fontWeight": 400,
+                "lineHeight": "24px",
+                "letterSpacing": "normal"
+            },
+            "$description": "Frequency rank #1"
+        },
+        "type-2": {
+            "$type": "typography",
+            "$value": {
+                "fontFamily": "Inter",
+                "fontSize": "14px",
+                "fontWeight": 700,
+                "lineHeight": "20px",
+                "letterSpacing": "normal"
+            },
+            "$description": "Frequency rank #2"
+        },
+        "type-3": {
+            "$type": "typography",
+            "$value": {
+                "fontFamily": "Inter",
+                "fontSize": "14px",
+                "fontWeight": 400,
+                "lineHeight": "20px",
+                "letterSpacing": "normal"
+            },
+            "$description": "Frequency rank #3"
+        },
+        "type-4": {
+            "$type": "typography",
+            "$value": {
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": 500,
+                "lineHeight": "16px",
+                "letterSpacing": "normal"
+            },
+            "$description": "Frequency rank #4"
+        },
+        "type-5": {
+            "$type": "typography",
+            "$value": {
+                "fontFamily": "inter",
+                "fontSize": "14px",
+                "fontWeight": 600,
+                "lineHeight": "20px",
+                "letterSpacing": "normal"
+            },
+            "$description": "Frequency rank #5"
+        }
     },
-    "text-3": {
-      "$type": "color",
-      "$value": "#ffffff",
-      "$description": "Frequency rank #3 (14 occurrences); token importance textCandidate: repeated text-role usage (14 hits)"
+    "spacing": {
+        "space-1": {
+            "$type": "dimension",
+            "$value": "12px"
+        },
+        "space-2": {
+            "$type": "dimension",
+            "$value": "16px"
+        },
+        "space-3": {
+            "$type": "dimension",
+            "$value": "24px"
+        },
+        "space-4": {
+            "$type": "dimension",
+            "$value": "8px"
+        },
+        "space-5": {
+            "$type": "dimension",
+            "$value": "6px"
+        },
+        "space-6": {
+            "$type": "dimension",
+            "$value": "32px"
+        },
+        "space-7": {
+            "$type": "dimension",
+            "$value": "96px"
+        },
+        "space-8": {
+            "$type": "dimension",
+            "$value": "20px"
+        },
+        "space-9": {
+            "$type": "dimension",
+            "$value": "56px"
+        },
+        "space-10": {
+            "$type": "dimension",
+            "$value": "2px"
+        }
     },
-    "local-accent": {
-      "$type": "color",
-      "$value": "#e0e0e0",
-      "$description": "Frequency rank #4 (6 occurrences); token importance localAccent: localized usage with limited global footprint"
-    },
-    "text-4": {
-      "$type": "color",
-      "$value": "#0e0e0e",
-      "$description": "Frequency rank #5 (6 occurrences); token importance textCandidate: repeated text-role usage (6 hits)"
-    },
-    "local-accent-2": {
-      "$type": "color",
-      "$value": "#11141b",
-      "$description": "Frequency rank #6 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
-    },
-    "local-accent-3": {
-      "$type": "color",
-      "$value": "#ff444f",
-      "$description": "Frequency rank #7 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
-    },
-    "local-accent-4": {
-      "$type": "color",
-      "$value": "#595959",
-      "$description": "Frequency rank #8 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
-    },
-    "local-accent-5": {
-      "$type": "color",
-      "$value": "#333333",
-      "$description": "Frequency rank #9 (2 occurrences); token importance localAccent: localized usage with limited global footprint"
-    },
-    "local-accent-6": {
-      "$type": "color",
-      "$value": "#000000",
-      "$description": "Frequency rank #10 (1 occurrences); token importance localAccent: localized usage with limited global footprint"
+    "borderRadius": {
+        "radius-1": {
+            "$type": "dimension",
+            "$value": "8px"
+        },
+        "radius-2": {
+            "$type": "dimension",
+            "$value": "12px"
+        },
+        "radius-3": {
+            "$type": "dimension",
+            "$value": "999px"
+        }
     }
-  },
-  "typography": {
-    "type-1": {
-      "$type": "typography",
-      "$value": {
-        "fontFamily": "Inter",
-        "fontSize": "16px",
-        "fontWeight": 400,
-        "lineHeight": "24px",
-        "letterSpacing": "normal"
-      },
-      "$description": "Frequency rank #1"
-    },
-    "type-2": {
-      "$type": "typography",
-      "$value": {
-        "fontFamily": "Inter",
-        "fontSize": "14px",
-        "fontWeight": 700,
-        "lineHeight": "20px",
-        "letterSpacing": "normal"
-      },
-      "$description": "Frequency rank #2"
-    },
-    "type-3": {
-      "$type": "typography",
-      "$value": {
-        "fontFamily": "Inter",
-        "fontSize": "14px",
-        "fontWeight": 400,
-        "lineHeight": "20px",
-        "letterSpacing": "normal"
-      },
-      "$description": "Frequency rank #3"
-    },
-    "type-4": {
-      "$type": "typography",
-      "$value": {
-        "fontFamily": "Inter",
-        "fontSize": "12px",
-        "fontWeight": 500,
-        "lineHeight": "16px",
-        "letterSpacing": "normal"
-      },
-      "$description": "Frequency rank #4"
-    },
-    "type-5": {
-      "$type": "typography",
-      "$value": {
-        "fontFamily": "inter",
-        "fontSize": "14px",
-        "fontWeight": 600,
-        "lineHeight": "20px",
-        "letterSpacing": "normal"
-      },
-      "$description": "Frequency rank #5"
-    }
-  },
-  "spacing": {
-    "space-1": {
-      "$type": "dimension",
-      "$value": "12px"
-    },
-    "space-2": {
-      "$type": "dimension",
-      "$value": "16px"
-    },
-    "space-3": {
-      "$type": "dimension",
-      "$value": "24px"
-    },
-    "space-4": {
-      "$type": "dimension",
-      "$value": "8px"
-    },
-    "space-5": {
-      "$type": "dimension",
-      "$value": "6px"
-    },
-    "space-6": {
-      "$type": "dimension",
-      "$value": "32px"
-    },
-    "space-7": {
-      "$type": "dimension",
-      "$value": "96px"
-    },
-    "space-8": {
-      "$type": "dimension",
-      "$value": "20px"
-    },
-    "space-9": {
-      "$type": "dimension",
-      "$value": "56px"
-    },
-    "space-10": {
-      "$type": "dimension",
-      "$value": "2px"
-    }
-  },
-  "borderRadius": {
-    "radius-1": {
-      "$type": "dimension",
-      "$value": "8px"
-    },
-    "radius-2": {
-      "$type": "dimension",
-      "$value": "12px"
-    },
-    "radius-3": {
-      "$type": "dimension",
-      "$value": "999px"
-    }
-  }
 }

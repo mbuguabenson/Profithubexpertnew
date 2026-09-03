@@ -54,10 +54,7 @@ const MobileFormWrapper = observer(
                             })}
                             autohide={false}
                         >
-                            <QSStepper
-                                current_step={current_step}
-                                is_mobile
-                            />
+                            <QSStepper current_step={current_step} is_mobile />
                             {is_selected_strategy_step && (
                                 <StrategyTemplatePicker
                                     setSelectedTradeType={setSelectedTradeType}
@@ -87,25 +84,63 @@ const MobileFormWrapper = observer(
                                     <StrategyTabContent formfields={children} active_tab={'TRADE_PARAMETERS'} />
 
                                     {/* Bot Builder Advanced Trade Parameters */}
-                                    <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)' }}>
-                                        <Text size='xs' weight='bold' style={{ marginBottom: 8, display: 'block', color: '#f5c542' }}>
+                                    <div
+                                        style={{
+                                            marginTop: 16,
+                                            padding: '12px 14px',
+                                            background: 'rgba(255,255,255,0.03)',
+                                            borderRadius: 8,
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                        }}
+                                    >
+                                        <Text
+                                            size='xs'
+                                            weight='bold'
+                                            style={{ marginBottom: 8, display: 'block', color: '#f5c542' }}
+                                        >
                                             {localize('Bot Builder Advanced Parameters')}
                                         </Text>
 
                                         {/* 1. Auto Switch Markets Toggle */}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                                            <Text size='xs' color='general'>⚡ {localize('Auto Switch Markets')}</Text>
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: 10,
+                                            }}
+                                        >
+                                            <Text size='xs' color='general'>
+                                                ⚡ {localize('Auto Switch Markets')}
+                                            </Text>
                                             <input
                                                 type='checkbox'
                                                 checked={scanner.auto_switch_markets}
-                                                onChange={e => { scanner.auto_switch_markets = e.target.checked; }}
+                                                onChange={e => {
+                                                    scanner.auto_switch_markets = e.target.checked;
+                                                }}
                                             />
                                         </div>
 
                                         {/* 2. Deriv Bulk Trades Engine */}
-                                        <div style={{ marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                                <Text size='xs' color='general'>📦 {localize('Bulk Trades Engine')}</Text>
+                                        <div
+                                            style={{
+                                                marginBottom: 10,
+                                                paddingBottom: 8,
+                                                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    marginBottom: 6,
+                                                }}
+                                            >
+                                                <Text size='xs' color='general'>
+                                                    📦 {localize('Bulk Trades Engine')}
+                                                </Text>
                                                 <input
                                                     type='checkbox'
                                                     checked={scanner.is_bulk_trades_enabled}
@@ -113,8 +148,17 @@ const MobileFormWrapper = observer(
                                                 />
                                             </div>
                                             {scanner.is_bulk_trades_enabled && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
-                                                    <Text size='xs' color='less-prominent'>{localize('Number of runs:')}</Text>
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 8,
+                                                        marginTop: 6,
+                                                    }}
+                                                >
+                                                    <Text size='xs' color='less-prominent'>
+                                                        {localize('Number of runs:')}
+                                                    </Text>
                                                     <input
                                                         type='number'
                                                         min={1}
@@ -129,17 +173,31 @@ const MobileFormWrapper = observer(
                                                             fontSize: 11,
                                                         }}
                                                         value={scanner.bulk_trades_count}
-                                                        onChange={e => scanner.setBulkTradesCount(parseInt(e.target.value, 10) || 1)}
+                                                        onChange={e =>
+                                                            scanner.setBulkTradesCount(
+                                                                parseInt(e.target.value, 10) || 1
+                                                            )
+                                                        }
                                                     />
-                                                    <Text size='xxs' color='less-prominent'>{localize('trades at once')}</Text>
+                                                    <Text size='xxs' color='less-prominent'>
+                                                        {localize('trades at once')}
+                                                    </Text>
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* 3. Virtual Hook Risk Filter */}
                                         <div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Text size='xs' color='general'>🛡️ {localize('Virtual Hook')}</Text>
+                                            <div
+                                                style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                }}
+                                            >
+                                                <Text size='xs' color='general'>
+                                                    🛡️ {localize('Virtual Hook')}
+                                                </Text>
                                                 <input
                                                     type='checkbox'
                                                     checked={scanner.is_virtual_hook_enabled}

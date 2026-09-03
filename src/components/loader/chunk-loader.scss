@@ -156,7 +156,7 @@
         .lth-cyber-grid {
             position: absolute;
             inset: 0;
-            background-image: 
+            background-image:
                 linear-gradient(rgba(0, 242, 254, 0.04) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 242, 254, 0.04) 1px, transparent 1px);
             background-size: 44px 44px;
@@ -200,7 +200,9 @@
         max-width: 520px;
         background: rgba(12, 19, 35, 0.78);
         border: 1px solid rgba(0, 242, 254, 0.2);
-        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.85), inset 0 0 30px rgba(0, 242, 254, 0.05);
+        box-shadow:
+            0 30px 60px -15px rgba(0, 0, 0, 0.85),
+            inset 0 0 30px rgba(0, 242, 254, 0.05);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
         border-radius: 20px;
@@ -279,9 +281,15 @@
                     width: 9px;
                     height: 9px;
                     border-radius: 50%;
-                    &.red { background: #ef4444; }
-                    &.yellow { background: #f59e0b; }
-                    &.green { background: #10b981; }
+                    &.red {
+                        background: #ef4444;
+                    }
+                    &.yellow {
+                        background: #f59e0b;
+                    }
+                    &.green {
+                        background: #10b981;
+                    }
                 }
 
                 .terminal-tag {
@@ -384,51 +392,102 @@
 
 // ── KEYFRAME ANIMATIONS ──
 @keyframes lthGyroRotate {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes lthGyroReverse {
-    0% { transform: rotate(360deg); }
-    100% { transform: rotate(0deg); }
+    0% {
+        transform: rotate(360deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
 }
 
 @keyframes lthCorePulse {
-    0% { transform: scale(0.85); box-shadow: 0 0 6px #00f2fe; }
-    100% { transform: scale(1.1); box-shadow: 0 0 16px #00f2fe; }
+    0% {
+        transform: scale(0.85);
+        box-shadow: 0 0 6px #00f2fe;
+    }
+    100% {
+        transform: scale(1.1);
+        box-shadow: 0 0 16px #00f2fe;
+    }
 }
 
 @keyframes lthPulseWave {
-    0%, 100% { opacity: 0.3; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.2); }
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
 }
 
 @keyframes lthDrift {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(40px, 20px) scale(1.1); }
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        transform: translate(40px, 20px) scale(1.1);
+    }
 }
 
 @keyframes lthDriftRev {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(-30px, -20px) scale(1.08); }
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    100% {
+        transform: translate(-30px, -20px) scale(1.08);
+    }
 }
 
 @keyframes lthCardEntrance {
-    0% { opacity: 0; transform: translateY(16px) scale(0.96); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
+    0% {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes lthLogSlide {
-    0% { opacity: 0; transform: translateX(-8px); }
-    100% { opacity: 1; transform: translateX(0); }
+    0% {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 @keyframes lthHeartbeat {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.12); }
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.12);
+    }
 }
 
 @keyframes lthBlink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
 }

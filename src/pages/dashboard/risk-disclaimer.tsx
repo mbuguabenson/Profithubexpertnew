@@ -33,18 +33,14 @@ const RiskDisclaimer = observer(({ is_mobile, is_modal = false, onClose, is_open
     };
 
     const DisclaimerContent = () => (
-        <div className={classNames('risk-disclaimer', {
-            'risk-disclaimer--mobile': is_mobile,
-        })}>
+        <div
+            className={classNames('risk-disclaimer', {
+                'risk-disclaimer--mobile': is_mobile,
+            })}
+        >
             <div className='risk-disclaimer__content'>
                 <div className='risk-disclaimer__header'>
-                    <Text 
-                        className='risk-disclaimer__title'
-                        as='h3'
-                        color='prominent'
-                        size='md'
-                        weight='bold'
-                    >
+                    <Text className='risk-disclaimer__title' as='h3' color='prominent' size='md' weight='bold'>
                         <Localize i18n_default_text='Risk Disclaimer' />
                     </Text>
                 </div>
@@ -57,10 +53,7 @@ const RiskDisclaimer = observer(({ is_mobile, is_modal = false, onClose, is_open
                     </Text>
                 </div>
                 <div className='risk-disclaimer__footer'>
-                    <Button 
-                        primary
-                        onClick={handleAcknowledge}
-                    >
+                    <Button primary onClick={handleAcknowledge}>
                         <Localize i18n_default_text='I Understand' />
                     </Button>
                 </div>

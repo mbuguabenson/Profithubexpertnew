@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { 
-    Activity, 
-    TrendingUp, 
-    ShieldAlert, 
-    Zap, 
-    Layers, 
+import {
+    Activity,
+    TrendingUp,
+    ShieldAlert,
+    Zap,
+    Layers,
     Target,
     ChevronRight,
     AlertCircle,
     Info,
     ArrowUpRight,
     Search,
-    Globe
+    Globe,
 } from 'lucide-react';
 import { useStore } from '@/hooks/useStore';
 import './account-flipper.scss';
@@ -30,7 +30,7 @@ const AnalysisCard = ({ analysis }: { analysis: any }) => (
                 {analysis.strength}
             </span>
         </div>
-        
+
         <div className='metrics-bars'>
             <div className='bar-group'>
                 <div className='bar-label'>
@@ -41,7 +41,7 @@ const AnalysisCard = ({ analysis }: { analysis: any }) => (
                     <div className='bar-fill bar-fill--under' style={{ width: `${analysis.underPercent}%` }} />
                 </div>
             </div>
-            
+
             <div className='bar-group'>
                 <div className='bar-label'>
                     <span>OVER</span>
@@ -57,14 +57,21 @@ const AnalysisCard = ({ analysis }: { analysis: any }) => (
             <div className='stat'>
                 <span className='label'>Confidence</span>
                 <div className='value-with-dot'>
-                    <div className='dot' style={{ backgroundColor: analysis.confidence > 70 ? '#10b981' : analysis.confidence > 40 ? '#f59e0b' : '#ef4444' }} />
+                    <div
+                        className='dot'
+                        style={{
+                            backgroundColor:
+                                analysis.confidence > 70 ? '#10b981' : analysis.confidence > 40 ? '#f59e0b' : '#ef4444',
+                        }}
+                    />
                     <span className='value'>{analysis.confidence.toFixed(0)}%</span>
                 </div>
             </div>
             <div className='stat'>
                 <span className='label'>Expected Value</span>
                 <span className={`value ${analysis.expectedPayout > 0 ? 'pos' : 'neg'}`}>
-                    {analysis.expectedPayout > 0 ? '+' : ''}{analysis.expectedPayout.toFixed(2)}
+                    {analysis.expectedPayout > 0 ? '+' : ''}
+                    {analysis.expectedPayout.toFixed(2)}
                 </span>
             </div>
         </div>
@@ -74,12 +81,12 @@ const AnalysisCard = ({ analysis }: { analysis: any }) => (
 const HeatmapCell = ({ value, i, j }: { value: number; i: number; j: number }) => {
     const intensity = value / 20; // Scale 0-20%
     return (
-        <div 
+        <div
             className='heatmap-cell'
-            style={{ 
+            style={{
                 backgroundColor: `rgba(72, 140, 251, ${intensity})`,
                 boxShadow: intensity > 0.6 ? `0 0 10px rgba(72, 140, 251, ${intensity * 0.5})` : 'none',
-                color: intensity > 0.5 ? '#fff' : 'rgba(255,255,255,0.4)'
+                color: intensity > 0.5 ? '#fff' : 'rgba(255,255,255,0.4)',
             }}
             title={`${i} → ${j}: ${value.toFixed(1)}%`}
         >
@@ -106,7 +113,7 @@ const RecommendationCard = ({ rec }: { rec: any }) => (
                 )}
             </div>
         </div>
-        
+
         {rec.action !== 'WAIT' ? (
             <div className='rec-body'>
                 <div className='rec-stats'>
@@ -134,7 +141,9 @@ const RecommendationCard = ({ rec }: { rec: any }) => (
             </div>
         ) : (
             <div className='rec-empty'>
-                <div className='icon-wrap'><Search size={24} /></div>
+                <div className='icon-wrap'>
+                    <Search size={24} />
+                </div>
                 <p>Waiting for statistical edge...</p>
             </div>
         )}
@@ -143,10 +152,10 @@ const RecommendationCard = ({ rec }: { rec: any }) => (
 
 const AccountFlipper = observer(() => {
     const { account_flipper, marketkiller } = useStore();
-    const { 
-        recent_digits, 
-        selected_threshold_key, 
-        timeframe, 
+    const {
+        recent_digits,
+        selected_threshold_key,
+        timeframe,
         current_digit,
         current_price,
         symbol,
@@ -159,7 +168,7 @@ const AccountFlipper = observer(() => {
         setTimeframe,
         setStake,
         setSymbol,
-        base_stake
+        base_stake,
     } = account_flipper;
 
     const availableSymbols = [
@@ -178,10 +187,14 @@ const AccountFlipper = observer(() => {
                 <div className='loading-hud'>
                     <div className='circle-outer' />
                     <div className='circle-inner' />
-                    <div className='icon-wrap'><Globe size={32} className='animate-pulse' /></div>
+                    <div className='icon-wrap'>
+                        <Globe size={32} className='animate-pulse' />
+                    </div>
                 </div>
                 <h3>Syncing Quantum Data</h3>
-                <p>Building statistical matrices for {symbol} ({recent_digits.length}/15)</p>
+                <p>
+                    Building statistical matrices for {symbol} ({recent_digits.length}/15)
+                </p>
             </div>
         );
     }
@@ -191,14 +204,14 @@ const AccountFlipper = observer(() => {
             {/* Top Command Bar */}
             <div className='flipper-top-bar'>
                 <div className='market-selector-group'>
-                    <div className='icon-wrap'><Globe size={18} /></div>
-                    <select 
-                        value={symbol} 
-                        onChange={(e) => setSymbol(e.target.value)}
-                        className='market-select'
-                    >
+                    <div className='icon-wrap'>
+                        <Globe size={18} />
+                    </div>
+                    <select value={symbol} onChange={e => setSymbol(e.target.value)} className='market-select'>
                         {availableSymbols.map(s => (
-                            <option key={s.symbol} value={s.symbol}>{s.display_name}</option>
+                            <option key={s.symbol} value={s.symbol}>
+                                {s.display_name}
+                            </option>
                         ))}
                     </select>
                 </div>
@@ -214,27 +227,25 @@ const AccountFlipper = observer(() => {
                     <div className='stat-divider' />
                     <div className='stat-block'>
                         <span className='label'>LAST DIGIT</span>
-                        <div className='value digit-value glowing'>
-                            {current_digit}
-                        </div>
+                        <div className='value digit-value glowing'>{current_digit}</div>
                     </div>
                 </div>
 
                 <div className='action-controls'>
                     <div className='input-group'>
                         <span className='label'>STAKE</span>
-                        <input 
-                            type='number' 
-                            value={base_stake} 
-                            onChange={(e) => setStake(parseFloat(e.target.value))}
+                        <input
+                            type='number'
+                            value={base_stake}
+                            onChange={e => setStake(parseFloat(e.target.value))}
                             className='dark-input'
                         />
                     </div>
                     <div className='input-group'>
                         <span className='label'>TIME</span>
-                        <select 
-                            value={timeframe} 
-                            onChange={(e) => setTimeframe(parseInt(e.target.value) as any)}
+                        <select
+                            value={timeframe}
+                            onChange={e => setTimeframe(parseInt(e.target.value) as any)}
                             className='dark-select'
                         >
                             <option value={50}>50 Ticks</option>
@@ -272,7 +283,13 @@ const AccountFlipper = observer(() => {
                                         <span>{risk_assessment.volatility.toFixed(1)}%</span>
                                     </div>
                                     <div className='progress-track'>
-                                        <div className='progress-fill' style={{ width: `${risk_assessment.volatility}%`, background: risk_assessment.volatility > 60 ? '#ef4444' : '#3b82f6' }} />
+                                        <div
+                                            className='progress-fill'
+                                            style={{
+                                                width: `${risk_assessment.volatility}%`,
+                                                background: risk_assessment.volatility > 60 ? '#ef4444' : '#3b82f6',
+                                            }}
+                                        />
                                     </div>
                                 </div>
                                 <div className='metric-row'>
@@ -281,12 +298,20 @@ const AccountFlipper = observer(() => {
                                         <span>{risk_assessment.trendStrength.toFixed(1)}%</span>
                                     </div>
                                     <div className='progress-track'>
-                                        <div className='progress-fill' style={{ width: `${risk_assessment.trendStrength}%`, background: '#10b981' }} />
+                                        <div
+                                            className='progress-fill'
+                                            style={{
+                                                width: `${risk_assessment.trendStrength}%`,
+                                                background: '#10b981',
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>
                             <div className={`risk-badge risk-badge--${risk_assessment.overallRisk.toLowerCase()}`}>
-                                <div className='badge-icon'><Info size={14} /></div>
+                                <div className='badge-icon'>
+                                    <Info size={14} />
+                                </div>
                                 <div className='badge-text'>
                                     <span className='level'>{risk_assessment.overallRisk} RISK</span>
                                     <span className='desc'>{risk_assessment.recommendation}</span>
@@ -300,7 +325,7 @@ const AccountFlipper = observer(() => {
                 <div className='content-col content-col--right'>
                     <div className='tabs-row'>
                         {all_analyses.map(analysis => (
-                            <button 
+                            <button
                                 key={analysis.threshold}
                                 className={`tab-pill ${selected_threshold_key === analysis.threshold.split('Over ')[1].replace(' / Under ', '-') ? 'active' : ''}`}
                                 onClick={() => {
@@ -329,7 +354,9 @@ const AccountFlipper = observer(() => {
                                 <div className='correlation-grid'>
                                     <div className='corner' />
                                     {Array.from({ length: 10 }).map((_, i) => (
-                                        <div key={`h-${i}`} className='label label--h'>{i}</div>
+                                        <div key={`h-${i}`} className='label label--h'>
+                                            {i}
+                                        </div>
                                     ))}
                                     {correlation_matrix.map((row, i) => (
                                         <React.Fragment key={`row-${i}`}>

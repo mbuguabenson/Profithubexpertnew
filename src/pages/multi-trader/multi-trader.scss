@@ -43,11 +43,11 @@
             justify-content: space-between;
             align-items: center;
 
-            h2 { 
-                font-size: 1.1rem; 
-                font-weight: 800; 
-                margin: 0; 
-                text-transform: uppercase; 
+            h2 {
+                font-size: 1.1rem;
+                font-weight: 800;
+                margin: 0;
+                text-transform: uppercase;
                 letter-spacing: 0.1em;
                 color: #00c6ff;
             }
@@ -75,8 +75,15 @@
         padding: 0 2rem 2rem;
         border-top: 1px solid rgba(255, 255, 255, 0.03);
         padding-top: 2rem;
-        
-        label { font-size: 1rem; font-weight: 800; color: #888; display: block; margin-bottom: 1.5rem; text-transform: uppercase; }
+
+        label {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #888;
+            display: block;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
     }
 
     &__strategy-grid {
@@ -84,7 +91,7 @@
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 1rem;
         margin-bottom: 1.5rem;
-        
+
         @include mobile-screen {
             grid-template-columns: repeat(2, 1fr);
         }
@@ -104,9 +111,16 @@
         position: relative;
         overflow: hidden;
 
-        .icon { font-size: 1.6rem; }
-        .label { font-size: 0.9rem; font-weight: 700; color: #aaa; text-align: center; }
-        
+        .icon {
+            font-size: 1.6rem;
+        }
+        .label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #aaa;
+            text-align: center;
+        }
+
         .indicator {
             position: absolute;
             bottom: 0;
@@ -127,8 +141,12 @@
         &.active {
             background: rgba(0, 198, 255, 0.05);
             border-color: #00c6ff;
-            .label { color: #00c6ff; }
-            .indicator { transform: scaleX(1); }
+            .label {
+                color: #00c6ff;
+            }
+            .indicator {
+                transform: scaleX(1);
+            }
         }
     }
 
@@ -137,14 +155,15 @@
         flex-direction: column;
         gap: 0.4rem;
 
-        label { 
-            font-size: 0.8rem; 
-            font-weight: 700; 
-            color: #666; 
-            text-transform: uppercase; 
+        label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
         }
 
-        select, input {
+        select,
+        input {
             background: #0d0e12;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
@@ -154,7 +173,10 @@
             font-weight: 600;
             width: 100%;
 
-            &:focus { border-color: #00c6ff; outline: none; }
+            &:focus {
+                border-color: #00c6ff;
+                outline: none;
+            }
         }
     }
 
@@ -162,8 +184,14 @@
         padding: 0 2rem 2rem;
         border-top: 1px solid rgba(255, 255, 255, 0.03);
         padding-top: 2rem;
-        
-        label { font-size: 1rem; font-weight: 800; color: #aaa; display: block; margin-bottom: 1rem; }
+
+        label {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #aaa;
+            display: block;
+            margin-bottom: 1rem;
+        }
     }
 
     &__strategy-select {
@@ -173,8 +201,12 @@
         border-radius: 12px;
         padding: 0.5rem;
         margin-bottom: 1.5rem;
-        
-        option { padding: 0.8rem; border-radius: 8px; margin-bottom: 2px; }
+
+        option {
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 2px;
+        }
     }
 
     &__predictions-row {
@@ -202,9 +234,18 @@
             border: none;
             cursor: pointer;
 
-            &--start { background: #00c853; color: #000; }
-            &--stop { background: #ff4444; color: #fff; }
-            &--reset { background: #2a2b36; color: #fff; }
+            &--start {
+                background: #00c853;
+                color: #000;
+            }
+            &--stop {
+                background: #ff4444;
+                color: #fff;
+            }
+            &--reset {
+                background: #2a2b36;
+                color: #fff;
+            }
         }
     }
 
@@ -223,8 +264,8 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 1rem;
 
-        @include mobile-or-tablet-screen { 
-            grid-template-columns: repeat(2, 1fr); 
+        @include mobile-or-tablet-screen {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 
@@ -235,19 +276,19 @@
         text-align: center;
         border: 1px solid rgba(255, 255, 255, 0.03);
 
-        label { 
-            font-size: 0.7rem; 
-            font-weight: 700; 
-            color: #555; 
-            display: block; 
-            margin-bottom: 0.2rem; 
+        label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #555;
+            display: block;
+            margin-bottom: 0.2rem;
             text-transform: uppercase;
         }
 
-        span { 
-            font-size: 1.2rem; 
-            font-weight: 800; 
-            
+        span {
+            font-size: 1.2rem;
+            font-weight: 800;
+
             @include mobile-screen {
                 font-size: 1.1rem;
             }
@@ -263,13 +304,24 @@
         align-items: center;
         border: 1px solid rgba(255, 255, 255, 0.03);
 
-        label { font-size: 0.9rem; font-weight: 800; color: #888; }
-        span { font-size: 1.4rem; font-weight: 900; }
+        label {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #888;
+        }
+        span {
+            font-size: 1.4rem;
+            font-weight: 900;
+        }
 
         @include mobile-screen {
             padding: 0.8rem 1rem;
-            label { font-size: 0.8rem; }
-            span { font-size: 1.2rem; }
+            label {
+                font-size: 0.8rem;
+            }
+            span {
+                font-size: 1.2rem;
+            }
         }
     }
 
@@ -287,8 +339,13 @@
         padding-right: 1rem;
         font-size: 0.95rem;
 
-        &::-webkit-scrollbar { width: 6px; }
-        &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 3px; }
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
     }
 
     &__log-entry {
@@ -297,12 +354,26 @@
         line-height: 1.4;
         padding: 0.4rem 0.8rem;
         border-radius: 6px;
-        
-        .log-time { color: #444; margin-right: 1rem; font-weight: 500; }
-        &--success { color: #00e676; background: rgba(0, 230, 118, 0.03); }
-        &--error { color: #ff5252; background: rgba(255, 82, 82, 0.03); }
-        &--warning { color: #ffd740; }
-        &--info { color: #40c4ff; }
+
+        .log-time {
+            color: #444;
+            margin-right: 1rem;
+            font-weight: 500;
+        }
+        &--success {
+            color: #00e676;
+            background: rgba(0, 230, 118, 0.03);
+        }
+        &--error {
+            color: #ff5252;
+            background: rgba(255, 82, 82, 0.03);
+        }
+        &--warning {
+            color: #ffd740;
+        }
+        &--info {
+            color: #40c4ff;
+        }
     }
 
     &__transactions-list {
@@ -347,15 +418,33 @@
             grid-template-columns: 1fr 1fr;
             gap: 0.5rem;
             padding: 1rem;
-            
-            span:nth-child(1) { font-weight: 900; color: #00c6ff; } // Type
-            span:nth-child(2) { grid-column: span 2; font-size: 0.85rem; color: #666; } // Spots
-            span:nth-child(3) { text-align: left; } // Buy
-            span:nth-child(4) { text-align: right; } // Profit
+
+            span:nth-child(1) {
+                font-weight: 900;
+                color: #00c6ff;
+            } // Type
+            span:nth-child(2) {
+                grid-column: span 2;
+                font-size: 0.85rem;
+                color: #666;
+            } // Spots
+            span:nth-child(3) {
+                text-align: left;
+            } // Buy
+            span:nth-child(4) {
+                text-align: right;
+            } // Profit
         }
-        
-        .spots { font-family: monospace; color: #555; font-size: 0.9rem; }
-        span:last-child { text-align: right; font-weight: 800; }
+
+        .spots {
+            font-family: monospace;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        span:last-child {
+            text-align: right;
+            font-weight: 800;
+        }
     }
 
     &__empty {
@@ -371,6 +460,10 @@
         font-weight: 500;
     }
 
-    .success { color: #00e676 !important; }
-    .error { color: #ff5252 !important; }
+    .success {
+        color: #00e676 !important;
+    }
+    .error {
+        color: #ff5252 !important;
+    }
 }

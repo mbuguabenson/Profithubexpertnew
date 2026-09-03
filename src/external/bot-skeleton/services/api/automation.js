@@ -67,21 +67,21 @@ const autoGet = async ({ run_id, subscribe = 1, passthrough, req_id }) => {
     return api_base.api.send(request);
 };
 
-const autoPause = async (run_id) => {
+const autoPause = async run_id => {
     if (!api_base.api) {
         throw new Error('Deriv API is not initialized');
     }
     return api_base.api.send({ auto_pause: 1, run_id });
 };
 
-const autoResume = async (run_id) => {
+const autoResume = async run_id => {
     if (!api_base.api) {
         throw new Error('Deriv API is not initialized');
     }
     return api_base.api.send({ auto_resume: 1, run_id });
 };
 
-const autoStop = async (run_id) => {
+const autoStop = async run_id => {
     if (!api_base.api) {
         throw new Error('Deriv API is not initialized');
     }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Redirect, Route, RouteComponentProps } from 'react-router-dom';
+import { Route, RouteComponentProps } from 'react-router-dom';
+import { Redirect } from 'withRouterShim';
 import { redirectToLogin, removeBranchName, routes, isEmptyObject, default_title } from '@deriv/shared';
 import { getLanguage } from '@deriv/translations';
 import Page404 from 'Modules/Page404';

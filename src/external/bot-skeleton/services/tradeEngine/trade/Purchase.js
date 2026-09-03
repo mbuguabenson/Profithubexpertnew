@@ -38,7 +38,7 @@ export default Engine =>
                 this.multiple_trades_count = 0; // Reset flag for subsequent runs
                 return this.bulkPurchase(contract_type, count);
             }
-            
+
             // Prevent duplicate parallel purchases
             if (this.is_contract_buying_in_progress) {
                 return Promise.resolve();
@@ -83,7 +83,7 @@ export default Engine =>
                 // Store on `this` so handleContractSold() can clear it immediately when the
                 // contract settles via the normal subscription path — preventing timer accumulation.
                 const purchasedContractId = buy.contract_id;
-                const watchdogDuration = (Number(this.tradeOptions?.duration || 5) * 1200) + 3500;
+                const watchdogDuration = Number(this.tradeOptions?.duration || 5) * 1200 + 3500;
 
                 this._clearWatchdog();
                 this._watchdogTimer = setTimeout(async () => {
@@ -115,11 +115,22 @@ export default Engine =>
                 });
             };
 
-            const isBulkEnabled = (this.purchase_block_allow_bulk === 'yes') || (window.scanner_store?.is_bulk_trades_enabled);
-            const bulkCount = isBulkEnabled ? Math.max(1, Math.min(100, Number(this.purchase_block_bulk_count || window.scanner_store?.bulk_trades_count || 2))) : 1;
+            const isBulkEnabled =
+                this.purchase_block_allow_bulk === 'yes' || window.scanner_store?.is_bulk_trades_enabled;
+            const bulkCount = isBulkEnabled
+                ? Math.max(
+                      1,
+                      Math.min(
+                          100,
+                          Number(this.purchase_block_bulk_count || window.scanner_store?.bulk_trades_count || 2)
+                      )
+                  )
+                : 1;
 
             if (bulkCount > 1) {
-                log(LogTypes.INFO, { message: `🚀 [BULK TRADES] Placing ${bulkCount} parallel contracts simultaneously on Deriv...` });
+                log(LogTypes.INFO, {
+                    message: `🚀 [BULK TRADES] Placing ${bulkCount} parallel contracts simultaneously on Deriv...`,
+                });
                 const trade_option = tradeOptionToBuy(contract_type, this.tradeOptions);
 
                 try {
@@ -144,29 +155,123 @@ export default Engine =>
                 const batchSize = 8;
                 const responses = [];
                 for (let index = 0; index < bulkCount; index += batchSize) {
-                    const batch = Array.from(
-                        { length: Math.min(batchSize, bulkCount - index) },
-                        () => api_base.api.send(JSON.parse(JSON.stringify(trade_option))).catch(err => ({ error: err }))
+                    const batch = Array.from({ length: Math.min(batchSize, bulkCount - index) }, () =>
+                        api_base.api.send(JSON.parse(JSON.stringify(trade_option))).catch(err => ({ error: err }))
                     );
                     responses.push(...(await Promise.all(batch)));
                 }
 
-                return Promise.resolve(responses).then(responses => {
-                    this.purchase_block_allow_bulk = 'no';
-                    const validResponses = responses.filter(r => r && r.buy && !r.error);
+                return Promise.resolve(responses)
+                    .then(responses => {
+                        this.purchase_block_allow_bulk = 'no';
+                        const validResponses = responses.filter(r => r && r.buy && !r.error);
 
-                    if (validResponses.length === 0) {
-                        // ─── Bug 3 fix (bulk): Emit Error so the run-panel's onError ──────
-                        // fires, logs to Journal, and un-freezes the panel. Without this
-                        // emit the run-panel stays frozen in PURCHASE_SENT forever.
-                        const errObj = responses.find(r => r && r.error);
-                        const errMsg = errObj?.error?.message || errObj?.error || 'Bulk trade purchase failed';
-                        const errCode = errObj?.error?.code || errObj?.error?.error?.code || 'BulkPurchaseFailed';
+                        if (validResponses.length === 0) {
+                            // ─── Bug 3 fix (bulk): Emit Error so the run-panel's onError ──────
+                            // fires, logs to Journal, and un-freezes the panel. Without this
+                            // emit the run-panel stays frozen in PURCHASE_SENT forever.
+                            const errObj = responses.find(r => r && r.error);
+                            const errMsg = errObj?.error?.message || errObj?.error || 'Bulk trade purchase failed';
+                            const errCode = errObj?.error?.code || errObj?.error?.error?.code || 'BulkPurchaseFailed';
 
-                        log(LogTypes.ERROR, { message: `❌ [BULK TRADES FAILED] ${errMsg}` });
+                            log(LogTypes.ERROR, { message: `❌ [BULK TRADES FAILED] ${errMsg}` });
 
-                        // Notify run-panel — this causes it to show the error in Journal
-                        // and correctly update is_running / contract_stage state.
+                            // Notify run-panel — this causes it to show the error in Journal
+                            // and correctly update is_running / contract_stage state.
+                            globalObserver.emit('Error', {
+                                code: errCode,
+                                message: errMsg,
+                                name: errCode,
+                            });
+
+                            this.store.dispatch(purchaseSuccessful());
+                            if (this.afterPromise) {
+                                this.afterPromise();
+                            }
+                            return null;
+                        }
+
+                        this.bulk_group_map = this.bulk_group_map || {};
+                        this.bulk_contract_ids = new Set(validResponses.map(r => String(r.buy.contract_id)));
+                        this.bulk_sold_contract_ids = new Set();
+                        this.contractId = String(validResponses[0].buy.contract_id);
+
+                        validResponses.forEach(res => {
+                            const { buy } = res;
+                            buy.bulk_group_id = bulkGroupId; // Inject bulk group ID
+                            buy.is_bulk_group = true;
+                            buy.bulk_count = validResponses.length;
+                            this.bulk_group_map[buy.contract_id] = bulkGroupId;
+
+                            // Subscribe to proposal_open_contract for EACH contract in the bulk batch
+                            if (api_base.api && buy.contract_id) {
+                                try {
+                                    api_base.api.send({
+                                        proposal_open_contract: 1,
+                                        contract_id: buy.contract_id,
+                                        subscribe: 1,
+                                    });
+                                } catch {}
+                            }
+
+                            contractStatus({
+                                id: 'contract.purchase_received',
+                                data: buy.transaction_id,
+                                buy,
+                            });
+                            log(LogTypes.PURCHASE, { transaction_id: buy.transaction_id });
+                            info({
+                                accountID: this.accountInfo?.loginid,
+                                totalRuns: this.updateAndReturnTotalRuns(),
+                                transaction_ids: { buy: buy.transaction_id },
+                                contract_type,
+                                buy_price: buy.buy_price,
+                            });
+                        });
+
+                        this.store.dispatch(purchaseSuccessful());
+
+                        if (this.is_proposal_subscription_required) {
+                            this.renewProposalsOnPurchase();
+                        }
+
+                        // 🛡️ Watchdog Recovery Timer across all contracts in the bulk batch.
+                        // Stored on this._bulkWatchdogTimer so handleContractSold() clears
+                        // it when all contracts settle — preventing timer accumulation.
+                        const watchdogDuration = Number(this.tradeOptions?.duration || 5) * 1200 + 4000;
+                        const contractIdsToCheck = new Set(this.bulk_contract_ids);
+                        this._clearWatchdog();
+                        this._bulkWatchdogTimer = setTimeout(async () => {
+                            this._bulkWatchdogTimer = null;
+                            for (const cid of contractIdsToCheck) {
+                                if (!this.bulk_sold_contract_ids.has(cid)) {
+                                    try {
+                                        const res = await api_base.api?.send({
+                                            proposal_open_contract: 1,
+                                            contract_id: Number(cid),
+                                        });
+                                        if (res?.proposal_open_contract?.is_sold) {
+                                            const poc = res.proposal_open_contract;
+                                            if (this.bulk_group_map && this.bulk_group_map[poc.contract_id]) {
+                                                poc.bulk_group_id = this.bulk_group_map[poc.contract_id];
+                                            }
+                                            this.handleContractSold(poc);
+                                        }
+                                    } catch {}
+                                }
+                            }
+                        }, watchdogDuration);
+
+                        return validResponses[0];
+                    })
+                    .catch(err => {
+                        this.purchase_block_allow_bulk = 'no';
+                        const errMsg = err?.message || String(err);
+                        const errCode = err?.error?.code || err?.code || 'BulkPurchaseError';
+
+                        log(LogTypes.ERROR, { message: `❌ [BULK TRADES ERROR] ${errMsg}` });
+
+                        // ─── Bug 3 fix (bulk catch): Emit Error to unfreeze the panel ──
                         globalObserver.emit('Error', {
                             code: errCode,
                             message: errMsg,
@@ -178,100 +283,7 @@ export default Engine =>
                             this.afterPromise();
                         }
                         return null;
-                    }
-
-                    this.bulk_group_map = this.bulk_group_map || {};
-                    this.bulk_contract_ids = new Set(validResponses.map(r => String(r.buy.contract_id)));
-                    this.bulk_sold_contract_ids = new Set();
-                    this.contractId = String(validResponses[0].buy.contract_id);
-
-                    validResponses.forEach((res) => {
-                        const { buy } = res;
-                        buy.bulk_group_id = bulkGroupId; // Inject bulk group ID
-                        buy.is_bulk_group = true;
-                        buy.bulk_count = validResponses.length;
-                        this.bulk_group_map[buy.contract_id] = bulkGroupId;
-
-                        // Subscribe to proposal_open_contract for EACH contract in the bulk batch
-                        if (api_base.api && buy.contract_id) {
-                            try {
-                                api_base.api.send({
-                                    proposal_open_contract: 1,
-                                    contract_id: buy.contract_id,
-                                    subscribe: 1,
-                                });
-                            } catch {}
-                        }
-
-                        contractStatus({
-                            id: 'contract.purchase_received',
-                            data: buy.transaction_id,
-                            buy,
-                        });
-                        log(LogTypes.PURCHASE, { transaction_id: buy.transaction_id });
-                        info({
-                            accountID: this.accountInfo?.loginid,
-                            totalRuns: this.updateAndReturnTotalRuns(),
-                            transaction_ids: { buy: buy.transaction_id },
-                            contract_type,
-                            buy_price: buy.buy_price,
-                        });
                     });
-
-                    this.store.dispatch(purchaseSuccessful());
-
-                    if (this.is_proposal_subscription_required) {
-                        this.renewProposalsOnPurchase();
-                    }
-
-                    // 🛡️ Watchdog Recovery Timer across all contracts in the bulk batch.
-                    // Stored on this._bulkWatchdogTimer so handleContractSold() clears
-                    // it when all contracts settle — preventing timer accumulation.
-                    const watchdogDuration = (Number(this.tradeOptions?.duration || 5) * 1200) + 4000;
-                    const contractIdsToCheck = new Set(this.bulk_contract_ids);
-                    this._clearWatchdog();
-                    this._bulkWatchdogTimer = setTimeout(async () => {
-                        this._bulkWatchdogTimer = null;
-                        for (const cid of contractIdsToCheck) {
-                            if (!this.bulk_sold_contract_ids.has(cid)) {
-                                try {
-                                    const res = await api_base.api?.send({
-                                        proposal_open_contract: 1,
-                                        contract_id: Number(cid),
-                                    });
-                                    if (res?.proposal_open_contract?.is_sold) {
-                                        const poc = res.proposal_open_contract;
-                                        if (this.bulk_group_map && this.bulk_group_map[poc.contract_id]) {
-                                            poc.bulk_group_id = this.bulk_group_map[poc.contract_id];
-                                        }
-                                        this.handleContractSold(poc);
-                                    }
-                                } catch {}
-                            }
-                        }
-                    }, watchdogDuration);
-
-                    return validResponses[0];
-                }).catch(err => {
-                    this.purchase_block_allow_bulk = 'no';
-                    const errMsg = err?.message || String(err);
-                    const errCode = err?.error?.code || err?.code || 'BulkPurchaseError';
-
-                    log(LogTypes.ERROR, { message: `❌ [BULK TRADES ERROR] ${errMsg}` });
-
-                    // ─── Bug 3 fix (bulk catch): Emit Error to unfreeze the panel ──
-                    globalObserver.emit('Error', {
-                        code: errCode,
-                        message: errMsg,
-                        name: errCode,
-                    });
-
-                    this.store.dispatch(purchaseSuccessful());
-                    if (this.afterPromise) {
-                        this.afterPromise();
-                    }
-                    return null;
-                });
             }
 
             const trade_option = tradeOptionToBuy(contract_type, this.tradeOptions);
@@ -306,31 +318,40 @@ export default Engine =>
                     data: askPrice,
                 });
 
-                return action().then(onSuccess).catch(err => {
-                    console.warn('[Purchase] Proposal purchase failed, retrying with parameters:', err);
-                    const paramAction = () => api_base.api.send(trade_option);
-                    return paramAction().then(onSuccess).catch(paramErr => {
-                        const errCode = paramErr?.error?.code || paramErr?.code || 'PurchaseFailed';
-                        const errMsg = paramErr?.error?.message || paramErr?.message || 'Purchase failed';
+                return action()
+                    .then(onSuccess)
+                    .catch(err => {
+                        console.warn('[Purchase] Proposal purchase failed, retrying with parameters:', err);
+                        const paramAction = () => api_base.api.send(trade_option);
+                        return paramAction()
+                            .then(onSuccess)
+                            .catch(paramErr => {
+                                const errCode = paramErr?.error?.code || paramErr?.code || 'PurchaseFailed';
+                                const errMsg = paramErr?.error?.message || paramErr?.message || 'Purchase failed';
 
-                        log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
+                                log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
 
-                        globalObserver.emit('Error', {
-                            code: errCode,
-                            message: errMsg,
-                            name: errCode,
-                        });
+                                globalObserver.emit('Error', {
+                                    code: errCode,
+                                    message: errMsg,
+                                    name: errCode,
+                                });
 
-                        if (['InsufficientBalance', 'NotEnoughMoney', 'AccountBalanceExceeded'].includes(errCode) || errMsg.toLowerCase().includes('insufficient')) {
-                            globalObserver.emit('bot.stop_button_click');
-                        }
+                                if (
+                                    ['InsufficientBalance', 'NotEnoughMoney', 'AccountBalanceExceeded'].includes(
+                                        errCode
+                                    ) ||
+                                    errMsg.toLowerCase().includes('insufficient')
+                                ) {
+                                    globalObserver.emit('bot.stop_button_click');
+                                }
 
-                        this.store.dispatch(purchaseSuccessful());
-                        if (this.afterPromise) {
-                            this.afterPromise();
-                        }
+                                this.store.dispatch(purchaseSuccessful());
+                                if (this.afterPromise) {
+                                    this.afterPromise();
+                                }
+                            });
                     });
-                });
             }
 
             try {
@@ -351,7 +372,9 @@ export default Engine =>
                 data: this.tradeOptions.amount,
             });
 
-                return action().then(onSuccess).catch(err => {
+            return action()
+                .then(onSuccess)
+                .catch(err => {
                     this.is_contract_buying_in_progress = false;
                     const errCode = err?.error?.code || err?.code || 'PurchaseFailed';
                     const errMsg = err?.error?.message || err?.message || 'Purchase failed';
@@ -366,7 +389,12 @@ export default Engine =>
                     });
 
                     if (
-                        ['InsufficientBalance', 'NotEnoughMoney', 'AccountBalanceExceeded', 'CustomLimitsReached'].includes(errCode) ||
+                        [
+                            'InsufficientBalance',
+                            'NotEnoughMoney',
+                            'AccountBalanceExceeded',
+                            'CustomLimitsReached',
+                        ].includes(errCode) ||
                         errMsg.toLowerCase().includes('insufficient') ||
                         errMsg.toLowerCase().includes('balance')
                     ) {

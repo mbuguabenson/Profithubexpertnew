@@ -98,7 +98,7 @@ const PovertyHunter: React.FC = observer(() => {
 
     // ── Strategy Configuration & Inputs ──
     const [initialStake, setInitialStake] = useState<string>('0.50');
-    const [currentStake, setCurrentStake] = useState<number>(0.50);
+    const [currentStake, setCurrentStake] = useState<number>(0.5);
     const [martingale, setMartingale] = useState<string>('2.6');
     const [takeProfit, setTakeProfit] = useState<string>('10.00');
     const [stopLoss, setStopLoss] = useState<string>('25.00');
@@ -115,7 +115,10 @@ const PovertyHunter: React.FC = observer(() => {
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [accumulatedLoss, setAccumulatedLoss] = useState<number>(0);
     const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
-    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({ isOpen: false, type: null });
+    const [milestone, setMilestone] = useState<{ isOpen: boolean; type: 'tp' | 'sl' | null }>({
+        isOpen: false,
+        type: null,
+    });
 
     // ── Differs Automation Condition States ──
     const [differTargetDigit, setDifferTargetDigit] = useState<number | null>(null);
@@ -259,7 +262,11 @@ const PovertyHunter: React.FC = observer(() => {
         // Unsubscribe unused symbols
         activeSubs.forEach((sub, sym) => {
             if (!symbolsToStream.includes(sym)) {
-                try { sub.unsubscribe(); } catch { /* ignore */ }
+                try {
+                    sub.unsubscribe();
+                } catch {
+                    /* ignore */
+                }
                 activeSubs.delete(sym);
             }
         });
@@ -267,7 +274,11 @@ const PovertyHunter: React.FC = observer(() => {
         return () => {
             isMountedRef.current = false;
             activeSubs.forEach(sub => {
-                try { sub.unsubscribe(); } catch { /* ignore */ }
+                try {
+                    sub.unsubscribe();
+                } catch {
+                    /* ignore */
+                }
             });
             activeSubs.clear();
         };
@@ -275,14 +286,16 @@ const PovertyHunter: React.FC = observer(() => {
 
     // ── Current Active Market Data ──
     const currentMarket = useMemo(() => {
-        return marketsDataRef.current.get(selectedSymbol) || {
-            symbol: selectedSymbol,
-            label: selectedSymbol,
-            digits: [],
-            currentPrice: '0.00',
-            lastDigit: 0,
-            pip: 2,
-        };
+        return (
+            marketsDataRef.current.get(selectedSymbol) || {
+                symbol: selectedSymbol,
+                label: selectedSymbol,
+                digits: [],
+                currentPrice: '0.00',
+                lastDigit: 0,
+                pip: 2,
+            }
+        );
     }, [selectedSymbol, renderTrigger]);
 
     // ── Calculate 0-9 Digit Analytics (Last 60 Ticks) ──
@@ -318,9 +331,7 @@ const PovertyHunter: React.FC = observer(() => {
         });
 
         // Sort to assign rankings
-        const sortedIndices = [...stats]
-            .map((s, idx) => ({ idx, count: s.count }))
-            .sort((a, b) => b.count - a.count);
+        const sortedIndices = [...stats].map((s, idx) => ({ idx, count: s.count })).sort((a, b) => b.count - a.count);
 
         sortedIndices.forEach((item, rankIdx) => {
             stats[item.idx].rank = rankIdx + 1;
@@ -458,165 +469,183 @@ const PovertyHunter: React.FC = observer(() => {
     }, [selectedSymbol, renderTrigger]);
 
     // ── Log and Drawer Contract Emitter ──
-    const pushContractToDrawer = useCallback((contractSnapshot: Record<string, unknown>) => {
-        try {
-            transactions.pushTransaction({ ...contractSnapshot, run_id: run_panel.run_id });
-            run_panel.onBotContractEvent(contractSnapshot);
-            summary_card.onBotContractEvent(contractSnapshot);
-        } catch {
-            // Ignore if core stores aren't initialized
-        }
-    }, [run_panel, summary_card, transactions]);
+    const pushContractToDrawer = useCallback(
+        (contractSnapshot: Record<string, unknown>) => {
+            try {
+                transactions.pushTransaction({ ...contractSnapshot, run_id: run_panel.run_id });
+                run_panel.onBotContractEvent(contractSnapshot);
+                summary_card.onBotContractEvent(contractSnapshot);
+            } catch {
+                // Ignore if core stores aren't initialized
+            }
+        },
+        [run_panel, summary_card, transactions]
+    );
 
-    const addLogEntry = useCallback((
-        market: string,
-        strategy: 'DIFFERS' | 'OVER_UNDER' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
-        contractType: string,
-        prediction: number,
-        stake: number,
-        result: 'WIN' | 'LOSS' | 'PENDING',
-        profit: number
-    ) => {
-        setTradeLog(prev => [{
-            id: `PH-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            time: new Date().toLocaleTimeString(),
-            market,
-            strategy,
-            contractType,
-            prediction,
-            stake,
-            result,
-            profit,
-        }, ...prev].slice(0, 80));
-    }, []);
+    const addLogEntry = useCallback(
+        (
+            market: string,
+            strategy: 'DIFFERS' | 'OVER_UNDER' | 'RECOVERY_OVER' | 'RECOVERY_UNDER',
+            contractType: string,
+            prediction: number,
+            stake: number,
+            result: 'WIN' | 'LOSS' | 'PENDING',
+            profit: number
+        ) => {
+            setTradeLog(prev =>
+                [
+                    {
+                        id: `PH-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                        time: new Date().toLocaleTimeString(),
+                        market,
+                        strategy,
+                        contractType,
+                        prediction,
+                        stake,
+                        result,
+                        profit,
+                    },
+                    ...prev,
+                ].slice(0, 80)
+            );
+        },
+        []
+    );
 
     // ── Execute Trade Order (Single or Bulk) ──
-    const executeTradeOrder = useCallback(async (
-        symbol: string,
-        contractType: 'DIGITDIFF' | 'DIGITOVER' | 'DIGITUNDER',
-        barrier: number,
-        stakeAmount: number,
-        isRecoveryTrade = false
-    ) => {
-        if (executionLockRef.current) return;
-        executionLockRef.current = true;
+    const executeTradeOrder = useCallback(
+        async (
+            symbol: string,
+            contractType: 'DIGITDIFF' | 'DIGITOVER' | 'DIGITUNDER',
+            barrier: number,
+            stakeAmount: number,
+            isRecoveryTrade = false
+        ) => {
+            if (executionLockRef.current) return;
+            executionLockRef.current = true;
 
-        const dur = parseInt(tickDuration, 10) || 1;
-        const count = Math.max(1, parseInt(bulkCount, 10) || 1);
-        const marketLabel = MARKETS.find(m => m.symbol === symbol)?.label || symbol;
+            const dur = parseInt(tickDuration, 10) || 1;
+            const count = Math.max(1, parseInt(bulkCount, 10) || 1);
+            const marketLabel = MARKETS.find(m => m.symbol === symbol)?.label || symbol;
 
-        const params = {
-            amount: stakeAmount,
-            basis: 'stake',
-            contract_type: contractType,
-            currency: currency || 'USD',
-            duration: dur,
-            duration_unit: 't',
-            symbol,
-            barrier: String(barrier),
-        };
+            const params = {
+                amount: stakeAmount,
+                basis: 'stake',
+                contract_type: contractType,
+                currency: currency || 'USD',
+                duration: dur,
+                duration_unit: 't',
+                symbol,
+                barrier: String(barrier),
+            };
 
-        const stratType = isRecoveryTrade
-            ? (contractType === 'DIGITOVER' ? 'RECOVERY_OVER' : 'RECOVERY_UNDER')
-            : (contractType === 'DIGITDIFF' ? 'DIFFERS' : 'OVER_UNDER');
+            const stratType = isRecoveryTrade
+                ? contractType === 'DIGITOVER'
+                    ? 'RECOVERY_OVER'
+                    : 'RECOVERY_UNDER'
+                : contractType === 'DIGITDIFF'
+                  ? 'DIFFERS'
+                  : 'OVER_UNDER';
 
-        try {
-            // Execute batch (Bulk purchases executed in parallel with same entry/exit)
-            const buyPromises = Array.from({ length: count }, () =>
-                buyContractForUi({ parameters: params, price: stakeAmount, source: 'PovertyHunter' })
-            );
+            try {
+                // Execute batch (Bulk purchases executed in parallel with same entry/exit)
+                const buyPromises = Array.from({ length: count }, () =>
+                    buyContractForUi({ parameters: params, price: stakeAmount, source: 'PovertyHunter' })
+                );
 
-            const buyResults = await Promise.all(buyPromises);
-            let totalBatchProfit = 0;
-            let batchWon = true;
+                const buyResults = await Promise.all(buyPromises);
+                let totalBatchProfit = 0;
+                let batchWon = true;
 
-            for (const buy of buyResults) {
-                if (!buy?.contract_id) continue;
-                const startTime = Math.floor(Date.now() / 1000);
-                const initSnapshot = {
-                    buy_price: buy.buy_price,
-                    contract_id: buy.contract_id,
-                    transaction_ids: { buy: buy.transaction_id },
-                    date_start: startTime,
-                    display_name: marketLabel,
-                    underlying_symbol: symbol,
-                    shortcode: `PH_${contractType}_${barrier}`,
-                    contract_type: contractType,
-                    currency: currency || 'USD',
-                    barrier: String(barrier),
-                };
+                for (const buy of buyResults) {
+                    if (!buy?.contract_id) continue;
+                    const startTime = Math.floor(Date.now() / 1000);
+                    const initSnapshot = {
+                        buy_price: buy.buy_price,
+                        contract_id: buy.contract_id,
+                        transaction_ids: { buy: buy.transaction_id },
+                        date_start: startTime,
+                        display_name: marketLabel,
+                        underlying_symbol: symbol,
+                        shortcode: `PH_${contractType}_${barrier}`,
+                        contract_type: contractType,
+                        currency: currency || 'USD',
+                        barrier: String(barrier),
+                    };
 
-                pushContractToDrawer(initSnapshot);
+                    pushContractToDrawer(initSnapshot);
 
-                const settled = await streamContractUntilSettled({
-                    contractId: buy.contract_id,
-                    fallback: initSnapshot,
-                    onUpdate: snap => pushContractToDrawer(snap),
-                    source: 'PovertyHunter',
-                });
+                    const settled = await streamContractUntilSettled({
+                        contractId: buy.contract_id,
+                        fallback: initSnapshot,
+                        onUpdate: snap => pushContractToDrawer(snap),
+                        source: 'PovertyHunter',
+                    });
 
-                const p = Number(settled.profit || 0);
-                totalBatchProfit += p;
-                if (settled.status === 'lost' || p < 0) {
-                    batchWon = false;
-                }
-            }
-
-            // Post-trade handling
-            const roundedProfit = Number(totalBatchProfit.toFixed(2));
-            setSessionProfit(sp => Number((sp + roundedProfit).toFixed(2)));
-
-            if (batchWon) {
-                setWinsCount(w => w + count);
-                addLogEntry(symbol, stratType, contractType, barrier, stakeAmount * count, 'WIN', roundedProfit);
-
-                // Recovery logic check
-                if (isRecoveryTrade || isInRecovery) {
-                    const newAccLoss = accumulatedLoss - roundedProfit;
-                    if (newAccLoss <= 0) {
-                        // Fully recovered! Revert to Differs with original base stake
-                        setIsInRecovery(false);
-                        setAccumulatedLoss(0);
-                        setCurrentStake(parseFloat(initialStake) || 0.5);
-                    } else {
-                        setAccumulatedLoss(newAccLoss);
+                    const p = Number(settled.profit || 0);
+                    totalBatchProfit += p;
+                    if (settled.status === 'lost' || p < 0) {
+                        batchWon = false;
                     }
                 }
-            } else {
-                setLossesCount(l => l + count);
-                addLogEntry(symbol, stratType, contractType, barrier, stakeAmount * count, 'LOSS', roundedProfit);
 
-                // Single Loss -> Trigger Over/Under Recovery
-                if (autoRecoveryMode) {
-                    setIsInRecovery(true);
-                    const lost = Math.abs(roundedProfit);
-                    setAccumulatedLoss(al => al + lost);
+                // Post-trade handling
+                const roundedProfit = Number(totalBatchProfit.toFixed(2));
+                setSessionProfit(sp => Number((sp + roundedProfit).toFixed(2)));
 
-                    const mult = parseFloat(martingale) || 2.6;
-                    const nextStake = Number((stakeAmount * mult).toFixed(2));
-                    setCurrentStake(nextStake);
+                if (batchWon) {
+                    setWinsCount(w => w + count);
+                    addLogEntry(symbol, stratType, contractType, barrier, stakeAmount * count, 'WIN', roundedProfit);
+
+                    // Recovery logic check
+                    if (isRecoveryTrade || isInRecovery) {
+                        const newAccLoss = accumulatedLoss - roundedProfit;
+                        if (newAccLoss <= 0) {
+                            // Fully recovered! Revert to Differs with original base stake
+                            setIsInRecovery(false);
+                            setAccumulatedLoss(0);
+                            setCurrentStake(parseFloat(initialStake) || 0.5);
+                        } else {
+                            setAccumulatedLoss(newAccLoss);
+                        }
+                    }
+                } else {
+                    setLossesCount(l => l + count);
+                    addLogEntry(symbol, stratType, contractType, barrier, stakeAmount * count, 'LOSS', roundedProfit);
+
+                    // Single Loss -> Trigger Over/Under Recovery
+                    if (autoRecoveryMode) {
+                        setIsInRecovery(true);
+                        const lost = Math.abs(roundedProfit);
+                        setAccumulatedLoss(al => al + lost);
+
+                        const mult = parseFloat(martingale) || 2.6;
+                        const nextStake = Number((stakeAmount * mult).toFixed(2));
+                        setCurrentStake(nextStake);
+                    }
                 }
-            }
 
-            setConsecutiveRuns(r => r + 1);
-        } catch (err) {
-            console.error('[PovertyHunter] Order execution error:', err);
-            addLogEntry(symbol, stratType, contractType, barrier, stakeAmount, 'LOSS', 0);
-        } finally {
-            executionLockRef.current = false;
-        }
-    }, [
-        tickDuration,
-        bulkCount,
-        currency,
-        pushContractToDrawer,
-        addLogEntry,
-        isInRecovery,
-        accumulatedLoss,
-        initialStake,
-        autoRecoveryMode,
-        martingale,
-    ]);
+                setConsecutiveRuns(r => r + 1);
+            } catch (err) {
+                console.error('[PovertyHunter] Order execution error:', err);
+                addLogEntry(symbol, stratType, contractType, barrier, stakeAmount, 'LOSS', 0);
+            } finally {
+                executionLockRef.current = false;
+            }
+        },
+        [
+            tickDuration,
+            bulkCount,
+            currency,
+            pushContractToDrawer,
+            addLogEntry,
+            isInRecovery,
+            accumulatedLoss,
+            initialStake,
+            autoRecoveryMode,
+            martingale,
+        ]
+    );
 
     // ── Automated Trading State Machine Tick Listener ──
     useEffect(() => {
@@ -715,7 +744,7 @@ const PovertyHunter: React.FC = observer(() => {
 
     // ── Handlers ──
     const handleStartBot = () => {
-        const baseStk = parseFloat(initialStake) || 0.50;
+        const baseStk = parseFloat(initialStake) || 0.5;
         setCurrentStake(baseStk);
         setConsecutiveRuns(0);
         setIsInRecovery(false);
@@ -799,53 +828,76 @@ const PovertyHunter: React.FC = observer(() => {
     const winRate = totalTrades > 0 ? ((winsCount / totalTrades) * 100).toFixed(1) : '0.0';
 
     return (
-        <div className="poverty-hunter">
+        <div className='poverty-hunter'>
             {/* ── Top Hero Header ── */}
-            <div className="poverty-hunter__header">
-                <div className="poverty-hunter__header-title-box">
-                    <div className="ph-icon-badge">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="22" y1="12" x2="18" y2="12" />
-                            <line x1="6" y1="12" x2="2" y2="12" />
-                            <line x1="12" y1="6" x2="12" y2="2" />
-                            <line x1="12" y1="22" x2="12" y2="18" />
-                            <circle cx="12" cy="12" r="3" />
+            <div className='poverty-hunter__header'>
+                <div className='poverty-hunter__header-title-box'>
+                    <div className='ph-icon-badge'>
+                        <svg
+                            width='28'
+                            height='28'
+                            viewBox='0 0 24 24'
+                            fill='none'
+                            stroke='currentColor'
+                            strokeWidth='2.2'
+                        >
+                            <circle cx='12' cy='12' r='10' />
+                            <line x1='22' y1='12' x2='18' y2='12' />
+                            <line x1='6' y1='12' x2='2' y2='12' />
+                            <line x1='12' y1='6' x2='12' y2='2' />
+                            <line x1='12' y1='22' x2='12' y2='18' />
+                            <circle cx='12' cy='12' r='3' />
                         </svg>
                     </div>
-                    <div className="ph-title-text">
+                    <div className='ph-title-text'>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', flexWrap: 'wrap' }}>
                             <h1>POVERTY HUNTER</h1>
-                            <span className={`ph-status-chip ph-status-chip--${botState === 'TRADING' ? (isInRecovery ? 'recovery' : 'hunting') : botState.toLowerCase()}`}>
-                                {botState === 'TRADING' ? (isInRecovery ? '⚡ RECOVERY ACTIVE' : '🎯 HUNTING LIVE') : botState === 'PAUSED' ? '⏸ PAUSED' : '● SYSTEM READY'}
+                            <span
+                                className={`ph-status-chip ph-status-chip--${botState === 'TRADING' ? (isInRecovery ? 'recovery' : 'hunting') : botState.toLowerCase()}`}
+                            >
+                                {botState === 'TRADING'
+                                    ? isInRecovery
+                                        ? '⚡ RECOVERY ACTIVE'
+                                        : '🎯 HUNTING LIVE'
+                                    : botState === 'PAUSED'
+                                      ? '⏸ PAUSED'
+                                      : '● SYSTEM READY'}
                             </span>
                         </div>
                         <span>High-Precision Synthetic Multi-Scanner &amp; Automated Differs / Over-Under Engine</span>
                     </div>
                 </div>
 
-                <div className="poverty-hunter__header-actions">
-                    <div className="ph-metric-pill">
-                        <span className="ph-metric-pill__label">Session P/L</span>
-                        <span className={`ph-metric-pill__val ${sessionProfit > 0 ? 'ph-metric-pill__val--profit' : sessionProfit < 0 ? 'ph-metric-pill__val--loss' : ''}`}>
+                <div className='poverty-hunter__header-actions'>
+                    <div className='ph-metric-pill'>
+                        <span className='ph-metric-pill__label'>Session P/L</span>
+                        <span
+                            className={`ph-metric-pill__val ${sessionProfit > 0 ? 'ph-metric-pill__val--profit' : sessionProfit < 0 ? 'ph-metric-pill__val--loss' : ''}`}
+                        >
                             {sessionProfit >= 0 ? `+${sessionProfit.toFixed(2)}` : sessionProfit.toFixed(2)} {currency}
                         </span>
                     </div>
-                    <div className="ph-metric-pill">
-                        <span className="ph-metric-pill__label">Win Rate</span>
-                        <span className="ph-metric-pill__val" style={{ color: Number(winRate) >= 60 ? '#10b981' : Number(winRate) > 0 ? '#f59e0b' : '#94a3b8' }}>
+                    <div className='ph-metric-pill'>
+                        <span className='ph-metric-pill__label'>Win Rate</span>
+                        <span
+                            className='ph-metric-pill__val'
+                            style={{
+                                color: Number(winRate) >= 60 ? '#10b981' : Number(winRate) > 0 ? '#f59e0b' : '#94a3b8',
+                            }}
+                        >
                             {winRate}%
                         </span>
                     </div>
-                    <div className="ph-metric-pill">
-                        <span className="ph-metric-pill__label">Wins / Losses</span>
-                        <span className="ph-metric-pill__val">
-                            <span style={{ color: '#10b981' }}>{winsCount}W</span> / <span style={{ color: '#ef4444' }}>{lossesCount}L</span>
+                    <div className='ph-metric-pill'>
+                        <span className='ph-metric-pill__label'>Wins / Losses</span>
+                        <span className='ph-metric-pill__val'>
+                            <span style={{ color: '#10b981' }}>{winsCount}W</span> /{' '}
+                            <span style={{ color: '#ef4444' }}>{lossesCount}L</span>
                         </span>
                     </div>
-                    <div className="ph-metric-pill">
-                        <span className="ph-metric-pill__label">Active Stake</span>
-                        <span className="ph-metric-pill__val ph-metric-pill__val--highlight">
+                    <div className='ph-metric-pill'>
+                        <span className='ph-metric-pill__label'>Active Stake</span>
+                        <span className='ph-metric-pill__val ph-metric-pill__val--highlight'>
                             {currentStake.toFixed(2)} {currency}
                         </span>
                     </div>
@@ -853,8 +905,8 @@ const PovertyHunter: React.FC = observer(() => {
             </div>
 
             {/* ── Market Selector & Wide View Ribbon ── */}
-            <div className="poverty-hunter__market-bar">
-                <div className="ph-select-group">
+            <div className='poverty-hunter__market-bar'>
+                <div className='ph-select-group'>
                     <label>Active Market:</label>
                     <select value={selectedSymbol} onChange={e => setSelectedSymbol(e.target.value)}>
                         {MARKETS.map(m => (
@@ -865,11 +917,11 @@ const PovertyHunter: React.FC = observer(() => {
                     </select>
                 </div>
 
-                <div className="ph-actions-cluster">
+                <div className='ph-actions-cluster'>
                     <button
                         className={`ph-toggle-button ${!sidebarCollapsed ? 'ph-toggle-button--active' : ''}`}
                         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                        title="Toggle market list sidebar"
+                        title='Toggle market list sidebar'
                     >
                         📋 {sidebarCollapsed ? 'Show Markets Sidebar' : 'Hide Sidebar'}
                     </button>
@@ -877,7 +929,7 @@ const PovertyHunter: React.FC = observer(() => {
                     <button
                         className={`ph-toggle-button ${scanAllMarkets ? 'ph-toggle-button--active' : ''}`}
                         onClick={() => setScanAllMarkets(!scanAllMarkets)}
-                        title="Scan all derived synthetic indices simultaneously"
+                        title='Scan all derived synthetic indices simultaneously'
                     >
                         ⚡ Scan All ({scanAllMarkets ? 'ON' : 'OFF'})
                     </button>
@@ -892,7 +944,7 @@ const PovertyHunter: React.FC = observer(() => {
                     <button
                         className={`ph-toggle-button ${autoSwitchMarkets ? 'ph-toggle-button--active' : ''}`}
                         onClick={() => setAutoSwitchMarkets(!autoSwitchMarkets)}
-                        title="Automatically switch to best performing market after runs"
+                        title='Automatically switch to best performing market after runs'
                     >
                         🔄 Auto-Switch ({autoSwitchMarkets ? 'ON' : 'OFF'})
                     </button>
@@ -901,7 +953,7 @@ const PovertyHunter: React.FC = observer(() => {
 
             {/* ── Expandable Wide View Grid ── */}
             {showWideView && (
-                <div className="poverty-hunter__wide-view">
+                <div className='poverty-hunter__wide-view'>
                     {MARKETS.map(m => {
                         const mState = marketsDataRef.current.get(m.symbol);
                         const digits = mState?.digits || [];
@@ -919,14 +971,16 @@ const PovertyHunter: React.FC = observer(() => {
                                     setShowWideView(false);
                                 }}
                             >
-                                <div className="ph-wide-card__header">
-                                    <span className="name">{m.label}</span>
-                                    <span className={`digit-badge digit-badge--${(mState?.lastDigit ?? 0) < 5 ? 'under' : 'over'}`}>
+                                <div className='ph-wide-card__header'>
+                                    <span className='name'>{m.label}</span>
+                                    <span
+                                        className={`digit-badge digit-badge--${(mState?.lastDigit ?? 0) < 5 ? 'under' : 'over'}`}
+                                    >
                                         {mState?.lastDigit ?? '—'}
                                     </span>
                                 </div>
-                                <div className="ph-wide-card__price">Price: {mState?.currentPrice ?? '0.00'}</div>
-                                <div className="ph-wide-card__stats-row">
+                                <div className='ph-wide-card__price'>Price: {mState?.currentPrice ?? '0.00'}</div>
+                                <div className='ph-wide-card__stats-row'>
                                     <span style={{ color: '#10b981' }}>Under (0-4): {u}</span>
                                     <span style={{ color: '#60a5fa' }}>Over (5-9): {o}</span>
                                     <span style={{ color: '#f5c542' }}>Best: {u >= o ? 'UNDER' : 'OVER'}</span>
@@ -941,12 +995,12 @@ const PovertyHunter: React.FC = observer(() => {
             <div className={`poverty-hunter__body ${sidebarCollapsed ? 'poverty-hunter__body--collapsed' : ''}`}>
                 {/* Left Sidebar / Markets List */}
                 {!sidebarCollapsed && (
-                    <div className="poverty-hunter__sidebar">
-                        <div className="poverty-hunter__sidebar-header">
+                    <div className='poverty-hunter__sidebar'>
+                        <div className='poverty-hunter__sidebar-header'>
                             <h3>DERIVED MARKETS</h3>
-                            <span className="badge">LIVE FEED</span>
+                            <span className='badge'>LIVE FEED</span>
                         </div>
-                        <div className="poverty-hunter__sidebar-list">
+                        <div className='poverty-hunter__sidebar-list'>
                             {MARKETS.map(m => {
                                 const mState = marketsDataRef.current.get(m.symbol);
                                 const digits = mState?.digits || [];
@@ -962,21 +1016,25 @@ const PovertyHunter: React.FC = observer(() => {
                                         className={`ph-market-card ${isSelected ? 'ph-market-card--active' : ''}`}
                                         onClick={() => setSelectedSymbol(m.symbol)}
                                     >
-                                        <div className="ph-market-card__top">
-                                            <span className="symbol-name">{m.label}</span>
-                                            <span className={`digit-pill digit-pill--${lastDigit < 5 ? 'under' : 'over'}`}>
+                                        <div className='ph-market-card__top'>
+                                            <span className='symbol-name'>{m.label}</span>
+                                            <span
+                                                className={`digit-pill digit-pill--${lastDigit < 5 ? 'under' : 'over'}`}
+                                            >
                                                 {lastDigit}
                                             </span>
                                         </div>
-                                        <div className="ph-market-card__mid">
-                                            <span className="price">{mState?.currentPrice ?? '0.00'}</span>
+                                        <div className='ph-market-card__mid'>
+                                            <span className='price'>{mState?.currentPrice ?? '0.00'}</span>
                                             <span className={`bias ${u >= o ? 'bias--under' : 'bias--over'}`}>
                                                 {u >= o ? `Under ${u}` : `Over ${o}`}
                                             </span>
                                         </div>
-                                        <div className="ph-market-card__bot">
+                                        <div className='ph-market-card__bot'>
                                             <span>Differs Pick:</span>
-                                            <span className="rec-differ">Digit {((mState?.lastDigit ?? 3) + 4) % 6 + 2}</span>
+                                            <span className='rec-differ'>
+                                                Digit {(((mState?.lastDigit ?? 3) + 4) % 6) + 2}
+                                            </span>
                                         </div>
                                     </div>
                                 );
@@ -986,60 +1044,70 @@ const PovertyHunter: React.FC = observer(() => {
                 )}
 
                 {/* Right Workspace */}
-                <div className="poverty-hunter__workspace">
+                <div className='poverty-hunter__workspace'>
                     {/* Live Chart & Last Digit Banner */}
-                    <div className="poverty-hunter__chart-card">
-                        <div className="ph-chart-top">
-                            <div className="ph-price-badge-group">
-                                <div className="ph-current-price-box">
-                                    <span className="label">LIVE QUOTE ({currentMarket.symbol})</span>
-                                    <div className="price-row">
-                                        <span className="price">{currentMarket.currentPrice}</span>
-                                        <span className="live-dot" />
+                    <div className='poverty-hunter__chart-card'>
+                        <div className='ph-chart-top'>
+                            <div className='ph-price-badge-group'>
+                                <div className='ph-current-price-box'>
+                                    <span className='label'>LIVE QUOTE ({currentMarket.symbol})</span>
+                                    <div className='price-row'>
+                                        <span className='price'>{currentMarket.currentPrice}</span>
+                                        <span className='live-dot' />
                                     </div>
                                 </div>
-                                <div className={`ph-last-digit-big ph-last-digit-big--${currentMarket.lastDigit < 5 ? 'under' : 'over'}`}>
-                                    <span className="digit-label">LAST DIGIT</span>
-                                    <span className="digit-val">{currentMarket.lastDigit}</span>
-                                    <span className="digit-sub">
+                                <div
+                                    className={`ph-last-digit-big ph-last-digit-big--${currentMarket.lastDigit < 5 ? 'under' : 'over'}`}
+                                >
+                                    <span className='digit-label'>LAST DIGIT</span>
+                                    <span className='digit-val'>{currentMarket.lastDigit}</span>
+                                    <span className='digit-sub'>
                                         {currentMarket.lastDigit < 5 ? 'Under (0–4)' : 'Over (5–9)'}
                                     </span>
                                 </div>
                             </div>
 
-                            <div className="ph-chart-legend">
-                                <div className="legend-item">
-                                    <span className="dot dot--curve" />
+                            <div className='ph-chart-legend'>
+                                <div className='legend-item'>
+                                    <span className='dot dot--curve' />
                                     <span>50-Ticks Spline</span>
                                 </div>
-                                <div className="legend-item">
-                                    <span className="dot dot--under" />
+                                <div className='legend-item'>
+                                    <span className='dot dot--under' />
                                     <span>Under 0–4</span>
                                 </div>
-                                <div className="legend-item">
-                                    <span className="dot dot--over" />
+                                <div className='legend-item'>
+                                    <span className='dot dot--over' />
                                     <span>Over 5–9</span>
                                 </div>
-                                <div className="legend-item">
-                                    <span className="dot dot--curr" />
+                                <div className='legend-item'>
+                                    <span className='dot dot--curr' />
                                     <span>Active Spot</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* SVG Spline Chart */}
-                        <div className="ph-svg-chart-container">
+                        <div className='ph-svg-chart-container'>
                             {chartPoints.length < 2 ? (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        height: '100%',
+                                        color: '#94a3b8',
+                                    }}
+                                >
                                     Streaming real-time ticks...
                                 </div>
                             ) : (
-                                <svg viewBox={`0 0 ${chartWidth} 175`} preserveAspectRatio="none">
+                                <svg viewBox={`0 0 ${chartWidth} 175`} preserveAspectRatio='none'>
                                     <defs>
-                                        <linearGradient id="ph-chart-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stopColor="#f5c542" />
-                                            <stop offset="50%" stopColor="#ff8c42" />
-                                            <stop offset="100%" stopColor="#10b981" />
+                                        <linearGradient id='ph-chart-grad' x1='0%' y1='0%' x2='100%' y2='0%'>
+                                            <stop offset='0%' stopColor='#f5c542' />
+                                            <stop offset='50%' stopColor='#ff8c42' />
+                                            <stop offset='100%' stopColor='#10b981' />
                                         </linearGradient>
                                     </defs>
 
@@ -1048,8 +1116,16 @@ const PovertyHunter: React.FC = observer(() => {
                                         const y = 28 + (175 - 50) - (d / 9) * (175 - 50);
                                         return (
                                             <g key={d}>
-                                                <line x1="22" y1={y} x2={chartWidth - 22} y2={y} className="ph-chart-grid-line" />
-                                                <text x="12" y={y + 3} className="ph-chart-label">{d}</text>
+                                                <line
+                                                    x1='22'
+                                                    y1={y}
+                                                    x2={chartWidth - 22}
+                                                    y2={y}
+                                                    className='ph-chart-grid-line'
+                                                />
+                                                <text x='12' y={y + 3} className='ph-chart-label'>
+                                                    {d}
+                                                </text>
                                             </g>
                                         );
                                     })}
@@ -1057,11 +1133,19 @@ const PovertyHunter: React.FC = observer(() => {
                                     {/* Middle Under/Over Partition Line (at 4.5) */}
                                     {(() => {
                                         const midY = 28 + (175 - 50) - (4.5 / 9) * (175 - 50);
-                                        return <line x1="22" y1={midY} x2={chartWidth - 22} y2={midY} className="ph-chart-split-line" />;
+                                        return (
+                                            <line
+                                                x1='22'
+                                                y1={midY}
+                                                x2={chartWidth - 22}
+                                                y2={midY}
+                                                className='ph-chart-split-line'
+                                            />
+                                        );
                                     })()}
 
                                     {/* Smooth Spline Curve */}
-                                    <path d={splinePath} className="ph-chart-curve" />
+                                    <path d={splinePath} className='ph-chart-curve' />
 
                                     {/* Data Points and Clear Digit Text Numbers */}
                                     {chartPoints.map((pt, i) => {
@@ -1074,10 +1158,10 @@ const PovertyHunter: React.FC = observer(() => {
                                                     <circle
                                                         cx={pt.x}
                                                         cy={pt.y}
-                                                        className="ph-pulse-ring"
-                                                        fill="none"
-                                                        stroke="#f5c542"
-                                                        strokeWidth="2"
+                                                        className='ph-pulse-ring'
+                                                        fill='none'
+                                                        stroke='#f5c542'
+                                                        strokeWidth='2'
                                                     />
                                                 )}
 
@@ -1108,7 +1192,7 @@ const PovertyHunter: React.FC = observer(() => {
                     </div>
 
                     {/* Digits 0-9 Statistical Grid (Fainted for 0,1 & 8,9) */}
-                    <div className="poverty-hunter__digits-grid">
+                    <div className='poverty-hunter__digits-grid'>
                         {digitStats.map(stat => {
                             const isDifferPick = stat.digit === differTargetDigit;
                             return (
@@ -1116,18 +1200,30 @@ const PovertyHunter: React.FC = observer(() => {
                                     key={stat.digit}
                                     className={`ph-digit-stat-card ${stat.isExcluded ? 'ph-digit-stat-card--excluded' : ''} ${isDifferPick ? 'ph-digit-stat-card--differ-pick' : ''}`}
                                 >
-                                    <span className="digit-num">{stat.digit}</span>
-                                    <span className="digit-pct">{stat.percentage.toFixed(1)}%</span>
-                                    <span className="digit-count">{stat.count} ticks</span>
-                                    <div className="digit-power-bar">
-                                        <div className="fill" style={{ width: `${Math.min(100, stat.percentage * 4)}%` }} />
+                                    <span className='digit-num'>{stat.digit}</span>
+                                    <span className='digit-pct'>{stat.percentage.toFixed(1)}%</span>
+                                    <span className='digit-count'>{stat.count} ticks</span>
+                                    <div className='digit-power-bar'>
+                                        <div
+                                            className='fill'
+                                            style={{ width: `${Math.min(100, stat.percentage * 4)}%` }}
+                                        />
                                     </div>
-                                    <span className={`rank-tag ${stat.rank === 1 ? 'rank-tag--most' : stat.rank === 2 ? 'rank-tag--second' : stat.rank === 10 ? 'rank-tag--least' : ''}`}>
+                                    <span
+                                        className={`rank-tag ${stat.rank === 1 ? 'rank-tag--most' : stat.rank === 2 ? 'rank-tag--second' : stat.rank === 10 ? 'rank-tag--least' : ''}`}
+                                    >
                                         Rank #{stat.rank}
                                     </span>
-                                    {stat.isExcluded && <span className="ph-excluded-badge">Excluded Edge</span>}
+                                    {stat.isExcluded && <span className='ph-excluded-badge'>Excluded Edge</span>}
                                     {isDifferPick && (
-                                        <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 800, marginTop: '0.3rem' }}>
+                                        <span
+                                            style={{
+                                                fontSize: '0.85rem',
+                                                color: '#10b981',
+                                                fontWeight: 800,
+                                                marginTop: '0.3rem',
+                                            }}
+                                        >
                                             🎯 DIFFERS PICK
                                         </span>
                                     )}
@@ -1137,68 +1233,73 @@ const PovertyHunter: React.FC = observer(() => {
                     </div>
 
                     {/* Rankings Strip & Excluded Digits Legend */}
-                    <div className="poverty-hunter__ranks-strip">
-                        <div className="ph-rank-item">
-                            <span className="rank-pill rank-pill--most">Most Appearing</span>
-                            <span className="rank-digit">{mostAppearing ?? '—'}</span>
+                    <div className='poverty-hunter__ranks-strip'>
+                        <div className='ph-rank-item'>
+                            <span className='rank-pill rank-pill--most'>Most Appearing</span>
+                            <span className='rank-digit'>{mostAppearing ?? '—'}</span>
                         </div>
-                        <div className="ph-rank-item">
-                            <span className="rank-pill rank-pill--second">2nd Highest</span>
-                            <span className="rank-digit">{secondHighest ?? '—'}</span>
+                        <div className='ph-rank-item'>
+                            <span className='rank-pill rank-pill--second'>2nd Highest</span>
+                            <span className='rank-digit'>{secondHighest ?? '—'}</span>
                         </div>
-                        <div className="ph-rank-item">
-                            <span className="rank-pill rank-pill--least">Least Appearing</span>
-                            <span className="rank-digit">{leastAppearing ?? '—'}</span>
+                        <div className='ph-rank-item'>
+                            <span className='rank-pill rank-pill--least'>Least Appearing</span>
+                            <span className='rank-digit'>{leastAppearing ?? '—'}</span>
                         </div>
-                        <div className="ph-excluded-notice">
+                        <div className='ph-excluded-notice'>
                             <strong>Edge Digits 0, 1 & 8, 9:</strong> Excluded from Differs calculation (Fainted)
                         </div>
                     </div>
 
                     {/* Two Strategic Engines: Differs Engine & Over/Under Recovery Analytics */}
-                    <div className="poverty-hunter__strategy-grid">
+                    <div className='poverty-hunter__strategy-grid'>
                         {/* Differs Primary Strategy Card */}
-                        <div className="ph-card-box">
-                            <div className="ph-card-box__header">
+                        <div className='ph-card-box'>
+                            <div className='ph-card-box__header'>
                                 <h3>
                                     <span>🎯</span> Differs Primary Strategy
                                 </h3>
-                                <span className="badge badge--differs">AUTOMATED (Digits 2–7)</span>
+                                <span className='badge badge--differs'>AUTOMATED (Digits 2–7)</span>
                             </div>
 
-                            <div className="ph-differ-details">
-                                <div className="ph-pick-banner">
-                                    <div className="label-group">
-                                        <span className="subtitle">AI AUTO-SELECTED PREDICTION</span>
-                                        <span className="title">DIFFER DIGIT: {differTargetDigit ?? '—'}</span>
+                            <div className='ph-differ-details'>
+                                <div className='ph-pick-banner'>
+                                    <div className='label-group'>
+                                        <span className='subtitle'>AI AUTO-SELECTED PREDICTION</span>
+                                        <span className='title'>DIFFER DIGIT: {differTargetDigit ?? '—'}</span>
                                     </div>
-                                    <div className="digit-circle">{differTargetDigit ?? '—'}</div>
+                                    <div className='digit-circle'>{differTargetDigit ?? '—'}</div>
                                 </div>
 
-                                <div className="ph-conditions-list">
-                                    <div className="condition-row">
+                                <div className='ph-conditions-list'>
+                                    <div className='condition-row'>
                                         <span>Candidate Range (2–7 &amp; Non-Edge):</span>
-                                        <span className="status status--met">✓ VERIFIED</span>
+                                        <span className='status status--met'>✓ VERIFIED</span>
                                     </div>
-                                    <div className="condition-row">
+                                    <div className='condition-row'>
                                         <span>Frequency in Last 60 Ticks (&lt; 10%):</span>
-                                        <span className="status status--met">
-                                            {digitStats.find(s => s.digit === differTargetDigit)?.percentage.toFixed(1)}% (Pass)
+                                        <span className='status status--met'>
+                                            {digitStats.find(s => s.digit === differTargetDigit)?.percentage.toFixed(1)}
+                                            % (Pass)
                                         </span>
                                     </div>
-                                    <div className="condition-row">
+                                    <div className='condition-row'>
                                         <span>Not Increasing in Power:</span>
-                                        <span className="status status--met">✓ PASS</span>
+                                        <span className='status status--met'>✓ PASS</span>
                                     </div>
-                                    <div className="condition-row">
+                                    <div className='condition-row'>
                                         <span>Appeared ≤ 3 Times in Last 15 Ticks:</span>
-                                        <span className="status status--met">✓ PASS</span>
+                                        <span className='status status--met'>✓ PASS</span>
                                     </div>
-                                    <div className="condition-row">
+                                    <div className='condition-row'>
                                         <span>Entry Confirmation Status:</span>
-                                        <span className={`status ${confirmationTicksRemaining === 0 ? 'status--met' : 'status--waiting'}`}>
+                                        <span
+                                            className={`status ${confirmationTicksRemaining === 0 ? 'status--met' : 'status--waiting'}`}
+                                        >
                                             {botState === 'TRADING'
-                                                ? (waitingForAppear ? 'Waiting for digit to appear' : `Confirming 3 ticks (${confirmationTicksRemaining} left)`)
+                                                ? waitingForAppear
+                                                    ? 'Waiting for digit to appear'
+                                                    : `Confirming 3 ticks (${confirmationTicksRemaining} left)`
                                                 : 'Ready'}
                                         </span>
                                     </div>
@@ -1207,52 +1308,60 @@ const PovertyHunter: React.FC = observer(() => {
                         </div>
 
                         {/* Over / Under Recovery & Analytics Card */}
-                        <div className="ph-card-box">
-                            <div className="ph-card-box__header">
+                        <div className='ph-card-box'>
+                            <div className='ph-card-box__header'>
                                 <h3>
                                     <span>🛡️</span> Over / Under Recovery Engine
                                 </h3>
-                                <span className="badge badge--recovery">
+                                <span className='badge badge--recovery'>
                                     {isInRecovery ? '⚡ RECOVERY ACTIVE' : 'HEDGING STANDBY'}
                                 </span>
                             </div>
 
-                            <div className="ph-ou-details">
+                            <div className='ph-ou-details'>
                                 {/* Under 0-4 vs Over 5-9 */}
-                                <div className="ph-split-stat">
-                                    <div className="ph-split-header">
-                                        <span className="under-side">Under 0–4: {ouAnalysis.under04} ({ouAnalysis.under04Pct}%)</span>
-                                        <span className="over-side">Over 5–9: {ouAnalysis.over59} ({ouAnalysis.over59Pct}%)</span>
+                                <div className='ph-split-stat'>
+                                    <div className='ph-split-header'>
+                                        <span className='under-side'>
+                                            Under 0–4: {ouAnalysis.under04} ({ouAnalysis.under04Pct}%)
+                                        </span>
+                                        <span className='over-side'>
+                                            Over 5–9: {ouAnalysis.over59} ({ouAnalysis.over59Pct}%)
+                                        </span>
                                     </div>
-                                    <div className="ph-split-bar">
-                                        <div className="under-fill" style={{ width: `${ouAnalysis.under04Pct}%` }} />
-                                        <div className="over-fill" style={{ width: `${ouAnalysis.over59Pct}%` }} />
+                                    <div className='ph-split-bar'>
+                                        <div className='under-fill' style={{ width: `${ouAnalysis.under04Pct}%` }} />
+                                        <div className='over-fill' style={{ width: `${ouAnalysis.over59Pct}%` }} />
                                     </div>
                                 </div>
 
                                 {/* Under 0-5 vs Over 4-9 */}
-                                <div className="ph-split-stat">
-                                    <div className="ph-split-header">
-                                        <span className="under-side">Under 0–5: {ouAnalysis.under05} ({ouAnalysis.under05Pct}%)</span>
-                                        <span className="over-side">Over 4–9: {ouAnalysis.over49} ({ouAnalysis.over49Pct}%)</span>
+                                <div className='ph-split-stat'>
+                                    <div className='ph-split-header'>
+                                        <span className='under-side'>
+                                            Under 0–5: {ouAnalysis.under05} ({ouAnalysis.under05Pct}%)
+                                        </span>
+                                        <span className='over-side'>
+                                            Over 4–9: {ouAnalysis.over49} ({ouAnalysis.over49Pct}%)
+                                        </span>
                                     </div>
-                                    <div className="ph-split-bar">
-                                        <div className="under-fill" style={{ width: `${ouAnalysis.under05Pct}%` }} />
-                                        <div className="over-fill" style={{ width: `${ouAnalysis.over49Pct}%` }} />
+                                    <div className='ph-split-bar'>
+                                        <div className='under-fill' style={{ width: `${ouAnalysis.under05Pct}%` }} />
+                                        <div className='over-fill' style={{ width: `${ouAnalysis.over49Pct}%` }} />
                                     </div>
                                 </div>
 
                                 {/* Glowing Entry Digit Card */}
-                                <div className="ph-glowing-entry-card">
-                                    <div className="entry-box entry-box--under">
-                                        <span className="tag">HIGHEST UNDER ENTRY</span>
-                                        <span className="digit-glowing">{ouAnalysis.highestUnderEntryDigit}</span>
-                                        <span className="desc">Prediction Under 6 / 8</span>
+                                <div className='ph-glowing-entry-card'>
+                                    <div className='entry-box entry-box--under'>
+                                        <span className='tag'>HIGHEST UNDER ENTRY</span>
+                                        <span className='digit-glowing'>{ouAnalysis.highestUnderEntryDigit}</span>
+                                        <span className='desc'>Prediction Under 6 / 8</span>
                                     </div>
-                                    <div className="entry-box entry-box--over">
-                                        <span className="tag">HIGHEST OVER ENTRY</span>
-                                        <span className="digit-glowing">{ouAnalysis.highestOverEntryDigit}</span>
-                                        <span className="desc">Prediction Over 3 / 2</span>
+                                    <div className='entry-box entry-box--over'>
+                                        <span className='tag'>HIGHEST OVER ENTRY</span>
+                                        <span className='digit-glowing'>{ouAnalysis.highestOverEntryDigit}</span>
+                                        <span className='desc'>Prediction Over 3 / 2</span>
                                     </div>
                                 </div>
                             </div>
@@ -1260,12 +1369,12 @@ const PovertyHunter: React.FC = observer(() => {
                     </div>
 
                     {/* ── Trading Controls & Risk Management ── */}
-                    <div className="poverty-hunter__controls-grid">
-                        <div className="ph-input-group">
+                    <div className='poverty-hunter__controls-grid'>
+                        <div className='ph-input-group'>
                             <label>Base Stake ({currency})</label>
                             <input
-                                type="number"
-                                step="0.1"
+                                type='number'
+                                step='0.1'
                                 value={initialStake}
                                 onChange={e => {
                                     setInitialStake(e.target.value);
@@ -1273,123 +1382,140 @@ const PovertyHunter: React.FC = observer(() => {
                                 }}
                             />
                         </div>
-                        <div className="ph-input-group">
+                        <div className='ph-input-group'>
                             <label>Martingale (Recovery)</label>
                             <input
-                                type="number"
-                                step="0.1"
+                                type='number'
+                                step='0.1'
                                 value={martingale}
                                 onChange={e => setMartingale(e.target.value)}
                             />
                         </div>
-                        <div className="ph-input-group">
+                        <div className='ph-input-group'>
                             <label>Take Profit ({currency})</label>
                             <input
-                                type="number"
-                                step="1"
+                                type='number'
+                                step='1'
                                 value={takeProfit}
                                 onChange={e => setTakeProfit(e.target.value)}
                             />
                         </div>
-                        <div className="ph-input-group">
+                        <div className='ph-input-group'>
                             <label>Stop Loss ({currency})</label>
                             <input
-                                type="number"
-                                step="1"
+                                type='number'
+                                step='1'
                                 value={stopLoss}
                                 onChange={e => setStopLoss(e.target.value)}
                             />
                         </div>
-                        <div className="ph-input-group">
+                        <div className='ph-input-group'>
                             <label>Ticks Duration</label>
                             <input
-                                type="number"
-                                min="1"
-                                max="10"
+                                type='number'
+                                min='1'
+                                max='10'
                                 value={tickDuration}
                                 onChange={e => setTickDuration(e.target.value)}
                             />
                         </div>
-                        <div className="ph-input-group">
+                        <div className='ph-input-group'>
                             <label>Bulk Purchases (Batch)</label>
                             <input
-                                type="number"
-                                min="1"
-                                max="10"
+                                type='number'
+                                min='1'
+                                max='10'
                                 value={bulkCount}
                                 onChange={e => setBulkCount(e.target.value)}
                             />
                         </div>
-                        <div className="ph-input-group">
+                        <div className='ph-input-group'>
                             <label>Max Runs Before Check</label>
                             <input
-                                type="number"
-                                min="1"
-                                max="50"
+                                type='number'
+                                min='1'
+                                max='50'
                                 value={maxRunsBeforeCheck}
                                 onChange={e => setMaxRunsBeforeCheck(Math.max(1, parseInt(e.target.value, 10) || 7))}
                             />
                         </div>
-                        <div className="ph-input-group">
+                        <div className='ph-input-group'>
                             <label>Auto-Recovery (Hedging)</label>
                             <select
                                 value={autoRecoveryMode ? 'true' : 'false'}
                                 onChange={e => setAutoRecoveryMode(e.target.value === 'true')}
                             >
-                                <option value="true">Enabled (Over/Under)</option>
-                                <option value="false">Disabled (Differs Only)</option>
+                                <option value='true'>Enabled (Over/Under)</option>
+                                <option value='false'>Disabled (Differs Only)</option>
                             </select>
                         </div>
                     </div>
 
                     {/* ── Action Buttons & Status Ribbon ── */}
-                    <div className="poverty-hunter__actions-bar">
-                        <div className="ph-status-indicator">
-                            <span className={`pulse-dot pulse-dot--${botState === 'TRADING' ? 'running' : botState === 'PAUSED' ? 'paused' : 'idle'}`} />
-                            <span className="status-text">
-                                STATUS: {botState === 'TRADING'
-                                    ? (isInRecovery ? '🚨 RECOVERY TRADING (Over/Under)' : '🎯 HUNTING (Differs Automation)')
-                                    : botState === 'PAUSED' ? '⏸️ PAUSED' : 'IDLE / READY'}
+                    <div className='poverty-hunter__actions-bar'>
+                        <div className='ph-status-indicator'>
+                            <span
+                                className={`pulse-dot pulse-dot--${botState === 'TRADING' ? 'running' : botState === 'PAUSED' ? 'paused' : 'idle'}`}
+                            />
+                            <span className='status-text'>
+                                STATUS:{' '}
+                                {botState === 'TRADING'
+                                    ? isInRecovery
+                                        ? '🚨 RECOVERY TRADING (Over/Under)'
+                                        : '🎯 HUNTING (Differs Automation)'
+                                    : botState === 'PAUSED'
+                                      ? '⏸️ PAUSED'
+                                      : 'IDLE / READY'}
                             </span>
                         </div>
 
-                        <div className="ph-buttons-cluster">
+                        <div className='ph-buttons-cluster'>
                             {botState === 'IDLE' ? (
-                                <button className="ph-btn ph-btn--start" onClick={handleStartBot}>
+                                <button className='ph-btn ph-btn--start' onClick={handleStartBot}>
                                     ▶ START POVERTY HUNTER
                                 </button>
                             ) : (
                                 <>
-                                    <button className="ph-btn ph-btn--stop" onClick={handleStopBot}>
+                                    <button className='ph-btn ph-btn--stop' onClick={handleStopBot}>
                                         ⏹ STOP HUNTER
                                     </button>
-                                    <button className="ph-btn ph-btn--pause" onClick={handlePauseBot}>
+                                    <button className='ph-btn ph-btn--pause' onClick={handlePauseBot}>
                                         {botState === 'PAUSED' ? '▶ RESUME' : '⏸ PAUSE'}
                                     </button>
                                 </>
                             )}
 
                             <button
-                                className="ph-btn ph-btn--bulk"
-                                onClick={() => void executeTradeOrder(selectedSymbol, 'DIGITDIFF', differTargetDigit ?? 4, currentStake, false)}
+                                className='ph-btn ph-btn--bulk'
+                                onClick={() =>
+                                    void executeTradeOrder(
+                                        selectedSymbol,
+                                        'DIGITDIFF',
+                                        differTargetDigit ?? 4,
+                                        currentStake,
+                                        false
+                                    )
+                                }
                                 disabled={botState === 'TRADING'}
                             >
                                 ⚡ MANUAL BULK ({bulkCount}x)
                             </button>
 
-                            <button className="ph-btn ph-btn--secondary" onClick={handleClearStats}>
+                            <button className='ph-btn ph-btn--secondary' onClick={handleClearStats}>
                                 🗑 CLEAR STATS
                             </button>
                         </div>
                     </div>
 
                     {/* ── Real-Time Trade Journal ── */}
-                    <div className="poverty-hunter__logs-card">
-                        <div className="ph-log-header">
+                    <div className='poverty-hunter__logs-card'>
+                        <div className='ph-log-header'>
                             <h3>REAL-TIME TRADE JOURNAL</h3>
-                            <button className="clear-btn" onClick={() => setTradeLog([])}>Clear Log</button>
+                            <button className='clear-btn' onClick={() => setTradeLog([])}>
+                                Clear Log
+                            </button>
                         </div>
-                        <div className="ph-log-table-wrap">
+                        <div className='ph-log-table-wrap'>
                             <table>
                                 <thead>
                                     <tr>
@@ -1406,8 +1532,12 @@ const PovertyHunter: React.FC = observer(() => {
                                 <tbody>
                                     {tradeLog.length === 0 ? (
                                         <tr>
-                                            <td colSpan={8} style={{ textAlign: 'center', color: '#64748b', padding: '2rem' }}>
-                                                No trade history yet. Click Start Poverty Hunter or Manual Bulk to trade.
+                                            <td
+                                                colSpan={8}
+                                                style={{ textAlign: 'center', color: '#64748b', padding: '2rem' }}
+                                            >
+                                                No trade history yet. Click Start Poverty Hunter or Manual Bulk to
+                                                trade.
                                             </td>
                                         </tr>
                                     ) : (
@@ -1418,14 +1548,26 @@ const PovertyHunter: React.FC = observer(() => {
                                                 <td>{item.strategy}</td>
                                                 <td>{item.contractType}</td>
                                                 <td>{item.prediction}</td>
-                                                <td>{item.stake.toFixed(2)} {currency}</td>
                                                 <td>
-                                                    <span className={`status-badge status-badge--${item.result.toLowerCase()}`}>
+                                                    {item.stake.toFixed(2)} {currency}
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        className={`status-badge status-badge--${item.result.toLowerCase()}`}
+                                                    >
                                                         {item.result}
                                                     </span>
                                                 </td>
-                                                <td style={{ color: item.profit >= 0 ? '#10b981' : '#ef4444', fontWeight: 800 }}>
-                                                    {item.profit >= 0 ? `+${item.profit.toFixed(2)}` : item.profit.toFixed(2)} {currency}
+                                                <td
+                                                    style={{
+                                                        color: item.profit >= 0 ? '#10b981' : '#ef4444',
+                                                        fontWeight: 800,
+                                                    }}
+                                                >
+                                                    {item.profit >= 0
+                                                        ? `+${item.profit.toFixed(2)}`
+                                                        : item.profit.toFixed(2)}{' '}
+                                                    {currency}
                                                 </td>
                                             </tr>
                                         ))
@@ -1442,7 +1584,7 @@ const PovertyHunter: React.FC = observer(() => {
                 amount={sessionProfit}
                 targetAmount={milestone.type === 'tp' ? parseFloat(takeProfit) || 10 : parseFloat(stopLoss) || 25}
                 currency={currency}
-                botName="Poverty Hunter Bot"
+                botName='Poverty Hunter Bot'
                 winsCount={winsCount}
                 lossesCount={lossesCount}
                 onClose={() => setMilestone({ isOpen: false, type: null })}

@@ -29,11 +29,7 @@ const LastDigitPointer = ({ is_lost, is_won, position }: TLastDigitPointer) => (
                     height='16'
                     viewBox='0 0 16 16'
                 >
-                    <path
-                        className='digits__icon-color'
-                        d='M8 2l6 10H2z'
-                        fill='currentColor'
-                    />
+                    <path className='digits__icon-color' d='M8 2l6 10H2z' fill='currentColor' />
                 </svg>
             </span>
         )}

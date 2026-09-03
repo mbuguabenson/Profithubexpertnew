@@ -1,6 +1,5 @@
 @use '@/components/shared/styles/mixins.scss' as *;
 
-
 .even-odd-tab {
     padding: 2rem;
     background: radial-gradient(circle at top right, #0b111a, #05070a);
@@ -889,4 +888,3 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
-

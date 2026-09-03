@@ -38,8 +38,14 @@ const FormatMessage = ({ logType, className, extra }: TFormatMessageProps) => {
             case LogTypes.SELL: {
                 const { sold_for } = extra;
                 let display_sold = sold_for;
-                if (typeof sold_for === 'number' || (typeof sold_for === 'string' && !isNaN(parseFloat(sold_for)) && isFinite(Number(sold_for)))) {
-                    const { amount: convertedSold, currency: targetCurrency } = convertCurrencyAmount(sold_for, extra?.currency || 'USD');
+                if (
+                    typeof sold_for === 'number' ||
+                    (typeof sold_for === 'string' && !isNaN(parseFloat(sold_for)) && isFinite(Number(sold_for)))
+                ) {
+                    const { amount: convertedSold, currency: targetCurrency } = convertCurrencyAmount(
+                        sold_for,
+                        extra?.currency || 'USD'
+                    );
                     display_sold = `${formatMoney(targetCurrency, convertedSold, true)} ${getCurrencyDisplayCode(targetCurrency)}`;
                 }
                 return (
