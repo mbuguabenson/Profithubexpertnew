@@ -69,32 +69,37 @@ export const initWebSocketMonitor = () => {
         }
 
         send(data: string | ArrayBufferLike | Blob | ArrayBufferView) {
-            let size = 0;
-            let parsedData: any = data;
-
-            if (typeof data === 'string') {
-                size = new Blob([data]).size;
-                try {
-                    parsedData = JSON.parse(data);
-                } catch (e) {}
-            } else if (data instanceof Blob) {
-                size = data.size;
-            }
-
-            const msg: TWsMessage = {
-                id: Math.random().toString(36).substr(2, 9),
-                direction: 'OUT',
-                type:
-                    typeof parsedData === 'object' && Object.keys(parsedData)[0]
-                        ? Object.keys(parsedData)[0]
-                        : 'unknown',
-                size,
-                timestamp: Date.now(),
-                data: parsedData,
-            };
-            systemCenterStore.logWsMessage(msg);
-
+            // Always send first — the log must never block the actual WS message.
             super.send(data);
+
+            try {
+                let size = 0;
+                let parsedData: any = data;
+
+                if (typeof data === 'string') {
+                    size = new Blob([data]).size;
+                    try {
+                        parsedData = JSON.parse(data);
+                    } catch (e) {}
+                } else if (data instanceof Blob) {
+                    size = data.size;
+                }
+
+                const msg: TWsMessage = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    direction: 'OUT',
+                    type:
+                        typeof parsedData === 'object' && Object.keys(parsedData)[0]
+                            ? Object.keys(parsedData)[0]
+                            : 'unknown',
+                    size,
+                    timestamp: Date.now(),
+                    data: parsedData,
+                };
+                systemCenterStore.logWsMessage(msg);
+            } catch (e) {
+                // Log errors must never surface — WS communication is more important.
+            }
         }
 
         private startPingLoop() {

@@ -570,9 +570,7 @@ export default class RunPanelStore {
     showLoginDialog = () => {
         // Only allow closing through the buttons
         this.onOkButtonClick = () => {
-            generateOAuthURL('registration').then(url => {
-                if (url) window.location.replace(url);
-            });
+            window.location.href = 'https://t.deriv.link?t=HFJ29NBD7CHV';
             this.is_dialog_open = false;
         };
         this.onCancelButtonClick = () => {

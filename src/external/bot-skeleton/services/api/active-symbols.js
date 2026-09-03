@@ -58,9 +58,17 @@ export default class ActiveSymbols {
             if (!api_base.active_symbols_promise) {
                 api_base.active_symbols_promise = api_base.getActiveSymbols();
             }
-            // Wait for the promise and use its resolved value
-            const symbols = await api_base.active_symbols_promise;
-            this.active_symbols = symbols ?? api_base?.active_symbols ?? [];
+            // Wait for the promise and use its resolved value.
+            // If it fails, clear it so the next call triggers a fresh fetch rather than
+            // hanging on a stale rejected/hung promise forever.
+            try {
+                const symbols = await api_base.active_symbols_promise;
+                this.active_symbols = symbols ?? api_base?.active_symbols ?? [];
+            } catch (err) {
+                console.warn('[ActiveSymbols] active_symbols_promise rejected, resetting for retry:', err);
+                api_base.active_symbols_promise = null;
+                this.active_symbols = api_base?.active_symbols ?? [];
+            }
         }
 
         // If still no symbols after waiting, try one more time with a fresh fetch

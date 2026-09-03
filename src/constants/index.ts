@@ -1,3 +1,4 @@
+export * from './affiliate-config';
 export * from './backend-error-messages';
 export * from './bot-version';
 export * from './button-status';

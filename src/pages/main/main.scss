@@ -125,9 +125,9 @@ main {
             }
 
             &__list {
-                background: #0c1222 !important;
-                border: 1px solid #1a243a !important;
-                border-radius: 10px !important;
+                background: color-mix(in srgb, var(--tab-accent, #00d2ff) 4%, #0c1222) !important;
+                border: 1px solid color-mix(in srgb, var(--tab-accent, #00d2ff) 14%, #1a243a) !important;
+                border-radius: 0 !important;
                 padding: 5px 8px !important;
                 margin-top: 0 !important;
                 margin-bottom: 6px !important;
@@ -140,6 +140,8 @@ main {
                 overflow-y: visible !important;
                 width: 100% !important;
                 box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
+                transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
+
                 &::-webkit-scrollbar {
                     display: none !important;
                 }
@@ -150,15 +152,33 @@ main {
                     min-width: 6px;
                 }
 
+                :global(.theme--light) &,
+                :global(body.theme--light) &,
+                body.theme--light &,
+                .theme--light & {
+                    background: color-mix(in srgb, var(--tab-accent, #00d2ff) 4%, #ffffff) !important;
+                    border: 1px solid color-mix(in srgb, var(--tab-accent, #00d2ff) 16%, #e2e8f0) !important;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+                }
+
                 @include mobile-or-tablet-screen {
                     padding: 4px 6px !important;
                     margin: 0 !important;
                     width: 100% !important;
                     border-radius: 0 !important;
                     gap: 3px !important;
-                    background: #0c1222 !important;
+                    background: color-mix(in srgb, var(--tab-accent, #00d2ff) 4%, #0c1222) !important;
                     border-left: none !important;
                     border-right: none !important;
+
+                    :global(.theme--light) &,
+                    :global(body.theme--light) &,
+                    body.theme--light &,
+                    .theme--light & {
+                        background: color-mix(in srgb, var(--tab-accent, #00d2ff) 4%, #ffffff) !important;
+                        border-top-color: color-mix(in srgb, var(--tab-accent, #00d2ff) 16%, #e2e8f0) !important;
+                        border-bottom-color: color-mix(in srgb, var(--tab-accent, #00d2ff) 16%, #e2e8f0) !important;
+                    }
                 }
 
                 &--header {
@@ -183,16 +203,11 @@ main {
             &__item {
                 background: transparent !important;
                 color: #94a3b8 !important;
-
-                :global(.theme--light) & {
-                    background: transparent !important;
-                    color: #94a3b8 !important;
-                }
+                border-radius: 0 !important;
                 width: auto !important;
                 height: 36px !important;
                 min-width: 0 !important;
                 max-width: none !important;
-                border-radius: 8px !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -226,6 +241,28 @@ main {
                     }
                 }
 
+                :global(.theme--light) &,
+                :global(body.theme--light) &,
+                body.theme--light &,
+                .theme--light & {
+                    background: transparent !important;
+                    color: #475569 !important;
+
+                    svg {
+                        stroke: #64748b !important;
+                        color: #64748b !important;
+
+                        path,
+                        circle,
+                        rect,
+                        polygon,
+                        line,
+                        polyline {
+                            stroke: #64748b !important;
+                        }
+                    }
+                }
+
                 &:hover {
                     background: #121b30 !important;
                     color: #ffffff !important;
@@ -245,14 +282,37 @@ main {
                             stroke: #ffffff !important;
                         }
                     }
+
+                    :global(.theme--light) &,
+                    :global(body.theme--light) &,
+                    body.theme--light &,
+                    .theme--light & {
+                        background: #f1f5f9 !important;
+                        color: #0f172a !important;
+                        border-color: #cbd5e1 !important;
+
+                        svg {
+                            stroke: #0f172a !important;
+                            color: #0f172a !important;
+
+                            path,
+                            circle,
+                            rect,
+                            polygon,
+                            line,
+                            polyline {
+                                stroke: #0f172a !important;
+                            }
+                        }
+                    }
                 }
 
                 &.dc-tabs__active {
-                    background: #111a2e !important;
+                    background: color-mix(in srgb, var(--tab-accent, #00d2ff) 14%, #0c1222) !important;
                     color: #ffffff !important;
-                    border: 1px solid #28395c !important;
-                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4) !important;
-                    border-radius: 8px !important;
+                    border: 1px solid color-mix(in srgb, var(--tab-accent, #00d2ff) 40%, transparent) !important;
+                    box-shadow: 0 2px 12px color-mix(in srgb, var(--tab-accent, #00d2ff) 20%, transparent) !important;
+                    border-radius: 0 !important;
                     transform: none !important;
                     z-index: 5 !important;
                     font-weight: 800 !important;
@@ -261,16 +321,17 @@ main {
                         content: '';
                         position: absolute;
                         bottom: 0;
-                        left: 10%;
-                        right: 10%;
+                        left: 0;
+                        right: 0;
                         height: 2.5px;
-                        background: linear-gradient(90deg, #00d2ff 0%, #7928ca 35%, #ff007a 65%, #ffd600 100%);
-                        border-radius: 2px;
+                        background: var(--tab-accent, #00d2ff) !important;
+                        border-radius: 0;
+                        box-shadow: 0 0 6px var(--tab-accent, #00d2ff);
                     }
 
                     svg {
-                        stroke: #00d2ff !important;
-                        color: #00d2ff !important;
+                        stroke: var(--tab-accent, #00d2ff) !important;
+                        color: var(--tab-accent, #00d2ff) !important;
 
                         path,
                         circle,
@@ -278,17 +339,22 @@ main {
                         polygon,
                         line,
                         polyline {
-                            stroke: #00d2ff !important;
+                            stroke: var(--tab-accent, #00d2ff) !important;
                         }
                     }
 
-                    :global(.theme--light) & {
-                        background: #111a2e !important;
-                        color: #ffffff !important;
+                    :global(.theme--light) &,
+                    :global(body.theme--light) &,
+                    body.theme--light &,
+                    .theme--light & {
+                        background: color-mix(in srgb, var(--tab-accent, #00d2ff) 12%, #ffffff) !important;
+                        color: #0f172a !important;
+                        border-color: color-mix(in srgb, var(--tab-accent, #00d2ff) 35%, transparent) !important;
+                        box-shadow: 0 2px 8px color-mix(in srgb, var(--tab-accent, #00d2ff) 18%, transparent) !important;
 
                         svg {
-                            stroke: #00d2ff !important;
-                            color: #00d2ff !important;
+                            stroke: var(--tab-accent, #00d2ff) !important;
+                            color: var(--tab-accent, #00d2ff) !important;
 
                             path,
                             circle,
@@ -296,7 +362,7 @@ main {
                             polygon,
                             line,
                             polyline {
-                                stroke: #00d2ff !important;
+                                stroke: var(--tab-accent, #00d2ff) !important;
                             }
                         }
                     }
@@ -1043,3 +1109,27 @@ main {
         line-height: 1;
     }
 }
+
+// ─── Per-Tab Accent Colors ────────────────────────────────────────────────────
+// The active tab's background, border, underline and icon tint adapt to the
+// current page by reading --tab-accent set on the [data-active-tab] container.
+
+[data-active-tab='dashboard']         { --tab-accent: #3b82f6; }   // Blue        – Dashboard
+[data-active-tab='bot_builder']       { --tab-accent: #a855f7; }   // Purple      – Bot Builder
+[data-active-tab='chart']             { --tab-accent: #10b981; }   // Emerald     – Charts
+[data-active-tab='trading_bots']      { --tab-accent: #f59e0b; }   // Amber       – Trading Bots
+[data-active-tab='analysis_tool']     { --tab-accent: #06b6d4; }   // Cyan        – Analysis Tool
+[data-active-tab='tradingview']       { --tab-accent: #2962ff; }   // TradingView Blue
+[data-active-tab='signals']           { --tab-accent: #22d3ee; }   // Light Cyan  – Signals
+[data-active-tab='scanner']           { --tab-accent: #f97316; }   // Orange      – AI Scanner
+[data-active-tab='manual_trading']    { --tab-accent: #14b8a6; }   // Teal        – Manual Trading
+[data-active-tab='easy_tool']         { --tab-accent: #84cc16; }   // Lime        – Easy Tool
+[data-active-tab='marketkiller']      { --tab-accent: #ef4444; }   // Red         – Marketkiller
+[data-active-tab='multi_trader']      { --tab-accent: #8b5cf6; }   // Violet      – Multi Trader
+[data-active-tab='market_hunter_pro'] { --tab-accent: #d97706; }   // Dark Amber  – Market Hunter Pro
+[data-active-tab='ai_trading_engine'] { --tab-accent: #00e5ff; }   // Electric    – AI Trading Engine
+[data-active-tab='digitflow']         { --tab-accent: #ec4899; }   // Pink        – DigitFlow
+[data-active-tab='elite_pro']         { --tab-accent: #ffd600; }   // Gold        – Elite Pro
+[data-active-tab='poverty_hunter']    { --tab-accent: #4ade80; }   // Green       – Poverty Hunter
+[data-active-tab='auto_x_eo']         { --tab-accent: #fb7185; }   // Rose        – AUTO X E/O
+[data-active-tab='overlord_ai']       { --tab-accent: #c084fc; }   // Lavender    – OVERLORD AI

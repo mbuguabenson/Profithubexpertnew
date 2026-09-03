@@ -711,6 +711,7 @@ const AppWrapper = observer(() => {
                         'main__container--active': active_tour && active_tab === DASHBOARD && !isDesktop,
                         'main__container--drawer-open': isDesktop && is_drawer_open && !shouldHideRunPanelAndDrawer,
                     })}
+                    data-active-tab={currentTabKey}
                 >
                     <Tabs
                         active_index={filteredActiveIndex}

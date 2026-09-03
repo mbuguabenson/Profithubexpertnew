@@ -32,6 +32,27 @@ interface ResetDemoBalanceResponse {
 }
 
 /**
+ * Request payload for creating an options account (POST /trading/v1/options/accounts)
+ */
+export interface CreateOptionsAccountRequest {
+    currency?: string;
+    group?: string;
+    account_type: 'demo' | 'real';
+}
+
+/**
+ * Response payload for creating an options account
+ */
+export interface CreateOptionsAccountResponse {
+    data: DerivAccount | DerivAccount[];
+    meta?: {
+        endpoint: string;
+        method: string;
+        timing?: number;
+    };
+}
+
+/**
  * OTP response data
  */
 interface OTPResponseData {
@@ -317,5 +338,123 @@ export class DerivWSAccountsService {
             console.error('[DerivWS] Error in authenticated WebSocket URL flow:', error);
             throw error;
         }
+    }
+
+    /**
+     * Creates a new Options trading account on Deriv Options REST API.
+     * Endpoint: POST /trading/v1/options/accounts
+     * Docs: https://developers.deriv.com/docs/options/create-account/
+     */
+    static async createAccount(
+        accessToken: string,
+        params: CreateOptionsAccountRequest
+    ): Promise<DerivAccount> {
+        if (!accessToken) {
+            throw new Error('Deriv OAuth access token is required to create an account.');
+        }
+
+        const account_type = params.account_type;
+        if (account_type !== 'demo' && account_type !== 'real') {
+            throw new Error(`Invalid account_type: "${account_type}". Must be "demo" or "real".`);
+        }
+
+        const currency = params.currency || 'USD';
+        const group = params.group || 'row';
+
+        const baseURL = this.getDerivWSBaseURL();
+        const optionsDir = brandConfig.platform.derivws.directories.options;
+        const endpoint = `${baseURL}${optionsDir}accounts`;
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                ...this.getAuthenticatedHeaders(accessToken),
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                currency,
+                group,
+                account_type,
+            }),
+        });
+
+        if (!response.ok) {
+            let message = `Failed to create account: ${response.status} ${response.statusText}`;
+            try {
+                const errData = await response.json();
+                message =
+                    errData?.errors?.[0]?.message ||
+                    errData?.error?.message ||
+                    errData?.message ||
+                    message;
+            } catch {
+                // Keep default HTTP status message
+            }
+            throw new Error(message);
+        }
+
+        const resData: CreateOptionsAccountResponse = await response.json();
+        const rawAccount = Array.isArray(resData?.data) ? resData.data[0] : resData?.data;
+
+        if (!rawAccount || !rawAccount.account_id) {
+            throw new Error('Deriv did not return account details in the response.');
+        }
+
+        const createdAccount: DerivAccount = {
+            account_id: rawAccount.account_id,
+            balance: String(rawAccount.balance ?? (account_type === 'demo' ? 10000 : 0)),
+            currency: rawAccount.currency || currency,
+            group: rawAccount.group || group,
+            status: rawAccount.status || 'active',
+            account_type: (rawAccount.account_type as 'demo' | 'real') || account_type,
+        };
+
+        // Invalidate cache
+        this.clearCache();
+
+        // Update stored accounts
+        const storedAccounts = this.getStoredAccounts() || [];
+        const existingIdx = storedAccounts.findIndex(a => a.account_id === createdAccount.account_id);
+        let updatedAccounts: DerivAccount[];
+        if (existingIdx >= 0) {
+            updatedAccounts = storedAccounts.map((a, idx) => (idx === existingIdx ? createdAccount : a));
+        } else {
+            updatedAccounts = [...storedAccounts, createdAccount];
+        }
+        this.storeAccounts(updatedAccounts);
+
+        // Also update client_account_details for global observables
+        try {
+            const rawDetails = localStorage.getItem('client_account_details');
+            const existingDetails = rawDetails ? JSON.parse(rawDetails) : [];
+            if (Array.isArray(existingDetails)) {
+                const foundIdx = existingDetails.findIndex(
+                    (a: any) => (a.loginid || a.account_id) === createdAccount.account_id
+                );
+                const detailEntry = {
+                    account_id: createdAccount.account_id,
+                    loginid: createdAccount.account_id,
+                    balance: parseFloat(createdAccount.balance) || 0,
+                    currency: createdAccount.currency,
+                    is_virtual: createdAccount.account_type === 'demo' ? 1 : 0,
+                };
+                if (foundIdx >= 0) {
+                    existingDetails[foundIdx] = { ...existingDetails[foundIdx], ...detailEntry };
+                } else {
+                    existingDetails.push(detailEntry);
+                }
+                localStorage.setItem('client_account_details', JSON.stringify(existingDetails));
+            }
+        } catch (e) {
+            console.warn('[DerivWS] Failed to sync client_account_details:', e);
+        }
+
+        // Dispatch sync events for UI listeners
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('deriv_account_created', { detail: createdAccount }));
+            window.dispatchEvent(new CustomEvent('accounts_updated', { detail: updatedAccounts }));
+        }
+
+        return createdAccount;
     }
 }

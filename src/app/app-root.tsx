@@ -15,7 +15,7 @@ const AppContent = lazy(() => import('./app-content'));
 const brandLabel = getBrandLabel();
 
 const AppRootLoader = () => {
-    return <ChunkLoader message={`Loading ${brandLabel}...`} isWelcome={false} />;
+    return <ChunkLoader message={`Loading ${brandLabel}...`} />;
 };
 
 const ErrorComponentWrapper = observer(() => {

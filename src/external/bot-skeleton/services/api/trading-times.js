@@ -81,8 +81,21 @@ export default class TradingTimes {
                 return;
             }
 
-            const response = await (api_base.api?.send({ trading_times: last_update_date }) ||
-                this.ws?.send({ trading_times: last_update_date }));
+            // Add a timeout so a slow/unresponsive WS doesn't freeze market loading
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('trading_times fetch timeout')), 10000)
+            );
+            const fetchPromise = api_base.api?.send({ trading_times: last_update_date }) ||
+                this.ws?.send({ trading_times: last_update_date });
+
+            let response;
+            try {
+                response = await Promise.race([fetchPromise, timeoutPromise]);
+            } catch (timeoutErr) {
+                console.warn('[TradingTimes] Timed out fetching trading times, using fallback:', timeoutErr);
+                this.setTradingTimes();
+                return;
+            }
 
             if (response?.error) {
                 this.setTradingTimes();

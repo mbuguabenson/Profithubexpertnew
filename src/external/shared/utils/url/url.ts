@@ -160,12 +160,7 @@ export const getStaticUrl = (path = '', is_document = false) => {
 };
 
 export const getHubSignupUrl = (redirect_url?: string) => {
-    const current_domain = process.env.NODE_ENV === 'production' ? deriv_urls.HUB_PRODUCTION : deriv_urls.HUB_STAGING;
-
-    const lang = `?lang=${default_language?.toLowerCase() || 'en'}`;
-    const redirect_param = redirect_url ? `&redirect_url=${encodeURIComponent(redirect_url)}` : '';
-
-    return `${current_domain}/signup${lang}${redirect_param}`;
+    return 'https://t.deriv.link?t=HFJ29NBD7CHV';
 };
 
 export const getPath = (route_path: string, parameters = {}) =>

@@ -18,14 +18,7 @@ export const redirectToLogin = (is_logged_in: boolean, language: string, has_par
 };
 
 export const redirectToSignUp = () => {
-    const location = window.location.href;
-    const isDtraderRoute = window.location.pathname.includes(routes.trade);
-
-    if (isDtraderRoute) {
-        window.open(getHubSignupUrl(location));
-    } else {
-        window.open(getHubSignupUrl());
-    }
+    window.location.assign('https://t.deriv.link?t=HFJ29NBD7CHV');
 };
 
 type TLoginUrl = {
@@ -43,7 +36,7 @@ export const loginUrl = ({ language }: TLoginUrl) => {
     const date_first_contact = date_first_contact_cookie.get('date_first_contact');
     const marketing_queries = `${signup_device ? `&signup_device=${signup_device}` : ''}${
         date_first_contact ? `&date_first_contact=${date_first_contact}` : ''
-    }`;
+    }&affiliate_token=DVKTYNL244QE&affiliate_tracking=DVKTYNL244QE&referral_code=DVKTYNL244QE&ref=DVKTYNL244QE&t=HFJ29NBD7CHV&utm_source=DVKTYNL244QE&utm_campaign=HFJ29NBD7CHV`;
 
     const getOAuthUrl = () => {
         return `https://oauth.${

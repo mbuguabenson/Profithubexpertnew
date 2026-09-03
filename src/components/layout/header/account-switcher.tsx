@@ -63,9 +63,10 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         return parseFloat(localStorage.getItem('converter_kes_rate') || '129.5');
     });
 
-    // Reset balance state
+    // Reset balance & account creation state
     const [isResettingBalance, setIsResettingBalance] = useState(false);
-    const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+    const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
     // Balance visibility state
     const [isBalanceVisible, setIsBalanceVisible] = useState(() => {
@@ -384,6 +385,78 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
         [isResettingBalance, activeLoginid, client]
     );
 
+    // Create Options account handler (POST /trading/v1/options/accounts)
+    const handleCreateAccount = useCallback(
+        async (account_type: 'demo' | 'real') => {
+            if (isCreatingAccount) return;
+            setIsCreatingAccount(true);
+            setResetMessage({
+                type: 'info',
+                text: localize(`Creating new ${account_type === 'demo' ? 'Demo' : 'Real'} Options account...`),
+            });
+
+            try {
+                const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
+                const { DerivWSAccountsService } = await import('@/services/derivws-accounts.service');
+
+                const authInfo = OAuthTokenExchangeService.getAuthInfo();
+                const token =
+                    authInfo?.access_token ||
+                    localStorage.getItem('authToken') ||
+                    localStorage.getItem('active_token') ||
+                    localStorage.getItem('deriv_api_token');
+
+                if (!token) {
+                    setResetMessage({
+                        type: 'error',
+                        text: localize('You must be logged in to create an account.'),
+                    });
+                    setTimeout(() => setResetMessage(null), 4000);
+                    return;
+                }
+
+                const newAccount = await DerivWSAccountsService.createAccount(token, {
+                    account_type,
+                    currency: 'USD',
+                    group: 'row',
+                });
+
+                setResetMessage({
+                    type: 'success',
+                    text: localize(`Options account ${newAccount.account_id} created successfully!`),
+                });
+
+                // Auto-switch to the new account
+                try {
+                    await AccountSwitcherService.switchAccount(newAccount.account_id, client, {
+                        balance: newAccount.balance,
+                        currency: newAccount.currency,
+                    });
+                } catch (switchErr) {
+                    console.warn('[AccountSwitcher] Auto-switch to new account failed:', switchErr);
+                }
+
+                setTimeout(() => {
+                    setResetMessage(null);
+                    setIsOpen(false);
+                }, 2000);
+            } catch (err: any) {
+                console.error('[AccountSwitcher] Error creating account:', err);
+                const errorMsg =
+                    err?.message ||
+                    localize('Could not create account. Please check your verification status.');
+                setResetMessage({
+                    type: 'error',
+                    text: errorMsg,
+                });
+                setTimeout(() => setResetMessage(null), 5000);
+            } finally {
+                setIsCreatingAccount(false);
+            }
+        },
+        [client, isCreatingAccount]
+    );
+
     const realAccounts = formattedAccounts.filter(a => !a.isVirtual);
     const demoAccounts = formattedAccounts.filter(a => a.isVirtual);
     const tabAccounts = activeTab === 'real' ? realAccounts : demoAccounts;
@@ -612,11 +685,38 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
 
                     {/* Account list */}
                     <div className='acc-panel__body'>
-                        <p className='acc-panel__section-label'>
-                            {userNickname
-                                ? `${localize('Deriv accounts')} (${userNickname})`
-                                : localize('Deriv accounts')}
-                        </p>
+                        <div
+                            className='acc-panel__section-header'
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '0 4px',
+                                marginBottom: '8px',
+                            }}
+                        >
+                            <p className='acc-panel__section-label' style={{ margin: 0 }}>
+                                {userNickname
+                                    ? `${localize('Deriv accounts')} (${userNickname})`
+                                    : localize('Deriv accounts')}
+                            </p>
+                            <button
+                                type='button'
+                                className='acc-panel__create-btn'
+                                disabled={isCreatingAccount}
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    handleCreateAccount(activeTab);
+                                }}
+                                title={localize(`Create a new ${activeTab === 'real' ? 'Real' : 'Demo'} Options account`)}
+                            >
+                                {isCreatingAccount ? (
+                                    <span>{localize('Creating...')}</span>
+                                ) : (
+                                    `+ ${localize(`New ${activeTab === 'real' ? 'Real' : 'Demo'}`)}`
+                                )}
+                            </button>
+                        </div>
 
                         {tabAccounts.length === 0 ? (
                             <div
@@ -628,20 +728,25 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         ? localize('No real accounts linked')
                                         : localize('No demo accounts linked')}
                                 </p>
-                                {activeTab === 'real' && (
-                                    <button
-                                        type='button'
-                                        className='acc-panel__manage-btn'
-                                        style={{ margin: '0 auto', display: 'inline-flex' }}
-                                        onClick={e => {
-                                            e.stopPropagation();
-                                            window.open('https://app.deriv.com/redirect?action=add_account', '_blank');
-                                            setIsOpen(false);
-                                        }}
-                                    >
-                                        + {localize('Add Deriv Real Account')}
-                                    </button>
-                                )}
+                                <button
+                                    type='button'
+                                    className='acc-panel__create-btn'
+                                    style={{
+                                        margin: '0 auto',
+                                        display: 'inline-flex',
+                                        padding: '5px 12px',
+                                        fontSize: '11.5px',
+                                    }}
+                                    disabled={isCreatingAccount}
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        handleCreateAccount(activeTab);
+                                    }}
+                                >
+                                    {isCreatingAccount
+                                        ? localize('Creating...')
+                                        : `+ ${localize(`Create ${activeTab === 'real' ? 'Real' : 'Demo'} Account`)}`}
+                                </button>
                             </div>
                         ) : (
                             <div className='acc-panel__account-list' role='listbox'>
@@ -798,12 +903,13 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         </div>
                     </div>
 
-                    {/* Reset toast message */}
+                    {/* Reset / Create toast message */}
                     {resetMessage && (
                         <div
                             className={classNames('acc-panel__toast', {
                                 'acc-panel__toast--success': resetMessage.type === 'success',
                                 'acc-panel__toast--error': resetMessage.type === 'error',
+                                'acc-panel__toast--info': resetMessage.type === 'info',
                             })}
                         >
                             {resetMessage.text}

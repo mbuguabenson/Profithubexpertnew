@@ -579,104 +579,117 @@ class APIBase {
     getActiveSymbols = async () => {
         let active_symbols: any[] = [];
 
-        // 1. Try to fetch active symbols via the main WebSocket first if it is already open (much faster, <100ms)
-        if (this.api && this.api.connection?.readyState === 1) {
-            try {
-                const timeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Active symbols fetch timeout')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
-                );
+        // Wrap the entire fetch in a generous overall timeout so the promise never hangs forever.
+        // Individual sub-steps also have their own timeouts; this is a safety net.
+        const OVERALL_TIMEOUT_MS = 35000;
 
-                const activeSymbolsPromise = doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], this);
-                const apiResult = await Promise.race([activeSymbolsPromise, timeout]);
-                const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
-
-                if (!error || Object.keys(error).length === 0) {
-                    active_symbols = ws_symbols;
+        const fetchSymbols = async (): Promise<any[]> => {
+            // 1. Try the main WebSocket first if it is already open (fastest path, <100ms)
+            if (this.api && this.api.connection?.readyState === 1) {
+                try {
+                    const timeout = new Promise<never>((_, reject) =>
+                        setTimeout(() => reject(new Error('Active symbols timeout (main WS)')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
+                    );
+                    // Pass null instead of `this` so the bot's is_running flag does NOT kill the
+                    // retry loop. Symbol fetches are infrastructure calls, not trade calls.
+                    const fetchPromise = doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], null);
+                    const apiResult = await Promise.race([fetchPromise, timeout]);
+                    const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
+                    if (!error || Object.keys(error).length === 0) {
+                        return ws_symbols;
+                    }
+                } catch (err) {
+                    console.warn('[APIBase] Main WS active symbols fetch failed, trying fallback:', err);
                 }
-            } catch (error) {
-                console.warn('[APIBase] Main WebSocket active symbols fetch failed, will try public WS:', error);
             }
-        }
 
-        // 2. Fallback to public WS if main connection was not open or failed
-        if (active_symbols.length === 0) {
+            // 2. Fallback: standard Deriv public WS endpoint
             try {
-                active_symbols = await new Promise<any[]>((resolve, reject) => {
-                    const environment = isProduction() ? 'production' : 'staging';
-                    const wsURL =
-                        environment === 'production'
-                            ? 'wss://api.derivws.com/trading/v1/options/ws/public'
-                            : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
+                const publicSymbols = await new Promise<any[]>((resolve, reject) => {
+                    // Use the real Deriv API WebSocket endpoint (not the trading/v1 path which
+                    // is internal and frequently blocked). Pick a known app_id for public data.
+                    const wsURL = isProduction()
+                        ? 'wss://ws.binaryws.com/websockets/v3?app_id=1089'
+                        : 'wss://ws.derivws.com/websockets/v3?app_id=36544';
 
                     const ws = new WebSocket(wsURL);
+                    let settled = false;
 
-                    ws.onopen = () => {
-                        ws.send(JSON.stringify({ active_symbols: 'brief' }));
+                    const cleanup = () => {
+                        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                            ws.close();
+                        }
                     };
 
+                    const safeResolve = (val: any[]) => {
+                        if (!settled) { settled = true; cleanup(); resolve(val); }
+                    };
+                    const safeReject = (err: any) => {
+                        if (!settled) { settled = true; cleanup(); reject(err); }
+                    };
+
+                    const timer = setTimeout(() => safeReject(new Error('Public WS timeout')), 12000);
+
+                    ws.onopen = () => {
+                        ws.send(JSON.stringify({ active_symbols: 'brief', req_id: 1 }));
+                    };
                     ws.onmessage = event => {
                         try {
                             const response = JSON.parse(event.data);
-                            if (response.active_symbols) {
-                                ws.close();
-                                resolve(response.active_symbols);
+                            if (response.active_symbols && response.active_symbols.length > 0) {
+                                clearTimeout(timer);
+                                safeResolve(response.active_symbols);
                             } else if (response.error) {
-                                ws.close();
-                                reject(new Error(response.error.message || 'API error'));
+                                clearTimeout(timer);
+                                safeReject(new Error(response.error.message || 'API error'));
                             }
                         } catch (e) {
-                            ws.close();
-                            reject(e);
+                            clearTimeout(timer);
+                            safeReject(e);
                         }
                     };
-
-                    ws.onerror = err => {
-                        ws.close();
-                        reject(err);
-                    };
-
-                    setTimeout(() => {
-                        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-                            ws.close();
-                            reject(new Error('Timeout'));
-                        }
-                    }, 5000);
+                    ws.onerror = () => { clearTimeout(timer); safeReject(new Error('Public WS error')); };
+                    ws.onclose = () => { if (!settled) { clearTimeout(timer); safeReject(new Error('Public WS closed prematurely')); } };
                 });
-            } catch (e) {
-                console.warn('[APIBase] Public WS active symbols fetch failed, will try fallback methods:', e);
-            }
-        }
 
-        // 3. Last resort fallback if connection wasn't open initially but exists now
-        if (active_symbols.length === 0) {
+                if (publicSymbols.length > 0) return publicSymbols;
+            } catch (e) {
+                console.warn('[APIBase] Public WS fallback failed, trying last-resort method:', e);
+            }
+
+            // 3. Last resort: wait for the main WS to open if it's still connecting
             if (!this.api) {
                 throw new Error('API connection not available for fetching active symbols');
             }
 
-            try {
-                // Add timeout to prevent hanging
-                const timeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Active symbols fetch timeout')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
-                );
-
-                const activeSymbolsPromise = doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], this);
-
-                const apiResult = await Promise.race([activeSymbolsPromise, timeout]);
-
-                const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
-
-                if (error && Object.keys(error).length > 0) {
-                    throw new Error(`Active symbols API error: ${error.message || 'Unknown error'}`);
-                }
-
-                active_symbols = ws_symbols;
-            } catch (error) {
-                console.error('[APIBase] WebSocket active symbols fetch failed:', error);
-                throw error;
+            const lastResortTimeout = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('Active symbols timeout (last resort)')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
+            );
+            // Again, pass null so bot's is_running=false doesn't immediately reject.
+            const lastResortFetch = doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], null);
+            const apiResult = await Promise.race([lastResortFetch, lastResortTimeout]);
+            const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
+            if (error && Object.keys(error).length > 0) {
+                throw new Error(`Active symbols API error: ${error.message || 'Unknown error'}`);
             }
+            return ws_symbols;
+        };
+
+        try {
+            const overallTimeout = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('getActiveSymbols overall timeout')), OVERALL_TIMEOUT_MS)
+            );
+            active_symbols = await Promise.race([fetchSymbols(), overallTimeout]);
+        } catch (err) {
+            // Reset the promise so the next caller gets a fresh attempt instead of awaiting
+            // a hung/rejected promise forever.
+            this.active_symbols_promise = null;
+            console.error('[APIBase] getActiveSymbols failed:', err);
+            throw err;
         }
 
-        if (!active_symbols.length) {
+        if (!active_symbols || !active_symbols.length) {
+            this.active_symbols_promise = null;
             throw new Error('No active symbols received from API');
         }
 

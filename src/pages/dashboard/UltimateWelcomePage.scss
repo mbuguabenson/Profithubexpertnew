@@ -135,6 +135,7 @@
         .typing-text {
             color: var(--brand-secondary);
             background: linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%);
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             position: relative;

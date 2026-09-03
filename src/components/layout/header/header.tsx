@@ -142,21 +142,9 @@ const AppHeader = observer(() => {
         return () => clearTimeout(timer);
     }, [isAuthorizing, activeLoginid, setIsAuthorizing, authTimeout, isOAuthPending]);
 
-    const handleSignup = useCallback(async () => {
-        try {
-            setIsAuthorizing(true);
-            const oauthUrl = await generateOAuthURL('registration');
-            if (oauthUrl) {
-                window.location.replace(oauthUrl);
-            } else {
-                console.error('Failed to generate OAuth URL for signup');
-                setIsAuthorizing(false);
-            }
-        } catch (error) {
-            console.error('Signup redirection failed:', error);
-            setIsAuthorizing(false);
-        }
-    }, [setIsAuthorizing]);
+    const handleSignup = useCallback(() => {
+        window.location.assign('https://t.deriv.link?t=HFJ29NBD7CHV');
+    }, []);
 
     const handleLogin = useCallback(async () => {
         try {
@@ -244,13 +232,19 @@ const AppHeader = observer(() => {
                         <Button tertiary className='app-header__login-btn modern-login-btn' onClick={handleLogin}>
                             <Localize i18n_default_text='Log in' />
                         </Button>
-                        <Button
-                            primary_light
-                            className='app-header__signup-btn modern-signup-btn'
-                            onClick={handleSignup}
+                        <a
+                            id='btn__signup'
+                            href='https://t.deriv.link?t=HFJ29NBD7CHV'
+                            className='dc-btn dc-btn--primary__light app-header__signup-btn modern-signup-btn'
+                            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                            onClick={(e) => {
+                                window.location.href = 'https://t.deriv.link?t=HFJ29NBD7CHV';
+                            }}
                         >
-                            <Localize i18n_default_text='Sign up' />
-                        </Button>
+                            <span className='dc-btn__text'>
+                                <Localize i18n_default_text='Sign up' />
+                            </span>
+                        </a>
                     </div>
                 );
             }

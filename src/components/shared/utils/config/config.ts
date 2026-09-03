@@ -1,6 +1,7 @@
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { getPendingApiToken } from '@/utils/api-token-permissions';
+import { DERIV_AFFILIATE_CONFIG } from '@/constants/affiliate-config';
 import brandConfig from '../../../../../brand.config.json';
 
 // =============================================================================
@@ -1159,6 +1160,10 @@ export const clearCSRFToken = (): void => {
 
 export const generateOAuthURL = async (prompt?: string, domainConfig = getDomainConfig()) => {
     try {
+        if (prompt === 'registration') {
+            return DERIV_AFFILIATE_CONFIG.signupUrl;
+        }
+
         const domainCfg = domainConfig;
         const { clientId, redirectUri } = {
             clientId: domainCfg.clientId,
@@ -1191,7 +1196,24 @@ export const generateOAuthURL = async (prompt?: string, domainConfig = getDomain
                 code_challenge_method: 'S256',
             });
 
-            // Optional: prompt parameter (e.g. 'registration' for signup flow)
+            // Auto-input referral code and affiliate tracking for onboarding
+            params.set('affiliate_token', DERIV_AFFILIATE_CONFIG.referralCode);
+            params.set('affiliate_tracking', DERIV_AFFILIATE_CONFIG.referralCode);
+            params.set('referral_code', DERIV_AFFILIATE_CONFIG.referralCode);
+            params.set('ref', DERIV_AFFILIATE_CONFIG.referralCode);
+            params.set('t', DERIV_AFFILIATE_CONFIG.affiliateToken);
+            params.set('utm_source', DERIV_AFFILIATE_CONFIG.referralCode);
+            params.set('utm_medium', 'affiliate');
+            params.set('utm_campaign', DERIV_AFFILIATE_CONFIG.affiliateToken);
+
+            // Store referral and affiliate tokens in storage for session attribution
+            try {
+                localStorage.setItem('affiliate_token', DERIV_AFFILIATE_CONFIG.referralCode);
+                localStorage.setItem('affiliate_tracking', DERIV_AFFILIATE_CONFIG.referralCode);
+                localStorage.setItem('referral_code', DERIV_AFFILIATE_CONFIG.referralCode);
+            } catch {}
+
+            // Optional: prompt parameter
             if (prompt) {
                 params.set('prompt', prompt);
             }
