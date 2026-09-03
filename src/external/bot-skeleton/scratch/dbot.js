@@ -348,6 +348,14 @@ class DBot {
                 this.interpreter = Interpreter();
             }
 
+            const ws = this.workspace || window.Blockly?.derivWorkspace || window.Blockly?.getMainWorkspace?.();
+            const tradeDefBlock = ws?.getTradeDefinitionBlock?.();
+            const marketBlock = tradeDefBlock?.getChildByType?.('trade_definition_market');
+            const targetSymbol = marketBlock?.getFieldValue?.('SYMBOL_LIST') || this.symbol;
+            if (targetSymbol) {
+                this.symbol = targetSymbol;
+            }
+
             const code = this.generateCode();
             console.log(`[BOT PERF] Code generated: ${(performance.now() - perfStart).toFixed(1)}ms`);
 
@@ -417,6 +425,9 @@ class DBot {
                 return false;
             }
             function BinaryBotPrivateTickAnalysis() {
+                if (!BinaryBotPrivateTickAnalysisList || BinaryBotPrivateTickAnalysisList.length === 0) {
+                    return;
+                }
                 try {
                     var currentTickTime = Bot.getLastTick(true);
                     var retryCount = 0;
