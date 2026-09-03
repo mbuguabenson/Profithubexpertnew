@@ -8,6 +8,7 @@ import {
     Activity,
     ChevronDown,
     ChevronUp,
+    Clock,
     Download,
     Flame,
     Grid,
@@ -20,6 +21,7 @@ import {
     Sparkles,
     Square,
     Target,
+    Timer,
     TrendingUp,
     Volume2,
     VolumeX,
@@ -87,8 +89,8 @@ const DERIVED_SYNTHETIC_MARKETS = [
 
 const MAX_TICKS_STORED = 100;
 const CHART_TICKS = 50;
-const STORAGE_PLAN_KEY = 'overlord_compounding_plan_v2';
-const STORAGE_CONFIG_KEY = 'overlord_bot_config_v2';
+const STORAGE_PLAN_KEY = 'overlord_compounding_plan_v3';
+const STORAGE_CONFIG_KEY = 'overlord_bot_config_v3';
 
 // ─── Web Audio Sound Effects ──────────────────────────────────────────────────
 
@@ -198,6 +200,7 @@ const OverlordAi: React.FC = observer(() => {
 
     // ── Autotrading & Strategy Parameters ──
     const [botState, setBotState] = useState<AutoRunState>('IDLE');
+    const [tradeByCompoundingPlan, setTradeByCompoundingPlan] = useState<boolean>(true);
     const [isAutoStake, setIsAutoStake] = useState<boolean>(true);
     const [autoStakePercent, setAutoStakePercent] = useState<string>('7'); // Default 7% of account balance
     const [manualStake, setManualStake] = useState<string>('1.00');
@@ -217,14 +220,76 @@ const OverlordAi: React.FC = observer(() => {
     const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
     const executionLockRef = useRef<boolean>(false);
 
-    // ── Compounding Generator State ──
+    // ── Compounding Generator & Active Step State ──
     const [compoundingMode, setCompoundingMode] = useState<'HOURS' | 'DAYS'>('HOURS');
     const [startingCapital, setStartingCapital] = useState<string>('100.00');
     const [targetGoal, setTargetGoal] = useState<string>('1000.00');
     const [planPeriods, setPlanPeriods] = useState<string>('24');
     const [periodProfitPct, setPeriodProfitPct] = useState<string>('7'); // Default 7%
     const [compoundingPlan, setCompoundingPlan] = useState<CompoundingStep[]>([]);
+    const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
+    const [stepSessionProfit, setStepSessionProfit] = useState<number>(0);
+    const [stepStartTime, setStepStartTime] = useState<number>(Date.now());
+    const [currentTime, setCurrentTime] = useState<number>(Date.now());
     const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+
+    // Live 1-Second Timer Ticker
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Active Compounding Step Item
+    const activeCompoundingStep = useMemo(() => {
+        if (compoundingPlan.length === 0) return null;
+        if (activeStepIndex >= 0 && activeStepIndex < compoundingPlan.length) {
+            return compoundingPlan[activeStepIndex];
+        }
+        return compoundingPlan[0];
+    }, [compoundingPlan, activeStepIndex]);
+
+    // Live Step Timer & Progress Calculation
+    const stepProgress = useMemo(() => {
+        if (!activeCompoundingStep) {
+            return {
+                elapsedFormatted: '00:00',
+                remainingFormatted: '00:00',
+                timePct: 0,
+                profitPct: 0,
+                targetProfit: 0,
+                currentStepProfit: 0,
+            };
+        }
+
+        const periodSeconds = compoundingMode === 'HOURS' ? 3600 : 86400;
+        const elapsedSec = Math.max(0, Math.floor((currentTime - stepStartTime) / 1000));
+        const remainingSec = Math.max(0, periodSeconds - elapsedSec);
+
+        const formatSec = (totalSec: number) => {
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            if (h > 0) {
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            }
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        };
+
+        const timePct = Math.min(100, Math.round((elapsedSec / periodSeconds) * 100));
+        const target = activeCompoundingStep.targetProfit || 1;
+        const profitPct = Math.min(100, Math.max(0, Math.round((stepSessionProfit / target) * 100)));
+
+        return {
+            elapsedFormatted: formatSec(elapsedSec),
+            remainingFormatted: formatSec(remainingSec),
+            timePct,
+            profitPct,
+            targetProfit: activeCompoundingStep.targetProfit,
+            currentStepProfit: stepSessionProfit,
+        };
+    }, [activeCompoundingStep, compoundingMode, currentTime, stepStartTime, stepSessionProfit]);
 
     // Throttle UI rerenders to keep high performance
     const throttleRender = useCallback(() => {
@@ -246,6 +311,10 @@ const OverlordAi: React.FC = observer(() => {
                 const parsed = JSON.parse(savedPlan);
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     setCompoundingPlan(parsed);
+                    const firstUncompleted = parsed.findIndex(s => !s.completed);
+                    if (firstUncompleted !== -1) {
+                        setActiveStepIndex(firstUncompleted);
+                    }
                 }
             }
             const savedConfig = localStorage.getItem(STORAGE_CONFIG_KEY);
@@ -304,6 +373,9 @@ const OverlordAi: React.FC = observer(() => {
         }
 
         setCompoundingPlan(steps);
+        setActiveStepIndex(0);
+        setStepSessionProfit(0);
+        setStepStartTime(Date.now());
         savePlanToStorage(steps);
 
         try {
@@ -341,9 +413,11 @@ const OverlordAi: React.FC = observer(() => {
         [savePlanToStorage]
     );
 
-    // Target a specific step's profit
-    const handleTargetStep = useCallback((step: CompoundingStep) => {
-        setTakeProfitTarget(step.targetProfit.toFixed(2));
+    // Set a step as the active target step
+    const handleSetAsActiveStep = useCallback((stepIndex: number) => {
+        setActiveStepIndex(stepIndex);
+        setStepSessionProfit(0);
+        setStepStartTime(Date.now());
     }, []);
 
     // Export compounding plan to CSV (Excel compatible)
@@ -368,6 +442,12 @@ const OverlordAi: React.FC = observer(() => {
 
     // ── Calculate Dynamic Auto Stake ──
     const effectiveStake = useMemo(() => {
+        if (tradeByCompoundingPlan && activeCompoundingStep) {
+            const pct = parseFloat(periodProfitPct) || 7;
+            const bal = activeCompoundingStep.startingBalance;
+            const calculated = Math.max(0.35, Math.round(bal * (pct / 100) * 100) / 100);
+            return calculated;
+        }
         if (isAutoStake) {
             const pct = parseFloat(autoStakePercent) || 7;
             const bal = rawBalance > 0 ? rawBalance : parseFloat(startingCapital) || 100;
@@ -375,7 +455,16 @@ const OverlordAi: React.FC = observer(() => {
             return calculated;
         }
         return Math.max(0.35, parseFloat(manualStake) || 1.0);
-    }, [isAutoStake, autoStakePercent, rawBalance, startingCapital, manualStake]);
+    }, [
+        tradeByCompoundingPlan,
+        activeCompoundingStep,
+        periodProfitPct,
+        isAutoStake,
+        autoStakePercent,
+        rawBalance,
+        startingCapital,
+        manualStake,
+    ]);
 
     // ── Real-Time Multi-Market WebSocket Streams ──
     useEffect(() => {
@@ -801,23 +890,34 @@ const OverlordAi: React.FC = observer(() => {
                     if (soundEnabled) playSoundCue('win');
                     updateLogResult(logId, 'WIN', profitVal);
                     setWinsCount(w => w + 1);
-                    setSessionProfit(p => {
-                        const newProfit = p + profitVal;
-                        // Auto-tick compounding plan step if target met
-                        setCompoundingPlan(prevPlan => {
-                            let updated = false;
-                            const newPlan = prevPlan.map(step => {
-                                if (!step.completed && newProfit >= step.targetProfit && !updated) {
-                                    updated = true;
-                                    return { ...step, completed: true };
-                                }
-                                return step;
+                    setSessionProfit(p => p + profitVal);
+
+                    // ── Handle Compounding Step Progression ──
+                    if (tradeByCompoundingPlan && activeCompoundingStep) {
+                        const newStepProfit = stepSessionProfit + profitVal;
+                        setStepSessionProfit(newStepProfit);
+
+                        // If Step Target Profit Achieved:
+                        if (newStepProfit >= activeCompoundingStep.targetProfit) {
+                            setCompoundingPlan(prevPlan => {
+                                const updated = prevPlan.map((s, idx) =>
+                                    idx === activeStepIndex ? { ...s, completed: true } : s
+                                );
+                                savePlanToStorage(updated);
+                                return updated;
                             });
-                            if (updated) savePlanToStorage(newPlan);
-                            return newPlan;
-                        });
-                        return newProfit;
-                    });
+
+                            // Advance to Next Period Step if available
+                            if (activeStepIndex + 1 < compoundingPlan.length) {
+                                setActiveStepIndex(idx => idx + 1);
+                                setStepSessionProfit(0);
+                                setStepStartTime(Date.now());
+                            } else {
+                                // All steps completed
+                                setBotState('PAUSED');
+                            }
+                        }
+                    }
 
                     if (isInRecovery) {
                         setIsInRecovery(false);
@@ -830,6 +930,9 @@ const OverlordAi: React.FC = observer(() => {
                     updateLogResult(logId, 'LOSS', profitVal);
                     setLossesCount(l => l + 1);
                     setSessionProfit(p => p + profitVal);
+                    if (tradeByCompoundingPlan) {
+                        setStepSessionProfit(sp => sp + profitVal);
+                    }
 
                     // Martingale multiplier
                     setIsInRecovery(true);
@@ -852,9 +955,14 @@ const OverlordAi: React.FC = observer(() => {
             currency,
             pushContractToDrawer,
             updateLogResult,
+            tradeByCompoundingPlan,
+            activeCompoundingStep,
+            stepSessionProfit,
+            activeStepIndex,
+            compoundingPlan.length,
+            savePlanToStorage,
             isInRecovery,
             effectiveStake,
-            savePlanToStorage,
             martingale,
             botState,
         ]
@@ -870,11 +978,13 @@ const OverlordAi: React.FC = observer(() => {
             isOverTriggerReady,
         } = statisticalAnalysis;
 
-        // Check Take Profit condition
-        const targetTp = parseFloat(takeProfitTarget) || 50;
-        if (sessionProfit >= targetTp && targetTp > 0) {
-            setBotState('PAUSED');
-            return;
+        // Check Fixed Take Profit condition (if not trading exclusively by compounding plan)
+        if (!tradeByCompoundingPlan) {
+            const targetTp = parseFloat(takeProfitTarget) || 50;
+            if (sessionProfit >= targetTp && targetTp > 0) {
+                setBotState('PAUSED');
+                return;
+            }
         }
 
         if (signal === 'NEUTRAL') {
@@ -916,8 +1026,9 @@ const OverlordAi: React.FC = observer(() => {
     }, [
         botState,
         statisticalAnalysis,
-        sessionProfit,
+        tradeByCompoundingPlan,
         takeProfitTarget,
+        sessionProfit,
         isInRecovery,
         currentStake,
         effectiveStake,
@@ -1093,6 +1204,7 @@ const OverlordAi: React.FC = observer(() => {
                             className='btn-control btn-autotrade-start'
                             onClick={() => {
                                 setBotState('WAITING_SIGNAL');
+                                setStepStartTime(Date.now());
                                 setCurrentStake(effectiveStake);
                             }}
                         >
@@ -1548,6 +1660,49 @@ const OverlordAi: React.FC = observer(() => {
                     {/* ── TAB 1: AUTOTRADER ENGINE ── */}
                     {activeRightTab === 'AUTOTRADER' && (
                         <div className='glass-panel autotrader-config-section'>
+                            {/* Live Compounding Timer HUD Banner */}
+                            {tradeByCompoundingPlan && activeCompoundingStep && (
+                                <div className='compounding-timer-hud'>
+                                    <div className='timer-header'>
+                                        <div className='step-badge'>
+                                            <Timer size={13} />
+                                            <span>Active: {activeCompoundingStep.label} (Step {activeCompoundingStep.step}/{compoundingPlan.length})</span>
+                                        </div>
+                                        <div className='live-clock-display' title='Time Elapsed in Current Period'>
+                                            <Clock size={14} />
+                                            <span>{stepProgress.elapsedFormatted}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className='progress-stats-row'>
+                                        <span className='profit-track'>
+                                            Step Goal: <strong>+${stepProgress.currentStepProfit.toFixed(2)}</strong> / +${stepProgress.targetProfit.toFixed(2)}
+                                        </span>
+                                        <span className='pct-track'>
+                                            {stepProgress.profitPct}% Met
+                                        </span>
+                                    </div>
+
+                                    <div className='dual-progress-bar'>
+                                        <div className='bar-label-mini'>
+                                            <span>Profit Target</span>
+                                            <span>{stepProgress.profitPct}%</span>
+                                        </div>
+                                        <div className='progress-track'>
+                                            <div className='progress-fill' style={{ width: `${stepProgress.profitPct}%` }} />
+                                        </div>
+
+                                        <div className='bar-label-mini' style={{ marginTop: '4px' }}>
+                                            <span>Period Time ({compoundingMode === 'HOURS' ? '60 min' : '24 hrs'})</span>
+                                            <span>{stepProgress.timePct}% Elapsed</span>
+                                        </div>
+                                        <div className='progress-track'>
+                                            <div className='time-fill' style={{ width: `${stepProgress.timePct}%` }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className='strategy-alert-box'>
                                 <Sparkles size={16} />
                                 <span>
@@ -1557,19 +1712,26 @@ const OverlordAi: React.FC = observer(() => {
 
                             <div className='form-row'>
                                 <div className='form-group'>
-                                    <label>Stake Mode</label>
+                                    <label>Trading Mode</label>
                                     <select
-                                        value={isAutoStake ? 'AUTO' : 'MANUAL'}
-                                        onChange={e => setIsAutoStake(e.target.value === 'AUTO')}
+                                        value={tradeByCompoundingPlan ? 'COMPOUNDING' : 'FIXED'}
+                                        onChange={e => setTradeByCompoundingPlan(e.target.value === 'COMPOUNDING')}
                                     >
-                                        <option value='AUTO'>Auto (7% Balance)</option>
-                                        <option value='MANUAL'>Manual Fixed Stake</option>
+                                        <option value='COMPOUNDING'>Trade by Compounding Plan (Auto Progression)</option>
+                                        <option value='FIXED'>Manual Fixed Target</option>
                                     </select>
                                 </div>
 
                                 <div className='form-group'>
-                                    <label>{isAutoStake ? 'Auto Stake %' : 'Fixed Stake ($)'}</label>
-                                    {isAutoStake ? (
+                                    <label>{tradeByCompoundingPlan ? 'Plan Profit %' : isAutoStake ? 'Auto Stake %' : 'Fixed Stake ($)'}</label>
+                                    {tradeByCompoundingPlan ? (
+                                        <input
+                                            type='number'
+                                            value={periodProfitPct}
+                                            onChange={e => setPeriodProfitPct(e.target.value)}
+                                            placeholder='7'
+                                        />
+                                    ) : isAutoStake ? (
                                         <input
                                             type='number'
                                             value={autoStakePercent}
@@ -1623,15 +1785,24 @@ const OverlordAi: React.FC = observer(() => {
                                     </select>
                                 </div>
 
-                                <div className='form-group'>
-                                    <label>Take Profit ($)</label>
-                                    <input
-                                        type='number'
-                                        value={takeProfitTarget}
-                                        onChange={e => setTakeProfitTarget(e.target.value)}
-                                        placeholder='50.00'
-                                    />
-                                </div>
+                                {!tradeByCompoundingPlan ? (
+                                    <div className='form-group'>
+                                        <label>Take Profit ($)</label>
+                                        <input
+                                            type='number'
+                                            value={takeProfitTarget}
+                                            onChange={e => setTakeProfitTarget(e.target.value)}
+                                            placeholder='50.00'
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className='form-group'>
+                                        <label>Active Step Target</label>
+                                        <div style={{ padding: '8px 12px', background: 'rgba(0, 230, 118, 0.1)', border: '1px solid rgba(0, 230, 118, 0.3)', borderRadius: '8px', color: '#00e676', fontWeight: '800', fontFamily: 'monospace' }}>
+                                            +${activeCompoundingStep?.targetProfit.toFixed(2) || '0.00'}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {predictionMode === 'CUSTOM' && (
@@ -1664,7 +1835,7 @@ const OverlordAi: React.FC = observer(() => {
 
                             <div className='form-row'>
                                 <div className='form-group' style={{ gridColumn: 'span 2' }}>
-                                    <label>Effective Stake</label>
+                                    <label>Effective Initial Stake</label>
                                     <div style={{ padding: '8px 12px', background: 'rgba(0, 245, 255, 0.1)', border: '1px solid rgba(0, 245, 255, 0.3)', borderRadius: '8px', color: '#00f5ff', fontWeight: '800', fontFamily: 'monospace' }}>
                                         ${isInRecovery ? currentStake.toFixed(2) : effectiveStake.toFixed(2)}
                                     </div>
@@ -1723,6 +1894,37 @@ const OverlordAi: React.FC = observer(() => {
                     {/* ── TAB 2: SIMPLE COMPOUNDING GENERATOR ── */}
                     {activeRightTab === 'COMPOUNDING' && (
                         <div className='glass-panel compounding-generator-section'>
+                            {/* Live Compounding Timer HUD */}
+                            {activeCompoundingStep && (
+                                <div className='compounding-timer-hud'>
+                                    <div className='timer-header'>
+                                        <div className='step-badge'>
+                                            <Timer size={13} />
+                                            <span>Active Step: {activeCompoundingStep.label}</span>
+                                        </div>
+                                        <div className='live-clock-display'>
+                                            <Clock size={14} />
+                                            <span>{stepProgress.elapsedFormatted}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className='progress-stats-row'>
+                                        <span className='profit-track'>
+                                            Target: <strong>+${stepProgress.currentStepProfit.toFixed(2)}</strong> / +${stepProgress.targetProfit.toFixed(2)}
+                                        </span>
+                                        <span className='pct-track'>
+                                            {stepProgress.profitPct}% Met
+                                        </span>
+                                    </div>
+
+                                    <div className='dual-progress-bar'>
+                                        <div className='progress-track'>
+                                            <div className='progress-fill' style={{ width: `${stepProgress.profitPct}%` }} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className='compounding-inputs-grid'>
                                 <div className='input-item'>
                                     <label>Starting Capital ($)</label>
@@ -1851,34 +2053,39 @@ const OverlordAi: React.FC = observer(() => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {compoundingPlan.map((step, idx) => (
-                                            <tr
-                                                key={step.step}
-                                                className={step.completed ? 'completed-step' : ''}
-                                            >
-                                                <td>
-                                                    <input
-                                                        type='checkbox'
-                                                        className='tick-checkbox'
-                                                        checked={step.completed}
-                                                        onChange={() => handleToggleStep(idx)}
-                                                    />
-                                                </td>
-                                                <td>{step.label}</td>
-                                                <td>${step.startingBalance.toFixed(2)}</td>
-                                                <td style={{ color: '#00e676' }}>+${step.targetProfit.toFixed(2)}</td>
-                                                <td>${step.endingBalance.toFixed(2)}</td>
-                                                <td>
-                                                    <button
-                                                        className='target-btn'
-                                                        onClick={() => handleTargetStep(step)}
-                                                        title='Set session TP to this step'
-                                                    >
-                                                        Target
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {compoundingPlan.map((step, idx) => {
+                                            const isActive = idx === activeStepIndex;
+                                            return (
+                                                <tr
+                                                    key={step.step}
+                                                    className={`${step.completed ? 'completed-step' : ''} ${isActive ? 'active-trading-step' : ''}`}
+                                                >
+                                                    <td>
+                                                        <input
+                                                            type='checkbox'
+                                                            className='tick-checkbox'
+                                                            checked={step.completed}
+                                                            onChange={() => handleToggleStep(idx)}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        {step.label} {isActive && <span style={{ color: '#00f5ff', fontSize: '9px', fontWeight: '800' }}>● ACTIVE</span>}
+                                                    </td>
+                                                    <td>${step.startingBalance.toFixed(2)}</td>
+                                                    <td style={{ color: '#00e676' }}>+${step.targetProfit.toFixed(2)}</td>
+                                                    <td>${step.endingBalance.toFixed(2)}</td>
+                                                    <td>
+                                                        <button
+                                                            className={`target-btn ${isActive ? 'is-active-btn' : ''}`}
+                                                            onClick={() => handleSetAsActiveStep(idx)}
+                                                            title='Set as active trading step'
+                                                        >
+                                                            {isActive ? 'Trading' : 'Target'}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
