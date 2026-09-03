@@ -25,6 +25,8 @@ import FreeBotsStore from './free-bots-store';
 import AnalysisStore from './analysis-store';
 import EntryScannerStore from './entry-scanner-store';
 import EasyToolStore from './easy-tool-store';
+import DigitCrackerStore from './digit-cracker-store';
+import SmartAutoStore from './smart-auto-store';
 
 export default class RootStore {
     public dbot;
@@ -45,6 +47,8 @@ export default class RootStore {
     public analysis: AnalysisStore;
     public entry_scanner: EntryScannerStore;
     public easy_tool: EasyToolStore;
+    public digit_cracker: DigitCrackerStore;
+    public smart_auto: SmartAutoStore;
 
     public dashboard: DashboardStore;
 
@@ -79,6 +83,8 @@ export default class RootStore {
         this.analysis = new AnalysisStore(this);
         this.entry_scanner = new EntryScannerStore(this);
         this.easy_tool = new EasyToolStore(this);
+        this.digit_cracker = new DigitCrackerStore(this);
+        this.smart_auto = new SmartAutoStore(this);
 
         this.app = new AppStore(this, this.core);
         this.summary_card = new SummaryCardStore(this, this.core);

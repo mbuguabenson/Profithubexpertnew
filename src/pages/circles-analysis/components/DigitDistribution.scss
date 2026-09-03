@@ -1,0 +1,210 @@
+@use 'components/shared/styles/constants' as *;
+
+.digit-distribution-card {
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    margin-bottom: 16px;
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 8px;
+
+        h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 12px;
+            font-size: 0.72rem;
+            color: #94a3b8;
+
+            .legend-item {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+
+                .dot {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    display: inline-block;
+
+                    &.highest {
+                        background: #10b981;
+                    }
+                    &.second {
+                        background: #ffd700;
+                    }
+                    &.lowest {
+                        background: #ef4444;
+                    }
+                    &.current {
+                        background: #ff7c00;
+                    }
+                }
+            }
+        }
+    }
+
+    .distribution-chart-wrapper {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bars-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: 160px;
+        padding-top: 15px;
+        width: 100%;
+        gap: 4px;
+    }
+
+    .bar-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        position: relative;
+
+        .bar-track {
+            flex: 1;
+            width: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 9999px;
+            position: relative;
+            margin-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow: visible;
+        }
+
+        .bar-fill {
+            width: 100%;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.15);
+            position: relative;
+            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 4px;
+        }
+
+        .percentage-label {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #94a3b8;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .digit-label-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 28px;
+            position: relative;
+
+            .digit-number {
+                font-size: 0.82rem;
+                font-weight: 700;
+                color: #64748b;
+                transition: color 0.2s ease;
+            }
+
+            .active-arrow-indicator {
+                font-size: 0.55rem;
+                color: #ff7c00;
+                margin-top: 2px;
+                animation: bounceArrow 1.2s infinite;
+            }
+        }
+
+        // Color ranks
+        &.highest {
+            .bar-fill {
+                background: linear-gradient(180deg, #10b981 0%, rgba(16, 185, 129, 0.3) 100%);
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+            }
+            .percentage-label {
+                color: #10b981;
+            }
+        }
+
+        &.second {
+            .bar-fill {
+                background: linear-gradient(180deg, #ffd700 0%, rgba(255, 215, 0, 0.3) 100%);
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+            }
+            .percentage-label {
+                color: #ffd700;
+            }
+        }
+
+        &.lowest {
+            .bar-fill {
+                background: linear-gradient(180deg, #ef4444 0%, rgba(239, 68, 68, 0.3) 100%);
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+            }
+            .percentage-label {
+                color: #ef4444;
+            }
+        }
+
+        &.is-current {
+            .bar-fill {
+                background: linear-gradient(180deg, #ff7c00 0%, rgba(255, 124, 0, 0.4) 100%) !important;
+                box-shadow: 0 0 15px rgba(255, 124, 0, 0.6) !important;
+                animation: pulseBar 1.8s infinite;
+            }
+            .percentage-label {
+                color: #ff7c00 !important;
+                font-weight: 800;
+            }
+            .digit-number {
+                color: #ff7c00 !important;
+                font-weight: 800;
+                font-size: 0.9rem;
+            }
+        }
+    }
+}
+
+@keyframes bounceArrow {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+@keyframes pulseBar {
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+    50% {
+        filter: brightness(1.2);
+    }
+}
