@@ -950,7 +950,6 @@ const OverlordAi: React.FC = observer(() => {
 
                     // Pause briefly (3 seconds) for multi-market AI re-analysis
                     setBotState('BURST_PAUSED');
-                    setAnalysisPauseTime(3);
 
                     // Market Rotation check:
                     if (
