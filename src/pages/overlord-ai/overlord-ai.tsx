@@ -6,31 +6,21 @@ import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purc
 import { safeSubscribe } from '@/utils/websocket-handler';
 import {
     Activity,
-    ArrowDownRight,
-    ArrowUpRight,
-    Award,
     BarChart2,
     Cpu,
-    Crosshair,
     Download,
     Flame,
     Layers,
-    LineChart,
     Maximize2,
     Minimize2,
     Play,
     Radio,
     RotateCcw,
-    ShieldAlert,
-    ShieldCheck,
     Sparkles,
     Square,
-    Target,
-    TrendingUp,
     Volume2,
     VolumeX,
     Wallet,
-    Workflow,
     Zap,
 } from 'lucide-react';
 import './overlord-ai.scss';
@@ -187,7 +177,7 @@ const extractLastDigit = (quote: number | string, pip = 2): number => {
 
 const OverlordAi: React.FC = observer(() => {
     const store = useStore();
-    const { client, transactions, run_panel, summary_card } = store || {};
+    const { client, transactions, summary_card } = store || {};
     const currency = client?.currency || 'USD';
     const rawBalance = Number(client?.balance || 0);
 
@@ -229,8 +219,7 @@ const OverlordAi: React.FC = observer(() => {
     const [stopLoss, setStopLoss] = useState<string>('50.00');
     const [strategyMode, setStrategyMode] = useState<OverlordStrategyMode>('ALL_AUTO');
     const [martingaleMultiplier, setMartingaleMultiplier] = useState<string>('2.5');
-    const [isMartingaleEnabled, setIsMartingaleEnabled] = useState<boolean>(true);
-    const tickDuration = '1';
+    const [isMartingaleEnabled] = useState<boolean>(true);
 
     // ── Continuous Burst Trading & Market Rotation ──
     const [burstRunSize, setBurstRunSize] = useState<number>(10); // 7 to 12 runs default: 10
@@ -238,12 +227,11 @@ const OverlordAi: React.FC = observer(() => {
     const [burstCountTotal, setBurstCountTotal] = useState<number>(0);
     const [marketRotationRuns, setMarketRotationRuns] = useState<number>(4); // Change market after 4 runs
     const [runsOnCurrentMarket, setRunsOnCurrentMarket] = useState<number>(0);
-    const [isMarketRotationEnabled, setIsMarketRotationEnabled] = useState<boolean>(true);
+    const [isMarketRotationEnabled] = useState<boolean>(true);
 
     // ── Session State & Execution Engine ──
     const [botState, setBotState] = useState<AutoRunState>('IDLE');
     const [currentStake, setCurrentStake] = useState<number>(1.0);
-    const [martingaleStage, setMartingaleStage] = useState<number>(0);
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [winsCount, setWinsCount] = useState<number>(0);
     const [lossesCount, setLossesCount] = useState<number>(0);
@@ -408,7 +396,6 @@ const OverlordAi: React.FC = observer(() => {
 
         // Low Digits (0–4) vs High Digits (5–9)
         const lowCount = [0, 1, 2, 3, 4].reduce((sum, d) => sum + frequencies[d], 0);
-        const highCount = [5, 6, 7, 8, 9].reduce((sum, d) => sum + frequencies[d], 0);
         const lowRatio = Math.round((lowCount / sampleSize) * 100);
         const highRatio = 100 - lowRatio;
 
@@ -584,47 +571,19 @@ const OverlordAi: React.FC = observer(() => {
 
     // Push Contract Details to Deriv System Drawer
     const pushContractToDrawer = useCallback(
-        (poc: any, contractType: string, barrierVal: number, stakeVal: number) => {
+        (poc: any) => {
             try {
-                if (summary_card?.setContractInfo) {
-                    summary_card.setContractInfo(poc);
+                if (summary_card) {
+                    summary_card.contract_info = poc;
                 }
-                if (transactions?.contracts) {
-                    const isSold = Boolean(poc.is_sold || poc.status === 'won' || poc.status === 'lost');
-                    const profitVal = Number(poc.profit || 0);
-                    const txItem = {
-                        barrier: barrierVal,
-                        buy_price: stakeVal,
-                        contract_id: poc.contract_id,
-                        contract_type: contractType,
-                        currency,
-                        display_name: currentMarket.label,
-                        date_start: poc.date_start || Math.floor(Date.now() / 1000),
-                        date_expiry: poc.date_expiry,
-                        entry_tick: poc.entry_tick,
-                        exit_tick: poc.exit_tick,
-                        is_completed: isSold,
-                        payout: Number(poc.payout || 0),
-                        profit: profitVal,
-                        reference_id: poc.transaction_ids?.buy || poc.contract_id,
-                        status: isSold ? (profitVal >= 0 ? 'won' : 'lost') : 'open',
-                        symbol: currentMarket.symbol,
-                        underlying: currentMarket.symbol,
-                    };
-                    const existingIdx = transactions.contracts.findIndex(
-                        (c: any) => c.contract_id === poc.contract_id
-                    );
-                    if (existingIdx >= 0) {
-                        transactions.contracts[existingIdx] = txItem as any;
-                    } else {
-                        transactions.contracts.unshift(txItem as any);
-                    }
+                if (transactions?.onBotContractEvent) {
+                    transactions.onBotContractEvent(poc);
                 }
             } catch (err) {
                 console.debug('[Overlord AI] Drawer update notice:', err);
             }
         },
-        [summary_card, transactions, currency, currentMarket]
+        [summary_card, transactions]
     );
 
     // ── Trade Order Execution ──
@@ -656,26 +615,30 @@ const OverlordAi: React.FC = observer(() => {
 
             try {
                 const buyRes = await buyContractForUi({
-                    symbol: symbolToTrade,
-                    contract_type: contractType,
-                    amount: stakeAmount,
-                    basis: 'stake',
-                    currency,
-                    duration: 1,
-                    duration_unit: 't',
-                    barrier: String(barrierValue),
+                    parameters: {
+                        amount: stakeAmount,
+                        basis: 'stake',
+                        contract_type: contractType,
+                        currency,
+                        duration: 1,
+                        duration_unit: 't',
+                        symbol: symbolToTrade,
+                        barrier: String(barrierValue),
+                    },
+                    price: stakeAmount,
+                    source: 'Overlord AI',
                 });
 
                 const contractId = buyRes.contract_id;
 
-                const settledContract = await streamContractUntilSettled(
-                    api_base?.api,
-                    contractId,
-                    poc => {
-                        pushContractToDrawer(poc, contractType, barrierValue, stakeAmount);
+                const settledContract = await streamContractUntilSettled({
+                    contractId: Number(contractId),
+                    source: 'Overlord AI',
+                    onUpdate: (snapshot: any) => {
+                        pushContractToDrawer(snapshot);
                     },
-                    12000
-                );
+                    timeoutMs: 12000,
+                });
 
                 const isWon = settledContract.status === 'won' || settledContract.profit > 0;
                 const profitVal = Number(settledContract.profit || 0);
