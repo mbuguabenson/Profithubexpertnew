@@ -1,10 +1,19 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
 import { api_base, ApiHelpers, observer as globalObserver } from '@/external/bot-skeleton';
 import { safeSubscribe } from '@/utils/websocket-handler';
-import { getAllMarketsFromApi, getGroupedMarkets, GroupedMarketOptions } from '@/constants/markets';
 import RootStore from './root-store';
 
-export type TMarketGroup = GroupedMarketOptions;
+export type TMarketItem = {
+    value: string;
+    label: string;
+    market?: string;
+    submarket?: string;
+};
+
+export type TMarketGroup = {
+    group: string;
+    items: TMarketItem[];
+};
 
 export default class EasyToolStore {
     root_store: RootStore;
@@ -14,8 +23,9 @@ export default class EasyToolStore {
     @observable accessor last_digit: number | null = null;
     @observable accessor ticks: number[] = [];
     @observable accessor stats_sample_size: number = 1000;
-    @observable accessor markets: TMarketGroup[] = getGroupedMarkets();
-    @observable accessor is_loading: boolean = false;
+    @observable accessor markets: TMarketGroup[] = [];
+    @observable accessor is_loading_markets: boolean = false;
+    @observable accessor is_loading_ticks: boolean = false;
     @observable accessor is_connected: boolean = false;
 
     private _tick_sub: any = null;
@@ -25,10 +35,7 @@ export default class EasyToolStore {
         makeObservable(this);
         this.root_store = root_store;
 
-        // Ensure markets are immediately populated
-        this.markets = getGroupedMarkets();
-
-        // Socket open reaction
+        // Auto-fetch markets & subscribe when socket connects
         reaction(
             () => this.root_store.common?.is_socket_opened,
             is_socket_opened => {
@@ -42,7 +49,7 @@ export default class EasyToolStore {
             }
         );
 
-        // Account switched or authorized
+        // Account switch or token authorization
         if (typeof window !== 'undefined') {
             window.addEventListener('account_switched', () => {
                 this.fetchMarkets();
@@ -61,12 +68,18 @@ export default class EasyToolStore {
         });
 
         // Initialize immediately
-        this.waitForApiAndConnect();
+        this.initWebSocketConnection();
     }
 
     @action
-    private waitForApiAndConnect = () => {
-        const tryConnect = () => {
+    private initWebSocketConnection = async () => {
+        // If api_base has cached active_symbols from WebSocket, populate immediately
+        if (api_base.active_symbols && Array.isArray(api_base.active_symbols) && api_base.active_symbols.length > 0) {
+            this.processWebSocketSymbols(api_base.active_symbols);
+        }
+
+        // Poll/wait for ready WebSocket
+        const checkConnection = () => {
             if (api_base.api) {
                 runInAction(() => {
                     this.is_connected = true;
@@ -74,10 +87,10 @@ export default class EasyToolStore {
                 this.fetchMarkets();
                 this.subscribeToActiveSymbol();
             } else {
-                setTimeout(tryConnect, 1000);
+                setTimeout(checkConnection, 800);
             }
         };
-        tryConnect();
+        checkConnection();
     };
 
     @action
@@ -95,44 +108,111 @@ export default class EasyToolStore {
         this.stats_sample_size = size;
     };
 
+    /**
+     * Group raw active_symbols from Deriv WebSocket by submarket/market display names
+     */
     @action
-    fetchMarkets = async () => {
+    processWebSocketSymbols = (rawSymbols: any[]) => {
+        if (!rawSymbols || !Array.isArray(rawSymbols) || rawSymbols.length === 0) return;
+
+        const groupMap = new Map<string, TMarketItem[]>();
+
+        rawSymbols.forEach((s: any) => {
+            if (s.is_trading_suspended) return;
+            const sym = s.symbol || s.underlying_symbol;
+            if (!sym) return;
+
+            const label = s.display_name || s.symbol_display_name || sym;
+            const groupName =
+                s.submarket_display_name ||
+                s.market_display_name ||
+                (s.market === 'synthetic_index' ? 'Derived Indices' : s.market) ||
+                'Markets';
+
+            if (!groupMap.has(groupName)) {
+                groupMap.set(groupName, []);
+            }
+
+            groupMap.get(groupName)!.push({
+                value: sym,
+                label,
+                market: s.market,
+                submarket: s.submarket,
+            });
+        });
+
+        const grouped: TMarketGroup[] = [];
+        groupMap.forEach((items, group) => {
+            grouped.push({
+                group,
+                items: items.sort((a, b) => a.label.localeCompare(b.label)),
+            });
+        });
+
+        // Sort groups with Derived / Continuous first
+        grouped.sort((a, b) => {
+            if (a.group.toLowerCase().includes('continuous')) return -1;
+            if (b.group.toLowerCase().includes('continuous')) return 1;
+            if (a.group.toLowerCase().includes('derived')) return -1;
+            if (b.group.toLowerCase().includes('derived')) return 1;
+            return a.group.localeCompare(b.group);
+        });
+
+        runInAction(() => {
+            this.markets = grouped;
+            this.is_loading_markets = false;
+
+            // If current symbol is not in available symbols, select the first one
+            const allValues = grouped.flatMap(g => g.items.map(i => i.value));
+            if (allValues.length > 0 && !allValues.includes(this.symbol)) {
+                this.symbol = allValues[0];
+            }
+        });
+    };
+
+    /**
+     * Fetch active_symbols directly over Deriv WebSocket
+     */
+    @action
+    fetchMarkets = async (retryCount = 0) => {
+        this.is_loading_markets = true;
         let symbols: any[] = [];
+
         try {
             if (api_base.api) {
-                const res: any = await api_base.api.send({ active_symbols: 'brief' });
+                // Direct Deriv WebSocket active_symbols send
+                const res: any = await api_base.api.send({ active_symbols: 'brief', product_type: 'basic' });
                 if (res?.active_symbols && Array.isArray(res.active_symbols) && res.active_symbols.length > 0) {
                     symbols = res.active_symbols;
                 }
             }
         } catch (error) {
-            console.warn('[EasyToolStore] API active_symbols fetch notice:', error);
+            console.debug('[EasyToolStore] WS active_symbols send notice:', error);
         }
 
+        // Fallback to ApiHelpers or api_base.active_symbols if send timed out
         if (symbols.length === 0) {
             try {
-                if (
+                if (api_base.active_symbols && Array.isArray(api_base.active_symbols) && api_base.active_symbols.length > 0) {
+                    symbols = api_base.active_symbols;
+                } else if (
                     ApiHelpers.instance &&
                     typeof (ApiHelpers.instance as any).active_symbols?.retrieveActiveSymbols === 'function'
                 ) {
                     symbols = await (ApiHelpers.instance as any).active_symbols.retrieveActiveSymbols();
                 }
             } catch (e) {
-                console.warn('[EasyToolStore] ApiHelpers retrieveActiveSymbols notice:', e);
+                console.debug('[EasyToolStore] ApiHelpers retrieveActiveSymbols notice:', e);
             }
         }
 
         if (symbols && symbols.length > 0) {
-            const allMarkets = getAllMarketsFromApi(symbols);
-            const grouped = getGroupedMarkets(allMarkets);
-            runInAction(() => {
-                if (grouped.length > 0) {
-                    this.markets = grouped;
-                }
-            });
+            this.processWebSocketSymbols(symbols);
+        } else if (retryCount < 5) {
+            setTimeout(() => this.fetchMarkets(retryCount + 1), 1500);
         } else {
             runInAction(() => {
-                this.markets = getGroupedMarkets();
+                this.is_loading_markets = false;
             });
         }
     };
@@ -149,12 +229,15 @@ export default class EasyToolStore {
         }
     };
 
+    /**
+     * Stream live ticks directly from Deriv WebSocket for active symbol
+     */
     @action
     subscribeToActiveSymbol = async (retryCount = 0) => {
         if (this._is_subscribing) return;
         this.unsubscribe();
         this._is_subscribing = true;
-        this.is_loading = true;
+        this.is_loading_ticks = true;
 
         const sym = this.symbol;
 
@@ -173,12 +256,12 @@ export default class EasyToolStore {
                     }, 1000);
                 } else {
                     this._is_subscribing = false;
-                    this.is_loading = false;
+                    this.is_loading_ticks = false;
                 }
                 return;
             }
 
-            // 1. Initial tick history
+            // 1. Initial tick history straight from WebSocket
             try {
                 const res: any = await api_base.api.send({
                     ticks_history: sym,
@@ -203,11 +286,11 @@ export default class EasyToolStore {
                         const parts = quoteStr.split('.');
                         const decimalPart = parts[1] || '0';
                         this.last_digit = parseInt(decimalPart[decimalPart.length - 1] || '0', 10);
-                        this.is_loading = false;
+                        this.is_loading_ticks = false;
                     });
                 }
             } catch (e) {
-                console.debug('[EasyToolStore] History fetch notice:', e);
+                console.debug('[EasyToolStore] WS ticks_history notice:', e);
             }
 
             if (this.symbol !== sym) {
@@ -215,7 +298,7 @@ export default class EasyToolStore {
                 return;
             }
 
-            // 2. Real-time tick stream via safeSubscribe
+            // 2. Real-time tick stream over WebSocket using safeSubscribe
             const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
             if (tickObservable) {
                 this._tick_sub = safeSubscribe(tickObservable, (data: any) => {
