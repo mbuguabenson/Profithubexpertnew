@@ -45,77 +45,130 @@ export default Engine =>
 
         getTicks(toString = false) {
             return new Promise(resolve => {
-                this.$scope.ticksService.request({ symbol: this.symbol }).then(ticks => {
-                    const ticks_list = ticks.map(tick => {
-                        if (toString) {
-                            return tick.quote.toFixed(this.getPipSize());
-                        }
-                        return tick.quote;
-                    });
+                const targetSymbol = this.symbol || this.options?.symbol;
+                if (!targetSymbol) {
+                    resolve([]);
+                    return;
+                }
+                this.$scope.ticksService
+                    .request({ symbol: targetSymbol })
+                    .then(ticks => {
+                        const ticks_list = (ticks || []).map(tick => {
+                            if (toString) {
+                                return typeof tick?.quote === 'number'
+                                    ? tick.quote.toFixed(this.getPipSize())
+                                    : String(tick?.quote ?? '');
+                            }
+                            return tick?.quote ?? 0;
+                        });
 
-                    resolve(ticks_list);
-                });
+                        resolve(ticks_list);
+                    })
+                    .catch(err => {
+                        console.warn('[Ticks] getTicks request error:', err);
+                        resolve([]);
+                    });
             });
         }
 
         getLastTick(raw, toString = false) {
-            return new Promise((resolve, reject) =>
+            return new Promise(resolve => {
+                const targetSymbol = this.symbol || this.options?.symbol;
+                if (!targetSymbol) {
+                    resolve(raw ? { epoch: Math.floor(Date.now() / 1000), quote: 0 } : (toString ? '0.00' : 0));
+                    return;
+                }
                 this.$scope.ticksService
-                    .request({ symbol: this.symbol })
+                    .request({ symbol: targetSymbol })
                     .then(ticks => {
                         try {
-                            let last_tick = raw ? getLast(ticks) : getLast(ticks).quote;
-                            if (!raw && toString) {
-                                last_tick = last_tick.toFixed(this.getPipSize());
+                            const last = getLast(ticks || []);
+                            if (!last) {
+                                resolve(
+                                    raw ? { epoch: Math.floor(Date.now() / 1000), quote: 0 } : (toString ? '0.00' : 0)
+                                );
+                                return;
+                            }
+                            let last_tick = raw ? last : last.quote;
+                            if (!raw && toString && typeof last?.quote === 'number') {
+                                last_tick = last.quote.toFixed(this.getPipSize());
                             }
                             resolve(last_tick);
                         } catch (error) {
-                            reject(error);
+                            resolve(
+                                raw ? { epoch: Math.floor(Date.now() / 1000), quote: 0 } : (toString ? '0.00' : 0)
+                            );
                         }
                     })
                     .catch(e => {
-                        if (e.code === 'MarketIsClosed') {
+                        if (e?.code === 'MarketIsClosed') {
                             const localizedError = {
                                 ...e,
                                 message: getLocalizedErrorMessage(e.code, e.details),
                             };
                             globalObserver.emit('Error', localizedError);
                             resolve(e.code);
+                        } else {
+                            resolve(
+                                raw ? { epoch: Math.floor(Date.now() / 1000), quote: 0 } : (toString ? '0.00' : 0)
+                            );
                         }
-                    })
-            );
+                    });
+            });
         }
 
         getLastDigit() {
-            return new Promise(resolve => this.getLastTick(false, true).then(tick => resolve(getLastDigit(tick))));
+            return new Promise(resolve =>
+                this.getLastTick(false, true)
+                    .then(tick => resolve(getLastDigit(tick)))
+                    .catch(() => resolve(0))
+            );
         }
 
         getLastDigitList() {
-            return new Promise(resolve => this.getTicks().then(ticks => resolve(this.getLastDigitsFromList(ticks))));
+            return new Promise(resolve =>
+                this.getTicks()
+                    .then(ticks => resolve(this.getLastDigitsFromList(ticks)))
+                    .catch(() => resolve([]))
+            );
         }
+
         getLastDigitsFromList(ticks) {
-            const digits = ticks.map(tick => {
-                return getLastDigit(tick.toFixed(this.getPipSize()));
+            if (!Array.isArray(ticks)) return [];
+            return ticks.map(tick => {
+                const num = typeof tick === 'number' ? tick.toFixed(this.getPipSize()) : String(tick ?? '');
+                return getLastDigit(num);
             });
-            return digits;
         }
 
         checkDirection(dir) {
-            return new Promise(resolve =>
+            return new Promise(resolve => {
+                const targetSymbol = this.symbol || this.options?.symbol;
+                if (!targetSymbol) {
+                    resolve(false);
+                    return;
+                }
                 this.$scope.ticksService
-                    .request({ symbol: this.symbol })
-                    .then(ticks => resolve(getDirection(ticks) === dir))
-            );
+                    .request({ symbol: targetSymbol })
+                    .then(ticks => resolve(getDirection(ticks || []) === dir))
+                    .catch(() => resolve(false));
+            });
         }
 
         getOhlc(args) {
-            const { granularity = this.options.candleInterval || 60, field } = args || {};
+            const { granularity = this.options?.candleInterval || 60, field } = args || {};
+            const targetSymbol = this.symbol || this.options?.symbol;
 
-            return new Promise(resolve =>
+            return new Promise(resolve => {
+                if (!targetSymbol) {
+                    resolve([]);
+                    return;
+                }
                 this.$scope.ticksService
-                    .request({ symbol: this.symbol, granularity })
-                    .then(ohlc => resolve(field ? ohlc.map(o => o[field]) : ohlc))
-            );
+                    .request({ symbol: targetSymbol, granularity })
+                    .then(ohlc => resolve(field ? (ohlc || []).map(o => o?.[field]) : (ohlc || [])))
+                    .catch(() => resolve([]));
+            });
         }
 
         getOhlcFromEnd(args) {
@@ -123,11 +176,16 @@ export default Engine =>
 
             const index = expectPositiveInteger(Number(i), localize('Index must be a positive integer'));
 
-            return new Promise(resolve => this.getOhlc(args).then(ohlc => resolve(ohlc.slice(-index)[0])));
+            return new Promise(resolve =>
+                this.getOhlc(args)
+                    .then(ohlc => resolve((ohlc || []).slice(-index)[0]))
+                    .catch(() => resolve(null))
+            );
         }
 
         getPipSize() {
-            return this.$scope.ticksService.pipSizes[this.symbol];
+            const pip = this.$scope.ticksService?.pipSizes?.[this.symbol] ?? api_base?.pip_sizes?.[this.symbol];
+            return typeof pip === 'number' ? pip : 2;
         }
 
         async requestAccumulatorStats() {

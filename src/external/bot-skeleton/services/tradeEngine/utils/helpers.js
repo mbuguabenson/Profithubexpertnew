@@ -328,19 +328,20 @@ export const createDetails = contract => {
 export const getUUID = () => `${new Date().getTime() * Math.random()}`;
 
 const hasBlockOfType = (targetType, workspace) => {
+    if (!workspace || typeof workspace.getAllBlocks !== 'function') return false;
     const allBlocks = workspace.getAllBlocks();
     return allBlocks.some(block => block.type === targetType && !!block.parentBlock_);
 };
 
 export const checkBlocksForProposalRequest = () => {
-    const workspace = window.Blockly.derivWorkspace;
+    const workspace = window.Blockly?.derivWorkspace || window.Blockly?.getMainWorkspace?.();
+    if (!workspace) {
+        return {
+            has_payout_block: false,
+            is_basis_payout: false,
+        };
+    }
     const has_payout_block = hasBlockOfType('payout', workspace);
-
-    // Code for the future for case when basis: 'payout':
-    // * Since basis : '${block.type === 'trade_definition_tradeoptions' ? 'stake' : 'payout'}'
-    // * basis: 'payout' when contract_type: "MULTUP"
-    // Uncomment next line later:
-    // const is_basis_payout = !hasBlockOfType('trade_definition_tradeoptions', workspace);
 
     return {
         has_payout_block,

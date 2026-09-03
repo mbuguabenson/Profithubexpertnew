@@ -87,6 +87,29 @@ export class SessionManager {
     }
 
     /**
+     * Updates and persists session data.
+     */
+    public setSession(payload: Partial<SessionPayload>) {
+        if (payload.loginid) {
+            localStorage.setItem('active_loginid', payload.loginid);
+            localStorage.setItem('client.loginid', payload.loginid);
+        }
+        if (payload.token) {
+            localStorage.setItem('authToken', payload.token);
+            localStorage.setItem('active_token', payload.token);
+            localStorage.setItem('token', payload.token);
+            localStorage.setItem('token1', payload.token);
+        }
+        if (payload.currency) {
+            localStorage.setItem('client.currency', payload.currency);
+        }
+        if (payload.appId) {
+            localStorage.setItem('config.app_id', payload.appId);
+        }
+        this.refreshSession();
+    }
+
+    /**
      * Manually refresh the session state and broadcast if changed.
      */
     public refreshSession() {

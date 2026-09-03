@@ -6,7 +6,6 @@ import { FORM_ERROR_MESSAGES } from '@/components/shared/constants/form-error-me
 import { initFormErrorMessages } from '@/components/shared/utils/validation/declarative-validation-rules';
 import { api_base } from '@/external/bot-skeleton';
 import { useApiBase } from '@/hooks/useApiBase';
-import { useLogout } from '@/hooks/useLogout';
 import { useStore } from '@/hooks/useStore';
 import { TSocketResponseData } from '@/types/api-types';
 import { clearInvalidTokenParams } from '@/utils/url-utils';
@@ -35,8 +34,6 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
     const { client, common } = useStore() ?? {};
 
     const { currentLang } = useTranslations();
-
-    const handleLogout = useLogout();
 
     const activeAccount = useMemo(
         () => accountList?.find(account => account.loginid === activeLoginid),
@@ -131,8 +128,8 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
         // Changed parameter type from Record<string, unknown> to unknown to match onMessage signature
         async (res: unknown) => {
             if (!res) return;
-            const data = (res as Record<string, unknown>).data as TSocketResponseData<'balance'>;
-            const { msg_type, error } = data;
+            const data = (res as Record<string, unknown>).data as Record<string, any>;
+            const { msg_type, error } = data || {};
 
             // Handle auth errors by attempting refresh first, preventing accidental logouts
             if (error?.code === 'DisabledClient' || (error?.code === 'InvalidToken' && msg_type === 'authorize')) {

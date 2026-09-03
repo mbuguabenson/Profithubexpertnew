@@ -417,21 +417,27 @@ class DBot {
                 return false;
             }
             function BinaryBotPrivateTickAnalysis() {
-                var currentTickTime = Bot.getLastTick(true);
-                while (currentTickTime === 'MarketIsClosed') {
-                    sleep(5);
-                    currentTickTime = Bot.getLastTick(true);
-                }
-                if (!currentTickTime || typeof currentTickTime.epoch !== 'number') {
-                    return;
-                }
-                currentTickTime = currentTickTime.epoch;
-                if (currentTickTime === BinaryBotPrivateLastTickTime) {
-                    return;
-                }
-                BinaryBotPrivateLastTickTime = currentTickTime;
-                for (var BinaryBotPrivateI = 0; BinaryBotPrivateI < BinaryBotPrivateTickAnalysisList.length; BinaryBotPrivateI++) {
-                    BinaryBotPrivateRun(BinaryBotPrivateTickAnalysisList[BinaryBotPrivateI]);
+                try {
+                    var currentTickTime = Bot.getLastTick(true);
+                    var retryCount = 0;
+                    while (currentTickTime === 'MarketIsClosed' && retryCount < 5) {
+                        sleep(2);
+                        retryCount++;
+                        currentTickTime = Bot.getLastTick(true);
+                    }
+                    if (!currentTickTime || typeof currentTickTime.epoch !== 'number') {
+                        return;
+                    }
+                    currentTickTime = currentTickTime.epoch;
+                    if (currentTickTime === BinaryBotPrivateLastTickTime) {
+                        return;
+                    }
+                    BinaryBotPrivateLastTickTime = currentTickTime;
+                    for (var BinaryBotPrivateI = 0; BinaryBotPrivateI < BinaryBotPrivateTickAnalysisList.length; BinaryBotPrivateI++) {
+                        BinaryBotPrivateRun(BinaryBotPrivateTickAnalysisList[BinaryBotPrivateI]);
+                    }
+                } catch(err) {
+                    // Safe non-blocking catch for tick analysis
                 }
             }
             var BinaryBotPrivateLimitations = ${JSON.stringify(limitations)};
