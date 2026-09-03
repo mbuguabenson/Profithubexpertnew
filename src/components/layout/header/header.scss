@@ -269,17 +269,17 @@
     }
 
     .modern-login-btn {
-        background: transparent !important;
-        border: 1px solid rgba(124, 58, 237, 0.5) !important;
-        color: #7c3aed !important;
+        background: var(--ph-login-bg, transparent) !important;
+        border: 1px solid var(--ph-primary, rgba(124, 58, 237, 0.5)) !important;
+        color: var(--ph-login-text, #7c3aed) !important;
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
         box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
 
         &:hover {
-            background: rgba(124, 58, 237, 0.1) !important;
-            border-color: #7c3aed !important;
+            background: var(--ph-login-bg, rgba(124, 58, 237, 0.1)) !important;
+            opacity: 0.85;
             box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
             transform: translateY(-2px);
         }
@@ -298,9 +298,9 @@
     }
 
     .modern-signup-btn {
-        background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%) !important;
+        background: var(--ph-signup-bg, linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)) !important;
         border: none !important;
-        color: #ffffff !important;
+        color: var(--ph-signup-text, #ffffff) !important;
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
@@ -309,7 +309,7 @@
         &:hover {
             box-shadow: 0 0 20px rgba(124, 58, 237, 0.8);
             transform: translateY(-2px);
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+            opacity: 0.88;
         }
 
         &::before {

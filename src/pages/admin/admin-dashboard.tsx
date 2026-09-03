@@ -1483,20 +1483,15 @@ Status: Systems functional. Replicator nodes ready.
     // ─── Sidebar Navigation Items ──────────────────────────────────────────────
     const sidebarGeneral = [
         { key: 'dashboard', icon: () => <Icons.Dashboard />, label: 'Dashboard' },
-        { key: 'users', icon: () => <Icons.Users />, label: 'Users' },
-        { key: 'messages', icon: () => <Icons.Messages />, label: 'Messages' },
-        { key: 'website-editor', icon: () => <Icons.Palette />, label: 'Website Editor' },
-        { key: 'portfolio', icon: () => <Icons.Portfolio />, label: 'Portfolio' },
-        { key: 'market-data', icon: () => <Icons.MarketData />, label: 'Market Data' },
-        { key: 'trading', icon: () => <Icons.Trading />, label: 'Trading' },
-        { key: 'analytics', icon: () => <Icons.Analytics />, label: 'Analytics' },
+        { key: 'website-editor', icon: () => <Icons.Palette />, label: 'Website Editor & Bots' },
+        { key: 'users', icon: () => <Icons.Users />, label: 'Users & Accounts' },
+        { key: 'analytics', icon: () => <Icons.Analytics />, label: 'Analytics & Telemetry' },
         { key: 'transactions', icon: () => <Icons.Transactions />, label: 'Transactions' },
-        { key: 'commission', icon: () => <Icons.Commission />, label: 'Commission' },
-        { key: 'platform-updates', icon: () => <Icons.Notifications />, label: 'Platform Updates' },
+        { key: 'commission', icon: () => <Icons.Commission />, label: 'Commissions' },
+        { key: 'platform-updates', icon: () => <Icons.Notifications />, label: 'Platform Broadcast' },
         { key: 'system-logs', icon: () => <Icons.SystemLogs />, label: 'System Logs' },
     ];
     const sidebarPrefs = [
-        { key: 'account', icon: () => <Icons.Account />, label: 'Account' },
         { key: 'settings', icon: () => <Icons.Settings />, label: 'Settings' },
     ];
 

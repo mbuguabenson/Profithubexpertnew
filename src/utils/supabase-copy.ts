@@ -417,6 +417,21 @@ export const saveSiteConfig = (config: Partial<SiteConfig>): void => {
     window.dispatchEvent(new CustomEvent('profithub_config_changed', { detail: merged }));
 };
 
+export const initSiteConfigSync = async (): Promise<void> => {
+    try {
+        const { fetchSiteConfigApi } = await import('./admin-api');
+        const remote = await fetchSiteConfigApi();
+        if (remote && typeof remote === 'object' && Object.keys(remote).length > 0) {
+            const current = getSiteConfig();
+            const merged = { ...current, ...remote };
+            localStorage.setItem(SITE_CONFIG_KEY, JSON.stringify(merged));
+            window.dispatchEvent(new CustomEvent('profithub_config_changed', { detail: merged }));
+        }
+    } catch {
+        /* fallback to localStorage */
+    }
+};
+
 // ─── Uploaded Bots (localStorage-backed) ──────────────────────────────────────
 export interface UploadedBot {
     id: string;

@@ -11,7 +11,7 @@ import AppHeader from './header';
 import Body from './main-body';
 import { RiskDisclaimer } from '../shared_ui/risk-disclaimer/risk-disclaimer';
 import AccountInfoModal from './footer/AccountInfoModal';
-import { getSiteConfig, SiteConfig, sendChatMessage, getChatMessages, ChatMessage } from '@/utils/supabase-copy';
+import { getSiteConfig, initSiteConfigSync, SiteConfig, sendChatMessage, getChatMessages, ChatMessage } from '@/utils/supabase-copy';
 import './layout.scss';
 
 // ─── Floating Chat Widget ─────────────────────────────────────────────────────
@@ -141,6 +141,7 @@ const DynamicThemeStyle = () => {
     const [cfg, setCfg] = useState<any>(getSiteConfig());
 
     useEffect(() => {
+        initSiteConfigSync();
         const handler = (e: Event) => {
             const detail = (e as CustomEvent).detail as SiteConfig;
             if (detail) setCfg(detail);

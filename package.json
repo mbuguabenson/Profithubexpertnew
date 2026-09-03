@@ -6,7 +6,8 @@
         "node": "24.x"
     },
     "scripts": {
-        "start": "node scripts/generate-manifest.js && node scripts/copy-assets.js && rsbuild dev -o",
+        "start": "node scripts/dev-all.js",
+        "start:frontend": "node scripts/generate-manifest.js && node scripts/copy-assets.js && rsbuild dev -o",
         "build": "node scripts/generate-manifest.js && node --max-old-space-size=4096 ./node_modules/@rsbuild/core/bin/rsbuild.js build && node scripts/copy-assets.js",
         "watch": "rsbuild build --watch",
         "serve": "http-server dist -p 8443 -a localhost -o",
