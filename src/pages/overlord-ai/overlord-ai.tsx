@@ -277,38 +277,95 @@ const OverlordAi: React.FC = observer(() => {
             ? DERIVED_SYNTHETIC_MARKETS.map(m => m.symbol)
             : [selectedSymbol];
 
-        activeSymbols.forEach(symbol => {
-            if (subscriptionsRef.current.has(symbol)) return;
+        const subscribeSymbol = async (sym: string) => {
+            if (!isMountedRef.current || !api_base?.api) return;
+            try {
+                const marketMeta = DERIVED_SYNTHETIC_MARKETS.find(m => m.symbol === sym);
+                const pip = marketMeta?.pip || 2;
 
-            const marketMeta = DERIVED_SYNTHETIC_MARKETS.find(m => m.symbol === symbol);
-            const pip = marketMeta?.pip || 2;
-
-            const sub = safeSubscribe(
-                api_base?.api,
-                { ticks: symbol },
-                (res: any) => {
-                    if (res?.tick && res.tick.symbol === symbol) {
-                        const quote = res.tick.quote;
-                        const digit = extractLastDigit(quote, pip);
-                        const mState = marketsDataRef.current.get(symbol);
-                        if (mState) {
-                            mState.digits.push(digit);
-                            if (mState.digits.length > MAX_HISTORY_TICKS) {
-                                mState.digits.shift();
-                            }
-                            mState.currentPrice = Number(quote).toFixed(pip);
-                            mState.lastDigit = digit;
-                            throttleRender();
+                // 1. Fetch initial tick history so the UI is immediately populated
+                const mData = marketsDataRef.current.get(sym);
+                if (mData && mData.digits.length === 0) {
+                    const res = await api_base.api.send({
+                        ticks_history: sym,
+                        end: 'latest',
+                        count: 1000,
+                        style: 'ticks',
+                    });
+                    if (res?.history?.prices && isMountedRef.current) {
+                        const prices: number[] = res.history.prices || [];
+                        const digits = prices.map(p => extractLastDigit(p, pip));
+                        mData.digits = digits.slice(-MAX_HISTORY_TICKS);
+                        if (prices.length > 0) {
+                            const lastPrice = prices[prices.length - 1];
+                            mData.currentPrice = Number(lastPrice).toFixed(pip);
+                            mData.lastDigit = extractLastDigit(lastPrice, pip);
                         }
+                        throttleRender();
                     }
-                },
-                (err: any) => {
-                    console.warn(`[Overlord AI] Tick subscription warning for ${symbol}:`, err);
                 }
-            );
 
-            subscriptionsRef.current.set(symbol, sub);
-        });
+                // 2. Subscribe to real-time live ticks
+                if (!subscriptionsRef.current.has(sym) && isMountedRef.current) {
+                    const tickObservable = (api_base.api as any).subscribe({ ticks: sym });
+                    const sub = safeSubscribe(
+                        tickObservable,
+                        (res: any) => {
+                            if (!isMountedRef.current) return;
+                            if (res?.tick && res.tick.symbol === sym) {
+                                const quote = res.tick.quote;
+                                const digit = extractLastDigit(quote, pip);
+                                const activeM = marketsDataRef.current.get(sym);
+                                if (activeM) {
+                                    activeM.digits.push(digit);
+                                    if (activeM.digits.length > MAX_HISTORY_TICKS) {
+                                        activeM.digits.shift();
+                                    }
+                                    activeM.currentPrice = Number(quote).toFixed(pip);
+                                    activeM.lastDigit = digit;
+                                    throttleRender();
+                                }
+                            }
+                        },
+                        (err: any) => {
+                            console.warn(`[Overlord AI] Tick subscription warning for ${sym}:`, err);
+                        }
+                    );
+
+                    subscriptionsRef.current.set(sym, sub);
+                }
+            } catch (err) {
+                console.warn(`[Overlord AI] Stream setup error for ${sym}:`, err);
+            }
+        };
+
+        const initAll = async () => {
+            if (!api_base?.api || (api_base.api as any)?.connection?.readyState !== 1) {
+                try {
+                    await api_base.init();
+                } catch {}
+            }
+            if (!api_base?.api) {
+                if (isMountedRef.current) {
+                    setTimeout(initAll, 1000);
+                }
+                return;
+            }
+
+            // Immediately load selected market first for fast UI render
+            await subscribeSymbol(selectedSymbol);
+
+            // Then asynchronously stream remaining markets
+            for (const sym of activeSymbols) {
+                if (!isMountedRef.current) break;
+                if (sym !== selectedSymbol) {
+                    await subscribeSymbol(sym);
+                    await new Promise(r => setTimeout(r, 60)); // Rate limiting guard
+                }
+            }
+        };
+
+        void initAll();
 
         return () => {
             // Keep persistent socket stream open for seamless trading
