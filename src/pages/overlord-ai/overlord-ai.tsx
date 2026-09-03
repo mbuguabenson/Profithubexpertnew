@@ -6,6 +6,8 @@ import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purc
 import { safeSubscribe } from '@/utils/websocket-handler';
 import {
     Activity,
+    Award,
+    BarChart2,
     ChevronDown,
     ChevronUp,
     Clock,
@@ -25,6 +27,7 @@ import {
     TrendingUp,
     Volume2,
     VolumeX,
+    Wallet,
     Zap,
 } from 'lucide-react';
 import './overlord-ai.scss';
@@ -175,6 +178,7 @@ const OverlordAi: React.FC = observer(() => {
     const [marketSearchTerm, setMarketSearchTerm] = useState<string>('');
     const [autoPickBestMarket, setAutoPickBestMarket] = useState<boolean>(true);
     const [activeRightTab, setActiveRightTab] = useState<'AUTOTRADER' | 'COMPOUNDING'>('AUTOTRADER');
+    const [mobileActiveTab, setMobileActiveTab] = useState<'DASHBOARD' | 'AUTOTRADER' | 'COMPOUNDING' | 'MARKETS'>('DASHBOARD');
 
     // ── Markets Tick Storage ──
     const marketsDataRef = useRef<Map<string, MarketDigitState>>(
@@ -1078,13 +1082,17 @@ const OverlordAi: React.FC = observer(() => {
 
         const path = getBezierSplinePath(points);
         const currentPoint = points[points.length - 1];
+        const areaPath =
+            path && points.length > 1
+                ? `${path} L ${currentPoint.x.toFixed(1)},175 L ${points[0].x.toFixed(1)},175 Z`
+                : '';
 
-        return { path, points, currentPoint };
+        return { path, points, currentPoint, areaPath };
     }, [currentMarket.digits]);
 
     // ── Compounding Growth Chart Curve ──
-    const growthChartPath = useMemo(() => {
-        if (compoundingPlan.length < 2) return '';
+    const growthChart = useMemo(() => {
+        if (compoundingPlan.length < 2) return { path: '', areaPath: '' };
         const width = 340;
         const height = 100;
         const padX = 10;
@@ -1100,7 +1108,14 @@ const OverlordAi: React.FC = observer(() => {
             return { x, y };
         });
 
-        return getBezierSplinePath(points);
+        const path = getBezierSplinePath(points);
+        const last = points[points.length - 1];
+        const areaPath =
+            path && points.length > 1
+                ? `${path} L ${last.x.toFixed(1)},96 L ${points[0].x.toFixed(1)},96 Z`
+                : '';
+
+        return { path, areaPath };
     }, [compoundingPlan]);
 
     // Filtered Market List for Search
@@ -1121,25 +1136,46 @@ const OverlordAi: React.FC = observer(() => {
                         <Zap size={24} />
                     </div>
                     <div className='brand-info'>
-                        <h1 className='brand-title'>
-                            OVERLORD AI
+                        <div className='brand-title-row'>
+                            <h1 className='brand-title'>
+                                OVERLORD AI
+                            </h1>
                             <span className='version-tag'>SYNTHETICS ENGINE</span>
-                        </h1>
+                            <span className='status-live-badge'>
+                                <span className='pulse-dot' />
+                                24/7 ONLINE
+                            </span>
+                        </div>
                         <span className='brand-subtitle'>
                             Deep Statistical Scanning • 24/7 Resilient Autotrader • Precision Compounding
                         </span>
                     </div>
                 </div>
 
-                <div className='top-stats-group'>
-                    {/* Live Deriv Account Balance */}
-                    <div className='stat-pill balance-pill'>
-                        <span>Live Balance:</span>
-                        <strong>
-                            {rawBalance > 0 ? `${rawBalance.toFixed(2)} ${currency}` : `Loading...`}
-                        </strong>
+                {/* ── Cyber Wallet & Balance Card ── */}
+                <div className='cyber-wallet-card'>
+                    <div className='wallet-account-header'>
+                        <span className={`account-badge ${client?.is_virtual ? 'badge-demo' : 'badge-real'}`}>
+                            {client?.is_virtual ? 'DEMO ACCOUNT' : 'REAL ACCOUNT'}
+                        </span>
+                        <span className='account-loginid'>{client?.loginid || 'Active Account'}</span>
+                    </div>
+
+                    <div className='wallet-balance-row'>
+                        <div className='balance-icon-wrap'>
+                            <Wallet size={18} />
+                        </div>
+                        <div className='balance-data'>
+                            <span className='balance-label'>LIVE WALLET BALANCE</span>
+                            <span className='balance-amount'>
+                                {rawBalance > 0
+                                    ? `$${rawBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    : '0.00'}{' '}
+                                <span className='currency-code'>{currency}</span>
+                            </span>
+                        </div>
                         <button
-                            className='refresh-icon-btn'
+                            className='refresh-balance-btn'
                             title='Sync Balance'
                             onClick={handleFetchBalance}
                         >
@@ -1147,23 +1183,63 @@ const OverlordAi: React.FC = observer(() => {
                         </button>
                     </div>
 
-                    {/* 24/7 Resilience Indicator */}
-                    <div className='stat-pill uptime-pill'>
-                        <div className='uptime-dot' />
-                        <span>24/7 Active Engine</span>
+                    <div className='wallet-chips-row'>
+                        <div className={`chip chip-profit ${sessionProfit >= 0 ? 'profit-pos' : 'profit-neg'}`}>
+                            <TrendingUp size={11} />
+                            <span>P/L: {sessionProfit >= 0 ? `+$${sessionProfit.toFixed(2)}` : `-$${Math.abs(sessionProfit).toFixed(2)}`}</span>
+                        </div>
+                        <div className='chip chip-winrate'>
+                            <Award size={11} />
+                            <span>WR: {winsCount + lossesCount > 0 ? `${Math.round((winsCount / (winsCount + lossesCount)) * 100)}%` : '0%'} ({winsCount}W/{lossesCount}L)</span>
+                        </div>
+                        <button
+                            className='sound-chip-btn'
+                            onClick={() => setSoundEnabled(!soundEnabled)}
+                            title={soundEnabled ? 'Mute Audio' : 'Enable Audio'}
+                        >
+                            {soundEnabled ? <Volume2 size={13} color='#00f5ff' /> : <VolumeX size={13} color='#64748b' />}
+                        </button>
                     </div>
-
-                    {/* Sound Toggle */}
-                    <button
-                        className='stat-pill'
-                        style={{ cursor: 'pointer', background: 'transparent' }}
-                        onClick={() => setSoundEnabled(!soundEnabled)}
-                        title={soundEnabled ? 'Mute Sounds' : 'Enable Sounds'}
-                    >
-                        {soundEnabled ? <Volume2 size={16} color='#00f5ff' /> : <VolumeX size={16} color='#64748b' />}
-                    </button>
                 </div>
             </header>
+
+            {/* ── Mobile Responsive Segmented View Switcher ── */}
+            <nav className='mobile-segmented-nav'>
+                <button
+                    className={`nav-pill ${mobileActiveTab === 'DASHBOARD' ? 'active' : ''}`}
+                    onClick={() => setMobileActiveTab('DASHBOARD')}
+                >
+                    <BarChart2 size={14} />
+                    <span>50-Digit Trend</span>
+                </button>
+                <button
+                    className={`nav-pill ${mobileActiveTab === 'AUTOTRADER' ? 'active' : ''}`}
+                    onClick={() => {
+                        setMobileActiveTab('AUTOTRADER');
+                        setActiveRightTab('AUTOTRADER');
+                    }}
+                >
+                    <Zap size={14} />
+                    <span>Autotrader</span>
+                </button>
+                <button
+                    className={`nav-pill ${mobileActiveTab === 'COMPOUNDING' ? 'active' : ''}`}
+                    onClick={() => {
+                        setMobileActiveTab('COMPOUNDING');
+                        setActiveRightTab('COMPOUNDING');
+                    }}
+                >
+                    <TrendingUp size={14} />
+                    <span>Compounding</span>
+                </button>
+                <button
+                    className={`nav-pill ${mobileActiveTab === 'MARKETS' ? 'active' : ''}`}
+                    onClick={() => setMobileActiveTab('MARKETS')}
+                >
+                    <Activity size={14} />
+                    <span>Markets</span>
+                </button>
+            </nav>
 
             {/* ── Control Ribbon: Scanner Mode & Autotrade Actions ── */}
             <div className='overlord-controls-ribbon'>
@@ -1298,7 +1374,7 @@ const OverlordAi: React.FC = observer(() => {
             {/* ── Main Layout: 3 Columns ── */}
             <div className='overlord-main-layout'>
                 {/* ── LEFT COLUMN: Market List & Side Scanner ── */}
-                <aside className='overlord-side-scanner'>
+                <aside className={`overlord-side-scanner ${mobileActiveTab === 'MARKETS' ? 'mobile-active' : ''}`}>
                     <div className='glass-panel'>
                         <div className='panel-header'>
                             <h3 className='panel-title'>
@@ -1337,6 +1413,7 @@ const OverlordAi: React.FC = observer(() => {
                                         onClick={() => {
                                             setSelectedSymbol(m.symbol);
                                             setAutoPickBestMarket(false);
+                                            setMobileActiveTab('DASHBOARD');
                                         }}
                                     >
                                         <div className='market-header-row'>
@@ -1365,7 +1442,7 @@ const OverlordAi: React.FC = observer(() => {
                 </aside>
 
                 {/* ── CENTER COLUMN: Real-Time Visualizers & Statistical Analysis ── */}
-                <main className='overlord-center-content'>
+                <main className={`overlord-center-content ${mobileActiveTab === 'DASHBOARD' ? 'mobile-active' : ''}`}>
                     {/* Active Market Banner */}
                     <div className='active-market-hero'>
                         <div className='market-left-info'>
@@ -1424,6 +1501,11 @@ const OverlordAi: React.FC = observer(() => {
                                             <stop offset='50%' stopColor='#9d4edd' />
                                             <stop offset='100%' stopColor='#00e676' />
                                         </linearGradient>
+                                        <linearGradient id='splineAreaGradient' x1='0' y1='0' x2='0' y2='1'>
+                                            <stop offset='0%' stopColor='rgba(0, 245, 255, 0.35)' />
+                                            <stop offset='60%' stopColor='rgba(157, 78, 221, 0.15)' />
+                                            <stop offset='100%' stopColor='rgba(0, 230, 118, 0.0)' />
+                                        </linearGradient>
                                         <filter id='glowSpline' x='-20%' y='-20%' width='140%' height='140%'>
                                             <feGaussianBlur stdDeviation='3' result='blur' />
                                             <feMerge>
@@ -1437,6 +1519,14 @@ const OverlordAi: React.FC = observer(() => {
                                     <line x1='0' y1='20' x2='600' y2='20' stroke='rgba(255,255,255,0.05)' strokeDasharray='4 4' />
                                     <line x1='0' y1='90' x2='600' y2='90' stroke='rgba(0, 245, 255, 0.2)' strokeWidth='1.5' strokeDasharray='6 6' />
                                     <line x1='0' y1='160' x2='600' y2='160' stroke='rgba(255,255,255,0.05)' strokeDasharray='4 4' />
+
+                                    {/* Spline Area Fill */}
+                                    {chartData.areaPath && (
+                                        <path
+                                            d={chartData.areaPath}
+                                            fill='url(#splineAreaGradient)'
+                                        />
+                                    )}
 
                                     {/* Spline Path */}
                                     {chartData.path && (
@@ -1638,19 +1728,25 @@ const OverlordAi: React.FC = observer(() => {
                 </main>
 
                 {/* ── RIGHT COLUMN: Autotrader & Compounding Generator Tabs ── */}
-                <aside className='overlord-right-panel'>
+                <aside className={`overlord-right-panel ${mobileActiveTab === 'AUTOTRADER' || mobileActiveTab === 'COMPOUNDING' ? 'mobile-active' : ''}`}>
                     {/* Tab Selector */}
                     <div className='right-panel-tabs'>
                         <button
                             className={`tab-btn ${activeRightTab === 'AUTOTRADER' ? 'active' : ''}`}
-                            onClick={() => setActiveRightTab('AUTOTRADER')}
+                            onClick={() => {
+                                setActiveRightTab('AUTOTRADER');
+                                setMobileActiveTab('AUTOTRADER');
+                            }}
                         >
                             <Zap size={14} />
                             <span>Autotrader Engine</span>
                         </button>
                         <button
                             className={`tab-btn ${activeRightTab === 'COMPOUNDING' ? 'active' : ''}`}
-                            onClick={() => setActiveRightTab('COMPOUNDING')}
+                            onClick={() => {
+                                setActiveRightTab('COMPOUNDING');
+                                setMobileActiveTab('COMPOUNDING');
+                            }}
                         >
                             <TrendingUp size={14} />
                             <span>Compounding Plan</span>
@@ -2047,10 +2143,20 @@ const OverlordAi: React.FC = observer(() => {
                                             <stop offset='0%' stopColor='#00f5ff' />
                                             <stop offset='100%' stopColor='#00e676' />
                                         </linearGradient>
+                                        <linearGradient id='growthAreaGradient' x1='0' y1='0' x2='0' y2='1'>
+                                            <stop offset='0%' stopColor='rgba(0, 245, 255, 0.3)' />
+                                            <stop offset='100%' stopColor='rgba(0, 230, 118, 0.0)' />
+                                        </linearGradient>
                                     </defs>
-                                    {growthChartPath && (
+                                    {growthChart.areaPath && (
                                         <path
-                                            d={growthChartPath}
+                                            d={growthChart.areaPath}
+                                            fill='url(#growthAreaGradient)'
+                                        />
+                                    )}
+                                    {growthChart.path && (
+                                        <path
+                                            d={growthChart.path}
                                             fill='none'
                                             stroke='url(#growthGradient)'
                                             strokeWidth='2.5'
