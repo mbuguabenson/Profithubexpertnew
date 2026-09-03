@@ -1,0 +1,28 @@
+.market-selector {
+    display: inline-block;
+
+    &__select {
+        background: rgba(15, 23, 42, 0.85);
+        color: #f8fafc;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.2s ease;
+
+        &:hover,
+        &:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        option,
+        optgroup {
+            background: #0f172a;
+            color: #f8fafc;
+        }
+    }
+}

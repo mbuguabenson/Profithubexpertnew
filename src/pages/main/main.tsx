@@ -51,7 +51,6 @@ const ScannerPage = lazyRetry(() => import('../scanner/scanner'), 'scanner');
 const ManualTrading = lazyRetry(() => import('../manual-trading'), 'manual_trading');
 const EasyTool = lazyRetry(() => import('../easy-tool'), 'easy_tool');
 const MultiTrader = lazyRetry(() => import('../multi-trader'), 'multi_trader');
-const SignalCentrePage = lazyRetry(() => import('../smart-trading/components/signal-centre-tab'), 'signal_centre');
 const Marketkiller = lazyRetry(() => import('../marketkiller'), 'marketkiller');
 const MarketHunterPro = lazyRetry(() => import('../market-hunter-pro'), 'market_hunter_pro');
 const TradingBots = lazyRetry(() => import('../free-bots/trading-bots'), 'trading_bots');
@@ -63,7 +62,6 @@ const DigitFlowPage = lazyRetry(() => import('../digitflow/digitflow'), 'digitfl
 const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pro');
 const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
 const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
-const DTraderPage = lazyRetry(() => import('../dtrader'), 'dtrader');
 const OverlordAiPage = lazyRetry(() => import('../overlord-ai'), 'overlord_ai');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
@@ -125,7 +123,6 @@ const AppWrapper = observer(() => {
         'scanner',
         'manual_trading',
         'easy_tool',
-        'signal_centre',
         'marketkiller',
         'multi_trader',
         'market_hunter_pro',
@@ -134,7 +131,6 @@ const AppWrapper = observer(() => {
         'elite_pro',
         'poverty_hunter',
         'auto_x_eo',
-        'dtrader',
         'overlord_ai',
     ];
     const { isDesktop } = useDevice();
@@ -527,20 +523,6 @@ const AppWrapper = observer(() => {
                 ),
             },
             {
-                key: 'signal_centre',
-                id: 'id-signal-centre',
-                label: <TabIcon iconKey='signal_centre' label='Signal Centre' />,
-                content: (
-                    <TabErrorBoundary tabId='id-signal-centre' tabName='Signal Centre'>
-                        <Suspense
-                            fallback={<ChunkLoader message={localize('Please wait, loading Signal Centre...')} />}
-                        >
-                            <SignalCentrePage />
-                        </Suspense>
-                    </TabErrorBoundary>
-                ),
-            },
-            {
                 key: 'marketkiller',
                 id: 'id-marketkiller',
                 label: <TabIcon iconKey='marketkiller' label='Marketkiller' />,
@@ -643,18 +625,6 @@ const AppWrapper = observer(() => {
                 ),
             },
             {
-                key: 'dtrader',
-                id: 'id-dtrader',
-                label: <TabIcon iconKey='dtrader' label='DTrader' />,
-                content: (
-                    <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
-                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
-                            <DTraderPage />
-                        </Suspense>
-                    </TabErrorBoundary>
-                ),
-            },
-            {
                 key: 'overlord_ai',
                 id: 'id-overlord-ai',
                 label: <TabIcon iconKey='overlord_ai' label='OVERLORD AI' />,
@@ -709,7 +679,7 @@ const AppWrapper = observer(() => {
                 if (globalIndex > -1) {
                     setActiveTab(globalIndex);
                     window.location.hash = targetTab.key;
-                    localStorage.setItem('profithub_last_active_tab', targetTab.key);
+                    localStorage.setItem('profithubexpert_last_active_tab', targetTab.key);
                     const el_id = targetTab.id;
                     if (el_id) {
                         const el_tab = document.getElementById(el_id);
@@ -725,11 +695,9 @@ const AppWrapper = observer(() => {
 
     if (!store) return null;
 
-    // 1. Remove run panel and drawer from dashboard, dtrader, reports, and trading bots
+    // 1. Remove run panel and drawer from dashboard and trading bots
     const shouldHideRunPanelAndDrawer = [
         'dashboard',
-        'dtrader',
-        'reports',
         'trading_bots',
         'free_bots',
         'trading-bots',

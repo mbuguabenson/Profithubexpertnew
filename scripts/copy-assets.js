@@ -33,21 +33,7 @@ if (!fs.existsSync(distDir)) {
 }
 copySmartCharts(distDir);
 
-// 2. Ensure public/ bundle is patched if available
-try {
-    require('./patch-dtrader-bundle');
-} catch (e) {
-    console.warn('⚠️ Notice during patch-dtrader-bundle:', e.message);
-}
-
-// 3. Ensure all trader chunk aliases are in place if trader chunks exist
-try {
-    require('./align-trader-chunks');
-} catch (e) {
-    console.warn('⚠️ Notice during align-trader-chunks:', e.message);
-}
-
-// 4. Copy public/ to dist/
+// 2. Copy public/ to dist/
 if (fs.existsSync(publicDir)) {
     fs.cpSync(publicDir, distDir, { recursive: true });
 }

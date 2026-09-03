@@ -7,8 +7,8 @@ import { calculatePatternStats, getOverUnderStats, isDigitPowerIncreasing } from
 import './over-under-pattern.scss';
 
 const OverUnderPattern = observer(() => {
-    const { smart_trading } = useStore();
-    const { ticks, stats_sample_size } = smart_trading;
+    const { easy_tool } = useStore();
+    const { ticks, stats_sample_size } = easy_tool;
 
     const analysis = useMemo(() => {
         const slice = ticks.slice(-stats_sample_size);

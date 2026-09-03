@@ -19,21 +19,13 @@ import ToolboxStore from './toolbox-store';
 import TransactionsStore from './transactions-store';
 import UiStore from './ui-store';
 import ScannerStore from './scanner-store';
-import AccountFlipperStore from './account-flipper-store';
 import AutoTraderStore from './auto-trader-store';
-import DigitCrackerStore from './digit-cracker-store';
 import MarketkillerStore from './marketkiller-store';
-import OverUnderStore from './over-under-store';
-import SmartAutoStore from './smart-auto-store';
-import SmartTradingStore from './smart-trading-store';
 import FreeBotsStore from './free-bots-store';
-import DollarflipperStore from './dollarflipper-store';
-import DollarmineStore from './dollarmine-store';
 import AnalysisStore from './analysis-store';
 import EntryScannerStore from './entry-scanner-store';
-import TraderStore from './trader-store';
+import EasyToolStore from './easy-tool-store';
 
-// TODO: need to write types for the individual classes and convert them to ts
 export default class RootStore {
     public dbot;
     public app: AppStore;
@@ -52,20 +44,13 @@ export default class RootStore {
     public scanner: ScannerStore;
     public analysis: AnalysisStore;
     public entry_scanner: EntryScannerStore;
-    public trader: TraderStore;
+    public easy_tool: EasyToolStore;
 
     public dashboard: DashboardStore;
 
-    public account_flipper: AccountFlipperStore;
     public auto_trader: AutoTraderStore;
-    public digit_cracker: DigitCrackerStore;
     public marketkiller: MarketkillerStore;
-    public over_under: OverUnderStore;
-    public smart_auto: SmartAutoStore;
-    public smart_trading: SmartTradingStore;
     public free_bots: FreeBotsStore;
-    public dollarflipper: DollarflipperStore;
-    public dollarmine: DollarmineStore;
 
     public chart_store: ChartStore;
     public blockly_store: BlocklyStore;
@@ -84,7 +69,6 @@ export default class RootStore {
     constructor(dbot: unknown) {
         this.dbot = dbot;
 
-        // Need to fix later without using this.core
         this.ui = new UiStore();
         this.client = new ClientStore();
         this.common = new CommonStore();
@@ -94,7 +78,7 @@ export default class RootStore {
 
         this.analysis = new AnalysisStore(this);
         this.entry_scanner = new EntryScannerStore(this);
-        this.trader = new TraderStore(this);
+        this.easy_tool = new EasyToolStore(this);
 
         this.app = new AppStore(this, this.core);
         this.summary_card = new SummaryCardStore(this, this.core);
@@ -110,21 +94,13 @@ export default class RootStore {
         this.toolbox = new ToolboxStore(this, this.core);
         this.quick_strategy = new QuickStrategyStore(this);
         this.scanner = new ScannerStore(this);
-        this.dollarflipper = new DollarflipperStore(this);
-        this.dollarmine = new DollarmineStore(this);
 
-        this.account_flipper = new AccountFlipperStore(this);
         this.auto_trader = new AutoTraderStore(this);
-        this.digit_cracker = new DigitCrackerStore(this);
         this.marketkiller = new MarketkillerStore(this);
-        this.over_under = new OverUnderStore(this);
-        this.smart_auto = new SmartAutoStore(this);
-        this.smart_trading = new SmartTradingStore(this);
         this.free_bots = new FreeBotsStore(this);
 
         this.dashboard = new DashboardStore(this, this.core);
 
-        // need to be at last for dependency
         this.chart_store = new ChartStore(this);
         this.blockly_store = new BlocklyStore(this);
         this.data_collection_store = new DataCollectionStore(this, this.core);

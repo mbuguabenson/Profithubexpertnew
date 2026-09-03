@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import TickSelector from '@/components/tick-selector/tick-selector';
 import { useStore } from '@/hooks/useStore';
 import DigitDistributionCircles from '@/pages/chart/digit-distribution-circles';
-import MarketSelector from '@/pages/smart-trading/components/market-selector';
+import MarketSelector from './components/market-selector';
 import { Localize } from '@deriv-com/translations';
 import AdvancedOUAnalyzer from './advanced-ou-analyzer';
 import EvenOddPattern from './even-odd-pattern';
@@ -25,9 +25,9 @@ const DIGIT_COLORS: Record<number, string> = {
 };
 
 const EasyTool = observer(() => {
-    const { smart_trading, ui } = useStore();
+    const { easy_tool, ui } = useStore();
     const { current_price, last_digit, ticks, stats_sample_size, setStatsSampleSize, markets, fetchMarkets } =
-        smart_trading;
+        easy_tool;
 
     const { is_dark_mode_on } = ui;
 
@@ -40,9 +40,9 @@ const EasyTool = observer(() => {
             fetchMarkets();
         }
         if (!ticks || ticks.length === 0) {
-            smart_trading.subscribeToActiveSymbol();
+            easy_tool.subscribeToActiveSymbol();
         }
-    }, [markets, fetchMarkets, ticks, smart_trading]);
+    }, [markets, fetchMarkets, ticks, easy_tool]);
 
     // Update selected digit when last_digit changes if none selected
     useEffect(() => {
