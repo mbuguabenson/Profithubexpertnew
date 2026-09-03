@@ -6,34 +6,26 @@ import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purc
 import { safeSubscribe } from '@/utils/websocket-handler';
 import {
     Activity,
-    AlertTriangle,
     ArrowDownRight,
     ArrowUpRight,
     Award,
     BarChart2,
-    CheckCircle2,
-    ChevronRight,
     Cpu,
     Crosshair,
     Download,
     Flame,
-    Gauge,
     Layers,
     LineChart,
     Maximize2,
     Minimize2,
-    Pause,
     Play,
     Radio,
-    RefreshCw,
     RotateCcw,
-    Shield,
     ShieldAlert,
     ShieldCheck,
     Sparkles,
     Square,
     Target,
-    TrendingDown,
     TrendingUp,
     Volume2,
     VolumeX,
@@ -199,7 +191,7 @@ const OverlordAi: React.FC = observer(() => {
 
     // ── Market States ──
     const [selectedSymbol, setSelectedSymbol] = useState<string>('1HZ100V');
-    const [scanAllMarkets, setScanAllMarkets] = useState<boolean>(true);
+    const scanAllMarkets = true;
     const [isWideViewOpen, setIsWideViewOpen] = useState<boolean>(false);
     const [marketSearchTerm, setMarketSearchTerm] = useState<string>('');
     const [autoPickBestMarket, setAutoPickBestMarket] = useState<boolean>(true);
@@ -236,8 +228,8 @@ const OverlordAi: React.FC = observer(() => {
     const [strategyMode, setStrategyMode] = useState<OverlordStrategyMode>('ALL_AUTO');
     const [martingaleMultiplier, setMartingaleMultiplier] = useState<string>('2.5');
     const [isMartingaleEnabled, setIsMartingaleEnabled] = useState<boolean>(true);
-    const [maxMartingaleSteps, setMaxMartingaleSteps] = useState<number>(4);
-    const [tickDuration, setTickDuration] = useState<string>('1');
+    const maxMartingaleSteps = 4;
+    const tickDuration = '1';
 
     // ── Continuous Burst Trading & Market Rotation ──
     const [burstRunSize, setBurstRunSize] = useState<number>(10); // 7 to 12 runs default: 10
@@ -258,7 +250,6 @@ const OverlordAi: React.FC = observer(() => {
     const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
     const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
     const executionLockRef = useRef<boolean>(false);
-    const [analysisPauseTime, setAnalysisPauseTime] = useState<number>(0);
 
     // Initial Manual Stake parse
     const initialBaseStake = useMemo(() => {
@@ -978,8 +969,8 @@ const OverlordAi: React.FC = observer(() => {
                     }
 
                     setTimeout(() => {
-                        if (isMountedRef.current && botState !== 'PAUSED') {
-                            setBotState('WAITING_SIGNAL');
+                        if (isMountedRef.current) {
+                            setBotState(curr => (curr === 'BURST_PAUSED' ? 'WAITING_SIGNAL' : curr));
                         }
                     }, 3000);
                 }
