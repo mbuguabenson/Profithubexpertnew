@@ -7,9 +7,16 @@ import 'dotenv/config';
 export default defineConfig({
     plugins: [
         pluginSass({
-            sassLoaderOptions: {
-                sourceMap: false,
-                additionalData: (content: string | Buffer, loaderContext: any) => {
+            sassLoaderOptions: (config: any) => {
+                config.sourceMap = false;
+                config.sassOptions = {
+                    includePaths: [
+                        path.resolve(__dirname, './src/external/trader/src/sass'),
+                        path.resolve(__dirname, './src/external/shared/styles'),
+                        path.resolve(__dirname, './src/external/components/src'),
+                    ],
+                };
+                config.additionalData = (content: string | Buffer, loaderContext: any) => {
                     const contentStr = typeof content === 'string' ? content : content.toString();
                     const normalized = (loaderContext?.resourcePath || '').replace(/\\/g, '/');
                     if (normalized.includes('/src/external/')) {
@@ -38,14 +45,7 @@ export default defineConfig({
                         `;
                     }
                     return contentStr;
-                },
-                sassOptions: {
-                    includePaths: [
-                        path.resolve(__dirname, './src/external/trader/src/sass'),
-                        path.resolve(__dirname, './src/external/shared/styles'),
-                        path.resolve(__dirname, './src/external/components/src'),
-                    ],
-                },
+                };
             },
         }),
         pluginReact(),
