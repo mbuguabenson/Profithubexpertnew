@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { api_base } from '@/external/bot-skeleton';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purchase';
 import { safeSubscribe } from '@/utils/websocket-handler';
@@ -177,7 +177,7 @@ const extractLastDigit = (quote: number | string, pip = 2): number => {
 
 const OverlordAi: React.FC = observer(() => {
     const store = useStore();
-    const { client, transactions, summary_card } = store || {};
+    const { client, transactions, summary_card, run_panel } = store || {};
     const currency = client?.currency || 'USD';
     const rawBalance = Number(client?.balance || 0);
 
@@ -569,21 +569,36 @@ const OverlordAi: React.FC = observer(() => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [renderTrigger]);
 
-    // Push Contract Details to Deriv System Drawer
+    // Push Contract Details to Deriv System Drawer & Run Panel
     const pushContractToDrawer = useCallback(
         (poc: any) => {
             try {
                 if (summary_card) {
                     summary_card.contract_info = poc;
+                    if (summary_card.onBotContractEvent) {
+                        summary_card.onBotContractEvent(poc);
+                    }
                 }
                 if (transactions?.onBotContractEvent) {
                     transactions.onBotContractEvent(poc);
+                }
+                if (run_panel?.onBotContractEvent) {
+                    run_panel.onBotContractEvent(poc);
+                }
+                globalObserver.emit('bot.contract', poc);
+
+                if (poc?.is_sold) {
+                    globalObserver.emit('contract.status', {
+                        id: 'contract.sold',
+                        contract: poc,
+                        data: poc.transaction_ids?.sell || poc.contract_id,
+                    });
                 }
             } catch (err) {
                 console.debug('[Overlord AI] Drawer update notice:', err);
             }
         },
-        [summary_card, transactions]
+        [summary_card, transactions, run_panel]
     );
 
     // ── Trade Order Execution ──
@@ -614,6 +629,12 @@ const OverlordAi: React.FC = observer(() => {
             setTradeLog(prev => [newLog, ...prev.slice(0, 49)]);
 
             try {
+                globalObserver.emit('bot.running');
+                globalObserver.emit('contract.status', {
+                    id: 'contract.purchase_sent',
+                    data: stakeAmount,
+                });
+
                 const buyRes = await buyContractForUi({
                     parameters: {
                         amount: stakeAmount,
@@ -631,6 +652,12 @@ const OverlordAi: React.FC = observer(() => {
 
                 const contractId = buyRes.contract_id;
 
+                globalObserver.emit('contract.status', {
+                    id: 'contract.purchase_received',
+                    buy: buyRes,
+                    data: buyRes.transaction_id,
+                });
+
                 const settledContract = await streamContractUntilSettled({
                     contractId: Number(contractId),
                     source: 'Overlord AI',
@@ -639,6 +666,8 @@ const OverlordAi: React.FC = observer(() => {
                     },
                     timeoutMs: 12000,
                 });
+
+                pushContractToDrawer(settledContract);
 
                 const isWon = settledContract.status === 'won' || settledContract.profit > 0;
                 const profitVal = Number(settledContract.profit || 0);
