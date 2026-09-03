@@ -17,13 +17,30 @@ import Sell from './Sell';
 import Ticks from './Ticks';
 import Total from './Total';
 
-const watchBefore = store =>
-    watchScope({
+const watchBefore = store => {
+    const currentState = store.getState();
+    if (currentState.scope === constants.DURING_PURCHASE) {
+        return Promise.resolve(false);
+    }
+
+    // Fast path: if state machine is in BEFORE_PURCHASE and proposalsReady is true,
+    // fire once immediately for the current trade cycle to execute without tick delay.
+    if (
+        currentState.scope === constants.BEFORE_PURCHASE &&
+        currentState.proposalsReady &&
+        !currentState.hasFiredBefore
+    ) {
+        store.dispatch({ type: 'BEFORE_FIRED' });
+        return Promise.resolve(true);
+    }
+
+    return watchScope({
         store,
         stopScope: constants.DURING_PURCHASE,
         passScope: constants.BEFORE_PURCHASE,
         passFlag: 'proposalsReady',
     });
+};
 
 const watchDuring = store =>
     watchScope({
@@ -47,12 +64,6 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
         return Promise.resolve(false);
     }
 
-    // Fast path: if state machine is already in passScope and passFlag is satisfied,
-    // resolve immediately (0ms) instead of stalling the interpreter loop waiting for another tick.
-    if (currentState.scope === passScope && currentState[passFlag]) {
-        return Promise.resolve(true);
-    }
-
     return new Promise(resolve => {
         let isResolved = false;
         const unsubscribe = store.subscribe(() => {
@@ -65,6 +76,9 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
                 resolve(false);
                 return;
             }
+
+            if (newState.newTick === prevTick) return;
+            prevTick = newState.newTick;
 
             if (newState.scope === passScope && newState[passFlag]) {
                 isResolved = true;
