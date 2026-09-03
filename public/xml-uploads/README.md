@@ -8,27 +8,28 @@ This folder is where you place your trading bot XML strategy files.
    e.g. `MY NEW BOT.xml`
 
 2. **Add an entry to `bots.json`**:
-   ```json
-   {
-     "name": "MY NEW BOT",
-     "file": "MY NEW BOT.xml",
-     "description": "Short description of what this bot does.",
-     "difficulty": "Intermediate",
-     "strategy": "My Strategy Name"
-   }
-   ```
+
+    ```json
+    {
+        "name": "MY NEW BOT",
+        "file": "MY NEW BOT.xml",
+        "description": "Short description of what this bot does.",
+        "difficulty": "Intermediate",
+        "strategy": "My Strategy Name"
+    }
+    ```
 
 3. **Refresh the app** — the bot card will appear automatically on the Trading Bots tab.
 
 ## Fields in bots.json
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | ✅ | Display name shown on the card |
-| `file` | ✅ | Exact filename of the `.xml` file |
-| `description` | ❌ | Card description text |
-| `difficulty` | ❌ | `Beginner`, `Intermediate`, or `Advanced` |
-| `strategy` | ❌ | Strategy label shown as a tag |
+| Field         | Required | Description                               |
+| ------------- | -------- | ----------------------------------------- |
+| `name`        | ✅       | Display name shown on the card            |
+| `file`        | ✅       | Exact filename of the `.xml` file         |
+| `description` | ❌       | Card description text                     |
+| `difficulty`  | ❌       | `Beginner`, `Intermediate`, or `Advanced` |
+| `strategy`    | ❌       | Strategy label shown as a tag             |
 
 ## How it Works
 

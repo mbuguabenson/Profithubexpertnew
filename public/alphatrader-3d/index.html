@@ -1,611 +1,800 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="dark scroll-smooth">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlphaTrader 3D — Next-Gen Algorithmic Trading | Deriv API Ecosystem</title>
-    
-    <!-- Meta & SEO -->
-    <meta name="description" content="AlphaTrader 3D is a next-generation 3rd-party algorithmic trading gateway integrated into the Deriv API ecosystem with real-time 3D execution and deep analytics.">
-    <meta name="keywords" content="Deriv API, Algorithmic Trading, 3D Trading Platform, Synthetic Indices, Volatility Indices, Bot Trading">
-    <meta name="theme-color" content="#060913">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AlphaTrader 3D — Next-Gen Algorithmic Trading | Deriv API Ecosystem</title>
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+        <!-- Meta & SEO -->
+        <meta
+            name="description"
+            content="AlphaTrader 3D is a next-generation 3rd-party algorithmic trading gateway integrated into the Deriv API ecosystem with real-time 3D execution and deep analytics."
+        />
+        <meta
+            name="keywords"
+            content="Deriv API, Algorithmic Trading, 3D Trading Platform, Synthetic Indices, Volatility Indices, Bot Trading"
+        />
+        <meta name="theme-color" content="#060913" />
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        cyber: {
-                            dark: '#05070E',
-                            card: 'rgba(11, 17, 32, 0.75)',
-                            border: 'rgba(16, 185, 129, 0.25)',
-                            emerald: '#10b981',
-                            emeraldLight: '#34d399',
-                            emeraldGlow: 'rgba(16, 185, 129, 0.4)',
-                            cyan: '#06b6d4',
-                            purple: '#a855f7',
-                            accent: '#f59e0b',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Space Grotesk', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'float-slow': 'float 6s ease-in-out infinite',
-                        'float-delayed': 'float 7s ease-in-out 2s infinite',
-                        'glow-line': 'glowLine 3s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-12px)' },
+        <!-- Google Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700;800;900&display=swap"
+            rel="stylesheet"
+        />
+
+        <!-- Tailwind CSS CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            cyber: {
+                                dark: '#05070E',
+                                card: 'rgba(11, 17, 32, 0.75)',
+                                border: 'rgba(16, 185, 129, 0.25)',
+                                emerald: '#10b981',
+                                emeraldLight: '#34d399',
+                                emeraldGlow: 'rgba(16, 185, 129, 0.4)',
+                                cyan: '#06b6d4',
+                                purple: '#a855f7',
+                                accent: '#f59e0b',
+                            },
                         },
-                        glowLine: {
-                            '0%, 100%': { opacity: '0.4', transform: 'scaleX(1)' },
-                            '50%': { opacity: '0.9', transform: 'scaleX(1.15)' },
-                        }
-                    }
+                        fontFamily: {
+                            sans: ['Inter', 'sans-serif'],
+                            display: ['Space Grotesk', 'sans-serif'],
+                            mono: ['JetBrains Mono', 'monospace'],
+                        },
+                        animation: {
+                            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                            'float-slow': 'float 6s ease-in-out infinite',
+                            'float-delayed': 'float 7s ease-in-out 2s infinite',
+                            'glow-line': 'glowLine 3s ease-in-out infinite',
+                        },
+                        keyframes: {
+                            float: {
+                                '0%, 100%': { transform: 'translateY(0px)' },
+                                '50%': { transform: 'translateY(-12px)' },
+                            },
+                            glowLine: {
+                                '0%, 100%': { opacity: '0.4', transform: 'scaleX(1)' },
+                                '50%': { opacity: '0.9', transform: 'scaleX(1.15)' },
+                            },
+                        },
+                    },
+                },
+            };
+        </script>
+
+        <style>
+            /* Custom 3D & Cyberpunk Styles */
+            :root {
+                --emerald-glow: #10b981;
+                --emerald-glow-rgb: 16, 185, 129;
+            }
+
+            body {
+                background-color: #05070e;
+                color: #f1f5f9;
+                overflow-x: hidden;
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* 3D Perspective Viewport */
+            .viewport-3d {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                perspective: 1200px;
+                perspective-origin: 50% 50%;
+                overflow: hidden;
+                pointer-events: none;
+                z-index: 10;
+            }
+
+            .scene-3d {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                transform-style: preserve-3d;
+                will-change: transform, opacity;
+                transition: opacity 0.4s ease-out;
+            }
+
+            /* Cyberpunk 3D Emerald Grid Floor */
+            .grid-floor-container {
+                position: absolute;
+                bottom: -35%;
+                left: -50%;
+                width: 200%;
+                height: 140%;
+                transform-origin: 50% 100%;
+                transform: rotateX(75deg) translateZ(-50px);
+                transform-style: preserve-3d;
+                pointer-events: none;
+            }
+
+            .grid-floor {
+                width: 100%;
+                height: 100%;
+                background-image:
+                    linear-gradient(to right, rgba(16, 185, 129, 0.28) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(16, 185, 129, 0.28) 1px, transparent 1px);
+                background-size: 64px 64px;
+                background-position: center bottom;
+                mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 80%);
+                -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 80%);
+                animation: gridMove 20s linear infinite;
+            }
+
+            @keyframes gridMove {
+                0% {
+                    background-position: center 0px;
+                }
+                100% {
+                    background-position: center 640px;
                 }
             }
-        }
-    </script>
 
-    <style>
-        /* Custom 3D & Cyberpunk Styles */
-        :root {
-            --emerald-glow: #10b981;
-            --emerald-glow-rgb: 16, 185, 129;
-        }
+            /* Horizon Laser Glow */
+            .horizon-glow {
+                position: absolute;
+                bottom: 30%;
+                left: 0;
+                width: 100%;
+                height: 120px;
+                background: radial-gradient(
+                    ellipse 60% 40% at 50% 50%,
+                    rgba(16, 185, 129, 0.35),
+                    rgba(6, 182, 212, 0.15),
+                    transparent 70%
+                );
+                filter: blur(20px);
+                pointer-events: none;
+            }
 
-        body {
-            background-color: #05070e;
-            color: #f1f5f9;
-            overflow-x: hidden;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+            /* Glassmorphism 3D Floating Cards */
+            .glass-card-3d {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform-style: preserve-3d;
+                background: rgba(10, 15, 29, 0.82);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(16, 185, 129, 0.35);
+                box-shadow:
+                    0 20px 50px rgba(0, 0, 0, 0.8),
+                    0 0 30px rgba(16, 185, 129, 0.18),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+                border-radius: 1.25rem;
+                pointer-events: auto;
+                transition:
+                    border-color 0.3s,
+                    box-shadow 0.3s;
+            }
 
-        /* 3D Perspective Viewport */
-        .viewport-3d {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            perspective: 1200px;
-            perspective-origin: 50% 50%;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 10;
-        }
+            .glass-card-3d:hover {
+                border-color: rgba(16, 185, 129, 0.8);
+                box-shadow:
+                    0 25px 60px rgba(0, 0, 0, 0.9),
+                    0 0 45px rgba(16, 185, 129, 0.35),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            }
 
-        .scene-3d {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-            will-change: transform, opacity;
-            transition: opacity 0.4s ease-out;
-        }
-
-        /* Cyberpunk 3D Emerald Grid Floor */
-        .grid-floor-container {
-            position: absolute;
-            bottom: -35%;
-            left: -50%;
-            width: 200%;
-            height: 140%;
-            transform-origin: 50% 100%;
-            transform: rotateX(75deg) translateZ(-50px);
-            transform-style: preserve-3d;
-            pointer-events: none;
-        }
-
-        .grid-floor {
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(to right, rgba(16, 185, 129, 0.28) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(16, 185, 129, 0.28) 1px, transparent 1px);
-            background-size: 64px 64px;
-            background-position: center bottom;
-            mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 80%);
-            -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 80%);
-            animation: gridMove 20s linear infinite;
-        }
-
-        @keyframes gridMove {
-            0% { background-position: center 0px; }
-            100% { background-position: center 640px; }
-        }
-
-        /* Horizon Laser Glow */
-        .horizon-glow {
-            position: absolute;
-            bottom: 30%;
-            left: 0;
-            width: 100%;
-            height: 120px;
-            background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(16, 185, 129, 0.35), rgba(6, 182, 212, 0.15), transparent 70%);
-            filter: blur(20px);
-            pointer-events: none;
-        }
-
-        /* Glassmorphism 3D Floating Cards */
-        .glass-card-3d {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform-style: preserve-3d;
-            background: rgba(10, 15, 29, 0.82);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            box-shadow: 
-                0 20px 50px rgba(0, 0, 0, 0.8),
-                0 0 30px rgba(16, 185, 129, 0.18),
-                inset 0 1px 1px rgba(255, 255, 255, 0.15);
-            border-radius: 1.25rem;
-            pointer-events: auto;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        .glass-card-3d:hover {
-            border-color: rgba(16, 185, 129, 0.8);
-            box-shadow: 
-                0 25px 60px rgba(0, 0, 0, 0.9),
-                0 0 45px rgba(16, 185, 129, 0.35),
-                inset 0 1px 2px rgba(255, 255, 255, 0.3);
-        }
-
-        /* Card 1: Left Foreground Depth */
-        .card-vol100 {
-            width: 320px;
-            margin-left: -480px;
-            margin-top: -120px;
-            transform: translate3d(0, 0, -220px) rotateY(12deg) rotateX(-5deg);
-        }
-
-        /* Card 2: Right Deep Space */
-        .card-vol75 {
-            width: 340px;
-            margin-left: 140px;
-            margin-top: -60px;
-            transform: translate3d(0, 0, -620px) rotateY(-14deg) rotateX(6deg);
-        }
-
-        @media (max-width: 1024px) {
+            /* Card 1: Left Foreground Depth */
             .card-vol100 {
-                width: 270px;
-                margin-left: -320px;
-                margin-top: -140px;
-                transform: translate3d(0, 0, -180px) rotateY(8deg);
+                width: 320px;
+                margin-left: -480px;
+                margin-top: -120px;
+                transform: translate3d(0, 0, -220px) rotateY(12deg) rotateX(-5deg);
             }
+
+            /* Card 2: Right Deep Space */
             .card-vol75 {
-                width: 280px;
-                margin-left: 40px;
-                margin-top: 20px;
-                transform: translate3d(0, 0, -480px) rotateY(-10deg);
+                width: 340px;
+                margin-left: 140px;
+                margin-top: -60px;
+                transform: translate3d(0, 0, -620px) rotateY(-14deg) rotateX(6deg);
             }
-        }
 
-        @media (max-width: 640px) {
-            .card-vol100 {
-                width: 260px;
-                margin-left: -130px;
-                margin-top: -190px;
-                transform: translate3d(0, 0, -150px) scale(0.9);
+            @media (max-width: 1024px) {
+                .card-vol100 {
+                    width: 270px;
+                    margin-left: -320px;
+                    margin-top: -140px;
+                    transform: translate3d(0, 0, -180px) rotateY(8deg);
+                }
+                .card-vol75 {
+                    width: 280px;
+                    margin-left: 40px;
+                    margin-top: 20px;
+                    transform: translate3d(0, 0, -480px) rotateY(-10deg);
+                }
             }
-            .card-vol75 {
-                width: 260px;
-                margin-left: -130px;
-                margin-top: 50px;
-                transform: translate3d(0, 0, -420px) scale(0.85);
+
+            @media (max-width: 640px) {
+                .card-vol100 {
+                    width: 260px;
+                    margin-left: -130px;
+                    margin-top: -190px;
+                    transform: translate3d(0, 0, -150px) scale(0.9);
+                }
+                .card-vol75 {
+                    width: 260px;
+                    margin-left: -130px;
+                    margin-top: 50px;
+                    transform: translate3d(0, 0, -420px) scale(0.85);
+                }
             }
-        }
 
-        /* Ambient Cyber Lights */
-        .cyber-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(90px);
-            pointer-events: none;
-            opacity: 0.25;
-        }
+            /* Ambient Cyber Lights */
+            .cyber-orb {
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(90px);
+                pointer-events: none;
+                opacity: 0.25;
+            }
 
-        /* Scroll Progress Bar */
-        .scroll-progress-line {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #10b981, #06b6d4, #a855f7);
-            z-index: 100;
-            width: 0%;
-            transition: width 0.1s linear;
-        }
+            /* Scroll Progress Bar */
+            .scroll-progress-line {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 3px;
+                background: linear-gradient(90deg, #10b981, #06b6d4, #a855f7);
+                z-index: 100;
+                width: 0%;
+                transition: width 0.1s linear;
+            }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #05070e;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(16, 185, 129, 0.4);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(16, 185, 129, 0.8);
-        }
-    </style>
-</head>
-<body class="bg-cyber-dark text-slate-100 antialiased selection:bg-emerald-500 selection:text-black">
+            /* Custom Scrollbar */
+            ::-webkit-scrollbar {
+                width: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #05070e;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: rgba(16, 185, 129, 0.4);
+                border-radius: 3px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(16, 185, 129, 0.8);
+            }
+        </style>
+    </head>
+    <body class="bg-cyber-dark text-slate-100 antialiased selection:bg-emerald-500 selection:text-black">
+        <!-- Scroll Progress Indicator -->
+        <div id="scrollProgress" class="scroll-progress-line"></div>
 
-    <!-- Scroll Progress Indicator -->
-    <div id="scrollProgress" class="scroll-progress-line"></div>
-
-    <!-- Navigation Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300 backdrop-blur-md bg-cyber-dark/40 border-b border-emerald-500/10">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 p-0.5 shadow-lg shadow-emerald-500/20 flex items-center justify-center">
-                    <div class="w-full h-full bg-cyber-dark rounded-[10px] flex items-center justify-center">
-                        <span class="font-display font-black text-emerald-400 text-lg tracking-tighter">α</span>
-                    </div>
-                </div>
-                <div>
-                    <span class="font-display font-bold text-lg tracking-wide text-white">ALPHA<span class="text-emerald-400">TRADER</span></span>
-                    <span class="text-[9px] font-mono text-emerald-400/80 block -mt-1 tracking-widest">3D DERIV ENGINE</span>
-                </div>
-            </div>
-
-            <!-- Header Vitals & Navigation -->
-            <div class="hidden md:flex items-center space-x-6">
-                <div class="flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-400">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span>DERIV API GATEWAY: <strong>ACTIVE</strong></span>
-                </div>
-                <div class="text-xs font-mono text-slate-400">
-                    LATENCY: <span id="headerLatency" class="text-emerald-400 font-bold">14ms</span>
-                </div>
-            </div>
-
-            <button onclick="scrollToDashboard()" class="relative group px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wider uppercase overflow-hidden border border-emerald-500/40 text-emerald-300 hover:text-white transition-colors duration-300">
-                <span class="absolute inset-0 w-full h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-all duration-300"></span>
-                <span class="relative flex items-center space-x-1.5">
-                    <span>ENTER TERMINAL</span>
-                    <svg class="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </span>
-            </button>
-        </div>
-    </header>
-
-    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-    <!-- 1. THE 3D VIEWPORT LAYER (Fixed Perspective & Floating Spatial Objects)   -->
-    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-    <div class="viewport-3d" id="viewport3d">
-        <div class="scene-3d" id="scene3d">
-            
-            <!-- Cyberpunk Atmospheric Lights -->
-            <div class="cyber-orb bg-emerald-500 w-[500px] h-[500px] -top-20 -left-20"></div>
-            <div class="cyber-orb bg-cyan-600 w-[600px] h-[600px] top-1/3 right-0"></div>
-            <div class="cyber-orb bg-purple-600 w-[450px] h-[450px] bottom-0 left-1/4"></div>
-
-            <!-- Horizon Laser Line & Atmospheric Glow -->
-            <div class="horizon-glow"></div>
-            <div class="absolute bottom-[35%] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent animate-glow-line"></div>
-
-            <!-- Glowing 3D Cyberpunk Emerald Grid Floor (rotateX: 75deg) -->
-            <div class="grid-floor-container">
-                <div class="grid-floor"></div>
-            </div>
-
-            <!-- ── FLOATING 3D CARD 1: Volatility 100 Index (Near-field Depth) ── -->
-            <div class="glass-card-3d card-vol100 p-5 select-none animate-float-slow">
-                <div class="flex items-center justify-between pb-3 border-b border-emerald-500/20">
-                    <div class="flex items-center space-x-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-mono text-xs font-bold">
-                            V100
-                        </div>
-                        <div>
-                            <h4 class="font-display font-bold text-sm text-white tracking-wide leading-none">Volatility 100</h4>
-                            <span class="text-[10px] font-mono text-slate-400">Continuous 2s Synthetic</span>
+        <!-- Navigation Header -->
+        <header
+            class="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300 backdrop-blur-md bg-cyber-dark/40 border-b border-emerald-500/10"
+        >
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div
+                    class="flex items-center space-x-3 cursor-pointer"
+                    onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                >
+                    <div
+                        class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 p-0.5 shadow-lg shadow-emerald-500/20 flex items-center justify-center"
+                    >
+                        <div class="w-full h-full bg-cyber-dark rounded-[10px] flex items-center justify-center">
+                            <span class="font-display font-black text-emerald-400 text-lg tracking-tighter">α</span>
                         </div>
                     </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>LIVE</span>
-                    </span>
-                </div>
-
-                <!-- Price Metric -->
-                <div class="mt-4 flex items-baseline justify-between">
                     <div>
-                        <span class="text-[10px] font-mono text-slate-400 block tracking-wider">SPOT QUOTE</span>
-                        <div class="flex items-baseline space-x-2">
-                            <span id="v100Price" class="font-mono text-2xl font-black text-emerald-300 tracking-tight transition-colors">1,482.94</span>
-                            <span id="v100Change" class="text-xs font-mono font-bold text-emerald-400">+0.42%</span>
-                        </div>
+                        <span class="font-display font-bold text-lg tracking-wide text-white"
+                            >ALPHA<span class="text-emerald-400">TRADER</span></span
+                        >
+                        <span class="text-[9px] font-mono text-emerald-400/80 block -mt-1 tracking-widest"
+                            >3D DERIV ENGINE</span
+                        >
                     </div>
-                    <div class="text-right">
-                        <span class="text-[10px] font-mono text-slate-400 block tracking-wider">LAST DIGIT</span>
-                        <span id="v100LastDigit" class="inline-block px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-sm font-black shadow-sm shadow-emerald-500/20">
-                            4
+                </div>
+
+                <!-- Header Vitals & Navigation -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <div
+                        class="flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-400"
+                    >
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>DERIV API GATEWAY: <strong>ACTIVE</strong></span>
+                    </div>
+                    <div class="text-xs font-mono text-slate-400">
+                        LATENCY: <span id="headerLatency" class="text-emerald-400 font-bold">14ms</span>
+                    </div>
+                </div>
+
+                <button
+                    onclick="scrollToDashboard()"
+                    class="relative group px-4 py-2 rounded-lg text-xs font-mono font-bold tracking-wider uppercase overflow-hidden border border-emerald-500/40 text-emerald-300 hover:text-white transition-colors duration-300"
+                >
+                    <span
+                        class="absolute inset-0 w-full h-full bg-emerald-500/20 group-hover:bg-emerald-500 transition-all duration-300"
+                    ></span>
+                    <span class="relative flex items-center space-x-1.5">
+                        <span>ENTER TERMINAL</span>
+                        <svg
+                            class="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                            />
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <!-- 1. THE 3D VIEWPORT LAYER (Fixed Perspective & Floating Spatial Objects)   -->
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <div class="viewport-3d" id="viewport3d">
+            <div class="scene-3d" id="scene3d">
+                <!-- Cyberpunk Atmospheric Lights -->
+                <div class="cyber-orb bg-emerald-500 w-[500px] h-[500px] -top-20 -left-20"></div>
+                <div class="cyber-orb bg-cyan-600 w-[600px] h-[600px] top-1/3 right-0"></div>
+                <div class="cyber-orb bg-purple-600 w-[450px] h-[450px] bottom-0 left-1/4"></div>
+
+                <!-- Horizon Laser Line & Atmospheric Glow -->
+                <div class="horizon-glow"></div>
+                <div
+                    class="absolute bottom-[35%] left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent animate-glow-line"
+                ></div>
+
+                <!-- Glowing 3D Cyberpunk Emerald Grid Floor (rotateX: 75deg) -->
+                <div class="grid-floor-container">
+                    <div class="grid-floor"></div>
+                </div>
+
+                <!-- ── FLOATING 3D CARD 1: Volatility 100 Index (Near-field Depth) ── -->
+                <div class="glass-card-3d card-vol100 p-5 select-none animate-float-slow">
+                    <div class="flex items-center justify-between pb-3 border-b border-emerald-500/20">
+                        <div class="flex items-center space-x-2.5">
+                            <div
+                                class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-mono text-xs font-bold"
+                            >
+                                V100
+                            </div>
+                            <div>
+                                <h4 class="font-display font-bold text-sm text-white tracking-wide leading-none">
+                                    Volatility 100
+                                </h4>
+                                <span class="text-[10px] font-mono text-slate-400">Continuous 2s Synthetic</span>
+                            </div>
+                        </div>
+                        <span
+                            class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1"
+                        >
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>LIVE</span>
                         </span>
                     </div>
-                </div>
 
-                <!-- SVG Sparkline Chart -->
-                <div class="mt-4 pt-2">
-                    <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
-                        <span>TICK PULSE</span>
-                        <span>REAL-TIME STREAM</span>
-                    </div>
-                    <svg id="v100Sparkline" class="w-full h-12 overflow-visible" viewBox="0 0 280 48">
-                        <defs>
-                            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="rgba(16, 185, 129, 0.4)" />
-                                <stop offset="100%" stop-color="rgba(16, 185, 129, 0.0)" />
-                            </linearGradient>
-                        </defs>
-                        <path id="v100SparklineArea" fill="url(#emeraldGrad)" d="M0,48 L0,24 L40,18 L80,30 L120,12 L160,28 L200,8 L240,20 L280,14 L280,48 Z" />
-                        <path id="v100SparklinePath" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M0,24 L40,18 L80,30 L120,12 L160,28 L200,8 L240,20 L280,14" />
-                        <circle id="v100SparklineDot" cx="280" cy="14" r="3.5" fill="#34d399" stroke="#05070e" stroke-width="1.5" />
-                    </svg>
-                </div>
-
-                <!-- Micro Stats Footnote -->
-                <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <span>Algorithm: <strong class="text-emerald-400">Delta-9 Differs</strong></span>
-                    <span>Confidence: <strong class="text-emerald-300">92.4%</strong></span>
-                </div>
-            </div>
-
-            <!-- ── FLOATING 3D CARD 2: Volatility 75 (1s) Index (Deep-field Depth) ── -->
-            <div class="glass-card-3d card-vol75 p-5 select-none animate-float-delayed">
-                <div class="flex items-center justify-between pb-3 border-b border-cyan-500/20">
-                    <div class="flex items-center space-x-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-mono text-xs font-bold">
-                            1HZ75
-                        </div>
+                    <!-- Price Metric -->
+                    <div class="mt-4 flex items-baseline justify-between">
                         <div>
-                            <h4 class="font-display font-bold text-sm text-white tracking-wide leading-none">Vol 75 (1s) Index</h4>
-                            <span class="text-[10px] font-mono text-slate-400">High-Velocity Tick Stream</span>
-                        </div>
-                    </div>
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-                        1s TICK
-                    </span>
-                </div>
-
-                <!-- Price Metric -->
-                <div class="mt-4 flex items-baseline justify-between">
-                    <div>
-                        <span class="text-[10px] font-mono text-slate-400 block tracking-wider">SPOT QUOTE</span>
-                        <div class="flex items-baseline space-x-2">
-                            <span id="v75Price" class="font-mono text-2xl font-black text-cyan-300 tracking-tight transition-colors">418,920.15</span>
-                            <span id="v75Change" class="text-xs font-mono font-bold text-cyan-400">+1.18%</span>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-[10px] font-mono text-slate-400 block tracking-wider">POWER GAP</span>
-                        <span class="inline-block px-2.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono text-sm font-black">
-                            +18.4%
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Algorithmic Live Gauges -->
-                <div class="mt-4 space-y-2">
-                    <div>
-                        <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
-                            <span>ODD / EVEN DOMINANCE</span>
-                            <span class="text-cyan-400 font-bold">EVEN (68%)</span>
-                        </div>
-                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden flex">
-                            <div class="h-full bg-cyan-400 w-[68%] transition-all duration-500"></div>
-                            <div class="h-full bg-purple-500 w-[32%] transition-all duration-500"></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
-                            <span>EXECUTION SPEED</span>
-                            <span class="text-emerald-400 font-bold">0.12s (Ultra-Low)</span>
-                        </div>
-                        <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 w-[95%]"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Micro Stats Footnote -->
-                <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <span>Protocol: <strong class="text-cyan-400">Deriv WS v2</strong></span>
-                    <span>Win Rate: <strong class="text-emerald-400">88.6%</strong></span>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-    <!-- 2. THE LANDING SCENE (FOREGROUND HERO LAYER)                              -->
-    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-    <main class="relative z-20">
-        
-        <!-- Section 1: Hero Cover (Scroll 0% to 50%) -->
-        <section class="min-h-screen flex flex-col items-center justify-center text-center px-4 pt-20 pb-16 pointer-events-none">
-            <div class="max-w-4xl mx-auto space-y-6 pointer-events-auto">
-                
-                <!-- Tag Badge -->
-                <div class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-950/40 backdrop-blur-md">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-xs font-mono font-semibold tracking-wider uppercase">Deriv API Ecosystem Gateway</span>
-                    <span class="text-emerald-500">•</span>
-                    <span class="text-[11px] font-mono text-emerald-400/90">Autonomous 3D Engine</span>
-                </div>
-
-                <!-- Main Hero Title -->
-                <h1 class="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight leading-[1.05] text-white">
-                    NEXT-GEN <br>
-                    <span class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(16,185,129,0.35)]">
-                        ALGORITHMIC
-                    </span> <br>
-                    TRADING
-                </h1>
-
-                <!-- Subtext -->
-                <p class="text-slate-300 text-base sm:text-lg md:text-xl font-normal max-w-2xl mx-auto leading-relaxed text-shadow">
-                    Experience physical depth with real-time algorithmic execution on Deriv synthetic indices. Zero-latency tick streaming, automated recovery logic, and AI-assisted prompt orchestration.
-                </p>
-
-                <!-- CTA & Scroll Button Group -->
-                <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <button onclick="scrollToDashboard()" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 font-display font-bold text-base tracking-wide shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center space-x-2">
-                        <span>LAUNCH TRADING ENVIRONMENT</span>
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                    </button>
-                    <button onclick="scrollToPrompt()" class="w-full sm:w-auto px-6 py-4 rounded-xl bg-slate-900/80 border border-slate-700/80 hover:border-emerald-500/50 text-slate-200 font-mono text-xs font-semibold tracking-wider uppercase hover:text-emerald-400 backdrop-blur-md transition-all duration-300 flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                        <span>GET LLM TRADING PROMPT</span>
-                    </button>
-                </div>
-
-                <!-- Animated Scroll Hint Indicator -->
-                <div class="pt-12 flex flex-col items-center justify-center space-y-2 cursor-pointer opacity-80 hover:opacity-100 transition-opacity" onclick="window.scrollBy({top: window.innerHeight * 1.2, behavior: 'smooth'})">
-                    <span class="text-[11px] font-mono tracking-widest text-emerald-400/90 uppercase animate-pulse">Scroll to dive into 3D space</span>
-                    <div class="w-6 h-10 rounded-full border-2 border-emerald-500/40 flex items-start justify-center p-1 shadow-inner shadow-emerald-500/20">
-                        <div class="w-1.5 h-2.5 bg-emerald-400 rounded-full animate-bounce"></div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- Long Scroll Spacer to drive the 3D Zoom Effect (350vh total height) -->
-        <div class="h-[220vh] pointer-events-none"></div>
-
-        <!-- ═══════════════════════════════════════════════════════════════════════ -->
-        <!-- 4. THE ACCESSIBLE TRADING DASHBOARD REVEAL (>85% Scroll Transition)  -->
-        <!-- ═══════════════════════════════════════════════════════════════════════ -->
-        <section id="dashboardSection" class="min-h-screen relative z-30 px-4 py-20 flex items-center justify-center">
-            <div class="max-w-6xl w-full mx-auto space-y-12">
-                
-                <!-- Section Header -->
-                <div class="text-center space-y-3">
-                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-400">
-                        <span>● TERMINAL ACTIVE</span>
-                    </div>
-                    <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-white tracking-tight">
-                        ALPHATRADER <span class="text-emerald-400">CONTROL CENTER</span>
-                    </h2>
-                    <p class="text-slate-400 max-w-xl mx-auto text-sm sm:text-base font-normal">
-                        Seamlessly link your Deriv account token or load autonomous algorithm scripts directly into your execution pipeline.
-                    </p>
-                </div>
-
-                <!-- Grid of Interactive Action Blocks (Block A & Block B) -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    
-                    <!-- ── BLOCK A: ACCESS LIVE PLATFORM (High-Conversion CTA Card) ── -->
-                    <div class="lg:col-span-5 flex flex-col justify-between p-8 rounded-2xl bg-slate-900/90 border border-emerald-500/30 backdrop-blur-xl shadow-2xl shadow-black/80 hover:border-emerald-500/60 transition-all duration-500 group">
-                        <div class="space-y-6">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-md border border-emerald-500/20">
-                                    GATEWAY BLOCK A
-                                </span>
-                                <span class="flex h-2.5 w-2.5 relative">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                                </span>
-                            </div>
-
-                            <div class="space-y-2">
-                                <h3 class="font-display font-bold text-2xl text-white group-hover:text-emerald-300 transition-colors">
-                                    Access Live Trading Platform
-                                </h3>
-                                <p class="text-slate-400 text-sm leading-relaxed">
-                                    Connect your Deriv WebSocket account token, access sub-second automated speedbots, and execute multi-market strategies with live risk limits.
-                                </p>
-                            </div>
-
-                            <!-- Live Telemetry Stats -->
-                            <div class="grid grid-cols-2 gap-3 py-2">
-                                <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
-                                    <span class="text-[10px] font-mono text-slate-400 block">WEBSOCKET STATUS</span>
-                                    <span class="text-sm font-mono font-bold text-emerald-400">wss:// CONNECTED</span>
-                                </div>
-                                <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
-                                    <span class="text-[10px] font-mono text-slate-400 block">EXECUTION LATENCY</span>
-                                    <span class="text-sm font-mono font-bold text-cyan-400">12ms (Direct)</span>
-                                </div>
-                                <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
-                                    <span class="text-[10px] font-mono text-slate-400 block">SUPPORTED MARKETS</span>
-                                    <span class="text-sm font-mono font-bold text-white">Synthetic + FX</span>
-                                </div>
-                                <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
-                                    <span class="text-[10px] font-mono text-slate-400 block">RISK MANAGEMENT</span>
-                                    <span class="text-sm font-mono font-bold text-emerald-400">Active TP/SL</span>
-                                </div>
+                            <span class="text-[10px] font-mono text-slate-400 block tracking-wider">SPOT QUOTE</span>
+                            <div class="flex items-baseline space-x-2">
+                                <span
+                                    id="v100Price"
+                                    class="font-mono text-2xl font-black text-emerald-300 tracking-tight transition-colors"
+                                    >1,482.94</span
+                                >
+                                <span id="v100Change" class="text-xs font-mono font-bold text-emerald-400">+0.42%</span>
                             </div>
                         </div>
-
-                        <!-- Main Launch Button -->
-                        <div class="pt-8">
-                            <a href="https://app.deriv.com" target="_blank" rel="noopener noreferrer" class="relative w-full group/btn block p-4 rounded-xl text-center font-display font-bold text-base text-slate-950 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300">
-                                <span class="flex items-center justify-center space-x-2">
-                                    <span>LAUNCH TRADING PLATFORM</span>
-                                    <svg class="w-5 h-5 transform group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                </span>
-                            </a>
-                            <span class="text-[10px] font-mono text-center text-slate-500 block mt-2">
-                                Official Deriv API Integration Endpoint • Zero Platform Fees
+                        <div class="text-right">
+                            <span class="text-[10px] font-mono text-slate-400 block tracking-wider">LAST DIGIT</span>
+                            <span
+                                id="v100LastDigit"
+                                class="inline-block px-2.5 py-0.5 rounded-md bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-mono text-sm font-black shadow-sm shadow-emerald-500/20"
+                            >
+                                4
                             </span>
                         </div>
                     </div>
 
-                    <!-- ── BLOCK B: COPY EXECUTION PROMPT (LLM Strategy Manager) ── -->
-                    <div id="promptBlock" class="lg:col-span-7 flex flex-col justify-between p-8 rounded-2xl bg-slate-900/90 border border-cyan-500/30 backdrop-blur-xl shadow-2xl shadow-black/80 hover:border-cyan-500/60 transition-all duration-500">
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-mono text-cyan-400 font-bold uppercase tracking-widest bg-cyan-500/10 px-3 py-1 rounded-md border border-cyan-500/20">
-                                    GATEWAY BLOCK B • LLM ENGINE
-                                </span>
-                                <span class="text-xs font-mono text-slate-400">STRUCTURED BOT SCRIPT</span>
-                            </div>
+                    <!-- SVG Sparkline Chart -->
+                    <div class="mt-4 pt-2">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
+                            <span>TICK PULSE</span>
+                            <span>REAL-TIME STREAM</span>
+                        </div>
+                        <svg id="v100Sparkline" class="w-full h-12 overflow-visible" viewBox="0 0 280 48">
+                            <defs>
+                                <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="rgba(16, 185, 129, 0.4)" />
+                                    <stop offset="100%" stop-color="rgba(16, 185, 129, 0.0)" />
+                                </linearGradient>
+                            </defs>
+                            <path
+                                id="v100SparklineArea"
+                                fill="url(#emeraldGrad)"
+                                d="M0,48 L0,24 L40,18 L80,30 L120,12 L160,28 L200,8 L240,20 L280,14 L280,48 Z"
+                            />
+                            <path
+                                id="v100SparklinePath"
+                                fill="none"
+                                stroke="#10b981"
+                                stroke-width="2.2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M0,24 L40,18 L80,30 L120,12 L160,28 L200,8 L240,20 L280,14"
+                            />
+                            <circle
+                                id="v100SparklineDot"
+                                cx="280"
+                                cy="14"
+                                r="3.5"
+                                fill="#34d399"
+                                stroke="#05070e"
+                                stroke-width="1.5"
+                            />
+                        </svg>
+                    </div>
 
+                    <!-- Micro Stats Footnote -->
+                    <div
+                        class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400"
+                    >
+                        <span>Algorithm: <strong class="text-emerald-400">Delta-9 Differs</strong></span>
+                        <span>Confidence: <strong class="text-emerald-300">92.4%</strong></span>
+                    </div>
+                </div>
+
+                <!-- ── FLOATING 3D CARD 2: Volatility 75 (1s) Index (Deep-field Depth) ── -->
+                <div class="glass-card-3d card-vol75 p-5 select-none animate-float-delayed">
+                    <div class="flex items-center justify-between pb-3 border-b border-cyan-500/20">
+                        <div class="flex items-center space-x-2.5">
+                            <div
+                                class="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-mono text-xs font-bold"
+                            >
+                                1HZ75
+                            </div>
                             <div>
-                                <h3 class="font-display font-bold text-2xl text-white">
-                                    Copy Execution Strategy Prompt
-                                </h3>
-                                <p class="text-slate-400 text-sm leading-relaxed mt-1">
-                                    Feed this pre-structured prompt into Claude, Gemini, or ChatGPT to generate custom Deriv bot scripts with automatic Martingale recovery and tick analysis logic.
-                                </p>
+                                <h4 class="font-display font-bold text-sm text-white tracking-wide leading-none">
+                                    Vol 75 (1s) Index
+                                </h4>
+                                <span class="text-[10px] font-mono text-slate-400">High-Velocity Tick Stream</span>
+                            </div>
+                        </div>
+                        <span
+                            class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                        >
+                            1s TICK
+                        </span>
+                    </div>
+
+                    <!-- Price Metric -->
+                    <div class="mt-4 flex items-baseline justify-between">
+                        <div>
+                            <span class="text-[10px] font-mono text-slate-400 block tracking-wider">SPOT QUOTE</span>
+                            <div class="flex items-baseline space-x-2">
+                                <span
+                                    id="v75Price"
+                                    class="font-mono text-2xl font-black text-cyan-300 tracking-tight transition-colors"
+                                    >418,920.15</span
+                                >
+                                <span id="v75Change" class="text-xs font-mono font-bold text-cyan-400">+1.18%</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-mono text-slate-400 block tracking-wider">POWER GAP</span>
+                            <span
+                                class="inline-block px-2.5 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono text-sm font-black"
+                            >
+                                +18.4%
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Algorithmic Live Gauges -->
+                    <div class="mt-4 space-y-2">
+                        <div>
+                            <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
+                                <span>ODD / EVEN DOMINANCE</span>
+                                <span class="text-cyan-400 font-bold">EVEN (68%)</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden flex">
+                                <div class="h-full bg-cyan-400 w-[68%] transition-all duration-500"></div>
+                                <div class="h-full bg-purple-500 w-[32%] transition-all duration-500"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
+                                <span>EXECUTION SPEED</span>
+                                <span class="text-emerald-400 font-bold">0.12s (Ultra-Low)</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 w-[95%]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Micro Stats Footnote -->
+                    <div
+                        class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-400"
+                    >
+                        <span>Protocol: <strong class="text-cyan-400">Deriv WS v2</strong></span>
+                        <span>Win Rate: <strong class="text-emerald-400">88.6%</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <!-- 2. THE LANDING SCENE (FOREGROUND HERO LAYER)                              -->
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <main class="relative z-20">
+            <!-- Section 1: Hero Cover (Scroll 0% to 50%) -->
+            <section
+                class="min-h-screen flex flex-col items-center justify-center text-center px-4 pt-20 pb-16 pointer-events-none"
+            >
+                <div class="max-w-4xl mx-auto space-y-6 pointer-events-auto">
+                    <!-- Tag Badge -->
+                    <div
+                        class="inline-flex items-center space-x-2.5 px-4 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-950/40 backdrop-blur-md"
+                    >
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-xs font-mono font-semibold tracking-wider uppercase"
+                            >Deriv API Ecosystem Gateway</span
+                        >
+                        <span class="text-emerald-500">•</span>
+                        <span class="text-[11px] font-mono text-emerald-400/90">Autonomous 3D Engine</span>
+                    </div>
+
+                    <!-- Main Hero Title -->
+                    <h1
+                        class="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight leading-[1.05] text-white"
+                    >
+                        NEXT-GEN <br />
+                        <span
+                            class="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(16,185,129,0.35)]"
+                        >
+                            ALGORITHMIC
+                        </span>
+                        <br />
+                        TRADING
+                    </h1>
+
+                    <!-- Subtext -->
+                    <p
+                        class="text-slate-300 text-base sm:text-lg md:text-xl font-normal max-w-2xl mx-auto leading-relaxed text-shadow"
+                    >
+                        Experience physical depth with real-time algorithmic execution on Deriv synthetic indices.
+                        Zero-latency tick streaming, automated recovery logic, and AI-assisted prompt orchestration.
+                    </p>
+
+                    <!-- CTA & Scroll Button Group -->
+                    <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button
+                            onclick="scrollToDashboard()"
+                            class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 font-display font-bold text-base tracking-wide shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center space-x-2"
+                        >
+                            <span>LAUNCH TRADING ENVIRONMENT</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2.5"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                />
+                            </svg>
+                        </button>
+                        <button
+                            onclick="scrollToPrompt()"
+                            class="w-full sm:w-auto px-6 py-4 rounded-xl bg-slate-900/80 border border-slate-700/80 hover:border-emerald-500/50 text-slate-200 font-mono text-xs font-semibold tracking-wider uppercase hover:text-emerald-400 backdrop-blur-md transition-all duration-300 flex items-center justify-center space-x-2"
+                        >
+                            <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                            </svg>
+                            <span>GET LLM TRADING PROMPT</span>
+                        </button>
+                    </div>
+
+                    <!-- Animated Scroll Hint Indicator -->
+                    <div
+                        class="pt-12 flex flex-col items-center justify-center space-y-2 cursor-pointer opacity-80 hover:opacity-100 transition-opacity"
+                        onclick="window.scrollBy({ top: window.innerHeight * 1.2, behavior: 'smooth' })"
+                    >
+                        <span class="text-[11px] font-mono tracking-widest text-emerald-400/90 uppercase animate-pulse"
+                            >Scroll to dive into 3D space</span
+                        >
+                        <div
+                            class="w-6 h-10 rounded-full border-2 border-emerald-500/40 flex items-start justify-center p-1 shadow-inner shadow-emerald-500/20"
+                        >
+                            <div class="w-1.5 h-2.5 bg-emerald-400 rounded-full animate-bounce"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Long Scroll Spacer to drive the 3D Zoom Effect (350vh total height) -->
+            <div class="h-[220vh] pointer-events-none"></div>
+
+            <!-- ═══════════════════════════════════════════════════════════════════════ -->
+            <!-- 4. THE ACCESSIBLE TRADING DASHBOARD REVEAL (>85% Scroll Transition)  -->
+            <!-- ═══════════════════════════════════════════════════════════════════════ -->
+            <section
+                id="dashboardSection"
+                class="min-h-screen relative z-30 px-4 py-20 flex items-center justify-center"
+            >
+                <div class="max-w-6xl w-full mx-auto space-y-12">
+                    <!-- Section Header -->
+                    <div class="text-center space-y-3">
+                        <div
+                            class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-400"
+                        >
+                            <span>● TERMINAL ACTIVE</span>
+                        </div>
+                        <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-white tracking-tight">
+                            ALPHATRADER <span class="text-emerald-400">CONTROL CENTER</span>
+                        </h2>
+                        <p class="text-slate-400 max-w-xl mx-auto text-sm sm:text-base font-normal">
+                            Seamlessly link your Deriv account token or load autonomous algorithm scripts directly into
+                            your execution pipeline.
+                        </p>
+                    </div>
+
+                    <!-- Grid of Interactive Action Blocks (Block A & Block B) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- ── BLOCK A: ACCESS LIVE PLATFORM (High-Conversion CTA Card) ── -->
+                        <div
+                            class="lg:col-span-5 flex flex-col justify-between p-8 rounded-2xl bg-slate-900/90 border border-emerald-500/30 backdrop-blur-xl shadow-2xl shadow-black/80 hover:border-emerald-500/60 transition-all duration-500 group"
+                        >
+                            <div class="space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <span
+                                        class="text-xs font-mono text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-md border border-emerald-500/20"
+                                    >
+                                        GATEWAY BLOCK A
+                                    </span>
+                                    <span class="flex h-2.5 w-2.5 relative">
+                                        <span
+                                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
+                                        ></span>
+                                        <span
+                                            class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"
+                                        ></span>
+                                    </span>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <h3
+                                        class="font-display font-bold text-2xl text-white group-hover:text-emerald-300 transition-colors"
+                                    >
+                                        Access Live Trading Platform
+                                    </h3>
+                                    <p class="text-slate-400 text-sm leading-relaxed">
+                                        Connect your Deriv WebSocket account token, access sub-second automated
+                                        speedbots, and execute multi-market strategies with live risk limits.
+                                    </p>
+                                </div>
+
+                                <!-- Live Telemetry Stats -->
+                                <div class="grid grid-cols-2 gap-3 py-2">
+                                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                                        <span class="text-[10px] font-mono text-slate-400 block">WEBSOCKET STATUS</span>
+                                        <span class="text-sm font-mono font-bold text-emerald-400"
+                                            >wss:// CONNECTED</span
+                                        >
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                                        <span class="text-[10px] font-mono text-slate-400 block"
+                                            >EXECUTION LATENCY</span
+                                        >
+                                        <span class="text-sm font-mono font-bold text-cyan-400">12ms (Direct)</span>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                                        <span class="text-[10px] font-mono text-slate-400 block"
+                                            >SUPPORTED MARKETS</span
+                                        >
+                                        <span class="text-sm font-mono font-bold text-white">Synthetic + FX</span>
+                                    </div>
+                                    <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+                                        <span class="text-[10px] font-mono text-slate-400 block">RISK MANAGEMENT</span>
+                                        <span class="text-sm font-mono font-bold text-emerald-400">Active TP/SL</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Code Prompt Box with Line Numbers -->
-                            <div class="relative rounded-xl bg-slate-950/90 border border-slate-800 p-4 font-mono text-xs text-slate-300 leading-relaxed overflow-x-auto shadow-inner">
-                                <div class="absolute top-3 right-3 flex items-center space-x-1.5 text-[10px] text-slate-500 uppercase tracking-wider font-mono">
-                                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-                                    <span>SYSTEM_PROMPT.md</span>
+                            <!-- Main Launch Button -->
+                            <div class="pt-8">
+                                <a
+                                    href="https://app.deriv.com"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="relative w-full group/btn block p-4 rounded-xl text-center font-display font-bold text-base text-slate-950 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300"
+                                >
+                                    <span class="flex items-center justify-center space-x-2">
+                                        <span>LAUNCH TRADING PLATFORM</span>
+                                        <svg
+                                            class="w-5 h-5 transform group-hover/btn:translate-x-1 transition-transform"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2.5"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                            />
+                                        </svg>
+                                    </span>
+                                </a>
+                                <span class="text-[10px] font-mono text-center text-slate-500 block mt-2">
+                                    Official Deriv API Integration Endpoint • Zero Platform Fees
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- ── BLOCK B: COPY EXECUTION PROMPT (LLM Strategy Manager) ── -->
+                        <div
+                            id="promptBlock"
+                            class="lg:col-span-7 flex flex-col justify-between p-8 rounded-2xl bg-slate-900/90 border border-cyan-500/30 backdrop-blur-xl shadow-2xl shadow-black/80 hover:border-cyan-500/60 transition-all duration-500"
+                        >
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span
+                                        class="text-xs font-mono text-cyan-400 font-bold uppercase tracking-widest bg-cyan-500/10 px-3 py-1 rounded-md border border-cyan-500/20"
+                                    >
+                                        GATEWAY BLOCK B • LLM ENGINE
+                                    </span>
+                                    <span class="text-xs font-mono text-slate-400">STRUCTURED BOT SCRIPT</span>
                                 </div>
-                                <pre id="promptCode" class="text-emerald-300/90 whitespace-pre-wrap selection:bg-cyan-500 selection:text-black">Act as an expert Deriv trading bot script architect. Build a high-performance automated trading strategy using the official Deriv WebSocket API with the following parameters:
+
+                                <div>
+                                    <h3 class="font-display font-bold text-2xl text-white">
+                                        Copy Execution Strategy Prompt
+                                    </h3>
+                                    <p class="text-slate-400 text-sm leading-relaxed mt-1">
+                                        Feed this pre-structured prompt into Claude, Gemini, or ChatGPT to generate
+                                        custom Deriv bot scripts with automatic Martingale recovery and tick analysis
+                                        logic.
+                                    </p>
+                                </div>
+
+                                <!-- Code Prompt Box with Line Numbers -->
+                                <div
+                                    class="relative rounded-xl bg-slate-950/90 border border-slate-800 p-4 font-mono text-xs text-slate-300 leading-relaxed overflow-x-auto shadow-inner"
+                                >
+                                    <div
+                                        class="absolute top-3 right-3 flex items-center space-x-1.5 text-[10px] text-slate-500 uppercase tracking-wider font-mono"
+                                    >
+                                        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                                        <span>SYSTEM_PROMPT.md</span>
+                                    </div>
+                                    <pre
+                                        id="promptCode"
+                                        class="text-emerald-300/90 whitespace-pre-wrap selection:bg-cyan-500 selection:text-black"
+                                    >
+Act as an expert Deriv trading bot script architect. Build a high-performance automated trading strategy using the official Deriv WebSocket API with the following parameters:
 
 - Market Target: Volatility 100 Index (1s) [underlying_symbol: "1HZ100V"]
 - Trade Contract: Dynamic Digit Differs [contract_type: "DIGITDIFF"]
@@ -616,236 +805,270 @@
   * Take Profit Threshold: $20.00 USD
   * Stop Loss Circuit Breaker: -$12.00 USD
 - Protocol: Direct WebSocket parameters payload using `buy: "1"` with strict string barrier formatting (`barrier: String(targetDigit)`).
-- Provide production-grade TypeScript code with robust WebSocket reconnection and tick stream memory management.</pre>
-                            </div>
-                        </div>
-
-                        <!-- Copy Button with Feedback Status -->
-                        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div class="text-xs font-mono text-slate-400 flex items-center space-x-2">
-                                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <span>Ready for ChatGPT, Claude 3.7 & Gemini Pro</span>
+- Provide production-grade TypeScript code with robust WebSocket reconnection and tick stream memory management.</pre
+                                    >
+                                </div>
                             </div>
 
-                            <button id="copyPromptBtn" onclick="copyPromptToClipboard()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-bold text-xs tracking-wider uppercase shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-2">
-                                <svg id="copyIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-                                <span id="copyBtnText">COPY EXECUTION PROMPT</span>
-                            </button>
+                            <!-- Copy Button with Feedback Status -->
+                            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div class="text-xs font-mono text-slate-400 flex items-center space-x-2">
+                                    <svg
+                                        class="w-4 h-4 text-cyan-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        />
+                                    </svg>
+                                    <span>Ready for ChatGPT, Claude 3.7 & Gemini Pro</span>
+                                </div>
+
+                                <button
+                                    id="copyPromptBtn"
+                                    onclick="copyPromptToClipboard()"
+                                    class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-bold text-xs tracking-wider uppercase shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 active:scale-95 transition-all duration-300 flex items-center justify-center space-x-2"
+                                >
+                                    <svg
+                                        id="copyIcon"
+                                        class="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                        />
+                                    </svg>
+                                    <span id="copyBtnText">COPY EXECUTION PROMPT</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Footer Footnote -->
+                    <div class="text-center pt-8 border-t border-slate-800/80 text-xs font-mono text-slate-500">
+                        AlphaTrader 3D • Connected to Deriv API Gateway • Developed for High-Frequency Synthetic Trading
+                    </div>
                 </div>
+            </section>
+        </main>
 
-                <!-- Footer Footnote -->
-                <div class="text-center pt-8 border-t border-slate-800/80 text-xs font-mono text-slate-500">
-                    AlphaTrader 3D • Connected to Deriv API Gateway • Developed for High-Frequency Synthetic Trading
-                </div>
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <!-- 5. VANILLA JAVASCRIPT CONTROLLER (3D Zoom-Scroll, Parallax & Tick Engine) -->
+        <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+        <script>
+            // ── 1. DOM Elements ───────────────────────────────────────────────────
+            const scene3d = document.getElementById('scene3d');
+            const viewport3d = document.getElementById('viewport3d');
+            const scrollProgress = document.getElementById('scrollProgress');
+            const dashboardSection = document.getElementById('dashboardSection');
+            const headerLatency = document.getElementById('headerLatency');
 
-            </div>
-        </section>
+            // Ticker elements
+            const v100Price = document.getElementById('v100Price');
+            const v100Change = document.getElementById('v100Change');
+            const v100LastDigit = document.getElementById('v100LastDigit');
+            const v100Path = document.getElementById('v100SparklinePath');
+            const v100Area = document.getElementById('v100SparklineArea');
+            const v100Dot = document.getElementById('v100SparklineDot');
 
-    </main>
+            const v75Price = document.getElementById('v75Price');
+            const v75Change = document.getElementById('v75Change');
 
-    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-    <!-- 5. VANILLA JAVASCRIPT CONTROLLER (3D Zoom-Scroll, Parallax & Tick Engine) -->
-    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-    <script>
-        // ── 1. DOM Elements ───────────────────────────────────────────────────
-        const scene3d = document.getElementById('scene3d');
-        const viewport3d = document.getElementById('viewport3d');
-        const scrollProgress = document.getElementById('scrollProgress');
-        const dashboardSection = document.getElementById('dashboardSection');
-        const headerLatency = document.getElementById('headerLatency');
+            // ── 2. Physics & Motion State Variables ──────────────────────────────
+            let targetScrollZ = 0;
+            let currentScrollZ = 0;
+            let targetRotateX = 0;
+            let currentRotateX = 0;
+            let targetRotateY = 0;
+            let currentRotateY = 0;
+            let isSceneVisible = true;
 
-        // Ticker elements
-        const v100Price = document.getElementById('v100Price');
-        const v100Change = document.getElementById('v100Change');
-        const v100LastDigit = document.getElementById('v100LastDigit');
-        const v100Path = document.getElementById('v100SparklinePath');
-        const v100Area = document.getElementById('v100SparklineArea');
-        const v100Dot = document.getElementById('v100SparklineDot');
+            // ── 3. Cursor Tracking (Gyro / Parallax Tilt) ─────────────────────────
+            window.addEventListener('mousemove', e => {
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
 
-        const v75Price = document.getElementById('v75Price');
-        const v75Change = document.getElementById('v75Change');
+                // Map mouse coordinates to subtle rotation angles
+                const deltaX = (e.clientX - centerX) / centerX; // -1.0 to 1.0
+                const deltaY = (e.clientY - centerY) / centerY; // -1.0 to 1.0
 
-        // ── 2. Physics & Motion State Variables ──────────────────────────────
-        let targetScrollZ = 0;
-        let currentScrollZ = 0;
-        let targetRotateX = 0;
-        let currentRotateX = 0;
-        let targetRotateY = 0;
-        let currentRotateY = 0;
-        let isSceneVisible = true;
+                targetRotateY = deltaX * 8.5; // ±8.5 deg
+                targetRotateX = -deltaY * 6.5; // ±6.5 deg
+            });
 
-        // ── 3. Cursor Tracking (Gyro / Parallax Tilt) ─────────────────────────
-        window.addEventListener('mousemove', (e) => {
-            const centerX = window.innerWidth / 2;
-            const centerY = window.innerHeight / 2;
-            
-            // Map mouse coordinates to subtle rotation angles
-            const deltaX = (e.clientX - centerX) / centerX; // -1.0 to 1.0
-            const deltaY = (e.clientY - centerY) / centerY; // -1.0 to 1.0
+            // ── 4. Zoom-Scroll Interpolation Loop (RAF) ───────────────────────────
+            function update3DScene() {
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                const scrollY = window.scrollY || window.pageYOffset || 0;
+                const progress = Math.min(Math.max(scrollY / (maxScroll || 1), 0), 1);
 
-            targetRotateY = deltaX * 8.5; // ±8.5 deg
-            targetRotateX = -deltaY * 6.5; // ±6.5 deg
-        });
-
-        // ── 4. Zoom-Scroll Interpolation Loop (RAF) ───────────────────────────
-        function update3DScene() {
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            const scrollY = window.scrollY || window.pageYOffset || 0;
-            const progress = Math.min(Math.max(scrollY / (maxScroll || 1), 0), 1);
-
-            // Update top progress bar
-            if (scrollProgress) {
-                scrollProgress.style.width = `${progress * 100}%`;
-            }
-
-            // Map scroll progress to Z-translation (0px at top -> +1450px at bottom)
-            targetScrollZ = progress * 1450;
-
-            // Smooth Lerp physics for camera translation and cursor rotation
-            currentScrollZ += (targetScrollZ - currentScrollZ) * 0.1;
-            currentRotateX += (targetRotateX - currentRotateX) * 0.08;
-            currentRotateY += (targetRotateY - currentRotateY) * 0.08;
-
-            // Apply 3D matrix transformation to the scene container
-            if (scene3d) {
-                scene3d.style.transform = `translate3d(0, 0, ${currentScrollZ}px) rotateX(${currentRotateX}deg) rotateY(${currentRotateY}deg)`;
-            }
-
-            // ── 5. Crossfade at >85% Scroll (Dashboard Reveal) ────────────────
-            if (progress >= 0.85) {
-                const fadeProgress = (progress - 0.85) / 0.15; // 0.0 to 1.0
-                const opacity = Math.max(0, 1 - fadeProgress * 1.5);
-                
-                if (viewport3d) {
-                    viewport3d.style.opacity = opacity.toString();
-                    viewport3d.style.filter = `blur(${fadeProgress * 12}px)`;
+                // Update top progress bar
+                if (scrollProgress) {
+                    scrollProgress.style.width = `${progress * 100}%`;
                 }
-            } else {
-                if (viewport3d) {
-                    viewport3d.style.opacity = '1';
-                    viewport3d.style.filter = 'none';
-                }
-            }
 
+                // Map scroll progress to Z-translation (0px at top -> +1450px at bottom)
+                targetScrollZ = progress * 1450;
+
+                // Smooth Lerp physics for camera translation and cursor rotation
+                currentScrollZ += (targetScrollZ - currentScrollZ) * 0.1;
+                currentRotateX += (targetRotateX - currentRotateX) * 0.08;
+                currentRotateY += (targetRotateY - currentRotateY) * 0.08;
+
+                // Apply 3D matrix transformation to the scene container
+                if (scene3d) {
+                    scene3d.style.transform = `translate3d(0, 0, ${currentScrollZ}px) rotateX(${currentRotateX}deg) rotateY(${currentRotateY}deg)`;
+                }
+
+                // ── 5. Crossfade at >85% Scroll (Dashboard Reveal) ────────────────
+                if (progress >= 0.85) {
+                    const fadeProgress = (progress - 0.85) / 0.15; // 0.0 to 1.0
+                    const opacity = Math.max(0, 1 - fadeProgress * 1.5);
+
+                    if (viewport3d) {
+                        viewport3d.style.opacity = opacity.toString();
+                        viewport3d.style.filter = `blur(${fadeProgress * 12}px)`;
+                    }
+                } else {
+                    if (viewport3d) {
+                        viewport3d.style.opacity = '1';
+                        viewport3d.style.filter = 'none';
+                    }
+                }
+
+                requestAnimationFrame(update3DScene);
+            }
             requestAnimationFrame(update3DScene);
-        }
-        requestAnimationFrame(update3DScene);
 
-        // ── 6. Live Synthetic Ticker Simulation (Mock Deriv WS Stream) ────────
-        let currentV100 = 1482.94;
-        let currentV75 = 418920.15;
-        let v100History = [24, 18, 30, 12, 28, 8, 20, 14];
+            // ── 6. Live Synthetic Ticker Simulation (Mock Deriv WS Stream) ────────
+            let currentV100 = 1482.94;
+            let currentV75 = 418920.15;
+            let v100History = [24, 18, 30, 12, 28, 8, 20, 14];
 
-        function updateTickData() {
-            // Random walk for Volatility 100
-            const v100Delta = (Math.random() - 0.48) * 2.8;
-            currentV100 = Math.max(100, currentV100 + v100Delta);
-            const v100Str = currentV100.toFixed(2);
-            const lastDigit = v100Str[v100Str.length - 1];
+            function updateTickData() {
+                // Random walk for Volatility 100
+                const v100Delta = (Math.random() - 0.48) * 2.8;
+                currentV100 = Math.max(100, currentV100 + v100Delta);
+                const v100Str = currentV100.toFixed(2);
+                const lastDigit = v100Str[v100Str.length - 1];
 
-            if (v100Price) {
-                v100Price.textContent = Number(v100Str).toLocaleString('en-US', { minimumFractionDigits: 2 });
-                v100Price.className = `font-mono text-2xl font-black tracking-tight transition-colors ${v100Delta >= 0 ? 'text-emerald-300' : 'text-rose-400'}`;
-            }
-
-            if (v100LastDigit) {
-                v100LastDigit.textContent = lastDigit;
-                v100LastDigit.className = `inline-block px-2.5 py-0.5 rounded-md border text-sm font-mono font-black transition-all ${
-                    parseInt(lastDigit) % 2 === 0 
-                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-sm shadow-emerald-500/20' 
-                        : 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-sm shadow-purple-500/20'
-                }`;
-            }
-
-            // Update Sparkline
-            const newY = Math.max(4, Math.min(44, 24 + v100Delta * 5));
-            v100History.shift();
-            v100History.push(newY);
-
-            const step = 280 / (v100History.length - 1);
-            let pathD = `M 0,${v100History[0]}`;
-            v100History.forEach((val, idx) => {
-                if (idx > 0) pathD += ` L ${idx * step},${val}`;
-            });
-
-            if (v100Path) v100Path.setAttribute('d', pathD);
-            if (v100Area) v100Area.setAttribute('d', `${pathD} L 280,48 L 0,48 Z`);
-            if (v100Dot) {
-                v100Dot.setAttribute('cx', '280');
-                v100Dot.setAttribute('cy', newY.toString());
-            }
-
-            // Update Volatility 75 (1s)
-            const v75Delta = (Math.random() - 0.47) * 45.0;
-            currentV75 = Math.max(1000, currentV75 + v75Delta);
-            if (v75Price) {
-                v75Price.textContent = Number(currentV75.toFixed(2)).toLocaleString('en-US', { minimumFractionDigits: 2 });
-                v75Price.className = `font-mono text-2xl font-black tracking-tight transition-colors ${v75Delta >= 0 ? 'text-cyan-300' : 'text-rose-400'}`;
-            }
-
-            // Jitter header latency
-            if (headerLatency && Math.random() > 0.6) {
-                headerLatency.textContent = `${Math.floor(11 + Math.random() * 8)}ms`;
-            }
-        }
-
-        setInterval(updateTickData, 1200);
-
-        // ── 7. Navigation Helpers ─────────────────────────────────────────────
-        function scrollToDashboard() {
-            if (dashboardSection) {
-                dashboardSection.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        function scrollToPrompt() {
-            const promptBlock = document.getElementById('promptBlock');
-            if (promptBlock) {
-                promptBlock.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        // ── 8. Clipboard Copy Handler with Visual Feedback ────────────────────
-        function copyPromptToClipboard() {
-            const promptCode = document.getElementById('promptCode');
-            const copyBtnText = document.getElementById('copyBtnText');
-            const copyPromptBtn = document.getElementById('copyPromptBtn');
-            const copyIcon = document.getElementById('copyIcon');
-
-            if (!promptCode) return;
-
-            const textToCopy = promptCode.innerText || promptCode.textContent;
-
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                // Success visual state
-                if (copyBtnText) copyBtnText.textContent = 'PROMPT COPIED! ✓';
-                if (copyPromptBtn) {
-                    copyPromptBtn.classList.remove('bg-cyan-500', 'text-slate-950');
-                    copyPromptBtn.classList.add('bg-emerald-400', 'text-black', 'shadow-emerald-500/50');
-                }
-                if (copyIcon) {
-                    copyIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />';
+                if (v100Price) {
+                    v100Price.textContent = Number(v100Str).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                    v100Price.className = `font-mono text-2xl font-black tracking-tight transition-colors ${v100Delta >= 0 ? 'text-emerald-300' : 'text-rose-400'}`;
                 }
 
-                // Reset after 3 seconds
-                setTimeout(() => {
-                    if (copyBtnText) copyBtnText.textContent = 'COPY EXECUTION PROMPT';
-                    if (copyPromptBtn) {
-                        copyPromptBtn.classList.remove('bg-emerald-400', 'text-black', 'shadow-emerald-500/50');
-                        copyPromptBtn.classList.add('bg-cyan-500', 'text-slate-950');
-                    }
-                    if (copyIcon) {
-                        copyIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>';
-                    }
-                }, 3000);
-            }).catch(err => {
-                console.error('Failed to copy to clipboard:', err);
-                if (copyBtnText) copyBtnText.textContent = 'PRESS CTRL+C TO COPY';
-            });
-        }
-    </script>
-</body>
+                if (v100LastDigit) {
+                    v100LastDigit.textContent = lastDigit;
+                    v100LastDigit.className = `inline-block px-2.5 py-0.5 rounded-md border text-sm font-mono font-black transition-all ${
+                        parseInt(lastDigit) % 2 === 0
+                            ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-sm shadow-emerald-500/20'
+                            : 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-sm shadow-purple-500/20'
+                    }`;
+                }
+
+                // Update Sparkline
+                const newY = Math.max(4, Math.min(44, 24 + v100Delta * 5));
+                v100History.shift();
+                v100History.push(newY);
+
+                const step = 280 / (v100History.length - 1);
+                let pathD = `M 0,${v100History[0]}`;
+                v100History.forEach((val, idx) => {
+                    if (idx > 0) pathD += ` L ${idx * step},${val}`;
+                });
+
+                if (v100Path) v100Path.setAttribute('d', pathD);
+                if (v100Area) v100Area.setAttribute('d', `${pathD} L 280,48 L 0,48 Z`);
+                if (v100Dot) {
+                    v100Dot.setAttribute('cx', '280');
+                    v100Dot.setAttribute('cy', newY.toString());
+                }
+
+                // Update Volatility 75 (1s)
+                const v75Delta = (Math.random() - 0.47) * 45.0;
+                currentV75 = Math.max(1000, currentV75 + v75Delta);
+                if (v75Price) {
+                    v75Price.textContent = Number(currentV75.toFixed(2)).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                    });
+                    v75Price.className = `font-mono text-2xl font-black tracking-tight transition-colors ${v75Delta >= 0 ? 'text-cyan-300' : 'text-rose-400'}`;
+                }
+
+                // Jitter header latency
+                if (headerLatency && Math.random() > 0.6) {
+                    headerLatency.textContent = `${Math.floor(11 + Math.random() * 8)}ms`;
+                }
+            }
+
+            setInterval(updateTickData, 1200);
+
+            // ── 7. Navigation Helpers ─────────────────────────────────────────────
+            function scrollToDashboard() {
+                if (dashboardSection) {
+                    dashboardSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            function scrollToPrompt() {
+                const promptBlock = document.getElementById('promptBlock');
+                if (promptBlock) {
+                    promptBlock.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            // ── 8. Clipboard Copy Handler with Visual Feedback ────────────────────
+            function copyPromptToClipboard() {
+                const promptCode = document.getElementById('promptCode');
+                const copyBtnText = document.getElementById('copyBtnText');
+                const copyPromptBtn = document.getElementById('copyPromptBtn');
+                const copyIcon = document.getElementById('copyIcon');
+
+                if (!promptCode) return;
+
+                const textToCopy = promptCode.innerText || promptCode.textContent;
+
+                navigator.clipboard
+                    .writeText(textToCopy)
+                    .then(() => {
+                        // Success visual state
+                        if (copyBtnText) copyBtnText.textContent = 'PROMPT COPIED! ✓';
+                        if (copyPromptBtn) {
+                            copyPromptBtn.classList.remove('bg-cyan-500', 'text-slate-950');
+                            copyPromptBtn.classList.add('bg-emerald-400', 'text-black', 'shadow-emerald-500/50');
+                        }
+                        if (copyIcon) {
+                            copyIcon.innerHTML =
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />';
+                        }
+
+                        // Reset after 3 seconds
+                        setTimeout(() => {
+                            if (copyBtnText) copyBtnText.textContent = 'COPY EXECUTION PROMPT';
+                            if (copyPromptBtn) {
+                                copyPromptBtn.classList.remove('bg-emerald-400', 'text-black', 'shadow-emerald-500/50');
+                                copyPromptBtn.classList.add('bg-cyan-500', 'text-slate-950');
+                            }
+                            if (copyIcon) {
+                                copyIcon.innerHTML =
+                                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>';
+                            }
+                        }, 3000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy to clipboard:', err);
+                        if (copyBtnText) copyBtnText.textContent = 'PRESS CTRL+C TO COPY';
+                    });
+            }
+        </script>
+    </body>
 </html>

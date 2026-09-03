@@ -351,13 +351,23 @@ export class ParentBridgeClient {
         }
 
         const allowedOrigins = [
+            this.iframeOrigin,
             'https://deriv-dtrader.vercel.app',
             'https://trader.deriv.com',
             'https://app.deriv.com',
+            'https://www.derivcircles.com',
+            'https://analysisprofithub.vercel.app',
+            'https://xenontool.netlify.app',
+            'https://dcircles.netlify.app',
+            'https://dcircles-six.vercel.app',
         ];
 
         const isAllowed =
-            allowedOrigins.some(o => event.origin.startsWith(o)) || /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
+            (this.iframeOrigin && this.iframeOrigin !== '*' && event.origin === this.iframeOrigin) ||
+            allowedOrigins.some(o => o && o !== '*' && (event.origin === o || event.origin.startsWith(o))) ||
+            /\.vercel\.app$/i.test(new URL(event.origin).hostname) ||
+            /\.deriv\.com$/i.test(new URL(event.origin).hostname) ||
+            /^http:\/\/localhost(:\d+)?$/i.test(event.origin);
 
         if (!isAllowed) {
             return;

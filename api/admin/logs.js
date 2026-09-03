@@ -22,9 +22,27 @@ const getStoredLogs = () => {
         }
     }
     const defaults = [
-        { id: 'LOG-001', timestamp: Date.now() - 3600000 * 5, level: 'info', message: 'Deriv API connection established successfully.', component: 'Deriv WS' },
-        { id: 'LOG-002', timestamp: Date.now() - 3600000 * 3, level: 'warn', message: 'WebSocket ping latency exceeded 350ms.', component: 'Network Monitor' },
-        { id: 'LOG-003', timestamp: Date.now() - 3600000 * 2, level: 'error', message: 'Failed to authorize client token VR129841. Error code: AuthorizationExpired.', component: 'Replicator Engine' }
+        {
+            id: 'LOG-001',
+            timestamp: Date.now() - 3600000 * 5,
+            level: 'info',
+            message: 'Deriv API connection established successfully.',
+            component: 'Deriv WS',
+        },
+        {
+            id: 'LOG-002',
+            timestamp: Date.now() - 3600000 * 3,
+            level: 'warn',
+            message: 'WebSocket ping latency exceeded 350ms.',
+            component: 'Network Monitor',
+        },
+        {
+            id: 'LOG-003',
+            timestamp: Date.now() - 3600000 * 2,
+            level: 'error',
+            message: 'Failed to authorize client token VR129841. Error code: AuthorizationExpired.',
+            component: 'Replicator Engine',
+        },
     ];
     try {
         fs.writeFileSync(LOGS_FILE, JSON.stringify(defaults, null, 2));
@@ -50,7 +68,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         const { level, message, component } = body;
 
         if (!message) {

@@ -1,8 +1,5 @@
 let ENDPOINT_INDEX = 0;
-const ENDPOINTS = [
-    'wss://ws.derivws.com/websockets/v3?app_id=1089',
-    'wss://ws.derivws.org/websockets/v3?app_id=1089',
-];
+const ENDPOINTS = ['wss://ws.derivws.com/websockets/v3?app_id=1089', 'wss://ws.derivws.org/websockets/v3?app_id=1089'];
 let ws = null;
 let currentSymbol = null;
 let activeSymbols = [];
@@ -392,7 +389,9 @@ function connect() {
 
         if (data.active_symbols) {
             const vols = data.active_symbols.filter(
-                s => /Volatility/i.test(s.display_name) || (s.symbol && (s.symbol.startsWith('R_') || s.symbol.startsWith('1HZ')))
+                s =>
+                    /Volatility/i.test(s.display_name) ||
+                    (s.symbol && (s.symbol.startsWith('R_') || s.symbol.startsWith('1HZ')))
             );
             if (vols && vols.length > 0) {
                 populateSymbolsDropdown(vols);

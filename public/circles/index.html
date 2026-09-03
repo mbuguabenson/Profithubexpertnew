@@ -4,9 +4,12 @@
         <meta charset="utf-8" />
         <title>DCircles Radial Cyber Deck | 360 Analysis</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap"
+            rel="stylesheet"
+        />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
         <link rel="stylesheet" href="style.css" />
     </head>
@@ -43,7 +46,14 @@
                 {/* 1. Market Selection Card */}
                 <div class="tb-cyber-card market-cyber-card">
                     <div class="cyber-orb orb-emerald">
-                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                            ></path>
+                        </svg>
                     </div>
                     <div class="card-inner">
                         <label id="label-market" for="symbols" class="cyber-label">ACTIVE MARKET SYMBOL</label>
@@ -54,7 +64,14 @@
                 {/* 2. Spot Price Ticker Card */}
                 <div class="tb-cyber-card price-cyber-card">
                     <div class="cyber-orb orb-cyan">
-                        <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                        </svg>
                     </div>
                     <div class="card-inner">
                         <span class="cyber-label">LIVE SPOT TICK</span>
@@ -65,12 +82,27 @@
                 {/* 3. Window Control Card */}
                 <div class="tb-cyber-card window-cyber-card">
                     <div class="cyber-orb orb-purple">
-                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                        </svg>
                     </div>
                     <div class="card-inner">
                         <label id="label-window" for="ticks-window" class="cyber-label">TICK SAMPLE WINDOW</label>
                         <div class="input-glow-group">
-                            <input id="ticks-window" type="number" min="50" max="5000" step="50" value="1000" class="cyber-num-input font-mono" />
+                            <input
+                                id="ticks-window"
+                                type="number"
+                                min="50"
+                                max="5000"
+                                step="50"
+                                value="1000"
+                                class="cyber-num-input font-mono"
+                            />
                             <span class="range-badge">50–5000 Ticks</span>
                         </div>
                     </div>
@@ -78,7 +110,7 @@
             </div>
 
             {/* Hidden digit element for script.js compat */}
-            <div class="display visually-hidden" style="display:none;">
+            <div class="display visually-hidden" style="display: none">
                 <div id="digit" class="digit">—</div>
             </div>
 

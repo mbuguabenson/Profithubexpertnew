@@ -19,7 +19,15 @@
         "allowJs": true,
         "baseUrl": "./src",
         "paths": {
-            "@/*": ["./*"]
+            "@/*": ["./*"],
+            "App/*": ["external/trader/src/App/*"],
+            "AppV2/*": ["external/trader/src/AppV2/*"],
+            "Modules/*": ["external/trader/src/Modules/*"],
+            "Stores/*": ["external/trader/src/Stores/*"],
+            "Sass/*": ["external/trader/src/sass/*"],
+            "Assets/*": ["external/trader/src/Assets/*"],
+            "Types": ["external/trader/src/Types"],
+            "_common/*": ["external/trader/src/_common/*"]
         },
         "esModuleInterop": true,
         "types": ["jest", "@testing-library/jest-dom"]

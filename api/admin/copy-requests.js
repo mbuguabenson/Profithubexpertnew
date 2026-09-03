@@ -30,7 +30,7 @@ const getStoredRequests = () => {
     return defaults;
 };
 
-const saveStoredRequests = (requests) => {
+const saveStoredRequests = requests => {
     ensureDataDir();
     fs.writeFileSync(COPY_FILE, JSON.stringify(requests, null, 2));
 };
@@ -56,7 +56,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         const { requester_loginid, requester_token, provider_loginid } = body;
 
         if (!requester_loginid || !requester_token) {
@@ -66,7 +66,9 @@ module.exports = async function handler(req, res) {
         const requests = getStoredRequests();
 
         // Remove old duplicate request for same requester + provider
-        const cleaned = requests.filter(r => !(r.requester_loginid === requester_loginid && r.provider_loginid === provider_loginid));
+        const cleaned = requests.filter(
+            r => !(r.requester_loginid === requester_loginid && r.provider_loginid === provider_loginid)
+        );
 
         const newRequest = {
             id: `req_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -84,7 +86,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'PATCH') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         const requestId = req.query.id || body.id;
         const { status } = body;
 

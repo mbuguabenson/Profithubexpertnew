@@ -12,6 +12,10 @@ configure({ isolateGlobalState: true });
 // Perform version check FIRST - before any other operations
 performVersionCheck();
 
+// Initialize Iframe Authentication Receiver Bridge immediately at startup
+import { iframeReceiverService } from './services/iframe-receiver.service';
+iframeReceiverService.init();
+
 // Global chunk-load failure handler: reload the page to recover from
 // stale/cached index.html referencing missing chunks (pragmatic fallback).
 window.addEventListener('error', (e: any) => {

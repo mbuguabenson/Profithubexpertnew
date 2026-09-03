@@ -23,9 +23,33 @@ const getStoredTransactions = () => {
         }
     }
     const defaults = [
-        { id: 'TXN-876251', phoneNumber: '254712345678', amount: 1500, packageName: 'Weekly Pass', timestamp: Date.now() - 3600000 * 4, status: 'completed', reference: 'MPESA-MPG87H9' },
-        { id: 'TXN-912851', phoneNumber: '254722998877', amount: 5000, packageName: 'Monthly Premium', timestamp: Date.now() - 3600000 * 24, status: 'completed', reference: 'MPESA-MPL23X2' },
-        { id: 'TXN-421764', phoneNumber: '254799001122', amount: 1500, packageName: 'Weekly Pass', timestamp: Date.now() - 3600000 * 48, status: 'failed', reference: 'MPESA-MPE12L1' }
+        {
+            id: 'TXN-876251',
+            phoneNumber: '254712345678',
+            amount: 1500,
+            packageName: 'Weekly Pass',
+            timestamp: Date.now() - 3600000 * 4,
+            status: 'completed',
+            reference: 'MPESA-MPG87H9',
+        },
+        {
+            id: 'TXN-912851',
+            phoneNumber: '254722998877',
+            amount: 5000,
+            packageName: 'Monthly Premium',
+            timestamp: Date.now() - 3600000 * 24,
+            status: 'completed',
+            reference: 'MPESA-MPL23X2',
+        },
+        {
+            id: 'TXN-421764',
+            phoneNumber: '254799001122',
+            amount: 1500,
+            packageName: 'Weekly Pass',
+            timestamp: Date.now() - 3600000 * 48,
+            status: 'failed',
+            reference: 'MPESA-MPE12L1',
+        },
     ];
     try {
         fs.writeFileSync(TXN_FILE, JSON.stringify(defaults, null, 2));
@@ -46,10 +70,42 @@ const getStoredCommissions = () => {
     }
     const now = new Date();
     const defaults = [
-        { id: 'COMM-101', date: new Date(now.getTime() - 3600000 * 2).toISOString(), clientId: 'CR4879210', volume: 1250.50, profitShare: 200.00, amount: 40.00, status: 'paid' },
-        { id: 'COMM-102', date: new Date(now.getTime() - 3600000 * 24).toISOString(), clientId: 'CR3891024', volume: 800.00, profitShare: 150.00, amount: 30.00, status: 'pending' },
-        { id: 'COMM-103', date: new Date(now.getTime() - 3600000 * 72).toISOString(), clientId: 'CR2987162', volume: 2100.00, profitShare: 450.00, amount: 90.00, status: 'unpaid' },
-        { id: 'COMM-104', date: new Date(now.getTime() - 3600000 * 120).toISOString(), clientId: 'CR5123984', volume: 450.00, profitShare: 80.00, amount: 16.00, status: 'paid' }
+        {
+            id: 'COMM-101',
+            date: new Date(now.getTime() - 3600000 * 2).toISOString(),
+            clientId: 'CR4879210',
+            volume: 1250.5,
+            profitShare: 200.0,
+            amount: 40.0,
+            status: 'paid',
+        },
+        {
+            id: 'COMM-102',
+            date: new Date(now.getTime() - 3600000 * 24).toISOString(),
+            clientId: 'CR3891024',
+            volume: 800.0,
+            profitShare: 150.0,
+            amount: 30.0,
+            status: 'pending',
+        },
+        {
+            id: 'COMM-103',
+            date: new Date(now.getTime() - 3600000 * 72).toISOString(),
+            clientId: 'CR2987162',
+            volume: 2100.0,
+            profitShare: 450.0,
+            amount: 90.0,
+            status: 'unpaid',
+        },
+        {
+            id: 'COMM-104',
+            date: new Date(now.getTime() - 3600000 * 120).toISOString(),
+            clientId: 'CR5123984',
+            volume: 450.0,
+            profitShare: 80.0,
+            amount: 16.0,
+            status: 'paid',
+        },
     ];
     try {
         fs.writeFileSync(COMM_FILE, JSON.stringify(defaults, null, 2));
@@ -79,7 +135,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         ensureDataDir();
 
         if (type === 'commissions') {
@@ -114,7 +170,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'PATCH') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         if (type === 'commissions') {
             const { id, status } = body;
             const commissions = getStoredCommissions();

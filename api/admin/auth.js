@@ -47,7 +47,7 @@ module.exports = async function handler(req, res) {
     const credentials = getStoredCredentials();
 
     if (req.method === 'POST') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         const { action, username, password, token, newPassword } = body;
 
         // Login Action

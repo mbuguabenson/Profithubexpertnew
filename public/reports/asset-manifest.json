@@ -1,12 +1,12 @@
 {
-  "reports.js": "/reports/js/reports.js",
-  "reports-app.css": "/reports/css/reports.reports-app.d86795a42ae50f5e00d6.css",
-  "reports-app.js": "/reports/js/reports.reports-app.032a20d1eacac1d80759.js",
-  "trade-modals.js": "/reports/js/reports.trade-modals.1f2b26d028f3fee6a46f.js",
-  "404.js": "/reports/js/reports.404.fea58e67ac71401d554c.js",
-  "reports-routes.css": "/reports/css/reports.reports-routes.cbe0705dd51dcc96cacc.css",
-  "reports-routes.js": "/reports/js/reports.reports-routes.4ec34a215600cd5f57ce.js",
-  "two-month-picker.js": "/reports/js/reports.two-month-picker.fdb8534660633d35a663.js",
-  "reports/js/reports.vendors-node_modules_deriv_quill-icons_dist_esm_react_Legacy_LegacyOpenPositionIcon_js-node_m-461bd6.js": "/reports/js/reports.vendors-node_modules_deriv_quill-icons_dist_esm_react_Legacy_LegacyOpenPositionIcon_js-node_m-461bd6.55a33f77d41c549390d3.js",
-  "reports/js/reports.vendors-node_modules_deriv_deriv-api_dist_DerivAPIBasic_js-node_modules_tanstack_query-core_b-d19654.js": "/reports/js/reports.vendors-node_modules_deriv_deriv-api_dist_DerivAPIBasic_js-node_modules_tanstack_query-core_b-d19654.fc7e84e3fa6439882a80.js"
+    "reports.js": "/reports/js/reports.js",
+    "reports-app.css": "/reports/css/reports.reports-app.d86795a42ae50f5e00d6.css",
+    "reports-app.js": "/reports/js/reports.reports-app.032a20d1eacac1d80759.js",
+    "trade-modals.js": "/reports/js/reports.trade-modals.1f2b26d028f3fee6a46f.js",
+    "404.js": "/reports/js/reports.404.fea58e67ac71401d554c.js",
+    "reports-routes.css": "/reports/css/reports.reports-routes.cbe0705dd51dcc96cacc.css",
+    "reports-routes.js": "/reports/js/reports.reports-routes.4ec34a215600cd5f57ce.js",
+    "two-month-picker.js": "/reports/js/reports.two-month-picker.fdb8534660633d35a663.js",
+    "reports/js/reports.vendors-node_modules_deriv_quill-icons_dist_esm_react_Legacy_LegacyOpenPositionIcon_js-node_m-461bd6.js": "/reports/js/reports.vendors-node_modules_deriv_quill-icons_dist_esm_react_Legacy_LegacyOpenPositionIcon_js-node_m-461bd6.55a33f77d41c549390d3.js",
+    "reports/js/reports.vendors-node_modules_deriv_deriv-api_dist_DerivAPIBasic_js-node_modules_tanstack_query-core_b-d19654.js": "/reports/js/reports.vendors-node_modules_deriv_deriv-api_dist_DerivAPIBasic_js-node_modules_tanstack_query-core_b-d19654.fc7e84e3fa6439882a80.js"
 }

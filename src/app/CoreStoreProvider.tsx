@@ -151,8 +151,11 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
                 // Clear all URL query parameters for these auth errors
                 clearInvalidTokenParams();
 
-                // Only perform a full redirect logout if the client was actively logged in
-                if (client?.is_logged_in) {
+                const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
+                if (isInIframe) {
+                    // Inside an iframe: avoid disruptive full-window redirects
+                    client?.setIsLoggedIn(false);
+                } else if (client?.is_logged_in) {
                     await client?.logout();
                 } else {
                     client?.setIsLoggedIn(false);

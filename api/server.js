@@ -17,8 +17,8 @@ const supabaseProxyHandler = require('./supabase-proxy');
 
 const PORT = process.env.PORT || 4000;
 
-const parseBody = (req) => {
-    return new Promise((resolve) => {
+const parseBody = req => {
+    return new Promise(resolve => {
         let body = '';
         req.on('data', chunk => {
             body += chunk.toString();
@@ -58,15 +58,15 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Response helper wrappers
-    res.status = (code) => {
+    res.status = code => {
         res.statusCode = code;
         return res;
     };
-    res.json = (data) => {
+    res.json = data => {
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify(data));
     };
-    res.send = (data) => {
+    res.send = data => {
         res.end(data);
     };
 
@@ -90,7 +90,7 @@ const server = http.createServer(async (req, res) => {
                     '/api/admin/bots',
                     '/api/deriv-accounts',
                     '/api/deriv-otp/{accountId}',
-                    '/api/supabase/{table}'
+                    '/api/supabase/{table}',
                 ],
             });
         }
@@ -134,7 +134,12 @@ const server = http.createServer(async (req, res) => {
         res.status(404).json({
             error: 'Endpoint not found',
             path: pathname,
-            availableEndpoints: ['/api/admin/auth', '/api/admin/site-config', '/api/admin/system-health', '/api/admin/copy-requests']
+            availableEndpoints: [
+                '/api/admin/auth',
+                '/api/admin/site-config',
+                '/api/admin/system-health',
+                '/api/admin/copy-requests',
+            ],
         });
     } catch (err) {
         console.error('[API Server Error]', err);

@@ -59,36 +59,202 @@
         <div id="modal_root" class="modal-root"></div>
         <div id="popup_root" class="popup-root"></div>
         <div id="root">
-            <div style="position:fixed;inset:0;background:#060911;background-image:radial-gradient(circle at 50% 25%, rgba(0,242,254,0.14), transparent 55%), radial-gradient(circle at 80% 80%, rgba(245,158,11,0.08), transparent 45%);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;color:#f8fafc;z-index:999999;">
-                <div style="display:flex;flex-direction:column;align-items:center;padding:2.5rem 2.2rem;border-radius:24px;background:rgba(12,19,35,0.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(0,242,254,0.2);box-shadow:0 30px 60px -15px rgba(0,0,0,0.9), 0 0 40px rgba(0,242,254,0.12);max-width:440px;width:90%;text-align:center;">
-                    <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 14px;border-radius:9999px;background:rgba(0,242,254,0.1);border:1px solid rgba(0,242,254,0.28);margin-bottom:1.5rem;">
-                        <span style="width:6px;height:6px;border-radius:50%;background:#00f2fe;box-shadow:0 0 10px #00f2fe;"></span>
-                        <span style="font-size:10.5px;font-weight:800;letter-spacing:0.12em;color:#38bdf8;text-transform:uppercase;">SYSTEM INITIALIZING</span>
+            <div
+                style="
+                    position: fixed;
+                    inset: 0;
+                    background: #060911;
+                    background-image:
+                        radial-gradient(circle at 50% 25%, rgba(0, 242, 254, 0.14), transparent 55%),
+                        radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.08), transparent 45%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+                    color: #f8fafc;
+                    z-index: 999999;
+                "
+            >
+                <div
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        padding: 2.5rem 2.2rem;
+                        border-radius: 24px;
+                        background: rgba(12, 19, 35, 0.85);
+                        backdrop-filter: blur(24px);
+                        -webkit-backdrop-filter: blur(24px);
+                        border: 1px solid rgba(0, 242, 254, 0.2);
+                        box-shadow:
+                            0 30px 60px -15px rgba(0, 0, 0, 0.9),
+                            0 0 40px rgba(0, 242, 254, 0.12);
+                        max-width: 440px;
+                        width: 90%;
+                        text-align: center;
+                    "
+                >
+                    <div
+                        style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            padding: 4px 14px;
+                            border-radius: 9999px;
+                            background: rgba(0, 242, 254, 0.1);
+                            border: 1px solid rgba(0, 242, 254, 0.28);
+                            margin-bottom: 1.5rem;
+                        "
+                    >
+                        <span
+                            style="
+                                width: 6px;
+                                height: 6px;
+                                border-radius: 50%;
+                                background: #00f2fe;
+                                box-shadow: 0 0 10px #00f2fe;
+                            "
+                        ></span>
+                        <span
+                            style="
+                                font-size: 10.5px;
+                                font-weight: 800;
+                                letter-spacing: 0.12em;
+                                color: #38bdf8;
+                                text-transform: uppercase;
+                            "
+                            >SYSTEM INITIALIZING</span
+                        >
                     </div>
-                    <div style="position:relative;width:84px;height:84px;margin-bottom:1.35rem;display:flex;align-items:center;justify-content:center;">
-                        <div style="position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(0,242,254,0.45);animation:spin 8s linear infinite;"></div>
-                        <div style="position:absolute;inset:6px;border-radius:50%;border:1px solid rgba(245,158,11,0.35);animation:spinRev 12s linear infinite;"></div>
-                        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg, #0e172a, #060911);border:1.5px solid rgba(0,242,254,0.35);display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(0,242,254,0.4);">
-                            <img src="/logo_icon.svg" alt="Legacy Trading Hub" style="width:36px;height:36px;object-fit:contain;" onerror="this.style.display='none'">
+                    <div
+                        style="
+                            position: relative;
+                            width: 84px;
+                            height: 84px;
+                            margin-bottom: 1.35rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        "
+                    >
+                        <div
+                            style="
+                                position: absolute;
+                                inset: 0;
+                                border-radius: 50%;
+                                border: 2px dashed rgba(0, 242, 254, 0.45);
+                                animation: spin 8s linear infinite;
+                            "
+                        ></div>
+                        <div
+                            style="
+                                position: absolute;
+                                inset: 6px;
+                                border-radius: 50%;
+                                border: 1px solid rgba(245, 158, 11, 0.35);
+                                animation: spinRev 12s linear infinite;
+                            "
+                        ></div>
+                        <div
+                            style="
+                                width: 56px;
+                                height: 56px;
+                                border-radius: 50%;
+                                background: linear-gradient(135deg, #0e172a, #060911);
+                                border: 1.5px solid rgba(0, 242, 254, 0.35);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                box-shadow: 0 0 24px rgba(0, 242, 254, 0.4);
+                            "
+                        >
+                            <img
+                                src="/logo_icon.svg"
+                                alt="Legacy Trading Hub"
+                                style="width: 36px; height: 36px; object-fit: contain"
+                                onerror="this.style.display = 'none'"
+                            />
                         </div>
                     </div>
-                    <h1 style="font-size:23px;font-weight:900;letter-spacing:0.04em;margin:0 0 6px 0;color:#ffffff;text-transform:uppercase;">
-                        LEGACY <span style="background:linear-gradient(135deg,#00f2fe 0%,#38bdf8 50%,#f59e0b 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">TRADING HUB</span>
+                    <h1
+                        style="
+                            font-size: 23px;
+                            font-weight: 900;
+                            letter-spacing: 0.04em;
+                            margin: 0 0 6px 0;
+                            color: #ffffff;
+                            text-transform: uppercase;
+                        "
+                    >
+                        LEGACY
+                        <span
+                            style="
+                                background: linear-gradient(135deg, #00f2fe 0%, #38bdf8 50%, #f59e0b 100%);
+                                -webkit-background-clip: text;
+                                background-clip: text;
+                                -webkit-text-fill-color: transparent;
+                            "
+                            >TRADING HUB</span
+                        >
                     </h1>
-                    <p style="font-size:11.5px;color:#94a3b8;margin:0 0 1.5rem 0;line-height:1.4;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">
+                    <p
+                        style="
+                            font-size: 11.5px;
+                            color: #94a3b8;
+                            margin: 0 0 1.5rem 0;
+                            line-height: 1.4;
+                            letter-spacing: 0.06em;
+                            text-transform: uppercase;
+                            font-weight: 600;
+                        "
+                    >
                         Institutional Algorithmic & AI Trading Network
                     </p>
-                    <div style="width:100%;height:6px;border-radius:9999px;background:rgba(15,23,42,0.9);border:1px solid rgba(255,255,255,0.08);overflow:hidden;position:relative;">
-                        <div style="height:100%;width:60%;border-radius:9999px;background:linear-gradient(90deg,#00f2fe,#38bdf8,#f59e0b);box-shadow:0 0 14px rgba(0,242,254,0.7);"></div>
+                    <div
+                        style="
+                            width: 100%;
+                            height: 6px;
+                            border-radius: 9999px;
+                            background: rgba(15, 23, 42, 0.9);
+                            border: 1px solid rgba(255, 255, 255, 0.08);
+                            overflow: hidden;
+                            position: relative;
+                        "
+                    >
+                        <div
+                            style="
+                                height: 100%;
+                                width: 60%;
+                                border-radius: 9999px;
+                                background: linear-gradient(90deg, #00f2fe, #38bdf8, #f59e0b);
+                                box-shadow: 0 0 14px rgba(0, 242, 254, 0.7);
+                            "
+                        ></div>
                     </div>
-                    <div style="margin-top:12px;font-size:11px;color:#64748b;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;">
+                    <div
+                        style="
+                            margin-top: 12px;
+                            font-size: 11px;
+                            color: #64748b;
+                            font-family: 'JetBrains Mono', monospace;
+                            letter-spacing: 0.04em;
+                        "
+                    >
                         Loading Legacy Trading Hub Workspace...
                     </div>
                 </div>
             </div>
             <style>
-                @keyframes spin { 100% { transform: rotate(360deg); } }
-                @keyframes spinRev { 100% { transform: rotate(-360deg); } }
+                @keyframes spin {
+                    100% {
+                        transform: rotate(360deg);
+                    }
+                }
+                @keyframes spinRev {
+                    100% {
+                        transform: rotate(-360deg);
+                    }
+                }
             </style>
         </div>
         <!-- LiveChat script -->

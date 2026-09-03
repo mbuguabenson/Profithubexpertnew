@@ -96,7 +96,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST' || req.method === 'PUT') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         const current = getStoredConfig();
         const updated = {
             ...current,

@@ -32,17 +32,17 @@ if (fs.existsSync(manifestPath)) {
 
 const list = xmlFiles.map(file => {
     const defaultName = path.basename(file, '.xml').replace(/[_-]/g, ' ');
-    
+
     // If it already exists in the manifest, preserve it
     if (existingMap[file]) {
         return existingMap[file];
     }
-    
+
     // Generate clean details based on name patterns
     let description = `Advanced trading strategy: ${defaultName}. Optimized for consistent returns and automated execution.`;
     let difficulty = 'Intermediate';
     let strategy = 'Multi-Strategy';
-    
+
     const upperName = defaultName.toUpperCase();
     if (upperName.includes('EVEN') || upperName.includes('ODD')) {
         strategy = 'Even/Odd';
@@ -59,13 +59,13 @@ const list = xmlFiles.map(file => {
     } else if (upperName.includes('RISE') || upperName.includes('FALL')) {
         strategy = 'Rise & Fall';
     }
-    
+
     return {
         name: defaultName,
         file: file,
         description: description,
         difficulty: difficulty,
-        strategy: strategy
+        strategy: strategy,
     };
 });
 

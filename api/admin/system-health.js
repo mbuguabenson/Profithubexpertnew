@@ -59,7 +59,11 @@ module.exports = async function handler(req, res) {
         },
         services: [
             { name: 'Deriv WebSocket Gateway', status: 'online', pingMs: Math.max(12, derivLatency - 5) },
-            { name: 'Deriv Accounts & Token Service', status: derivApiStatus === 'healthy' ? 'online' : 'degraded', pingMs: derivLatency },
+            {
+                name: 'Deriv Accounts & Token Service',
+                status: derivApiStatus === 'healthy' ? 'online' : 'degraded',
+                pingMs: derivLatency,
+            },
             { name: 'ProfitHub Copy Replicator Engine', status: 'online', pingMs: 15 },
             { name: 'Supabase Data Sync Proxy', status: 'online', pingMs: 22 },
             { name: 'Algorithmic Radar Scanner', status: 'online', pingMs: 8 },

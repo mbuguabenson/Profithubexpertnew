@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+        const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         const { title, message } = body;
 
         if (!title || !message) {

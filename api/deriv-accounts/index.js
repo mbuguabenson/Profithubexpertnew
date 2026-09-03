@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
     // Use official standard Deriv binaryws.com / derivws.com WebSocket gateway
     const wsUrl = `wss://ws.binaryws.com/websockets/v3?app_id=${encodeURIComponent(appId)}`;
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         let ws;
         const timeout = setTimeout(() => {
             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -42,7 +42,7 @@ module.exports = async function handler(req, res) {
                 ws.send(JSON.stringify({ authorize: token }));
             });
 
-            ws.on('message', (message) => {
+            ws.on('message', message => {
                 try {
                     const data = JSON.parse(message.toString());
 
@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
                         ws.close();
                         res.status(400).json({
                             error: data.error.message || 'Authorization failed',
-                            code: data.error.code
+                            code: data.error.code,
                         });
                         return resolve();
                     }
@@ -68,12 +68,12 @@ module.exports = async function handler(req, res) {
                             email: auth.email || '',
                             currency: auth.currency || 'USD',
                             balance: typeof auth.balance === 'number' ? auth.balance : parseFloat(auth.balance || '0'),
-                            accountList: (auth.account_list || []).map((acc) => ({
+                            accountList: (auth.account_list || []).map(acc => ({
                                 loginid: acc.loginid,
                                 currency: acc.currency,
                                 isVirtual: Boolean(acc.is_virtual),
-                                isDisabled: Boolean(acc.is_disabled)
-                            }))
+                                isDisabled: Boolean(acc.is_disabled),
+                            })),
                         });
                         return resolve();
                     }
@@ -85,7 +85,7 @@ module.exports = async function handler(req, res) {
                 }
             });
 
-            ws.on('error', (err) => {
+            ws.on('error', err => {
                 clearTimeout(timeout);
                 res.status(502).json({ error: 'Deriv WebSocket connection error', details: err.message });
                 return resolve();

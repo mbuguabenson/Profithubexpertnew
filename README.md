@@ -16,13 +16,13 @@
 
 ## 👨‍💻 Codeowner & Lead Architect
 
-| Property | Details |
-| :--- | :--- |
-| **Codeowner / Developer** | **Mbuguabenson** |
-| **Email** | [mbuguabenson2020@gmail.com](mailto:mbuguabenson2020@gmail.com) |
-| **Official Website & Portfolio** | [Benadesigns.co.ke](https://benadesigns.co.ke) |
-| **Direct Contact / WhatsApp** | `+254 757 722 344` |
-| **Expertise & Services** | **Graphic Designer \| Web Signages & Custom Web Applications \| FinTech & Algorithmic Trading Systems** |
+| Property                         | Details                                                                                                 |
+| :------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| **Codeowner / Developer**        | **Mbuguabenson**                                                                                        |
+| **Email**                        | [mbuguabenson2020@gmail.com](mailto:mbuguabenson2020@gmail.com)                                         |
+| **Official Website & Portfolio** | [Benadesigns.co.ke](https://benadesigns.co.ke)                                                          |
+| **Direct Contact / WhatsApp**    | `+254 757 722 344`                                                                                      |
+| **Expertise & Services**         | **Graphic Designer \| Web Signages & Custom Web Applications \| FinTech & Algorithmic Trading Systems** |
 
 ---
 
@@ -33,26 +33,26 @@
 ### 🌟 Key Highlights
 
 1. **Fast-Switch Account Architecture**
-   - Instant 0ms perceived latency switching between Real accounts (USD, CR IDs) and Demo accounts (VRTC).
-   - In-memory optimistic balance updating with WebSocket authorization and state synchronization.
+    - Instant 0ms perceived latency switching between Real accounts (USD, CR IDs) and Demo accounts (VRTC).
+    - In-memory optimistic balance updating with WebSocket authorization and state synchronization.
 
 2. **Advanced Digit Analysis & Prediction Engines**
-   - **Digit Cracker**: Live digit power distribution, entropy rankings, even/odd percentages, and automated prediction targeting.
-   - **Over/Under Power Engine**: Real-time momentum scoring, volatility metrics, and dynamic threshold switching.
-   - **Market Killer**: Direct purchase execution with automated recovery chains and tick stream ribbons covering all Volatility & Jump indices.
-   - **Easy Tool & Smart Trading**: Streamlined one-click digit and contract execution with automatic tick history hydration.
+    - **Digit Cracker**: Live digit power distribution, entropy rankings, even/odd percentages, and automated prediction targeting.
+    - **Over/Under Power Engine**: Real-time momentum scoring, volatility metrics, and dynamic threshold switching.
+    - **Market Killer**: Direct purchase execution with automated recovery chains and tick stream ribbons covering all Volatility & Jump indices.
+    - **Easy Tool & Smart Trading**: Streamlined one-click digit and contract execution with automatic tick history hydration.
 
 3. **Elite Pro & Multi-Trader Suite**
-   - **Elite Pro Terminal**: Mobile-responsive trading suite with live digit grids, Martingale recovery, and multi-market monitoring.
-   - **Auto X E/O & Poverty Hunter**: High-velocity algorithmic engines tailored for rapid tick-based market strategies.
-   - **Multi-Trader**: Simultaneous multi-account and multi-market contract execution over independent socket connections.
+    - **Elite Pro Terminal**: Mobile-responsive trading suite with live digit grids, Martingale recovery, and multi-market monitoring.
+    - **Auto X E/O & Poverty Hunter**: High-velocity algorithmic engines tailored for rapid tick-based market strategies.
+    - **Multi-Trader**: Simultaneous multi-account and multi-market contract execution over independent socket connections.
 
 4. **Visual Blockly Strategy Builder (DBot Engine)**
-   - Drag-and-drop trading block workspace with support for custom indicators, Martingale, D'Alembert, Oscar's Grind, and Accumulators.
-   - Real-time XML strategy import/export, strategy testing, and live execution.
+    - Drag-and-drop trading block workspace with support for custom indicators, Martingale, D'Alembert, Oscar's Grind, and Accumulators.
+    - Real-time XML strategy import/export, strategy testing, and live execution.
 
 5. **Institutional Charting & Indicator Integration**
-   - Embedded SmartCharts with technical indicators (SMA, EMA, MACD, RSI, Bollinger Bands).
+    - Embedded SmartCharts with technical indicators (SMA, EMA, MACD, RSI, Bollinger Bands).
 
 ---
 
@@ -73,6 +73,7 @@ Profit Hub Expert
 ## ⚙️ Getting Started
 
 ### Prerequisites
+
 - **Node.js**: `20.x` or higher
 - **npm**: `9.x` or higher
 - **Modern Browser**: Chrome, Edge, Firefox, or Safari (Supporting WebCrypto & WebSockets)
@@ -110,6 +111,7 @@ npm run build
 ## 🎨 Branding & Customization
 
 The design system and corporate identity are configured in [`brand.config.json`](./brand.config.json):
+
 - **Brand Name**: Legacy Trading Hub / Profit Hub Expert
 - **Color Palettes**: Primary (`#38bdf8`), Tertiary (`#f59e0b`), Slate Greys, Dark Glassmorphism
 - **Typography**: Inter / Plus Jakarta Sans / JetBrains Mono

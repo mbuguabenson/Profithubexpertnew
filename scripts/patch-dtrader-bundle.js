@@ -28,7 +28,7 @@ if (fs.existsSync(mainAPath)) {
         `const BinarySocket = __webpack_require__(/*! ./socket_base */ \\"./_common/base/socket_base.js\\");`,
         `const BinarySocket = __webpack_require__(/*! ./socket_base */ "./_common/base/socket_base.js");`,
         `const BinarySocket = require('./socket_base');`,
-        `const BinarySocket = require(\\'./socket_base\\');`
+        `const BinarySocket = require(\\'./socket_base\\');`,
     ];
 
     patterns.forEach((pattern, idx) => {
@@ -56,7 +56,8 @@ files.forEach(file => {
 
     // Pattern 1: __webpack_require__.p = "/";
     const pPattern1 = '__webpack_require__.p = "/";';
-    const pReplacement1 = '__webpack_require__.p = (typeof window !== "undefined" && window.__webpack_public_path__) || "/dtrader/";';
+    const pReplacement1 =
+        '__webpack_require__.p = (typeof window !== "undefined" && window.__webpack_public_path__) || "/dtrader/";';
     if (content.includes(pPattern1)) {
         content = content.split(pPattern1).join(pReplacement1);
         mod = true;
