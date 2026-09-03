@@ -45,14 +45,14 @@ const useActiveAccount = ({
         const accCurrency = activeAccount?.currency || 'USD';
 
         let rawBal: number | string = 0;
-        if (currentBalanceData?.balance !== undefined) {
+        if (directBalance !== undefined && directBalance !== null && directBalance !== '') {
+            rawBal = directBalance;
+        } else if (currentBalanceData?.balance !== undefined) {
             rawBal = currentBalanceData.balance;
-        } else if (authData?.loginid === activeAccount.loginid && authData?.balance !== undefined) {
-            rawBal = authData.balance;
         } else if (activeAccount.balance !== undefined && activeAccount.balance !== null) {
             rawBal = activeAccount.balance;
-        } else if (directBalance !== undefined && directBalance !== null && directBalance !== '') {
-            rawBal = directBalance;
+        } else if (authData?.loginid === activeAccount.loginid && authData?.balance !== undefined) {
+            rawBal = authData.balance;
         }
 
         const numBal = typeof rawBal === 'number' ? rawBal : parseFloat(String(rawBal).replace(/,/g, '')) || 0;

@@ -393,16 +393,25 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     const { currency, isVirtual, balance } = activeAccount;
     const showChevron = !is_bot_running;
 
+    const rawLiveBalance =
+        client?.balance !== undefined && client?.balance !== null && client?.balance !== ''
+            ? addComma(
+                  (parseFloat(String(client.balance).replace(/,/g, '')) || 0).toFixed(
+                      getDecimalPlaces(currency || 'USD')
+                  )
+              )
+            : balance;
+
     // ─── Format balance for header chip ──────────────────────────────────────
     const chipBalance = (() => {
         if (!currency) return localize('No currency');
         const accCurr = currency || 'USD';
         if (displayCurrency === 'KES' && accCurr === 'USD') {
-            const num = parseFloat((balance || '0').replace(/,/g, '')) || 0;
+            const num = parseFloat((rawLiveBalance || '0').replace(/,/g, '')) || 0;
             const converted = num * rate;
             return `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(converted)} KES`;
         }
-        return `${balance} ${getCurrencyDisplayCode(accCurr)}`;
+        return `${rawLiveBalance} ${getCurrencyDisplayCode(accCurr)}`;
     })();
 
     // Set initial tab when dropdown opens
