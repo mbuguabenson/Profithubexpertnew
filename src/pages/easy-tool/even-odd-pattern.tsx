@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { Localize } from '@deriv-com/translations';
 
-import { calculatePatternStats, getEvenOddStats, isDigitPowerIncreasing } from './analysis-utils';
+import { calculatePatternStats, getEvenOddStats } from './analysis-utils';
 import './even-odd-pattern.scss';
 
 const EvenOddPattern = observer(() => {
@@ -15,7 +15,7 @@ const EvenOddPattern = observer(() => {
 
     const analysis = useMemo(() => {
         const slice = ticks.slice(-stats_sample_size);
-        const { even_pct, odd_pct, even_count, odd_count } = getEvenOddStats(slice);
+        const { even_pct, odd_pct } = getEvenOddStats(slice);
         const stats = calculatePatternStats(slice);
 
         // Analyze Previous Window for Trend
@@ -32,9 +32,6 @@ const EvenOddPattern = observer(() => {
 
         // --- Even Strategy Logic ---
         // 1. Ranking Check: Most, 2nd Most, Least should be Even
-        const top_3 = stats.sorted_digits.slice(0, 3);
-        const lowest_1 = stats.sorted_digits[stats.sorted_digits.length - 1];
-
         const is_most_even = stats.most_frequent % 2 === 0;
         const is_2nd_most_even = stats.second_most_frequent % 2 === 0;
         const is_least_even = stats.least_frequent % 2 === 0;

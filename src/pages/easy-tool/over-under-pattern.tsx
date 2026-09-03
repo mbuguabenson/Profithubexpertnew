@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { Localize } from '@deriv-com/translations';
 
-import { calculatePatternStats, getOverUnderStats, isDigitPowerIncreasing } from './analysis-utils';
+import { calculatePatternStats, getOverUnderStats } from './analysis-utils';
 import './over-under-pattern.scss';
 
 const OverUnderPattern = observer(() => {
