@@ -6,33 +6,52 @@ import { buyContractForUi, streamContractUntilSettled } from '@/utils/trade-purc
 import { safeSubscribe } from '@/utils/websocket-handler';
 import {
     Activity,
+    ArrowDownRight,
+    ArrowUpRight,
     Award,
     BarChart2,
-    ChevronDown,
-    ChevronUp,
-    Clock,
+    Cpu,
+    Crosshair,
     Download,
     Flame,
-    Grid,
     Layers,
     LineChart,
-    Pause,
+    Maximize2,
+    Minimize2,
     Play,
-    RefreshCw,
+    Radio,
     RotateCcw,
+    ShieldAlert,
+    ShieldCheck,
     Sparkles,
     Square,
     Target,
-    Timer,
     TrendingUp,
     Volume2,
     VolumeX,
     Wallet,
+    Workflow,
     Zap,
 } from 'lucide-react';
 import './overlord-ai.scss';
 
-// ─── Interfaces & Types ───────────────────────────────────────────────────────
+// ─── Type Definitions ─────────────────────────────────────────────────────────
+
+export type OverlordStrategyMode =
+    | 'OVER_1_UNDER_8'
+    | 'OVER_2_UNDER_7'
+    | 'OVER_3_UNDER_6'
+    | 'ALL_AUTO';
+
+export type AutoRunState =
+    | 'IDLE'
+    | 'WAITING_SIGNAL'
+    | 'WAITING_TRIGGER'
+    | 'BURST_TRADING'
+    | 'BURST_PAUSED'
+    | 'TP_REACHED'
+    | 'SL_REACHED'
+    | 'PAUSED';
 
 export interface MarketDigitState {
     symbol: string;
@@ -43,117 +62,118 @@ export interface MarketDigitState {
     pip: number;
 }
 
-export interface DigitStat {
-    digit: number;
-    count: number;
-    percentage: number;
-    rank: number;
-    isIncreasing: boolean;
-}
-
-export interface CompoundingStep {
-    step: number;
-    label: string;
-    startingBalance: number;
-    targetProfit: number;
-    endingBalance: number;
-    completed: boolean;
-}
-
 export interface TradeLogItem {
     id: string;
-    time: string;
-    market: string;
-    contractType: 'DIGITUNDER' | 'DIGITOVER';
-    prediction: number;
+    timestamp: number;
+    symbol: string;
+    contractType: 'DIGITOVER' | 'DIGITUNDER';
+    barrier: number;
     stake: number;
     result: 'WIN' | 'LOSS' | 'PENDING';
     profit: number;
+    exitDigit?: number;
+    burstRunIndex?: number;
 }
 
-type AutoRunState = 'IDLE' | 'SCANNING' | 'WAITING_SIGNAL' | 'WAITING_TRIGGER' | 'TRADING' | 'PAUSED';
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-// Derived Synthetic Volatility Markets (150 1s and 250 1s removed)
 const DERIVED_SYNTHETIC_MARKETS = [
-    { symbol: '1HZ10V', label: 'Vol 10 (1s)', pip: 2 },
-    { symbol: '1HZ15V', label: 'Vol 15 (1s)', pip: 3 },
-    { symbol: '1HZ25V', label: 'Vol 25 (1s)', pip: 2 },
-    { symbol: '1HZ30V', label: 'Vol 30 (1s)', pip: 3 },
-    { symbol: '1HZ50V', label: 'Vol 50 (1s)', pip: 2 },
-    { symbol: '1HZ75V', label: 'Vol 75 (1s)', pip: 2 },
-    { symbol: '1HZ90V', label: 'Vol 90 (1s)', pip: 3 },
-    { symbol: '1HZ100V', label: 'Vol 100 (1s)', pip: 2 },
-    { symbol: 'R_10', label: 'Vol 10', pip: 3 },
-    { symbol: 'R_25', label: 'Vol 25', pip: 3 },
-    { symbol: 'R_50', label: 'Vol 50', pip: 3 },
-    { symbol: 'R_75', label: 'Vol 75', pip: 3 },
-    { symbol: 'R_100', label: 'Vol 100', pip: 2 },
+    { symbol: '1HZ100V', label: 'Volatility 100 (1s) Index', pip: 2 },
+    { symbol: '1HZ10V', label: 'Volatility 10 (1s) Index', pip: 2 },
+    { symbol: '1HZ25V', label: 'Volatility 25 (1s) Index', pip: 2 },
+    { symbol: '1HZ50V', label: 'Volatility 50 (1s) Index', pip: 2 },
+    { symbol: '1HZ75V', label: 'Volatility 75 (1s) Index', pip: 2 },
+    { symbol: 'R_100', label: 'Volatility 100 Index', pip: 2 },
+    { symbol: 'R_10', label: 'Volatility 10 Index', pip: 3 },
+    { symbol: 'R_25', label: 'Volatility 25 Index', pip: 3 },
+    { symbol: 'R_50', label: 'Volatility 50 Index', pip: 4 },
+    { symbol: 'R_75', label: 'Volatility 75 Index', pip: 4 },
 ];
 
-const MAX_TICKS_STORED = 100;
+const MAX_HISTORY_TICKS = 1000;
 const CHART_TICKS = 50;
-const STORAGE_PLAN_KEY = 'overlord_compounding_plan_v3';
-const STORAGE_CONFIG_KEY = 'overlord_bot_config_v3';
 
-// ─── Web Audio Sound Effects ──────────────────────────────────────────────────
-
-const playSoundCue = (type: 'win' | 'loss' | 'signal') => {
+// Sound Synthesizer for Audio Feedback
+const playSoundCue = (type: 'win' | 'loss' | 'start' | 'burst_complete' | 'alert') => {
     try {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioContextClass) return;
-        const ctx = new AudioContextClass();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
 
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        const now = ctx.currentTime;
         if (type === 'win') {
-            osc.frequency.setValueAtTime(523.25, now); // C5
-            osc.frequency.exponentialRampToValueAtTime(880, now + 0.18); // A5
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-            osc.start(now);
-            osc.stop(now + 0.35);
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+            osc.frequency.setValueAtTime(880.0, ctx.currentTime + 0.1); // A5
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.35);
         } else if (type === 'loss') {
-            osc.frequency.setValueAtTime(369.99, now); // F#4
-            osc.frequency.exponentialRampToValueAtTime(220, now + 0.22); // A3
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-            osc.start(now);
-            osc.stop(now + 0.35);
-        } else {
-            osc.frequency.setValueAtTime(659.25, now); // E5
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-            osc.start(now);
-            osc.stop(now + 0.15);
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(320, ctx.currentTime);
+            osc.frequency.setValueAtTime(180, ctx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        } else if (type === 'start') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.16);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'burst_complete') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+            osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+            osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
         }
     } catch {
-        // Silently ignore audio context restrictions
+        // AudioContext not allowed or disabled
     }
 };
 
-// ─── SVG Bezier Spline Line Chart Path Generator ──────────────────────────────
-
-const getBezierSplinePath = (points: { x: number; y: number }[]) => {
-    if (points.length < 2) return '';
+// Bezier Spline Path Generator for Smooth Wave Curve
+const getBezierSplinePath = (points: { x: number; y: number }[]): string => {
+    if (points.length === 0) return '';
+    if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
     let d = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
     for (let i = 0; i < points.length - 1; i++) {
-        const p0 = points[i];
-        const p1 = points[i + 1];
-        const cpX1 = p0.x + (p1.x - p0.x) / 2;
-        const cpY1 = p0.y;
-        const cpX2 = p0.x + (p1.x - p0.x) / 2;
-        const cpY2 = p1.y;
-        d += ` C ${cpX1.toFixed(1)},${cpY1.toFixed(1)} ${cpX2.toFixed(1)},${cpY2.toFixed(1)} ${p1.x.toFixed(1)},${p1.y.toFixed(1)}`;
+        const p0 = i > 0 ? points[i - 1] : points[0];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = i != points.length - 2 ? points[i + 2] : p2;
+        const cpX1 = p1.x + (p2.x - p0.x) / 6;
+        const cpY1 = p1.y + (p2.y - p0.y) / 6;
+        const cpX2 = p2.x - (p3.x - p1.x) / 6;
+        const cpY2 = p2.y - (p3.y - p1.y) / 6;
+        d += ` C ${cpX1.toFixed(1)},${cpY1.toFixed(1)} ${cpX2.toFixed(1)},${cpY2.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
     }
     return d;
 };
 
-// ─── Digit Extraction Helper ──────────────────────────────────────────────────
-
+// Digit Extraction Helper
 const extractLastDigit = (quote: number | string, pip = 2): number => {
     const p = Number(quote);
     if (isNaN(p)) return 0;
@@ -173,12 +193,13 @@ const OverlordAi: React.FC = observer(() => {
 
     // ── Market States ──
     const [selectedSymbol, setSelectedSymbol] = useState<string>('1HZ100V');
-    const [scanAllMarkets, setScanAllMarkets] = useState<boolean>(true);
+    const scanAllMarkets = true;
     const [isWideViewOpen, setIsWideViewOpen] = useState<boolean>(false);
     const [marketSearchTerm, setMarketSearchTerm] = useState<string>('');
     const [autoPickBestMarket, setAutoPickBestMarket] = useState<boolean>(true);
-    const [activeRightTab, setActiveRightTab] = useState<'AUTOTRADER' | 'COMPOUNDING'>('AUTOTRADER');
-    const [mobileActiveTab, setMobileActiveTab] = useState<'DASHBOARD' | 'AUTOTRADER' | 'COMPOUNDING' | 'MARKETS'>('DASHBOARD');
+    const [mobileActiveTab, setMobileActiveTab] = useState<
+        'DASHBOARD' | 'AUTOTRADER' | 'MARKETS' | 'TRADES'
+    >('DASHBOARD');
 
     // ── Markets Tick Storage ──
     const marketsDataRef = useRef<Map<string, MarketDigitState>>(
@@ -202,871 +223,595 @@ const OverlordAi: React.FC = observer(() => {
     const isMountedRef = useRef<boolean>(true);
     const throttleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // ── Autotrading & Strategy Parameters ──
-    const [botState, setBotState] = useState<AutoRunState>('IDLE');
-    const [tradeByCompoundingPlan, setTradeByCompoundingPlan] = useState<boolean>(true);
-    const [isAutoStake, setIsAutoStake] = useState<boolean>(true);
-    const [autoStakePercent, setAutoStakePercent] = useState<string>('7'); // Default 7% of account balance
+    // ── User Configuration & Strategy Parameters ──
     const [manualStake, setManualStake] = useState<string>('1.00');
-    const [currentStake, setCurrentStake] = useState<number>(1.0);
-    const [martingale, setMartingale] = useState<string>('2.6'); // Default 2.6x
-    const [tickDuration, setTickDuration] = useState<string>('1'); // Default 1 tick
-    const [predictionMode, setPredictionMode] = useState<'AUTO' | 'CUSTOM'>('AUTO');
-    const [customUnderPrediction, setCustomUnderPrediction] = useState<number>(6); // 6, 7, or 8
-    const [customOverPrediction, setCustomOverPrediction] = useState<number>(3); // 1, 2, or 3
-    const [takeProfitTarget, setTakeProfitTarget] = useState<string>('50.00');
+    const [takeProfit, setTakeProfit] = useState<string>('20.00');
+    const [stopLoss, setStopLoss] = useState<string>('50.00');
+    const [strategyMode, setStrategyMode] = useState<OverlordStrategyMode>('ALL_AUTO');
+    const [martingaleMultiplier, setMartingaleMultiplier] = useState<string>('2.5');
+    const [isMartingaleEnabled, setIsMartingaleEnabled] = useState<boolean>(true);
+    const tickDuration = '1';
 
-    // ── Session Trading Statistics ──
+    // ── Continuous Burst Trading & Market Rotation ──
+    const [burstRunSize, setBurstRunSize] = useState<number>(10); // 7 to 12 runs default: 10
+    const [currentBurstRun, setCurrentBurstRun] = useState<number>(0);
+    const [burstCountTotal, setBurstCountTotal] = useState<number>(0);
+    const [marketRotationRuns, setMarketRotationRuns] = useState<number>(4); // Change market after 4 runs
+    const [runsOnCurrentMarket, setRunsOnCurrentMarket] = useState<number>(0);
+    const [isMarketRotationEnabled, setIsMarketRotationEnabled] = useState<boolean>(true);
+
+    // ── Session State & Execution Engine ──
+    const [botState, setBotState] = useState<AutoRunState>('IDLE');
+    const [currentStake, setCurrentStake] = useState<number>(1.0);
+    const [martingaleStage, setMartingaleStage] = useState<number>(0);
+    const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [winsCount, setWinsCount] = useState<number>(0);
     const [lossesCount, setLossesCount] = useState<number>(0);
     const [sessionProfit, setSessionProfit] = useState<number>(0);
-    const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
     const [tradeLog, setTradeLog] = useState<TradeLogItem[]>([]);
+    const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
     const executionLockRef = useRef<boolean>(false);
 
-    // ── Compounding Generator & Active Step State ──
-    const [compoundingMode, setCompoundingMode] = useState<'HOURS' | 'DAYS'>('HOURS');
-    const [startingCapital, setStartingCapital] = useState<string>('100.00');
-    const [targetGoal, setTargetGoal] = useState<string>('1000.00');
-    const [planPeriods, setPlanPeriods] = useState<string>('24');
-    const [periodProfitPct, setPeriodProfitPct] = useState<string>('7'); // Default 7%
-    const [compoundingPlan, setCompoundingPlan] = useState<CompoundingStep[]>([]);
-    const [activeStepIndex, setActiveStepIndex] = useState<number>(0);
-    const [stepSessionProfit, setStepSessionProfit] = useState<number>(0);
-    const [stepStartTime, setStepStartTime] = useState<number>(Date.now());
-    const [currentTime, setCurrentTime] = useState<number>(Date.now());
-    const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+    // Initial Manual Stake parse
+    const initialBaseStake = useMemo(() => {
+        const parsed = parseFloat(manualStake);
+        return isNaN(parsed) || parsed <= 0 ? 1.0 : parsed;
+    }, [manualStake]);
 
-    // Live 1-Second Timer Ticker
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(Date.now());
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    // Active Compounding Step Item
-    const activeCompoundingStep = useMemo(() => {
-        if (compoundingPlan.length === 0) return null;
-        if (activeStepIndex >= 0 && activeStepIndex < compoundingPlan.length) {
-            return compoundingPlan[activeStepIndex];
-        }
-        return compoundingPlan[0];
-    }, [compoundingPlan, activeStepIndex]);
-
-    // Live Step Timer & Progress Calculation
-    const stepProgress = useMemo(() => {
-        if (!activeCompoundingStep) {
-            return {
-                elapsedFormatted: '00:00',
-                remainingFormatted: '00:00',
-                timePct: 0,
-                profitPct: 0,
-                targetProfit: 0,
-                currentStepProfit: 0,
-            };
-        }
-
-        const periodSeconds = compoundingMode === 'HOURS' ? 3600 : 86400;
-        const elapsedSec = Math.max(0, Math.floor((currentTime - stepStartTime) / 1000));
-        const remainingSec = Math.max(0, periodSeconds - elapsedSec);
-
-        const formatSec = (totalSec: number) => {
-            const h = Math.floor(totalSec / 3600);
-            const m = Math.floor((totalSec % 3600) / 60);
-            const s = totalSec % 60;
-            if (h > 0) {
-                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            }
-            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        };
-
-        const timePct = Math.min(100, Math.round((elapsedSec / periodSeconds) * 100));
-        const target = activeCompoundingStep.targetProfit || 1;
-        const profitPct = Math.min(100, Math.max(0, Math.round((stepSessionProfit / target) * 100)));
-
-        return {
-            elapsedFormatted: formatSec(elapsedSec),
-            remainingFormatted: formatSec(remainingSec),
-            timePct,
-            profitPct,
-            targetProfit: activeCompoundingStep.targetProfit,
-            currentStepProfit: stepSessionProfit,
-        };
-    }, [activeCompoundingStep, compoundingMode, currentTime, stepStartTime, stepSessionProfit]);
-
-    // Throttle UI rerenders to keep high performance
+    // Throttle UI rerenders for maximum frame-rate
     const throttleRender = useCallback(() => {
         if (!throttleTimerRef.current) {
             throttleTimerRef.current = setTimeout(() => {
                 throttleTimerRef.current = null;
                 if (isMountedRef.current) {
-                    setRenderTrigger(Date.now());
+                    setRenderTrigger(prev => prev + 1);
                 }
             }, 120);
         }
     }, []);
 
-    // ── Load & Restore Compounding Plan from localStorage ──
-    useEffect(() => {
-        try {
-            const savedPlan = localStorage.getItem(STORAGE_PLAN_KEY);
-            if (savedPlan) {
-                const parsed = JSON.parse(savedPlan);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setCompoundingPlan(parsed);
-                    const firstUncompleted = parsed.findIndex(s => !s.completed);
-                    if (firstUncompleted !== -1) {
-                        setActiveStepIndex(firstUncompleted);
-                    }
-                }
-            }
-            const savedConfig = localStorage.getItem(STORAGE_CONFIG_KEY);
-            if (savedConfig) {
-                const cfg = JSON.parse(savedConfig);
-                if (cfg.startingCapital) setStartingCapital(cfg.startingCapital);
-                if (cfg.targetGoal) setTargetGoal(cfg.targetGoal);
-                if (cfg.periodProfitPct) setPeriodProfitPct(cfg.periodProfitPct);
-                if (cfg.planPeriods) setPlanPeriods(cfg.planPeriods);
-                if (cfg.compoundingMode) setCompoundingMode(cfg.compoundingMode);
-            }
-        } catch {
-            /* ignore */
-        }
-    }, []);
-
-    // Save compounding plan on changes
-    const savePlanToStorage = useCallback((plan: CompoundingStep[]) => {
-        try {
-            localStorage.setItem(STORAGE_PLAN_KEY, JSON.stringify(plan));
-        } catch {
-            /* ignore */
-        }
-    }, []);
-
-    // ── Fetch Live Balance ──
-    const handleFetchBalance = useCallback(() => {
-        if (rawBalance > 0) {
-            setStartingCapital(rawBalance.toFixed(2));
-        }
-    }, [rawBalance]);
-
-    // ── Generate Compounding Plan Formula ──
-    const handleGenerateCompoundingPlan = useCallback(() => {
-        const start = parseFloat(startingCapital) || 100;
-        const pct = parseFloat(periodProfitPct) || 7;
-        const periods = parseInt(planPeriods, 10) || 24;
-
-        let currentBal = start;
-        const steps: CompoundingStep[] = [];
-
-        for (let i = 1; i <= periods; i++) {
-            const startBal = Math.round(currentBal * 100) / 100;
-            const profit = Math.round(startBal * (pct / 100) * 100) / 100;
-            const endBal = Math.round((startBal + profit) * 100) / 100;
-            currentBal = endBal;
-
-            steps.push({
-                step: i,
-                label: compoundingMode === 'HOURS' ? `Hour ${i}` : `Day ${i}`,
-                startingBalance: startBal,
-                targetProfit: profit,
-                endingBalance: endBal,
-                completed: false,
-            });
-        }
-
-        setCompoundingPlan(steps);
-        setActiveStepIndex(0);
-        setStepSessionProfit(0);
-        setStepStartTime(Date.now());
-        savePlanToStorage(steps);
-
-        try {
-            localStorage.setItem(
-                STORAGE_CONFIG_KEY,
-                JSON.stringify({
-                    startingCapital,
-                    targetGoal,
-                    periodProfitPct,
-                    planPeriods,
-                    compoundingMode,
-                })
-            );
-        } catch {
-            /* ignore */
-        }
-    }, [startingCapital, periodProfitPct, planPeriods, compoundingMode, targetGoal, savePlanToStorage]);
-
-    // Auto-generate initial compounding plan if empty
-    useEffect(() => {
-        if (compoundingPlan.length === 0) {
-            handleGenerateCompoundingPlan();
-        }
-    }, [compoundingPlan.length, handleGenerateCompoundingPlan]);
-
-    // Toggle completion of a step
-    const handleToggleStep = useCallback(
-        (stepIndex: number) => {
-            setCompoundingPlan(prev => {
-                const updated = prev.map((s, idx) => (idx === stepIndex ? { ...s, completed: !s.completed } : s));
-                savePlanToStorage(updated);
-                return updated;
-            });
-        },
-        [savePlanToStorage]
-    );
-
-    // Set a step as the active target step
-    const handleSetAsActiveStep = useCallback((stepIndex: number) => {
-        setActiveStepIndex(stepIndex);
-        setStepSessionProfit(0);
-        setStepStartTime(Date.now());
-    }, []);
-
-    // Export compounding plan to CSV (Excel compatible)
-    const handleExportToExcel = useCallback(() => {
-        if (compoundingPlan.length === 0) return;
-
-        let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
-        csvContent += 'Step,Period,Starting Balance,Target Profit,Ending Balance,Status\n';
-
-        compoundingPlan.forEach(s => {
-            csvContent += `${s.step},"${s.label}",${s.startingBalance.toFixed(2)},${s.targetProfit.toFixed(2)},${s.endingBalance.toFixed(2)},"${s.completed ? 'Completed' : 'Pending'}"\n`;
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `OVERLORD_AI_Compounding_Plan_${Date.now()}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }, [compoundingPlan]);
-
-    // ── Calculate Dynamic Auto Stake ──
-    const effectiveStake = useMemo(() => {
-        if (tradeByCompoundingPlan && activeCompoundingStep) {
-            const pct = parseFloat(periodProfitPct) || 7;
-            const bal = activeCompoundingStep.startingBalance;
-            const calculated = Math.max(0.35, Math.round(bal * (pct / 100) * 100) / 100);
-            return calculated;
-        }
-        if (isAutoStake) {
-            const pct = parseFloat(autoStakePercent) || 7;
-            const bal = rawBalance > 0 ? rawBalance : parseFloat(startingCapital) || 100;
-            const calculated = Math.max(0.35, Math.round(bal * (pct / 100) * 100) / 100);
-            return calculated;
-        }
-        return Math.max(0.35, parseFloat(manualStake) || 1.0);
-    }, [
-        tradeByCompoundingPlan,
-        activeCompoundingStep,
-        periodProfitPct,
-        isAutoStake,
-        autoStakePercent,
-        rawBalance,
-        startingCapital,
-        manualStake,
-    ]);
-
-    // ── Real-Time Multi-Market WebSocket Streams ──
+    // ── WebSocket Tick Ingestion ──
     useEffect(() => {
         isMountedRef.current = true;
-        const activeSubs = subscriptionsRef.current;
-        const symbolsToStream = scanAllMarkets
+        const activeSymbols = scanAllMarkets
             ? DERIVED_SYNTHETIC_MARKETS.map(m => m.symbol)
             : [selectedSymbol];
 
-        const subscribeSymbol = async (sym: string) => {
-            if (!api_base?.api || !isMountedRef.current) return;
-            const pip = DERIVED_SYNTHETIC_MARKETS.find(m => m.symbol === sym)?.pip || 2;
+        activeSymbols.forEach(symbol => {
+            if (subscriptionsRef.current.has(symbol)) return;
 
-            try {
-                const mData = marketsDataRef.current.get(sym);
-                // 1. Initial tick history fetch
-                if (!mData || mData.digits.length < 20) {
-                    const res = await api_base.api.send({
-                        ticks_history: sym,
-                        end: 'latest',
-                        count: MAX_TICKS_STORED,
-                        style: 'ticks',
-                    });
+            const marketMeta = DERIVED_SYNTHETIC_MARKETS.find(m => m.symbol === symbol);
+            const pip = marketMeta?.pip || 2;
 
-                    if (!isMountedRef.current) return;
-
-                    if (mData && res?.history?.prices) {
-                        const prices: number[] = res.history.prices || [];
-                        const digits = prices.map(p => extractLastDigit(p, pip));
-                        mData.digits = digits;
-                        if (prices.length > 0) {
-                            const lastP = prices[prices.length - 1];
-                            mData.currentPrice = Number(lastP).toFixed(pip);
-                            mData.lastDigit = digits[digits.length - 1];
-                        }
-                        throttleRender();
-                    }
-                }
-
-                // 2. Real-time live tick subscription
-                const tickObservable = (api_base.api as any)?.subscribe?.({ ticks: sym });
-                const sub = safeSubscribe(tickObservable, (tickRes: any) => {
-                    if (!isMountedRef.current) return;
-                    if (tickRes?.tick?.symbol === sym && tickRes?.tick?.quote !== undefined) {
-                        const quote = Number(tickRes.tick.quote);
-                        const lastD = extractLastDigit(quote, pip);
-                        const item = marketsDataRef.current.get(sym);
-                        if (item) {
-                            item.currentPrice = quote.toFixed(pip);
-                            item.lastDigit = lastD;
-                            item.digits = [...item.digits, lastD].slice(-MAX_TICKS_STORED);
+            const sub = safeSubscribe(
+                api_base?.api,
+                { ticks: symbol },
+                (res: any) => {
+                    if (res?.tick && res.tick.symbol === symbol) {
+                        const quote = res.tick.quote;
+                        const digit = extractLastDigit(quote, pip);
+                        const mState = marketsDataRef.current.get(symbol);
+                        if (mState) {
+                            mState.digits.push(digit);
+                            if (mState.digits.length > MAX_HISTORY_TICKS) {
+                                mState.digits.shift();
+                            }
+                            mState.currentPrice = Number(quote).toFixed(pip);
+                            mState.lastDigit = digit;
                             throttleRender();
                         }
                     }
-                });
-
-                if (isMountedRef.current) {
-                    activeSubs.get(sym)?.unsubscribe?.();
-                    activeSubs.set(sym, sub);
+                },
+                (err: any) => {
+                    console.warn(`[Overlord AI] Tick subscription warning for ${symbol}:`, err);
                 }
-            } catch (err) {
-                console.error(`[OVERLORD AI] Error streaming ${sym}:`, err);
-            }
-        };
+            );
 
-        const initAllStreams = async () => {
-            if (!api_base?.api) {
-                setTimeout(initAllStreams, 1000);
-                return;
-            }
-            for (const sym of symbolsToStream) {
-                if (!isMountedRef.current) break;
-                await subscribeSymbol(sym);
-                await new Promise(r => setTimeout(r, 100)); // Rate-limiting guard
-            }
-        };
-
-        void initAllStreams();
-
-        // Heartbeat Keepalive (Ping every 30s to maintain 24/7 uninterrupted connection)
-        const keepaliveInterval = setInterval(() => {
-            if (api_base?.api && typeof (api_base.api as any).send === 'function') {
-                (api_base.api as any).send({ ping: 1 }).catch(() => {});
-            }
-        }, 30000);
+            subscriptionsRef.current.set(symbol, sub);
+        });
 
         return () => {
-            clearInterval(keepaliveInterval);
+            // Keep persistent socket stream open for seamless trading
         };
     }, [scanAllMarkets, selectedSymbol, throttleRender]);
 
-    // Component unmount cleanup
-    useEffect(() => {
-        return () => {
-            isMountedRef.current = false;
-            subscriptionsRef.current.forEach(sub => {
-                try {
-                    sub?.unsubscribe?.();
-                } catch {
-                    /* ignore */
-                }
-            });
-            subscriptionsRef.current.clear();
-        };
-    }, []);
-
-    // ── Current Active Market Data ──
+    // Current Selected Market State
     const currentMarket = useMemo(() => {
-        const m = marketsDataRef.current.get(selectedSymbol);
-        if (m) return m;
-        return {
-            symbol: selectedSymbol,
-            label: DERIVED_SYNTHETIC_MARKETS.find(x => x.symbol === selectedSymbol)?.label || selectedSymbol,
-            digits: [],
-            currentPrice: '0.00',
-            lastDigit: 0,
-            pip: 2,
-        };
+        return (
+            marketsDataRef.current.get(selectedSymbol) || {
+                symbol: selectedSymbol,
+                label: 'Selected Volatility',
+                digits: [],
+                currentPrice: '0.00',
+                lastDigit: 0,
+                pip: 2,
+            }
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedSymbol, renderTrigger]);
 
-    // ── Digit Statistics Spectrum (0-9 on Last 50 Ticks) ──
-    const digitStats: DigitStat[] = useMemo(() => {
-        const recent50 = currentMarket.digits.slice(-50);
-        const total = recent50.length || 1;
-        const counts = new Array(10).fill(0);
+    // ── Smart AI Pattern & Statistical Analysis Engine ──
+    const patternEngine = useMemo(() => {
+        const digits = currentMarket.digits;
+        const totalTicks = digits.length;
 
-        recent50.forEach(d => {
-            if (d >= 0 && d <= 9) counts[d]++;
+        const frequencies: Record<number, number> = {
+            0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0,
+        };
+
+        digits.forEach(d => {
+            if (frequencies[d] !== undefined) frequencies[d]++;
         });
 
-        const last15 = currentMarket.digits.slice(-15);
-        const prev15 = currentMarket.digits.slice(-30, -15);
+        const sampleSize = Math.max(1, totalTicks);
+        const percentages: Record<number, number> = {};
+        for (let i = 0; i <= 9; i++) {
+            percentages[i] = Math.round((frequencies[i] / sampleSize) * 1000) / 10;
+        }
 
-        const stats: DigitStat[] = counts.map((count, digit) => {
-            const percentage = Math.round((count / total) * 1000) / 10;
-            const c15 = last15.filter(d => d === digit).length;
-            const p15 = prev15.filter(d => d === digit).length;
-            const isIncreasing = c15 >= p15;
+        // Low Digits (0–4) vs High Digits (5–9)
+        const lowCount = [0, 1, 2, 3, 4].reduce((sum, d) => sum + frequencies[d], 0);
+        const highCount = [5, 6, 7, 8, 9].reduce((sum, d) => sum + frequencies[d], 0);
+        const lowRatio = Math.round((lowCount / sampleSize) * 100);
+        const highRatio = 100 - lowRatio;
+
+        // Specific Barriers Frequency
+        const under8Count = [0, 1, 2, 3, 4, 5, 6, 7].reduce((s, d) => s + frequencies[d], 0);
+        const over1Count = [2, 3, 4, 5, 6, 7, 8, 9].reduce((s, d) => s + frequencies[d], 0);
+        const under7Count = [0, 1, 2, 3, 4, 5, 6].reduce((s, d) => s + frequencies[d], 0);
+        const over2Count = [3, 4, 5, 6, 7, 8, 9].reduce((s, d) => s + frequencies[d], 0);
+        const under6Count = [0, 1, 2, 3, 4, 5].reduce((s, d) => s + frequencies[d], 0);
+        const over3Count = [4, 5, 6, 7, 8, 9].reduce((s, d) => s + frequencies[d], 0);
+
+        const under8Pct = Math.round((under8Count / sampleSize) * 100);
+        const over1Pct = Math.round((over1Count / sampleSize) * 100);
+        const under7Pct = Math.round((under7Count / sampleSize) * 100);
+        const over2Pct = Math.round((over2Count / sampleSize) * 100);
+        const under6Pct = Math.round((under6Count / sampleSize) * 100);
+        const over3Pct = Math.round((over3Count / sampleSize) * 100);
+
+        // Micro-momentum (last 10 & last 5 ticks)
+        const last10 = digits.slice(-10);
+        const last10Low = last10.filter(d => d <= 4).length;
+        const last10High = 10 - last10Low;
+
+        // Strategy Resolution
+        let chosenStrategy: OverlordStrategyMode = strategyMode;
+        if (strategyMode === 'ALL_AUTO') {
+            const scores = [
+                { mode: 'OVER_1_UNDER_8' as OverlordStrategyMode, edge: Math.max(under8Pct, over1Pct) },
+                { mode: 'OVER_2_UNDER_7' as OverlordStrategyMode, edge: Math.max(under7Pct, over2Pct) * 1.05 },
+                { mode: 'OVER_3_UNDER_6' as OverlordStrategyMode, edge: Math.max(under6Pct, over3Pct) * 1.15 },
+            ];
+            scores.sort((a, b) => b.edge - a.edge);
+            chosenStrategy = scores[0].mode;
+        }
+
+        let targetBarrier = 8;
+        let signal: 'UNDER' | 'OVER' | 'NEUTRAL' = 'NEUTRAL';
+        let signalConfidence = 50;
+        let isTriggerReady = false;
+        let triggerDigits: number[] = [];
+
+        if (chosenStrategy === 'OVER_1_UNDER_8') {
+            if (under8Pct >= 78 || last10Low >= 6) {
+                signal = 'UNDER';
+                targetBarrier = 8;
+                signalConfidence = Math.min(98, Math.round(under8Pct * 0.9 + last10Low * 2));
+                triggerDigits = [0, 1, 2, 3, 4, 5, 6, 7];
+                isTriggerReady = triggerDigits.includes(currentMarket.lastDigit);
+            } else if (over1Pct >= 78 || last10High >= 6) {
+                signal = 'OVER';
+                targetBarrier = 1;
+                signalConfidence = Math.min(98, Math.round(over1Pct * 0.9 + last10High * 2));
+                triggerDigits = [2, 3, 4, 5, 6, 7, 8, 9];
+                isTriggerReady = triggerDigits.includes(currentMarket.lastDigit);
+            }
+        } else if (chosenStrategy === 'OVER_2_UNDER_7') {
+            if (under7Pct >= 68 || last10Low >= 6) {
+                signal = 'UNDER';
+                targetBarrier = 7;
+                signalConfidence = Math.min(95, Math.round(under7Pct * 0.9 + last10Low * 2.5));
+                triggerDigits = [0, 1, 2, 3, 4, 5, 6];
+                isTriggerReady = triggerDigits.includes(currentMarket.lastDigit);
+            } else if (over2Pct >= 68 || last10High >= 6) {
+                signal = 'OVER';
+                targetBarrier = 2;
+                signalConfidence = Math.min(95, Math.round(over2Pct * 0.9 + last10High * 2.5));
+                triggerDigits = [3, 4, 5, 6, 7, 8, 9];
+                isTriggerReady = triggerDigits.includes(currentMarket.lastDigit);
+            }
+        } else if (chosenStrategy === 'OVER_3_UNDER_6') {
+            if (under6Pct >= 58 || last10Low >= 6) {
+                signal = 'UNDER';
+                targetBarrier = 6;
+                signalConfidence = Math.min(92, Math.round(under6Pct * 0.95 + last10Low * 3));
+                triggerDigits = [0, 1, 2, 3, 4, 5];
+                isTriggerReady = triggerDigits.includes(currentMarket.lastDigit);
+            } else if (over3Pct >= 58 || last10High >= 6) {
+                signal = 'OVER';
+                targetBarrier = 3;
+                signalConfidence = Math.min(92, Math.round(over3Pct * 0.95 + last10High * 3));
+                triggerDigits = [4, 5, 6, 7, 8, 9];
+                isTriggerReady = triggerDigits.includes(currentMarket.lastDigit);
+            }
+        }
+
+        // Find Highest & Lowest Frequency Digits
+        let highestDigit = 0;
+        let highestFreq = -1;
+        let lowestDigit = 0;
+        let lowestFreq = 999999;
+
+        for (let i = 0; i <= 9; i++) {
+            if (frequencies[i] > highestFreq) {
+                highestFreq = frequencies[i];
+                highestDigit = i;
+            }
+            if (frequencies[i] < lowestFreq) {
+                lowestFreq = frequencies[i];
+                lowestDigit = i;
+            }
+        }
+
+        return {
+            totalTicks,
+            frequencies,
+            percentages,
+            lowRatio,
+            highRatio,
+            under8Pct,
+            over1Pct,
+            under7Pct,
+            over2Pct,
+            under6Pct,
+            over3Pct,
+            last10Low,
+            last10High,
+            chosenStrategy,
+            signal,
+            targetBarrier,
+            signalConfidence,
+            isTriggerReady,
+            triggerDigits,
+            highestDigit,
+            lowestDigit,
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentMarket, strategyMode, renderTrigger]);
+
+    // ── Multi-Market Cross Scanner Ranking ──
+    const rankedMarketCandidates = useMemo(() => {
+        return DERIVED_SYNTHETIC_MARKETS.map(meta => {
+            const data = marketsDataRef.current.get(meta.symbol);
+            const digits = data?.digits || [];
+            const count = digits.length;
+            if (count < 20) {
+                return {
+                    ...meta,
+                    digitsCount: count,
+                    bias: 'NEUTRAL',
+                    score: 50,
+                    lastDigit: data?.lastDigit || 0,
+                    currentPrice: data?.currentPrice || '0.00',
+                };
+            }
+
+            const lowC = digits.filter(d => d <= 4).length;
+            const lowPct = Math.round((lowC / count) * 100);
+            const last10 = digits.slice(-10);
+            const last10Low = last10.filter(d => d <= 4).length;
+
+            let score = 50;
+            let bias: 'UNDER' | 'OVER' | 'NEUTRAL' = 'NEUTRAL';
+
+            if (lowPct >= 56 || last10Low >= 7) {
+                bias = 'UNDER';
+                score = Math.min(99, 50 + (lowPct - 50) * 2.5 + (last10Low - 5) * 6);
+            } else if (lowPct <= 44 || last10Low <= 3) {
+                bias = 'OVER';
+                score = Math.min(99, 50 + (50 - lowPct) * 2.5 + (5 - last10Low) * 6);
+            }
 
             return {
-                digit,
-                count,
-                percentage,
-                rank: 0,
-                isIncreasing,
+                ...meta,
+                digitsCount: count,
+                bias,
+                score: Math.round(score),
+                lastDigit: data?.lastDigit || 0,
+                currentPrice: data?.currentPrice || '0.00',
             };
-        });
+        }).sort((a, b) => b.score - a.score);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [renderTrigger]);
 
-        const sorted = [...stats].sort((a, b) => b.count - a.count);
-        sorted.forEach((item, index) => {
-            const original = stats.find(s => s.digit === item.digit);
-            if (original) original.rank = index + 1;
-        });
-
-        return stats;
-    }, [currentMarket.digits]);
-
-    // ── Dual Statistical Breakdown & Analysis ──
-    const statisticalAnalysis = useMemo(() => {
-        const last50 = currentMarket.digits.slice(-50);
-        const total = last50.length || 1;
-
-        // Breakdown 1: Under 0-4 vs Over 5-9
-        const under04Count = last50.filter(d => d <= 4).length;
-        const over59Count = last50.filter(d => d >= 5).length;
-        const under04Pct = Math.round((under04Count / total) * 100);
-        const over59Pct = Math.round((over59Count / total) * 100);
-
-        // Trend calculation for Under 0-4 vs Over 5-9 (last 15 vs prev 15)
-        const last15 = currentMarket.digits.slice(-15);
-        const prev15 = currentMarket.digits.slice(-30, -15);
-        const last15Under04 = last15.filter(d => d <= 4).length;
-        const prev15Under04 = prev15.filter(d => d <= 4).length;
-        const isUnder04Increasing = last15Under04 >= prev15Under04;
-        const isOver59Increasing = 15 - last15Under04 >= 15 - prev15Under04;
-
-        // Breakdown 2: Under 0-5 vs Over 4-9
-        const under05Count = last50.filter(d => d <= 5).length;
-        const over49Count = last50.filter(d => d >= 4).length;
-        const under05Pct = Math.round((under05Count / total) * 100);
-        const over49Pct = Math.round((over49Count / total) * 100);
-
-        // Highest Entry Digit in Under and Over
-        const underDigitsRanked = digitStats.filter(s => s.digit <= 4).sort((a, b) => b.count - a.count);
-        const overDigitsRanked = digitStats.filter(s => s.digit >= 5).sort((a, b) => b.count - a.count);
-        const highestUnderEntryDigit = underDigitsRanked[0]?.digit ?? 2;
-        const highestOverEntryDigit = overDigitsRanked[0]?.digit ?? 7;
-
-        // Micro-confirmation: Last 10 & Last 7 Ticks
-        const last10 = currentMarket.digits.slice(-10);
-        const last10Under = last10.filter(d => d <= 4).length;
-        const last10Over = last10.filter(d => d >= 5).length;
-
-        const last7 = currentMarket.digits.slice(-7);
-        const last7Under = last7.filter(d => d <= 4).length;
-        const last7Over = last7.filter(d => d >= 5).length;
-
-        // OVERLORD Strategy Signal Evaluation
-        let signal: 'UNDER' | 'OVER' | 'NEUTRAL' = 'NEUTRAL';
-        let signalConfidence = 0;
-
-        // Under Signal Criteria:
-        // 1. Under 0-4 threshold > 55% and increasing
-        // 2. Under 0-5 count > Over 4-9 count (e.g. 34 vs 25)
-        // 3. Last 10 ticks has >= 7 under and last 7 ticks favor under
-        const underCondition1 = under04Pct >= 55 && isUnder04Increasing;
-        const underCondition2 = under05Count > over49Count;
-        const underCondition3 = last10Under >= 7 && last7Under >= 4;
-
-        // Over Signal Criteria:
-        // 1. Over 5-9 threshold > 55% and increasing
-        // 2. Over 4-9 count > Under 0-5 count
-        // 3. Last 10 ticks has >= 7 over and last 7 ticks favor over
-        const overCondition1 = over59Pct >= 55 && isOver59Increasing;
-        const overCondition2 = over49Count > under05Count;
-        const overCondition3 = last10Over >= 7 && last7Over >= 4;
-
-        if (underCondition1 && underCondition2 && underCondition3) {
-            signal = 'UNDER';
-            signalConfidence = Math.min(98, under04Pct + (last10Under >= 8 ? 10 : 5));
-        } else if (overCondition1 && overCondition2 && overCondition3) {
-            signal = 'OVER';
-            signalConfidence = Math.min(98, over59Pct + (last10Over >= 8 ? 10 : 5));
-        } else if (under04Pct > over59Pct) {
-            signalConfidence = under04Pct;
-        } else {
-            signalConfidence = over59Pct;
-        }
-
-        // Check if current tick last digit matches entry trigger digit
-        const isUnderTriggerReady = currentMarket.lastDigit === highestUnderEntryDigit;
-        const isOverTriggerReady = currentMarket.lastDigit === highestOverEntryDigit;
-
-        return {
-            under04Count,
-            over59Count,
-            under04Pct,
-            over59Pct,
-            isUnder04Increasing,
-            isOver59Increasing,
-            under05Count,
-            over49Count,
-            under05Pct,
-            over49Pct,
-            highestUnderEntryDigit,
-            highestOverEntryDigit,
-            last10Under,
-            last10Over,
-            last7Under,
-            last7Over,
-            signal,
-            signalConfidence,
-            isUnderTriggerReady,
-            isOverTriggerReady,
-            underCondition1,
-            underCondition2,
-            underCondition3,
-            overCondition1,
-            overCondition2,
-            overCondition3,
-        };
-    }, [currentMarket.digits, currentMarket.lastDigit, digitStats]);
-
-    // ── Auto-Select Best Market Candidate ──
-    const bestMarketCandidate = useMemo(() => {
-        let bestSym = selectedSymbol;
-        let bestScore = -1;
-        let bestType = 'NEUTRAL';
-
-        marketsDataRef.current.forEach((mState, sym) => {
-            if (mState.digits.length < 30) return;
-            const last50 = mState.digits.slice(-50);
-            const total = last50.length || 1;
-            const uCount = last50.filter(d => d <= 4).length;
-            const oCount = last50.filter(d => d >= 5).length;
-            const maxUO = Math.max(uCount, oCount);
-            const uoPct = Math.round((maxUO / total) * 100);
-
-            // Calculate directional dominance
-            const u05 = last50.filter(d => d <= 5).length;
-            const o49 = last50.filter(d => d >= 4).length;
-            const disparity = Math.abs(u05 - o49);
-
-            const score = uoPct * 0.7 + disparity * 1.5;
-
-            if (score > bestScore) {
-                bestScore = score;
-                bestSym = sym;
-                bestType = uCount > oCount ? 'UNDER' : 'OVER';
-            }
-        });
-
-        return { symbol: bestSym, score: Math.round(bestScore), type: bestType };
-    }, [selectedSymbol, renderTrigger]);
-
-    // Auto-switch to best market when enabled and not actively in a trade
-    useEffect(() => {
-        if (autoPickBestMarket && botState !== 'TRADING' && bestMarketCandidate.symbol !== selectedSymbol) {
-            if (bestMarketCandidate.score >= 50) {
-                setSelectedSymbol(bestMarketCandidate.symbol);
-            }
-        }
-    }, [autoPickBestMarket, bestMarketCandidate, botState, selectedSymbol]);
-
-    // ── Push Contracts to Deriv Transaction Drawer & Summary ──
+    // Push Contract Details to Deriv System Drawer
     const pushContractToDrawer = useCallback(
-        (contractSnapshot: Record<string, unknown>) => {
+        (poc: any, contractType: string, barrierVal: number, stakeVal: number) => {
             try {
-                transactions?.pushTransaction?.({ ...contractSnapshot, run_id: run_panel?.run_id });
-                run_panel?.onBotContractEvent?.(contractSnapshot);
-                summary_card?.onBotContractEvent?.(contractSnapshot);
-            } catch {
-                /* ignore */
+                if (summary_card?.setContractInfo) {
+                    summary_card.setContractInfo(poc);
+                }
+                if (transactions?.contracts) {
+                    const isSold = Boolean(poc.is_sold || poc.status === 'won' || poc.status === 'lost');
+                    const profitVal = Number(poc.profit || 0);
+                    const txItem = {
+                        barrier: barrierVal,
+                        buy_price: stakeVal,
+                        contract_id: poc.contract_id,
+                        contract_type: contractType,
+                        currency,
+                        display_name: currentMarket.label,
+                        date_start: poc.date_start || Math.floor(Date.now() / 1000),
+                        date_expiry: poc.date_expiry,
+                        entry_tick: poc.entry_tick,
+                        exit_tick: poc.exit_tick,
+                        is_completed: isSold,
+                        payout: Number(poc.payout || 0),
+                        profit: profitVal,
+                        reference_id: poc.transaction_ids?.buy || poc.contract_id,
+                        status: isSold ? (profitVal >= 0 ? 'won' : 'lost') : 'open',
+                        symbol: currentMarket.symbol,
+                        underlying: currentMarket.symbol,
+                    };
+                    const existingIdx = transactions.contracts.findIndex(
+                        (c: any) => c.contract_id === poc.contract_id
+                    );
+                    if (existingIdx >= 0) {
+                        transactions.contracts[existingIdx] = txItem as any;
+                    } else {
+                        transactions.contracts.unshift(txItem as any);
+                    }
+                }
+            } catch (err) {
+                console.debug('[Overlord AI] Drawer update notice:', err);
             }
         },
-        [run_panel, summary_card, transactions]
+        [summary_card, transactions, currency, currentMarket]
     );
 
-    // ── Add Trade Log Entry ──
-    const addLogEntry = useCallback(
-        (
-            market: string,
-            contractType: 'DIGITUNDER' | 'DIGITOVER',
-            prediction: number,
-            stake: number,
-            result: 'WIN' | 'LOSS' | 'PENDING',
-            profit: number
-        ) => {
-            const item: TradeLogItem = {
-                id: `ovl-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-                time: new Date().toLocaleTimeString(),
-                market,
-                contractType,
-                prediction,
-                stake,
-                result,
-                profit,
-            };
-            setTradeLog(prev => [item, ...prev.slice(0, 49)]);
-            return item.id;
-        },
-        []
-    );
-
-    const updateLogResult = useCallback((id: string, result: 'WIN' | 'LOSS', profit: number) => {
-        setTradeLog(prev => prev.map(item => (item.id === id ? { ...item, result, profit } : item)));
-    }, []);
-
-    // ── Execute Trade Order ──
+    // ── Trade Order Execution ──
     const executeTradeOrder = useCallback(
         async (
-            market: string,
-            contractType: 'DIGITUNDER' | 'DIGITOVER',
-            barrier: number,
-            stake: number
+            symbolToTrade: string,
+            contractType: 'DIGITOVER' | 'DIGITUNDER',
+            barrierValue: number,
+            stakeAmount: number,
+            burstRunNumber: number
         ) => {
             if (executionLockRef.current) return;
             executionLockRef.current = true;
-            setBotState('TRADING');
-            if (soundEnabled) playSoundCue('signal');
 
-            const logId = addLogEntry(market, contractType, barrier, stake, 'PENDING', 0);
+            const logId = `trade_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+            const newLog: TradeLogItem = {
+                id: logId,
+                timestamp: Date.now(),
+                symbol: symbolToTrade,
+                contractType,
+                barrier: barrierValue,
+                stake: stakeAmount,
+                result: 'PENDING',
+                profit: 0,
+                burstRunIndex: burstRunNumber,
+            };
+
+            setTradeLog(prev => [newLog, ...prev.slice(0, 49)]);
 
             try {
-                const duration = parseInt(tickDuration, 10) || 1;
-                const params: Record<string, any> = {
-                    amount: stake,
+                const buyRes = await buyContractForUi({
+                    symbol: symbolToTrade,
+                    contract_type: contractType,
+                    amount: stakeAmount,
                     basis: 'stake',
-                    contract_type: contractType,
                     currency,
-                    duration,
+                    duration: 1,
                     duration_unit: 't',
-                    symbol: market,
-                    barrier: String(barrier),
-                };
-
-                const buyResult = await buyContractForUi({
-                    parameters: params,
-                    price: stake,
-                    source: 'OVERLORD AI',
+                    barrier: String(barrierValue),
                 });
 
-                if (!buyResult?.contract_id) {
-                    throw new Error('No contract ID received');
-                }
+                const contractId = buyRes.contract_id;
 
-                const contractId = buyResult.contract_id;
-                const transactionId = buyResult.transaction_id || contractId;
-                const startTime = Math.floor(Date.now() / 1000);
-                const marketLabel = DERIVED_SYNTHETIC_MARKETS.find(m => m.symbol === market)?.label || market;
-
-                const initSnapshot = {
-                    contract_id: contractId,
-                    transaction_ids: { buy: transactionId },
-                    buy_price: stake,
-                    underlying: market,
-                    underlying_symbol: market,
-                    display_name: marketLabel,
-                    shortcode: `OVERLORD_${contractType}_${barrier}`,
-                    contract_type: contractType,
-                    currency: currency || 'USD',
-                    date_start: startTime,
-                    status: 'open',
-                    barrier: String(barrier),
-                };
-                pushContractToDrawer(initSnapshot);
-
-                // Stream contract until settled
-                const settledSnapshot = await streamContractUntilSettled({
+                const settledContract = await streamContractUntilSettled(
+                    api_base?.api,
                     contractId,
-                    fallback: initSnapshot,
-                    onUpdate: snapshot => {
-                        pushContractToDrawer(snapshot);
+                    poc => {
+                        pushContractToDrawer(poc, contractType, barrierValue, stakeAmount);
                     },
-                    source: 'OVERLORD AI',
-                });
+                    12000
+                );
 
-                pushContractToDrawer(settledSnapshot);
-                const profitVal = Number(settledSnapshot?.profit || 0);
-                const isWin = profitVal > 0;
+                const isWon = settledContract.status === 'won' || settledContract.profit > 0;
+                const profitVal = Number(settledContract.profit || 0);
+                const exitDigit = extractLastDigit(settledContract.exit_tick || settledContract.current_spot || 0);
 
-                if (isWin) {
+                // Update Session Log
+                setTradeLog(prev =>
+                    prev.map(item =>
+                        item.id === logId
+                            ? {
+                                  ...item,
+                                  result: isWon ? 'WIN' : 'LOSS',
+                                  profit: profitVal,
+                                  exitDigit,
+                              }
+                            : item
+                    )
+                );
+
+                // Update Session Statistics
+                if (isWon) {
                     if (soundEnabled) playSoundCue('win');
-                    updateLogResult(logId, 'WIN', profitVal);
                     setWinsCount(w => w + 1);
-                    setSessionProfit(p => p + profitVal);
-
-                    // ── Handle Compounding Step Progression ──
-                    if (tradeByCompoundingPlan && activeCompoundingStep) {
-                        const newStepProfit = stepSessionProfit + profitVal;
-                        setStepSessionProfit(newStepProfit);
-
-                        // If Step Target Profit Achieved:
-                        if (newStepProfit >= activeCompoundingStep.targetProfit) {
-                            setCompoundingPlan(prevPlan => {
-                                const updated = prevPlan.map((s, idx) =>
-                                    idx === activeStepIndex ? { ...s, completed: true } : s
-                                );
-                                savePlanToStorage(updated);
-                                return updated;
-                            });
-
-                            // Advance to Next Period Step if available
-                            if (activeStepIndex + 1 < compoundingPlan.length) {
-                                setActiveStepIndex(idx => idx + 1);
-                                setStepSessionProfit(0);
-                                setStepStartTime(Date.now());
-                            } else {
-                                // All steps completed
-                                setBotState('PAUSED');
-                            }
-                        }
-                    }
-
-                    if (isInRecovery) {
-                        setIsInRecovery(false);
-                        setCurrentStake(effectiveStake);
-                    } else {
-                        setCurrentStake(effectiveStake);
-                    }
+                    setSessionProfit(p => Math.round((p + profitVal) * 100) / 100);
+                    setIsInRecovery(false);
+                    setMartingaleStage(0);
+                    setCurrentStake(initialBaseStake);
                 } else {
                     if (soundEnabled) playSoundCue('loss');
-                    updateLogResult(logId, 'LOSS', profitVal);
                     setLossesCount(l => l + 1);
-                    setSessionProfit(p => p + profitVal);
-                    if (tradeByCompoundingPlan) {
-                        setStepSessionProfit(sp => sp + profitVal);
-                    }
+                    setSessionProfit(p => Math.round((p + profitVal) * 100) / 100);
 
-                    // Martingale multiplier
-                    setIsInRecovery(true);
-                    const martMult = parseFloat(martingale) || 2.6;
-                    const nextStake = Math.round(stake * martMult * 100) / 100;
-                    setCurrentStake(nextStake);
+                    if (isMartingaleEnabled) {
+                        setIsInRecovery(true);
+                        setMartingaleStage(s => s + 1);
+                        const mult = parseFloat(martingaleMultiplier) || 2.5;
+                        const nextStakeVal = Math.round(stakeAmount * mult * 100) / 100;
+                        setCurrentStake(nextStakeVal);
+                    } else {
+                        setCurrentStake(initialBaseStake);
+                    }
                 }
-            } catch (err: any) {
-                console.error('[OVERLORD AI] Trade execution failed:', err);
-                updateLogResult(logId, 'LOSS', 0);
+
+                return isWon;
+            } catch (tradeErr: any) {
+                console.error('[Overlord AI] Trade error:', tradeErr);
+                setTradeLog(prev =>
+                    prev.map(item =>
+                        item.id === logId ? { ...item, result: 'LOSS', profit: -stakeAmount } : item
+                    )
+                );
+                setLossesCount(l => l + 1);
+                setSessionProfit(p => Math.round((p - stakeAmount) * 100) / 100);
+                return false;
             } finally {
                 executionLockRef.current = false;
-                setBotState(botState === 'PAUSED' ? 'PAUSED' : 'WAITING_SIGNAL');
             }
         },
         [
-            soundEnabled,
-            addLogEntry,
-            tickDuration,
             currency,
             pushContractToDrawer,
-            updateLogResult,
-            tradeByCompoundingPlan,
-            activeCompoundingStep,
-            stepSessionProfit,
-            activeStepIndex,
-            compoundingPlan.length,
-            savePlanToStorage,
-            isInRecovery,
-            effectiveStake,
-            martingale,
-            botState,
+            soundEnabled,
+            initialBaseStake,
+            isMartingaleEnabled,
+            martingaleMultiplier,
         ]
     );
 
-    // ── Continuous Autotrading Strategy Loop ──
+    // ── Continuous Burst Trading & Autopilot Orchestrator ──
     useEffect(() => {
-        if (botState === 'IDLE' || botState === 'PAUSED' || executionLockRef.current) return;
-
-        const {
-            signal,
-            isUnderTriggerReady,
-            isOverTriggerReady,
-        } = statisticalAnalysis;
-
-        // Check Fixed Take Profit condition (if not trading exclusively by compounding plan)
-        if (!tradeByCompoundingPlan) {
-            const targetTp = parseFloat(takeProfitTarget) || 50;
-            if (sessionProfit >= targetTp && targetTp > 0) {
-                setBotState('PAUSED');
-                return;
-            }
-        }
-
-        if (signal === 'NEUTRAL') {
-            if (botState !== 'WAITING_SIGNAL') setBotState('WAITING_SIGNAL');
+        if (
+            botState === 'IDLE' ||
+            botState === 'PAUSED' ||
+            botState === 'TP_REACHED' ||
+            botState === 'SL_REACHED' ||
+            executionLockRef.current
+        ) {
             return;
         }
 
-        // Stake to use (normal vs recovery)
-        const stakeToUse = isInRecovery ? currentStake : effectiveStake;
+        // 1. Risk Guards (Take Profit & Stop Loss)
+        const targetTp = parseFloat(takeProfit) || 20.0;
+        const targetSl = parseFloat(stopLoss) || 50.0;
 
-        // If Under signal: Under predictions strictly 6, 7, or 8 ONLY
-        if (signal === 'UNDER') {
-            if (isUnderTriggerReady) {
-                let underPrediction = customUnderPrediction;
-                if (predictionMode === 'AUTO') {
-                    underPrediction = 6; // Default highly resilient Under 6
-                }
-                if (![6, 7, 8].includes(underPrediction)) underPrediction = 6;
-
-                void executeTradeOrder(selectedSymbol, 'DIGITUNDER', underPrediction, stakeToUse);
-            } else {
-                if (botState !== 'WAITING_TRIGGER') setBotState('WAITING_TRIGGER');
-            }
+        if (sessionProfit >= targetTp && targetTp > 0) {
+            setBotState('TP_REACHED');
+            if (soundEnabled) playSoundCue('burst_complete');
+            return;
         }
-        // If Over signal: Over predictions strictly 1, 2, or 3 ONLY
-        else if (signal === 'OVER') {
-            if (isOverTriggerReady) {
-                let overPrediction = customOverPrediction;
-                if (predictionMode === 'AUTO') {
-                    overPrediction = 3; // Default highly resilient Over 3
-                }
-                if (![1, 2, 3].includes(overPrediction)) overPrediction = 3;
 
-                void executeTradeOrder(selectedSymbol, 'DIGITOVER', overPrediction, stakeToUse);
-            } else {
-                if (botState !== 'WAITING_TRIGGER') setBotState('WAITING_TRIGGER');
+        if (sessionProfit <= -targetSl && targetSl > 0) {
+            setBotState('SL_REACHED');
+            if (soundEnabled) playSoundCue('loss');
+            return;
+        }
+
+        // 2. Active Burst Execution
+        if (botState === 'BURST_TRADING') {
+            void (async () => {
+                const nextRun = currentBurstRun + 1;
+                setCurrentBurstRun(nextRun);
+                setRunsOnCurrentMarket(r => r + 1);
+
+                const contractType = patternEngine.signal === 'OVER' ? 'DIGITOVER' : 'DIGITUNDER';
+                const barrier = patternEngine.targetBarrier;
+                const stakeToUse = isInRecovery ? currentStake : initialBaseStake;
+
+                await executeTradeOrder(selectedSymbol, contractType, barrier, stakeToUse, nextRun);
+
+                // If completed full burst streak (e.g. 10 of 10)
+                if (nextRun >= burstRunSize) {
+                    if (soundEnabled) playSoundCue('burst_complete');
+                    setCurrentBurstRun(0);
+                    setBurstCountTotal(b => b + 1);
+
+                    // Pause briefly for multi-market AI re-analysis
+                    setBotState('BURST_PAUSED');
+
+                    // Market Rotation check:
+                    if (
+                        isMarketRotationEnabled &&
+                        rankedMarketCandidates.length > 0 &&
+                        (runsOnCurrentMarket >= marketRotationRuns ||
+                            rankedMarketCandidates[0].symbol !== selectedSymbol)
+                    ) {
+                        const nextBest =
+                            rankedMarketCandidates.find(c => c.symbol !== selectedSymbol) ||
+                            rankedMarketCandidates[0];
+                        if (nextBest && nextBest.score >= 70) {
+                            setSelectedSymbol(nextBest.symbol);
+                            setRunsOnCurrentMarket(0);
+                        }
+                    }
+
+                    setTimeout(() => {
+                        if (isMountedRef.current) {
+                            setBotState(curr => (curr === 'BURST_PAUSED' ? 'WAITING_SIGNAL' : curr));
+                        }
+                    }, 3000);
+                }
+            })();
+            return;
+        }
+
+        // 3. Waiting for High-Confidence Entry Signal to Trigger New Burst
+        if (patternEngine.signal === 'NEUTRAL' || patternEngine.signalConfidence < 65) {
+            if (botState !== 'WAITING_SIGNAL' && botState !== 'BURST_PAUSED') {
+                setBotState('WAITING_SIGNAL');
+            }
+            return;
+        }
+
+        // 4. Signal detected -> Check trigger confirmation
+        if (patternEngine.isTriggerReady) {
+            const contractType = patternEngine.signal === 'OVER' ? 'DIGITOVER' : 'DIGITUNDER';
+            const barrier = patternEngine.targetBarrier;
+            const stakeToUse = isInRecovery ? currentStake : initialBaseStake;
+
+            setBotState('BURST_TRADING');
+            setCurrentBurstRun(1);
+            setRunsOnCurrentMarket(r => r + 1);
+
+            void executeTradeOrder(selectedSymbol, contractType, barrier, stakeToUse, 1);
+        } else {
+            if (botState !== 'WAITING_TRIGGER') {
+                setBotState('WAITING_TRIGGER');
             }
         }
     }, [
         botState,
-        statisticalAnalysis,
-        tradeByCompoundingPlan,
-        takeProfitTarget,
+        currentBurstRun,
+        burstRunSize,
         sessionProfit,
+        takeProfit,
+        stopLoss,
+        patternEngine,
         isInRecovery,
         currentStake,
-        effectiveStake,
-        customUnderPrediction,
-        predictionMode,
-        executeTradeOrder,
+        initialBaseStake,
         selectedSymbol,
-        customOverPrediction,
+        executeTradeOrder,
+        soundEnabled,
+        isMarketRotationEnabled,
+        runsOnCurrentMarket,
+        marketRotationRuns,
+        rankedMarketCandidates,
     ]);
 
-    // ── Compounding Summary Metrics ──
-    const compoundingSummary = useMemo(() => {
-        if (compoundingPlan.length === 0) {
-            return { totalProfit: 0, finalBalance: 0, completedSteps: 0, totalSteps: 0 };
-        }
-        const lastStep = compoundingPlan[compoundingPlan.length - 1];
-        const start = compoundingPlan[0].startingBalance;
-        const finalBal = lastStep.endingBalance;
-        const totalProfit = Math.round((finalBal - start) * 100) / 100;
-        const completedSteps = compoundingPlan.filter(s => s.completed).length;
-
-        return {
-            totalProfit,
-            finalBalance: finalBal,
-            completedSteps,
-            totalSteps: compoundingPlan.length,
-        };
-    }, [compoundingPlan]);
-
-    // ── 50-Digit Spline Line Chart Calculations ──
+    // ── 50-Digit Bezier Wave Spline Line Chart ──
     const chartData = useMemo(() => {
         const last50 = currentMarket.digits.slice(-CHART_TICKS);
         const count = last50.length;
-        if (count < 2) return { path: '', points: [], currentPoint: null };
+        if (count < 2) return { path: '', points: [], currentPoint: null, areaPath: '' };
 
         const width = 600;
         const height = 180;
@@ -1075,7 +820,7 @@ const OverlordAi: React.FC = observer(() => {
 
         const points = last50.map((digit, idx) => {
             const x = padX + (idx / (CHART_TICKS - 1)) * (width - padX * 2);
-            // Inverted Y: Digit 9 at top (padY), Digit 0 at bottom (height - padY)
+            // Inverted Y: Digit 9 at top, Digit 0 at bottom
             const y = height - padY - (digit / 9) * (height - padY * 2);
             return { x, y, digit, idx };
         });
@@ -1090,34 +835,6 @@ const OverlordAi: React.FC = observer(() => {
         return { path, points, currentPoint, areaPath };
     }, [currentMarket.digits]);
 
-    // ── Compounding Growth Chart Curve ──
-    const growthChart = useMemo(() => {
-        if (compoundingPlan.length < 2) return { path: '', areaPath: '' };
-        const width = 340;
-        const height = 100;
-        const padX = 10;
-        const padY = 12;
-
-        const maxBal = compoundingPlan[compoundingPlan.length - 1].endingBalance || 1;
-        const minBal = compoundingPlan[0].startingBalance || 0;
-        const range = maxBal - minBal || 1;
-
-        const points = compoundingPlan.map((step, idx) => {
-            const x = padX + (idx / (compoundingPlan.length - 1)) * (width - padX * 2);
-            const y = height - padY - ((step.endingBalance - minBal) / range) * (height - padY * 2);
-            return { x, y };
-        });
-
-        const path = getBezierSplinePath(points);
-        const last = points[points.length - 1];
-        const areaPath =
-            path && points.length > 1
-                ? `${path} L ${last.x.toFixed(1)},96 L ${points[0].x.toFixed(1)},96 Z`
-                : '';
-
-        return { path, areaPath };
-    }, [compoundingPlan]);
-
     // Filtered Market List for Search
     const filteredMarkets = useMemo(() => {
         if (!marketSearchTerm.trim()) return DERIVED_SYNTHETIC_MARKETS;
@@ -1127,9 +844,42 @@ const OverlordAi: React.FC = observer(() => {
         );
     }, [marketSearchTerm]);
 
+    // Controls Action Handlers
+    const handleStartTrading = () => {
+        if (soundEnabled) playSoundCue('start');
+        setBotState('WAITING_SIGNAL');
+    };
+
+    const handleStopTrading = () => {
+        setBotState('IDLE');
+        setCurrentBurstRun(0);
+    };
+
+    const handleResetStats = () => {
+        setWinsCount(0);
+        setLossesCount(0);
+        setSessionProfit(0);
+        setTradeLog([]);
+        setCurrentBurstRun(0);
+        setBurstCountTotal(0);
+        setMartingaleStage(0);
+        setIsInRecovery(false);
+        setCurrentStake(initialBaseStake);
+    };
+
+    // Quick Stake Setters
+    const handleAdjustStake = (delta: number) => {
+        const current = parseFloat(manualStake) || 1.0;
+        const next = Math.max(0.35, Math.round((current + delta) * 100) / 100);
+        setManualStake(next.toFixed(2));
+    };
+
+    const totalTrades = winsCount + lossesCount;
+    const winRate = totalTrades > 0 ? Math.round((winsCount / totalTrades) * 100) : 0;
+
     return (
-        <div className='overlord-ai-wrapper'>
-            {/* ── Top Header & Stats Bar ── */}
+        <div className={`overlord-ai-wrapper ${isWideViewOpen ? 'wide-view-active' : ''}`}>
+            {/* ── Top Header & Cyber Wallet Bar ── */}
             <header className='overlord-top-bar'>
                 <div className='brand-section'>
                     <div className='brand-icon-box'>
@@ -1137,589 +887,421 @@ const OverlordAi: React.FC = observer(() => {
                     </div>
                     <div className='brand-info'>
                         <div className='brand-title-row'>
-                            <h1 className='brand-title'>
-                                OVERLORD AI
-                            </h1>
-                            <span className='version-tag'>SYNTHETICS ENGINE</span>
+                            <h1 className='brand-title'>OVERLORD AI</h1>
+                            <span className='version-tag'>QUANTUM TRADER v4.0</span>
                             <span className='status-live-badge'>
                                 <span className='pulse-dot' />
                                 24/7 ONLINE
                             </span>
                         </div>
                         <span className='brand-subtitle'>
-                            Deep Statistical Scanning • 24/7 Resilient Autotrader • Precision Compounding
+                            Neural Pattern Detection • 7–12 Run Continuous Bursts • Dynamic Market Rotation
                         </span>
                     </div>
                 </div>
 
-                {/* ── Cyber Wallet & Balance Card ── */}
+                {/* Cyber Wallet Card */}
                 <div className='cyber-wallet-card'>
                     <div className='wallet-account-header'>
-                        <span className={`account-badge ${client?.is_virtual ? 'badge-demo' : 'badge-real'}`}>
+                        <span
+                            className={`account-badge ${client?.is_virtual ? 'badge-demo' : 'badge-real'}`}
+                        >
                             {client?.is_virtual ? 'DEMO ACCOUNT' : 'REAL ACCOUNT'}
                         </span>
-                        <span className='account-loginid'>{client?.loginid || 'Active Account'}</span>
+                        <span className='account-loginid'>{client?.loginid || 'CR000000'}</span>
                     </div>
-
                     <div className='wallet-balance-row'>
                         <div className='balance-icon-wrap'>
                             <Wallet size={18} />
                         </div>
                         <div className='balance-data'>
-                            <span className='balance-label'>LIVE WALLET BALANCE</span>
+                            <span className='balance-label'>AVAILABLE BALANCE</span>
                             <span className='balance-amount'>
-                                {rawBalance > 0
-                                    ? `$${rawBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                    : '0.00'}{' '}
+                                {rawBalance.toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                })}
                                 <span className='currency-code'>{currency}</span>
                             </span>
                         </div>
                         <button
                             className='refresh-balance-btn'
-                            title='Sync Balance'
-                            onClick={handleFetchBalance}
+                            title='Toggle Sound'
+                            onClick={() => setSoundEnabled(!soundEnabled)}
                         >
-                            <RefreshCw size={14} />
+                            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                         </button>
                     </div>
-
                     <div className='wallet-chips-row'>
-                        <div className={`chip chip-profit ${sessionProfit >= 0 ? 'profit-pos' : 'profit-neg'}`}>
-                            <TrendingUp size={11} />
-                            <span>P/L: {sessionProfit >= 0 ? `+$${sessionProfit.toFixed(2)}` : `-$${Math.abs(sessionProfit).toFixed(2)}`}</span>
-                        </div>
-                        <div className='chip chip-winrate'>
-                            <Award size={11} />
-                            <span>WR: {winsCount + lossesCount > 0 ? `${Math.round((winsCount / (winsCount + lossesCount)) * 100)}%` : '0%'} ({winsCount}W/{lossesCount}L)</span>
-                        </div>
+                        <span
+                            className={`chip chip-profit ${sessionProfit >= 0 ? 'profit-pos' : 'profit-neg'}`}
+                        >
+                            P&L: {sessionProfit >= 0 ? `+$${sessionProfit.toFixed(2)}` : `-$${Math.abs(sessionProfit).toFixed(2)}`}
+                        </span>
+                        <span className='chip chip-winrate'>
+                            WIN: {winRate}% ({winsCount}W / {lossesCount}L)
+                        </span>
                         <button
                             className='sound-chip-btn'
-                            onClick={() => setSoundEnabled(!soundEnabled)}
-                            title={soundEnabled ? 'Mute Audio' : 'Enable Audio'}
+                            title='Reset Session Stats'
+                            onClick={handleResetStats}
                         >
-                            {soundEnabled ? <Volume2 size={13} color='#00f5ff' /> : <VolumeX size={13} color='#64748b' />}
+                            <RotateCcw size={12} />
                         </button>
                     </div>
                 </div>
             </header>
 
-            {/* ── Mobile Responsive Segmented View Switcher ── */}
+            {/* ── Mobile Segmented Navigation Bar ── */}
             <nav className='mobile-segmented-nav'>
                 <button
                     className={`nav-pill ${mobileActiveTab === 'DASHBOARD' ? 'active' : ''}`}
                     onClick={() => setMobileActiveTab('DASHBOARD')}
                 >
-                    <BarChart2 size={14} />
-                    <span>50-Digit Trend</span>
+                    <BarChart2 size={14} /> DASHBOARD
                 </button>
                 <button
                     className={`nav-pill ${mobileActiveTab === 'AUTOTRADER' ? 'active' : ''}`}
-                    onClick={() => {
-                        setMobileActiveTab('AUTOTRADER');
-                        setActiveRightTab('AUTOTRADER');
-                    }}
+                    onClick={() => setMobileActiveTab('AUTOTRADER')}
                 >
-                    <Zap size={14} />
-                    <span>Autotrader</span>
-                </button>
-                <button
-                    className={`nav-pill ${mobileActiveTab === 'COMPOUNDING' ? 'active' : ''}`}
-                    onClick={() => {
-                        setMobileActiveTab('COMPOUNDING');
-                        setActiveRightTab('COMPOUNDING');
-                    }}
-                >
-                    <TrendingUp size={14} />
-                    <span>Compounding</span>
+                    <Cpu size={14} /> AI TRADER
                 </button>
                 <button
                     className={`nav-pill ${mobileActiveTab === 'MARKETS' ? 'active' : ''}`}
                     onClick={() => setMobileActiveTab('MARKETS')}
                 >
-                    <Activity size={14} />
-                    <span>Markets</span>
+                    <Radio size={14} /> MARKETS
+                </button>
+                <button
+                    className={`nav-pill ${mobileActiveTab === 'TRADES' ? 'active' : ''}`}
+                    onClick={() => setMobileActiveTab('TRADES')}
+                >
+                    <Layers size={14} /> JOURNAL
                 </button>
             </nav>
 
-            {/* ── Control Ribbon: Scanner Mode & Autotrade Actions ── */}
+            {/* ── Control Ribbon & Strategy Selector ── */}
             <div className='overlord-controls-ribbon'>
                 <div className='left-controls'>
-                    {/* Wide View Toggle */}
-                    <button
-                        className={`btn-control btn-scan-wide ${isWideViewOpen ? 'active' : ''}`}
-                        onClick={() => setIsWideViewOpen(!isWideViewOpen)}
-                    >
-                        <Grid size={15} />
-                        <span>{isWideViewOpen ? 'Collapse Scanner Grid' : 'All Markets Wide View'}</span>
-                        {isWideViewOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                    </button>
+                    {botState === 'IDLE' || botState === 'PAUSED' || botState === 'TP_REACHED' || botState === 'SL_REACHED' ? (
+                        <button
+                            className='btn-control btn-autotrade-start'
+                            onClick={handleStartTrading}
+                        >
+                            <Play size={16} /> START AI TRADER
+                        </button>
+                    ) : (
+                        <button
+                            className='btn-control btn-autotrade-stop'
+                            onClick={handleStopTrading}
+                        >
+                            <Square size={16} /> STOP TRADING
+                        </button>
+                    )}
 
-                    {/* Auto Pick Best Market */}
                     <button
                         className={`btn-control btn-best-market ${autoPickBestMarket ? 'active' : ''}`}
                         onClick={() => setAutoPickBestMarket(!autoPickBestMarket)}
-                        title='Auto-inputs the best market with highest statistical advantage'
+                        title='Auto-select the highest scoring volatility market'
                     >
-                        <Flame size={15} />
-                        <span>Best Market: {bestMarketCandidate.symbol} ({bestMarketCandidate.type} {bestMarketCandidate.score}%)</span>
-                    </button>
-
-                    {/* Multi-Market Scanner Toggle */}
-                    <button
-                        className={`btn-control btn-toggle-scan ${scanAllMarkets ? 'active' : ''}`}
-                        onClick={() => setScanAllMarkets(!scanAllMarkets)}
-                    >
-                        <Layers size={15} />
-                        <span>Scan Entire Synthetics ({scanAllMarkets ? 'Active' : 'Single Only'})</span>
+                        <Sparkles size={14} />
+                        {autoPickBestMarket ? 'AUTO-MARKET ACTIVE' : 'MANUAL MARKET'}
                     </button>
                 </div>
 
                 <div className='right-controls'>
-                    {botState === 'IDLE' || botState === 'PAUSED' ? (
-                        <button
-                            className='btn-control btn-autotrade-start'
-                            onClick={() => {
-                                setBotState('WAITING_SIGNAL');
-                                setStepStartTime(Date.now());
-                                setCurrentStake(effectiveStake);
-                            }}
-                        >
-                            <Play size={16} />
-                            <span>Start OVERLORD Autotrade</span>
-                        </button>
-                    ) : (
-                        <>
-                            <button
-                                className='btn-control btn-autotrade-pause'
-                                onClick={() => setBotState('PAUSED')}
-                            >
-                                <Pause size={16} />
-                                <span>Pause</span>
-                            </button>
-                            <button
-                                className='btn-control btn-autotrade-stop'
-                                onClick={() => setBotState('IDLE')}
-                            >
-                                <Square size={16} />
-                                <span>Stop Bot</span>
-                            </button>
-                        </>
-                    )}
+                    <button
+                        className={`btn-control ${isWideViewOpen ? 'active' : ''}`}
+                        onClick={() => setIsWideViewOpen(!isWideViewOpen)}
+                    >
+                        {isWideViewOpen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                        {isWideViewOpen ? 'COMPACT VIEW' : 'EXPAND VIEW'}
+                    </button>
                 </div>
             </div>
 
-            {/* ── Wide View All Markets Dropdown / Grid ── */}
-            {isWideViewOpen && (
-                <div className='wide-scanner-grid-container'>
-                    <div className='wide-grid-header'>
-                        <h3 className='wide-title'>
-                            <Activity size={18} />
-                            <span>Derived Synthetics Real-Time Multi-Market Grid</span>
+            {/* ── Main 3-Column Grid Layout ── */}
+            <div className='overlord-main-layout'>
+                {/* ── LEFT COLUMN: Market Scanner ── */}
+                <aside
+                    className={`overlord-side-scanner ${mobileActiveTab === 'MARKETS' ? 'mobile-active' : ''}`}
+                >
+                    <div className='scanner-header'>
+                        <h3 className='scanner-title'>
+                            <Radio size={14} /> SYNTHETICS SCANNER
                         </h3>
-                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                            Click any market to trade immediately
-                        </span>
                     </div>
 
-                    <div className='wide-market-cards-grid'>
-                        {DERIVED_SYNTHETIC_MARKETS.map(m => {
-                            const data = marketsDataRef.current.get(m.symbol);
-                            const last50 = data?.digits.slice(-50) || [];
-                            const total = last50.length || 1;
-                            const u04 = last50.filter(d => d <= 4).length;
-                            const o59 = last50.filter(d => d >= 5).length;
-                            const u04Pct = Math.round((u04 / total) * 100);
-                            const o59Pct = Math.round((o59 / total) * 100);
-                            const u05 = last50.filter(d => d <= 5).length;
-                            const o49 = last50.filter(d => d >= 4).length;
-                            const isBest = bestMarketCandidate.symbol === m.symbol;
+                    <div className='scanner-search-box'>
+                        <input
+                            type='text'
+                            placeholder='Search markets...'
+                            value={marketSearchTerm}
+                            onChange={e => setMarketSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className='market-list-scroll'>
+                        {filteredMarkets.map(m => {
+                            const marketData = marketsDataRef.current.get(m.symbol);
+                            const ranked = rankedMarketCandidates.find(c => c.symbol === m.symbol);
+                            const isSelected = m.symbol === selectedSymbol;
+                            const lastD = marketData?.lastDigit || 0;
+                            const isUnder = lastD <= 4;
 
                             return (
                                 <div
                                     key={m.symbol}
-                                    className={`wide-card ${isBest ? 'is-best-candidate' : ''}`}
-                                    onClick={() => {
-                                        setSelectedSymbol(m.symbol);
-                                        setAutoPickBestMarket(false);
-                                    }}
+                                    className={`market-item-card ${isSelected ? 'active' : ''}`}
+                                    onClick={() => setSelectedSymbol(m.symbol)}
                                 >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <strong style={{ color: '#ffffff', fontSize: '13px' }}>{m.label}</strong>
-                                        {isBest && (
-                                            <span style={{ fontSize: '10px', background: '#00e676', color: '#04140c', fontWeight: '800', padding: '1px 6px', borderRadius: '4px' }}>
-                                                BEST EDGE
-                                            </span>
-                                        )}
-                                        <span style={{ fontFamily: 'monospace', color: '#00f5ff', fontSize: '12px' }}>
-                                            {data?.currentPrice || '0.00'}
+                                    <div className='market-header-row'>
+                                        <span className='market-name'>{m.label}</span>
+                                        <span
+                                            className={`last-digit-badge ${isUnder ? 'digit-under' : 'digit-over'}`}
+                                        >
+                                            {lastD}
                                         </span>
                                     </div>
-
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                        <span style={{ color: '#00e676' }}>U (0-4): {u04Pct}% ({u05} U)</span>
-                                        <span style={{ color: '#ffb700' }}>O (5-9): {o59Pct}% ({o49} O)</span>
+                                    <div className='market-data-row'>
+                                        <span className='market-price'>
+                                            {marketData?.currentPrice || '0.00'}
+                                        </span>
+                                        <span
+                                            className={`market-bias-badge ${
+                                                ranked?.bias === 'UNDER'
+                                                    ? 'bias-under'
+                                                    : ranked?.bias === 'OVER'
+                                                    ? 'bias-over'
+                                                    : 'bias-neutral'
+                                            }`}
+                                        >
+                                            {ranked?.bias || 'NEUTRAL'} ({ranked?.score || 50}%)
+                                        </span>
                                     </div>
-
-                                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', display: 'flex', overflow: 'hidden' }}>
-                                        <div style={{ width: `${u04Pct}%`, background: '#00e676' }} />
-                                        <div style={{ width: `${o59Pct}%`, background: '#ffb700' }} />
+                                    <div className='market-mini-bar'>
+                                        <div
+                                            className='mini-bar-under'
+                                            style={{ width: `${ranked?.score || 50}%` }}
+                                        />
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
-                </div>
-            )}
-
-            {/* ── Main Layout: 3 Columns ── */}
-            <div className='overlord-main-layout'>
-                {/* ── LEFT COLUMN: Market List & Side Scanner ── */}
-                <aside className={`overlord-side-scanner ${mobileActiveTab === 'MARKETS' ? 'mobile-active' : ''}`}>
-                    <div className='glass-panel'>
-                        <div className='panel-header'>
-                            <h3 className='panel-title'>
-                                <Activity size={16} />
-                                <span>Derived Markets</span>
-                            </h3>
-                            <span className='panel-tag tag-cyan'>{DERIVED_SYNTHETIC_MARKETS.length} Vol Indices</span>
-                        </div>
-
-                        <div className='market-search-box'>
-                            <input
-                                type='text'
-                                placeholder='Search synthetic index...'
-                                value={marketSearchTerm}
-                                onChange={e => setMarketSearchTerm(e.target.value)}
-                            />
-                        </div>
-
-                        <div className='market-list-scroll'>
-                            {filteredMarkets.map(m => {
-                                const mData = marketsDataRef.current.get(m.symbol);
-                                const last50 = mData?.digits.slice(-50) || [];
-                                const total = last50.length || 1;
-                                const uCount = last50.filter(d => d <= 4).length;
-                                const oCount = last50.filter(d => d >= 5).length;
-                                const uPct = Math.round((uCount / total) * 100);
-                                const oPct = Math.round((oCount / total) * 100);
-                                const isSelected = selectedSymbol === m.symbol;
-                                const lastDigit = mData?.lastDigit ?? 0;
-                                const isUnderDigit = lastDigit <= 4;
-
-                                return (
-                                    <div
-                                        key={m.symbol}
-                                        className={`market-item-card ${isSelected ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setSelectedSymbol(m.symbol);
-                                            setAutoPickBestMarket(false);
-                                            setMobileActiveTab('DASHBOARD');
-                                        }}
-                                    >
-                                        <div className='market-header-row'>
-                                            <span className='market-name'>{m.label}</span>
-                                            <div className={`last-digit-badge ${isUnderDigit ? 'digit-under' : 'digit-over'}`}>
-                                                {lastDigit}
-                                            </div>
-                                        </div>
-
-                                        <div className='market-data-row'>
-                                            <span className='market-price'>{mData?.currentPrice || '0.00'}</span>
-                                            <span className={`market-bias-badge ${uPct > 55 ? 'bias-under' : oPct > 55 ? 'bias-over' : 'bias-neutral'}`}>
-                                                {uPct > 55 ? `Under ${uPct}%` : oPct > 55 ? `Over ${oPct}%` : 'Balanced'}
-                                            </span>
-                                        </div>
-
-                                        <div className='market-mini-bar'>
-                                            <div className='mini-bar-under' style={{ width: `${uPct}%` }} />
-                                            <div className='mini-bar-over' style={{ width: `${oPct}%` }} />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
                 </aside>
 
-                {/* ── CENTER COLUMN: Real-Time Visualizers & Statistical Analysis ── */}
-                <main className={`overlord-center-content ${mobileActiveTab === 'DASHBOARD' ? 'mobile-active' : ''}`}>
-                    {/* Active Market Banner */}
+                {/* ── CENTER COLUMN: Live Wave & Deep Analytics ── */}
+                <main
+                    className={`overlord-center-content ${mobileActiveTab === 'DASHBOARD' ? 'mobile-active' : ''}`}
+                >
+                    {/* Active Market Hero */}
                     <div className='active-market-hero'>
                         <div className='market-left-info'>
-                            <div>
-                                <h2 className='active-market-title'>{currentMarket.label}</h2>
-                                <div className='active-price-display'>
-                                    <span className='price-label'>SPOT PRICE</span>
-                                    <span>{currentMarket.currentPrice}</span>
-                                </div>
+                            <h2 className='active-market-title'>{currentMarket.label}</h2>
+                            <div className='active-price-display'>
+                                <span className='price-label'>LIVE SPOT</span>
+                                {currentMarket.currentPrice}
                             </div>
                         </div>
 
                         <div className='market-right-digit'>
                             <div className='last-digit-hero-box'>
                                 <div
-                                    key={`digit-beat-${currentMarket.lastDigit}-${renderTrigger}`}
                                     className={`digit-avatar ${currentMarket.lastDigit <= 4 ? 'digit-under' : 'digit-over'}`}
                                 >
                                     {currentMarket.lastDigit}
                                 </div>
                                 <div className='digit-labels'>
-                                    <span className='digit-sub'>Last Digit</span>
-                                    <span className={`digit-type-text ${currentMarket.lastDigit <= 4 ? 'text-under' : 'text-over'}`}>
-                                        {currentMarket.lastDigit <= 4 ? 'UNDER (0-4)' : 'OVER (5-9)'}
+                                    <span className='digit-sub'>AI SIGNAL</span>
+                                    <span
+                                        className={`digit-type-text ${
+                                            patternEngine.signal === 'UNDER'
+                                                ? 'text-under'
+                                                : patternEngine.signal === 'OVER'
+                                                ? 'text-over'
+                                                : ''
+                                        }`}
+                                    >
+                                        {patternEngine.signal === 'NEUTRAL'
+                                            ? 'SCANNING...'
+                                            : `${patternEngine.signal} ${patternEngine.targetBarrier} (${patternEngine.signalConfidence}%)`}
                                     </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 50-Digit Spline Line Chart */}
-                    <div className='glass-panel glowing-cyan'>
-                        <div className='digit-chart-container'>
-                            <div className='chart-header-row'>
-                                <h3 className='panel-title'>
-                                    <LineChart size={16} />
-                                    <span>Live 50 Last Digits Trend Line</span>
-                                </h3>
-                                <div className='chart-legend'>
-                                    <div className='legend-item'>
-                                        <div className='dot dot-under' />
-                                        <span>Under (0-4)</span>
-                                    </div>
-                                    <div className='legend-item'>
-                                        <div className='dot dot-over' />
-                                        <span>Over (5-9)</span>
-                                    </div>
+                    {/* 50-Digit Bezier Wave Spline Chart */}
+                    <div className='digit-chart-container'>
+                        <div className='chart-header-row'>
+                            <span className='split-title'>
+                                <Activity size={14} /> LIVE DIGIT TRAJECTORY (LAST 50 TICKS)
+                            </span>
+                            <div className='chart-legend'>
+                                <div className='legend-item'>
+                                    <span className='dot dot-under' /> UNDER 0–4
+                                </div>
+                                <div className='legend-item'>
+                                    <span className='dot dot-over' /> OVER 5–9
                                 </div>
                             </div>
+                        </div>
 
-                            <div className='svg-chart-wrapper'>
-                                <svg viewBox='0 0 600 180' preserveAspectRatio='none'>
-                                    <defs>
-                                        <linearGradient id='splineGradient' x1='0' y1='0' x2='1' y2='0'>
-                                            <stop offset='0%' stopColor='#00f5ff' />
-                                            <stop offset='50%' stopColor='#9d4edd' />
-                                            <stop offset='100%' stopColor='#00e676' />
-                                        </linearGradient>
-                                        <linearGradient id='splineAreaGradient' x1='0' y1='0' x2='0' y2='1'>
-                                            <stop offset='0%' stopColor='rgba(0, 245, 255, 0.35)' />
-                                            <stop offset='60%' stopColor='rgba(157, 78, 221, 0.15)' />
-                                            <stop offset='100%' stopColor='rgba(0, 230, 118, 0.0)' />
-                                        </linearGradient>
-                                        <filter id='glowSpline' x='-20%' y='-20%' width='140%' height='140%'>
-                                            <feGaussianBlur stdDeviation='3' result='blur' />
-                                            <feMerge>
-                                                <feMergeNode in='blur' />
-                                                <feMergeNode in='SourceGraphic' />
-                                            </feMerge>
-                                        </filter>
-                                    </defs>
-
-                                    {/* Grid Lines */}
-                                    <line x1='0' y1='20' x2='600' y2='20' stroke='rgba(255,255,255,0.05)' strokeDasharray='4 4' />
-                                    <line x1='0' y1='90' x2='600' y2='90' stroke='rgba(0, 245, 255, 0.2)' strokeWidth='1.5' strokeDasharray='6 6' />
-                                    <line x1='0' y1='160' x2='600' y2='160' stroke='rgba(255,255,255,0.05)' strokeDasharray='4 4' />
-
-                                    {/* Spline Area Fill */}
-                                    {chartData.areaPath && (
-                                        <path
-                                            d={chartData.areaPath}
-                                            fill='url(#splineAreaGradient)'
-                                        />
-                                    )}
-
-                                    {/* Spline Path */}
-                                    {chartData.path && (
-                                        <path
-                                            d={chartData.path}
-                                            fill='none'
-                                            stroke='url(#splineGradient)'
-                                            strokeWidth='2.5'
-                                            filter='url(#glowSpline)'
-                                        />
-                                    )}
-
-                                    {/* Data Points */}
-                                    {chartData.points.map((p, idx) => {
-                                        const isUnder = p.digit <= 4;
-                                        return (
-                                            <circle
-                                                key={idx}
-                                                cx={p.x}
-                                                cy={p.y}
-                                                r={idx === chartData.points.length - 1 ? '5' : '2.5'}
-                                                fill={isUnder ? '#00e676' : '#ffb700'}
-                                                stroke='#070a13'
-                                                strokeWidth='1'
-                                            />
-                                        );
-                                    })}
-
-                                    {/* Pulsing Head for Current Digit */}
-                                    {chartData.currentPoint && (
-                                        <circle
-                                            cx={chartData.currentPoint.x}
-                                            cy={chartData.currentPoint.y}
-                                            r='8'
-                                            fill='none'
-                                            stroke='#00f5ff'
-                                            strokeWidth='1.5'
-                                            opacity='0.8'
-                                        >
-                                            <animate attributeName='r' values='4;12;4' dur='1.5s' repeatCount='indefinite' />
-                                            <animate attributeName='opacity' values='0.9;0.1;0.9' dur='1.5s' repeatCount='indefinite' />
-                                        </circle>
-                                    )}
-                                </svg>
-                            </div>
+                        <div className='svg-chart-wrapper'>
+                            <svg viewBox='0 0 600 180' preserveAspectRatio='none'>
+                                <defs>
+                                    <linearGradient
+                                        id='splineAreaGrad'
+                                        x1='0'
+                                        y1='0'
+                                        x2='0'
+                                        y2='1'
+                                    >
+                                        <stop offset='0%' stopColor='#00f5ff' stopOpacity='0.25' />
+                                        <stop offset='100%' stopColor='#00f5ff' stopOpacity='0.0' />
+                                    </linearGradient>
+                                </defs>
+                                {chartData.areaPath && (
+                                    <path d={chartData.areaPath} fill='url(#splineAreaGrad)' />
+                                )}
+                                {chartData.path && (
+                                    <path
+                                        d={chartData.path}
+                                        fill='none'
+                                        stroke='#00f5ff'
+                                        strokeWidth='2.5'
+                                    />
+                                )}
+                                {chartData.points.map(pt => (
+                                    <circle
+                                        key={pt.idx}
+                                        cx={pt.x}
+                                        cy={pt.y}
+                                        r={pt.digit === currentMarket.lastDigit ? 4.5 : 2.5}
+                                        fill={pt.digit <= 4 ? '#00e676' : '#ffb700'}
+                                    />
+                                ))}
+                            </svg>
                         </div>
                     </div>
 
                     {/* Dual Statistical Analysis Grid */}
                     <div className='overlord-stats-dual-grid'>
-                        {/* Analysis 1: Under 0-4 vs Over 5-9 */}
-                        <div className='glass-panel stat-split-card'>
+                        <div className='stat-split-card'>
                             <div className='split-title-row'>
-                                <span className='split-title'>Under (0-4) vs Over (5-9)</span>
-                                <span className='split-badge'>
-                                    {statisticalAnalysis.under04Pct >= 55
-                                        ? 'Under Edge (>55%)'
-                                        : statisticalAnalysis.over59Pct >= 55
-                                        ? 'Over Edge (>55%)'
-                                        : 'Neutral Range'}
-                                </span>
+                                <span className='split-title'>LOW vs HIGH RATIO</span>
+                                <span className='split-badge'>ENTROPY SCAN</span>
                             </div>
-
                             <div className='split-meter-box'>
                                 <div className='meter-bar'>
                                     <div
                                         className='meter-left'
-                                        style={{ width: `${statisticalAnalysis.under04Pct}%` }}
+                                        style={{ width: `${patternEngine.lowRatio}%` }}
                                     />
                                     <div
                                         className='meter-right'
-                                        style={{ width: `${statisticalAnalysis.over59Pct}%` }}
+                                        style={{ width: `${patternEngine.highRatio}%` }}
                                     />
                                 </div>
                                 <div className='meter-labels'>
-                                    <span className='label-left'>
-                                        Under: {statisticalAnalysis.under04Pct}% ({statisticalAnalysis.under04Count}/50)
-                                    </span>
-                                    <span className='label-right'>
-                                        Over: {statisticalAnalysis.over59Pct}% ({statisticalAnalysis.over59Count}/50)
-                                    </span>
+                                    <span className='label-left'>LOW (0–4): {patternEngine.lowRatio}%</span>
+                                    <span className='label-right'>HIGH (5–9): {patternEngine.highRatio}%</span>
                                 </div>
                             </div>
-
                             <div className='stat-metrics-row'>
-                                <span>Trend: <strong>{statisticalAnalysis.isUnder04Increasing ? 'Under ↗ Rising' : 'Over ↗ Rising'}</strong></span>
-                                <span>Condition 1: <strong style={{ color: statisticalAnalysis.underCondition1 || statisticalAnalysis.overCondition1 ? '#00e676' : '#94a3b8' }}>
-                                    {statisticalAnalysis.underCondition1 || statisticalAnalysis.overCondition1 ? 'PASSED ✓' : 'WAITING'}
-                                </strong></span>
+                                <span>Recent Momentum (10 Ticks):</span>
+                                <strong>
+                                    {patternEngine.last10Low} Low / {patternEngine.last10High} High
+                                </strong>
                             </div>
                         </div>
 
-                        {/* Analysis 2: Under 0-5 vs Over 4-9 */}
-                        <div className='glass-panel stat-split-card'>
+                        <div className='stat-split-card'>
                             <div className='split-title-row'>
-                                <span className='split-title'>Under (0-5) vs Over (4-9) Split</span>
-                                <span className='split-badge'>
-                                    {statisticalAnalysis.under05Count > statisticalAnalysis.over49Count
-                                        ? 'Under Power Dominant'
-                                        : 'Over Power Dominant'}
-                                </span>
+                                <span className='split-title'>HIGH-PROBABILITY BARRIERS</span>
+                                <span className='split-badge'>EDGE CALC</span>
                             </div>
-
-                            <div className='split-meter-box'>
-                                <div className='meter-bar'>
-                                    <div
-                                        className='meter-left'
-                                        style={{ width: `${statisticalAnalysis.under05Pct}%` }}
-                                    />
-                                    <div
-                                        className='meter-right'
-                                        style={{ width: `${statisticalAnalysis.over49Pct}%` }}
-                                    />
-                                </div>
-                                <div className='meter-labels'>
-                                    <span className='label-left'>
-                                        {statisticalAnalysis.under05Count} Unders (0-5)
-                                    </span>
-                                    <span className='label-right'>
-                                        {statisticalAnalysis.over49Count} Overs (4-9)
-                                    </span>
-                                </div>
-                            </div>
-
                             <div className='stat-metrics-row'>
-                                <span>Last 10: <strong>{statisticalAnalysis.last10Under} Under / {statisticalAnalysis.last10Over} Over</strong></span>
-                                <span>Last 7: <strong>{statisticalAnalysis.last7Under} Under / {statisticalAnalysis.last7Over} Over</strong></span>
+                                <span>Under 8 Frequency:</span>
+                                <strong>{patternEngine.under8Pct}%</strong>
+                            </div>
+                            <div className='stat-metrics-row'>
+                                <span>Under 7 Frequency:</span>
+                                <strong>{patternEngine.under7Pct}%</strong>
+                            </div>
+                            <div className='stat-metrics-row'>
+                                <span>Under 6 Frequency:</span>
+                                <strong>{patternEngine.under6Pct}%</strong>
                             </div>
                         </div>
                     </div>
 
-                    {/* Glowing Highest Entry Digit Panel */}
-                    <div className='glass-panel glowing-entry-digits-panel'>
-                        <div className='panel-header'>
-                            <h3 className='panel-title'>
-                                <Target size={16} />
-                                <span>Highest Entry Digits & Trigger Matrix</span>
-                            </h3>
-                            <span className='panel-tag tag-emerald'>
-                                Live Trigger: {statisticalAnalysis.signal}
-                            </span>
-                        </div>
-
+                    {/* Glowing Highest Entry Digit Panel & 0-9 Spectrum */}
+                    <div className='glowing-entry-digits-panel'>
                         <div className='entry-digits-grid'>
-                            {/* Under Highest Entry Digit */}
-                            <div className={`entry-digit-card under-glow ${statisticalAnalysis.isUnderTriggerReady ? 'is-active-trigger' : ''}`}>
+                            <div
+                                className={`entry-digit-card under-glow ${
+                                    patternEngine.signal === 'UNDER' && patternEngine.isTriggerReady
+                                        ? 'is-active-trigger'
+                                        : ''
+                                }`}
+                            >
                                 <div className='digit-orb orb-under'>
-                                    {statisticalAnalysis.highestUnderEntryDigit}
+                                    {patternEngine.highestDigit}
                                 </div>
                                 <div className='entry-details'>
-                                    <span className='entry-type'>Highest Under Entry Digit</span>
+                                    <span className='entry-type'>DOMINANT HOT DIGIT</span>
                                     <span className='entry-status'>
-                                        Digit {statisticalAnalysis.highestUnderEntryDigit} ({digitStats.find(s => s.digit === statisticalAnalysis.highestUnderEntryDigit)?.percentage}%)
+                                        Digit {patternEngine.highestDigit} ({patternEngine.percentages[patternEngine.highestDigit]}%)
                                     </span>
                                     <span className='entry-subtext'>
-                                        {statisticalAnalysis.isUnderTriggerReady ? '⚡ TRIGGER PULSING - READY TO BUY' : 'Awaiting spot trigger digit...'}
+                                        High probability catalyst for Under triggers
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Over Highest Entry Digit */}
-                            <div className={`entry-digit-card over-glow ${statisticalAnalysis.isOverTriggerReady ? 'is-active-trigger' : ''}`}>
+                            <div
+                                className={`entry-digit-card over-glow ${
+                                    patternEngine.signal === 'OVER' && patternEngine.isTriggerReady
+                                        ? 'is-active-trigger'
+                                        : ''
+                                }`}
+                            >
                                 <div className='digit-orb orb-over'>
-                                    {statisticalAnalysis.highestOverEntryDigit}
+                                    {patternEngine.lowestDigit}
                                 </div>
                                 <div className='entry-details'>
-                                    <span className='entry-type'>Highest Over Entry Digit</span>
+                                    <span className='entry-type'>COLD DIGIT / REVERSAL</span>
                                     <span className='entry-status'>
-                                        Digit {statisticalAnalysis.highestOverEntryDigit} ({digitStats.find(s => s.digit === statisticalAnalysis.highestOverEntryDigit)?.percentage}%)
+                                        Digit {patternEngine.lowestDigit} ({patternEngine.percentages[patternEngine.lowestDigit]}%)
                                     </span>
                                     <span className='entry-subtext'>
-                                        {statisticalAnalysis.isOverTriggerReady ? '⚡ TRIGGER PULSING - READY TO BUY' : 'Awaiting spot trigger digit...'}
+                                        Oversold anomaly for Over triggers
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Full 0-9 Digit Spectrum Bar */}
+                        {/* 0 to 9 Spectrum Bars */}
                         <div className='digit-spectrum-row'>
-                            {digitStats.map(s => {
-                                const isUnder = s.digit <= 4;
-                                const isHighest =
-                                    (isUnder && s.digit === statisticalAnalysis.highestUnderEntryDigit) ||
-                                    (!isUnder && s.digit === statisticalAnalysis.highestOverEntryDigit);
+                            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(digit => {
+                                const pct = patternEngine.percentages[digit] || 0;
+                                const isHighest = digit === patternEngine.highestDigit;
+                                const isUnder = digit <= 4;
 
                                 return (
                                     <div
-                                        key={s.digit}
-                                        className={`spectrum-bar-item ${isUnder ? 'is-under' : 'is-over'} ${isHighest ? 'is-highest' : ''}`}
+                                        key={digit}
+                                        className={`spectrum-bar-item ${
+                                            isUnder ? 'is-under' : 'is-over'
+                                        } ${isHighest ? 'is-highest' : ''}`}
                                     >
-                                        <span className='digit-num'>{s.digit}</span>
-                                        <span className='digit-freq-pct'>{s.percentage}%</span>
-                                        <span className='digit-rank-badge'>#{s.rank}</span>
+                                        <span className='digit-num'>{digit}</span>
+                                        <span className='digit-freq-pct'>{pct}%</span>
+                                        <span className='digit-rank-badge'>
+                                            {isHighest ? 'HOT' : `${digit}`}
+                                        </span>
                                     </div>
                                 );
                             })}
@@ -1727,496 +1309,303 @@ const OverlordAi: React.FC = observer(() => {
                     </div>
                 </main>
 
-                {/* ── RIGHT COLUMN: Autotrader & Compounding Generator Tabs ── */}
-                <aside className={`overlord-right-panel ${mobileActiveTab === 'AUTOTRADER' || mobileActiveTab === 'COMPOUNDING' ? 'mobile-active' : ''}`}>
-                    {/* Tab Selector */}
+                {/* ── RIGHT COLUMN: Standalone AI Trader & Journal ── */}
+                <aside
+                    className={`overlord-right-panel ${
+                        mobileActiveTab === 'AUTOTRADER' || mobileActiveTab === 'TRADES'
+                            ? 'mobile-active'
+                            : ''
+                    }`}
+                >
+                    {/* Strategy Mode Selector */}
                     <div className='right-panel-tabs'>
                         <button
-                            className={`tab-btn ${activeRightTab === 'AUTOTRADER' ? 'active' : ''}`}
-                            onClick={() => {
-                                setActiveRightTab('AUTOTRADER');
-                                setMobileActiveTab('AUTOTRADER');
-                            }}
+                            className={`tab-btn ${strategyMode === 'OVER_1_UNDER_8' ? 'active' : ''}`}
+                            onClick={() => setStrategyMode('OVER_1_UNDER_8')}
                         >
-                            <Zap size={14} />
-                            <span>Autotrader Engine</span>
+                            Over 1 / Under 8
                         </button>
                         <button
-                            className={`tab-btn ${activeRightTab === 'COMPOUNDING' ? 'active' : ''}`}
-                            onClick={() => {
-                                setActiveRightTab('COMPOUNDING');
-                                setMobileActiveTab('COMPOUNDING');
-                            }}
+                            className={`tab-btn ${strategyMode === 'OVER_2_UNDER_7' ? 'active' : ''}`}
+                            onClick={() => setStrategyMode('OVER_2_UNDER_7')}
                         >
-                            <TrendingUp size={14} />
-                            <span>Compounding Plan</span>
+                            Over 2 / Under 7
                         </button>
                     </div>
 
-                    {/* ── TAB 1: AUTOTRADER ENGINE ── */}
-                    {activeRightTab === 'AUTOTRADER' && (
-                        <div className='glass-panel autotrader-config-section'>
-                            {/* Live Compounding Timer HUD Banner */}
-                            {tradeByCompoundingPlan && activeCompoundingStep && (
-                                <div className='compounding-timer-hud'>
-                                    <div className='timer-header'>
-                                        <div className='step-badge'>
-                                            <Timer size={13} />
-                                            <span>Active: {activeCompoundingStep.label} (Step {activeCompoundingStep.step}/{compoundingPlan.length})</span>
-                                        </div>
-                                        <div className='live-clock-display' title='Time Elapsed in Current Period'>
-                                            <Clock size={14} />
-                                            <span>{stepProgress.elapsedFormatted}</span>
-                                        </div>
-                                    </div>
+                    <div className='right-panel-tabs' style={{ marginTop: '-8px' }}>
+                        <button
+                            className={`tab-btn ${strategyMode === 'OVER_3_UNDER_6' ? 'active' : ''}`}
+                            onClick={() => setStrategyMode('OVER_3_UNDER_6')}
+                        >
+                            Over 3 / Under 6
+                        </button>
+                        <button
+                            className={`tab-btn ${strategyMode === 'ALL_AUTO' ? 'active' : ''}`}
+                            onClick={() => setStrategyMode('ALL_AUTO')}
+                        >
+                            <Sparkles size={12} /> ALL AUTO-CHOOSE
+                        </button>
+                    </div>
 
-                                    <div className='progress-stats-row'>
-                                        <span className='profit-track'>
-                                            Step Goal: <strong>+${stepProgress.currentStepProfit.toFixed(2)}</strong> / +${stepProgress.targetProfit.toFixed(2)}
-                                        </span>
-                                        <span className='pct-track'>
-                                            {stepProgress.profitPct}% Met
-                                        </span>
-                                    </div>
-
-                                    <div className='dual-progress-bar'>
-                                        <div className='bar-label-mini'>
-                                            <span>Profit Target</span>
-                                            <span>{stepProgress.profitPct}%</span>
-                                        </div>
-                                        <div className='progress-track'>
-                                            <div className='progress-fill' style={{ width: `${stepProgress.profitPct}%` }} />
-                                        </div>
-
-                                        <div className='bar-label-mini' style={{ marginTop: '4px' }}>
-                                            <span>Period Time ({compoundingMode === 'HOURS' ? '60 min' : '24 hrs'})</span>
-                                            <span>{stepProgress.timePct}% Elapsed</span>
-                                        </div>
-                                        <div className='progress-track'>
-                                            <div className='time-fill' style={{ width: `${stepProgress.timePct}%` }} />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className='strategy-alert-box'>
-                                <Sparkles size={16} />
-                                <span>
-                                    OVERLORD Strategy: Only Over (1, 2, 3) & Under (6, 7, 8) with 2.6x Martingale.
-                                </span>
-                            </div>
-
-                            <div className='form-row'>
-                                <div className='form-group'>
-                                    <label>Trading Mode</label>
-                                    <select
-                                        value={tradeByCompoundingPlan ? 'COMPOUNDING' : 'FIXED'}
-                                        onChange={e => setTradeByCompoundingPlan(e.target.value === 'COMPOUNDING')}
-                                    >
-                                        <option value='COMPOUNDING'>Trade by Compounding Plan (Auto Progression)</option>
-                                        <option value='FIXED'>Manual Fixed Target</option>
-                                    </select>
-                                </div>
-
-                                {tradeByCompoundingPlan ? (
-                                    <div className='form-group'>
-                                        <label>Plan Profit %</label>
-                                        <input
-                                            type='number'
-                                            value={periodProfitPct}
-                                            onChange={e => setPeriodProfitPct(e.target.value)}
-                                            placeholder='7'
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className='form-group'>
-                                        <label>Stake Mode</label>
-                                        <select
-                                            value={isAutoStake ? 'AUTO' : 'MANUAL'}
-                                            onChange={e => setIsAutoStake(e.target.value === 'AUTO')}
-                                        >
-                                            <option value='AUTO'>Auto Stake (7% of Balance)</option>
-                                            <option value='MANUAL'>Manual Fixed Stake ($)</option>
-                                        </select>
-                                    </div>
-                                )}
-                            </div>
-
-                            {!tradeByCompoundingPlan && (
-                                <div className='form-row'>
-                                    <div className='form-group' style={{ gridColumn: 'span 2' }}>
-                                        <label>{isAutoStake ? 'Auto Stake %' : 'Fixed Stake ($)'}</label>
-                                        {isAutoStake ? (
-                                            <input
-                                                type='number'
-                                                value={autoStakePercent}
-                                                onChange={e => setAutoStakePercent(e.target.value)}
-                                                placeholder='7'
-                                            />
-                                        ) : (
-                                            <input
-                                                type='number'
-                                                value={manualStake}
-                                                onChange={e => setManualStake(e.target.value)}
-                                                placeholder='1.00'
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className='form-row'>
-                                <div className='form-group'>
-                                    <label>Martingale Multiplier</label>
-                                    <input
-                                        type='number'
-                                        step='0.1'
-                                        value={martingale}
-                                        onChange={e => setMartingale(e.target.value)}
-                                        placeholder='2.6'
-                                    />
-                                </div>
-
-                                <div className='form-group'>
-                                    <label>Duration (Ticks)</label>
-                                    <select
-                                        value={tickDuration}
-                                        onChange={e => setTickDuration(e.target.value)}
-                                    >
-                                        <option value='1'>1 Tick (Recommended)</option>
-                                        <option value='2'>2 Ticks</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className='form-row'>
-                                <div className='form-group'>
-                                    <label>Prediction Mode</label>
-                                    <select
-                                        value={predictionMode}
-                                        onChange={e => setPredictionMode(e.target.value as 'AUTO' | 'CUSTOM')}
-                                    >
-                                        <option value='AUTO'>Auto (Smart Barrier)</option>
-                                        <option value='CUSTOM'>Custom Fixed Barrier</option>
-                                    </select>
-                                </div>
-
-                                {!tradeByCompoundingPlan ? (
-                                    <div className='form-group'>
-                                        <label>Take Profit ($)</label>
-                                        <input
-                                            type='number'
-                                            value={takeProfitTarget}
-                                            onChange={e => setTakeProfitTarget(e.target.value)}
-                                            placeholder='50.00'
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className='form-group'>
-                                        <label>Active Step Target</label>
-                                        <div style={{ padding: '8px 12px', background: 'rgba(0, 230, 118, 0.1)', border: '1px solid rgba(0, 230, 118, 0.3)', borderRadius: '8px', color: '#00e676', fontWeight: '800', fontFamily: 'monospace' }}>
-                                            +${activeCompoundingStep?.targetProfit.toFixed(2) || '0.00'}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {predictionMode === 'CUSTOM' && (
-                                <div className='form-row'>
-                                    <div className='form-group'>
-                                        <label>Under Prediction</label>
-                                        <select
-                                            value={customUnderPrediction}
-                                            onChange={e => setCustomUnderPrediction(parseInt(e.target.value, 10))}
-                                        >
-                                            <option value={6}>Under 6 (High Safety)</option>
-                                            <option value={7}>Under 7 (Balanced)</option>
-                                            <option value={8}>Under 8 (Aggressive)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className='form-group'>
-                                        <label>Over Prediction</label>
-                                        <select
-                                            value={customOverPrediction}
-                                            onChange={e => setCustomOverPrediction(parseInt(e.target.value, 10))}
-                                        >
-                                            <option value={3}>Over 3 (High Safety)</option>
-                                            <option value={2}>Over 2 (Balanced)</option>
-                                            <option value={1}>Over 1 (Aggressive)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className='form-row'>
-                                <div className='form-group' style={{ gridColumn: 'span 2' }}>
-                                    <label>Effective Initial Stake</label>
-                                    <div style={{ padding: '8px 12px', background: 'rgba(0, 245, 255, 0.1)', border: '1px solid rgba(0, 245, 255, 0.3)', borderRadius: '8px', color: '#00f5ff', fontWeight: '800', fontFamily: 'monospace' }}>
-                                        ${isInRecovery ? currentStake.toFixed(2) : effectiveStake.toFixed(2)}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Session Performance Metrics */}
-                            <div className='session-metrics-grid'>
-                                <div className='metric-mini-card'>
-                                    <span className='m-label'>Session Profit</span>
-                                    <span className={`m-val ${sessionProfit >= 0 ? 'val-win' : 'val-loss'}`}>
-                                        ${sessionProfit.toFixed(2)}
-                                    </span>
-                                </div>
-                                <div className='metric-mini-card'>
-                                    <span className='m-label'>Wins</span>
-                                    <span className='m-val val-win'>{winsCount}</span>
-                                </div>
-                                <div className='metric-mini-card'>
-                                    <span className='m-label'>Losses</span>
-                                    <span className='m-val val-loss'>{lossesCount}</span>
-                                </div>
-                            </div>
-
-                            {/* Live Trade Execution Logs */}
-                            <div className='panel-header' style={{ marginTop: '8px', marginBottom: '6px' }}>
-                                <span className='panel-title' style={{ fontSize: '12px' }}>Live Order Stream</span>
-                                <span style={{ fontSize: '10px', color: '#64748b' }}>{tradeLog.length} Executed</span>
-                            </div>
-
-                            <div className='live-trade-log-container'>
-                                {tradeLog.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '16px', color: '#64748b', fontSize: '11px' }}>
-                                        No trades executed yet. Start bot to begin trading.
-                                    </div>
-                                ) : (
-                                    tradeLog.map(item => (
-                                        <div key={item.id} className='log-item-row'>
-                                            <div className='log-left'>
-                                                <span>{item.time}</span>
-                                                <strong style={{ color: item.contractType === 'DIGITUNDER' ? '#00e676' : '#ffb700' }}>
-                                                    {item.contractType === 'DIGITUNDER' ? `U${item.prediction}` : `O${item.prediction}`}
-                                                </strong>
-                                                <span>${item.stake.toFixed(2)}</span>
-                                            </div>
-                                            <div className={`log-right ${item.result.toLowerCase()}`}>
-                                                {item.result === 'WIN' ? `+$${item.profit.toFixed(2)}` : item.result === 'LOSS' ? `-$${item.stake.toFixed(2)}` : 'PENDING'}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                    {/* Continuous Burst Monitor */}
+                    <div className='compounding-timer-hud'>
+                        <div className='timer-header'>
+                            <span className='step-badge'>
+                                <Flame size={14} /> CONTINUOUS BURST STREAK
+                            </span>
+                            <span className='live-clock-display'>
+                                RUN {currentBurstRun} / {burstRunSize}
+                            </span>
+                        </div>
+                        <div className='progress-stats-row'>
+                            <span className='profit-track'>
+                                Target Profit: <strong>+${takeProfit}</strong>
+                            </span>
+                            <span className='pct-track'>
+                                Stop Loss: <strong>-${stopLoss}</strong>
+                            </span>
+                        </div>
+                        <div className='dual-progress-bar'>
+                            <div className='progress-track'>
+                                <div
+                                    className='progress-fill'
+                                    style={{
+                                        width: `${Math.min(100, (currentBurstRun / burstRunSize) * 100)}%`,
+                                    }}
+                                />
                             </div>
                         </div>
-                    )}
+                    </div>
 
-                    {/* ── TAB 2: SIMPLE COMPOUNDING GENERATOR ── */}
-                    {activeRightTab === 'COMPOUNDING' && (
-                        <div className='glass-panel compounding-generator-section'>
-                            {/* Live Compounding Timer HUD */}
-                            {activeCompoundingStep && (
-                                <div className='compounding-timer-hud'>
-                                    <div className='timer-header'>
-                                        <div className='step-badge'>
-                                            <Timer size={13} />
-                                            <span>Active Step: {activeCompoundingStep.label}</span>
-                                        </div>
-                                        <div className='live-clock-display'>
-                                            <Clock size={14} />
-                                            <span>{stepProgress.elapsedFormatted}</span>
-                                        </div>
-                                    </div>
+                    {/* Stake & Risk Controls */}
+                    <div className='form-row'>
+                        <div className='form-group'>
+                            <label>MANUAL STAKE ({currency})</label>
+                            <input
+                                type='number'
+                                step='0.1'
+                                min='0.35'
+                                value={manualStake}
+                                onChange={e => setManualStake(e.target.value)}
+                            />
+                        </div>
+                        <div className='form-group'>
+                            <label>BURST RUNS (7–12)</label>
+                            <select
+                                value={burstRunSize}
+                                onChange={e => setBurstRunSize(Number(e.target.value))}
+                            >
+                                <option value={7}>7 Consecutive Runs</option>
+                                <option value={8}>8 Consecutive Runs</option>
+                                <option value={10}>10 Consecutive Runs</option>
+                                <option value={12}>12 Consecutive Runs</option>
+                            </select>
+                        </div>
+                    </div>
 
-                                    <div className='progress-stats-row'>
-                                        <span className='profit-track'>
-                                            Target: <strong>+${stepProgress.currentStepProfit.toFixed(2)}</strong> / +${stepProgress.targetProfit.toFixed(2)}
-                                        </span>
-                                        <span className='pct-track'>
-                                            {stepProgress.profitPct}% Met
-                                        </span>
-                                    </div>
+                    {/* Quick Stake Adjustment Pills */}
+                    <div className='wallet-chips-row' style={{ marginBottom: '12px' }}>
+                        <button
+                            className='chip'
+                            onClick={() => handleAdjustStake(1)}
+                            style={{ cursor: 'pointer', background: 'rgba(0, 245, 255, 0.15)', color: '#00f5ff' }}
+                        >
+                            +$1
+                        </button>
+                        <button
+                            className='chip'
+                            onClick={() => handleAdjustStake(5)}
+                            style={{ cursor: 'pointer', background: 'rgba(0, 245, 255, 0.15)', color: '#00f5ff' }}
+                        >
+                            +$5
+                        </button>
+                        <button
+                            className='chip'
+                            onClick={() => handleAdjustStake(10)}
+                            style={{ cursor: 'pointer', background: 'rgba(0, 245, 255, 0.15)', color: '#00f5ff' }}
+                        >
+                            +$10
+                        </button>
+                        <button
+                            className='chip'
+                            onClick={() => setManualStake('1.00')}
+                            style={{ cursor: 'pointer', background: 'rgba(255, 255, 255, 0.1)', color: '#cbd5e1' }}
+                        >
+                            Reset ($1.00)
+                        </button>
+                    </div>
 
-                                    <div className='dual-progress-bar'>
-                                        <div className='progress-track'>
-                                            <div className='progress-fill' style={{ width: `${stepProgress.profitPct}%` }} />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                    <div className='form-row'>
+                        <div className='form-group'>
+                            <label>TAKE PROFIT (${currency})</label>
+                            <input
+                                type='number'
+                                value={takeProfit}
+                                onChange={e => setTakeProfit(e.target.value)}
+                            />
+                        </div>
+                        <div className='form-group'>
+                            <label>STOP LOSS (${currency})</label>
+                            <input
+                                type='number'
+                                value={stopLoss}
+                                onChange={e => setStopLoss(e.target.value)}
+                            />
+                        </div>
+                    </div>
 
-                            <div className='compounding-inputs-grid'>
-                                <div className='input-item'>
-                                    <label>Starting Capital ($)</label>
-                                    <div className='input-with-button'>
-                                        <input
-                                            type='number'
-                                            value={startingCapital}
-                                            onChange={e => setStartingCapital(e.target.value)}
-                                        />
-                                        <button onClick={handleFetchBalance} title='Fetch Deriv Balance'>
-                                            Auto
-                                        </button>
-                                    </div>
-                                </div>
+                    <div className='form-row'>
+                        <div className='form-group'>
+                            <label>MARTINGALE MULTIPLIER</label>
+                            <input
+                                type='number'
+                                step='0.1'
+                                value={martingaleMultiplier}
+                                onChange={e => setMartingaleMultiplier(e.target.value)}
+                            />
+                        </div>
+                        <div className='form-group'>
+                            <label>MARKET ROTATION</label>
+                            <select
+                                value={marketRotationRuns}
+                                onChange={e => setMarketRotationRuns(Number(e.target.value))}
+                            >
+                                <option value={3}>Every 3 Runs</option>
+                                <option value={4}>Every 4 Runs</option>
+                                <option value={6}>Every 6 Runs</option>
+                                <option value={10}>After Every Burst</option>
+                            </select>
+                        </div>
+                    </div>
 
-                                <div className='input-item'>
-                                    <label>Target Amount ($)</label>
-                                    <input
-                                        type='number'
-                                        value={targetGoal}
-                                        onChange={e => setTargetGoal(e.target.value)}
-                                    />
-                                </div>
+                    {/* Session Performance Grid */}
+                    <div className='session-metrics-grid'>
+                        <div className='metric-mini-card'>
+                            <span className='m-label'>WINS</span>
+                            <span className='m-val val-win'>{winsCount}</span>
+                        </div>
+                        <div className='metric-mini-card'>
+                            <span className='m-label'>LOSSES</span>
+                            <span className='m-val val-loss'>{lossesCount}</span>
+                        </div>
+                        <div className='metric-mini-card'>
+                            <span className='m-label'>BURSTS</span>
+                            <span className='m-val' style={{ color: '#00f5ff' }}>
+                                {burstCountTotal}
+                            </span>
+                        </div>
+                    </div>
 
-                                <div className='input-item'>
-                                    <label>Timeframe</label>
-                                    <select
-                                        value={compoundingMode}
-                                        onChange={e => setCompoundingMode(e.target.value as any)}
-                                    >
-                                        <option value='HOURS'>Hourly Plan</option>
-                                        <option value='DAYS'>Daily Plan</option>
-                                    </select>
-                                </div>
+                    {/* Live Trade Journal */}
+                    <div className='trade-journal-card'>
+                        <div className='chart-header-row'>
+                            <span className='split-title'>
+                                <Layers size={14} /> LIVE EXECUTION LOGS
+                            </span>
+                            <button
+                                className='chip'
+                                onClick={() => {
+                                    const csvContent =
+                                        'data:text/csv;charset=utf-8,' +
+                                        ['Time,Market,Type,Barrier,Stake,Result,Profit,ExitDigit']
+                                            .concat(
+                                                tradeLog.map(
+                                                    t =>
+                                                        `${new Date(t.timestamp).toLocaleTimeString()},${t.symbol},${t.contractType},${t.barrier},${t.stake},${t.result},${t.profit},${t.exitDigit || ''}`
+                                                )
+                                            )
+                                            .join('\n');
+                                    const encodedUri = encodeURI(csvContent);
+                                    const link = document.createElement('a');
+                                    link.setAttribute('href', encodedUri);
+                                    link.setAttribute('download', `overlord_trades_${Date.now()}.csv`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                }}
+                                style={{ cursor: 'pointer', background: 'rgba(255, 255, 255, 0.08)' }}
+                            >
+                                <Download size={11} /> CSV
+                            </button>
+                        </div>
 
-                                <div className='input-item'>
-                                    <label>Number of {compoundingMode === 'HOURS' ? 'Hours' : 'Days'}</label>
-                                    <input
-                                        type='number'
-                                        value={planPeriods}
-                                        onChange={e => setPlanPeriods(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className='input-item' style={{ gridColumn: 'span 2' }}>
-                                    <label>Profit % per {compoundingMode === 'HOURS' ? 'Hour' : 'Day'}</label>
-                                    <input
-                                        type='number'
-                                        value={periodProfitPct}
-                                        onChange={e => setPeriodProfitPct(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Plan Action Buttons */}
-                            <div className='compounding-actions-row'>
-                                <button className='btn-gen-plan' onClick={handleGenerateCompoundingPlan}>
-                                    <Sparkles size={14} />
-                                    <span>Generate Plan</span>
-                                </button>
-                                <button
-                                    className='btn-reset-plan'
-                                    onClick={() => {
-                                        setStartingCapital('100.00');
-                                        setPeriodProfitPct('7');
-                                        setPlanPeriods('24');
-                                        handleGenerateCompoundingPlan();
+                        <div className='live-trade-log-container'>
+                            {tradeLog.length === 0 ? (
+                                <div
+                                    style={{
+                                        padding: '24px',
+                                        textAlign: 'center',
+                                        color: '#64748b',
+                                        fontSize: '11px',
                                     }}
                                 >
-                                    <RotateCcw size={13} />
-                                    <span>Reset</span>
-                                </button>
-                                <button className='btn-export-excel' onClick={handleExportToExcel} title='Export to Excel CSV'>
-                                    <Download size={14} />
-                                    <span>Excel</span>
-                                </button>
-                            </div>
-
-                            {/* KPI Summary Banner */}
-                            <div className='compounding-summary-banner'>
-                                <div className='summary-kpi'>
-                                    <span className='kpi-label'>Total Net Profit</span>
-                                    <span className='kpi-value text-profit'>
-                                        +${compoundingSummary.totalProfit.toFixed(2)}
-                                    </span>
+                                    Awaiting trade execution triggers...
                                 </div>
-                                <div className='summary-kpi'>
-                                    <span className='kpi-label'>Final Balance</span>
-                                    <span className='kpi-value text-final'>
-                                        ${compoundingSummary.finalBalance.toFixed(2)}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Growth Projection Chart */}
-                            <div className='growth-chart-wrapper'>
-                                <svg viewBox='0 0 340 100' preserveAspectRatio='none'>
-                                    <defs>
-                                        <linearGradient id='growthGradient' x1='0' y1='0' x2='1' y2='0'>
-                                            <stop offset='0%' stopColor='#00f5ff' />
-                                            <stop offset='100%' stopColor='#00e676' />
-                                        </linearGradient>
-                                        <linearGradient id='growthAreaGradient' x1='0' y1='0' x2='0' y2='1'>
-                                            <stop offset='0%' stopColor='rgba(0, 245, 255, 0.3)' />
-                                            <stop offset='100%' stopColor='rgba(0, 230, 118, 0.0)' />
-                                        </linearGradient>
-                                    </defs>
-                                    {growthChart.areaPath && (
-                                        <path
-                                            d={growthChart.areaPath}
-                                            fill='url(#growthAreaGradient)'
-                                        />
-                                    )}
-                                    {growthChart.path && (
-                                        <path
-                                            d={growthChart.path}
-                                            fill='none'
-                                            stroke='url(#growthGradient)'
-                                            strokeWidth='2.5'
-                                        />
-                                    )}
-                                </svg>
-                            </div>
-
-                            {/* Step-by-Step Schedule Table */}
-                            <div className='compounding-table-wrapper'>
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>✓</th>
-                                            <th>Period</th>
-                                            <th>Start</th>
-                                            <th>Target</th>
-                                            <th>End</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {compoundingPlan.map((step, idx) => {
-                                            const isActive = idx === activeStepIndex;
-                                            return (
-                                                <tr
-                                                    key={step.step}
-                                                    className={`${step.completed ? 'completed-step' : ''} ${isActive ? 'active-trading-step' : ''}`}
-                                                >
-                                                    <td>
-                                                        <input
-                                                            type='checkbox'
-                                                            className='tick-checkbox'
-                                                            checked={step.completed}
-                                                            onChange={() => handleToggleStep(idx)}
-                                                        />
-                                                    </td>
-                                                    <td>
-                                                        {step.label} {isActive && <span style={{ color: '#00f5ff', fontSize: '9px', fontWeight: '800' }}>● ACTIVE</span>}
-                                                    </td>
-                                                    <td>${step.startingBalance.toFixed(2)}</td>
-                                                    <td style={{ color: '#00e676' }}>+${step.targetProfit.toFixed(2)}</td>
-                                                    <td>${step.endingBalance.toFixed(2)}</td>
-                                                    <td>
-                                                        <button
-                                                            className={`target-btn ${isActive ? 'is-active-btn' : ''}`}
-                                                            onClick={() => handleSetAsActiveStep(idx)}
-                                                            title='Set as active trading step'
-                                                        >
-                                                            {isActive ? 'Trading' : 'Target'}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                            ) : (
+                                tradeLog.map(item => (
+                                    <div
+                                        key={item.id}
+                                        className='log-item-row'
+                                        style={{
+                                            borderLeft: `3px solid ${
+                                                item.result === 'WIN'
+                                                    ? '#00e676'
+                                                    : item.result === 'LOSS'
+                                                    ? '#ff4757'
+                                                    : '#94a3b8'
+                                            }`,
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '10px', color: '#64748b' }}>
+                                                {new Date(item.timestamp).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit',
+                                                })}
+                                            </span>
+                                            <span style={{ fontWeight: 800, fontSize: '11px', color: '#f1f5f9' }}>
+                                                {item.symbol}
+                                            </span>
+                                            <span
+                                                style={{
+                                                    fontSize: '10px',
+                                                    fontWeight: 800,
+                                                    color: item.contractType === 'DIGITOVER' ? '#ffb700' : '#00e676',
+                                                }}
+                                            >
+                                                {item.contractType === 'DIGITOVER' ? 'OVER' : 'UNDER'} {item.barrier}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                                ${item.stake.toFixed(2)}
+                                            </span>
+                                            <span
+                                                style={{
+                                                    fontSize: '11px',
+                                                    fontWeight: 900,
+                                                    color:
+                                                        item.result === 'WIN'
+                                                            ? '#00e676'
+                                                            : item.result === 'LOSS'
+                                                            ? '#ff4757'
+                                                            : '#94a3b8',
+                                                }}
+                                            >
+                                                {item.result === 'WIN'
+                                                    ? `+$${item.profit.toFixed(2)}`
+                                                    : item.result === 'LOSS'
+                                                    ? `-$${Math.abs(item.profit).toFixed(2)}`
+                                                    : 'PENDING'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
-                    )}
+                    </div>
                 </aside>
             </div>
         </div>
