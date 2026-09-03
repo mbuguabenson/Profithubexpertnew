@@ -1,6 +1,8 @@
 import { action, makeObservable, observable, runInAction, computed, reaction } from 'mobx';
 import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
-import { normalizeTradeParameters } from '@/utils/trade-purchase';
+import { buyContractForUi, streamContractUntilSettled, normalizeTradeParameters } from '@/utils/trade-purchase';
+import { safeSubscribe } from '@/utils/websocket-handler';
+import { generateBotXML } from '@/utils/bot-xml-generator';
 import { DBOT_TABS } from '@/constants/bot-contents';
 
 export type TStrategyType = 'over_under' | 'even_odd' | 'differs' | 'matches' | 'rise_fall';
@@ -119,7 +121,7 @@ export default class EntryScannerStore {
     @observable accessor market_stats: Map<string, TEntryScannerMarketStats> = new Map();
     @observable accessor wait_sequence: number[] = [];
 
-    private _main_sub: any = null;
+    private _tick_subs: Map<string, { unsubscribe?: () => void }> = new Map();
     private _scan_interval: any = null;
     private _cooldown_timer: any = null;
     private _buy_sub: any = null;
@@ -252,10 +254,8 @@ export default class EntryScannerStore {
             this._buy_sub.unsubscribe();
             this._buy_sub = null;
         }
-        if (this._main_sub) {
-            this._main_sub.unsubscribe();
-            this._main_sub = null;
-        }
+        this._tick_subs.forEach(sub => sub?.unsubscribe?.());
+        this._tick_subs.clear();
     }
 
     // ─── Fetch Symbols ────────────────────────────────────────
@@ -295,7 +295,7 @@ export default class EntryScannerStore {
                 });
             });
 
-            this.subscribeToTicks();
+            void this.subscribeToTicks();
         };
 
         if (this.isApiReady()) {
@@ -326,81 +326,66 @@ export default class EntryScannerStore {
 
     // ─── Tick Streaming & Throttled Progress Calculation ──────
 
-    private subscribeToTicks() {
-        if (this._main_sub) {
-            this._main_sub.unsubscribe();
-            this._main_sub = null;
+    private async subscribeToTicks() {
+        this._tick_subs.forEach(sub => sub?.unsubscribe?.());
+        this._tick_subs.clear();
+
+        if (!api_base.api || (api_base.api as any)?.connection?.readyState !== 1) {
+            try {
+                await api_base.init();
+            } catch {}
         }
 
-        // Single global listener for WebSocket ticks & history
-        this._main_sub = api_base.api!.onMessage().subscribe((res: any) => {
-            if (res.msg_type === 'history' && res.echo_req?.ticks_history) {
-                const symbol = res.echo_req.ticks_history;
-                const prices: number[] = res.history?.prices || [];
-                if (prices.length > 0) {
+        if (!this.isApiReady()) {
+            return;
+        }
+
+        for (const market of this.active_symbols) {
+            if (!this.is_scanning) break;
+            try {
+                // 1. Fetch initial tick history for immediate calculation
+                const res = await api_base.api!.send({
+                    ticks_history: market.symbol,
+                    end: 'latest',
+                    count: 1000,
+                    style: 'ticks',
+                });
+
+                if (res?.history?.prices && Array.isArray(res.history.prices)) {
+                    const prices: number[] = res.history.prices;
                     const digits = prices.map((p: number) => {
                         const str = (p || 0).toString();
                         const parts = str.split('.');
                         const decimalPart = parts[1] || '0';
                         return parseInt(decimalPart[decimalPart.length - 1] || '0', 10);
                     });
-                    const market = this.active_symbols.find(s => s.symbol === symbol);
-                    if (market) {
-                        this.initializeMarketStats(symbol, market.display_name, digits, market.is1s);
-                    }
+                    this.initializeMarketStats(market.symbol, market.display_name, digits, market.is1s);
                 }
-            } else if (res.msg_type === 'tick' && res.tick?.symbol) {
-                const symbol = res.tick.symbol;
-                const quoteStr = (res.tick.quote || 0).toString();
-                const parts = quoteStr.split('.');
-                const decimalPart = parts[1] || '0';
-                const digit = parseInt(decimalPart[decimalPart.length - 1] || '0', 10);
-                this.onNewTick(symbol, digit);
-            } else if (res.msg_type === 'auto_start' || res.auto_start || res.msg_type === 'auto_get' || res.auto_get) {
-                const autoData = res.auto_start || res.auto_get;
-                if (autoData) {
-                    runInAction(() => {
-                        if (autoData.id) this.active_auto_run_id = autoData.id;
-                        if (autoData.contracts && Array.isArray(autoData.contracts)) {
-                            this.current_runs = autoData.contracts.length;
-                            const totalProfit = autoData.contracts.reduce(
-                                (sum: number, c: any) => sum + Number(c.profit || 0),
-                                0
-                            );
-                            this.total_profit = Number(totalProfit.toFixed(2));
-                            const lastContract = autoData.contracts[autoData.contracts.length - 1];
-                            if (lastContract && lastContract.profit !== undefined) {
-                                const profit = Number(lastContract.profit || 0);
-                                const isWin = profit > 0;
-                                this.trade_log.unshift({
-                                    time: new Date().toLocaleTimeString(),
-                                    market: this.scan_result?.displayName || 'Deriv Auto Strategy',
-                                    direction: this.scan_result?.direction || 'AUTO',
-                                    prediction: this.scan_result?.prediction || 0,
-                                    result: isWin ? 'WIN' : 'LOSS',
-                                    profit,
-                                });
-                            }
-                        }
-                    });
-                }
-            }
-        });
 
-        // Send tick history request WITH subscribe: 1
-        this.active_symbols.forEach(market => {
-            if (this.isApiReady()) {
-                api_base
-                    .api!.send({
-                        ticks_history: market.symbol,
-                        end: 'latest',
-                        count: 1000,
-                        style: 'ticks',
-                        subscribe: 1,
-                    })
-                    .catch(() => {});
+                // 2. Subscribe to real-time live ticks
+                const tickObservable = (api_base.api as any).subscribe({ ticks: market.symbol });
+                const sub = safeSubscribe(
+                    tickObservable,
+                    (data: any) => {
+                        if (data?.tick && data.tick.symbol === market.symbol) {
+                            const quoteStr = (data.tick.quote || 0).toString();
+                            const parts = quoteStr.split('.');
+                            const decimalPart = parts[1] || '0';
+                            const digit = parseInt(decimalPart[decimalPart.length - 1] || '0', 10);
+                            this.onNewTick(market.symbol, digit);
+                        }
+                    },
+                    (err: any) => {
+                        console.warn(`[EntryScanner] Stream error for ${market.symbol}:`, err);
+                    }
+                );
+
+                this._tick_subs.set(market.symbol, sub);
+                await new Promise(r => setTimeout(r, 60)); // Rate limiting guard
+            } catch (err) {
+                console.warn(`[EntryScanner] Error subscribing to ${market.symbol}:`, err);
             }
-        });
+        }
 
         // Start analysis loop every 1 second for fast pattern detection
         if (!this._scan_interval) {
@@ -859,7 +844,7 @@ export default class EntryScannerStore {
                     '[EntryScannerStore] Deriv auto_start rejected. Falling back to local execution engine:',
                     res.error
                 );
-                this.executeDirectTrade();
+                void this.executeDirectTrade();
                 return;
             }
 
@@ -871,7 +856,7 @@ export default class EntryScannerStore {
             });
         } catch (err: any) {
             console.warn('[EntryScannerStore] Deriv Automation API error, falling back to direct executor:', err);
-            this.executeDirectTrade();
+            void this.executeDirectTrade();
         }
     }
 
@@ -891,168 +876,147 @@ export default class EntryScannerStore {
         }
     }
 
-    @action public executeDirectTrade() {
+    private pushContractToDrawer(poc: any) {
+        try {
+            const { summary_card, transactions, run_panel } = this.root_store || {};
+            if (summary_card) {
+                summary_card.contract_info = poc;
+                if (summary_card.onBotContractEvent) {
+                    summary_card.onBotContractEvent(poc);
+                }
+            }
+            if (transactions?.onBotContractEvent) {
+                transactions.onBotContractEvent(poc);
+            }
+            if (run_panel?.onBotContractEvent) {
+                run_panel.onBotContractEvent(poc);
+            }
+            globalObserver.emit('bot.contract', poc);
+
+            if (poc?.is_sold) {
+                globalObserver.emit('contract.status', {
+                    id: 'contract.sold',
+                    contract: poc,
+                    data: poc.transaction_ids?.sell || poc.contract_id,
+                });
+            }
+        } catch (err) {
+            console.debug('[EntryScannerStore] Drawer update notice:', err);
+        }
+    }
+
+    @action public async executeDirectTrade() {
         if (!this.scan_result || this.is_executing_trade) return;
         this.is_executing_trade = true;
         const result = this.scan_result;
         const contract_type = this.getContractType(result);
         const barrier = this.custom_prediction !== null ? this.custom_prediction : this.getBarrier(result);
         const targetSymbol = result.symbol || this.target_single_symbol || '1HZ100V';
+        const stakeAmount = Number(this.stake) || 0.5;
 
-        if (!this.isApiReady()) {
+        this.scan_status = `📈 Trade #${this.current_runs + 1}/${this.max_runs_before_pause} on ${result.displayName} | ${contract_type} @ $${stakeAmount.toFixed(2)}`;
+
+        try {
+            globalObserver.emit('bot.running');
+            globalObserver.emit('contract.status', {
+                id: 'contract.purchase_sent',
+                data: stakeAmount,
+            });
+
+            const buyRes = await buyContractForUi({
+                parameters: {
+                    amount: stakeAmount,
+                    basis: 'stake',
+                    contract_type,
+                    currency: this.root_store?.client?.currency || 'USD',
+                    duration: Number(this.duration) || 1,
+                    duration_unit: 't',
+                    symbol: targetSymbol,
+                    ...(barrier !== null ? { barrier: String(barrier) } : {}),
+                },
+                price: stakeAmount,
+                source: 'Entry Scanner',
+            });
+
+            const contractId = buyRes.contract_id;
+
+            globalObserver.emit('contract.status', {
+                id: 'contract.purchase_received',
+                buy: buyRes,
+                data: buyRes.transaction_id,
+            });
+
+            const settledContract = await streamContractUntilSettled({
+                contractId: Number(contractId),
+                source: 'Entry Scanner',
+                onUpdate: (snapshot: any) => {
+                    this.pushContractToDrawer(snapshot);
+                },
+                timeoutMs: 12000,
+            });
+
+            this.pushContractToDrawer(settledContract);
+
+            const isWin = settledContract.status === 'won' || (settledContract.profit || 0) > 0;
+            const profit = Number(settledContract.profit || 0);
+
+            runInAction(() => {
+                this.current_runs++;
+                this.total_profit = Number((this.total_profit + profit).toFixed(2));
+                this.is_executing_trade = false;
+                if (isWin) this.wins++;
+                else this.losses++;
+
+                this.trade_log.unshift({
+                    time: new Date().toLocaleTimeString(),
+                    market: result.displayName,
+                    direction: this.is_in_recovery_mode ? 'RECOVERY (Under 7)' : result.direction,
+                    prediction: barrier !== null ? barrier : 0,
+                    result: isWin ? 'WIN' : 'LOSS',
+                    profit,
+                });
+
+                if (!isWin) {
+                    if (result.strategy === 'differs' || this.primary_strategy === 'differs') {
+                        this.is_in_recovery_mode = true;
+                        this.primary_strategy = 'differs';
+                        this.scan_status = `🛡️ Differs loss detected (-$${stakeAmount.toFixed(2)}). Strategy switched to Under 7 recovery...`;
+                    }
+                    if (this.use_martingale) {
+                        const mult = this.is_in_recovery_mode ? Math.max(2.5, this.martingale) : this.martingale;
+                        this.stake = Number((this.stake * mult).toFixed(2));
+                    }
+                } else {
+                    if (this.is_in_recovery_mode) {
+                        this.is_in_recovery_mode = false;
+                        this.scan_status = `✅ Recovery win (+$${profit.toFixed(2)})! Reverted to initial strategy.`;
+                    }
+                    this.stake = this.initial_stake;
+                }
+
+                if (this.total_profit >= this.take_profit) {
+                    this.scan_status = `🎉 Take profit reached (+$${this.total_profit.toFixed(2)} USD)!`;
+                    this.stopScanning();
+                } else if (this.total_profit <= -this.stop_loss) {
+                    this.scan_status = `🛑 Stop loss reached (-$${Math.abs(this.total_profit).toFixed(2)} USD).`;
+                    this.stopScanning();
+                } else if (this.current_runs >= this.max_runs_before_pause) {
+                    this.pauseAndReanalyze();
+                } else {
+                    this.scan_phase = 'waiting_entry';
+                    this.wait_sequence = [];
+                    this.scan_status = `⏳ Trade completed. Strictly waiting for next entry trigger on ${result.displayName}...`;
+                }
+            });
+        } catch (err: any) {
+            runInAction(() => {
+                this.scan_status = `⚠️ Execution notice: ${err?.message || err}. Retrying in 3s...`;
+                this.is_executing_trade = false;
+            });
             setTimeout(() => {
-                runInAction(() => {
-                    const isWin = Math.random() > 0.35;
-                    const profit = isWin ? this.stake * 0.95 : -this.stake;
-                    this.current_runs++;
-                    this.total_profit += profit;
-                    this.trade_log.unshift({
-                        time: new Date().toLocaleTimeString(),
-                        market: result.displayName,
-                        direction: result.direction,
-                        prediction: barrier !== null ? barrier : 0,
-                        result: isWin ? 'WIN' : 'LOSS',
-                        profit,
-                    });
-                    this.is_executing_trade = false;
-
-                    if (!isWin && this.use_martingale) {
-                        this.stake = Number((this.stake * this.martingale).toFixed(2));
-                    } else if (isWin) {
-                        this.stake = this.initial_stake;
-                    }
-
-                    if (this.total_profit >= this.take_profit) {
-                        this.scan_status = `🎉 Take profit reached (+$${this.total_profit.toFixed(2)} USD)!`;
-                        this.stopScanning();
-                    } else if (this.total_profit <= -this.stop_loss) {
-                        this.scan_status = `🛑 Stop loss reached (-$${Math.abs(this.total_profit).toFixed(2)} USD).`;
-                        this.stopScanning();
-                    } else if (this.current_runs >= this.max_runs_before_pause) {
-                        this.pauseAndReanalyze();
-                    }
-                });
-            }, 1000);
-            return;
+                if (this.scan_phase === 'trading') this.executeTrade();
+            }, 3000);
         }
-
-        const proposal_request = normalizeTradeParameters({
-            proposal: 1,
-            amount: this.stake,
-            basis: 'stake',
-            contract_type,
-            currency: this.root_store?.client?.currency || 'USD',
-            duration: this.duration || 1,
-            duration_unit: 't',
-            symbol: targetSymbol,
-            ...(barrier !== null ? { barrier: String(barrier) } : {}),
-        });
-
-        this.scan_status = `📈 Trade #${this.current_runs + 1}/${this.max_runs_before_pause} on ${result.displayName} | ${contract_type} @ $${this.stake.toFixed(2)}`;
-
-        (async () => {
-            try {
-                const proposalRes = (await api_base.api!.send(proposal_request)) as any;
-                if (proposalRes?.error) {
-                    throw new Error(proposalRes.error.message || 'Proposal failed');
-                }
-                const proposalId = proposalRes?.proposal?.id;
-                const askPrice = proposalRes?.proposal?.ask_price || this.stake;
-
-                if (!proposalId) throw new Error('No proposal id returned');
-
-                const buyRes = (await api_base.api!.send({
-                    buy: proposalId,
-                    price: askPrice,
-                })) as any;
-
-                if (buyRes?.error) {
-                    throw new Error(buyRes.error.message || 'Buy failed');
-                }
-
-                const contractId = buyRes?.buy?.contract_id;
-                if (!contractId) throw new Error('No contract id returned');
-
-                // Wait for contract result
-                setTimeout(
-                    async () => {
-                        try {
-                            const pocRes = (await api_base.api!.send({
-                                proposal_open_contract: 1,
-                                contract_id: contractId,
-                            })) as any;
-
-                            const poc = pocRes?.proposal_open_contract;
-                            const profit = Number(poc?.profit || 0);
-                            const isWin = profit > 0;
-
-                            runInAction(() => {
-                                this.current_runs++;
-                                this.total_profit = Number((this.total_profit + profit).toFixed(2));
-                                this.is_executing_trade = false;
-                                this.trade_log.unshift({
-                                    time: new Date().toLocaleTimeString(),
-                                    market: result.displayName,
-                                    direction: this.is_in_recovery_mode ? 'RECOVERY (Under 7)' : result.direction,
-                                    prediction: barrier !== null ? barrier : 0,
-                                    result: isWin ? 'WIN' : 'LOSS',
-                                    profit,
-                                });
-
-                                if (!isWin) {
-                                    // If Differs lost (or already recovering), switch to Over/Under (Under 7)
-                                    if (result.strategy === 'differs' || this.primary_strategy === 'differs') {
-                                        this.is_in_recovery_mode = true;
-                                        this.primary_strategy = 'differs';
-                                        this.scan_status = `🛡️ Differs loss detected (-$${this.stake.toFixed(2)}). Strategy switched to Over/Under (Under 7) for Martingale recovery...`;
-                                    }
-                                    if (this.use_martingale) {
-                                        const mult = this.is_in_recovery_mode
-                                            ? Math.max(2.5, this.martingale)
-                                            : this.martingale;
-                                        this.stake = Number((this.stake * mult).toFixed(2));
-                                    }
-                                } else {
-                                    if (this.is_in_recovery_mode) {
-                                        this.is_in_recovery_mode = false;
-                                        this.scan_status = `✅ Recovery win (+$${profit.toFixed(2)})! Reverted to initial Differs strategy.`;
-                                    }
-                                    this.stake = this.initial_stake;
-                                }
-
-                                if (this.total_profit >= this.take_profit) {
-                                    this.scan_status = `🎉 Take profit reached (+$${this.total_profit.toFixed(2)} USD)!`;
-                                    this.stopScanning();
-                                } else if (this.total_profit <= -this.stop_loss) {
-                                    this.scan_status = `🛑 Stop loss reached (-$${Math.abs(this.total_profit).toFixed(2)} USD).`;
-                                    this.stopScanning();
-                                } else if (this.current_runs >= this.max_runs_before_pause) {
-                                    this.pauseAndReanalyze();
-                                } else {
-                                    // Strictly wait for the next confirmed entry trigger on this market
-                                    this.scan_phase = 'waiting_entry';
-                                    this.wait_sequence = [];
-                                    this.scan_status = `⏳ Trade completed. Strictly waiting for next confirmed entry trigger on ${result.displayName}...`;
-                                }
-                            });
-                        } catch (e: any) {
-                            runInAction(() => {
-                                this.is_executing_trade = false;
-                            });
-                        }
-                    },
-                    this.duration * 1000 + 1500
-                );
-            } catch (err: any) {
-                runInAction(() => {
-                    this.scan_status = `⚠️ Execution notice: ${err?.message || err}. Retrying in 3s...`;
-                    this.is_executing_trade = false;
-                });
-                setTimeout(() => {
-                    if (this.scan_phase === 'trading') this.executeTrade();
-                }, 3000);
-            }
-        })();
     }
 
     public getContractType(result: TScanResult): string {
@@ -1123,52 +1087,65 @@ export default class EntryScannerStore {
 
     // ─── Bot Generation & Blockly Loading ─────────────────────
 
-    @action public loadBotToBuilderAndRun(autoRun: boolean = true) {
+    @action public async loadBotToBuilderAndRun(autoRun: boolean = true) {
         if (!this.scan_result) return;
         const result = this.scan_result;
         const contract_type = this.getContractType(result);
         const barrier = this.custom_prediction !== null ? this.custom_prediction : this.getBarrier(result);
         const targetSymbol = result.symbol || this.target_single_symbol || '1HZ100V';
 
-        // Map to Quick Strategy trade type categories
-        let tradetype = 'overunder';
-        if (result.strategy === 'even_odd') tradetype = 'evenodd';
-        else if (result.strategy === 'differs' || result.strategy === 'matches') tradetype = 'matchesdiffers';
-        else if (result.strategy === 'rise_fall') tradetype = 'callput';
+        try {
+            const xml = generateBotXML({
+                stake: (Number(this.stake) || 0.5).toString(),
+                takeProfit: (Number(this.take_profit) || 10).toString(),
+                stopLoss: (Number(this.stop_loss) || 50).toString(),
+                martingale: (Number(this.martingale) || 2.0).toString(),
+                symbol: targetSymbol,
+                tradeTypeLabel: result.strategy.replace('_', ' ').toUpperCase(),
+                bestSignal: {
+                    symbol: targetSymbol,
+                    action: result.direction,
+                    prediction: barrier ?? 0,
+                    digit: barrier ?? 0,
+                    type: result.strategy,
+                    confidence: result.confidence,
+                },
+                entryDigit: result.triggerDigit ?? barrier ?? 0,
+            });
 
-        const qs = this.root_store?.quick_strategy;
-        if (qs) {
-            qs.setSelectedStrategy('MARTINGALE');
-            qs.setValue('symbol', targetSymbol);
-            qs.setValue('tradetype', tradetype);
-            qs.setValue('type', contract_type);
-            qs.setValue('stake', Number(this.stake) || 0.5);
-            qs.setValue('size', Number(this.martingale) || 2);
-            qs.setValue('profit', Number(this.take_profit) || 10);
-            qs.setValue('loss', Number(this.stop_loss) || 50);
-            qs.setValue('durationtype', 't');
-            qs.setValue('duration', Number(this.duration) || 1);
-            qs.setValue('action', autoRun ? 'RUN' : 'BUILD');
+            const name = `AI_EntryScanner_${targetSymbol}_${result.direction}`;
+            const { load_modal, dashboard, run_panel } = this.root_store;
 
-            if (barrier !== null) {
-                qs.setValue('last_digit_prediction', Number(barrier));
+            if (load_modal) {
+                await load_modal.loadStrategyToBuilder({
+                    id: name,
+                    name,
+                    xml,
+                    save_type: 'local',
+                    timestamp: Date.now(),
+                });
             }
 
-            // Build/import strategy XML DOM to Blockly workspace and optionally run
-            void qs.onSubmit(qs.form_data);
-        }
+            if (dashboard?.setActiveTab) {
+                dashboard.setActiveTab(DBOT_TABS.BOT_BUILDER);
+            }
 
-        // Switch active tab to Bot Builder workspace if available
-        if (this.root_store?.dashboard?.setActiveTab) {
-            this.root_store.dashboard.setActiveTab(DBOT_TABS.BOT_BUILDER);
-        }
+            if (autoRun && run_panel?.onRunButtonClick) {
+                setTimeout(() => {
+                    run_panel.onRunButtonClick();
+                }, 800);
+            }
 
-        this.scan_phase = 'trading';
-        this.scan_status = `🚀 Bot loaded for ${result.displayName} (${contract_type}). ${autoRun ? 'Trading active!' : 'Ready in Bot Builder.'}`;
+            this.scan_phase = 'trading';
+            this.scan_status = `🚀 Bot loaded for ${result.displayName} (${contract_type}). ${autoRun ? 'Trading active in Bot Builder!' : 'Ready in Bot Builder.'}`;
+        } catch (err: any) {
+            console.error('[EntryScannerStore] Failed to generate/load bot to builder:', err);
+            this.scan_status = `⚠️ Error loading bot: ${err?.message || err}`;
+        }
     }
 
     @action public generateAndLoadBot() {
-        this.loadBotToBuilderAndRun(true);
+        void this.loadBotToBuilderAndRun(true);
     }
 
     // ─── Computed ─────────────────────────────────────────────

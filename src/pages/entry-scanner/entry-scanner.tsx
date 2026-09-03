@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import classNames from 'classnames';
@@ -7,6 +7,12 @@ import type { TStrategyType } from '@/stores/entry-scanner-store';
 
 export const EntryScanner = observer(() => {
     const { entry_scanner } = useStore();
+
+    useEffect(() => {
+        if (!entry_scanner.is_scanning) {
+            entry_scanner.startScanning();
+        }
+    }, [entry_scanner]);
 
     const strategies: { key: TStrategyType; label: string; icon: string; tag: string }[] = [
         { key: 'over_under', label: 'Over / Under', icon: '↕', tag: 'High/Low' },
