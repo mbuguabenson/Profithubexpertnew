@@ -7,8 +7,11 @@ import { calculatePatternStats, getEvenOddStats, isDigitPowerIncreasing } from '
 import './even-odd-pattern.scss';
 
 const EvenOddPattern = observer(() => {
-    const { easy_tool } = useStore();
-    const { ticks, stats_sample_size } = easy_tool;
+    const store = useStore();
+    if (!store?.easy_tool) return null;
+
+    const { easy_tool } = store;
+    const { ticks = [], stats_sample_size = 1000 } = easy_tool;
 
     const analysis = useMemo(() => {
         const slice = ticks.slice(-stats_sample_size);

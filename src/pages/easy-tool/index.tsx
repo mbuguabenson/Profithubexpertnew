@@ -25,11 +25,14 @@ const DIGIT_COLORS: Record<number, string> = {
 };
 
 const EasyTool = observer(() => {
-    const { easy_tool, ui } = useStore();
-    const { current_price, last_digit, ticks, stats_sample_size, setStatsSampleSize, markets, fetchMarkets } =
+    const store = useStore();
+    if (!store?.easy_tool) return null;
+
+    const { easy_tool, ui } = store;
+    const { current_price, last_digit, ticks = [], stats_sample_size = 1000, setStatsSampleSize, markets = [], fetchMarkets } =
         easy_tool;
 
-    const { is_dark_mode_on } = ui;
+    const is_dark_mode_on = ui?.is_dark_mode_on ?? true;
 
     const [selected_digit, setSelectedDigit] = useState<number | null>(null);
     const [history_count, setHistoryCount] = useState<15 | 50>(15);
@@ -37,10 +40,10 @@ const EasyTool = observer(() => {
     // Fetch active markets on mount and ensure tick stream is active
     useEffect(() => {
         if (!markets || markets.length === 0) {
-            fetchMarkets();
+            fetchMarkets?.();
         }
         if (!ticks || ticks.length === 0) {
-            easy_tool.subscribeToActiveSymbol();
+            easy_tool.subscribeToActiveSymbol?.();
         }
     }, [markets, fetchMarkets, ticks, easy_tool]);
 

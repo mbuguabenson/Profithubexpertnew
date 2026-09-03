@@ -7,12 +7,15 @@ import { getGroupedMarkets } from '@/constants/markets';
 const DEFAULT_FALLBACK_MARKETS = getGroupedMarkets();
 
 const MarketSelector = observer(() => {
-    const { easy_tool } = useStore();
-    const { symbol, setSymbol, markets, fetchMarkets } = easy_tool;
+    const store = useStore();
+    if (!store?.easy_tool) return null;
+
+    const { easy_tool } = store;
+    const { symbol = '1HZ100V', setSymbol, markets = [], fetchMarkets } = easy_tool;
 
     useEffect(() => {
         if (!markets || markets.length === 0) {
-            fetchMarkets();
+            fetchMarkets?.();
         }
     }, [markets, fetchMarkets]);
 
