@@ -282,24 +282,39 @@ export default class ClientStore {
         }
     };
 
-    setBalance = (balance: string) => {
+    setBalance = (balance: string, loginid?: string) => {
         const currentLoginId = getAccountId() || this.loginid;
+
+        // If a specific loginid was provided with this balance update, ensure it belongs to the active account
+        if (loginid && currentLoginId && loginid !== currentLoginId) {
+            // Update the background account's balance in the accounts map without overwriting active balance
+            const numBal = parseFloat(balance) || 0;
+            if (this.accounts[loginid]) {
+                this.accounts[loginid] = {
+                    ...this.accounts[loginid],
+                    balance: numBal,
+                };
+            }
+            return;
+        }
+
         if (currentLoginId && this.loginid && this.loginid !== currentLoginId) {
             return;
         }
 
         this.balance = balance;
         const numBal = parseFloat(balance) || 0;
-        if (this.loginid) {
-            if (this.accounts[this.loginid]) {
-                this.accounts[this.loginid] = {
-                    ...this.accounts[this.loginid],
+        const targetId = loginid || this.loginid;
+        if (targetId) {
+            if (this.accounts[targetId]) {
+                this.accounts[targetId] = {
+                    ...this.accounts[targetId],
                     balance: numBal,
                 };
             }
             if (Array.isArray(this.account_list)) {
                 this.account_list = this.account_list.map(acc =>
-                    acc.loginid === this.loginid ? { ...acc, balance: numBal } : acc
+                    acc.loginid === targetId ? { ...acc, balance: numBal } : acc
                 );
                 try {
                     localStorage.setItem('client_account_details', JSON.stringify(this.account_list));
@@ -312,14 +327,14 @@ export default class ClientStore {
                     localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
                 if (storedAccounts) {
                     const parsed = JSON.parse(storedAccounts);
-                    if (parsed[this.loginid]) {
-                        parsed[this.loginid].balance = numBal;
+                    if (parsed[targetId]) {
+                        parsed[targetId].balance = numBal;
                         localStorage.setItem('client.accounts', JSON.stringify(parsed));
                         localStorage.setItem('clientAccounts', JSON.stringify(parsed));
                     }
                 }
             } catch (e: any) {
-                console.debug('[ClientStore] Could not update stored accounts balance:', e?.message);
+                console.debug('[ClientStore] Could not update client.accounts in storage:', e?.message);
             }
         }
     };

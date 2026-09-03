@@ -839,18 +839,32 @@ export default class RunPanelStore {
 
     onError = (data: { error: any }) => {
         // data.error for API errors, data for code errors
-        const error = data.error || data;
+        const error = data?.error || data;
+        const errorCode = error?.code;
         const isInsufficientBalance =
-            error?.code === 'InsufficientBalance' ||
-            error?.code === 'NotEnoughMoney' ||
-            error?.code === 'AccountBalanceExceeded' ||
+            errorCode === 'InsufficientBalance' ||
+            errorCode === 'NotEnoughMoney' ||
+            errorCode === 'AccountBalanceExceeded' ||
             (typeof error?.message === 'string' && error.message.toLowerCase().includes('insufficient'));
 
-        if (unrecoverable_errors.includes(error.code) || isInsufficientBalance) {
-            this.root_store.summary_card.clear();
+        const isFatal =
+            unrecoverable_errors.includes(errorCode) ||
+            isInsufficientBalance ||
+            errorCode === 'InvalidToken' ||
+            errorCode === 'InvalidAppID' ||
+            errorCode === 'AuthorizationRequired' ||
+            errorCode === 'ContractCreationFailure' ||
+            errorCode === 'InvalidtoBuy' ||
+            errorCode === 'MarketIsClosed' ||
+            errorCode === 'SellNotAvailableCustom' ||
+            !this.dbot?.is_bot_running;
+
+        if (isFatal) {
+            this.root_store.summary_card?.clear();
             this.error_type = ErrorTypes.UNRECOVERABLE_ERRORS;
             this.is_contract_buying_in_progress = false;
             this.setIsRunning(false);
+            this.setHasOpenContract(false);
             this.setContractStage(contract_stages.NOT_RUNNING);
             this.core.ui?.setAccountSwitcherDisabledMessage?.();
             this.unregisterBotListeners();

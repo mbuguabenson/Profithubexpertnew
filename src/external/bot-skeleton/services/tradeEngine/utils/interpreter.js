@@ -319,10 +319,12 @@ const Interpreter = () => {
                 // DBot handles 'InvalidToken' internally
                 if (errObj?.code === 'InvalidToken') {
                     globalObserver.emit('client.invalid_token');
+                    globalObserver.emit('bot.stop');
                     return;
                 }
                 if (shouldStopOnError(bot, errObj?.code)) {
                     globalObserver.emit('bot.click_stop');
+                    globalObserver.emit('bot.stop');
                     return;
                 }
 
@@ -330,6 +332,7 @@ const Interpreter = () => {
                 if (!shouldRestartOnError(bot, errObj?.code) || !botStarted(bot)) {
                     globalObserver.emit('Error', errObj);
                     globalObserver.emit('bot.click_stop');
+                    globalObserver.emit('bot.stop');
                     reject(errObj);
                     return;
                 }

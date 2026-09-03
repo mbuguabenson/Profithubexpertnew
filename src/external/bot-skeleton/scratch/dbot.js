@@ -333,11 +333,15 @@ class DBot {
             return;
         }
 
+        const perfStart = performance.now();
+        console.log('[BOT PERF] Run clicked: 0ms');
+
         try {
             // Reuse a healthy, already-authorized connection instead of force-resetting the socket
-            // on every bot start. This prevents the 3-second startup stall caused by redundant init/auth churn.
+            // on every bot start. This prevents the startup stall caused by redundant init/auth churn.
             if (!api_base.api || api_base.api?.connection?.readyState !== 1) {
                 await api_base.init();
+                console.log(`[BOT PERF] WebSocket init completed: ${(performance.now() - perfStart).toFixed(1)}ms`);
             }
 
             if (!this.interpreter || !this.interpreter.bot?.tradeEngine) {
@@ -345,6 +349,8 @@ class DBot {
             }
 
             const code = this.generateCode();
+            console.log(`[BOT PERF] Code generated: ${(performance.now() - perfStart).toFixed(1)}ms`);
+
             if (this.symbol && !this.interpreter.bot.tradeEngine.checkTicksPromiseExists()) {
                 this.interpreter.bot.tradeEngine.watchTicks(this.symbol).catch(() => {});
             }
@@ -353,6 +359,7 @@ class DBot {
 
             api_base.setIsRunning(true);
             this.interpreter.run(code).catch(error => {
+                console.warn('[DBot] interpreter.run runtime error:', error);
                 globalObserver.emit('Error', error);
                 this.stopBot();
             });

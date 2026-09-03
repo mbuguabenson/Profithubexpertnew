@@ -162,9 +162,10 @@ const CoreStoreProvider: React.FC<{ children: React.ReactNode }> = observer(({ c
             if (msg_type === 'balance' && data && !error) {
                 const balance = data.balance;
                 if (balance && typeof balance.balance === 'number') {
-                    client.setBalance(balance.balance.toString());
+                    const balanceLoginId = balance.loginid;
+                    client.setBalance(balance.balance.toString(), balanceLoginId);
 
-                    if (balance.currency) {
+                    if (balance.currency && (!balanceLoginId || balanceLoginId === client.loginid)) {
                         client.setCurrency(balance.currency);
                     }
                 }

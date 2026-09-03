@@ -127,9 +127,28 @@ export class AccountSwitcherService {
             localStorage.setItem('active_currency', targetCurrency);
             const balance = targetBalance;
 
-            // 4. Persist the target account to the socket/account state, but do not
-            // mutate the active client state until the authoritative authorize response
-            // confirms that the selected account is the one we actually switched to.
+            // 4. Instantly synchronize client store and auth observables (0ms perceived latency)
+            // with the target account's known/cached balance, ensuring no stale previous balance is shown.
+            const resolvedClientStore = clientStore || globalObserver.getState('client.store');
+            if (resolvedClientStore) {
+                if (typeof resolvedClientStore.setLoginId === 'function') {
+                    resolvedClientStore.setLoginId(targetLoginId);
+                }
+                if (typeof resolvedClientStore.setCurrency === 'function') {
+                    resolvedClientStore.setCurrency(targetCurrency);
+                }
+                if (typeof resolvedClientStore.setBalance === 'function') {
+                    resolvedClientStore.setBalance(String(balance), targetLoginId);
+                }
+            }
+
+            setAuthData({
+                loginid: targetLoginId,
+                currency: targetCurrency,
+                balance: balance,
+                is_virtual: isVirtual ? 1 : 0,
+            } as any);
+
             api_base.account_info = {
                 balance,
                 currency: targetCurrency,
@@ -137,13 +156,12 @@ export class AccountSwitcherService {
             };
             api_base.token = targetToken || targetLoginId;
 
-            // Only flip the UI/auth state after the WS authorize confirms the target
-            // account. This prevents stale balance and account-list updates from older
-            // or still-in-flight sessions from overwriting the active account state.
+            // 5. Invalidate old subscriptions to prevent cross-account stream overwrite
+            api_base.unsubscribeAllSubscriptions();
+
             setIsAuthorizing(true);
 
-            // 5. Broadcast the switch intent before the final authorize completes so
-            // other listeners can safely suspend active bot work without trusting stale data.
+            // 6. Broadcast the switch intent across the application
             window.dispatchEvent(
                 new CustomEvent('account_switching_start', {
                     detail: { loginid: targetLoginId, currency: targetCurrency, balance, token: targetToken },
@@ -152,7 +170,7 @@ export class AccountSwitcherService {
             window.dispatchEvent(new Event('currency_changed'));
             window.dispatchEvent(new Event('storage'));
 
-            // 6. Seamless live WebSocket re-authorization with strict 2500ms timeout guard
+            // 7. Seamless live WebSocket re-authorization with strict 2500ms timeout guard
             const { DerivWSAccountsService } = await import('./derivws-accounts.service');
             DerivWSAccountsService.clearCache();
 
@@ -199,18 +217,18 @@ export class AccountSwitcherService {
                         api_base.is_authorized = true;
                         authorized = true;
 
-                        if (clientStore) {
-                            if (typeof clientStore.setBalance === 'function') {
-                                clientStore.setBalance(String(authBalance));
+                        if (resolvedClientStore) {
+                            if (typeof resolvedClientStore.setBalance === 'function') {
+                                resolvedClientStore.setBalance(String(authBalance), authLoginid);
                             }
-                            if (typeof clientStore.setCurrency === 'function') {
-                                clientStore.setCurrency(authCurrency);
+                            if (typeof resolvedClientStore.setCurrency === 'function') {
+                                resolvedClientStore.setCurrency(authCurrency);
                             }
-                            if (typeof clientStore.setLoginId === 'function') {
-                                clientStore.setLoginId(authLoginid);
+                            if (typeof resolvedClientStore.setLoginId === 'function') {
+                                resolvedClientStore.setLoginId(authLoginid);
                             }
-                            if (authAccountList && typeof clientStore.setAccountList === 'function') {
-                                clientStore.setAccountList(authAccountList);
+                            if (authAccountList && typeof resolvedClientStore.setAccountList === 'function') {
+                                resolvedClientStore.setAccountList(authAccountList);
                             }
                         }
 
@@ -251,9 +269,8 @@ export class AccountSwitcherService {
                         );
                         window.dispatchEvent(new Event('currency_changed'));
 
-                        // Subscribe to live balance & transaction stream on new account
-                        api_base.api.send({ balance: 1, subscribe: 1 }).catch(() => {});
-                        api_base.api.send({ transaction: 1, subscribe: 1 }).catch(() => {});
+                        // Subscribe to live balance & transaction stream on new authoritative account
+                        api_base.subscribe().catch(() => {});
                     } else if (res?.authorize && res.authorize.loginid !== targetLoginId) {
                         console.warn(
                             `[AccountSwitcherService] Fast authorize returned ${res.authorize.loginid}, expected ${targetLoginId}; reconnecting socket...`

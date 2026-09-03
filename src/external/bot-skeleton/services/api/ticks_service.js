@@ -80,11 +80,19 @@ export default class TicksService {
             const style = getType(granularity);
 
             if (style === 'ticks' && this.ticks.has(symbol)) {
-                resolve(this.ticks.get(symbol));
+                const cachedTicks = this.ticks.get(symbol);
+                if (cachedTicks && cachedTicks.length > 0) {
+                    resolve(cachedTicks);
+                    return;
+                }
             }
 
             if (style === 'candles' && this.candles.hasIn([symbol, Number(granularity)])) {
-                resolve(this.candles.getIn([symbol, Number(granularity)]));
+                const cachedCandles = this.candles.getIn([symbol, Number(granularity)]);
+                if (cachedCandles && cachedCandles.length > 0) {
+                    resolve(cachedCandles);
+                    return;
+                }
             }
             this.requestStream({ ...options, style })
                 .then(res => {

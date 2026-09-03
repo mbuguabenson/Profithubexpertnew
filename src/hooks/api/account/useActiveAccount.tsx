@@ -49,10 +49,10 @@ const useActiveAccount = ({
             rawBal = currentBalanceData.balance;
         } else if (authData?.loginid === activeAccount.loginid && authData?.balance !== undefined) {
             rawBal = authData.balance;
+        } else if (activeAccount.balance !== undefined && activeAccount.balance !== null) {
+            rawBal = activeAccount.balance;
         } else if (directBalance !== undefined && directBalance !== null && directBalance !== '') {
             rawBal = directBalance;
-        } else if (activeAccount.balance !== undefined) {
-            rawBal = activeAccount.balance;
         }
 
         const numBal = typeof rawBal === 'number' ? rawBal : parseFloat(String(rawBal).replace(/,/g, '')) || 0;
