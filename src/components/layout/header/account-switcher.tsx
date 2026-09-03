@@ -235,6 +235,14 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
 
         const activeId = activeLoginid || localStorage.getItem('active_loginid') || client?.loginid || '';
 
+        // Merge live balance from client store directly into active account if available
+        if (activeId && client?.balance !== undefined && client?.balance !== null && accountsMap[activeId]) {
+            const parsedLiveBal = parseFloat(client.balance);
+            if (!isNaN(parsedLiveBal)) {
+                accountsMap[activeId].balance = parsedLiveBal;
+            }
+        }
+
         return Object.values(accountsMap)
             .map(account => {
                 const accCurr = account.currency || 'USD';
@@ -258,7 +266,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                 };
             })
             .sort((a, b) => (a.isActive ? -1 : b.isActive ? 1 : 0));
-    }, [accountList, client?.account_list, client?.loginid, activeLoginid, displayCurrency, rate]);
+    }, [accountList, client?.account_list, client?.loginid, client?.balance, activeLoginid, displayCurrency, rate]);
 
     const toggleDropdown = useCallback(() => {
         if (is_bot_running) return;

@@ -1,4 +1,5 @@
 import { LogTypes } from '../../../constants/messages';
+import DBotStore from '../../../scratch/dbot-store';
 import { api_base } from '../../api/api-base';
 import { contractStatus, info, log } from '../utils/broadcast';
 import { doUntilDone, getUUID, recoverFromError, tradeOptionToBuy } from '../utils/helpers';
@@ -53,6 +54,18 @@ export default Engine =>
             const onSuccess = response => {
                 this.is_contract_buying_in_progress = false;
                 const { buy } = response;
+
+                if (buy && typeof buy.balance_after === 'number') {
+                    try {
+                        const { client } = DBotStore.instance || {};
+                        if (client?.setBalance) {
+                            client.setBalance(
+                                buy.balance_after.toString(),
+                                this.accountInfo?.loginid || client.loginid
+                            );
+                        }
+                    } catch (e) {}
+                }
 
                 contractStatus({
                     id: 'contract.purchase_received',

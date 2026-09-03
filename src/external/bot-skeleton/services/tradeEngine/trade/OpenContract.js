@@ -1,4 +1,5 @@
 import { getRoundedNumber } from '@/components/shared';
+import DBotStore from '../../../scratch/dbot-store';
 import { api_base } from '../../api/api-base';
 import { contract as broadcastContract, contractStatus } from '../utils/broadcast';
 import { openContractReceived, sell } from './state/actions';
@@ -84,6 +85,23 @@ export default Engine =>
                 try {
                     if (contract?.subscription?.id) {
                         api_base.api?.send({ forget: contract.subscription.id }).catch(() => {});
+                    }
+                } catch (e) {}
+
+                // Request fresh balance upon contract settlement
+                try {
+                    if (api_base.api) {
+                        api_base.api.send({ balance: 1 }).then(res => {
+                            if (res?.balance && typeof res.balance.balance === 'number') {
+                                const { client } = DBotStore.instance || {};
+                                if (client?.setBalance) {
+                                    client.setBalance(
+                                        res.balance.balance.toString(),
+                                        res.balance.loginid || this.accountInfo?.loginid || client.loginid
+                                    );
+                                }
+                            }
+                        }).catch(() => {});
                     }
                 } catch (e) {}
 

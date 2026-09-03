@@ -12,10 +12,17 @@ export default Engine =>
             const subscription = api_base.api.onMessage().subscribe(({ data }) => {
                 if (data?.msg_type === 'balance' && data?.balance) {
                     const {
-                        balance: { balance: b, currency },
+                        balance: { balance: b, currency, loginid },
                     } = data;
 
                     balance_string = getFormattedText(b, currency);
+
+                    try {
+                        const { client } = DBotStore.instance || {};
+                        if (client?.setBalance && typeof b === 'number') {
+                            client.setBalance(b.toString(), loginid || this.accountInfo?.loginid || client.loginid);
+                        }
+                    } catch (e) {}
 
                     if (this.accountInfo) info({ accountID: this.accountInfo.loginid, balance: balance_string });
                 }

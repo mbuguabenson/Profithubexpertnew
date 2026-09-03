@@ -295,16 +295,21 @@ export default class ClientStore {
                     balance: numBal,
                 };
             }
+            if (Array.isArray(this.account_list)) {
+                this.account_list = this.account_list.map(acc =>
+                    acc.loginid === loginid ? { ...acc, balance: numBal } : acc
+                );
+            }
             return;
         }
 
-        if (currentLoginId && this.loginid && this.loginid !== currentLoginId) {
-            return;
+        if (currentLoginId && this.loginid !== currentLoginId) {
+            this.loginid = currentLoginId;
         }
 
         this.balance = balance;
         const numBal = parseFloat(balance) || 0;
-        const targetId = loginid || this.loginid;
+        const targetId = loginid || currentLoginId || this.loginid;
         if (targetId) {
             if (this.accounts[targetId]) {
                 this.accounts[targetId] = {
