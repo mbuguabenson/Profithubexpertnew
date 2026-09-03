@@ -1722,32 +1722,52 @@ const OverlordAi: React.FC = observer(() => {
                                     </select>
                                 </div>
 
-                                <div className='form-group'>
-                                    <label>{tradeByCompoundingPlan ? 'Plan Profit %' : isAutoStake ? 'Auto Stake %' : 'Fixed Stake ($)'}</label>
-                                    {tradeByCompoundingPlan ? (
+                                {tradeByCompoundingPlan ? (
+                                    <div className='form-group'>
+                                        <label>Plan Profit %</label>
                                         <input
                                             type='number'
                                             value={periodProfitPct}
                                             onChange={e => setPeriodProfitPct(e.target.value)}
                                             placeholder='7'
                                         />
-                                    ) : isAutoStake ? (
-                                        <input
-                                            type='number'
-                                            value={autoStakePercent}
-                                            onChange={e => setAutoStakePercent(e.target.value)}
-                                            placeholder='7'
-                                        />
-                                    ) : (
-                                        <input
-                                            type='number'
-                                            value={manualStake}
-                                            onChange={e => setManualStake(e.target.value)}
-                                            placeholder='1.00'
-                                        />
-                                    )}
-                                </div>
+                                    </div>
+                                ) : (
+                                    <div className='form-group'>
+                                        <label>Stake Mode</label>
+                                        <select
+                                            value={isAutoStake ? 'AUTO' : 'MANUAL'}
+                                            onChange={e => setIsAutoStake(e.target.value === 'AUTO')}
+                                        >
+                                            <option value='AUTO'>Auto Stake (7% of Balance)</option>
+                                            <option value='MANUAL'>Manual Fixed Stake ($)</option>
+                                        </select>
+                                    </div>
+                                )}
                             </div>
+
+                            {!tradeByCompoundingPlan && (
+                                <div className='form-row'>
+                                    <div className='form-group' style={{ gridColumn: 'span 2' }}>
+                                        <label>{isAutoStake ? 'Auto Stake %' : 'Fixed Stake ($)'}</label>
+                                        {isAutoStake ? (
+                                            <input
+                                                type='number'
+                                                value={autoStakePercent}
+                                                onChange={e => setAutoStakePercent(e.target.value)}
+                                                placeholder='7'
+                                            />
+                                        ) : (
+                                            <input
+                                                type='number'
+                                                value={manualStake}
+                                                onChange={e => setManualStake(e.target.value)}
+                                                placeholder='1.00'
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className='form-row'>
                                 <div className='form-group'>
