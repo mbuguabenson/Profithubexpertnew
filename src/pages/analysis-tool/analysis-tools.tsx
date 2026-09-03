@@ -5,7 +5,6 @@ import Signals from '../signals';
 import TickAnalyser from './tick-analyser';
 import CirclesAnalysis from '../circles-analysis';
 import DigitCracker from '../digit-cracker';
-import DpTools from '../dp-tools/dp-tools';
 import { useStore } from '@/hooks/useStore';
 import { ApiHelpers } from '@/external/bot-skeleton';
 import { ALL_DERIV_MARKETS } from '@/constants/markets';
@@ -17,8 +16,7 @@ type AnalysisToolSubTab =
     | 'all-analysis'
     | 'tick-analyser'
     | 'circles-analysis'
-    | 'digit-cracker'
-    | 'xenon-tool';
+    | 'digit-cracker';
 
 const AnalysisTools: React.FC = () => {
     const { run_panel } = useStore();
@@ -657,8 +655,6 @@ const AnalysisTools: React.FC = () => {
                 return <CirclesAnalysis />;
             case 'digit-cracker':
                 return <DigitCracker />;
-            case 'xenon-tool':
-                return <DpTools />;
             default:
                 return null;
         }
@@ -714,14 +710,6 @@ const AnalysisTools: React.FC = () => {
                     >
                         <div className='analysis-tools__card-content'>
                             <span className='analysis-tools__card-label'>Digit Cracker</span>
-                        </div>
-                    </div>
-                    <div
-                        className={`analysis-tools__card analysis-tools__card--light ${active_tool === 'xenon-tool' ? 'analysis-tools__card--active' : ''}`}
-                        onClick={() => handleCardClick('xenon-tool')}
-                    >
-                        <div className='analysis-tools__card-content'>
-                            <span className='analysis-tools__card-label'>Xenon Tool</span>
                         </div>
                     </div>
                 </div>
