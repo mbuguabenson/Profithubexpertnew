@@ -269,18 +269,20 @@
     }
 
     .modern-login-btn {
-        background: var(--ph-login-bg, transparent) !important;
-        border: 1px solid var(--ph-primary, rgba(124, 58, 237, 0.5)) !important;
-        color: var(--ph-login-text, #7c3aed) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 68, 79, 0.5) !important;
+        color: #ffffff !important;
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
-        box-shadow: 0 0 10px rgba(124, 58, 237, 0.2);
+        box-shadow: 0 0 10px rgba(255, 68, 79, 0.15);
 
         &:hover {
-            background: var(--ph-login-bg, rgba(124, 58, 237, 0.1)) !important;
-            opacity: 0.85;
-            box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+            background: rgba(255, 68, 79, 0.15) !important;
+            border-color: #ff444f !important;
+            color: #ff444f !important;
+            opacity: 1;
+            box-shadow: 0 0 15px rgba(255, 68, 79, 0.4);
             transform: translateY(-2px);
         }
 
@@ -298,18 +300,19 @@
     }
 
     .modern-signup-btn {
-        background: var(--ph-signup-bg, linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)) !important;
+        background: linear-gradient(135deg, #ff444f 0%, #ea3943 100%) !important;
         border: none !important;
-        color: var(--ph-signup-text, #ffffff) !important;
+        color: #ffffff !important;
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
-        box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+        box-shadow: 0 4px 14px rgba(255, 68, 79, 0.4);
 
         &:hover {
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.8);
+            box-shadow: 0 6px 20px rgba(255, 68, 79, 0.65);
             transform: translateY(-2px);
-            opacity: 0.88;
+            opacity: 0.95;
+            background: linear-gradient(135deg, #eb3e48 0%, #d42e38 100%) !important;
         }
 
         &::before {
@@ -549,32 +552,10 @@
 
 /* 2. Login Button (Modern Glassmorphism) */
 .app-header__login-btn {
-    background: transparent !important;
-    border: 1px solid var(--border-normal) !important;
-    border-radius: 8px !important;
-    color: var(--text-prominent) !important;
-    transition: all 0.3s ease !important;
-
-    .dc-btn__text {
-        color: var(--text-prominent) !important;
-        font-weight: 500 !important;
-    }
-
-    &:hover {
-        background: var(--general-hover) !important;
-        border-color: var(--border-hover) !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-    }
-}
-
-/* 3. Signup Button (Premium Gradient) */
-.app-header__signup-btn {
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
-    border: none !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 68, 79, 0.4) !important;
     border-radius: 8px !important;
     color: #ffffff !important;
-    font-weight: 600 !important;
     transition: all 0.3s ease !important;
 
     .dc-btn__text {
@@ -583,9 +564,37 @@
     }
 
     &:hover {
+        background: rgba(255, 68, 79, 0.15) !important;
+        border-color: #ff444f !important;
+        color: #ff444f !important;
         transform: translateY(-1px) !important;
-        box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4) !important;
-        background: linear-gradient(135deg, #9333ea 0%, #a855f7 100%) !important;
+        box-shadow: 0 4px 14px rgba(255, 68, 79, 0.3) !important;
+
+        .dc-btn__text {
+            color: #ff444f !important;
+        }
+    }
+}
+
+/* 3. Signup Button (Premium Gradient) */
+.app-header__signup-btn {
+    background: linear-gradient(135deg, #ff444f 0%, #ea3943 100%) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 14px rgba(255, 68, 79, 0.4) !important;
+
+    .dc-btn__text {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    &:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(255, 68, 79, 0.65) !important;
+        background: linear-gradient(135deg, #eb3e48 0%, #d42e38 100%) !important;
     }
 }
 

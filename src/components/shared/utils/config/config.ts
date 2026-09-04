@@ -1,6 +1,5 @@
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
-import { getPendingApiToken } from '@/utils/api-token-permissions';
 import { DERIV_AFFILIATE_CONFIG } from '@/constants/affiliate-config';
 import brandConfig from '../../../../../brand.config.json';
 
@@ -74,23 +73,11 @@ type DomainUIConfig = {
     martingale?: MartingaleConfig;
 };
 
-interface DomainConfig {
-    clientId: string;
-    appId: string;
-    redirectUri: string;
-    botsFolder: string;
-    canonicalHost: string;
-    includeLegacyAppIdInOAuth: boolean;
-    useLegacyOAuthLogin: boolean;
-    features: DomainFeatureFlags;
-    ui: DomainUIConfig;
-}
-
 interface HostedDomainDefinition {
     primaryDomain: string;
     aliases?: string[];
     clientId: string;
-    appId: string;
+    appId?: string;
     botsFolder?: string;
     includeLegacyAppIdInOAuth?: boolean;
     useLegacyOAuthLogin?: boolean;
@@ -927,11 +914,13 @@ export const getBestBotsFileUrl = (file_name: string) => buildBestBotsFileUrl(ge
 // Constants - Server Configuration (from brand.config.json)
 // =============================================================================
 
-// WebSocket server URLs - modern Deriv options public/auth endpoints
+// WebSocket server URLs - route to Deriv v3 endpoint
 export const WS_SERVERS = {
-    STAGING: 'wss://api.derivws.com/trading/v1/options/ws/public',
-    PRODUCTION: 'wss://api.derivws.com/trading/v1/options/ws/public',
+    STAGING: 'wss://ws.derivws.com/websockets/v3',
+    PRODUCTION: 'wss://ws.derivws.com/websockets/v3',
 } as const;
+
+const LEGACY_WS_SERVER = 'wss://ws.derivws.com/websockets/v3';
 
 // Helper to check if we're on production domains
 export const isProduction = () => {
@@ -943,12 +932,14 @@ export const isProduction = () => {
 
 export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
 
-export const getDefaultServerURL = () => {
-    return 'wss://api.derivws.com/trading/v1/options/ws/public';
+export const getLegacyServerURL = () => {
+    const domainCfg = getDomainConfig();
+    const appId = domainCfg.appId || '121856';
+    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId)}&l=EN&brand=deriv`;
 };
 
-export const getLegacyServerURL = () => {
-    return getDefaultServerURL();
+export const getDefaultServerURL = () => {
+    return getLegacyServerURL();
 };
 
 /**
@@ -1138,6 +1129,13 @@ export const validateCSRFToken = (token: string): boolean => {
         const storedToken = sessionStorage.getItem('oauth_csrf_token') || localStorage.getItem('oauth_csrf_token');
         const timestamp =
             sessionStorage.getItem('oauth_csrf_token_timestamp') || localStorage.getItem('oauth_csrf_token_timestamp');
+
+        if (timestamp) {
+            const age = Date.now() - parseInt(timestamp, 10);
+            if (age > 15 * 60 * 1000) {
+                console.warn('[OAuth] CSRF token expired (>15 min)');
+            }
+        }
 
         // If storedToken is found, check match
         if (storedToken) {
