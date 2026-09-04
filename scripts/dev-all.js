@@ -10,7 +10,7 @@ try {
 }
 
 console.log('🚀 Starting ProfitHub Backend API Server on port 4000...');
-const backendProcess = spawn('node', [path.join(__dirname, '../api/server.js')], {
+const backendProcess = spawn('node', [path.join(__dirname, 'server.js')], {
     stdio: 'inherit',
     shell: true,
     env: { ...process.env, PORT: '4000' },

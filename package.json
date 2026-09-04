@@ -3,7 +3,7 @@
     "private": true,
     "version": "0.0.1",
     "engines": {
-        "node": "24.x"
+        "node": "20.x || 22.x"
     },
     "scripts": {
         "start": "node scripts/dev-all.js",
@@ -21,7 +21,7 @@
         "prepare": "husky install",
         "build:analyze": "BUNDLE_ANALYZE=true rsbuild build",
         "generate:brand-css": "node scripts/generate-brand-css.js",
-        "start:backend": "node api/server.js",
+        "start:backend": "node scripts/server.js",
         "type-check": "tsc --noEmit"
     },
     "dependencies": {
@@ -78,7 +78,8 @@
         "ua-parser-js": "^1.0.38",
         "usehooks-ts": "^3.1.0",
         "uuid": "^11.1.1",
-        "yup": "^1.4.0"
+        "yup": "^1.4.0",
+        "ws": "^8.18.0"
     },
     "devDependencies": {
         "@babel/core": "^7.24.7",

@@ -3,18 +3,18 @@
 const http = require('http');
 const url = require('url');
 
-const authHandler = require('./admin/auth');
-const siteConfigHandler = require('./admin/site-config');
-const systemHealthHandler = require('./admin/system-health');
-const copyRequestsHandler = require('./admin/copy-requests');
-const transactionsHandler = require('./admin/transactions');
-const logsHandler = require('./admin/logs');
-const notificationsHandler = require('./admin/notifications');
-const botsHandler = require('./admin/bots');
-const derivAccountsHandler = require('./deriv-accounts');
-const derivAppsHandler = require('./admin/deriv-apps');
-const derivOtpHandler = require('./deriv-otp/[accountId]');
-const supabaseProxyHandler = require('./supabase-proxy');
+const authHandler = require('../api/admin/auth');
+const siteConfigHandler = require('../api/admin/site-config');
+const systemHealthHandler = require('../api/admin/system-health');
+const copyRequestsHandler = require('../api/admin/copy-requests');
+const transactionsHandler = require('../api/admin/transactions');
+const logsHandler = require('../api/admin/logs');
+const notificationsHandler = require('../api/admin/notifications');
+const botsHandler = require('../api/admin/bots');
+const derivAccountsHandler = require('../api/deriv-accounts');
+const derivAppsHandler = require('../api/admin/deriv-apps');
+const derivOtpHandler = require('../api/deriv-otp/[accountId]');
+const supabaseProxyHandler = require('../api/supabase-proxy');
 
 const PORT = process.env.PORT || 4000;
 
@@ -151,6 +151,10 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-server.listen(PORT, () => {
-    console.log(`🚀 ProfitHub Expert Backend API Server running at http://localhost:${PORT}/api/`);
-});
+if (require.main === module) {
+    server.listen(PORT, () => {
+        console.log(`🚀 ProfitHub Expert Backend API Server running at http://localhost:${PORT}/api/`);
+    });
+}
+
+module.exports = server;

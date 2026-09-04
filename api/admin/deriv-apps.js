@@ -1,6 +1,6 @@
 'use strict';
 
-const WebSocket = require('ws');
+const WebSocket = typeof globalThis.WebSocket !== 'undefined' ? globalThis.WebSocket : require('ws');
 
 module.exports = async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json');
