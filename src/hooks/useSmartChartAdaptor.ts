@@ -42,19 +42,29 @@ interface UseSmartChartAdaptorReturn {
 }
 
 const FALLBACK_SYMBOLS_LIST = [
-    { value: 'R_10', label: 'Volatility 10 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_25', label: 'Volatility 25 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_50', label: 'Volatility 50 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_75', label: 'Volatility 75 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_100', label: 'Volatility 100 Index', group: 'Continuous Volatility Indices' },
-    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ15V', label: 'Volatility 15 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ30V', label: 'Volatility 30 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ90V', label: 'Volatility 90 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: 'R_10', label: 'Volatility 10 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_25', label: 'Volatility 25 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_50', label: 'Volatility 50 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_75', label: 'Volatility 75 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_100', label: 'Volatility 100 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'CRASH500', label: 'Crash 500 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'CRASH1000', label: 'Crash 1000 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'BOOM500', label: 'Boom 500 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'BOOM1000', label: 'Boom 1000 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'JD10', label: 'Jump 10 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD25', label: 'Jump 25 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD50', label: 'Jump 50 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD75', label: 'Jump 75 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD100', label: 'Jump 100 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'STPIND', label: 'Step Index', group: 'Step Indices', market: 'synthetic_index', submarket: 'step_index' },
+    { value: 'STEP100', label: 'Step 100 Index', group: 'Step Indices', market: 'synthetic_index', submarket: 'step_index' },
+    { value: 'RDBEAR', label: 'Range Break 100 Index', group: 'Range Break Indices', market: 'synthetic_index', submarket: 'range_break' },
+    { value: 'RDBULL', label: 'Range Break 200 Index', group: 'Range Break Indices', market: 'synthetic_index', submarket: 'range_break' },
 ];
 
 const getStaticFallbackChartData = (): { activeSymbols: ActiveSymbols; tradingTimes: TradingTimesMap } => {
@@ -67,9 +77,9 @@ const getStaticFallbackChartData = (): { activeSymbols: ActiveSymbols; tradingTi
             symbol: m.value,
             underlying_symbol: m.value,
             display_name: m.label,
-            market: 'synthetic_index',
+            market: (m as any).market || 'synthetic_index',
             market_display_name: 'Derived',
-            submarket: 'random_index',
+            submarket: (m as any).submarket || 'random_index',
             submarket_display_name: m.group || 'Continuous Indices',
             subgroup: 'synthetics',
             subgroup_display_name: 'Synthetics',
@@ -146,6 +156,8 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                 if (!chart_api.api) {
                     await chart_api.init?.();
                 }
+
+                await chart_api.waitForConnection?.(10000);
 
                 if (isCancelled || !isMountedRef.current) return;
 

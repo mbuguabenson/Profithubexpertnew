@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 /* [AI] - Analytics removed - rudderstack event tracking removed */
@@ -73,8 +73,10 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (chartData.activeSymbols.length > 0) {
             const hasValidSymbol = Boolean(symbol && chartData.activeSymbols.some(s => s.symbol === symbol));
             if (!hasValidSymbol) {
+                // Auto-select a safe default so the chart never stays stuck
                 const defaultSymbol =
                     chartData.activeSymbols.find(s => s.symbol === 'R_100')?.symbol ||
+                    chartData.activeSymbols.find(s => s.symbol === 'R_50')?.symbol ||
                     chartData.activeSymbols[0]?.symbol ||
                     'R_100';
                 onSymbolChange(defaultSymbol);
@@ -83,6 +85,27 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
             updateSymbol();
         }
     }, [chartData.activeSymbols, symbol, onSymbolChange, updateSymbol]);
+
+    // Safety: if symbols load but selected symbol still invalid after 3s, force a default
+    const symbolResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        if (symbolResetTimerRef.current) clearTimeout(symbolResetTimerRef.current);
+        if (chartData.activeSymbols.length > 0 && symbol) {
+            const isSymbolInList = chartData.activeSymbols.some(s => s.symbol === symbol);
+            if (!isSymbolInList) {
+                symbolResetTimerRef.current = setTimeout(() => {
+                    const fallback =
+                        chartData.activeSymbols.find(s => s.symbol === 'R_100')?.symbol ||
+                        chartData.activeSymbols[0]?.symbol ||
+                        'R_100';
+                    onSymbolChange(fallback);
+                }, 3000);
+            }
+        }
+        return () => {
+            if (symbolResetTimerRef.current) clearTimeout(symbolResetTimerRef.current);
+        };
+    }, [chartData.activeSymbols, symbol, onSymbolChange]);
 
     // Handle chart canvas recalculation when run panel drawer opens/closes or when navigating to chart tab
     useEffect(() => {
@@ -98,7 +121,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         };
     }, [is_drawer_open]);
 
-    const is_connection_opened = !!chart_api?.api;
+    const is_connection_opened = chart_api?.api?.connection?.readyState === WebSocket.OPEN;
 
     const handleStateChange: TStateChangeListener = (state, _options) => {
         /* [AI] - Analytics removed - rudderstack event call removed */
@@ -121,10 +144,16 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         return times;
     }, [chartData.tradingTimes, symbol]);
 
+    // isSymbolReady: allow render if activeSymbols loaded and symbol is either valid
+    // OR has a fallback default ready — avoids infinite spinner on stale stored symbols
     const isSymbolReady =
         Boolean(symbol) &&
-        chartData.activeSymbols.length > 0 &&
-        chartData.activeSymbols.some(s => s.symbol === symbol);
+        (
+            chartData.activeSymbols.some(s => s.symbol === symbol) ||
+            // If symbols are loaded but don't contain the stored symbol, still render
+            // (the useEffect above will update the symbol shortly)
+            (chartData.activeSymbols.length > 0 && Boolean(symbol))
+        );
 
     if (!isSymbolReady) {
         return <ChunkLoader message='' />;

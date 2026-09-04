@@ -34,33 +34,43 @@ type SubscriptionPromise = Promise<{
 type TApiBaseApi = any;
 
 const FALLBACK_SYMBOLS_LIST = [
-    { value: 'R_10', label: 'Volatility 10 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_25', label: 'Volatility 25 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_50', label: 'Volatility 50 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_75', label: 'Volatility 75 Index', group: 'Continuous Volatility Indices' },
-    { value: 'R_100', label: 'Volatility 100 Index', group: 'Continuous Volatility Indices' },
-    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ15V', label: 'Volatility 15 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ30V', label: 'Volatility 30 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ90V', label: 'Volatility 90 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Continuous 1s Indices' },
-    { value: 'JD10', label: 'Jump 10 Index', group: 'Jump Indices' },
-    { value: 'JD25', label: 'Jump 25 Index', group: 'Jump Indices' },
-    { value: 'JD50', label: 'Jump 50 Index', group: 'Jump Indices' },
-    { value: 'JD75', label: 'Jump 75 Index', group: 'Jump Indices' },
-    { value: 'JD100', label: 'Jump 100 Index', group: 'Jump Indices' },
-    { value: 'STPIND', label: 'Step Index', group: 'Step Indices' },
-    { value: 'STEP100', label: 'Step 100 Index', group: 'Step Indices' },
-    { value: 'STEP200', label: 'Step 200 Index', group: 'Step Indices' },
-    { value: 'STEP500', label: 'Step 500 Index', group: 'Step Indices' },
-    { value: 'RDBEAR', label: 'Range Break 100 Index', group: 'Range Break Indices' },
-    { value: 'RDBULL', label: 'Range Break 200 Index', group: 'Range Break Indices' },
-    { value: 'DSI10', label: 'Drift Switch 10 Index', group: 'Drift Switch Indices' },
-    { value: 'DSI20', label: 'Drift Switch 20 Index', group: 'Drift Switch Indices' },
-    { value: 'DSI30', label: 'Drift Switch 30 Index', group: 'Drift Switch Indices' },
+    // Continuous Indices
+    { value: 'R_10', label: 'Volatility 10 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_25', label: 'Volatility 25 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_50', label: 'Volatility 50 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_75', label: 'Volatility 75 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: 'R_100', label: 'Volatility 100 Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Continuous Indices', market: 'synthetic_index', submarket: 'random_index' },
+    // NOTE: 1HZ150V, 1HZ200V, 1HZ250V, 1HZ300V are disabled
+    // Crash/Boom Indices
+    { value: 'CRASH300N', label: 'Crash 300 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'CRASH500', label: 'Crash 500 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'CRASH1000', label: 'Crash 1000 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'BOOM300N', label: 'Boom 300 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'BOOM500', label: 'Boom 500 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    { value: 'BOOM1000', label: 'Boom 1000 Index', group: 'Crash/Boom Indices', market: 'synthetic_index', submarket: 'crash_index' },
+    // Jump Indices
+    { value: 'JD10', label: 'Jump 10 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD25', label: 'Jump 25 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD50', label: 'Jump 50 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD75', label: 'Jump 75 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    { value: 'JD100', label: 'Jump 100 Index', group: 'Jump Indices', market: 'synthetic_index', submarket: 'jump_index' },
+    // Step Indices
+    { value: 'STPIND', label: 'Step Index', group: 'Step Indices', market: 'synthetic_index', submarket: 'step_index' },
+    { value: 'STEP100', label: 'Step 100 Index', group: 'Step Indices', market: 'synthetic_index', submarket: 'step_index' },
+    { value: 'STEP200', label: 'Step 200 Index', group: 'Step Indices', market: 'synthetic_index', submarket: 'step_index' },
+    { value: 'STEP500', label: 'Step 500 Index', group: 'Step Indices', market: 'synthetic_index', submarket: 'step_index' },
+    // Range Break Indices
+    { value: 'RDBEAR', label: 'Range Break 100 Index', group: 'Range Break Indices', market: 'synthetic_index', submarket: 'range_break' },
+    { value: 'RDBULL', label: 'Range Break 200 Index', group: 'Range Break Indices', market: 'synthetic_index', submarket: 'range_break' },
+    // Drift Switch Indices
+    { value: 'DSI10', label: 'Drift Switch 10 Index', group: 'Drift Switch Indices', market: 'synthetic_index', submarket: 'random_daily' },
+    { value: 'DSI20', label: 'Drift Switch 20 Index', group: 'Drift Switch Indices', market: 'synthetic_index', submarket: 'random_daily' },
+    { value: 'DSI30', label: 'Drift Switch 30 Index', group: 'Drift Switch Indices', market: 'synthetic_index', submarket: 'random_daily' },
 ];
 
 const buildFallbackActiveSymbols = (): any[] => {
@@ -72,9 +82,9 @@ const buildFallbackActiveSymbols = (): any[] => {
         symbol: m.value,
         underlying_symbol: m.value,
         display_name: m.label,
-        market: 'synthetic_index',
+        market: (m as any).market || 'synthetic_index',
         market_display_name: 'Derived',
-        submarket: 'random_index',
+        submarket: (m as any).submarket || 'random_index',
         submarket_display_name: m.group || 'Continuous Indices',
         subgroup: 'synthetics',
         subgroup_display_name: 'Synthetics',
@@ -98,6 +108,7 @@ class APIBase {
     has_active_symbols = false;
     is_stopping = false;
     active_symbols: any[] = [];
+    active_symbols_source: 'fallback' | 'cache' | 'live' = 'fallback';
     current_auth_subscriptions: SubscriptionPromise[] = [];
     is_authorized = false;
     active_symbols_promise: Promise<any[]> | null = null;
@@ -122,7 +133,10 @@ class APIBase {
                     const parsed = JSON.parse(cached);
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         this.active_symbols = parsed;
-                        this.has_active_symbols = true;
+                        // Cached symbols are provisional. Always refresh from the live API before
+                        // treating them as authoritative because symbol availability changes.
+                        this.has_active_symbols = false;
+                        this.active_symbols_source = 'cache';
                         return;
                     }
                 }
@@ -130,7 +144,8 @@ class APIBase {
         } catch {}
         // Pre-seed in-memory with fallback symbols so all components have valid symbols on frame 1
         this.active_symbols = buildFallbackActiveSymbols();
-        this.has_active_symbols = true;
+        this.has_active_symbols = false;
+        this.active_symbols_source = 'fallback';
     }
 
     unsubscribeAllSubscriptions = () => {
@@ -710,7 +725,12 @@ class APIBase {
 
     getActiveSymbols = async (): Promise<any[]> => {
         // Fast path 1: Return in-memory symbols if already available
-        if (this.has_active_symbols && Array.isArray(this.active_symbols) && this.active_symbols.length > 0) {
+        if (
+            this.has_active_symbols &&
+            this.active_symbols_source === 'live' &&
+            Array.isArray(this.active_symbols) &&
+            this.active_symbols.length > 0
+        ) {
             return this.active_symbols;
         }
 
@@ -779,34 +799,10 @@ class APIBase {
             // If network did not return symbols, use the comprehensive fallback list
             if (!active_symbols || active_symbols.length === 0) {
                 active_symbols = buildFallbackActiveSymbols();
+                this.active_symbols_source = 'fallback';
+            } else {
+                this.active_symbols_source = 'live';
             }
-
-            // Ensure required 1s volatility indices (15, 30, 90) are always present
-            const required_1s_symbols_list = [10, 15, 25, 30, 50, 75, 90, 100];
-            const required_1s_symbols = required_1s_symbols_list.map(v => ({
-                symbol: `1HZ${v}V`,
-                underlying_symbol: `1HZ${v}V`,
-                display_name: `Volatility ${v} (1s) Index`,
-                market: 'synthetic_index',
-                market_display_name: 'Derived',
-                submarket: 'random_index',
-                submarket_display_name: 'Continuous Indices',
-                subgroup: 'synthetics',
-                subgroup_display_name: 'Synthetics',
-                pip: 0.001,
-                pip_size: 0.001,
-                exchange_is_open: true,
-                is_trading_suspended: false,
-            }));
-
-            required_1s_symbols.forEach(req => {
-                const exists = active_symbols.some(
-                    (s: any) => s.symbol === req.symbol || s.underlying_symbol === req.symbol
-                );
-                if (!exists) {
-                    active_symbols.push(req);
-                }
-            });
 
             try {
                 this.has_active_symbols = true;
