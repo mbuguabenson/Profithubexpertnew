@@ -75,7 +75,7 @@ export default class ChartStore {
             market_block?.getFieldValue('SYMBOL_LIST') ??
             (api_base?.active_symbols?.[0]
                 ? (api_base.active_symbols[0] as any).underlying_symbol || (api_base.active_symbols[0] as any).symbol
-                : this.symbol || '1HZ10V');
+                : this.symbol || 'R_100');
         this.symbol = symbol;
         if (!this.granularity && this.granularity !== 0) this.granularity = 0;
         if (!this.chart_type) this.chart_type = 'line';
@@ -117,17 +117,17 @@ export default class ChartStore {
 
             if (props) {
                 const { symbol, granularity, chart_type } = JSON.parse(props);
-                this.symbol = symbol || '1HZ10V';
+                this.symbol = symbol || 'R_100';
                 this.granularity = granularity ?? 0;
                 this.chart_type = chart_type || 'line';
             } else {
-                this.symbol = '1HZ10V';
+                this.symbol = 'R_100';
                 this.granularity = 0;
                 this.chart_type = 'line';
             }
         } catch {
             LocalStore.remove('bot.chart_props');
-            this.symbol = '1HZ10V';
+            this.symbol = 'R_100';
             this.granularity = 0;
             this.chart_type = 'line';
         }

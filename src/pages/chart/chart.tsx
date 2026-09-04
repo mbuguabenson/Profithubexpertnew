@@ -70,8 +70,19 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     }, []);
 
     useEffect(() => {
-        if (!symbol) updateSymbol();
-    }, [symbol, updateSymbol]);
+        if (chartData.activeSymbols.length > 0) {
+            const hasValidSymbol = Boolean(symbol && chartData.activeSymbols.some(s => s.symbol === symbol));
+            if (!hasValidSymbol) {
+                const defaultSymbol =
+                    chartData.activeSymbols.find(s => s.symbol === 'R_100')?.symbol ||
+                    chartData.activeSymbols[0]?.symbol ||
+                    'R_100';
+                onSymbolChange(defaultSymbol);
+            }
+        } else if (!symbol) {
+            updateSymbol();
+        }
+    }, [chartData.activeSymbols, symbol, onSymbolChange, updateSymbol]);
 
     // Handle chart canvas recalculation when run panel drawer opens/closes or when navigating to chart tab
     useEffect(() => {
@@ -102,7 +113,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         Boolean(symbol) &&
         chartData.activeSymbols.length > 0 &&
         chartData.activeSymbols.some(s => s.symbol === symbol) &&
-        Boolean(chartData.tradingTimes && chartData.tradingTimes[symbol]);
+        Boolean(symbol && chartData.tradingTimes && (chartData.tradingTimes as Record<string, any>)[symbol]);
 
     if (!isSymbolReady) {
         return <ChunkLoader message='' />;
