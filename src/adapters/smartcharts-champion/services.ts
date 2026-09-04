@@ -5,6 +5,7 @@
 
 import ApiHelpers from '@/external/bot-skeleton/services/api/api-helpers';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
+import { ALL_DERIV_MARKETS } from '@/constants/markets';
 import type { TServices } from './types';
 
 // Logger utility for services layer
@@ -142,6 +143,23 @@ function transformTradingTimesData(tradingTimesData: any): any {
  * Create services wrapper around ApiHelpers
  * @returns TServices implementation
  */
+const getFallbackSymbols = () =>
+    ALL_DERIV_MARKETS.map(m => ({
+        symbol: m.value,
+        underlying_symbol: m.value,
+        display_name: m.label,
+        market: 'synthetic_index',
+        market_display_name: 'Derived',
+        submarket: 'random_index',
+        submarket_display_name: m.group || 'Continuous Indices',
+        subgroup: 'synthetics',
+        subgroup_display_name: 'Synthetics',
+        pip: 2,
+        delay_amount: 0,
+        exchange_is_open: 1,
+        is_trading_suspended: 0,
+    }));
+
 export function createServices(): TServices {
     return {
         /**
@@ -171,34 +189,30 @@ export function createServices(): TServices {
                 const apiHelpers = ApiHelpers.instance as any;
 
                 if (!isApiHelpersInitialized(apiHelpers)) {
-                    // Try fallback check
-                    if (apiHelpers?.active_symbols?.active_symbols) {
+                    if (apiHelpers?.active_symbols?.active_symbols && apiHelpers.active_symbols.active_symbols.length > 0) {
                         return apiHelpers.active_symbols.active_symbols;
                     }
-                    return [];
+                    return getFallbackSymbols();
                 }
 
                 // Retrieve active symbols using the existing service
                 const activeSymbols = await apiHelpers.active_symbols.retrieveActiveSymbols();
 
                 // Convert the processed symbols back to array format for the adapter
-                if (!Array.isArray(activeSymbols)) {
-                    return [];
+                if (Array.isArray(activeSymbols) && activeSymbols.length > 0) {
+                    return activeSymbols;
                 }
 
-                return activeSymbols;
+                return getFallbackSymbols();
             } catch (error) {
-                // Fallback: try to get from the raw active_symbols array if available
                 try {
                     const apiHelpers = ApiHelpers.instance as any;
-                    if (isApiHelpersInitialized(apiHelpers) && apiHelpers.active_symbols?.active_symbols) {
+                    if (isApiHelpersInitialized(apiHelpers) && apiHelpers.active_symbols?.active_symbols?.length > 0) {
                         return apiHelpers.active_symbols.active_symbols;
                     }
-                } catch {
-                    // Ignore fallback errors during startup
-                }
+                } catch {}
 
-                return [];
+                return getFallbackSymbols();
             }
         },
 

@@ -50,6 +50,8 @@ class APIBase {
     active_symbols_promise: Promise<any[] | undefined> | null = null;
     common_store: CommonStore | undefined;
     reconnection_attempts: number = 0;
+    ACTIVE_SYMBOLS_TIMEOUT_MS = 10000;
+    ENRICHMENT_TIMEOUT_MS = 10000;
     private init_promise: Promise<void> | null = null;
 
     constructor() {
@@ -727,7 +729,7 @@ class APIBase {
                         if (!settled) { settled = true; cleanup(); reject(err); }
                     };
 
-                    const timer = setTimeout(() => safeReject(new Error('Public WS timeout')), 4000);
+                    const timer = setTimeout(() => safeReject(new Error('Public WS timeout')), 8000);
 
                     ws.onopen = () => {
                         try {
