@@ -91,9 +91,16 @@ const AppHeader = observer(() => {
     }, []);
 
     // Detect OAuth callback on mount (before App.tsx cleans up the URL).
+    // Also check sessionStorage/localStorage for an in-progress PKCE code_verifier
+    // which persists even after App.tsx strips the query params from the URL.
     const [isOAuthPending, setIsOAuthPending] = useState(() => {
         const params = new URLSearchParams(window.location.search);
-        return Boolean(params.get('code') && params.get('state'));
+        if (params.get('code') && params.get('state')) return true;
+        // PKCE verifier present means we initiated a login flow and are waiting for completion
+        const hasVerifier =
+            !!sessionStorage.getItem('oauth_code_verifier') ||
+            !!localStorage.getItem('oauth_code_verifier');
+        return hasVerifier;
     });
 
     const { data: activeAccount } = useActiveAccount({
@@ -103,14 +110,15 @@ const AppHeader = observer(() => {
 
     const handleLogout = useLogout();
 
-    // Clear OAuth-pending flag once the account is set (auth succeeded)
+    // Clear OAuth-pending flag once the account is set (auth succeeded) or timed out
     useEffect(() => {
         if (!isOAuthPending) return;
         if (activeLoginid) {
             setIsOAuthPending(false);
             return;
         }
-        const timer = setTimeout(() => setIsOAuthPending(false), 30_000);
+        // Keep pending for up to 60s – PKCE exchange + WS auth can take several seconds
+        const timer = setTimeout(() => setIsOAuthPending(false), 60_000);
         return () => clearTimeout(timer);
     }, [isOAuthPending, activeLoginid]);
 
@@ -123,16 +131,23 @@ const AppHeader = observer(() => {
         }
     }, [setIsAuthorizing]);
 
-    // Fallback timeout
+    // Fallback timeout: only fire when no OAuth flow is in progress.
+    // The timeout is intentionally long (15s) to accommodate slow network conditions.
     useEffect(() => {
+        // Never apply the timeout while an OAuth callback is being processed
         if (isOAuthPending) return;
 
         const timer = setTimeout(() => {
             if (isAuthorizing && !activeLoginid) {
+                // Double-check that a verifier hasn't appeared (race between mount and token exchange)
+                const hasVerifier =
+                    !!sessionStorage.getItem('oauth_code_verifier') ||
+                    !!localStorage.getItem('oauth_code_verifier');
+                if (hasVerifier) return; // Still in PKCE flow, do not timeout
                 setAuthTimeout(true);
                 setIsAuthorizing(false);
             }
-        }, 5000);
+        }, 15_000);
 
         if (activeLoginid || !isAuthorizing) {
             if (authTimeout) setAuthTimeout(false);

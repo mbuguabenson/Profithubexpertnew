@@ -126,9 +126,11 @@ export class AccountSwitcherService {
             localStorage.setItem('account_type', isVirtual ? 'demo' : 'real');
             localStorage.setItem('active_currency', targetCurrency);
             const balance = targetBalance;
+            const hasKnownBalance = balance > 0;
 
             // 4. Instantly synchronize client store and auth observables (0ms perceived latency)
-            // with the target account's known/cached balance, ensuring no stale previous balance is shown.
+            // Only pre-set balance if we actually know it; otherwise leave the loading state
+            // active (spinning) until the WS authorize response provides the real balance.
             const resolvedClientStore = clientStore || globalObserver.getState('client.store');
             if (resolvedClientStore) {
                 if (typeof resolvedClientStore.setLoginId === 'function') {
@@ -137,15 +139,19 @@ export class AccountSwitcherService {
                 if (typeof resolvedClientStore.setCurrency === 'function') {
                     resolvedClientStore.setCurrency(targetCurrency);
                 }
-                if (typeof resolvedClientStore.setBalance === 'function') {
+                // Only pre-populate balance if we have a real cached value to avoid showing 0.00
+                if (hasKnownBalance && typeof resolvedClientStore.setBalance === 'function') {
                     resolvedClientStore.setBalance(String(balance), targetLoginId);
                 }
             }
 
+            // Only emit balance in the optimistic authData update if we actually know it.
+            // Emitting balance=0 would make useActiveAccount render "0.00" until the real
+            // authorize response arrives. If unknown, omit it so the previous balance is preserved.
             setAuthData({
                 loginid: targetLoginId,
                 currency: targetCurrency,
-                balance: balance,
+                ...(hasKnownBalance ? { balance } : {}),
                 is_virtual: isVirtual ? 1 : 0,
             } as any);
 

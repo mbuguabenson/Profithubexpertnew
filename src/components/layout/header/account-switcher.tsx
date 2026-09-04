@@ -466,14 +466,20 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
     const { currency, isVirtual, balance } = activeAccount;
     const showChevron = !is_bot_running;
 
-    const rawLiveBalance =
-        client?.balance !== undefined && client?.balance !== null && client?.balance !== ''
-            ? addComma(
-                  (parseFloat(String(client.balance).replace(/,/g, '')) || 0).toFixed(
-                      getDecimalPlaces(currency || 'USD')
-                  )
-              )
-            : balance;
+    // Use client.balance as the "live" balance source, but only if:
+    //  - it's a defined, non-empty value AND
+    //  - it's not zero while we're in the middle of an account switch
+    //    (balance=0 during a switch is "not yet loaded", not a real zero balance)
+    const clientBalanceNum = client?.balance !== undefined && client?.balance !== null && client?.balance !== ''
+        ? parseFloat(String(client.balance).replace(/,/g, ''))
+        : NaN;
+    const clientBalanceIsValid =
+        !isNaN(clientBalanceNum) &&
+        (!isSwitchingAccount || clientBalanceNum > 0 || isVirtual);
+
+    const rawLiveBalance = clientBalanceIsValid
+        ? addComma(clientBalanceNum.toFixed(getDecimalPlaces(currency || 'USD')))
+        : balance;
 
     // ─── Format balance for header chip ──────────────────────────────────────
     const chipBalance = (() => {
