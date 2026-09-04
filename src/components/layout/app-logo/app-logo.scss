@@ -91,11 +91,36 @@
     &__icon {
         display: block;
         object-fit: contain;
-        filter: drop-shadow(0 2px 6px rgba(3, 61, 38, 0.25));
         transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 
         &:hover {
             transform: scale(1.06);
+        }
+
+        // SVG Theme Styles
+        .base-fill { fill: url(#baseGrad); }
+        .base-stroke { stroke: url(#baseGrad); }
+        
+        .logo-glow {
+            :global(.theme--dark) & {
+                filter: drop-shadow(0px 4px 5px rgba(255, 255, 255, 0.2));
+            }
+            :global(.theme--light) & {
+                filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.2));
+            }
+        }
+
+        // Define gradient stops for light and dark modes
+        :global(.theme--dark) & {
+            .base-stop-1 { stop-color: #f8fafc; }
+            .base-stop-2 { stop-color: #cbd5e1; }
+            .base-stop-3 { stop-color: #94a3b8; }
+        }
+
+        :global(.theme--light) & {
+            .base-stop-1 { stop-color: #064e3b; }
+            .base-stop-2 { stop-color: #022c1e; }
+            .base-stop-3 { stop-color: #011a12; }
         }
     }
 
