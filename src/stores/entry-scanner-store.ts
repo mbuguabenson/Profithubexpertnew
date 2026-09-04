@@ -376,6 +376,12 @@ export default class EntryScannerStore {
                         }
                     },
                     (err: any) => {
+                        const isAlreadySub =
+                            err?.error?.code === 'AlreadySubscribed' ||
+                            err?.code === 'AlreadySubscribed' ||
+                            String(err?.message || '').toLowerCase().includes('already subscribed') ||
+                            String(err?.error?.message || '').toLowerCase().includes('already subscribed');
+                        if (isAlreadySub) return;
                         console.warn(`[EntryScanner] Stream error for ${market.symbol}:`, err);
                     }
                 );

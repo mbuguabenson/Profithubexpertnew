@@ -420,7 +420,8 @@ export default class MarketkillerStore {
                     const isAlreadySub =
                         err?.error?.code === 'AlreadySubscribed' ||
                         err?.code === 'AlreadySubscribed' ||
-                        err?.message?.includes?.('AlreadySubscribed');
+                        String(err?.message || '').toLowerCase().includes('already subscribed') ||
+                        String(err?.error?.message || '').toLowerCase().includes('already subscribed');
                     if (isAlreadySub) return;
                     console.warn(`[Marketkiller] Stream error for ${sym}:`, err);
                 }
