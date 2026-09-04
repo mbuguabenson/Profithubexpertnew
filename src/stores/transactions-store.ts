@@ -44,6 +44,7 @@ export default class TransactionsStore {
             total_won_accumulator: observable,
             total_lost_accumulator: observable,
             transactions: computed,
+            contracts: computed,
             onBotContractEvent: action.bound,
             pushTransaction: action.bound,
             clear: action.bound,
@@ -76,6 +77,12 @@ export default class TransactionsStore {
         // Keep every bulk contract as its own drawer row. The card can still
         // display bulk metadata without hiding individual trades.
         return raw_elements;
+    }
+
+    get contracts(): TContractInfo[] {
+        return this.transactions
+            .filter(item => item.type === transaction_elements.CONTRACT && typeof item.data === 'object' && item.data !== null)
+            .map(item => item.data as TContractInfo);
     }
 
     get statistics() {

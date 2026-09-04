@@ -52,7 +52,10 @@ export default class ChartStore {
     get is_contract_ended() {
         const { transactions } = this.root_store;
 
-        return transactions.contracts.length > 0 && transactions.contracts[0].is_ended;
+        return (
+            transactions.contracts.length > 0 &&
+            Boolean(transactions.contracts[0].is_completed || (transactions.contracts[0] as any).is_ended)
+        );
     }
 
     onStartBot = () => {
@@ -67,9 +70,9 @@ export default class ChartStore {
 
     updateSymbol = () => {
         const workspace = window.Blockly?.derivWorkspace;
-        const market_block = workspace?.getAllBlocks().find((block: window.Blockly.Block) => {
-            return block.type === 'trade_definition_market';
-        });
+        const market_block = workspace
+            ?.getAllBlocks()
+            .find((block: any) => block?.type === 'trade_definition_market');
 
         const symbol =
             market_block?.getFieldValue('SYMBOL_LIST') ??
