@@ -89,7 +89,7 @@ const PovertyHunter: React.FC = observer(() => {
     const currency = client?.currency || 'USD';
 
     // ── UI States ──
-    const [selectedSymbol, setSelectedSymbol] = useState<string>('1HZ100V');
+    const [selectedSymbol, setSelectedSymbol] = useState<string>('R_100');
     const [scanAllMarkets, setScanAllMarkets] = useState<boolean>(true);
     const [showWideView, setShowWideView] = useState<boolean>(false);
     const [autoSwitchMarkets, setAutoSwitchMarkets] = useState<boolean>(true);

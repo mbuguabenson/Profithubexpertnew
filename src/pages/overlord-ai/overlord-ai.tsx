@@ -68,12 +68,11 @@ export interface TradeLogItem {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DERIVED_SYNTHETIC_MARKETS = [
-    { symbol: '1HZ100V', label: 'Volatility 100 (1s) Index', pip: 2 },
+    { symbol: 'R_100', label: 'Volatility 100 Index', pip: 2 },
     { symbol: '1HZ10V', label: 'Volatility 10 (1s) Index', pip: 2 },
     { symbol: '1HZ25V', label: 'Volatility 25 (1s) Index', pip: 2 },
     { symbol: '1HZ50V', label: 'Volatility 50 (1s) Index', pip: 2 },
     { symbol: '1HZ75V', label: 'Volatility 75 (1s) Index', pip: 2 },
-    { symbol: 'R_100', label: 'Volatility 100 Index', pip: 2 },
     { symbol: 'R_10', label: 'Volatility 10 Index', pip: 3 },
     { symbol: 'R_25', label: 'Volatility 25 Index', pip: 3 },
     { symbol: 'R_50', label: 'Volatility 50 Index', pip: 4 },
@@ -182,7 +181,7 @@ const OverlordAi: React.FC = observer(() => {
     const rawBalance = Number(client?.balance || 0);
 
     // ── Market States ──
-    const [selectedSymbol, setSelectedSymbol] = useState<string>('1HZ100V');
+    const [selectedSymbol, setSelectedSymbol] = useState<string>('R_100');
     const scanAllMarkets = true;
     const [isWideViewOpen, setIsWideViewOpen] = useState<boolean>(false);
     const [marketSearchTerm, setMarketSearchTerm] = useState<string>('');

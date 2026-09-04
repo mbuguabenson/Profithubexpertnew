@@ -8,7 +8,7 @@ const MarketSelector = observer(() => {
     if (!store?.easy_tool) return null;
 
     const { easy_tool } = store;
-    const { symbol = '1HZ100V', setSymbol, markets = [], fetchMarkets, is_loading_markets } = easy_tool;
+    const { symbol = 'R_100', setSymbol, markets = [], fetchMarkets, is_loading_markets } = easy_tool;
 
     useEffect(() => {
         if (!markets || markets.length === 0) {

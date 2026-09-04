@@ -57,10 +57,15 @@ export const safeSubscribe = (
             if (onError) {
                 onError(error);
             } else {
-                console.error(
-                    '[WebSocketHandler] Unhandled stream error:\n',
-                    error instanceof Error ? error.stack : errorDetails
-                );
+                const code = (errorDetails as any)?.code;
+                if (code === 'InvalidSymbol' || code === 'InputValidationFailed') {
+                    console.warn('[WebSocketHandler] Stream notice:', errorDetails);
+                } else {
+                    console.error(
+                        '[WebSocketHandler] Unhandled stream error:\n',
+                        error instanceof Error ? error.stack : errorDetails
+                    );
+                }
             }
         } catch (err) {
             console.error(

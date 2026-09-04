@@ -502,7 +502,7 @@ export default class SmartAutoStore {
             const final_stake = Math.max(0.35, Math.min(stake, max_stake));
 
             const targetSymbol =
-                this.root_store.analysis?.symbol || (api_base.active_symbols?.[0] as any)?.symbol || '1HZ100V';
+                this.root_store.analysis?.symbol || (api_base.active_symbols?.[0] as any)?.symbol || 'R_100';
 
             this.addLog(
                 `🚀 Placing ${runs} Bulk ${contract_type} trade(s) on ${targetSymbol} @ $${final_stake.toFixed(2)} simultaneously...`,
@@ -676,7 +676,7 @@ export default class SmartAutoStore {
             }
 
             const targetSymbol =
-                this.root_store.analysis?.symbol || (api_base.active_symbols?.[0] as any)?.symbol || '1HZ100V';
+                this.root_store.analysis?.symbol || (api_base.active_symbols?.[0] as any)?.symbol || 'R_100';
 
             this.addLog(`Buying ${contract_type} on ${targetSymbol} for $${final_stake.toFixed(2)}`, 'trade');
 

@@ -87,7 +87,7 @@ export const AutoHunterBotModal: React.FC<AutoHunterBotModalProps> = ({
                 takeProfit,
                 stopLoss,
                 martingale,
-                symbol: symbol || '1HZ100V',
+                symbol: symbol || 'R_100',
                 tradeTypeLabel: strategyLabel || 'Even / Odd',
                 bestSignal: strategyId.toUpperCase(),
             });

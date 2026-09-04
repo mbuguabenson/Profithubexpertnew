@@ -612,7 +612,7 @@ export default function Scanner() {
     const store = useStore();
     const [step, setStep] = useState<Step>('scanning');
     const [minimized] = useState(false);
-    const [selectedSymbol, setSelectedSymbol] = useState('1HZ100V');
+    const [selectedSymbol, setSelectedSymbol] = useState('R_100');
     const [selectedTradeType, setSelectedTradeType] = useState('over_under');
     const [stake, setStake] = useState('1');
     const [takeProfit, setTakeProfit] = useState('10');

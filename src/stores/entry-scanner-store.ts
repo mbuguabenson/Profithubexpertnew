@@ -58,7 +58,7 @@ export default class EntryScannerStore {
         'rise_fall',
     ];
     @observable accessor scan_mode: 'all' | 'single' = 'all';
-    @observable accessor target_single_symbol: string = '1HZ100V';
+    @observable accessor target_single_symbol: string = 'R_100';
     @observable accessor min_confidence: number = 65; // %
     @observable accessor tick_sample_size: number = 1000;
     @observable accessor auto_load_on_match: boolean = true;
@@ -265,7 +265,6 @@ export default class EntryScannerStore {
         { symbol: '1HZ25V', display_name: 'Volatility 25 (1s) Index', is1s: true },
         { symbol: '1HZ50V', display_name: 'Volatility 50 (1s) Index', is1s: true },
         { symbol: '1HZ75V', display_name: 'Volatility 75 (1s) Index', is1s: true },
-        { symbol: '1HZ100V', display_name: 'Volatility 100 (1s) Index', is1s: true },
         { symbol: '1HZ15V', display_name: 'Volatility 15 (1s) Index', is1s: true },
         { symbol: '1HZ30V', display_name: 'Volatility 30 (1s) Index', is1s: true },
         { symbol: '1HZ90V', display_name: 'Volatility 90 (1s) Index', is1s: true },

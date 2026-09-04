@@ -12,10 +12,6 @@ export const SYMBOLS = [
     { id: '1HZ75V', label: 'Volatility 75 (1s)', short: 'V75s', category: 'Volatility' },
     { id: '1HZ90V', label: 'Volatility 90 (1s)', short: 'V90s', category: 'Volatility' },
     { id: 'R_100', label: 'Volatility 100', short: 'V100', category: 'Volatility' },
-    { id: '1HZ100V', label: 'Volatility 100 (1s)', short: 'V100s', category: 'Volatility' },
-    { id: '1HZ150V', label: 'Volatility 150 (1s)', short: 'V150s', category: 'Volatility' },
-    { id: '1HZ250V', label: 'Volatility 250 (1s)', short: 'V250s', category: 'Volatility' },
-    { id: '1HZ300V', label: 'Volatility 300 (1s)', short: 'V300s', category: 'Volatility' },
 
     // Crash/Boom
     { id: 'BOOM1000', label: 'Boom 1000', short: 'B1000', category: 'Crash/Boom' },

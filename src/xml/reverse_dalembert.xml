@@ -25,7 +25,7 @@
       <block type="trade_definition_market" id="*z5eSR~mt#(|upx(NCB6" deletable="false" movable="false">
         <field name="MARKET_LIST">synthetic_index</field>
         <field name="SUBMARKET_LIST">random_index</field>
-        <field name="SYMBOL_LIST">1HZ100V</field>
+        <field name="SYMBOL_LIST">1HZ10V</field>
         <next>
           <block type="trade_definition_tradetype" id="{[R6A=sR8$3%rXWv#y@D" deletable="false" movable="false">
             <field name="TRADETYPECAT_LIST">callput</field>

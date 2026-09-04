@@ -45,7 +45,7 @@ const removeUndefinedFields = <T extends Record<string, any>>(fields: T): T =>
 
 export const normalizeTradeParameters = (parameters: TTradeParameters) => {
     const { symbol, underlying_symbol, barrier, barrier2, prediction, ...rest } = parameters;
-    const normalized_symbol = (underlying_symbol || symbol)?.toString().trim() || '1HZ100V';
+    const normalized_symbol = (underlying_symbol || symbol)?.toString().trim() || 'R_100';
     const symbol_field = { underlying_symbol: normalized_symbol };
     const barrier_field: Record<string, string> = {};
 

@@ -86,7 +86,7 @@ export const EntryScanner = observer(() => {
                                 <span className='active-symbol-emboss'>{entry_scanner.scan_result.displayName}</span>
                             ) : (
                                 <span className='standby-text'>
-                                    •••• •••• •••• {entry_scanner.target_single_symbol || '1HZ100V'}
+                                    •••• •••• •••• {entry_scanner.target_single_symbol || 'R_100'}
                                 </span>
                             )}
                         </div>
@@ -205,7 +205,6 @@ export const EntryScanner = observer(() => {
                             <option value='1HZ25V'>Volatility 25 (1s) Index</option>
                             <option value='1HZ50V'>Volatility 50 (1s) Index</option>
                             <option value='1HZ75V'>Volatility 75 (1s) Index</option>
-                            <option value='1HZ100V'>Volatility 100 (1s) Index</option>
                             <option value='1HZ15V'>Volatility 15 (1s) Index</option>
                             <option value='1HZ30V'>Volatility 30 (1s) Index</option>
                             <option value='1HZ90V'>Volatility 90 (1s) Index</option>

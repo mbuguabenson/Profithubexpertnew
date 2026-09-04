@@ -18,7 +18,7 @@ export type TMarketGroup = {
 export default class EasyToolStore {
     root_store: RootStore;
 
-    @observable accessor symbol: string = '1HZ100V';
+    @observable accessor symbol: string = 'R_100';
     @observable accessor current_price: number | null = null;
     @observable accessor last_digit: number | null = null;
     @observable accessor ticks: number[] = [];
