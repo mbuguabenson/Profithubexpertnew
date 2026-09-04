@@ -928,21 +928,20 @@ export const isProduction = () => {
     return !!DOMAIN_CONFIG[hostname];
 };
 
-/**
- * Public market data WebSocket endpoint (unauthenticated).
- * Official Deriv Options public market data stream.
- */
-export const getPublicWebSocketURL = () =>
-    isProduction()
-        ? 'wss://api.derivws.com/trading/v1/options/ws/public'
-        : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
+// The Deriv v3 WebSocket base URL
+const DERIV_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
+const PUBLIC_APP_ID = '1089';
 
 /**
  * Returns a public (unauthenticated) WebSocket URL for pre-login market data.
+ * Uses registered Deriv App ID with fallback to standard public app ID 1089.
  */
-export const getLegacyServerURL = () => getPublicWebSocketURL();
+export const getLegacyServerURL = () => {
+    const appId = getAppId() || PUBLIC_APP_ID;
+    return `${DERIV_WS_BASE}?app_id=${encodeURIComponent(appId)}&l=EN&brand=deriv`;
+};
 
-export const getDefaultServerURL = () => getPublicWebSocketURL();
+export const getDefaultServerURL = () => getLegacyServerURL();
 
 /**
  * Gets the WebSocket URL for the current session.

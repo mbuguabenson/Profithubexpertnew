@@ -31,13 +31,6 @@ const watchBefore = store => {
         return Promise.resolve(false);
     }
 
-    // Fast path: In Fast Mode, execute immediately without blocking for server tick intervals
-    if (isFastModeActive()) {
-        if (currentState.scope === constants.BEFORE_PURCHASE) {
-            return Promise.resolve(true);
-        }
-    }
-
     if (
         currentState.scope === constants.BEFORE_PURCHASE &&
         currentState.proposalsReady &&
@@ -77,11 +70,6 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
         return Promise.resolve(false);
     }
 
-    // In Fast Mode, resolve immediately when in passScope
-    if (isFastModeActive() && currentState.scope === passScope) {
-        return Promise.resolve(true);
-    }
-
     return new Promise(resolve => {
         let isResolved = false;
         const unsubscribe = store.subscribe(() => {
@@ -92,13 +80,6 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
                 isResolved = true;
                 unsubscribe();
                 resolve(false);
-                return;
-            }
-
-            if (isFastModeActive() && newState.scope === passScope) {
-                isResolved = true;
-                unsubscribe();
-                resolve(true);
                 return;
             }
 

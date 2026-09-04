@@ -88,9 +88,8 @@ export default Engine =>
                     this.renewProposalsOnPurchase();
                 }
 
-                // In fast mode, rely on standard proposal_open_contract / transaction listener
-                // without sending an extra subscribe: 1 duplicate.
-                if (!isFastMode && api_base.api && buy.contract_id) {
+                // Stream proposal_open_contract real-time updates for this purchased contract
+                if (api_base.api && buy.contract_id) {
                     try {
                         api_base.api.send({
                             proposal_open_contract: 1,
