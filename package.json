@@ -3,7 +3,7 @@
     "private": true,
     "version": "0.0.1",
     "engines": {
-        "node": "20.x || 22.x"
+        "node": ">=20.0.0"
     },
     "scripts": {
         "start": "node scripts/dev-all.js",
@@ -79,7 +79,7 @@
         "usehooks-ts": "^3.1.0",
         "uuid": "^11.1.1",
         "yup": "^1.4.0",
-        "ws": "^8.18.0"
+        "ws": "8.20.1"
     },
     "devDependencies": {
         "@babel/core": "^7.24.7",
