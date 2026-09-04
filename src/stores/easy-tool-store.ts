@@ -174,47 +174,23 @@ export default class EasyToolStore {
      * Fetch active_symbols directly over Deriv WebSocket
      */
     @action
-    fetchMarkets = async (retryCount = 0) => {
+    fetchMarkets = async (_retryCount = 0) => {
         this.is_loading_markets = true;
         let symbols: any[] = [];
 
         try {
-            if (api_base.api) {
-                // Direct Deriv WebSocket active_symbols send
-                const res: any = await api_base.api.send({ active_symbols: 'brief', product_type: 'basic' });
-                if (res?.active_symbols && Array.isArray(res.active_symbols) && res.active_symbols.length > 0) {
-                    symbols = res.active_symbols;
-                }
-            }
+            symbols = await api_base.getActiveSymbols();
         } catch (error) {
-            console.debug('[EasyToolStore] WS active_symbols send notice:', error);
-        }
-
-        // Fallback to ApiHelpers or api_base.active_symbols if send timed out
-        if (symbols.length === 0) {
-            try {
-                if (api_base.active_symbols && Array.isArray(api_base.active_symbols) && api_base.active_symbols.length > 0) {
-                    symbols = api_base.active_symbols;
-                } else if (
-                    ApiHelpers.instance &&
-                    typeof (ApiHelpers.instance as any).active_symbols?.retrieveActiveSymbols === 'function'
-                ) {
-                    symbols = await (ApiHelpers.instance as any).active_symbols.retrieveActiveSymbols();
-                }
-            } catch (e) {
-                console.debug('[EasyToolStore] ApiHelpers retrieveActiveSymbols notice:', e);
-            }
+            console.debug('[EasyToolStore] getActiveSymbols notice:', error);
         }
 
         if (symbols && symbols.length > 0) {
             this.processWebSocketSymbols(symbols);
-        } else if (retryCount < 5) {
-            setTimeout(() => this.fetchMarkets(retryCount + 1), 1500);
         } else {
-            runInAction(() => {
-                this.is_loading_markets = false;
-            });
+            this.markets = DEFAULT_MARKETS;
         }
+
+        this.is_loading_markets = false;
     };
 
     @action

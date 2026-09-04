@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { getAppId, getSocketURL } from '@/components/shared/utils/config/config';
+import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import './all-analysis.scss';
 
 const AllAnalysis: React.FC = () => {
@@ -117,18 +118,29 @@ const AllAnalysis: React.FC = () => {
 
                 ws = new WebSocket(wsUrl);
 
-                ws.onopen = () => {
+                ws.onopen = async () => {
                     if (isCancelled) {
                         ws?.close();
                         return;
                     }
 
-                    // Request active symbols to get verified available volatility indices
-                    ws.send(
-                        JSON.stringify({
-                            active_symbols: 'brief',
-                        })
-                    );
+                    try {
+                        const symbols = await api_base.getActiveSymbols();
+                        const syntheticSymbols = symbols.filter(
+                            (symbol: any) =>
+                                symbol.market === 'synthetic_index' && symbol.submarket === 'random_index'
+                        );
+
+                        syntheticSymbols.forEach((symbolData: any) => {
+                            const symbol = symbolData.underlying_symbol || symbolData.symbol;
+                            if (symbol) {
+                                if (!ticksStorage[symbol]) ticksStorage[symbol] = [];
+                                subscribeTicks(symbol);
+                            }
+                        });
+                    } catch (e) {
+                        console.warn('[AllAnalysis] getActiveSymbols notice:', e);
+                    }
                 };
 
                 ws.onmessage = event => {
@@ -143,22 +155,6 @@ const AllAnalysis: React.FC = () => {
                                 data.echo_req?.ticks_history || 'unknown',
                                 data.error.message || data.error
                             );
-                            return;
-                        }
-
-                        // Handle active symbols response
-                        if (data.active_symbols && Array.isArray(data.active_symbols)) {
-                            // Filter for continuous synthetic indices (both 1s and standard)
-                            const syntheticSymbols = data.active_symbols.filter(
-                                (symbol: any) =>
-                                    symbol.market === 'synthetic_index' && symbol.submarket === 'random_index'
-                            );
-
-                            syntheticSymbols.forEach((symbolData: any) => {
-                                const symbol = symbolData.symbol;
-                                if (!ticksStorage[symbol]) ticksStorage[symbol] = [];
-                                subscribeTicks(symbol);
-                            });
                             return;
                         }
 

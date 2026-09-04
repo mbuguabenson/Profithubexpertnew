@@ -4,7 +4,6 @@ import { getAccountId, getAccountType, isDemoAccount, removeUrlParameter } from 
 import CommonStore from '@/stores/common-store';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
-import { isProduction, getLegacyServerURL } from '@/components/shared/utils/config/config';
 import { clearAuthData } from '@/utils/auth-utils';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { handleBackendError, isBackendError } from '@/utils/error-handler';
@@ -21,6 +20,7 @@ import {
 } from './observables/connection-status-stream';
 import { generateDerivApiInstance, V2GetActiveAccountId } from './appId';
 import chart_api from './chart-api';
+import { ALL_DERIV_MARKETS } from '@/constants/markets';
 
 type CurrentSubscription = {
     id: string;
@@ -32,6 +32,59 @@ type SubscriptionPromise = Promise<{
 }>;
 
 type TApiBaseApi = any;
+
+const FALLBACK_SYMBOLS_LIST = [
+    { value: 'R_10', label: 'Volatility 10 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_25', label: 'Volatility 25 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_50', label: 'Volatility 50 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_75', label: 'Volatility 75 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_100', label: 'Volatility 100 Index', group: 'Continuous Volatility Indices' },
+    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ15V', label: 'Volatility 15 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ30V', label: 'Volatility 30 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ90V', label: 'Volatility 90 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: 'JD10', label: 'Jump 10 Index', group: 'Jump Indices' },
+    { value: 'JD25', label: 'Jump 25 Index', group: 'Jump Indices' },
+    { value: 'JD50', label: 'Jump 50 Index', group: 'Jump Indices' },
+    { value: 'JD75', label: 'Jump 75 Index', group: 'Jump Indices' },
+    { value: 'JD100', label: 'Jump 100 Index', group: 'Jump Indices' },
+    { value: 'STPIND', label: 'Step Index', group: 'Step Indices' },
+    { value: 'STEP100', label: 'Step 100 Index', group: 'Step Indices' },
+    { value: 'STEP200', label: 'Step 200 Index', group: 'Step Indices' },
+    { value: 'STEP500', label: 'Step 500 Index', group: 'Step Indices' },
+    { value: 'RDBEAR', label: 'Range Break 100 Index', group: 'Range Break Indices' },
+    { value: 'RDBULL', label: 'Range Break 200 Index', group: 'Range Break Indices' },
+    { value: 'DSI10', label: 'Drift Switch 10 Index', group: 'Drift Switch Indices' },
+    { value: 'DSI20', label: 'Drift Switch 20 Index', group: 'Drift Switch Indices' },
+    { value: 'DSI30', label: 'Drift Switch 30 Index', group: 'Drift Switch Indices' },
+];
+
+const buildFallbackActiveSymbols = (): any[] => {
+    const list =
+        typeof ALL_DERIV_MARKETS !== 'undefined' && Array.isArray(ALL_DERIV_MARKETS) && ALL_DERIV_MARKETS.length > 0
+            ? ALL_DERIV_MARKETS
+            : FALLBACK_SYMBOLS_LIST;
+    return list.map(m => ({
+        symbol: m.value,
+        underlying_symbol: m.value,
+        display_name: m.label,
+        market: 'synthetic_index',
+        market_display_name: 'Derived',
+        submarket: 'random_index',
+        submarket_display_name: m.group || 'Continuous Indices',
+        subgroup: 'synthetics',
+        subgroup_display_name: 'Synthetics',
+        pip: 2,
+        pip_size: 2,
+        delay_amount: 0,
+        exchange_is_open: true,
+        is_trading_suspended: false,
+    }));
+};
 
 class APIBase {
     api: TApiBaseApi | null = null;
@@ -47,11 +100,14 @@ class APIBase {
     active_symbols: any[] = [];
     current_auth_subscriptions: SubscriptionPromise[] = [];
     is_authorized = false;
-    active_symbols_promise: Promise<any[] | undefined> | null = null;
+    active_symbols_promise: Promise<any[]> | null = null;
     common_store: CommonStore | undefined;
     reconnection_attempts: number = 0;
     ACTIVE_SYMBOLS_TIMEOUT_MS = 10000;
     ENRICHMENT_TIMEOUT_MS = 10000;
+    private rate_limit_backoff_delay = 3000; // starts at 3s, doubles on rate limits up to 30s
+    private rate_limit_retry_timer: ReturnType<typeof setTimeout> | null = null;
+    private readonly MAX_RECONNECTION_ATTEMPTS = 15;
     private init_promise: Promise<void> | null = null;
 
     constructor() {
@@ -67,16 +123,15 @@ class APIBase {
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         this.active_symbols = parsed;
                         this.has_active_symbols = true;
+                        return;
                     }
                 }
             }
         } catch {}
+        // Pre-seed in-memory with fallback symbols so all components have valid symbols on frame 1
+        this.active_symbols = buildFallbackActiveSymbols();
+        this.has_active_symbols = true;
     }
-
-    // Constants for timeouts - extracted magic numbers for better maintainability
-    private readonly ACTIVE_SYMBOLS_TIMEOUT_MS = 4000; // 4 seconds before fallback
-    private readonly ENRICHMENT_TIMEOUT_MS = 25000; // 25 seconds
-    private readonly MAX_RECONNECTION_ATTEMPTS = 15; // Maximum number of reconnection attempts before giving up
 
     unsubscribeAllSubscriptions = () => {
         this.current_auth_subscriptions?.forEach(subscription_promise => {
@@ -653,7 +708,7 @@ class APIBase {
         await Promise.all(streamsToSubscribe.map(subscribeToStream));
     }
 
-    getActiveSymbols = async () => {
+    getActiveSymbols = async (): Promise<any[]> => {
         // Fast path 1: Return in-memory symbols if already available
         if (this.has_active_symbols && Array.isArray(this.active_symbols) && this.active_symbols.length > 0) {
             return this.active_symbols;
@@ -668,229 +723,190 @@ class APIBase {
                     if (Array.isArray(parsed) && parsed.length > 0) {
                         this.active_symbols = parsed;
                         this.has_active_symbols = true;
-                        // Still allow background refresh if needed, but return cached data immediately
                         return this.active_symbols;
                     }
                 }
             }
         } catch {}
 
-        let active_symbols: any[] = [];
+        // Fast path 3: If a fetch is already in flight, reuse the exact same promise (singleton lock)
+        if (this.active_symbols_promise) {
+            return this.active_symbols_promise;
+        }
 
-        // Wrap the entire fetch in an overall timeout so the promise never hangs forever.
-        const OVERALL_TIMEOUT_MS = 25000;
+        // Start single in-flight request
+        this.active_symbols_promise = (async (): Promise<any[]> => {
+            let active_symbols: any[] = [];
 
-        const fetchSymbols = async (): Promise<any[]> => {
-            // Wait briefly for main WebSocket if it is currently connecting
-            await this.waitForConnection(3000);
+            try {
+                // Wait briefly for main WebSocket if it is connecting
+                await this.waitForConnection(3000);
 
-            // 1. Try the main WebSocket first if it is already open (fastest path, <100ms)
-            if (this.api && this.api.connection?.readyState === 1) {
-                try {
-                    const timeout = new Promise<never>((_, reject) =>
-                        setTimeout(() => reject(new Error('Active symbols timeout (main WS)')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
-                    );
-                    // Pass null instead of `this` so the bot's is_running flag does NOT kill the
-                    // retry loop. Symbol fetches are infrastructure calls, not trade calls.
-                    const fetchPromise = doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], null);
-                    const apiResult = await Promise.race([fetchPromise, timeout]);
-                    const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
-                    if (!error || Object.keys(error).length === 0) {
-                        if (Array.isArray(ws_symbols) && ws_symbols.length > 0) {
-                            return ws_symbols;
+                if (this.api && this.api.connection?.readyState === WebSocket.OPEN) {
+                    try {
+                        const timeout = new Promise<never>((_, reject) =>
+                            setTimeout(() => reject(new Error('Active symbols timeout')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
+                        );
+                        const fetchPromise = this.api.send({ active_symbols: 'brief' });
+                        const apiResult = await Promise.race([fetchPromise, timeout]);
+
+                        if (apiResult?.active_symbols && Array.isArray(apiResult.active_symbols) && apiResult.active_symbols.length > 0) {
+                            active_symbols = apiResult.active_symbols;
+                            this.rate_limit_backoff_delay = 3000; // Reset backoff on success
+                        } else if (apiResult?.error) {
+                            const errCode = apiResult.error.code || apiResult.error.name || '';
+                            const errMsg = apiResult.error.message || '';
+                            if (errCode === 'RateLimit' || errMsg.toLowerCase().includes('rate limit')) {
+                                console.warn(`[APIBase] Deriv active_symbols rate limited. Coordinated backoff: ${this.rate_limit_backoff_delay}ms`);
+                                this.scheduleSingleRateLimitRetry();
+                            }
+                        }
+                    } catch (err: any) {
+                        const errCode = err?.error?.code || err?.code || '';
+                        const errMsg = err?.error?.message || err?.message || '';
+                        if (errCode === 'RateLimit' || errMsg.toLowerCase().includes('rate limit')) {
+                            console.warn(`[APIBase] Deriv active_symbols rate limited. Coordinated backoff: ${this.rate_limit_backoff_delay}ms`);
+                            this.scheduleSingleRateLimitRetry();
+                        } else {
+                            console.warn('[APIBase] WS active symbols fetch notice:', errMsg || err);
                         }
                     }
-                } catch (err) {
-                    console.warn('[APIBase] Main WS active symbols fetch failed, trying fallback:', err);
                 }
+            } catch (err) {
+                console.warn('[APIBase] getActiveSymbols network attempt failed, using fallback:', err);
             }
 
-            // 2. Fallback: standard Deriv public WS endpoint with 4000ms timeout
-            try {
-                const publicSymbols = await new Promise<any[]>((resolve, reject) => {
-                    // Use the reliable standard Deriv API WebSocket endpoint with domain app_id
-                    const wsURL = getLegacyServerURL();
-
-                    const ws = new WebSocket(wsURL);
-                    let settled = false;
-
-                    const cleanup = () => {
-                        try {
-                            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-                                ws.close();
-                            }
-                        } catch {}
-                    };
-
-                    const safeResolve = (val: any[]) => {
-                        if (!settled) { settled = true; cleanup(); resolve(val); }
-                    };
-                    const safeReject = (err: any) => {
-                        if (!settled) { settled = true; cleanup(); reject(err); }
-                    };
-
-                    const timer = setTimeout(() => safeReject(new Error('Public WS timeout')), 8000);
-
-                    ws.onopen = () => {
-                        try {
-                            ws.send(JSON.stringify({ active_symbols: 'brief', req_id: 1 }));
-                        } catch (err) {
-                            clearTimeout(timer);
-                            safeReject(err);
-                        }
-                    };
-                    ws.onmessage = event => {
-                        try {
-                            const response = JSON.parse(event.data);
-                            if (response.active_symbols && response.active_symbols.length > 0) {
-                                clearTimeout(timer);
-                                safeResolve(response.active_symbols);
-                            } else if (response.error) {
-                                clearTimeout(timer);
-                                safeReject(new Error(response.error.message || 'API error'));
-                            }
-                        } catch (e) {
-                            clearTimeout(timer);
-                            safeReject(e);
-                        }
-                    };
-                    ws.onerror = () => { clearTimeout(timer); safeReject(new Error('Public WS error')); };
-                    ws.onclose = () => { if (!settled) { clearTimeout(timer); safeReject(new Error('Public WS closed prematurely')); } };
-                });
-
-                if (publicSymbols.length > 0) return publicSymbols;
-            } catch (e) {
-                console.warn('[APIBase] Public WS fallback failed, trying last-resort method:', e);
+            // If network did not return symbols, use the comprehensive fallback list
+            if (!active_symbols || active_symbols.length === 0) {
+                active_symbols = buildFallbackActiveSymbols();
             }
 
-            // 3. Last resort: wait for the main WS to open if it's still connecting
-            if (!this.api) {
-                throw new Error('API connection not available for fetching active symbols');
-            }
+            // Ensure required 1s volatility indices (15, 30, 90) are always present
+            const required_1s_symbols = [
+                {
+                    symbol: '1HZ15V',
+                    underlying_symbol: '1HZ15V',
+                    display_name: 'Volatility 15 (1s) Index',
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    subgroup: 'synthetics',
+                    subgroup_display_name: 'Synthetics',
+                    pip: 0.001,
+                    pip_size: 0.001,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+                {
+                    symbol: '1HZ30V',
+                    underlying_symbol: '1HZ30V',
+                    display_name: 'Volatility 30 (1s) Index',
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    subgroup: 'synthetics',
+                    subgroup_display_name: 'Synthetics',
+                    pip: 0.001,
+                    pip_size: 0.001,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+                {
+                    symbol: '1HZ90V',
+                    underlying_symbol: '1HZ90V',
+                    display_name: 'Volatility 90 (1s) Index',
+                    market: 'synthetic_index',
+                    market_display_name: 'Derived',
+                    submarket: 'random_index',
+                    submarket_display_name: 'Continuous Indices',
+                    subgroup: 'synthetics',
+                    subgroup_display_name: 'Synthetics',
+                    pip: 0.001,
+                    pip_size: 0.001,
+                    exchange_is_open: true,
+                    is_trading_suspended: false,
+                },
+            ];
 
-            const lastResortTimeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('Active symbols timeout (last resort)')), this.ACTIVE_SYMBOLS_TIMEOUT_MS)
-            );
-            // Again, pass null so bot's is_running=false doesn't immediately reject.
-            const lastResortFetch = doUntilDone(() => this.api?.send({ active_symbols: 'brief' }), [], null);
-            const apiResult = await Promise.race([lastResortFetch, lastResortTimeout]);
-            const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
-            if (error && Object.keys(error).length > 0) {
-                throw new Error(`Active symbols API error: ${error.message || 'Unknown error'}`);
-            }
-            return ws_symbols;
-        };
-
-        try {
-            const overallTimeout = new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error('getActiveSymbols overall timeout')), OVERALL_TIMEOUT_MS)
-            );
-            active_symbols = await Promise.race([fetchSymbols(), overallTimeout]);
-        } catch (err) {
-            // Reset the promise so the next caller gets a fresh attempt instead of awaiting
-            // a hung/rejected promise forever.
-            this.active_symbols_promise = null;
-            console.error('[APIBase] getActiveSymbols failed:', err);
-            throw err;
-        }
-
-        if (!active_symbols || !active_symbols.length) {
-            this.active_symbols_promise = null;
-            throw new Error('No active symbols received from API');
-        }
-
-        // Ensure 1s volatility indices (15, 30, 90) are always present
-        const required_1s_symbols = [
-            {
-                symbol: '1HZ15V',
-                underlying_symbol: '1HZ15V',
-                display_name: 'Volatility 15 (1s) Index',
-                market: 'synthetic_index',
-                market_display_name: 'Derived',
-                submarket: 'random_index',
-                submarket_display_name: 'Continuous Indices',
-                subgroup: 'synthetics',
-                subgroup_display_name: 'Synthetics',
-                pip: 0.001,
-                pip_size: 0.001,
-                exchange_is_open: true,
-                is_trading_suspended: false,
-            },
-            {
-                symbol: '1HZ30V',
-                underlying_symbol: '1HZ30V',
-                display_name: 'Volatility 30 (1s) Index',
-                market: 'synthetic_index',
-                market_display_name: 'Derived',
-                submarket: 'random_index',
-                submarket_display_name: 'Continuous Indices',
-                subgroup: 'synthetics',
-                subgroup_display_name: 'Synthetics',
-                pip: 0.001,
-                pip_size: 0.001,
-                exchange_is_open: true,
-                is_trading_suspended: false,
-            },
-            {
-                symbol: '1HZ90V',
-                underlying_symbol: '1HZ90V',
-                display_name: 'Volatility 90 (1s) Index',
-                market: 'synthetic_index',
-                market_display_name: 'Derived',
-                submarket: 'random_index',
-                submarket_display_name: 'Continuous Indices',
-                subgroup: 'synthetics',
-                subgroup_display_name: 'Synthetics',
-                pip: 0.001,
-                pip_size: 0.001,
-                exchange_is_open: true,
-                is_trading_suspended: false,
-            },
-        ];
-
-        required_1s_symbols.forEach(req => {
-            const exists = active_symbols.some(
-                (s: any) => s.symbol === req.symbol || s.underlying_symbol === req.symbol
-            );
-            if (!exists) {
-                active_symbols.push(req);
-            }
-        });
-
-        try {
-            this.has_active_symbols = true;
-
-            // Process active symbols using the dedicated service with fallback
-            try {
-                const enrichmentTimeout = new Promise<never>((_, reject) =>
-                    setTimeout(() => reject(new Error('Enrichment timeout')), this.ENRICHMENT_TIMEOUT_MS)
+            required_1s_symbols.forEach(req => {
+                const exists = active_symbols.some(
+                    (s: any) => s.symbol === req.symbol || s.underlying_symbol === req.symbol
                 );
-
-                const enrichmentPromise = activeSymbolsProcessorService.processActiveSymbols(active_symbols);
-                const processedResult = await Promise.race([enrichmentPromise, enrichmentTimeout]);
-
-                this.active_symbols = processedResult.enrichedSymbols;
-                this.pip_sizes = processedResult.pipSizes;
-            } catch (enrichmentError) {
-                console.warn('Symbol enrichment failed, using raw symbols:', enrichmentError);
-                // Fallback to raw symbols if enrichment fails
-                this.active_symbols = active_symbols;
-                this.pip_sizes = {};
-            }
-
-            // Persist to localStorage for instantaneous loading next time
-            try {
-                if (typeof window !== 'undefined' && window.localStorage && this.active_symbols?.length > 0) {
-                    localStorage.setItem('cached_active_symbols', JSON.stringify(this.active_symbols));
+                if (!exists) {
+                    active_symbols.push(req);
                 }
-            } catch {}
+            });
 
-            this.toggleRunButton(false);
-            return this.active_symbols;
-        } catch (error) {
-            console.error('Failed to process active symbols:', error);
-            throw error;
-        }
+            try {
+                this.has_active_symbols = true;
+
+                // Process active symbols using the dedicated service with fallback
+                try {
+                    const enrichmentTimeout = new Promise<never>((_, reject) =>
+                        setTimeout(() => reject(new Error('Enrichment timeout')), this.ENRICHMENT_TIMEOUT_MS)
+                    );
+
+                    const enrichmentPromise = activeSymbolsProcessorService.processActiveSymbols(active_symbols);
+                    const processedResult = await Promise.race([enrichmentPromise, enrichmentTimeout]);
+
+                    this.active_symbols = processedResult.enrichedSymbols;
+                    this.pip_sizes = processedResult.pipSizes;
+                } catch (enrichmentError) {
+                    this.active_symbols = active_symbols;
+                    this.pip_sizes = {};
+                }
+
+                // Persist to localStorage for instantaneous loading next time
+                try {
+                    if (typeof window !== 'undefined' && window.localStorage && this.active_symbols?.length > 0) {
+                        localStorage.setItem('cached_active_symbols', JSON.stringify(this.active_symbols));
+                    }
+                } catch {}
+
+                this.toggleRunButton(false);
+                return this.active_symbols;
+            } catch (error) {
+                console.error('[APIBase] Failed to process active symbols:', error);
+                this.active_symbols = active_symbols;
+                return this.active_symbols;
+            } finally {
+                this.active_symbols_promise = null;
+            }
+        })();
+
+        return this.active_symbols_promise;
+    };
+
+    private scheduleSingleRateLimitRetry = () => {
+        // Do not run several retry timers in parallel; use one retry after the suggested delay
+        if (this.rate_limit_retry_timer) return;
+
+        const delay = this.rate_limit_backoff_delay;
+        // Increase backoff delay exponentially for subsequent rate limits (max 30s)
+        this.rate_limit_backoff_delay = Math.min(this.rate_limit_backoff_delay * 2, 30000);
+
+        this.rate_limit_retry_timer = setTimeout(async () => {
+            this.rate_limit_retry_timer = null;
+            try {
+                if (this.api && this.api.connection?.readyState === WebSocket.OPEN) {
+                    const res = await this.api.send({ active_symbols: 'brief' });
+                    if (res?.active_symbols && Array.isArray(res.active_symbols) && res.active_symbols.length > 0) {
+                        this.rate_limit_backoff_delay = 3000; // Reset backoff on success
+                        const enriched = await activeSymbolsProcessorService.processActiveSymbols(res.active_symbols);
+                        this.active_symbols = enriched.enrichedSymbols;
+                        this.pip_sizes = enriched.pipSizes;
+                        this.has_active_symbols = true;
+                        try {
+                            localStorage.setItem('cached_active_symbols', JSON.stringify(this.active_symbols));
+                        } catch {}
+                    }
+                }
+            } catch {
+                // Ignore background retry failure
+            }
+        }, delay);
     };
 
     toggleRunButton = (toggle: boolean) => {

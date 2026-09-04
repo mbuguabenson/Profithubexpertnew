@@ -145,12 +145,7 @@ export default class DigitCrackerStore {
     fetchMarkets = async () => {
         let symbols: any[] = [];
         try {
-            if (api_base.api) {
-                const response = await api_base.api.send({ active_symbols: 'brief' });
-                if (response?.active_symbols && Array.isArray(response.active_symbols)) {
-                    symbols = response.active_symbols;
-                }
-            }
+            symbols = await api_base.getActiveSymbols();
         } catch (e) {
             console.warn('[DigitCrackerStore] Failed to fetch active_symbols:', e);
         }

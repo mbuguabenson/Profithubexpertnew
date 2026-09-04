@@ -571,27 +571,9 @@ export default class AnalysisStore {
     fetchMarkets = async () => {
         let symbols: any[] = [];
         try {
-            if (api_base.api) {
-                const response = (await api_base.api.send({ active_symbols: 'brief' })) as unknown as any;
-                if (response && response.active_symbols && response.active_symbols.length > 0) {
-                    symbols = response.active_symbols;
-                }
-            }
+            symbols = await api_base.getActiveSymbols();
         } catch (error) {
             console.warn('[AnalysisStore] API active_symbols fetch failed:', error);
-        }
-
-        if (symbols.length === 0) {
-            try {
-                if (
-                    ApiHelpers.instance &&
-                    typeof (ApiHelpers.instance as any).active_symbols?.retrieveActiveSymbols === 'function'
-                ) {
-                    symbols = await (ApiHelpers.instance as any).active_symbols.retrieveActiveSymbols();
-                }
-            } catch (e) {
-                console.warn('[AnalysisStore] ApiHelpers fetch failed:', e);
-            }
         }
 
         if (!symbols || symbols.length === 0) {

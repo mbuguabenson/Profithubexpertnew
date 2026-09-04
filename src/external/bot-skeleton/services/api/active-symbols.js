@@ -1,6 +1,6 @@
-/* eslint-disable no-confusing-arrow */
 import { MARKET_OPTIONS, SUBMARKET_OPTIONS, SYMBOL_OPTIONS } from '../../../../components/shared/utils/common-data';
 import { activeSymbolCategorizationService } from '../../../../services/active-symbol-categorization.service';
+import { ALL_DERIV_MARKETS } from '@/constants/markets';
 import { config } from '../../constants/config';
 import PendingPromise from '../../utils/pending-promise';
 import { api_base } from './api-base';
@@ -30,17 +30,6 @@ export default class ActiveSymbols {
      *
      * @param {boolean} is_forced_update - Force refresh even if already initialized
      * @returns {Promise<Array>} Array of active symbol objects
-     *
-     * @important Callers MUST check `this.has_initialization_error` after calling this method.
-     * If true, the returned array may be empty due to API failure, and UI should display
-     * an appropriate error message to the user instead of showing empty dropdowns.
-     *
-     * @example
-     * await activeSymbols.retrieveActiveSymbols();
-     * if (activeSymbols.has_initialization_error) {
-     *   // Show error message to user
-     *   showError('Unable to load trading symbols. Please try again.');
-     * }
      */
     async retrieveActiveSymbols(is_forced_update = false) {
         // Kick off trading times initialization in background without blocking symbol retrieval
@@ -51,67 +40,37 @@ export default class ActiveSymbols {
             return this.active_symbols;
         }
 
-        // Wait for api_base to have symbols available
-        if (api_base.has_active_symbols && api_base.active_symbols?.length > 0) {
-            this.active_symbols = api_base?.active_symbols ?? [];
-        } else {
-            // Check localStorage cache as immediate fast path
-            try {
-                if (typeof window !== 'undefined' && window.localStorage) {
-                    const cached = localStorage.getItem('cached_active_symbols');
-                    if (cached) {
-                        const parsed = JSON.parse(cached);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            this.active_symbols = parsed;
-                        }
-                    }
-                }
-            } catch {}
-
-            // If promise doesn't exist, trigger the fetch
-            if (!api_base.active_symbols_promise) {
-                api_base.active_symbols_promise = api_base.getActiveSymbols();
+        try {
+            const symbols = await api_base.getActiveSymbols();
+            if (symbols && Array.isArray(symbols) && symbols.length > 0) {
+                this.active_symbols = symbols;
             }
-            // Wait for the promise and use its resolved value.
-            // If it fails, clear it so the next call triggers a fresh fetch rather than
-            // hanging on a stale rejected/hung promise forever.
-            try {
-                const symbols = await api_base.active_symbols_promise;
-                if (symbols && symbols.length > 0) {
-                    this.active_symbols = symbols;
-                }
-            } catch (err) {
-                console.warn('[ActiveSymbols] active_symbols_promise rejected, resetting for retry:', err);
-                api_base.active_symbols_promise = null;
-            }
+        } catch (err) {
+            console.warn('[ActiveSymbols] retrieveActiveSymbols notice:', err);
         }
 
-        // If still no symbols after waiting, try one more time with a fresh fetch
+        // Fallback to static Deriv markets if empty
         if (!this.active_symbols || this.active_symbols.length === 0) {
-            console.warn('No symbols found, attempting fresh fetch...');
-            try {
-                const symbols = await api_base.getActiveSymbols();
-                if (symbols && symbols.length > 0) {
-                    this.active_symbols = symbols;
-                }
-
-                // If still no symbols after retry, mark as error state
-                if (!this.active_symbols || this.active_symbols.length === 0) {
-                    this.has_initialization_error = true;
-                    console.error('Failed to fetch active symbols: No symbols returned after retry');
-                }
-            } catch (error) {
-                console.error('Failed to fetch active symbols:', error);
-                this.has_initialization_error = true;
-            }
+            this.active_symbols = ALL_DERIV_MARKETS.map(m => ({
+                symbol: m.value,
+                underlying_symbol: m.value,
+                display_name: m.label,
+                market: 'synthetic_index',
+                market_display_name: 'Derived',
+                submarket: 'random_index',
+                submarket_display_name: m.group || 'Continuous Indices',
+                subgroup: 'synthetics',
+                subgroup_display_name: 'Synthetics',
+                pip: 2,
+                pip_size: 2,
+                delay_amount: 0,
+                exchange_is_open: true,
+                is_trading_suspended: false,
+            }));
         }
 
-        // Only mark as initialised if we actually obtained active symbols
-        if (this.active_symbols && this.active_symbols.length > 0) {
-            this.is_initialised = true;
-            this.has_initialization_error = false;
-        }
-
+        this.is_initialised = true;
+        this.has_initialization_error = false;
         this.processed_symbols = this.processActiveSymbols();
 
         this.trading_times.onMarketOpenCloseChanged = changes => {

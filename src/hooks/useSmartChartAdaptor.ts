@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildSmartchartsChampionAdapter, transformations } from '@/adapters/smartcharts-champion';
 import { createServices } from '@/adapters/smartcharts-champion/services';
 import { createTransport } from '@/adapters/smartcharts-champion/transport';
+import { ALL_DERIV_MARKETS } from '@/constants/markets';
 import chart_api from '@/external/bot-skeleton/services/api/chart-api';
 import type { SmartchartsChampionAdapter } from '@/types/smartchart.types';
 import type {
@@ -40,6 +41,48 @@ interface UseSmartChartAdaptorReturn {
     error: Error | null;
 }
 
+const FALLBACK_SYMBOLS_LIST = [
+    { value: 'R_10', label: 'Volatility 10 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_25', label: 'Volatility 25 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_50', label: 'Volatility 50 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_75', label: 'Volatility 75 Index', group: 'Continuous Volatility Indices' },
+    { value: 'R_100', label: 'Volatility 100 Index', group: 'Continuous Volatility Indices' },
+    { value: '1HZ10V', label: 'Volatility 10 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ15V', label: 'Volatility 15 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ25V', label: 'Volatility 25 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ30V', label: 'Volatility 30 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ50V', label: 'Volatility 50 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ75V', label: 'Volatility 75 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ90V', label: 'Volatility 90 (1s) Index', group: 'Continuous 1s Indices' },
+    { value: '1HZ100V', label: 'Volatility 100 (1s) Index', group: 'Continuous 1s Indices' },
+];
+
+const getStaticFallbackChartData = (): { activeSymbols: ActiveSymbols; tradingTimes: TradingTimesMap } => {
+    const list =
+        typeof ALL_DERIV_MARKETS !== 'undefined' && Array.isArray(ALL_DERIV_MARKETS) && ALL_DERIV_MARKETS.length > 0
+            ? ALL_DERIV_MARKETS
+            : FALLBACK_SYMBOLS_LIST;
+    const fallbackActive = transformations.toActiveSymbols(
+        list.map(m => ({
+            symbol: m.value,
+            underlying_symbol: m.value,
+            display_name: m.label,
+            market: 'synthetic_index',
+            market_display_name: 'Derived',
+            submarket: 'random_index',
+            submarket_display_name: m.group || 'Continuous Indices',
+            subgroup: 'synthetics',
+            subgroup_display_name: 'Synthetics',
+            pip: 2,
+            delay_amount: 0,
+            exchange_is_open: 1,
+            is_trading_suspended: 0,
+        }))
+    );
+    const fallbackTimes = transformations.toTradingTimesMap({}, fallbackActive);
+    return { activeSymbols: fallbackActive, tradingTimes: fallbackTimes };
+};
+
 /**
  * Custom hook for SmartChart Adaptor
  * Handles adapter initialization, data fetching, and subscription management
@@ -61,7 +104,7 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                 }
             }
         } catch {}
-        return { activeSymbols: [] as ActiveSymbols, tradingTimes: {} as TradingTimesMap };
+        return getStaticFallbackChartData();
     };
 
     const [adapter, setAdapter] = useState<SmartchartsChampionAdapter | null>(null);

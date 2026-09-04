@@ -160,6 +160,18 @@ const getFallbackSymbols = () =>
         is_trading_suspended: 0,
     }));
 
+function buildDefaultTradingTimes(): any {
+    const times: Record<string, any> = {};
+    ALL_DERIV_MARKETS.forEach(m => {
+        times[m.value] = {
+            open: ['00:00:00'],
+            close: ['23:59:59'],
+            settlement: undefined,
+        };
+    });
+    return times;
+}
+
 export function createServices(): TServices {
     return {
         /**
@@ -168,50 +180,13 @@ export function createServices(): TServices {
          */
         async getActiveSymbols(): Promise<any> {
             try {
-                // Fast path 1: Check in-memory api_base symbols
-                if (api_base?.has_active_symbols && Array.isArray(api_base.active_symbols) && api_base.active_symbols.length > 0) {
-                    return api_base.active_symbols;
+                const symbols = await api_base.getActiveSymbols();
+                if (Array.isArray(symbols) && symbols.length > 0) {
+                    return symbols;
                 }
-
-                // Fast path 2: Check localStorage cached symbols
-                try {
-                    if (typeof window !== 'undefined' && window.localStorage) {
-                        const cached = localStorage.getItem('cached_active_symbols');
-                        if (cached) {
-                            const parsed = JSON.parse(cached);
-                            if (Array.isArray(parsed) && parsed.length > 0) {
-                                return parsed;
-                            }
-                        }
-                    }
-                } catch {}
-
-                const apiHelpers = ApiHelpers.instance as any;
-
-                if (!isApiHelpersInitialized(apiHelpers)) {
-                    if (apiHelpers?.active_symbols?.active_symbols && apiHelpers.active_symbols.active_symbols.length > 0) {
-                        return apiHelpers.active_symbols.active_symbols;
-                    }
-                    return getFallbackSymbols();
-                }
-
-                // Retrieve active symbols using the existing service
-                const activeSymbols = await apiHelpers.active_symbols.retrieveActiveSymbols();
-
-                // Convert the processed symbols back to array format for the adapter
-                if (Array.isArray(activeSymbols) && activeSymbols.length > 0) {
-                    return activeSymbols;
-                }
-
                 return getFallbackSymbols();
             } catch (error) {
-                try {
-                    const apiHelpers = ApiHelpers.instance as any;
-                    if (isApiHelpersInitialized(apiHelpers) && apiHelpers.active_symbols?.active_symbols?.length > 0) {
-                        return apiHelpers.active_symbols.active_symbols;
-                    }
-                } catch {}
-
+                logger.warn('[SmartCharts Services] getActiveSymbols notice, using fallback:', error);
                 return getFallbackSymbols();
             }
         },
@@ -225,31 +200,24 @@ export function createServices(): TServices {
                 const apiHelpers = ApiHelpers.instance as any;
 
                 if (!apiHelpers || !apiHelpers.trading_times) {
-                    return {};
+                    return buildDefaultTradingTimes();
                 }
                 // Initialize trading times if not already done
-                await apiHelpers.trading_times.initialise();
+                await apiHelpers.trading_times.initialise().catch(() => {});
 
                 // Get the trading times data - this is the actual data structure from TradingTimes class
                 const tradingTimesData = apiHelpers.trading_times.trading_times;
 
-                if (!tradingTimesData || typeof tradingTimesData !== 'object') {
-                    // Try to trigger setTradingTimes fallback manually
-                    if (typeof apiHelpers.trading_times.setTradingTimes === 'function') {
-                        apiHelpers.trading_times.setTradingTimes();
-                        const fallbackData = apiHelpers.trading_times.trading_times;
-
-                        if (fallbackData && typeof fallbackData === 'object') {
-                            return transformTradingTimesData(fallbackData);
-                        }
+                if (tradingTimesData && typeof tradingTimesData === 'object' && Object.keys(tradingTimesData).length > 0) {
+                    const transformed = transformTradingTimesData(tradingTimesData);
+                    if (Object.keys(transformed).length > 0) {
+                        return transformed;
                     }
-
-                    return {};
                 }
 
-                return transformTradingTimesData(tradingTimesData);
+                return buildDefaultTradingTimes();
             } catch {
-                return {};
+                return buildDefaultTradingTimes();
             }
         },
     };

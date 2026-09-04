@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 /* [AI] - Analytics removed - rudderstack event tracking removed */
@@ -109,11 +109,22 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         }
     };
 
+    const effectiveTradingTimes = useMemo(() => {
+        const times = { ...(chartData.tradingTimes || {}) };
+        if (symbol && !times[symbol]) {
+            times[symbol] = {
+                isOpen: true,
+                openTime: '00:00:00',
+                closeTime: '23:59:59',
+            };
+        }
+        return times;
+    }, [chartData.tradingTimes, symbol]);
+
     const isSymbolReady =
         Boolean(symbol) &&
         chartData.activeSymbols.length > 0 &&
-        chartData.activeSymbols.some(s => s.symbol === symbol) &&
-        Boolean(symbol && chartData.tradingTimes && (chartData.tradingTimes as Record<string, any>)[symbol]);
+        chartData.activeSymbols.some(s => s.symbol === symbol);
 
     if (!isSymbolReady) {
         return <ChunkLoader message='' />;
@@ -163,7 +174,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 getQuotes={getQuotes}
                 subscribeQuotes={subscribeQuotes}
                 unsubscribeQuotes={unsubscribeQuotes}
-                chartData={{ activeSymbols: chartData.activeSymbols, tradingTimes: chartData.tradingTimes }}
+                chartData={{ activeSymbols: chartData.activeSymbols, tradingTimes: effectiveTradingTimes }}
                 settings={settings}
                 symbol={symbol}
                 topWidgets={() => <ChartTitle onChange={onSymbolChange} />}

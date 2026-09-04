@@ -297,30 +297,29 @@ export default class EntryScannerStore {
             void this.subscribeToTicks();
         };
 
-        if (this.isApiReady()) {
-            api_base
-                .api!.send({ active_symbols: 'brief' })
-                .then((res: any) => {
-                    if (!res?.active_symbols || !Array.isArray(res.active_symbols)) {
-                        applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
-                        return;
-                    }
-                    const filtered = res.active_symbols
-                        .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
-                        .map((s: any) => ({
-                            symbol: s.symbol,
-                            display_name: s.display_name,
-                            is1s: s.symbol.includes('1HZ') || s.symbol.includes('1S'),
-                        }));
-
-                    applySymbols(filtered.length > 0 ? filtered : this.DEFAULT_FALLBACK_SYMBOLS);
-                })
-                .catch(() => {
+        api_base
+            .getActiveSymbols()
+            .then((symbols: any[]) => {
+                if (!symbols || !Array.isArray(symbols) || symbols.length === 0) {
                     applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
-                });
-        } else {
-            applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
-        }
+                    return;
+                }
+                const filtered = symbols
+                    .filter((s: any) => s.market === 'synthetic_index' && s.submarket === 'random_index')
+                    .map((s: any) => {
+                        const sym = s.underlying_symbol || s.symbol;
+                        return {
+                            symbol: sym,
+                            display_name: s.display_name || sym,
+                            is1s: sym.includes('1HZ') || sym.includes('1S'),
+                        };
+                    });
+
+                applySymbols(filtered.length > 0 ? filtered : this.DEFAULT_FALLBACK_SYMBOLS);
+            })
+            .catch(() => {
+                applySymbols(this.DEFAULT_FALLBACK_SYMBOLS);
+            });
     }
 
     // ─── Tick Streaming & Throttled Progress Calculation ──────
