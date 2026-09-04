@@ -12,6 +12,7 @@ const logsHandler = require('./admin/logs');
 const notificationsHandler = require('./admin/notifications');
 const botsHandler = require('./admin/bots');
 const derivAccountsHandler = require('./deriv-accounts');
+const derivAppsHandler = require('./admin/deriv-apps');
 const derivOtpHandler = require('./deriv-otp/[accountId]');
 const supabaseProxyHandler = require('./supabase-proxy');
 
@@ -121,6 +122,9 @@ const server = http.createServer(async (req, res) => {
         }
         if (pathname === '/api/deriv-accounts') {
             return await derivAccountsHandler(req, res);
+        }
+        if (pathname === '/api/admin/deriv-apps') {
+            return await derivAppsHandler(req, res);
         }
         if (pathname.startsWith('/api/deriv-otp/')) {
             const parts = pathname.split('/');

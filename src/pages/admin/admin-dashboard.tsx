@@ -16,7 +16,12 @@ import {
 } from 'recharts';
 import { Button, Badge, Heading, Text, CaptionText } from '@deriv-com/quill-ui';
 import { DerivAnalyticsService, LiveSiteMetrics } from '@/services/deriv-analytics.service';
-import { DerivAccountWalletService, DerivPortfolioPosition } from '@/services/deriv-account-wallet.service';
+import {
+    DerivAccountWalletService,
+    DerivPortfolioPosition,
+    DerivMarkupStatistics,
+    DerivAppMarkupTransaction,
+} from '@/services/deriv-account-wallet.service';
 import {
     getPendingRequestsForProvider,
     updateCopyRequestStatus,
@@ -581,6 +586,9 @@ const AdminDashboard = observer(() => {
     const [markupStats, setMarkupStats] = useState<any>(null);
     const [isLoadingApps, setIsLoadingApps] = useState(false);
     const [appSearchQuery, setAppSearchQuery] = useState('');
+    const [derivMarkupStats, setDerivMarkupStats] = useState<DerivMarkupStatistics | null>(null);
+    const [derivMarkupTransactions, setDerivMarkupTransactions] = useState<DerivAppMarkupTransaction[]>([]);
+    const [isLoadingMarkup, setIsLoadingMarkup] = useState(false);
 
     const fetchOpenPositions = useCallback(async () => {
         setIsLoadingPositions(true);
@@ -877,17 +885,6 @@ const AdminDashboard = observer(() => {
                 }
             }
 
-            // Function to generate deterministic realistic client IP address per account
-            const getDeterministicIp = (loginid: string) => {
-                let hash = 0;
-                for (let i = 0; i < loginid.length; i++) hash = (hash << 5) - hash + loginid.charCodeAt(i);
-                const p1 = 105 + Math.abs(hash % 92);
-                const p2 = 160 + Math.abs((hash >> 2) % 75);
-                const p3 = Math.abs((hash >> 4) % 254);
-                const p4 = 10 + Math.abs((hash >> 6) % 200);
-                return `${p1}.${p2}.${p3}.${p4}`;
-            };
-
             for (const target of targets) {
                 const { loginid, token } = target;
 
@@ -927,8 +924,9 @@ const AdminDashboard = observer(() => {
                             currency: data.currency || 'USD',
                             realBalance,
                             demoBalance,
-                            drawdown: parseFloat((Math.random() * 3 + 0.8).toFixed(2)),
-                            ip: data.ip || getDeterministicIp(loginid),
+                            drawdown: 0,
+                            ip: data.ip || 'Deriv Cloud',
+                            scopes: data.scopes || ['read', 'trade'],
                             source: 'live_deriv',
                         };
                     } else {
@@ -936,14 +934,22 @@ const AdminDashboard = observer(() => {
                     }
                 } catch {
                     if (!updated[loginid]) {
+                        let parsedClientAccounts: Record<string, any> = {};
+                        try {
+                            parsedClientAccounts = JSON.parse(localStorage.getItem('client.accounts') || '{}');
+                        } catch {}
+                        const localAcc = parsedClientAccounts[loginid] || {};
+                        const parsedBal = typeof localAcc.balance === 'number' ? localAcc.balance : parseFloat(localAcc.balance || '0');
+
                         updated[loginid] = {
-                            name: `Account (${loginid})`,
-                            email: `${loginid.toLowerCase()}@client.deriv.com`,
-                            currency: 'USD',
-                            realBalance: isDemoAccount(loginid) ? 0 : 250.0,
-                            demoBalance: 10000.0,
-                            drawdown: 1.2,
-                            ip: getDeterministicIp(loginid),
+                            name: localAcc.fullname || `Account (${loginid})`,
+                            email: localAcc.email || '',
+                            currency: localAcc.currency || 'USD',
+                            realBalance: isDemoAccount(loginid) ? 0 : parsedBal,
+                            demoBalance: isDemoAccount(loginid) ? parsedBal : 10000.0,
+                            drawdown: 0,
+                            ip: 'Active Session',
+                            scopes: ['read', 'trade'],
                             source: 'local_session',
                         };
                     }
@@ -981,35 +987,43 @@ const AdminDashboard = observer(() => {
         if (!isAuthenticated) return;
 
         const pollRealData = () => {
-            const logs: any[] = [];
-            setTradeLogs(logs);
+            const metrics = DerivAnalyticsService.getLiveSiteMetrics();
+            const realPnl = parseFloat(metrics.totalProfitLossUSD.toFixed(2));
+            const realVol = parseFloat(metrics.totalTradeVolumeUSD.toFixed(2));
 
-            // Compute PnL from replicator logs
-            let pnl = 0;
-            let vol = 0;
-            const chartPoints: any[] = [];
+            setPlatformPnL(realPnl);
+            setTradingVolume(realVol);
 
-            logs.forEach((log: any) => {
-                const amt = parseFloat(log.payload?.amount || 0);
-                vol += amt;
-                if (!log.error)
-                    pnl += amt * 0.15; // Reconstructed profits
-                else pnl -= amt;
+            // Active / Online Users from real session count and accounts list
+            const currentAccountCount = Object.keys(getAccountsList()).length;
+            const liveUsers = Math.max(metrics.activeUsersCount, currentAccountCount);
+            setOnlineUsers(liveUsers);
 
-                chartPoints.push({
-                    name: new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    PnL: parseFloat(pnl.toFixed(2)),
-                    volume: vol,
+            // Real chart points constructed from real executed trades in telemetry
+            const realTradeEvents = (metrics.recentEvents || [])
+                .filter(e => e.eventName === 'trade_executed')
+                .slice(-30);
+
+            if (realTradeEvents.length > 0) {
+                let cumulativePnl = 0;
+                let cumulativeVol = 0;
+                const pts = realTradeEvents.map((ev, i) => {
+                    const profit = typeof ev.details?.profit === 'number' ? ev.details.profit : parseFloat(ev.details?.profit || '0');
+                    const stake = typeof ev.details?.stake === 'number' ? ev.details.stake : parseFloat(ev.details?.stake || '0');
+                    cumulativePnl += profit;
+                    cumulativeVol += stake;
+                    return {
+                        name: ev.timestamp ? new Date(ev.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `T-${i + 1}`,
+                        PnL: parseFloat(cumulativePnl.toFixed(2)),
+                        volume: parseFloat(cumulativeVol.toFixed(2)),
+                    };
                 });
-            });
-
-            setPlatformPnL(parseFloat(pnl.toFixed(2)));
-            setTradingVolume(parseFloat(vol.toFixed(2)));
-            if (chartPoints.length > 0) setChartData(chartPoints);
-
-            // Online Users
-            const accepted = (copyRequests || []).filter(r => r.status === 'accepted').length;
-            setOnlineUsers(accepted);
+                setChartData(pts);
+                setTradeLogs(realTradeEvents);
+            } else {
+                setChartData([]);
+                setTradeLogs([]);
+            }
 
             // WS Latency Simulation from actual ping
             const start = performance.now();
@@ -1080,23 +1094,7 @@ const AdminDashboard = observer(() => {
     // ─── Real Market WebSocket Fetch Engine ─────────────────────────────────
     const [marketTicks, setMarketTicks] = useState<
         Record<string, { price: number; lastDigit: number; history: number[] }>
-    >({
-        'Volatility 10 (1s) Index': { price: 6312.45, lastDigit: 4, history: [4, 2, 7, 3, 9, 8, 2, 0, 1, 4] },
-        'Volatility 25 (1s) Index': { price: 1421.1, lastDigit: 7, history: [1, 8, 7, 3, 2, 5, 7, 9, 2, 7] },
-        'Volatility 50 (1s) Index': { price: 42189.15, lastDigit: 5, history: [4, 5, 1, 2, 3, 9, 5, 6, 2, 5] },
-        'Volatility 75 (1s) Index': { price: 92831.6, lastDigit: 0, history: [9, 2, 0, 1, 3, 4, 6, 8, 9, 0] },
-        'Volatility 100 (1s) Index': { price: 4210.82, lastDigit: 2, history: [1, 2, 5, 3, 9, 8, 2, 0, 1, 2] },
-        'Volatility 10 Index': { price: 8912.3, lastDigit: 3, history: [3, 4, 2, 6, 1, 5, 8, 3, 9, 3] },
-        'Volatility 25 Index': { price: 3418.9, lastDigit: 6, history: [6, 2, 7, 1, 8, 4, 9, 6, 0, 6] },
-        'Volatility 50 Index': { price: 781.45, lastDigit: 1, history: [1, 5, 9, 2, 3, 8, 4, 1, 7, 1] },
-        'Volatility 75 Index': { price: 1245.18, lastDigit: 8, history: [8, 3, 4, 6, 7, 9, 2, 8, 8, 8] },
-        'Volatility 100 Index': { price: 341.29, lastDigit: 9, history: [1, 4, 2, 3, 9, 8, 9, 9, 0, 9] },
-        'Jump 10 Index': { price: 10243.5, lastDigit: 5, history: [5, 1, 8, 2, 9, 4, 0, 3, 7, 5] },
-        'Jump 25 Index': { price: 25190.8, lastDigit: 2, history: [2, 9, 4, 1, 8, 3, 6, 0, 5, 2] },
-        'Jump 50 Index': { price: 50840.1, lastDigit: 8, history: [8, 3, 7, 2, 9, 1, 4, 6, 0, 8] },
-        'Jump 75 Index': { price: 75432.9, lastDigit: 1, history: [1, 6, 2, 8, 3, 9, 4, 0, 5, 1] },
-        'Jump 100 Index': { price: 100980.2, lastDigit: 9, history: [9, 4, 1, 7, 2, 8, 3, 5, 0, 9] },
-    });
+    >({});
 
     useEffect(() => {
         if (!isAuthenticated) return;
@@ -1249,18 +1247,6 @@ const AdminDashboard = observer(() => {
                             `M-Pesa payment verified: KES ${mpesaAmount} from ${mpesaPhone}`,
                             'M-Pesa API'
                         );
-
-                        // Add automated markup commission
-                        const profitSplitAmt = (mpesaAmount / 130) * 0.2; // 20% Profit Split translation to USD roughly
-                        addCommission({
-                            id: `COMM-${Date.now()}`,
-                            date: new Date().toISOString(),
-                            clientId: `CR-${mpesaPhone.substring(mpesaPhone.length - 6)}`,
-                            volume: mpesaAmount / 130, // Mock Volume in USD
-                            profitShare: profitSplitAmt * 5,
-                            amount: profitSplitAmt,
-                            status: 'pending',
-                        });
                     } else {
                         setMpesaStatusText('❌ Transaction cancelled by user or expired.');
                         addSystemLog('error', `M-Pesa transaction failed/timeout for ${mpesaPhone}`, 'M-Pesa API');
@@ -1271,12 +1257,73 @@ const AdminDashboard = observer(() => {
         }, 1500);
     };
 
-    // ─── Commissions Filters ─────────────────────────────────────────────────
+    // ─── Commissions Filters & Deriv Live Markup ─────────────────────────────
     type TCommRange = 'daily' | 'weekly' | 'monthly' | 'all' | '7d' | '30d' | '3m' | '6m' | '12m' | 'custom';
-    const [commFilterRange, setCommFilterRange] = useState<TCommRange>('weekly');
+    const [commFilterRange, setCommFilterRange] = useState<TCommRange>('all');
     const [commStartDate, setCommStartDate] = useState('');
     const [commEndDate, setCommEndDate] = useState('');
     const [commissions, setCommissionsState] = useState<MarkupCommission[]>(getCommissions());
+
+    const getMarkupDateRange = useCallback((range: TCommRange, customStart?: string, customEnd?: string) => {
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const format = (d: Date) =>
+            `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+        const now = new Date();
+        let from = new Date('2020-01-01T00:00:00Z');
+        if (range === 'daily') from = new Date(now.getTime() - 86400000);
+        else if (range === 'weekly' || range === '7d') from = new Date(now.getTime() - 7 * 86400000);
+        else if (range === 'monthly' || range === '30d') from = new Date(now.getTime() - 30 * 86400000);
+        else if (range === '3m') from = new Date(now.getTime() - 90 * 86400000);
+        else if (range === '6m') from = new Date(now.getTime() - 180 * 86400000);
+        else if (range === '12m') from = new Date(now.getTime() - 365 * 86400000);
+        else if (range === 'custom' && customStart) from = new Date(customStart);
+
+        const to = range === 'custom' && customEnd ? new Date(customEnd + ' 23:59:59') : now;
+        return {
+            date_from: format(from),
+            date_to: format(to),
+        };
+    }, []);
+
+    const fetchDerivMarkupData = useCallback(async () => {
+        setIsLoadingMarkup(true);
+        try {
+            const range = getMarkupDateRange(commFilterRange, commStartDate, commEndDate);
+            const [stats, details] = await Promise.all([
+                DerivAccountWalletService.getMarkupStatistics(range),
+                DerivAccountWalletService.getMarkupDetails(range),
+            ]);
+            if (stats) {
+                setDerivMarkupStats(stats);
+                setMarkupStats(stats);
+            }
+            if (details?.transactions) {
+                setDerivMarkupTransactions(details.transactions);
+            }
+        } catch (e) {
+            console.error('[AdminDashboard] Failed to fetch Deriv markup data:', e);
+        } finally {
+            setIsLoadingMarkup(false);
+        }
+    }, [commFilterRange, commStartDate, commEndDate, getMarkupDateRange]);
+
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        fetchDerivMarkupData();
+    }, [isAuthenticated, fetchDerivMarkupData]);
+
+    const totalCommissionsEarned = useMemo(() => {
+        if (derivMarkupStats && typeof derivMarkupStats.total_app_markup_usd === 'number') {
+            return derivMarkupStats.total_app_markup_usd;
+        }
+        if (derivMarkupTransactions.length > 0) {
+            return derivMarkupTransactions.reduce(
+                (acc, t) => acc + (Number(t.app_markup_usd ?? t.app_markup) || 0),
+                0
+            );
+        }
+        return 0.0;
+    }, [derivMarkupStats, derivMarkupTransactions]);
 
     const filteredCommissions = useMemo(() => {
         const list = getCommissions();
@@ -1303,10 +1350,6 @@ const AdminDashboard = observer(() => {
             return true;
         });
     }, [commFilterRange, commStartDate, commEndDate, commissions]);
-
-    const totalCommissionsEarned = useMemo(() => {
-        return getCommissions().reduce((acc, c) => acc + c.amount, 0);
-    }, [commissions]);
 
     // ─── Platform Pushed Updates ──────────────────────────────────────────────
     const [pushedNotis, setPushedNotis] = useState<any[]>(getPlatformNotifications());
@@ -1367,11 +1410,7 @@ Status: Systems functional. Replicator nodes ready.
         e.preventDefault();
         setLoginError('');
         const apiRes = await loginAdminApi(loginUsername, loginPassword);
-        if (
-            apiRes.success ||
-            (loginUsername === 'Admin_profithub' && loginPassword === 'Access@profithub2026') ||
-            (loginUsername === 'admin' && loginPassword === 'admin123')
-        ) {
+        if (apiRes.success) {
             setIsAuthenticated(true);
             localStorage.setItem('CLIENT_ID', '33Mmq9JHMrJaUKT2KIhKZ');
             localStorage.setItem('admin_authenticated', 'true');
@@ -1714,9 +1753,9 @@ Status: Systems functional. Replicator nodes ready.
                                     <div className='adm-kpi__body'>
                                         <span className='adm-kpi__label'>TOTAL COMMISSION EARNED</span>
                                         <h2 className='adm-kpi__value'>${totalCommissionsEarned.toFixed(2)}</h2>
-                                        <span className='adm-kpi__sub'>Aggregated Markup (20%)</span>
+                                        <span className='adm-kpi__sub'>Deriv App Markup (App ID: {getAppId() || '121856'})</span>
                                         <span className='adm-kpi__trend adm-kpi__trend--up'>
-                                            +{commissions.filter(c => c.status === 'pending').length} pending approval
+                                            {derivMarkupStats?.total_transactions_count ?? derivMarkupTransactions.length} transactions recorded
                                         </span>
                                     </div>
                                     <div className='adm-kpi__icon adm-kpi__icon--red'>
@@ -1994,7 +2033,10 @@ Status: Systems functional. Replicator nodes ready.
                                             alignItems: 'center',
                                         }}
                                     >
-                                        <h3 className='adm-card__title'>💰 Markup Commissions Overview</h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <h3 className='adm-card__title'>💰 Live Deriv Markup Commissions</h3>
+                                            <span className='adm-tag adm-tag--accepted'>app_markup_statistics</span>
+                                        </div>
                                         <span className='adm-tag adm-tag--accepted'>
                                             ${totalCommissionsEarned.toFixed(2)} TOTAL
                                         </span>
@@ -2016,52 +2058,40 @@ Status: Systems functional. Replicator nodes ready.
                                             }}
                                         >
                                             <span style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>
-                                                PAID COMMISSIONS
+                                                SETTLED BY DERIV
                                             </span>
                                             <h4 style={{ margin: '4px 0 0 0', color: '#10b981' }}>
-                                                $
-                                                {commissions
-                                                    .filter(c => c.status === 'paid')
-                                                    .reduce((a, c) => a + c.amount, 0)
-                                                    .toFixed(2)}
+                                                ${totalCommissionsEarned.toFixed(2)}
                                             </h4>
                                         </div>
                                         <div
                                             style={{
                                                 padding: 12,
-                                                background: 'rgba(245,158,11,0.08)',
+                                                background: 'rgba(59,130,246,0.08)',
                                                 borderRadius: 8,
-                                                border: '1px solid rgba(245,158,11,0.2)',
+                                                border: '1px solid rgba(59,130,246,0.2)',
                                             }}
                                         >
-                                            <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700 }}>
-                                                PENDING COMMISSIONS
+                                            <span style={{ fontSize: 11, color: '#3b82f6', fontWeight: 700 }}>
+                                                TOTAL TRANSACTIONS
                                             </span>
-                                            <h4 style={{ margin: '4px 0 0 0', color: '#f59e0b' }}>
-                                                $
-                                                {commissions
-                                                    .filter(c => c.status === 'pending')
-                                                    .reduce((a, c) => a + c.amount, 0)
-                                                    .toFixed(2)}
+                                            <h4 style={{ margin: '4px 0 0 0', color: '#3b82f6' }}>
+                                                {derivMarkupStats?.total_transactions_count ?? derivMarkupTransactions.length}
                                             </h4>
                                         </div>
                                         <div
                                             style={{
                                                 padding: 12,
-                                                background: 'rgba(239,68,68,0.08)',
+                                                background: 'rgba(139,92,246,0.08)',
                                                 borderRadius: 8,
-                                                border: '1px solid rgba(239,68,68,0.2)',
+                                                border: '1px solid rgba(139,92,246,0.2)',
                                             }}
                                         >
-                                            <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>
-                                                UNPAID COMMISSIONS
+                                            <span style={{ fontSize: 11, color: '#8b5cf6', fontWeight: 700 }}>
+                                                REGISTERED APP ID
                                             </span>
-                                            <h4 style={{ margin: '4px 0 0 0', color: '#ef4444' }}>
-                                                $
-                                                {commissions
-                                                    .filter(c => c.status === 'unpaid')
-                                                    .reduce((a, c) => a + c.amount, 0)
-                                                    .toFixed(2)}
+                                            <h4 style={{ margin: '4px 0 0 0', color: '#8b5cf6' }}>
+                                                {getAppId() || '121856'}
                                             </h4>
                                         </div>
                                     </div>
@@ -2071,31 +2101,49 @@ Status: Systems functional. Replicator nodes ready.
                                         <table className='adm-table' style={{ fontSize: 12 }}>
                                             <thead>
                                                 <tr>
-                                                    <th>Client ID</th>
-                                                    <th>Volume</th>
-                                                    <th>Amount</th>
+                                                    <th>Txn ID</th>
+                                                    <th>Client Login ID</th>
+                                                    <th>Markup (USD)</th>
+                                                    <th>Date & Time</th>
                                                     <th>Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {commissions.slice(0, 4).map(c => (
-                                                    <tr key={c.id}>
-                                                        <td>
-                                                            <code className='adm-mono'>{c.clientId}</code>
-                                                        </td>
-                                                        <td>${c.volume.toFixed(2)}</td>
-                                                        <td style={{ color: '#10b981', fontWeight: 700 }}>
-                                                            +${c.amount.toFixed(2)}
-                                                        </td>
-                                                        <td>
-                                                            <span
-                                                                className={`adm-tag adm-tag--${c.status === 'paid' ? 'accepted' : c.status === 'pending' ? 'stopped' : 'rejected'}`}
-                                                            >
-                                                                {c.status}
-                                                            </span>
+                                                {derivMarkupTransactions.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={5} style={{ textAlign: 'center', padding: '24px', opacity: 0.6 }}>
+                                                            No live Deriv markup transactions recorded yet. Markups will appear as users trade on App #{getAppId() || '121856'}.
                                                         </td>
                                                     </tr>
-                                                ))}
+                                                ) : (
+                                                    derivMarkupTransactions.slice(0, 4).map((t, idx) => (
+                                                        <tr key={t.transaction_id || idx}>
+                                                            <td>
+                                                                <code className='adm-mono'>#{t.transaction_id}</code>
+                                                            </td>
+                                                            <td>
+                                                                <code className='adm-mono'>{t.client_loginid || 'CR-Client'}</code>
+                                                            </td>
+                                                            <td style={{ color: '#10b981', fontWeight: 700 }}>
+                                                                +${Number(t.app_markup_usd || t.app_markup || 0).toFixed(2)}
+                                                            </td>
+                                                            <td>
+                                                                {t.transaction_time
+                                                                    ? new Date(
+                                                                          typeof t.transaction_time === 'string' && !t.transaction_time.includes('-')
+                                                                              ? Number(t.transaction_time) * 1000
+                                                                              : t.transaction_time
+                                                                      ).toLocaleDateString()
+                                                                    : 'Recent'}
+                                                            </td>
+                                                            <td>
+                                                                <span className='adm-tag adm-tag--accepted'>
+                                                                    Paid (Deriv)
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
@@ -2492,6 +2540,13 @@ Status: Systems functional. Replicator nodes ready.
                                                                     <span style={{ fontSize: 11, opacity: 0.6 }}>
                                                                         {details.email || `${loginid}@deriv.com`}
                                                                     </span>
+                                                                    <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                                                                        {(details.scopes || ['read', 'trade']).map((sc: string) => (
+                                                                            <span key={sc} className='adm-tag adm-tag--info' style={{ fontSize: 9, padding: '1px 5px', textTransform: 'uppercase' }}>
+                                                                                {sc}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                             <td>
@@ -4094,7 +4149,7 @@ Status: Systems functional. Replicator nodes ready.
                                         <div className='adm-kpi__body'>
                                             <span className='adm-kpi__label'>TOTAL APPLICATION TURNOVER</span>
                                             <h2 className='adm-kpi__value'>
-                                                ${(markupStats?.total_turnover || 148520).toLocaleString()}
+                                                ${(markupStats?.total_turnover ?? liveMetrics.totalTradeVolumeUSD ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </h2>
                                             <CaptionText size='sm' color='subtle'>
                                                 Across all registered app tokens
@@ -4105,10 +4160,10 @@ Status: Systems functional. Replicator nodes ready.
                                         <div className='adm-kpi__body'>
                                             <span className='adm-kpi__label'>TOTAL MARKUP EARNED</span>
                                             <h2 className='adm-kpi__value'>
-                                                +${(markupStats?.total_markup || 2970.41).toLocaleString()}
+                                                +${(markupStats?.total_markup ?? (liveMetrics.totalTradeVolumeUSD * 0.01)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </h2>
                                             <CaptionText size='sm' color='subtle'>
-                                                KES {((markupStats?.total_markup || 2970.41) * 130).toLocaleString()}
+                                                KES {((markupStats?.total_markup ?? (liveMetrics.totalTradeVolumeUSD * 0.01)) * 130).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </CaptionText>
                                         </div>
                                     </div>
@@ -4116,7 +4171,7 @@ Status: Systems functional. Replicator nodes ready.
                                         <div className='adm-kpi__body'>
                                             <span className='adm-kpi__label'>APP TRANSACTIONS</span>
                                             <h2 className='adm-kpi__value'>
-                                                {(markupStats?.total_transactions || 1420).toLocaleString()}
+                                                {(markupStats?.total_transactions ?? liveMetrics.totalTradesExecuted).toLocaleString()}
                                             </h2>
                                             <CaptionText size='sm' color='subtle'>
                                                 Total API Purchases Processed
@@ -4728,21 +4783,35 @@ Status: Systems functional. Replicator nodes ready.
                                             ) tracking app revenue across all registered client applications.
                                         </p>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 10 }}>
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                                         <button
                                             className='adm-act adm-act--green'
+                                            disabled={isLoadingMarkup}
                                             onClick={async () => {
                                                 try {
-                                                    const stats = await DerivAccountWalletService.getMarkupStatistics();
+                                                    setIsLoadingMarkup(true);
+                                                    const range = getMarkupDateRange(commFilterRange, commStartDate, commEndDate);
+                                                    const [stats, details] = await Promise.all([
+                                                        DerivAccountWalletService.getMarkupStatistics(range),
+                                                        DerivAccountWalletService.getMarkupDetails(range),
+                                                    ]);
+                                                    if (stats) setDerivMarkupStats(stats);
+                                                    if (details?.transactions) setDerivMarkupTransactions(details.transactions);
                                                     alert(
-                                                        `✅ Deriv Markup Stats fetched!\nTotal Turnover: $${stats.total_turnover || 148520.5}\nTotal Markup Earned: $${stats.total_markup || 2970.41}`
+                                                        `✅ Deriv Live Markup API Query Successful!\n\n` +
+                                                        `• Total App Markup (USD): $${Number(stats?.total_app_markup_usd || 0).toFixed(2)}\n` +
+                                                        `• Total Transactions: ${stats?.total_transactions_count || details?.transactions?.length || 0}\n` +
+                                                        `• Date Range: ${range.date_from} to ${range.date_to}\n` +
+                                                        `• App Breakdown: ${stats?.breakdown?.length || 0} registered applications`
                                                     );
                                                 } catch (e: any) {
-                                                    alert(`Markup Stats Query: ${e?.message || 'Done'}`);
+                                                    alert(`Deriv Markup API Notice: ${e?.message || 'Check connection or authorization'}`);
+                                                } finally {
+                                                    setIsLoadingMarkup(false);
                                                 }
                                             }}
                                         >
-                                            ⚡ Fetch Live Markup WS Data
+                                            {isLoadingMarkup ? '⏳ Querying Deriv API...' : '⚡ Fetch Live Markup WS Data'}
                                         </button>
                                     </div>
                                 </div>
@@ -4758,7 +4827,7 @@ Status: Systems functional. Replicator nodes ready.
                                         <p className='adm-card__subtitle'>
                                             Application: <strong>ProfitHub Trading Suite</strong> | App ID:{' '}
                                             <code className='adm-mono' style={{ color: 'var(--color-blue)' }}>
-                                                3Mmq9JHMrJaUKT2KIhKZ
+                                                {getAppId() || '121856'}
                                             </code>
                                         </p>
                                     </div>
@@ -4802,24 +4871,26 @@ Status: Systems functional. Replicator nodes ready.
                                 <div className='adm-metrics-grid' style={{ marginBottom: 20 }}>
                                     <div className='adm-metric-card'>
                                         <div className='adm-metric-card__title'>Total Trades Executed</div>
-                                        <div className='adm-metric-card__value'>1,482</div>
+                                        <div className='adm-metric-card__value'>
+                                            {liveMetrics.totalTradesExecuted.toLocaleString()}
+                                        </div>
                                     </div>
                                     <div className='adm-metric-card'>
-                                        <div className='adm-metric-card__title'>Active Copier Clients</div>
+                                        <div className='adm-metric-card__title'>Active Accounts & Clients</div>
                                         <div className='adm-metric-card__value'>
-                                            {onlineUsers > 0 ? onlineUsers : 12}
+                                            {Object.keys(getAccountsList()).length || liveMetrics.activeUsersCount}
                                         </div>
                                     </div>
                                     <div className='adm-metric-card'>
                                         <div className='adm-metric-card__title'>Markup Commission ($)</div>
                                         <div className='adm-metric-card__value' style={{ color: 'var(--color-green)' }}>
-                                            +$2,840.50
+                                            +${totalCommissionsEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </div>
                                     </div>
                                     <div className='adm-metric-card'>
-                                        <div className='adm-metric-card__title'>Total Volume ($)</div>
+                                        <div className='adm-metric-card__title'>Markup Transactions</div>
                                         <div className='adm-metric-card__value' style={{ color: 'var(--color-blue)' }}>
-                                            ${tradingVolume > 0 ? tradingVolume.toFixed(2) : '142,025.00'}
+                                            {(derivMarkupStats?.total_transactions_count ?? derivMarkupTransactions.length).toLocaleString()}
                                         </div>
                                     </div>
                                 </div>
@@ -4842,50 +4913,27 @@ Status: Systems functional. Replicator nodes ready.
                                         }}
                                     >
                                         <h4 style={{ margin: '0 0 12px 0', fontSize: 13, color: '#94a3b8' }}>
-                                            Contract Types Volume Distribution
+                                            Live Strategy Performance
                                         </h4>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                            {[
-                                                { type: 'Rise / Fall', pct: 42, color: '#10b981' },
-                                                { type: 'Digits Over / Under', pct: 28, color: '#3b82f6' },
-                                                { type: 'Matches / Differs', pct: 15, color: '#8b5cf6' },
-                                                { type: 'High / Low Ticks', pct: 10, color: '#f59e0b' },
-                                                { type: 'Touch / No Touch', pct: 5, color: '#ec4899' },
-                                            ].map(item => (
-                                                <div key={item.type}>
-                                                    <div
-                                                        style={{
-                                                            display: 'flex',
-                                                            justifyContent: 'space-between',
-                                                            fontSize: 12,
-                                                            marginBottom: 4,
-                                                        }}
-                                                    >
-                                                        <span>{item.type}</span>
-                                                        <span style={{ fontWeight: 700, color: item.color }}>
-                                                            {item.pct}%
-                                                        </span>
-                                                    </div>
-                                                    <div
-                                                        style={{
-                                                            width: '100%',
-                                                            height: 6,
-                                                            background: 'rgba(255,255,255,0.08)',
-                                                            borderRadius: 6,
-                                                            overflow: 'hidden',
-                                                        }}
-                                                    >
-                                                        <div
-                                                            style={{
-                                                                width: `${item.pct}%`,
-                                                                height: '100%',
-                                                                background: item.color,
-                                                                borderRadius: 6,
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ))}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                                                <span>Win Rate</span>
+                                                <span style={{ fontWeight: 700, color: '#10b981' }}>{liveMetrics.winRate}%</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                                                <span>Winning Contracts</span>
+                                                <span style={{ fontWeight: 700, color: '#3b82f6' }}>{liveMetrics.winCount}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                                                <span>Losing Contracts</span>
+                                                <span style={{ fontWeight: 700, color: '#f43f5e' }}>{liveMetrics.lossCount}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                                                <span>Aggregated P/L</span>
+                                                <span style={{ fontWeight: 700, color: liveMetrics.totalProfitLossUSD >= 0 ? '#10b981' : '#f43f5e' }}>
+                                                    {liveMetrics.totalProfitLossUSD >= 0 ? '+' : ''}${liveMetrics.totalProfitLossUSD.toFixed(2)}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -4898,18 +4946,20 @@ Status: Systems functional. Replicator nodes ready.
                                         }}
                                     >
                                         <h4 style={{ margin: '0 0 12px 0', fontSize: 13, color: '#94a3b8' }}>
-                                            Volume & Commission Growth
+                                            Volume & Commission Activity
                                         </h4>
                                         <ResponsiveContainer width='100%' height={160}>
                                             <AreaChart
-                                                data={[
-                                                    { day: 'Mon', Volume: 12000, Commission: 240 },
-                                                    { day: 'Tue', Volume: 18000, Commission: 360 },
-                                                    { day: 'Wed', Volume: 15000, Commission: 300 },
-                                                    { day: 'Thu', Volume: 24000, Commission: 480 },
-                                                    { day: 'Fri', Volume: 32000, Commission: 640 },
-                                                    { day: 'Sat', Volume: 28000, Commission: 560 },
-                                                    { day: 'Sun', Volume: 35000, Commission: 700 },
+                                                data={derivMarkupTransactions.length > 0 ? derivMarkupTransactions.map(t => ({
+                                                    day: new Date(
+                                                        typeof t.transaction_time === 'string' && !t.transaction_time.includes('-')
+                                                            ? Number(t.transaction_time) * 1000
+                                                            : t.transaction_time
+                                                    ).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+                                                    Commission: Number(t.app_markup_usd || t.app_markup || 0),
+                                                })) : [
+                                                    { day: 'Start', Commission: 0 },
+                                                    { day: 'Current', Commission: totalCommissionsEarned }
                                                 ]}
                                             >
                                                 <CartesianGrid strokeDasharray='3 3' stroke='rgba(255,255,255,0.08)' />
@@ -4937,53 +4987,55 @@ Status: Systems functional. Replicator nodes ready.
                                     <table className='adm-table'>
                                         <thead>
                                             <tr>
-                                                <th>Commission ID</th>
-                                                <th>Date</th>
-                                                <th>Client ID</th>
-                                                <th>Trade Volume</th>
-                                                <th>Net Profit Split</th>
-                                                <th>Earnings (USD)</th>
+                                                <th>Txn ID</th>
+                                                <th>Date & Time</th>
+                                                <th>Client Login ID</th>
+                                                <th>Client Currency</th>
+                                                <th>Markup Amount (USD)</th>
+                                                <th>App ID</th>
                                                 <th>Deriv Paid Status</th>
-                                                <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredCommissions.map(comm => (
-                                                <tr key={comm.id}>
-                                                    <td>{comm.id}</td>
-                                                    <td>{new Date(comm.date).toLocaleDateString()}</td>
-                                                    <td>{comm.clientId}</td>
-                                                    <td>${comm.volume.toFixed(2)}</td>
-                                                    <td>${comm.profitShare.toFixed(2)}</td>
-                                                    <td style={{ color: 'var(--color-green)', fontWeight: 800 }}>
-                                                        +${comm.amount.toFixed(2)}
-                                                    </td>
-                                                    <td>
-                                                        <span
-                                                            className={`adm-tag adm-tag--${comm.status === 'paid' ? 'accepted' : comm.status === 'pending' ? 'pending' : 'rejected'}`}
-                                                        >
-                                                            {comm.status === 'paid'
-                                                                ? 'Paid by Deriv'
-                                                                : comm.status === 'pending'
-                                                                  ? 'Pending Payout'
-                                                                  : 'Unpaid Markup'}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        {comm.status !== 'paid' && (
-                                                            <button
-                                                                className='adm-act adm-act--green'
-                                                                onClick={() => {
-                                                                    updateCommissionStatus(comm.id, 'paid');
-                                                                    setCommissionsState(getCommissions());
-                                                                }}
-                                                            >
-                                                                Verify Paid
-                                                            </button>
-                                                        )}
+                                            {derivMarkupTransactions.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={7} style={{ textAlign: 'center', padding: '36px', opacity: 0.6 }}>
+                                                        No live markup records returned by Deriv API for this period. Markups accumulate automatically as clients execute trades under App ID #{getAppId() || '121856'}.
                                                     </td>
                                                 </tr>
-                                            ))}
+                                            ) : (
+                                                derivMarkupTransactions.map((comm, idx) => (
+                                                <tr key={comm.transaction_id || idx}>
+                                                    <td>
+                                                        <code className='adm-mono'>#{comm.transaction_id}</code>
+                                                    </td>
+                                                    <td>
+                                                        {comm.transaction_time
+                                                            ? new Date(
+                                                                  typeof comm.transaction_time === 'string' && !comm.transaction_time.includes('-')
+                                                                      ? Number(comm.transaction_time) * 1000
+                                                                      : comm.transaction_time
+                                                              ).toLocaleString()
+                                                            : 'Recent'}
+                                                    </td>
+                                                    <td>
+                                                        <code className='adm-mono'>{comm.client_loginid || 'CR-Client'}</code>
+                                                    </td>
+                                                    <td>{comm.client_currcode || 'USD'}</td>
+                                                    <td style={{ color: 'var(--color-green)', fontWeight: 800 }}>
+                                                        +${Number(comm.app_markup_usd || comm.app_markup || 0).toFixed(2)}
+                                                    </td>
+                                                    <td>
+                                                        <code className='adm-mono'>{comm.app_id || getAppId() || '121856'}</code>
+                                                    </td>
+                                                    <td>
+                                                        <span className='adm-tag adm-tag--accepted'>
+                                                            Paid by Deriv
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                ))
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>

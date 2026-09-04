@@ -14,7 +14,15 @@ const RoutePromptDialog = observer(() => {
     const { show_prompt } = ui;
 
     const blocker = useBlocker(
-        ({ currentLocation, nextLocation }) => show_prompt && currentLocation.pathname !== nextLocation.pathname
+        Boolean(show_prompt)
+            ? ({ currentLocation, nextLocation, historyAction }) => {
+                  if (!show_prompt) return false;
+                  if (historyAction === 'POP' && currentLocation.pathname === nextLocation.pathname) {
+                      return false;
+                  }
+                  return currentLocation.pathname !== nextLocation.pathname;
+              }
+            : false
     );
 
     React.useEffect(() => {

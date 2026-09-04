@@ -23,6 +23,12 @@ window.addEventListener('error', (e: any) => {
     if (/Loading chunk \d+ failed/.test(msg) || /Loading CSS chunk \d+ failed/.test(msg)) {
         console.warn('Chunk load failure detected, reloading to recover.');
         window.location.reload();
+        return;
+    }
+    // Suppress benign unhandled errors from external trackers/adblockers (e.g. GTM reportAllChanges reading startTime)
+    if (typeof msg === 'string' && msg.includes("Cannot read properties of undefined (reading 'startTime')")) {
+        e.preventDefault();
+        return;
     }
 });
 
@@ -32,6 +38,16 @@ window.addEventListener('unhandledrejection', (ev: any) => {
     if (msg && /Loading chunk \d+ failed/.test(msg)) {
         console.warn('Chunk import rejection detected, reloading to recover.');
         window.location.reload();
+        return;
+    }
+    // Suppress browser extension messaging port closure rejections
+    if (
+        typeof msg === 'string' &&
+        (msg.includes('A listener indicated an asynchronous response') ||
+            msg.includes('message channel closed before a response was received'))
+    ) {
+        ev.preventDefault();
+        return;
     }
 });
 

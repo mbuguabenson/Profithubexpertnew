@@ -68,6 +68,9 @@ module.exports = async function handler(req, res) {
                             email: auth.email || '',
                             currency: auth.currency || 'USD',
                             balance: typeof auth.balance === 'number' ? auth.balance : parseFloat(auth.balance || '0'),
+                            scopes: auth.scopes || ['read', 'trade'],
+                            country: auth.country || '',
+                            isVirtual: Boolean(auth.is_virtual),
                             accountList: (auth.account_list || []).map(acc => ({
                                 loginid: acc.loginid,
                                 currency: acc.currency,

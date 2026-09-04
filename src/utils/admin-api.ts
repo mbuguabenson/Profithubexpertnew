@@ -61,12 +61,7 @@ export const loginAdminApi = async (
 
     if (res) return res;
 
-    // Fallback authentication check if serverless backend is unmapped locally
-    if ((username === 'admin' || username === 'Profithubadmin') && password === 'admin123') {
-        const token = `admin_session_${Date.now()}`;
-        return { success: true, token };
-    }
-    return { success: false, error: 'Invalid username or password' };
+    return { success: false, error: 'Database authentication service unreachable or credentials invalid.' };
 };
 
 export const changeAdminPasswordApi = async (newPassword: string): Promise<boolean> => {

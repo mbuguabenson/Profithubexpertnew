@@ -26,6 +26,10 @@ export class BridgeStateMachine {
             BridgeState.LOADING_IFRAME,
             BridgeState.WAITING_READY,
             BridgeState.READY,
+            BridgeState.REQUESTING_SESSION,
+            BridgeState.AUTHENTICATING,
+            BridgeState.AUTHENTICATED,
+            BridgeState.CONNECTED,
             BridgeState.LOGGED_OUT,
         ],
         [BridgeState.LOADING_IFRAME]: [
@@ -96,6 +100,10 @@ export class BridgeStateMachine {
     }
 
     public transitionTo(newState: BridgeState): boolean {
+        if (this.state === newState) {
+            return true;
+        }
+
         const allowed = this.allowedTransitions[this.state];
 
         // Always allow transition to IDLE (e.g. during component unmount/detach)

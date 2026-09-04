@@ -91,30 +91,44 @@ export const DigitFlowIframeContainer: React.FC<DigitFlowIframeContainerProps> =
                     sessionPayload.token = token;
                 }
 
+                // Check again after async token resolution
+                const currentIframe = iframeRef.current;
+                if (!currentIframe || !currentIframe.contentWindow) return;
+                const targetWindow = currentIframe.contentWindow;
+
                 const sessionMsg = createMessage(BridgeEvent.SESSION_DATA, appId, 'parent', sessionPayload);
 
                 try {
                     const targetOrigin = (() => {
                         try {
-                            return new URL(iframe.src).origin;
+                            return new URL(currentIframe.src).origin;
                         } catch {
                             return '*';
                         }
                     })();
 
-                    iframe.contentWindow.postMessage(sessionMsg, targetOrigin);
-                    iframe.contentWindow.postMessage({ type: 'SESSION_DATA', ...sessionPayload }, targetOrigin);
-                    iframe.contentWindow.postMessage({ type: 'DERIV_AUTH', ...sessionPayload }, targetOrigin);
+                    const safePost = (msg: any) => {
+                        try {
+                            targetWindow.postMessage(msg, targetOrigin);
+                        } catch {
+                            if (targetOrigin !== '*') {
+                                try {
+                                    targetWindow.postMessage(msg, '*');
+                                } catch {}
+                            }
+                        }
+                    };
+
+                    safePost(sessionMsg);
+                    safePost({ type: 'SESSION_DATA', ...sessionPayload });
+                    safePost({ type: 'DERIV_AUTH', ...sessionPayload });
 
                     if (includeToken && sessionPayload.token) {
-                        iframe.contentWindow.postMessage({ type: 'AUTH_TOKEN', ...sessionPayload }, targetOrigin);
-                        iframe.contentWindow.postMessage({ action: 'setToken', ...sessionPayload }, targetOrigin);
-                        iframe.contentWindow.postMessage({ action: 'login', ...sessionPayload }, targetOrigin);
-                        iframe.contentWindow.postMessage({ action: 'SYNC_SESSION', ...sessionPayload }, targetOrigin);
-                        iframe.contentWindow.postMessage(
-                            JSON.stringify({ type: 'SESSION_DATA', ...sessionPayload }),
-                            targetOrigin
-                        );
+                        safePost({ type: 'AUTH_TOKEN', ...sessionPayload });
+                        safePost({ action: 'setToken', ...sessionPayload });
+                        safePost({ action: 'login', ...sessionPayload });
+                        safePost({ action: 'SYNC_SESSION', ...sessionPayload });
+                        safePost(JSON.stringify({ type: 'SESSION_DATA', ...sessionPayload }));
                     }
                 } catch (e) {
                     console.warn('[DigitFlowIframe] Error sending auth postMessage:', e);

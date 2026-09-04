@@ -12,12 +12,26 @@ let derivApiInstance = null;
 let derivApiPromise = null;
 let currentWebSocketURL = null;
 
+const normalizeWsUrl = url => {
+    if (!url) return '';
+    try {
+        const u = new URL(url);
+        u.searchParams.delete('otp');
+        return u.toString();
+    } catch {
+        return url.replace(/([?&])otp=[^&]+(&|$)/, '$1');
+    }
+};
+
 /**
  * Clears the singleton instance (useful for logout or forced reconnection)
  */
 export const clearDerivApiInstance = () => {
     if (derivApiInstance?.connection) {
         try {
+            derivApiInstance.connection.onopen = null;
+            derivApiInstance.connection.onclose = null;
+            derivApiInstance.connection.onerror = null;
             derivApiInstance.connection.close();
         } catch (error) {
             console.error('[DerivAPI] Error closing WebSocket:', error);
@@ -68,10 +82,18 @@ export const generateDerivApiInstance = async (forceNew = false) => {
             // Await the async getSocketURL() function
             const wsURL = await getSocketURL();
 
-            // Check if URL changed (account switch scenario)
-            if (currentWebSocketURL && currentWebSocketURL !== wsURL) {
+            // Check if normalized URL changed (real account switch scenario, ignoring single-use OTP difference)
+            const isDestinationChanged =
+                currentWebSocketURL && normalizeWsUrl(currentWebSocketURL) !== normalizeWsUrl(wsURL);
+            if (isDestinationChanged) {
                 console.log('[DerivAPI] WebSocket URL changed, clearing old instance');
                 clearDerivApiInstance();
+            } else if (derivApiInstance) {
+                const readyState = derivApiInstance.connection?.readyState;
+                if (readyState === WebSocket.CONNECTING || readyState === WebSocket.OPEN) {
+                    console.log('[DerivAPI] Reusing existing in-flight instance (state:', readyState, ')');
+                    return derivApiInstance;
+                }
             }
 
             currentWebSocketURL = wsURL;
@@ -125,10 +147,7 @@ export const generateDerivApiInstance = async (forceNew = false) => {
             derivApiInstance = null;
             throw error;
         } finally {
-            // Clear the promise after a short delay to allow reuse during concurrent calls
-            setTimeout(() => {
-                derivApiPromise = null;
-            }, 100);
+            derivApiPromise = null;
         }
     })();
 

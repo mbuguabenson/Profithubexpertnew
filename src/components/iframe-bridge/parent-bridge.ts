@@ -44,6 +44,17 @@ export class ParentBridgeClient {
 
     private listeners: Set<() => void> = new Set();
     private sessionUnsubscribe: (() => void) | null = null;
+    private activeTimeouts: Set<any> = new Set();
+
+    private safeTimeout(fn: () => void, delay: number) {
+        const id = setTimeout(() => {
+            this.activeTimeouts.delete(id);
+            if (!this.iframeWindow) return;
+            fn();
+        }, delay);
+        this.activeTimeouts.add(id);
+        return id;
+    }
 
     constructor() {
         this.stateMachine = new BridgeStateMachine(BridgeState.IDLE);
@@ -82,7 +93,7 @@ export class ParentBridgeClient {
         // Proactively send auth handshakes to iframe continuously for 30s
         this.startProactiveAuthLoop();
 
-        setTimeout(() => {
+        this.safeTimeout(() => {
             if (this.stateMachine.getState() === BridgeState.LOADING_IFRAME) {
                 this.stateMachine.transitionTo(BridgeState.WAITING_READY);
             }
@@ -200,10 +211,26 @@ export class ParentBridgeClient {
 
             const postBoth = (msg: any) => {
                 try {
-                    const targetOrigin = this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : new URL(window.location.href).origin;
-                    targetWindow.postMessage(msg, targetOrigin);
+                    const targetOrigin = this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : '*';
+                    try {
+                        targetWindow.postMessage(msg, targetOrigin);
+                    } catch {
+                        if (targetOrigin !== '*') {
+                            try {
+                                targetWindow.postMessage(msg, '*');
+                            } catch {}
+                        }
+                    }
                     if (typeof msg === 'object') {
-                        targetWindow.postMessage(JSON.stringify(msg), targetOrigin);
+                        try {
+                            targetWindow.postMessage(JSON.stringify(msg), targetOrigin);
+                        } catch {
+                            if (targetOrigin !== '*') {
+                                try {
+                                    targetWindow.postMessage(JSON.stringify(msg), '*');
+                                } catch {}
+                            }
+                        }
                     }
                 } catch (e) {
                     // ignore
@@ -285,6 +312,8 @@ export class ParentBridgeClient {
             clearInterval(this.retryIntervalId);
             this.retryIntervalId = null;
         }
+        this.activeTimeouts.forEach(id => clearTimeout(id));
+        this.activeTimeouts.clear();
         if (typeof window !== 'undefined') {
             window.removeEventListener('message', this.handleMessage);
         }
@@ -331,16 +360,25 @@ export class ParentBridgeClient {
         if (!this.iframeWindow) return;
 
         const session = sessionManager.getSession();
-            const appId = session?.appId || getAppId() || '121856';
+        const appId = session?.appId || getAppId() || '121856';
         this.diagnostics.appId = appId;
 
         const msg = createMessage(type, appId, 'parent', payload);
         this.logMessage('out', msg);
         this.logger.messageSent(this.iframeOrigin, msg.type as string);
+        const origin = this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : '*';
         try {
-            this.iframeWindow.postMessage(msg, this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : '*');
+            this.iframeWindow.postMessage(msg, origin);
         } catch (error) {
-            console.error('[ParentBridge] Failed to send message', error);
+            if (origin !== '*') {
+                try {
+                    this.iframeWindow.postMessage(msg, '*');
+                } catch (fallbackErr) {
+                    console.error('[ParentBridge] Failed to send message', fallbackErr);
+                }
+            } else {
+                console.error('[ParentBridge] Failed to send message', error);
+            }
         }
     }
 
@@ -435,7 +473,7 @@ export class ParentBridgeClient {
                 break;
             case BridgeEvent.AUTH_SUCCESS:
                 this.stateMachine.transitionTo(BridgeState.AUTHENTICATED);
-                setTimeout(() => this.stateMachine.transitionTo(BridgeState.CONNECTED), 100);
+                this.safeTimeout(() => this.stateMachine.transitionTo(BridgeState.CONNECTED), 100);
                 this.reconnectAttempts = 0;
                 break;
             case BridgeEvent.AUTH_FAILED:
@@ -477,9 +515,9 @@ export class ParentBridgeClient {
         this.stateMachine.transitionTo(BridgeState.AUTHENTICATING);
         this.sendMessage(BridgeEvent.AUTH_START, { timestamp: Date.now() });
 
-        setTimeout(() => {
+        this.safeTimeout(() => {
             this.stateMachine.transitionTo(BridgeState.AUTHENTICATED);
-            setTimeout(() => {
+            this.safeTimeout(() => {
                 this.stateMachine.transitionTo(BridgeState.CONNECTED);
             }, 100);
         }, 300);

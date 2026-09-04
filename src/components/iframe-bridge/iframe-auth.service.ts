@@ -123,7 +123,15 @@ export class IframeAuthService {
                             return '*';
                         }
                     })();
-                    iframeWindow.postMessage(payload, targetOrigin);
+                    try {
+                        iframeWindow.postMessage(payload, targetOrigin);
+                    } catch {
+                        if (targetOrigin !== '*') {
+                            try {
+                                iframeWindow.postMessage(payload, '*');
+                            } catch {}
+                        }
+                    }
                 }
             } catch (e) {
                 try {

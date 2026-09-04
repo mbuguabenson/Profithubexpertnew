@@ -510,38 +510,7 @@ export const getMpesaTransactions = (): MpesaTransaction[] => {
     try {
         const raw = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
         if (!raw) {
-            // Seed mock transactions
-            const mocks: MpesaTransaction[] = [
-                {
-                    id: 'TXN-876251',
-                    phoneNumber: '254712345678',
-                    amount: 1500,
-                    packageName: 'Weekly Pass',
-                    timestamp: Date.now() - 3600000 * 4,
-                    status: 'completed',
-                    reference: 'MPESA-MPG87H9',
-                },
-                {
-                    id: 'TXN-912851',
-                    phoneNumber: '254722998877',
-                    amount: 5000,
-                    packageName: 'Monthly Premium',
-                    timestamp: Date.now() - 3600000 * 24,
-                    status: 'completed',
-                    reference: 'MPESA-MPL23X2',
-                },
-                {
-                    id: 'TXN-421764',
-                    phoneNumber: '254799001122',
-                    amount: 1500,
-                    packageName: 'Weekly Pass',
-                    timestamp: Date.now() - 3600000 * 48,
-                    status: 'failed',
-                    reference: 'MPESA-MPE12L1',
-                },
-            ];
-            localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(mocks));
-            return mocks;
+            return [];
         }
         return JSON.parse(raw);
     } catch {
@@ -572,47 +541,7 @@ export const getCommissions = (): MarkupCommission[] => {
     try {
         const raw = localStorage.getItem(COMMISSIONS_STORAGE_KEY);
         if (!raw) {
-            const now = new Date();
-            const mocks: MarkupCommission[] = [
-                {
-                    id: 'COMM-101',
-                    date: new Date(now.getTime() - 3600000 * 2).toISOString(),
-                    clientId: 'CR4879210',
-                    volume: 1250.5,
-                    profitShare: 200.0,
-                    amount: 40.0,
-                    status: 'paid',
-                },
-                {
-                    id: 'COMM-102',
-                    date: new Date(now.getTime() - 3600000 * 24).toISOString(),
-                    clientId: 'CR3891024',
-                    volume: 800.0,
-                    profitShare: 150.0,
-                    amount: 30.0,
-                    status: 'pending',
-                },
-                {
-                    id: 'COMM-103',
-                    date: new Date(now.getTime() - 3600000 * 72).toISOString(),
-                    clientId: 'CR2987162',
-                    volume: 2100.0,
-                    profitShare: 450.0,
-                    amount: 90.0,
-                    status: 'unpaid',
-                },
-                {
-                    id: 'COMM-104',
-                    date: new Date(now.getTime() - 3600000 * 120).toISOString(),
-                    clientId: 'CR5123984',
-                    volume: 450.0,
-                    profitShare: 80.0,
-                    amount: 16.0,
-                    status: 'paid',
-                },
-            ];
-            localStorage.setItem(COMMISSIONS_STORAGE_KEY, JSON.stringify(mocks));
-            return mocks;
+            return [];
         }
         return JSON.parse(raw);
     } catch {
@@ -650,31 +579,7 @@ export const getSystemLogs = (): SystemLogItem[] => {
     try {
         const raw = localStorage.getItem(SYSTEM_LOGS_STORAGE_KEY);
         if (!raw) {
-            const mocks: SystemLogItem[] = [
-                {
-                    id: 'LOG-001',
-                    timestamp: Date.now() - 3600000 * 5,
-                    level: 'info',
-                    message: 'Deriv API connection established successfully.',
-                    component: 'Deriv WS',
-                },
-                {
-                    id: 'LOG-002',
-                    timestamp: Date.now() - 3600000 * 3,
-                    level: 'warn',
-                    message: 'WebSocket ping latency exceeded 350ms.',
-                    component: 'Network Monitor',
-                },
-                {
-                    id: 'LOG-003',
-                    timestamp: Date.now() - 3600000 * 2,
-                    level: 'error',
-                    message: 'Failed to authorize client token VR129841. Error code: AuthorizationExpired.',
-                    component: 'Replicator Engine',
-                },
-            ];
-            localStorage.setItem(SYSTEM_LOGS_STORAGE_KEY, JSON.stringify(mocks));
-            return mocks;
+            return [];
         }
         return JSON.parse(raw);
     } catch {

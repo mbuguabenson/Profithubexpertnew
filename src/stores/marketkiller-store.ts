@@ -233,7 +233,7 @@ export default class MarketkillerStore {
             this.live_market_ribbon.push({ symbol: sym, price: '0.00', digit: null, is_up: true });
         });
 
-        // Wait for API to be ready then connect
+        // Debounced subscribe to prevent duplicate parallel subscriptions on startup
         this.waitForApiAndConnect();
 
         reaction(
@@ -241,29 +241,36 @@ export default class MarketkillerStore {
             is_socket_opened => {
                 this.is_connected = !!is_socket_opened;
                 if (is_socket_opened) {
-                    this.subscribeToTicks();
-                    this.subscribeToRibbon();
+                    this.debouncedSubscribe();
                 }
             }
         );
 
         if (typeof window !== 'undefined') {
             window.addEventListener('account_switched', () => {
-                this.subscribeToTicks();
-                this.subscribeToRibbon();
+                this.debouncedSubscribe();
             });
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden && (!this.ticks || this.ticks.length === 0)) {
-                    this.subscribeToTicks();
-                    this.subscribeToRibbon();
+                    this.debouncedSubscribe();
                 }
             });
         }
         globalObserver.register('api.authorize', () => {
-            this.subscribeToTicks();
-            this.subscribeToRibbon();
+            this.debouncedSubscribe();
         });
     }
+
+    private subscribeDebounceTimer: any = null;
+
+    @action
+    public debouncedSubscribe = (delay = 300) => {
+        if (this.subscribeDebounceTimer) clearTimeout(this.subscribeDebounceTimer);
+        this.subscribeDebounceTimer = setTimeout(() => {
+            this.subscribeToTicks();
+            this.subscribeToRibbon();
+        }, delay);
+    };
 
     @action
     private waitForApiAndConnect = () => {
@@ -272,8 +279,7 @@ export default class MarketkillerStore {
                 runInAction(() => {
                     this.is_connected = true;
                 });
-                this.subscribeToTicks();
-                this.subscribeToRibbon();
+                this.debouncedSubscribe(100);
             } else {
                 setTimeout(tryConnect, 800);
             }
@@ -322,37 +328,41 @@ export default class MarketkillerStore {
     };
 
     private tick_listener_sub: any = null;
+    private is_subscribing = false;
 
     @action
     public subscribeToTicks = async (retry_count = 0) => {
-        // Cleanup previous tick subscription ID if exists
-        if (this.tick_subscription) {
-            try {
-                await api_base.api.send({ forget: this.tick_subscription });
-            } catch (e) {
-                /* ignore */
-            }
-            this.tick_subscription = null;
-        }
-
-        // Cleanup RxJS listener to prevent memory leaks and duplicate ticks
-        if (this.tick_listener_sub) {
-            try {
-                this.tick_listener_sub.unsubscribe();
-            } catch (e) {
-                /* ignore */
-            }
-            this.tick_listener_sub = null;
-        }
-
-        if (!api_base?.api || api_base.api.connection?.readyState !== 1) {
-            if (retry_count < 10) {
-                setTimeout(() => this.subscribeToTicks(retry_count + 1), 1000);
-            }
-            return;
-        }
+        if (this.is_subscribing) return;
+        this.is_subscribing = true;
 
         try {
+            // Cleanup previous tick subscription ID if exists
+            if (this.tick_subscription) {
+                try {
+                    await api_base.api.send({ forget: this.tick_subscription });
+                } catch (e) {
+                    /* ignore */
+                }
+                this.tick_subscription = null;
+            }
+
+            // Cleanup RxJS listener to prevent memory leaks and duplicate ticks
+            if (this.tick_listener_sub) {
+                try {
+                    this.tick_listener_sub.unsubscribe();
+                } catch (e) {
+                    /* ignore */
+                }
+                this.tick_listener_sub = null;
+            }
+
+            if (!api_base?.api || api_base.api.connection?.readyState !== 1) {
+                if (retry_count < 10) {
+                    setTimeout(() => this.subscribeToTicks(retry_count + 1), 1000);
+                }
+                return;
+            }
+
             const sym = this.symbol;
             console.log('[Marketkiller] Subscribing to ticks and history for:', sym);
 
@@ -407,6 +417,11 @@ export default class MarketkillerStore {
                     }
                 },
                 (err: any) => {
+                    const isAlreadySub =
+                        err?.error?.code === 'AlreadySubscribed' ||
+                        err?.code === 'AlreadySubscribed' ||
+                        err?.message?.includes?.('AlreadySubscribed');
+                    if (isAlreadySub) return;
                     console.warn(`[Marketkiller] Stream error for ${sym}:`, err);
                 }
             );
@@ -423,6 +438,8 @@ export default class MarketkillerStore {
             if (retry_count < 5) {
                 setTimeout(() => this.subscribeToTicks(retry_count + 1), 2000);
             }
+        } finally {
+            this.is_subscribing = false;
         }
     };
 
