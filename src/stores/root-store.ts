@@ -55,6 +55,7 @@ export default class RootStore {
     public auto_trader: AutoTraderStore;
     public marketkiller: MarketkillerStore;
     public free_bots: FreeBotsStore;
+    public dollarflipper?: any;
 
     public chart_store: ChartStore;
     public blockly_store: BlocklyStore;

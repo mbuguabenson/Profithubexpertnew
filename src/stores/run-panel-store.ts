@@ -428,7 +428,8 @@ export default class RunPanelStore {
 
     stopBot = () => {
         const { ui } = this.core;
-        const { scanner, dollarflipper } = this.root_store;
+        const { scanner } = this.root_store;
+        const dollarflipper = this.root_store?.dollarflipper || (scanner as any)?.dollarflipper;
 
         if (this.dbot?.stopBot) {
             this.dbot.stopBot().catch(() => {});
@@ -453,7 +454,7 @@ export default class RunPanelStore {
             scanner.signal_sequence_id = null;
         }
         if (dollarflipper?.is_running) {
-            dollarflipper.stopDollarflipper();
+            dollarflipper.stopDollarflipper?.();
         }
 
         if (this.error_type) {
