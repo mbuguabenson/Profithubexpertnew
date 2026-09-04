@@ -233,6 +233,7 @@ const OverlordAi: React.FC = observer(() => {
     const [botState, setBotState] = useState<AutoRunState>('IDLE');
     const [currentStake, setCurrentStake] = useState<number>(1.0);
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
+    const [martingaleStage, setMartingaleStage] = useState<number>(0);
     const [winsCount, setWinsCount] = useState<number>(0);
     const [lossesCount, setLossesCount] = useState<number>(0);
     const [sessionProfit, setSessionProfit] = useState<number>(0);
@@ -702,7 +703,7 @@ const OverlordAi: React.FC = observer(() => {
 
                     if (isMartingaleEnabled) {
                         setIsInRecovery(true);
-                        setMartingaleStage(s => s + 1);
+                        setMartingaleStage((s: number) => s + 1);
                         const mult = parseFloat(martingaleMultiplier) || 2.5;
                         const nextStakeVal = Math.round(stakeAmount * mult * 100) / 100;
                         setCurrentStake(nextStakeVal);
