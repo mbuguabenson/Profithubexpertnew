@@ -1,7 +1,10 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
-import { api_base, ApiHelpers, observer as globalObserver } from '@/external/bot-skeleton';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
+import { getGroupedMarkets } from '@/constants/markets';
 import { safeSubscribe } from '@/utils/websocket-handler';
 import RootStore from './root-store';
+
+const DEFAULT_MARKETS = getGroupedMarkets();
 
 export type TMarketItem = {
     value: string;
