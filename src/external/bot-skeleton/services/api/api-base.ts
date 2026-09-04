@@ -782,53 +782,22 @@ class APIBase {
             }
 
             // Ensure required 1s volatility indices (15, 30, 90) are always present
-            const required_1s_symbols = [
-                {
-                    symbol: '1HZ15V',
-                    underlying_symbol: '1HZ15V',
-                    display_name: 'Volatility 15 (1s) Index',
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    subgroup: 'synthetics',
-                    subgroup_display_name: 'Synthetics',
-                    pip: 0.001,
-                    pip_size: 0.001,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-                {
-                    symbol: '1HZ30V',
-                    underlying_symbol: '1HZ30V',
-                    display_name: 'Volatility 30 (1s) Index',
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    subgroup: 'synthetics',
-                    subgroup_display_name: 'Synthetics',
-                    pip: 0.001,
-                    pip_size: 0.001,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-                {
-                    symbol: '1HZ90V',
-                    underlying_symbol: '1HZ90V',
-                    display_name: 'Volatility 90 (1s) Index',
-                    market: 'synthetic_index',
-                    market_display_name: 'Derived',
-                    submarket: 'random_index',
-                    submarket_display_name: 'Continuous Indices',
-                    subgroup: 'synthetics',
-                    subgroup_display_name: 'Synthetics',
-                    pip: 0.001,
-                    pip_size: 0.001,
-                    exchange_is_open: true,
-                    is_trading_suspended: false,
-                },
-            ];
+            const required_1s_symbols_list = [10, 15, 25, 30, 50, 75, 90, 100, 150, 200, 250];
+            const required_1s_symbols = required_1s_symbols_list.map(v => ({
+                symbol: `1HZ${v}V`,
+                underlying_symbol: `1HZ${v}V`,
+                display_name: `Volatility ${v} (1s) Index`,
+                market: 'synthetic_index',
+                market_display_name: 'Derived',
+                submarket: 'random_index',
+                submarket_display_name: 'Continuous Indices',
+                subgroup: 'synthetics',
+                subgroup_display_name: 'Synthetics',
+                pip: 0.001,
+                pip_size: 0.001,
+                exchange_is_open: true,
+                is_trading_suspended: false,
+            }));
 
             required_1s_symbols.forEach(req => {
                 const exists = active_symbols.some(
