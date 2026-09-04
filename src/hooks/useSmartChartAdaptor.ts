@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { buildSmartchartsChampionAdapter } from '@/adapters/smartcharts-champion';
+import { buildSmartchartsChampionAdapter, transformations } from '@/adapters/smartcharts-champion';
 import { createServices } from '@/adapters/smartcharts-champion/services';
 import { createTransport } from '@/adapters/smartcharts-champion/transport';
 import chart_api from '@/external/bot-skeleton/services/api/chart-api';
@@ -54,7 +54,7 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                 if (cached) {
                     const parsed = JSON.parse(cached);
                     if (Array.isArray(parsed) && parsed.length > 0) {
-                        return parsed as ActiveSymbols;
+                        return transformations.toActiveSymbols(parsed);
                     }
                 }
             }

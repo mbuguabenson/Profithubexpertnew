@@ -172,8 +172,10 @@ export default class FreeBotsStore {
                     const g = s.market_display_name || s.market || 'Other';
                     if (!groups[g]) groups[g] = { group: g, items: [] };
                     groups[g].items.push({ value: s.symbol, label: s.display_name });
-                    this.pip_map.set(s.symbol, Math.abs(Math.log10(s.pip)));
-                    if (s.symbol === this.symbol) this.pip = Math.abs(Math.log10(s.pip));
+                    const pipVal = s.pip || s.pip_size || 0.01;
+                    const pipDecimals = Math.abs(Math.log10(pipVal));
+                    this.pip_map.set(s.symbol, Number.isFinite(pipDecimals) ? pipDecimals : 2);
+                    if (s.symbol === this.symbol) this.pip = Number.isFinite(pipDecimals) ? pipDecimals : 2;
                 });
                 const sorted = Object.values(groups).sort((a, b) => (a?.group || '').localeCompare(b?.group || ''));
                 runInAction(() => {

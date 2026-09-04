@@ -452,7 +452,7 @@ export class ActiveSymbolCategorizationService {
                 const displayName = symbol.display_name || symbolCode;
                 symbols[symbolCode] = {
                     display_name: displayName,
-                    pip_size: `${symbol.pip || symbol.pip_size || 0}`.length - 2,
+                    pip_size: `${symbol.pip || symbol.pip_size || 0.01}`.length - 2,
                     is_active: !symbol.is_trading_suspended && !!symbol.exchange_is_open,
                 };
             }

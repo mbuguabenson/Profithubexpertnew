@@ -126,21 +126,28 @@ const transformations = {
         }
 
         for (const symbol of activeSymbolsData) {
+            if (!symbol || typeof symbol !== 'object') continue;
             const symbolCode = symbol.underlying_symbol || symbol.symbol;
+            if (!symbolCode) continue;
+
+            const rawPip = symbol.pip ?? symbol.pip_size ?? 0.01;
+            const pipNum = typeof rawPip === 'number' ? rawPip : parseFloat(rawPip);
+            const validPip = Number.isFinite(pipNum) && pipNum > 0 ? pipNum : 0.01;
+
             symbols.push({
                 display_name: symbol.display_name || symbolCode,
-                market: symbol.market,
-                market_display_name: symbol.market_display_name,
-                subgroup: symbol.subgroup, // Map submarket to subgroup
-                subgroup_display_name: symbol.subgroup_display_name, // Map submarket_display_name to subgroup_display_name
-                submarket: symbol.submarket,
-                submarket_display_name: symbol.submarket_display_name,
+                market: symbol.market || '',
+                market_display_name: symbol.market_display_name || symbol.market || '',
+                subgroup: symbol.subgroup || symbol.submarket || '', // Map submarket to subgroup
+                subgroup_display_name: symbol.subgroup_display_name || symbol.submarket_display_name || '', // Map submarket_display_name to subgroup_display_name
+                submarket: symbol.submarket || '',
+                submarket_display_name: symbol.submarket_display_name || '',
                 symbol: symbolCode,
                 symbol_type: symbol.symbol_type || '',
-                pip: symbol.pip || symbol.pip_size || 0.01,
-                exchange_is_open: symbol.exchange_is_open || 0,
-                is_trading_suspended: symbol.is_trading_suspended || 0,
-                delay_amount: symbol.delay_amount,
+                pip: validPip,
+                exchange_is_open: symbol.exchange_is_open ? 1 : 0,
+                is_trading_suspended: symbol.is_trading_suspended ? 1 : 0,
+                delay_amount: symbol.delay_amount || 0,
             });
         }
 
@@ -365,5 +372,6 @@ export function buildSmartchartsChampionAdapter(
     return adapter;
 }
 
-// Export types for convenience
+// Export types and transformations for convenience
+export { transformations };
 export type { SmartchartsChampionAdapter, TGetQuotesRequest, TGetQuotesResult } from './types';

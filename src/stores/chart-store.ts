@@ -140,13 +140,13 @@ export default class ChartStore {
             return [synthetic_index];
         }
 
-        const has_synthetic_index = !!active_symbols.find(s => s.market === synthetic_index);
+        const has_synthetic_index = !!active_symbols.find(s => s?.market === synthetic_index);
 
         return active_symbols
-            .map(s => s.market)
+            .map(s => s?.market)
             .reduce(
                 (arr, market) => {
-                    if (arr.indexOf(market) === -1) arr.push(market);
+                    if (market && arr.indexOf(market) === -1) arr.push(market);
                     return arr;
                 },
                 has_synthetic_index ? [synthetic_index] : []
