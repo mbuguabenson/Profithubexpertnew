@@ -147,9 +147,12 @@ export default class RunPanelStore {
         this.is_every_tick_mode = !this.is_every_tick_mode;
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem('dbot_every_tick_mode', String(this.is_every_tick_mode));
-            if (this.is_every_tick_mode) {
-                localStorage.setItem('bot_execution_speed', '2');
-            }
+            localStorage.setItem('bot_execution_speed', this.is_every_tick_mode ? '2' : '1');
+        }
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+                new CustomEvent('dbot_speed_mode_changed', { detail: { isFast: this.is_every_tick_mode } })
+            );
         }
     };
 

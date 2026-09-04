@@ -17,19 +17,30 @@ import Sell from './Sell';
 import Ticks from './Ticks';
 import Total from './Total';
 
+export const isFastModeActive = () => {
+    if (typeof localStorage === 'undefined') return false;
+    return (
+        localStorage.getItem('dbot_every_tick_mode') === 'true' ||
+        localStorage.getItem('bot_execution_speed') === '2'
+    );
+};
+
 const watchBefore = store => {
     const currentState = store.getState();
     if (currentState.scope === constants.DURING_PURCHASE) {
         return Promise.resolve(false);
     }
 
-    const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
+    // Fast path: In Fast Mode, execute immediately without blocking for server tick intervals
+    if (isFastModeActive()) {
+        if (currentState.scope === constants.BEFORE_PURCHASE) {
+            return Promise.resolve(true);
+        }
+    }
 
-    // Fast path: if Fast Mode is active or state machine is in BEFORE_PURCHASE and proposalsReady is true,
-    // fire once immediately for the current trade cycle to execute without tick delay.
     if (
         currentState.scope === constants.BEFORE_PURCHASE &&
-        (isFastMode || currentState.proposalsReady) &&
+        currentState.proposalsReady &&
         !currentState.hasFiredBefore
     ) {
         store.dispatch({ type: 'BEFORE_FIRED' });
@@ -66,6 +77,11 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
         return Promise.resolve(false);
     }
 
+    // In Fast Mode, resolve immediately when in passScope
+    if (isFastModeActive() && currentState.scope === passScope) {
+        return Promise.resolve(true);
+    }
+
     return new Promise(resolve => {
         let isResolved = false;
         const unsubscribe = store.subscribe(() => {
@@ -76,6 +92,13 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
                 isResolved = true;
                 unsubscribe();
                 resolve(false);
+                return;
+            }
+
+            if (isFastModeActive() && newState.scope === passScope) {
+                isResolved = true;
+                unsubscribe();
+                resolve(true);
                 return;
             }
 
@@ -104,6 +127,14 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
         this.subscription_id_for_accumulators = null;
         this.is_proposal_requested_for_accumulators = false;
         this.store = createStore(rootReducer, applyMiddleware(thunk));
+
+        // Listen for live speed mode changes from the header toggle while bot is running
+        if (typeof window !== 'undefined') {
+            this._speedModeListener = () => {
+                this.makeDirectPurchaseDecision();
+            };
+            window.addEventListener('dbot_speed_mode_changed', this._speedModeListener);
+        }
     }
 
     init(...args) {
@@ -146,10 +177,7 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
         };
         this.token = activeLoginId || api_base.token || token;
 
-        // ─── Bug 1 fix: Guard against duplicate subscriptions ─────────────────────
-        // Without this flag, every bot start re-registers a new transaction recovery
-        // listener on the WebSocket message stream. After many runs these accumulate,
-        // slow down message processing, and degrade trade cycle times.
+        // ─── Guard against duplicate subscriptions ─────────────────────
         if (!this._txRecoverySubscribed && api_base.api) {
             this._txRecoverySubscribed = true;
             try {
@@ -195,9 +223,7 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
 
     makeDirectPurchaseDecision() {
         const { has_payout_block, is_basis_payout } = checkBlocksForProposalRequest();
-        const isEveryTickMode = localStorage.getItem('dbot_every_tick_mode') === 'true';
-        const speed = isEveryTickMode ? '2' : localStorage.getItem('bot_execution_speed') || '1';
-        const isSpeedMode = speed !== '1' || isEveryTickMode;
+        const isSpeedMode = isFastModeActive();
         this.is_proposal_subscription_required = !isSpeedMode && (has_payout_block || is_basis_payout);
 
         if (this.is_proposal_subscription_required) {

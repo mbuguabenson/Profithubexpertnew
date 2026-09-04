@@ -36,7 +36,9 @@ export default Engine =>
         async purchase(contract_type, is_fast_override) {
             const isFastMode =
                 is_fast_override ||
-                (typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true');
+                (typeof localStorage !== 'undefined' &&
+                    (localStorage.getItem('dbot_every_tick_mode') === 'true' ||
+                        localStorage.getItem('bot_execution_speed') === '2'));
 
             if (this.multiple_trades_count > 1) {
                 const count = this.multiple_trades_count;

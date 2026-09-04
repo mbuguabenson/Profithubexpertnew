@@ -5,13 +5,19 @@ import getToolsInterface from './ToolsInterface';
 import getScannerInterface from './ScannerInterface';
 
 const sleep = (observer, arg = 1) => {
+    const isFast =
+        typeof localStorage !== 'undefined' &&
+        (localStorage.getItem('dbot_every_tick_mode') === 'true' ||
+            localStorage.getItem('bot_execution_speed') === '2');
+    const delayMs = isFast ? Math.min(arg * 1000, 100) : arg * 1000;
+
     return new Promise(
         r =>
             // eslint-disable-next-line no-promise-executor-return
             setTimeout(() => {
                 r();
                 setTimeout(() => observer.emit('CONTINUE'), 0);
-            }, arg * 1000),
+            }, delayMs),
         () => {}
     );
 };
