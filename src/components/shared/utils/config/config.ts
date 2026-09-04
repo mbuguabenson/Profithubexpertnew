@@ -935,16 +935,21 @@ export const isProduction = () => {
     return !!DOMAIN_CONFIG[hostname];
 };
 
-export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
+/**
+ * Public market data WebSocket endpoint (unauthenticated).
+ * Official Deriv Options public market data stream.
+ */
+export const getPublicWebSocketURL = () =>
+    isProduction()
+        ? 'wss://api.derivws.com/trading/v1/options/ws/public'
+        : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
 
 /**
  * Returns a public (unauthenticated) WebSocket URL for pre-login market data.
- * Uses Deriv's public app_id so active_symbols works without authorization.
  */
-export const getLegacyServerURL = () =>
-    `${DERIV_WS_BASE}?app_id=${PUBLIC_APP_ID}&l=EN&brand=deriv`;
+export const getLegacyServerURL = () => getPublicWebSocketURL();
 
-export const getDefaultServerURL = () => getLegacyServerURL();
+export const getDefaultServerURL = () => getPublicWebSocketURL();
 
 /**
  * Gets the WebSocket URL for the current session.
