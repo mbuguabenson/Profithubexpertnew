@@ -344,7 +344,10 @@ export default class DigitCrackerStore {
                     }
                 },
                 (err: any) => {
-                    console.warn(`[DigitCrackerStore] Stream error for ${sym}:`, err);
+                    const code = err?.code || err?.error?.code;
+                    if (code !== 'AlreadySubscribed') {
+                        console.warn(`[DigitCrackerStore] Stream error for ${sym}:`, err);
+                    }
                 }
             );
 

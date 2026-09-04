@@ -454,7 +454,10 @@ export default class AnalysisStore {
                     }
                 },
                 (err: any) => {
-                    console.warn(`[AnalysisStore] Stream error for ${sym}:`, err);
+                    const code = err?.code || err?.error?.code;
+                    if (code !== 'AlreadySubscribed') {
+                        console.warn(`[AnalysisStore] Stream error for ${sym}:`, err);
+                    }
                 }
             );
 

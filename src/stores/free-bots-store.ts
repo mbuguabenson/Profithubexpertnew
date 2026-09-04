@@ -273,7 +273,10 @@ export default class FreeBotsStore {
                     }
                 },
                 (err: any) => {
-                    console.warn(`[FreeBotsStore] Stream error for ${sym}:`, err);
+                    const code = err?.code || err?.error?.code;
+                    if (code !== 'AlreadySubscribed') {
+                        console.warn(`[FreeBotsStore] Stream error for ${sym}:`, err);
+                    }
                 }
             );
 

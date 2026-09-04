@@ -4,7 +4,7 @@ import { getAccountId, getAccountType, isDemoAccount, removeUrlParameter } from 
 import CommonStore from '@/stores/common-store';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
-import { isProduction } from '@/components/shared/utils/config/config';
+import { isProduction, getLegacyServerURL } from '@/components/shared/utils/config/config';
 import { clearAuthData } from '@/utils/auth-utils';
 import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { handleBackendError, isBackendError } from '@/utils/error-handler';
@@ -52,7 +52,7 @@ class APIBase {
     reconnection_attempts: number = 0;
 
     // Constants for timeouts - extracted magic numbers for better maintainability
-    private readonly ACTIVE_SYMBOLS_TIMEOUT_MS = 25000; // 25 seconds
+    private readonly ACTIVE_SYMBOLS_TIMEOUT_MS = 4000; // 4 seconds before fallback
     private readonly ENRICHMENT_TIMEOUT_MS = 25000; // 25 seconds
     private readonly MAX_RECONNECTION_ATTEMPTS = 15; // Maximum number of reconnection attempts before giving up
 
@@ -567,7 +567,10 @@ class APIBase {
                 [],
                 this
             ).catch(err => {
-                console.warn(`[APIBase] Stream '${streamName}' subscription returned error:`, err?.error || err);
+                const code = err?.error?.code || err?.code;
+                if (code !== 'AlreadySubscribed') {
+                    console.warn(`[APIBase] Stream '${streamName}' subscription returned error:`, err?.error || err);
+                }
             });
         };
 
@@ -606,11 +609,8 @@ class APIBase {
             // 2. Fallback: standard Deriv public WS endpoint
             try {
                 const publicSymbols = await new Promise<any[]>((resolve, reject) => {
-                    // Use the real Deriv API WebSocket endpoint (not the trading/v1 path which
-                    // is internal and frequently blocked). Pick a known app_id for public data.
-                    const wsURL = isProduction()
-                        ? 'wss://ws.binaryws.com/websockets/v3?app_id=1089'
-                        : 'wss://ws.derivws.com/websockets/v3?app_id=36544';
+                    // Use the reliable standard Deriv API WebSocket endpoint with domain app_id
+                    const wsURL = getLegacyServerURL();
 
                     const ws = new WebSocket(wsURL);
                     let settled = false;
