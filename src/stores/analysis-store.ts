@@ -259,13 +259,13 @@ export default class AnalysisStore {
                         `[Nexus OU] Under ${signal.under.prediction} met (Power: ${signal.under.power.toFixed(1)}%). Executing auto-trade...`
                     );
                     this.recordTrade('UNDER', signal.under.prediction);
-                    this.root_store.smart_trading.manualTrade('DIGITUNDER', signal.under.prediction);
+                    this.manualTrade('DIGITUNDER', signal.under.prediction);
                 } else if (is_over_signal && signal.over.power >= 55) {
                     console.log(
                         `[Nexus OU] Over ${signal.over.prediction} met (Power: ${signal.over.power.toFixed(1)}%). Executing auto-trade...`
                     );
                     this.recordTrade('OVER', signal.over.prediction);
-                    this.root_store.smart_trading.manualTrade('DIGITOVER', signal.over.prediction);
+                    this.manualTrade('DIGITOVER', signal.over.prediction);
                 }
             }
 
@@ -342,9 +342,29 @@ export default class AnalysisStore {
                 console.log(`[Nexus EO] Condition ${this.eo_selected_condition} met! Executing auto-trade...`);
                 this.recordEOTrade();
                 const contract_type = this.eo_target_side === 'EVEN' ? 'DIGITEVEN' : 'DIGITODD';
-                this.root_store.smart_trading.manualTrade(contract_type);
+                this.manualTrade(contract_type);
             }
         });
+    };
+
+    @action
+    manualTrade = async (contract_type: string, prediction?: number) => {
+        try {
+            const currency = this.root_store.client?.currency || 'USD';
+            const strategy: 'over_under' | 'even_odd' =
+                contract_type === 'DIGITOVER' || contract_type === 'DIGITUNDER' ? 'over_under' : 'even_odd';
+            const pred = prediction ?? (contract_type === 'DIGITEVEN' ? 0 : 1);
+            const config = (this.trade_engine as any)[`${strategy}_config`];
+            if (config) {
+                config.is_running = true;
+                if (prediction !== undefined) {
+                    config.prediction = prediction;
+                }
+            }
+            await this.trade_engine.executeTrade(strategy, this.symbol, contract_type, pred, currency);
+        } catch (err) {
+            console.error('[AnalysisStore] manualTrade failed:', err);
+        }
     };
 
     @action
