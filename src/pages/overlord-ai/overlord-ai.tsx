@@ -233,7 +233,7 @@ const OverlordAi: React.FC = observer(() => {
     const [botState, setBotState] = useState<AutoRunState>('IDLE');
     const [currentStake, setCurrentStake] = useState<number>(1.0);
     const [isInRecovery, setIsInRecovery] = useState<boolean>(false);
-    const [martingaleStage, setMartingaleStage] = useState<number>(0);
+    const [, setMartingaleStage] = useState<number>(0);
     const [winsCount, setWinsCount] = useState<number>(0);
     const [lossesCount, setLossesCount] = useState<number>(0);
     const [sessionProfit, setSessionProfit] = useState<number>(0);

@@ -3,6 +3,8 @@ import getCandleInterface from './CandleInterface';
 import getIndicatorsInterface from './IndicatorsInterface';
 import getMiscInterface from './MiscInterface';
 
+const _blockCache = new Map();
+
 const getToolsInterface = tradeEngine => {
     return {
         dateTimeStringToTimestamp: datetime_string => {
@@ -49,20 +51,18 @@ const getToolsInterface = tradeEngine => {
 
         // Highlight the block that is being executed
         highlightBlock: block_id => {
-            const block = window.Blockly.derivWorkspace.getBlockById(block_id);
-            window.Blockly.BlockSvg.prototype.highlightExecutedBlock = function () {
-                const highlight_block_class = 'block--execution-highlighted';
-                if (!window.Blockly.utils.dom.hasClass(this.svgGroup_, highlight_block_class)) {
-                    window.Blockly.utils.dom.addClass(this.svgGroup_, highlight_block_class);
-                    setTimeout(() => {
-                        if (this.svgGroup_) {
-                            window.Blockly.utils.dom.removeClass(this.svgGroup_, highlight_block_class);
-                        }
-                    }, 1505);
+            if (!window.Blockly?.derivWorkspace) return;
+            let block = _blockCache.get(block_id);
+            if (!block || !block.svgGroup_ || !block.workspace) {
+                block = window.Blockly.derivWorkspace.getBlockById(block_id);
+                if (block) {
+                    _blockCache.set(block_id, block);
+                } else {
+                    _blockCache.delete(block_id);
                 }
-            };
-            if (block) {
-                block.highlightExecutedBlock(block);
+            }
+            if (block && typeof block.highlightExecutedBlock === 'function') {
+                block.highlightExecutedBlock();
             }
         },
     };

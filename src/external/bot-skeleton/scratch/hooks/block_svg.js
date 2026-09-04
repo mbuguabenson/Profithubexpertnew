@@ -74,9 +74,14 @@ window.Blockly.BlockSvg.prototype.setErrorHighlighted = function (
 // Highlight the block that is being executed
 window.Blockly.BlockSvg.prototype.highlightExecutedBlock = function () {
     const highlight_block_class = 'block--execution-highlighted';
-    if (!window.Blockly.utils.dom.hasClass(this.svgGroup_, highlight_block_class)) {
+    if (this._highlightTimer) {
+        clearTimeout(this._highlightTimer);
+        this._highlightTimer = null;
+    }
+    if (this.svgGroup_) {
         window.Blockly.utils.dom.addClass(this.svgGroup_, highlight_block_class);
-        setTimeout(() => {
+        this._highlightTimer = setTimeout(() => {
+            this._highlightTimer = null;
             if (this.svgGroup_) {
                 window.Blockly.utils.dom.removeClass(this.svgGroup_, highlight_block_class);
             }
@@ -90,11 +95,19 @@ window.Blockly.BlockSvg.prototype.highlightExecutedBlock = function () {
 
 window.Blockly.BlockSvg.prototype.blink = function () {
     const blink_class = 'block--blink';
-    window.Blockly.utils.dom.addClass(this.svgGroup_, blink_class);
-
-    setTimeout(() => {
-        window.Blockly.utils.dom.removeClass(this.svgGroup_, blink_class);
-    }, 2000);
+    if (this._blinkTimer) {
+        clearTimeout(this._blinkTimer);
+        this._blinkTimer = null;
+    }
+    if (this.svgGroup_) {
+        window.Blockly.utils.dom.addClass(this.svgGroup_, blink_class);
+        this._blinkTimer = setTimeout(() => {
+            this._blinkTimer = null;
+            if (this.svgGroup_) {
+                window.Blockly.utils.dom.removeClass(this.svgGroup_, blink_class);
+            }
+        }, 2000);
+    }
 };
 
 /**

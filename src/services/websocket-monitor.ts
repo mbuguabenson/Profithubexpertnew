@@ -37,7 +37,7 @@ export const initWebSocketMonitor = () => {
                 let data = event.data;
 
                 if (typeof event.data === 'string') {
-                    size = new Blob([event.data]).size;
+                    size = event.data.length * 2;
                     try {
                         const parsed = JSON.parse(event.data);
                         data = parsed;
@@ -54,6 +54,10 @@ export const initWebSocketMonitor = () => {
                             systemCenterStore.setServerTime(parsed.time);
                         }
                     } catch (e) {}
+                } else if (event.data instanceof Blob) {
+                    size = event.data.size;
+                } else if (event.data instanceof ArrayBuffer) {
+                    size = event.data.byteLength;
                 }
 
                 const msg: TWsMessage = {
@@ -77,12 +81,16 @@ export const initWebSocketMonitor = () => {
                 let parsedData: any = data;
 
                 if (typeof data === 'string') {
-                    size = new Blob([data]).size;
+                    size = data.length * 2;
                     try {
                         parsedData = JSON.parse(data);
                     } catch (e) {}
                 } else if (data instanceof Blob) {
                     size = data.size;
+                } else if (data instanceof ArrayBuffer) {
+                    size = data.byteLength;
+                } else if (ArrayBuffer.isView(data)) {
+                    size = data.byteLength;
                 }
 
                 const msg: TWsMessage = {
