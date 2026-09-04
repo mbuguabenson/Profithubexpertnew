@@ -1,5 +1,3 @@
-import { systemCenterStore } from '@/stores/system-center-store';
-
 /**
  * WebSocket Monitor for System Center NOC.
  * Tracks WebSocket health safely without monkey-patching native WebSocket host objects.
