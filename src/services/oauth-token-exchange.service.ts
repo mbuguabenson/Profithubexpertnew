@@ -182,7 +182,9 @@ export class OAuthTokenExchangeService {
             // getDomainConfig() picks the correct registered URI from DOMAIN_CONFIG
             // based on the current hostname, so it always matches regardless of
             // which domain the user is visiting from.
-            const redirectUrl = getDomainConfig().redirectUri;
+            // Normalize: ensure trailing slash matches what generateOAuthURL sends.
+            const rawRedirectUrl = getDomainConfig().redirectUri;
+            const redirectUrl = rawRedirectUrl.endsWith('/') ? rawRedirectUrl : `${rawRedirectUrl}/`;
 
             const requestBody = new URLSearchParams({
                 grant_type: 'authorization_code',

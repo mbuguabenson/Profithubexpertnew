@@ -293,7 +293,7 @@ export const DOMAIN_CONFIG: Record<string, DomainConfig> = {
         primaryDomain: 'profithub.co.ke',
         aliases: ['www.profithub.co.ke', 'staging.profithub.co.ke'],
         clientId: '33Mmq9JHMrJaUKT2KIhKZ',
-        redirectUri: 'https://profithub.co.ke',
+        redirectUri: 'https://profithub.co.ke/',
         features: {
             autoTrades: true,
             manualTrading: true,
@@ -1174,10 +1174,12 @@ export const generateOAuthURL = async (prompt?: string, domainConfig = getDomain
         }
 
         const domainCfg = domainConfig;
-        const { clientId, redirectUri } = {
-            clientId: domainCfg.clientId,
-            redirectUri: domainCfg.redirectUri,
-        };
+        const { clientId } = domainCfg;
+        // Normalize: OAuth servers require redirect_uri to exactly match the registered URI.
+        // Most Deriv apps are registered with a trailing slash, so ensure it is always present.
+        const redirectUri = domainCfg.redirectUri.endsWith('/')
+            ? domainCfg.redirectUri
+            : `${domainCfg.redirectUri}/`;
 
         // Use brand config for the OAuth2 base URL
         const environment = isProduction() ? 'production' : 'staging';

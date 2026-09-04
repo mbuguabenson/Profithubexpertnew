@@ -252,7 +252,7 @@ const AppHeader = observer(() => {
                             href='https://t.deriv.link?t=HFJ29NBD7CHV'
                             className='dc-btn dc-btn--primary__light app-header__signup-btn modern-signup-btn'
                             style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                            onClick={(e) => {
+                            onClick={() => {
                                 window.location.href = 'https://t.deriv.link?t=HFJ29NBD7CHV';
                             }}
                         >
