@@ -123,6 +123,53 @@ export interface DerivMarkupDetails {
     transactions: DerivAppMarkupTransaction[];
 }
 
+export interface DerivTransferValidateRequest {
+    from_account: string;
+    to_account: string;
+    amount: number;
+}
+
+export interface DerivTransferValidateResponse {
+    fee?: number;
+    net_amount?: number;
+    estimated_amount_received?: number;
+    is_valid?: boolean;
+    error?: string;
+}
+
+export interface DerivTransferExecuteRequest {
+    from_account: string;
+    to_account: string;
+    amount: number;
+    request_id: string;
+}
+
+export interface DerivExchangeRateResponse {
+    exchange_rate?: number;
+    rate_token?: string;
+    error?: string;
+}
+
+export interface DerivTransferExchangeRequest {
+    from_account: string;
+    to_account: string;
+    amount: number;
+    exchange_rate: number;
+    rate_token: string;
+    request_id: string;
+}
+
+export interface DerivTransferPlatformRequest {
+    direction: 'from_wallet' | 'to_wallet';
+    wallet_account: string;
+    platform_account: string;
+    amount: number;
+    wallet_currency?: string;
+    exchange_rate?: number;
+    rate_token?: string;
+    request_id: string;
+}
+
 const WALLET_BASE_URL = 'https://api.derivws.com';
 
 export class DerivAccountWalletService {
@@ -911,6 +958,124 @@ export class DerivAccountWalletService {
         }
 
         return buyRes.buy;
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // 7. WALLET TRANSFERS (https://developers.deriv.com/docs/wallet/)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Preview transfer to get net amount and fee before execution
+     * POST /wallet/v1/transfers/validate
+     */
+    public static async validateTransfer(params: DerivTransferValidateRequest): Promise<DerivTransferValidateResponse> {
+        const { token, appId } = this.getAuthCredentials();
+        if (!token) return { is_valid: false, error: 'Authentication required' };
+
+        try {
+            const response = await fetch(`${WALLET_BASE_URL}/wallet/v1/transfers/validate`, {
+                method: 'POST',
+                headers: this.getDerivRestHeaders(token, appId),
+                body: JSON.stringify(params),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                return { is_valid: false, error: data?.error?.message || 'Transfer validation failed' };
+            }
+            return {
+                fee: data.fee,
+                net_amount: data.net_amount,
+                estimated_amount_received: data.estimated_amount_received,
+                is_valid: true,
+            };
+        } catch (err: any) {
+            return { is_valid: false, error: err.message };
+        }
+    }
+
+    /**
+     * Execute same-currency wallet-to-wallet transfer
+     * POST /wallet/v1/transfers
+     */
+    public static async executeTransfer(params: DerivTransferExecuteRequest): Promise<any> {
+        const { token, appId } = this.getAuthCredentials();
+        if (!token) throw new Error('Authentication required');
+
+        const response = await fetch(`${WALLET_BASE_URL}/wallet/v1/transfers`, {
+            method: 'POST',
+            headers: this.getDerivRestHeaders(token, appId),
+            body: JSON.stringify(params),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error?.message || 'Transfer failed');
+        return data;
+    }
+
+    /**
+     * Get quote for cross-currency transfers
+     * GET /wallet/v1/exchange-rate?base_currency={base}&target_currency={target}
+     */
+    public static async getExchangeRate(baseCurrency: string, targetCurrency: string): Promise<DerivExchangeRateResponse> {
+        const { token, appId } = this.getAuthCredentials();
+        if (!token) return { error: 'Authentication required' };
+
+        try {
+            const query = new URLSearchParams({
+                base_currency: baseCurrency,
+                target_currency: targetCurrency,
+            });
+            const response = await fetch(`${WALLET_BASE_URL}/wallet/v1/exchange-rate?${query.toString()}`, {
+                method: 'GET',
+                headers: this.getDerivRestHeaders(token, appId),
+            });
+            const data = await response.json();
+            if (!response.ok) return { error: data?.error?.message || 'Failed to fetch exchange rate' };
+            return {
+                exchange_rate: data.exchange_rate,
+                rate_token: data.rate_token,
+            };
+        } catch (err: any) {
+            return { error: err.message };
+        }
+    }
+
+    /**
+     * Execute cross-currency wallet transfer
+     * POST /wallet/v1/transfers/exchange
+     */
+    public static async executeCrossCurrencyTransfer(params: DerivTransferExchangeRequest): Promise<any> {
+        const { token, appId } = this.getAuthCredentials();
+        if (!token) throw new Error('Authentication required');
+
+        const response = await fetch(`${WALLET_BASE_URL}/wallet/v1/transfers/exchange`, {
+            method: 'POST',
+            headers: this.getDerivRestHeaders(token, appId),
+            body: JSON.stringify(params),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error?.message || 'Cross-currency transfer failed');
+        return data;
+    }
+
+    /**
+     * Execute wallet-to-platform or platform-to-wallet transfer
+     * POST /wallet/v1/transfers/platforms
+     */
+    public static async executePlatformTransfer(params: DerivTransferPlatformRequest): Promise<any> {
+        const { token, appId } = this.getAuthCredentials();
+        if (!token) throw new Error('Authentication required');
+
+        const response = await fetch(`${WALLET_BASE_URL}/wallet/v1/transfers/platforms`, {
+            method: 'POST',
+            headers: this.getDerivRestHeaders(token, appId),
+            body: JSON.stringify(params),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error?.message || 'Platform transfer failed');
+        return data;
     }
 
     /**
