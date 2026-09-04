@@ -120,6 +120,9 @@ class APIBase {
     private rate_limit_retry_timer: ReturnType<typeof setTimeout> | null = null;
     private readonly MAX_RECONNECTION_ATTEMPTS = 15;
     private init_promise: Promise<void> | null = null;
+    // Bump this version whenever the shape/content of cached_active_symbols changes
+    // so stale caches are automatically invalidated on the next page load.
+    private readonly CACHE_VERSION = 'v3_submarket_fix';
 
     constructor() {
         this.loadCachedActiveSymbols();
@@ -128,16 +131,25 @@ class APIBase {
     private loadCachedActiveSymbols() {
         try {
             if (typeof window !== 'undefined' && window.localStorage) {
-                const cached = localStorage.getItem('cached_active_symbols');
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        this.active_symbols = parsed;
-                        // Cached symbols are provisional. Always refresh from the live API before
-                        // treating them as authoritative because symbol availability changes.
-                        this.has_active_symbols = false;
-                        this.active_symbols_source = 'cache';
-                        return;
+                // Check cache version — if stale, discard and rebuild from fallback
+                const cachedVersion = localStorage.getItem('cached_active_symbols_version');
+                if (cachedVersion !== this.CACHE_VERSION) {
+                    // Stale cache: remove and force fresh fetch
+                    localStorage.removeItem('cached_active_symbols');
+                    localStorage.removeItem('cached_active_symbols_version');
+                    console.info('[APIBase] Cleared stale active symbols cache (version mismatch)');
+                } else {
+                    const cached = localStorage.getItem('cached_active_symbols');
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            this.active_symbols = parsed;
+                            // Cached symbols are provisional. Always refresh from the live API before
+                            // treating them as authoritative because symbol availability changes.
+                            this.has_active_symbols = false;
+                            this.active_symbols_source = 'cache';
+                            return;
+                        }
                     }
                 }
             }
@@ -827,6 +839,7 @@ class APIBase {
                 try {
                     if (typeof window !== 'undefined' && window.localStorage && this.active_symbols?.length > 0) {
                         localStorage.setItem('cached_active_symbols', JSON.stringify(this.active_symbols));
+                        localStorage.setItem('cached_active_symbols_version', this.CACHE_VERSION);
                     }
                 } catch {}
 

@@ -100,9 +100,17 @@ const getStaticFallbackChartData = (): { activeSymbols: ActiveSymbols; tradingTi
  */
 export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     // State management
+    // Bump this when cached_active_symbols data shape changes
+    const CHART_CACHE_VERSION = 'v3_submarket_fix';
+
     const getInitialChartData = (): { activeSymbols: ActiveSymbols; tradingTimes: TradingTimesMap } => {
         try {
             if (typeof window !== 'undefined' && window.localStorage) {
+                const cachedVersion = localStorage.getItem('cached_active_symbols_version');
+                if (cachedVersion !== CHART_CACHE_VERSION) {
+                    // Stale cache - discard and use static fallback
+                    return getStaticFallbackChartData();
+                }
                 const cached = localStorage.getItem('cached_active_symbols');
                 if (cached) {
                     const parsed = JSON.parse(cached);
