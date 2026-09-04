@@ -1,5 +1,5 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
-import { api_base, ApiHelpers } from '@/external/bot-skeleton';
+import { api_base } from '@/external/bot-skeleton';
 import { normalizeTradeParameters } from '@/utils/trade-purchase';
 import { TDigitStat } from './analysis-store';
 import RootStore from './root-store';
@@ -206,9 +206,6 @@ export default class SmartAutoStore {
     private consecutive_odd = 0;
     private consecutive_over = 0;
     private consecutive_under = 0;
-
-    // Internal trackers to avoid re-triggering on duplicate ticks
-    private last_processed_epoch = 0;
 
     constructor(root_store: RootStore) {
         makeObservable(this);
@@ -537,7 +534,7 @@ export default class SmartAutoStore {
                         buy: proposal.proposal.id,
                         price: ask_price,
                     })
-                    .catch(err => ({ error: err }))
+                    .catch((err: any) => ({ error: err }))
             );
 
             const buyResults = await Promise.all(buyPromises);
@@ -822,6 +819,10 @@ export default class SmartAutoStore {
                 if (config.global_max_loss && total_loss >= config.global_max_loss) {
                     this.addLog(`Global Max Loss Hit ($${config.global_max_loss})`, 'error');
                     this.stopAllBots('GLOBAL MAX LOSS HIT');
+                }
+
+                if (config.switch_condition) {
+                    this.switchMarket((config as any).is_smart24);
                 }
             }
         });

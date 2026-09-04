@@ -24,19 +24,6 @@ const throwApiError = (response: any, source: string) => {
     }
 };
 
-const isLegacyOAuthSession = () => {
-    try {
-        const active_loginid = localStorage.getItem('active_loginid');
-        const accounts_list_raw = localStorage.getItem('accountsList');
-        if (!active_loginid || !accounts_list_raw) return false;
-
-        const accounts_list = JSON.parse(accounts_list_raw);
-        return Boolean(accounts_list?.[active_loginid]);
-    } catch {
-        return false;
-    }
-};
-
 const removeUndefinedFields = <T extends Record<string, any>>(fields: T): T =>
     Object.entries(fields).reduce((cleaned, [key, value]) => {
         if (value !== undefined && value !== null && value !== '') cleaned[key as keyof T] = value;
