@@ -7,9 +7,18 @@ import 'dotenv/config';
 export default defineConfig({
     plugins: [
         pluginSass({
+            rewriteUrls: false,
             sassLoaderOptions: (config: any) => {
                 config.sourceMap = false;
                 config.sassOptions = {
+                    quietDeps: true,
+                    silenceDeprecations: [
+                        'color-functions',
+                        'global-builtin',
+                        'import',
+                        'mixed-decls',
+                        'legacy-js-api',
+                    ],
                     includePaths: [
                         path.resolve(__dirname, './src/external/trader/src/sass'),
                         path.resolve(__dirname, './src/external/shared/styles'),
