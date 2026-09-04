@@ -147,28 +147,28 @@ const DEFAULT_MARTINGALE_CONFIG: MartingaleConfig = {
 
 const DEFAULT_DOMAIN_UI: DomainUIConfig = {
     brandName: 'Deriv Bot',
-    primaryColor: '#f97316',
-    secondaryColor: '#1a1a2e',
-    accentColor: '#2196f3',
+    primaryColor: '#ff444f',
+    secondaryColor: '#181c25',
+    accentColor: '#ff444f',
     logoUrl: '',
     faviconUrl: '',
-    headerBgColor: '#1a1a2e',
+    headerBgColor: '#12151c',
     headerTextColor: 'var(--text-colored-background)',
-    sidebarBgColor: '#16213e',
+    sidebarBgColor: '#181c25',
     sidebarTextColor: '#e0e0e0',
-    buttonPrimaryBg: '#f97316',
+    buttonPrimaryBg: '#ff444f',
     buttonPrimaryText: 'var(--text-colored-background)',
-    buttonSecondaryBg: '#2d2d44',
+    buttonSecondaryBg: '#222734',
     buttonSecondaryText: '#e0e0e0',
-    cardBgColor: '#1e1e32',
-    cardBorderColor: '#2d2d44',
+    cardBgColor: '#181c25',
+    cardBorderColor: '#262c3b',
     textPrimary: 'var(--text-colored-background)',
     textSecondary: '#a0a0b0',
-    successColor: '#4caf50',
-    errorColor: '#f44336',
-    warningColor: '#ff9800',
+    successColor: '#00a79e',
+    errorColor: '#ff444f',
+    warningColor: '#ff9c1a',
     fontFamily: "'Inter', 'Segoe UI', sans-serif",
-    borderRadius: '8px',
+    borderRadius: '12px',
     showHeaderLogo: true,
     showHeaderTitle: true,
     showFooter: true,
@@ -313,27 +313,27 @@ export const DOMAIN_CONFIG: Record<string, DomainConfig> = {
             chart: true,
         },
         ui: createDomainShellUI('ProfitHub', {
-            primaryColor: '#3b82f6',
-            secondaryColor: '#64748b',
-            accentColor: '#8b5cf6',
-            headerBgColor: '#0f172a',
-            sidebarBgColor: '#1e293b',
-            navBg: '#1e293b',
-            navActive: '#3b82f6',
-            navHover: '#475569',
-            pageBg: '#0f172a',
+            primaryColor: '#ff444f',
+            secondaryColor: '#858d9d',
+            accentColor: '#ff444f',
+            headerBgColor: '#12151c',
+            sidebarBgColor: '#181c25',
+            navBg: '#181c25',
+            navActive: '#ff444f',
+            navHover: '#222734',
+            pageBg: '#0e1117',
             pageBgLight: '#f8fafc',
-            sectionBg: '#1e293b',
-            sectionBg2: '#334155',
-            sectionMuted: '#475569',
-            sectionBorder: 'rgba(59, 130, 246, 0.34)',
-            panelBorder: '#3b82f6',
-            panelBorderSoft: 'rgba(59, 130, 246, 0.22)',
-            runButton: '#10b981',
-            runButtonHover: '#34d399',
-            authBlue: '#3b82f6',
-            authBorder: '#60a5fa',
-            gold: '#fbbf24',
+            sectionBg: '#181c25',
+            sectionBg2: '#1f2430',
+            sectionMuted: '#676a6f',
+            sectionBorder: 'rgba(255, 68, 79, 0.25)',
+            panelBorder: '#262c3b',
+            panelBorderSoft: 'rgba(255, 255, 255, 0.08)',
+            runButton: '#ff444f',
+            runButtonHover: '#eb3e48',
+            authBlue: '#ff444f',
+            authBorder: '#ff444f',
+            gold: '#ff9c1a',
         }),
     }),
     // ── Primary production domain ────────────────────────────────────────────
@@ -958,6 +958,16 @@ export const getLegacyServerURL = () => {
  */
 export const getSocketURL = async (): Promise<string> => {
     try {
+        let isFallback = false;
+        try {
+            isFallback = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('use_legacy_deriv_ws') === 'true';
+        } catch {}
+
+        if (isFallback) {
+            console.log('[getSocketURL] Using resilient standard Deriv WebSocket endpoint');
+            return getLegacyServerURL();
+        }
+
         let authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
         const tokenNeedsRefresh =
             !!authInfo?.refresh_token && !!authInfo.expires_at && Date.now() >= authInfo.expires_at - 300000;
@@ -976,7 +986,8 @@ export const getSocketURL = async (): Promise<string> => {
                     return wsUrl;
                 }
             } catch (pkceError) {
-                console.error('[getSocketURL] Error retrieving authenticated WebSocket URL:', pkceError);
+                console.error('[getSocketURL] Error retrieving authenticated WebSocket URL, using standard Deriv endpoint:', pkceError);
+                return getLegacyServerURL();
             }
         }
 
@@ -986,8 +997,8 @@ export const getSocketURL = async (): Promise<string> => {
 
         return defaultUrl;
     } catch (error) {
-        console.error('[DerivWS] Error in getSocketURL:', error);
-        return getDefaultServerURL();
+        console.error('[DerivWS] Error in getSocketURL, falling back to standard endpoint:', error);
+        return getLegacyServerURL();
     }
 };
 
