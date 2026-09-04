@@ -163,13 +163,14 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
         // noop
     }
 
-    // 3. Fetch OTP WebSocket token for PKCE OAuth2 session
+    // 3. Fetch OTP WebSocket token for PKCE OAuth2 session.
+    // Two sequential REST calls are needed (accounts list + OTP), so allow 10s.
     try {
         const authInfo = OAuthTokenExchangeService.getAuthInfo();
         if (authInfo?.access_token) {
             const fetchPromise = DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
             const timeoutPromise = new Promise<string>((_, reject) =>
-                setTimeout(() => reject(new Error('OTP fetch timeout')), 1000)
+                setTimeout(() => reject(new Error('OTP fetch timeout')), 10000)
             );
             const wsUrl = await Promise.race([fetchPromise, timeoutPromise]);
             if (wsUrl) {
@@ -181,7 +182,8 @@ export const resolveValidDerivWSToken = async (loginid?: string): Promise<string
             }
         }
     } catch (e) {
-        // Fail fast if OTP backend is unreachable
+        // OTP backend unreachable or timed out
+        console.warn('[tokenBridge] OTP fetch failed:', e);
     }
 
     return '';

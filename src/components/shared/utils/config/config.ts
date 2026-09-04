@@ -911,16 +911,21 @@ export const buildBestBotsFileUrl = (bots_folder: string, file_name: string) => 
 export const getBestBotsFileUrl = (file_name: string) => buildBestBotsFileUrl(getBestBotsFolder(), file_name);
 
 // =============================================================================
-// Constants - Server Configuration (from brand.config.json)
+// WebSocket server URLs — new authenticated Deriv v3 endpoint only
 // =============================================================================
 
-// WebSocket server URLs - route to Deriv v3 endpoint
+// New Deriv WebSocket endpoint (both staging and production share the same URL)
 export const WS_SERVERS = {
     STAGING: 'wss://ws.derivws.com/websockets/v3',
     PRODUCTION: 'wss://ws.derivws.com/websockets/v3',
 } as const;
 
-const LEGACY_WS_SERVER = 'wss://ws.derivws.com/websockets/v3';
+// The new Deriv public WebSocket base URL
+const DERIV_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
+
+// Public app_id for unauthenticated market-data access (active_symbols, ticks).
+// 1089 is Deriv's registered public application — it never requires authorize.
+const PUBLIC_APP_ID = '1089';
 
 // Helper to check if we're on production domains
 export const isProduction = () => {
@@ -932,37 +937,39 @@ export const isProduction = () => {
 
 export const isLocal = () => /localhost(:\d+)?$/i.test(window.location.hostname);
 
-export const getLegacyServerURL = () => {
-    const domainCfg = getDomainConfig();
-    const appId = domainCfg.appId || '121856';
-    return `${LEGACY_WS_SERVER}?app_id=${encodeURIComponent(appId)}&l=EN&brand=deriv`;
-};
+/**
+ * Returns a public (unauthenticated) WebSocket URL for pre-login market data.
+ * Uses Deriv's public app_id so active_symbols works without authorization.
+ */
+export const getLegacyServerURL = () =>
+    `${DERIV_WS_BASE}?app_id=${PUBLIC_APP_ID}&l=EN&brand=deriv`;
 
-export const getDefaultServerURL = () => {
-    return getLegacyServerURL();
-};
+export const getDefaultServerURL = () => getLegacyServerURL();
 
 /**
- * Gets the WebSocket URL using Deriv OAuth 2.0 PKCE.
- * For authenticated sessions with an access token, fetches an OTP-authenticated URL.
- * For unauthenticated sessions, connects to the public market data WebSocket endpoint.
+ * Gets the WebSocket URL for the current session.
+ *
+ * - Authenticated users (PKCE auth_info present): always uses the OTP-authenticated
+ *   WebSocket URL returned by the Deriv REST API. This is a single-use URL that
+ *   embeds the session token, so no separate `authorize` call is needed.
+ *
+ * - Unauthenticated users (no auth_info): returns the public WebSocket URL so
+ *   market data (active_symbols, ticks) works before login.
+ *
+ * The legacy `use_legacy_deriv_ws` sessionStorage flag is explicitly cleared on
+ * every call so transient network errors from previous sessions can never
+ * permanently prevent OTP authentication.
  */
 export const getSocketURL = async (): Promise<string> => {
+    // Always clear the legacy fallback flag — we never want it to bypass OTP auth
+    try { sessionStorage.removeItem('use_legacy_deriv_ws'); } catch {}
+
     try {
-        let isFallback = false;
-        try {
-            isFallback = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('use_legacy_deriv_ws') === 'true';
-        } catch {}
-
-        if (isFallback) {
-            console.log('[getSocketURL] Using resilient standard Deriv WebSocket endpoint');
-            return getLegacyServerURL();
-        }
-
         let authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+
+        // Silently refresh the token if it is near expiry
         const tokenNeedsRefresh =
             !!authInfo?.refresh_token && !!authInfo.expires_at && Date.now() >= authInfo.expires_at - 300000;
-
         if (tokenNeedsRefresh && authInfo?.refresh_token) {
             const refreshedAuth = await OAuthTokenExchangeService.refreshAccessToken(authInfo.refresh_token);
             if (refreshedAuth.access_token) {
@@ -971,25 +978,24 @@ export const getSocketURL = async (): Promise<string> => {
         }
 
         if (authInfo?.access_token) {
-            try {
-                const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
-                if (wsUrl) {
-                    return wsUrl;
-                }
-            } catch (pkceError) {
-                console.error('[getSocketURL] Error retrieving authenticated WebSocket URL, using standard Deriv endpoint:', pkceError);
-                return getLegacyServerURL();
+            // Authenticated path: fetch an OTP WebSocket URL from the Deriv REST API.
+            // This URL is already pre-authenticated — no separate authorize() needed.
+            const wsUrl = await DerivWSAccountsService.getAuthenticatedWebSocketURL(authInfo.access_token);
+            if (wsUrl) {
+                console.log('[getSocketURL] Using OTP-authenticated Deriv WebSocket endpoint');
+                return wsUrl;
             }
+            // OTP fetch returned an empty URL — fall through to the public endpoint
+            console.warn('[getSocketURL] OTP URL was empty, using public endpoint until re-authentication');
         }
 
-        // Try default public WS first. We do not test it here to avoid
-        // connection rate limits or slowing down the initial connect.
-        const defaultUrl = getDefaultServerURL();
-
-        return defaultUrl;
+        // Unauthenticated path: public WebSocket for market data before login
+        console.log('[getSocketURL] Using public Deriv WebSocket endpoint (unauthenticated)');
+        return getDefaultServerURL();
     } catch (error) {
-        console.error('[DerivWS] Error in getSocketURL, falling back to standard endpoint:', error);
-        return getLegacyServerURL();
+        // Any error (network, REST API down, etc.) falls back to the public endpoint
+        console.error('[getSocketURL] Error fetching OTP WebSocket URL, using public endpoint:', error);
+        return getDefaultServerURL();
     }
 };
 

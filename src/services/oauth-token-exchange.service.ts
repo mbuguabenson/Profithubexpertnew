@@ -55,7 +55,7 @@ export class OAuthTokenExchangeService {
      * Get stored authentication info from localStorage with sessionStorage fallback.
      * @returns AuthInfo object or null if not found
      */
-    static getAuthInfo({ allowExpiredWithRefresh = true } = {}): AuthInfo | null {
+    static getAuthInfo({ allowExpiredWithRefresh: _allowExpiredWithRefresh = true } = {}): AuthInfo | null {
         try {
             const authInfoStr = localStorage.getItem(AUTH_INFO_KEY) || sessionStorage.getItem(AUTH_INFO_KEY);
             if (!authInfoStr) {

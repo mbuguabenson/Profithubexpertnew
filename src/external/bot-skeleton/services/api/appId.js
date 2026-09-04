@@ -141,16 +141,6 @@ export const generateDerivApiInstance = async (forceNew = false) => {
 
             deriv_socket.addEventListener('error', error => {
                 console.error('[DerivAPI] WebSocket connection error:', error);
-                if (wsURL && wsURL.includes('api.derivws.com')) {
-                    try {
-                        const failures = parseInt(sessionStorage.getItem('api_derivws_failures') || '0', 10) + 1;
-                        sessionStorage.setItem('api_derivws_failures', failures.toString());
-                        if (failures >= 2) {
-                            console.warn('[DerivAPI] api.derivws.com repeatedly failed; enabling fallback to resilient standard Deriv WebSocket');
-                            sessionStorage.setItem('use_legacy_deriv_ws', 'true');
-                        }
-                    } catch {}
-                }
             });
 
             return deriv_api;
