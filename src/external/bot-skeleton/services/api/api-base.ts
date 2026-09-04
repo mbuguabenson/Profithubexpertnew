@@ -50,6 +50,26 @@ class APIBase {
     active_symbols_promise: Promise<any[] | undefined> | null = null;
     common_store: CommonStore | undefined;
     reconnection_attempts: number = 0;
+    private init_promise: Promise<void> | null = null;
+
+    constructor() {
+        this.loadCachedActiveSymbols();
+    }
+
+    private loadCachedActiveSymbols() {
+        try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+                const cached = localStorage.getItem('cached_active_symbols');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        this.active_symbols = parsed;
+                        this.has_active_symbols = true;
+                    }
+                }
+            }
+        } catch {}
+    }
 
     // Constants for timeouts - extracted magic numbers for better maintainability
     private readonly ACTIVE_SYMBOLS_TIMEOUT_MS = 4000; // 4 seconds before fallback
@@ -165,52 +185,104 @@ class APIBase {
         }
     };
 
-    async init(force_create_connection = false) {
-        if (this.api) {
-            this.unsubscribeAllSubscriptions();
+    async waitForConnection(timeoutMs = 5000): Promise<boolean> {
+        if (this.api?.connection?.readyState === 1) return true;
+        if (!this.api || this.api?.connection?.readyState > 1) {
+            this.init().catch(() => {});
         }
+        if (this.api?.connection?.readyState === 1) return true;
 
-        // Reset reconnection attempts counter on successful connection initialization
-        if (!force_create_connection) {
-            this.reconnection_attempts = 0;
-        }
-
-        if (!this.api || this.api?.connection.readyState !== 1 || force_create_connection) {
-            if (this.api?.connection) {
-                setConnectionStatus(CONNECTION_STATUS.CLOSED);
-                this.api.disconnect();
-                this.api.connection.removeEventListener('open', this.onsocketopen.bind(this));
-                this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
-            }
-
-            this.api = await generateDerivApiInstance(force_create_connection);
-
-            this.api?.connection.addEventListener('open', this.onsocketopen.bind(this));
-            this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
-
-            // Store the current account ID used for this WebSocket connection
-            // This will be used to check if we need to regenerate the connection when the tab becomes active
-            const currentClientStore = globalObserver.getState('client.store');
-            if (currentClientStore) {
-                const active_login_id = getAccountId();
-                if (active_login_id) {
-                    currentClientStore.setWebSocketLoginId(active_login_id);
+        return new Promise(resolve => {
+            const start = Date.now();
+            const check = () => {
+                if (this.api?.connection?.readyState === 1) {
+                    resolve(true);
+                } else if (Date.now() - start >= timeoutMs) {
+                    resolve(false);
+                } else {
+                    setTimeout(check, 50);
                 }
+            };
+            check();
+        });
+    }
+
+    async init(force_create_connection = false): Promise<void> {
+        // If an init is already in flight and this is not a force reconnect, reuse the existing promise
+        if (!force_create_connection && this.init_promise) {
+            return this.init_promise;
+        }
+
+        // If connection is already OPEN and no force reconnect, nothing to do
+        if (!force_create_connection && this.api?.connection?.readyState === 1) {
+            return;
+        }
+
+        // If connection is currently CONNECTING and no force reconnect, wait for it rather than destroying it
+        if (!force_create_connection && this.api?.connection?.readyState === 0) {
+            return this.waitForConnection(5000).then(() => {});
+        }
+
+        this.init_promise = (async () => {
+            try {
+                if (this.api) {
+                    this.unsubscribeAllSubscriptions();
+                }
+
+                // Reset reconnection attempts counter on successful connection initialization
+                if (!force_create_connection) {
+                    this.reconnection_attempts = 0;
+                }
+
+                const readyState = this.api?.connection?.readyState;
+                const needsNewConnection = !this.api || readyState === undefined || readyState > 1 || force_create_connection;
+
+                if (needsNewConnection) {
+                    if (this.api?.connection) {
+                        setConnectionStatus(CONNECTION_STATUS.CLOSED);
+                        try {
+                            this.api.connection.removeEventListener('open', this.onsocketopen.bind(this));
+                            this.api.connection.removeEventListener('close', this.onsocketclose.bind(this));
+                            this.api.disconnect();
+                        } catch {}
+                    }
+
+                    this.api = await generateDerivApiInstance(force_create_connection);
+
+                    this.api?.connection.addEventListener('open', this.onsocketopen.bind(this));
+                    this.api?.connection.addEventListener('close', this.onsocketclose.bind(this));
+
+                    // Store the current account ID used for this WebSocket connection
+                    // This will be used to check if we need to regenerate the connection when the tab becomes active
+                    const currentClientStore = globalObserver.getState('client.store');
+                    if (currentClientStore) {
+                        const active_login_id = getAccountId();
+                        if (active_login_id) {
+                            currentClientStore.setWebSocketLoginId(active_login_id);
+                        }
+                    }
+                }
+
+                const hasAccountID = V2GetActiveAccountId();
+
+                if (!this.has_active_symbols && !hasAccountID) {
+                    this.active_symbols_promise = this.getActiveSymbols();
+                }
+
+                this.initEventListeners();
+
+                if (this.time_interval) clearInterval(this.time_interval);
+                this.time_interval = null;
+
+                try {
+                    chart_api.init?.();
+                } catch {}
+            } finally {
+                this.init_promise = null;
             }
-        }
+        })();
 
-        const hasAccountID = V2GetActiveAccountId();
-
-        if (!this.has_active_symbols && !hasAccountID) {
-            this.active_symbols_promise = this.getActiveSymbols();
-        }
-
-        this.initEventListeners();
-
-        if (this.time_interval) clearInterval(this.time_interval);
-        this.time_interval = null;
-
-        chart_api.init();
+        return this.init_promise;
     }
 
     getConnectionStatus() {
@@ -580,13 +652,36 @@ class APIBase {
     }
 
     getActiveSymbols = async () => {
+        // Fast path 1: Return in-memory symbols if already available
+        if (this.has_active_symbols && Array.isArray(this.active_symbols) && this.active_symbols.length > 0) {
+            return this.active_symbols;
+        }
+
+        // Fast path 2: Return localStorage cached symbols if available
+        try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+                const cached = localStorage.getItem('cached_active_symbols');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        this.active_symbols = parsed;
+                        this.has_active_symbols = true;
+                        // Still allow background refresh if needed, but return cached data immediately
+                        return this.active_symbols;
+                    }
+                }
+            }
+        } catch {}
+
         let active_symbols: any[] = [];
 
-        // Wrap the entire fetch in a generous overall timeout so the promise never hangs forever.
-        // Individual sub-steps also have their own timeouts; this is a safety net.
-        const OVERALL_TIMEOUT_MS = 35000;
+        // Wrap the entire fetch in an overall timeout so the promise never hangs forever.
+        const OVERALL_TIMEOUT_MS = 25000;
 
         const fetchSymbols = async (): Promise<any[]> => {
+            // Wait briefly for main WebSocket if it is currently connecting
+            await this.waitForConnection(3000);
+
             // 1. Try the main WebSocket first if it is already open (fastest path, <100ms)
             if (this.api && this.api.connection?.readyState === 1) {
                 try {
@@ -599,14 +694,16 @@ class APIBase {
                     const apiResult = await Promise.race([fetchPromise, timeout]);
                     const { active_symbols: ws_symbols = [], error = {} } = apiResult as any;
                     if (!error || Object.keys(error).length === 0) {
-                        return ws_symbols;
+                        if (Array.isArray(ws_symbols) && ws_symbols.length > 0) {
+                            return ws_symbols;
+                        }
                     }
                 } catch (err) {
                     console.warn('[APIBase] Main WS active symbols fetch failed, trying fallback:', err);
                 }
             }
 
-            // 2. Fallback: standard Deriv public WS endpoint
+            // 2. Fallback: standard Deriv public WS endpoint with 4000ms timeout
             try {
                 const publicSymbols = await new Promise<any[]>((resolve, reject) => {
                     // Use the reliable standard Deriv API WebSocket endpoint with domain app_id
@@ -616,9 +713,11 @@ class APIBase {
                     let settled = false;
 
                     const cleanup = () => {
-                        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-                            ws.close();
-                        }
+                        try {
+                            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                                ws.close();
+                            }
+                        } catch {}
                     };
 
                     const safeResolve = (val: any[]) => {
@@ -628,10 +727,15 @@ class APIBase {
                         if (!settled) { settled = true; cleanup(); reject(err); }
                     };
 
-                    const timer = setTimeout(() => safeReject(new Error('Public WS timeout')), 12000);
+                    const timer = setTimeout(() => safeReject(new Error('Public WS timeout')), 4000);
 
                     ws.onopen = () => {
-                        ws.send(JSON.stringify({ active_symbols: 'brief', req_id: 1 }));
+                        try {
+                            ws.send(JSON.stringify({ active_symbols: 'brief', req_id: 1 }));
+                        } catch (err) {
+                            clearTimeout(timer);
+                            safeReject(err);
+                        }
                     };
                     ws.onmessage = event => {
                         try {
@@ -771,6 +875,13 @@ class APIBase {
                 this.active_symbols = active_symbols;
                 this.pip_sizes = {};
             }
+
+            // Persist to localStorage for instantaneous loading next time
+            try {
+                if (typeof window !== 'undefined' && window.localStorage && this.active_symbols?.length > 0) {
+                    localStorage.setItem('cached_active_symbols', JSON.stringify(this.active_symbols));
+                }
+            } catch {}
 
             this.toggleRunButton(false);
             return this.active_symbols;

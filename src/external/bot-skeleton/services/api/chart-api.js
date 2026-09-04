@@ -8,18 +8,35 @@ class ChartAPI {
         this.reconnectIfNotConnected();
     }
 
-    init = async () => {
+    waitForConnection = async (timeoutMs = 5000) => {
+        if (this.api?.connection?.readyState === WebSocket.OPEN) return true;
+        if (!this.api || this.api?.connection?.readyState > WebSocket.OPEN) {
+            await this.init();
+        }
+        if (this.api?.connection?.readyState === WebSocket.OPEN) return true;
+
+        return new Promise(resolve => {
+            const start = Date.now();
+            const check = () => {
+                if (this.api?.connection?.readyState === WebSocket.OPEN) {
+                    resolve(true);
+                } else if (Date.now() - start >= timeoutMs) {
+                    resolve(false);
+                } else {
+                    setTimeout(check, 50);
+                }
+            };
+            check();
+        });
+    };
+
+    init = async (forceNew = false) => {
         const connectionState = this.api?.connection?.readyState;
-        if (!this.api || connectionState === WebSocket.CLOSED || connectionState === WebSocket.CLOSING) {
-            this.api = await generateDerivApiInstance();
-
-            // Intercept the send method to filter active_symbols responses for chart
-            // this.interceptApiCalls();
-
-            // Force inject symbols after a short delay to ensure api_base is ready
-            // this.forceInjectSymbols();
+        if (!this.api || connectionState === WebSocket.CLOSED || connectionState === WebSocket.CLOSING || forceNew) {
+            this.api = await generateDerivApiInstance(forceNew);
         }
         this.getTime();
+        return this.api;
     };
 
     getTime() {

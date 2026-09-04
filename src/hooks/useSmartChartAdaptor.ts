@@ -47,13 +47,28 @@ interface UseSmartChartAdaptorReturn {
  */
 export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     // State management
+    const getInitialActiveSymbols = (): ActiveSymbols => {
+        try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+                const cached = localStorage.getItem('cached_active_symbols');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        return parsed as ActiveSymbols;
+                    }
+                }
+            }
+        } catch {}
+        return [] as ActiveSymbols;
+    };
+
     const [adapter, setAdapter] = useState<SmartchartsChampionAdapter | null>(null);
     const [adapterInitialized, setAdapterInitialized] = useState(false);
     const [chartData, setChartData] = useState<{
         activeSymbols: ActiveSymbols;
         tradingTimes: TradingTimesMap;
     }>({
-        activeSymbols: [] as ActiveSymbols,
+        activeSymbols: getInitialActiveSymbols(),
         tradingTimes: {} as TradingTimesMap,
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -78,10 +93,20 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         };
     }, []);
 
-    // Initialize adapter - runs once when chart_api.api is available
+    // Initialize adapter - proactively ensures chart_api is initialized
     useEffect(() => {
-        if (!adapterInitialized && chart_api.api) {
+        let isCancelled = false;
+
+        const initAdapter = async () => {
+            if (adapterInitialized) return;
+
             try {
+                if (!chart_api.api) {
+                    await chart_api.init?.();
+                }
+
+                if (isCancelled || !isMountedRef.current) return;
+
                 const transport = createTransport();
                 const services = createServices();
                 const championAdapter = buildSmartchartsChampionAdapter(transport, services, {
@@ -100,7 +125,13 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                     setIsLoading(false);
                 }
             }
-        }
+        };
+
+        initAdapter();
+
+        return () => {
+            isCancelled = true;
+        };
     }, [adapterInitialized]);
 
     // Load chart data when adapter is initialized

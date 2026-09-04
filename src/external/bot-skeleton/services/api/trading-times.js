@@ -81,9 +81,9 @@ export default class TradingTimes {
                 return;
             }
 
-            // Add a timeout so a slow/unresponsive WS doesn't freeze market loading
+            // Add a short timeout so a slow/unresponsive WS doesn't freeze market loading
             const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('trading_times fetch timeout')), 10000)
+                setTimeout(() => reject(new Error('trading_times fetch timeout')), 2500)
             );
             const fetchPromise = api_base.api?.send({ trading_times: last_update_date }) ||
                 this.ws?.send({ trading_times: last_update_date });

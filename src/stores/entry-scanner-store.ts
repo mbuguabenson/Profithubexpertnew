@@ -332,7 +332,7 @@ export default class EntryScannerStore {
 
         if (!api_base.api || (api_base.api as any)?.connection?.readyState !== 1) {
             try {
-                await api_base.init();
+                await api_base.waitForConnection(3000);
             } catch {}
         }
 

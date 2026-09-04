@@ -4,6 +4,7 @@
  */
 
 import ApiHelpers from '@/external/bot-skeleton/services/api/api-helpers';
+import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import type { TServices } from './types';
 
 // Logger utility for services layer
@@ -149,6 +150,24 @@ export function createServices(): TServices {
          */
         async getActiveSymbols(): Promise<any> {
             try {
+                // Fast path 1: Check in-memory api_base symbols
+                if (api_base?.has_active_symbols && Array.isArray(api_base.active_symbols) && api_base.active_symbols.length > 0) {
+                    return api_base.active_symbols;
+                }
+
+                // Fast path 2: Check localStorage cached symbols
+                try {
+                    if (typeof window !== 'undefined' && window.localStorage) {
+                        const cached = localStorage.getItem('cached_active_symbols');
+                        if (cached) {
+                            const parsed = JSON.parse(cached);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                return parsed;
+                            }
+                        }
+                    }
+                } catch {}
+
                 const apiHelpers = ApiHelpers.instance as any;
 
                 if (!isApiHelpersInitialized(apiHelpers)) {
@@ -172,7 +191,7 @@ export function createServices(): TServices {
                 // Fallback: try to get from the raw active_symbols array if available
                 try {
                     const apiHelpers = ApiHelpers.instance as any;
-                    if (isApiHelpersInitialized(apiHelpers) && apiHelpers.active_symbols.active_symbols) {
+                    if (isApiHelpersInitialized(apiHelpers) && apiHelpers.active_symbols?.active_symbols) {
                         return apiHelpers.active_symbols.active_symbols;
                     }
                 } catch {

@@ -16,7 +16,7 @@
 
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
-import { getAppId } from '@/components/shared/utils/config/config';
+import { getAppId, getDomainConfig } from '@/components/shared/utils/config/config';
 import { getAccountsList, getActiveLoginId, getActiveToken, isInvalidBearerToken } from '@/utils/token-bridge';
 
 export interface DerivWalletBalance {
@@ -158,10 +158,11 @@ export class DerivAccountWalletService {
     public static getDerivRestHeaders(overrideToken?: string, overrideAppId?: string): Record<string, string> {
         const { token: defaultToken, appId: defaultAppId } = this.getAuthCredentials();
         const token = overrideToken || defaultToken;
-        const appId = overrideAppId || defaultAppId;
+        const { clientId } = getDomainConfig();
+        const effectiveAppId = clientId || overrideAppId || defaultAppId;
 
         const headers: Record<string, string> = {
-            'Deriv-App-ID': String(appId),
+            'Deriv-App-ID': String(effectiveAppId),
             'Content-Type': 'application/json',
         };
 
@@ -381,7 +382,7 @@ export class DerivAccountWalletService {
     public static async getConnectedApi(): Promise<any> {
         if (!api_base.api || api_base.api?.connection?.readyState !== 1) {
             try {
-                await api_base.init();
+                await api_base.waitForConnection(3000);
             } catch (err) {
                 console.warn('[DerivAccountWalletService] Failed to auto-init api_base connection:', err);
             }

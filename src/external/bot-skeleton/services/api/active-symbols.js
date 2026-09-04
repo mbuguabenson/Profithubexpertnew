@@ -43,17 +43,31 @@ export default class ActiveSymbols {
      * }
      */
     async retrieveActiveSymbols(is_forced_update = false) {
-        await this.trading_times.initialise();
+        // Kick off trading times initialization in background without blocking symbol retrieval
+        this.trading_times.initialise().catch(() => {});
 
-        if (!is_forced_update && this.is_initialised) {
+        if (!is_forced_update && this.is_initialised && this.active_symbols?.length > 0) {
             await this.init_promise;
             return this.active_symbols;
         }
 
         // Wait for api_base to have symbols available
-        if (api_base.has_active_symbols) {
+        if (api_base.has_active_symbols && api_base.active_symbols?.length > 0) {
             this.active_symbols = api_base?.active_symbols ?? [];
         } else {
+            // Check localStorage cache as immediate fast path
+            try {
+                if (typeof window !== 'undefined' && window.localStorage) {
+                    const cached = localStorage.getItem('cached_active_symbols');
+                    if (cached) {
+                        const parsed = JSON.parse(cached);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            this.active_symbols = parsed;
+                        }
+                    }
+                }
+            } catch {}
+
             // If promise doesn't exist, trigger the fetch
             if (!api_base.active_symbols_promise) {
                 api_base.active_symbols_promise = api_base.getActiveSymbols();
@@ -63,11 +77,12 @@ export default class ActiveSymbols {
             // hanging on a stale rejected/hung promise forever.
             try {
                 const symbols = await api_base.active_symbols_promise;
-                this.active_symbols = symbols ?? api_base?.active_symbols ?? [];
+                if (symbols && symbols.length > 0) {
+                    this.active_symbols = symbols;
+                }
             } catch (err) {
                 console.warn('[ActiveSymbols] active_symbols_promise rejected, resetting for retry:', err);
                 api_base.active_symbols_promise = null;
-                this.active_symbols = api_base?.active_symbols ?? [];
             }
         }
 
@@ -76,7 +91,9 @@ export default class ActiveSymbols {
             console.warn('No symbols found, attempting fresh fetch...');
             try {
                 const symbols = await api_base.getActiveSymbols();
-                this.active_symbols = symbols ?? [];
+                if (symbols && symbols.length > 0) {
+                    this.active_symbols = symbols;
+                }
 
                 // If still no symbols after retry, mark as error state
                 if (!this.active_symbols || this.active_symbols.length === 0) {
@@ -85,12 +102,16 @@ export default class ActiveSymbols {
                 }
             } catch (error) {
                 console.error('Failed to fetch active symbols:', error);
-                this.active_symbols = [];
                 this.has_initialization_error = true;
             }
         }
 
-        this.is_initialised = true;
+        // Only mark as initialised if we actually obtained active symbols
+        if (this.active_symbols && this.active_symbols.length > 0) {
+            this.is_initialised = true;
+            this.has_initialization_error = false;
+        }
+
         this.processed_symbols = this.processActiveSymbols();
 
         this.trading_times.onMarketOpenCloseChanged = changes => {
