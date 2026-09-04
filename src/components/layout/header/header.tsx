@@ -73,6 +73,45 @@ const CurrencyDropdown = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Header Speed Toggle (Desktop: ⚡ Fast Switch | Mobile: ⚡ Icon Alone)
+// ─────────────────────────────────────────────────────────────────────────────
+const HeaderSpeedToggle = observer(() => {
+    const { run_panel } = useStore() ?? {};
+    const { isDesktop } = useDevice();
+
+    if (!run_panel) return null;
+
+    const isActive = run_panel.is_every_tick_mode;
+
+    return (
+        <button
+            type='button'
+            id='header-speed-toggle'
+            className={clsx('app-header__speed-toggle', {
+                'app-header__speed-toggle--active': isActive,
+                'app-header__speed-toggle--mobile': !isDesktop,
+            })}
+            title={
+                isActive
+                    ? 'Fast Execution Mode ACTIVE: Direct parameter trading with instant cycle execution (Matches 360 speed)'
+                    : 'Fast Execution Mode OFF: Click to enable 2x fast direct execution'
+            }
+            onClick={() => run_panel.toggleEveryTickMode()}
+        >
+            <span className='speed-toggle__icon'>⚡</span>
+            {isDesktop && (
+                <>
+                    <span className='speed-toggle__text'>Fast</span>
+                    <div className='speed-toggle__track'>
+                        <div className='speed-toggle__thumb' />
+                    </div>
+                </>
+            )}
+        </button>
+    );
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main AppHeader
 // ─────────────────────────────────────────────────────────────────────────────
 const AppHeader = observer(() => {
@@ -323,6 +362,7 @@ const AppHeader = observer(() => {
                 </Wrapper>
                 <Wrapper variant='right'>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <HeaderSpeedToggle />
                         {!isDesktop && (
                             <button
                                 type='button'

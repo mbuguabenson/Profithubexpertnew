@@ -34,6 +34,10 @@ export default Engine =>
 
         // ─── Purchase (single trade) ───────────────────────────────────────────────
         async purchase(contract_type, is_fast_override) {
+            const isFastMode =
+                is_fast_override ||
+                (typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true');
+
             if (this.multiple_trades_count > 1) {
                 const count = this.multiple_trades_count;
                 this.multiple_trades_count = 0; // Reset flag for subsequent runs
@@ -78,11 +82,13 @@ export default Engine =>
                 this.bulk_sold_contract_ids = new Set();
                 this.store.dispatch(purchaseSuccessful());
 
-                if (this.is_proposal_subscription_required) {
+                if (this.is_proposal_subscription_required && !isFastMode) {
                     this.renewProposalsOnPurchase();
                 }
 
-                if (api_base.api && buy.contract_id) {
+                // In fast mode, rely on standard proposal_open_contract / transaction listener
+                // without sending an extra subscribe: 1 duplicate.
+                if (!isFastMode && api_base.api && buy.contract_id) {
                     try {
                         api_base.api.send({
                             proposal_open_contract: 1,
@@ -302,7 +308,8 @@ export default Engine =>
             const trade_option = tradeOptionToBuy(contract_type, this.tradeOptions);
 
             let selectedProposal = null;
-            if (this.is_proposal_subscription_required) {
+            // In Fast Mode, completely bypass proposal ID negotiation to avoid PriceMoved slippage retries
+            if (!isFastMode && this.is_proposal_subscription_required) {
                 try {
                     selectedProposal = this.selectProposal(contract_type);
                 } catch (propErr) {

@@ -60,15 +60,24 @@ export const initWebSocketMonitor = () => {
                     size = event.data.byteLength;
                 }
 
-                const msg: TWsMessage = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    direction: 'IN',
-                    type: typeof data === 'object' && data.msg_type ? data.msg_type : 'unknown',
-                    size,
-                    timestamp: Date.now(),
-                    data,
-                };
-                systemCenterStore.logWsMessage(msg);
+                const isBotRunning =
+                    typeof window !== 'undefined' &&
+                    Boolean((window as any).DBot?.is_running || (window as any).is_bot_running);
+
+                const msgType = typeof data === 'object' && data?.msg_type ? data.msg_type : 'unknown';
+
+                // Skip high-frequency market streaming log overhead during active bot runs
+                if (!isBotRunning || (msgType !== 'ticks' && msgType !== 'ohlc' && msgType !== 'candles')) {
+                    const msg: TWsMessage = {
+                        id: Math.random().toString(36).substr(2, 9),
+                        direction: 'IN',
+                        type: msgType,
+                        size,
+                        timestamp: Date.now(),
+                        data,
+                    };
+                    systemCenterStore.logWsMessage(msg);
+                }
             });
         }
 

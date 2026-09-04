@@ -23,11 +23,13 @@ const watchBefore = store => {
         return Promise.resolve(false);
     }
 
-    // Fast path: if state machine is in BEFORE_PURCHASE and proposalsReady is true,
+    const isFastMode = typeof localStorage !== 'undefined' && localStorage.getItem('dbot_every_tick_mode') === 'true';
+
+    // Fast path: if Fast Mode is active or state machine is in BEFORE_PURCHASE and proposalsReady is true,
     // fire once immediately for the current trade cycle to execute without tick delay.
     if (
         currentState.scope === constants.BEFORE_PURCHASE &&
-        currentState.proposalsReady &&
+        (isFastMode || currentState.proposalsReady) &&
         !currentState.hasFiredBefore
     ) {
         store.dispatch({ type: 'BEFORE_FIRED' });
