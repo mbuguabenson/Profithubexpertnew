@@ -98,7 +98,13 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         }
     };
 
-    if (!symbol || chartData.activeSymbols.length === 0) {
+    const isSymbolReady =
+        Boolean(symbol) &&
+        chartData.activeSymbols.length > 0 &&
+        chartData.activeSymbols.some(s => s.symbol === symbol) &&
+        Boolean(chartData.tradingTimes && chartData.tradingTimes[symbol]);
+
+    if (!isSymbolReady) {
         return <ChunkLoader message='' />;
     }
 

@@ -158,52 +158,69 @@ const transformations = {
      * Transform trading times data to SmartChart expected format
      * SmartChart expects: Record<string, { isOpen: boolean; openTime: string; closeTime: string }>
      */
-    toTradingTimesMap(tradingTimesData: any): TradingTimesMap {
+    toTradingTimesMap(tradingTimesData: any, activeSymbolsData: ActiveSymbol[] = []): TradingTimesMap {
         const tradingTimes: TradingTimesMap = {};
 
-        if (!tradingTimesData || typeof tradingTimesData !== 'object') {
-            return tradingTimes;
-        }
+        if (tradingTimesData && typeof tradingTimesData === 'object') {
+            Object.keys(tradingTimesData).forEach(symbol => {
+                const symbolData = tradingTimesData[symbol];
 
-        Object.keys(tradingTimesData).forEach(symbol => {
-            const symbolData = tradingTimesData[symbol];
-
-            if (symbolData) {
-                // Handle the format from services layer (with open/close arrays)
-                if (symbolData.open && symbolData.close) {
-                    const openTimes = Array.isArray(symbolData.open) ? symbolData.open : [symbolData.open];
-                    const closeTimes = Array.isArray(symbolData.close) ? symbolData.close : [symbolData.close];
-
-                    tradingTimes[symbol] = {
-                        isOpen: openTimes.length > 0 && openTimes[0] !== '--',
-                        openTime: openTimes[0] || '',
-                        closeTime: closeTimes[0] || '',
-                    };
-                }
-                // Handle legacy format with times array
-                else if (symbolData.times && Array.isArray(symbolData.times)) {
-                    const firstSession = symbolData.times[0];
-                    if (firstSession && firstSession.open && firstSession.close) {
-                        const openTime = new Date(firstSession.open).toISOString().substr(11, 8);
-                        const closeTime = new Date(firstSession.close).toISOString().substr(11, 8);
+                if (symbolData) {
+                    // Handle the format from services layer (with open/close arrays)
+                    if (symbolData.open && symbolData.close) {
+                        const openTimes = Array.isArray(symbolData.open) ? symbolData.open : [symbolData.open];
+                        const closeTimes = Array.isArray(symbolData.close) ? symbolData.close : [symbolData.close];
 
                         tradingTimes[symbol] = {
-                            isOpen: true,
-                            openTime,
-                            closeTime,
+                            isOpen: openTimes.length > 0 && openTimes[0] !== '--',
+                            openTime: openTimes[0] || '00:00:00',
+                            closeTime: closeTimes[0] || '23:59:59',
+                        };
+                    }
+                    // Handle legacy format with times array
+                    else if (symbolData.times && Array.isArray(symbolData.times)) {
+                        const firstSession = symbolData.times[0];
+                        if (firstSession && firstSession.open && firstSession.close) {
+                            const openTime =
+                                typeof firstSession.open === 'number'
+                                    ? new Date(firstSession.open * 1000).toISOString().substr(11, 8)
+                                    : new Date(firstSession.open).toISOString().substr(11, 8);
+                            const closeTime =
+                                typeof firstSession.close === 'number'
+                                    ? new Date(firstSession.close * 1000).toISOString().substr(11, 8)
+                                    : new Date(firstSession.close).toISOString().substr(11, 8);
+
+                            tradingTimes[symbol] = {
+                                isOpen: true,
+                                openTime,
+                                closeTime,
+                            };
+                        }
+                    }
+                    // Handle direct isOpen/openTime/closeTime format (if already in correct format)
+                    else if ('isOpen' in symbolData && 'openTime' in symbolData && 'closeTime' in symbolData) {
+                        tradingTimes[symbol] = {
+                            isOpen: symbolData.isOpen,
+                            openTime: symbolData.openTime || '00:00:00',
+                            closeTime: symbolData.closeTime || '23:59:59',
                         };
                     }
                 }
-                // Handle direct isOpen/openTime/closeTime format (if already in correct format)
-                else if ('isOpen' in symbolData && 'openTime' in symbolData && 'closeTime' in symbolData) {
-                    tradingTimes[symbol] = {
-                        isOpen: symbolData.isOpen,
-                        openTime: symbolData.openTime,
-                        closeTime: symbolData.closeTime,
+            });
+        }
+
+        // Guarantee every active symbol has an entry in tradingTimes so SmartCharts never throws undefined error
+        if (Array.isArray(activeSymbolsData)) {
+            activeSymbolsData.forEach(s => {
+                if (s && s.symbol && !tradingTimes[s.symbol]) {
+                    tradingTimes[s.symbol] = {
+                        isOpen: Boolean(s.exchange_is_open !== 0),
+                        openTime: '00:00:00',
+                        closeTime: '23:59:59',
                     };
                 }
-            }
-        });
+            });
+        }
 
         return tradingTimes;
     },
@@ -356,7 +373,7 @@ export function buildSmartchartsChampionAdapter(
                 ]);
 
                 const activeSymbols = transformations.toActiveSymbols(activeSymbolsData);
-                const tradingTimes = transformations.toTradingTimesMap(tradingTimesData);
+                const tradingTimes = transformations.toTradingTimesMap(tradingTimesData, activeSymbols);
 
                 return { activeSymbols, tradingTimes };
             } catch (error) {

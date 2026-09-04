@@ -47,19 +47,21 @@ interface UseSmartChartAdaptorReturn {
  */
 export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     // State management
-    const getInitialActiveSymbols = (): ActiveSymbols => {
+    const getInitialChartData = (): { activeSymbols: ActiveSymbols; tradingTimes: TradingTimesMap } => {
         try {
             if (typeof window !== 'undefined' && window.localStorage) {
                 const cached = localStorage.getItem('cached_active_symbols');
                 if (cached) {
                     const parsed = JSON.parse(cached);
                     if (Array.isArray(parsed) && parsed.length > 0) {
-                        return transformations.toActiveSymbols(parsed);
+                        const activeSymbols = transformations.toActiveSymbols(parsed);
+                        const tradingTimes = transformations.toTradingTimesMap({}, activeSymbols);
+                        return { activeSymbols, tradingTimes };
                     }
                 }
             }
         } catch {}
-        return [] as ActiveSymbols;
+        return { activeSymbols: [] as ActiveSymbols, tradingTimes: {} as TradingTimesMap };
     };
 
     const [adapter, setAdapter] = useState<SmartchartsChampionAdapter | null>(null);
@@ -67,10 +69,7 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     const [chartData, setChartData] = useState<{
         activeSymbols: ActiveSymbols;
         tradingTimes: TradingTimesMap;
-    }>({
-        activeSymbols: getInitialActiveSymbols(),
-        tradingTimes: {} as TradingTimesMap,
-    });
+    }>(getInitialChartData);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 

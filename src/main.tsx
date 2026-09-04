@@ -21,8 +21,13 @@ iframeReceiverService.init();
 window.addEventListener('error', (e: any) => {
     const msg = e?.message || '';
     if (/Loading chunk \d+ failed/.test(msg) || /Loading CSS chunk \d+ failed/.test(msg)) {
-        console.warn('Chunk load failure detected, reloading to recover.');
-        window.location.reload();
+        const lastReload = sessionStorage.getItem('chunk_reload_time');
+        const now = Date.now();
+        if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+            sessionStorage.setItem('chunk_reload_time', String(now));
+            console.warn('Chunk load failure detected, reloading to recover.');
+            window.location.reload();
+        }
         return;
     }
     // Suppress benign unhandled errors from external trackers/adblockers (e.g. GTM reportAllChanges reading startTime)
@@ -36,8 +41,13 @@ window.addEventListener('unhandledrejection', (ev: any) => {
     const reason = ev?.reason;
     const msg = typeof reason === 'string' ? reason : reason?.message;
     if (msg && /Loading chunk \d+ failed/.test(msg)) {
-        console.warn('Chunk import rejection detected, reloading to recover.');
-        window.location.reload();
+        const lastReload = sessionStorage.getItem('chunk_reload_time');
+        const now = Date.now();
+        if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+            sessionStorage.setItem('chunk_reload_time', String(now));
+            console.warn('Chunk import rejection detected, reloading to recover.');
+            window.location.reload();
+        }
         return;
     }
     // Suppress browser extension messaging port closure rejections
