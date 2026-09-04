@@ -782,7 +782,7 @@ class APIBase {
             }
 
             // Ensure required 1s volatility indices (15, 30, 90) are always present
-            const required_1s_symbols_list = [10, 15, 25, 30, 50, 75, 90, 100, 150, 200, 250];
+            const required_1s_symbols_list = [10, 15, 25, 30, 50, 75, 90, 100];
             const required_1s_symbols = required_1s_symbols_list.map(v => ({
                 symbol: `1HZ${v}V`,
                 underlying_symbol: `1HZ${v}V`,

@@ -431,7 +431,7 @@ export const config = () => ({
         },
     },
     default_file_name: localize('Untitled Bot'),
-    DISABLED_SYMBOLS: ['frxGBPNOK', 'frxUSDNOK', 'frxUSDNEK', 'frxUSDSEK'],
+    DISABLED_SYMBOLS: ['frxGBPNOK', 'frxUSDNOK', 'frxUSDNEK', 'frxUSDSEK', '1HZ150V', '1HZ200V', '1HZ250V', '1HZ300V'],
     DISABLED_SUBMARKETS: ['energy'],
     QUICK_STRATEGY: {
         DISABLED: {

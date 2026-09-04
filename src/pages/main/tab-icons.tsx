@@ -20,52 +20,10 @@ export const TabIcon: React.FC<TTabIconProps> = ({ iconKey, label }) => {
                         strokeLinecap='round'
                         strokeLinejoin='round'
                     >
-                        <rect x='3' y='3' width='8' height='9' rx='2' />
-                        <rect x='13' y='3' width='8' height='5' rx='2' />
-                        <rect x='13' y='10' width='8' height='11' rx='2' />
-                        <rect x='3' y='14' width='8' height='7' rx='2' />
-                    </svg>
-                );
-            case 'bot_builder':
-                return (
-                    <svg
-                        width='18'
-                        height='18'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='1.8'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                    >
-                        <path d='M12 2v4' />
-                        <path d='M6.8 7.5L4 5.3' />
-                        <path d='M17.2 7.5L20 5.3' />
-                        <rect x='4' y='9' width='16' height='12' rx='3' />
-                        <circle cx='9' cy='14' r='1.5' />
-                        <circle cx='15' cy='14' r='1.5' />
-                        <path d='M9 18h6' />
-                    </svg>
-                );
-            case 'chart':
-                return (
-                    <svg
-                        width='18'
-                        height='18'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='1.8'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                    >
-                        <path d='M3 20h18' />
-                        <path d='M7 16V10' />
-                        <path d='M7 10l3.5-4L14 9l4-5' />
-                        <circle cx='7' cy='16' r='1' fill='currentColor' />
-                        <circle cx='10.5' cy='6' r='1' fill='currentColor' />
-                        <circle cx='14' cy='9' r='1' fill='currentColor' />
-                        <circle cx='18' cy='4' r='1' fill='currentColor' />
+                        <rect x='3' y='3' width='7' height='7' rx='1' />
+                        <rect x='14' y='3' width='7' height='7' rx='1' />
+                        <rect x='14' y='14' width='7' height='7' rx='1' />
+                        <rect x='3' y='14' width='7' height='7' rx='1' />
                     </svg>
                 );
             case 'trading_bots':
