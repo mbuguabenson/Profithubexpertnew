@@ -59,8 +59,25 @@ const Tab = ({
         'dc-tabs__item--is-scrollable-and-active': is_scrollable && is_active,
     });
     const title_color = is_active ? active_icon_color : icon_color;
+    const onKeyDown = (event: React.KeyboardEvent<HTMLLIElement>) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onClick(event as unknown as React.MouseEvent<HTMLLIElement>);
+        }
+    };
+
     return (
-        <li id={id} className={classes} style={{ color: title_color }} onClick={onClick} ref={active_tab_ref}>
+        <li
+            id={id}
+            className={classes}
+            style={{ color: title_color }}
+            aria-selected={is_active}
+            role='tab'
+            tabIndex={is_active ? 0 : -1}
+            onClick={onClick}
+            onKeyDown={onKeyDown}
+            ref={active_tab_ref}
+        >
             {icon && <Icon icon={icon} size={icon_size} custom_color={title_color} className='dc-tabs__item__icon' />}
             {header_content || label}
             {!!count && <Counter className='dc-tabs__item__counter' count={count} />}

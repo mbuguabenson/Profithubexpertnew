@@ -33,19 +33,34 @@ export class DerivAnalyticsService {
             const activeLoginId = localStorage.getItem('active_loginid') || 'unlogged';
             const accountType = activeLoginId.match(/[a-zA-Z]+/g)?.join('') || 'unlogged';
             const isMobile = window.innerWidth <= 768;
+            const rudderstackKey = process.env.RUDDERSTACK_KEY;
+            const posthogKey = process.env.POSTHOG_KEY;
 
             const config: any = {
-                growthbookOptions: {
-                    disableCache: process.env.NODE_ENV !== 'production',
-                    attributes: {
-                        account_type: accountType,
-                        app_id: String(getAppId() || '121856'),
-                        device_type: isMobile ? 'mobile' : 'desktop',
-                        device_language: navigator?.language || 'en-US',
-                        domain: window.location.hostname,
-                        url: window.location.href,
-                    },
-                },
+                ...(rudderstackKey ? { rudderstackKey } : {}),
+                ...(posthogKey
+                    ? {
+                          posthogOptions: {
+                              apiKey: posthogKey,
+                              api_host: process.env.POSTHOG_HOST,
+                          },
+                      }
+                    : {}),
+                debug: process.env.NODE_ENV === 'development',
+            };
+
+            if (!rudderstackKey && !posthogKey) {
+                this.isInitialized = true;
+                return;
+            }
+
+            (config as any).attributes = {
+                account_type: accountType,
+                app_id: String(getAppId() || '121856'),
+                device_type: isMobile ? 'mobile' : 'desktop',
+                device_language: navigator?.language || 'en-US',
+                domain: window.location.hostname,
+                url: window.location.href,
             };
 
             if (Analytics && typeof (Analytics as any).initialise === 'function') {

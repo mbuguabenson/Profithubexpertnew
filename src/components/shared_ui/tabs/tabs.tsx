@@ -176,7 +176,9 @@ const Tabs = ({
                         'dc-tabs__list--full-width': is_full_width,
                         [`dc-tabs__list--${className}`]: className,
                         'dc-tabs__list--overflow-hidden': is_overflow_hidden,
+                        'dc-tabs__list--scrollable': is_scrollable,
                     })}
+                    role='tablist'
                     ref={tabs_wrapper_ref}
                 >
                     <ThemedScrollbars

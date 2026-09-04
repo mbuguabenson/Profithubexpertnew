@@ -6,6 +6,7 @@ import { api_base } from '@/external/bot-skeleton';
 import { useStore } from '@/hooks/useStore';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import { sanitizeAccountsList } from '@/utils/token-bridge';
+import { DerivAnalyticsService } from '@/services/deriv-analytics.service';
 import { getBrandLabel } from '@/components/shared/utils/brand/brand';
 import { BarChart3, Bot, Copy, Loader2, ShieldCheck } from 'lucide-react';
 import './app-root.scss';
@@ -266,6 +267,11 @@ const AppRoot = () => {
     const [is_api_initialized, setIsApiInitialized] = useState(false);
 
     useTokenRefresh();
+
+    useEffect(() => {
+        void DerivAnalyticsService.initialize();
+    }, []);
+
     const [showWelcome, setShowWelcome] = useState(true);
     const [progress, setProgress] = useState(0);
     const [statusIndex, setStatusIndex] = useState(0);

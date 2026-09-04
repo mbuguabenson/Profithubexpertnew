@@ -27,6 +27,17 @@
             display: block;
         }
 
+        &--scrollable {
+            justify-content: flex-start;
+            overflow-x: auto;
+            overscroll-behavior-inline: contain;
+            scrollbar-width: none;
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
         &--border-bottom {
             border-bottom: 2px solid var(--general-section-1);
         }
@@ -121,6 +132,11 @@
         &:not(.dc-tabs__active) {
             cursor: pointer;
             color: var(--text-general);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--brand-red-coral);
+            outline-offset: -2px;
         }
 
         &:not(&--header-fit-content) {
