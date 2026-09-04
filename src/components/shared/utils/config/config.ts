@@ -920,13 +920,6 @@ export const WS_SERVERS = {
     PRODUCTION: 'wss://ws.derivws.com/websockets/v3',
 } as const;
 
-// The new Deriv public WebSocket base URL
-const DERIV_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
-
-// Public app_id for unauthenticated market-data access (active_symbols, ticks).
-// 1089 is Deriv's registered public application — it never requires authorize.
-const PUBLIC_APP_ID = '1089';
-
 // Helper to check if we're on production domains
 export const isProduction = () => {
     if (process.env.APP_ENV === 'production') return true;
