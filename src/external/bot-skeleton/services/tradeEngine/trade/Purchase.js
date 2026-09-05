@@ -128,8 +128,9 @@ export default Engine =>
                             });
                             if (res && res.proposal_open_contract) {
                                 const poc = res.proposal_open_contract;
+                                const isFast = isFastModeActive();
                                 const isFinished = Boolean(
-                                    poc.is_sold || poc.is_expired || (poc.status && poc.status !== 'open')
+                                    poc.is_sold || (isFast && (poc.is_expired || (poc.status && poc.status !== 'open')))
                                 );
                                 if (isFinished) {
                                     this.handleContractSold(poc);
@@ -286,8 +287,9 @@ export default Engine =>
                                             contract_id: Number(cid),
                                         });
                                         const poc = res?.proposal_open_contract;
+                                        const isFast = isFastModeActive();
                                         const isFinished = Boolean(
-                                            poc?.is_sold || poc?.is_expired || (poc?.status && poc?.status !== 'open')
+                                            poc?.is_sold || (isFast && (poc?.is_expired || (poc?.status && poc?.status !== 'open')))
                                         );
                                         if (poc && isFinished) {
                                             if (this.bulk_group_map && this.bulk_group_map[poc.contract_id]) {

@@ -2,6 +2,7 @@ import { getRoundedNumber } from '@/components/shared';
 import DBotStore from '../../../scratch/dbot-store';
 import { api_base } from '../../api/api-base';
 import { contract as broadcastContract, contractStatus } from '../utils/broadcast';
+import { isFastModeActive } from '../utils/fastMode';
 import { openContractReceived, sell } from './state/actions';
 
 export default Engine =>
@@ -30,10 +31,10 @@ export default Engine =>
 
                     broadcastContract({ accountID: api_base.account_info?.loginid, ...contract });
 
+                    const isFast = isFastModeActive();
                     const isContractFinished = Boolean(
                         contract.is_sold ||
-                        contract.is_expired ||
-                        (contract.status && contract.status !== 'open')
+                        (isFast && (contract.is_expired || (contract.status && contract.status !== 'open')))
                     );
 
                     if (isContractFinished) {
@@ -158,8 +159,9 @@ export default Engine =>
 
         setContractFlags(contract) {
             const { is_expired, is_valid_to_sell, is_sold, entry_tick, status } = contract;
+            const isFast = isFastModeActive();
 
-            this.isSold = Boolean(is_sold || is_expired || (status && status !== 'open'));
+            this.isSold = Boolean(is_sold || (isFast && (is_expired || (status && status !== 'open'))));
             this.isSellAvailable = !this.isSold && Boolean(is_valid_to_sell);
             this.isExpired = Boolean(is_expired);
             this.hasEntryTick = Boolean(entry_tick);
