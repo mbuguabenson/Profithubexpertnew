@@ -122,6 +122,24 @@ const AppHeader = observer(() => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const is_account_regenerating = client?.is_account_regenerating || false;
 
+    const [isDTraderTab, setIsDTraderTab] = useState(() => {
+        return typeof window !== 'undefined' && window.location.hash?.toLowerCase()?.includes('dtrader');
+    });
+
+    useEffect(() => {
+        const checkDTrader = () => {
+            setIsDTraderTab(window.location.hash?.toLowerCase()?.includes('dtrader'));
+        };
+        window.addEventListener('hashchange', checkDTrader);
+        window.addEventListener('popstate', checkDTrader);
+        const interval = setInterval(checkDTrader, 500);
+        return () => {
+            window.removeEventListener('hashchange', checkDTrader);
+            window.removeEventListener('popstate', checkDTrader);
+            clearInterval(interval);
+        };
+    }, []);
+
     const handleMobileRefresh = useCallback(() => {
         setIsRefreshing(true);
         setTimeout(() => {
@@ -281,6 +299,9 @@ const AppHeader = observer(() => {
                 !isOAuthPending &&
                 ((!is_account_regenerating && !isAuthorizing && !activeLoginid) || authTimeout)
             ) {
+                if (isDTraderTab) {
+                    return null;
+                }
                 return (
                     <div className='auth-actions'>
                         <Button tertiary className='app-header__login-btn modern-login-btn' onClick={handleLogin}>

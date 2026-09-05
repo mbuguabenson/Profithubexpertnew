@@ -7,172 +7,13 @@
     position: relative;
     overflow: hidden;
 
-    &__toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 6px 14px;
-        background: rgba(13, 17, 26, 0.95);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(10px);
-        z-index: 20;
-        flex-shrink: 0;
-        gap: 12px;
-
-        @media (max-width: 768px) {
-            padding: 6px 10px;
-            gap: 8px;
-        }
-    }
-
-    &__left-group {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    &__brand-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: #f1f5f9;
-        background: rgba(255, 68, 79, 0.15);
-        border: 1px solid rgba(255, 68, 79, 0.35);
-        border-radius: 6px;
-        padding: 3px 8px;
-
-        .brand-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #ff444f;
-            box-shadow: 0 0 8px #ff444f;
-            animation: pulse-dot 2s infinite ease-in-out;
-        }
-    }
-
-    &__account-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        color: #e2e8f0;
-        background: rgba(30, 41, 59, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        padding: 3px 10px;
-
-        .account-type-tag {
-            font-size: 9px;
-            font-weight: 800;
-            padding: 1px 5px;
-            border-radius: 4px;
-            letter-spacing: 0.4px;
-            text-transform: uppercase;
-
-            &--demo {
-                background: rgba(234, 179, 8, 0.2);
-                color: #facc15;
-                border: 1px solid rgba(234, 179, 8, 0.3);
-            }
-
-            &--real {
-                background: rgba(16, 185, 129, 0.2);
-                color: #34d399;
-                border: 1px solid rgba(16, 185, 129, 0.3);
-            }
-
-            &--guest {
-                background: rgba(148, 163, 184, 0.2);
-                color: #cbd5e1;
-                border: 1px solid rgba(148, 163, 184, 0.3);
-            }
-        }
-    }
-
-    &__appid-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 11px;
-        font-weight: 600;
-        color: #38bdf8;
-        background: rgba(56, 189, 248, 0.1);
-        border: 1px solid rgba(56, 189, 248, 0.25);
-        border-radius: 6px;
-        padding: 3px 8px;
-        font-family: 'JetBrains Mono', 'Courier New', monospace;
-
-        .appid-label {
-            color: #94a3b8;
-            font-size: 10px;
-        }
-    }
-
-    &__right-group {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    &__btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: 1px solid transparent;
-
-        &--login {
-            background: #ff444f;
-            color: #ffffff;
-            border-color: #ff444f;
-
-            &:hover {
-                background: #e63946;
-                box-shadow: 0 0 12px rgba(255, 68, 79, 0.4);
-            }
-        }
-
-        &--refresh {
-            background: rgba(30, 41, 59, 0.6);
-            color: #cbd5e1;
-            border-color: rgba(255, 255, 255, 0.1);
-
-            &:hover {
-                background: rgba(51, 65, 85, 0.8);
-                color: #ffffff;
-            }
-        }
-
-        &--fullscreen {
-            background: rgba(30, 41, 59, 0.6);
-            color: #94a3b8;
-            border-color: rgba(255, 255, 255, 0.08);
-
-            &:hover {
-                background: rgba(51, 65, 85, 0.8);
-                color: #ffffff;
-            }
-        }
-    }
-
     &__frame-wrapper {
         flex: 1;
         width: 100%;
         height: 100%;
         position: relative;
         background: #090d16;
+        overflow: hidden;
     }
 
     &__iframe {
@@ -181,6 +22,19 @@
         border: none;
         background: #090d16;
         display: block;
+    }
+
+    // Masks the iframe's internal top-right auth buttons (Log in / Sign up) when unauthenticated
+    &__auth-mask {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 220px;
+        height: 52px;
+        background: #15171e;
+        z-index: 5;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
     }
 
     &__loader {
@@ -192,39 +46,15 @@
         justify-content: center;
         background: #090d16;
         color: #94a3b8;
-        gap: 14px;
+        gap: 12px;
         z-index: 10;
         transition: opacity 0.3s ease;
 
-        .loader-brand {
-            font-size: 15px;
-            font-weight: 700;
-            color: #f1f5f9;
-            letter-spacing: 0.5px;
-        }
-
         .loader-sub {
-            font-size: 12px;
-            color: #64748b;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
         }
-    }
-
-    &--fullscreen {
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 99999 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-    }
-}
-
-@keyframes pulse-dot {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.4;
-        transform: scale(0.85);
     }
 }
