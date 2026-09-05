@@ -206,8 +206,25 @@ export const updateErrorMessage = error => {
 };
 
 export const shouldThrowError = (error, errors_to_ignore = []) => {
-    if (!error.error) {
-        return false;
+    const error_code = error?.error?.code ?? error?.code ?? error?.name;
+
+    // Non-recoverable auth and critical validation errors must never trigger endless retry loops in the journal
+    const fatal_errors = [
+        'AuthorizationRequired',
+        'InvalidToken',
+        'DisabledToken',
+        'ExpiredToken',
+        'InvalidAppID',
+        'Unauthorized',
+        'InsufficientBalance',
+        'CustomContractValidationError',
+    ];
+    if (fatal_errors.includes(error_code)) {
+        return true;
+    }
+
+    if (!error?.error && !error_code) {
+        return true;
     }
 
     const default_errors_to_ignore = [
@@ -222,7 +239,7 @@ export const shouldThrowError = (error, errors_to_ignore = []) => {
     updateErrorMessage(error);
     const is_ignorable_error = errors_to_ignore
         .concat(default_errors_to_ignore)
-        .includes(error?.error?.code ?? error?.name);
+        .includes(error_code);
 
     return !is_ignorable_error;
 };

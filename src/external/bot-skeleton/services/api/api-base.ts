@@ -707,30 +707,44 @@ class APIBase {
     }
 
     async subscribe() {
-        const subscribeToStream = (streamName: string) => {
-            return doUntilDone(
-                () => {
-                    const subscription = this.api?.send({
-                        [streamName]: 1,
-                        subscribe: 1,
-                    });
+        if (!this.is_authorized || !this.api) {
+            return;
+        }
 
-                    if (subscription) {
-                        this.current_auth_subscriptions.push(subscription);
+        // Clean up previous auth stream subscriptions safely
+        if (this.current_auth_subscriptions && this.current_auth_subscriptions.length > 0) {
+            this.current_auth_subscriptions.forEach(sub => {
+                try {
+                    if (typeof (sub as any)?.unsubscribe === 'function') {
+                        (sub as any).unsubscribe();
                     }
-                    return subscription;
-                },
-                [],
-                this
-            ).catch(err => {
+                } catch {}
+            });
+            this.current_auth_subscriptions = [];
+        }
+
+        const subscribeToStream = async (streamName: string) => {
+            if (!this.is_authorized || !this.api) return;
+
+            try {
+                const subscription = await this.api.send({
+                    [streamName]: 1,
+                    subscribe: 1,
+                });
+
+                if (subscription) {
+                    this.current_auth_subscriptions.push(subscription as any);
+                }
+                return subscription;
+            } catch (err: any) {
                 const code = err?.error?.code || err?.code;
                 if (code !== 'AlreadySubscribed') {
-                    console.warn(`[APIBase] Stream '${streamName}' subscription returned error:`, err?.error || err);
+                    console.warn(`[APIBase] Stream '${streamName}' subscription notice:`, err?.error || err);
                 }
-            });
+            }
         };
 
-        const streamsToSubscribe = ['balance', 'transaction', 'proposal_open_contract'];
+        const streamsToSubscribe = ['balance', 'transaction'];
 
         await Promise.all(streamsToSubscribe.map(subscribeToStream));
     }
@@ -936,6 +950,17 @@ class APIBase {
     clearSubscriptions() {
         this.subscriptions.forEach(s => s.unsubscribe());
         this.subscriptions = [];
+
+        if (this.current_auth_subscriptions && this.current_auth_subscriptions.length > 0) {
+            this.current_auth_subscriptions.forEach(s => {
+                try {
+                    if (typeof (s as any)?.unsubscribe === 'function') {
+                        (s as any).unsubscribe();
+                    }
+                } catch {}
+            });
+            this.current_auth_subscriptions = [];
+        }
 
         // Resetting timeout resolvers
         const global_timeouts = globalObserver.getState('global_timeouts') ?? [];
