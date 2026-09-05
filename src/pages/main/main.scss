@@ -107,7 +107,7 @@ main {
 
         &--drawer-open {
             @include desktop-screen {
-                padding-inline-end: 38rem;
+                padding-inline-end: 39.8rem;
                 transition: padding 0.3s ease;
             }
         }
@@ -765,7 +765,7 @@ main {
     }
 
     &--drawer-open {
-        width: calc(100% - 3.2rem - 35rem) !important;
+        width: calc(100% - 3.2rem - 36.6rem - 1.6rem) !important;
     }
 
     &--inactive {

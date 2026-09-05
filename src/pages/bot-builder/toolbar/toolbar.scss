@@ -136,7 +136,8 @@
     }
 
     &__animation {
-        width: 35rem;
+        width: 100%;
+        max-width: 36.6rem;
     }
 
     &__dialog {
