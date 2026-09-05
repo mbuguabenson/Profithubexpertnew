@@ -42,8 +42,6 @@ export default Engine =>
                 is_fast_override === 1;
             if (blockFastOn) {
                 setFastExecutionOverride(true);
-            } else if (is_fast_override === false || is_fast_override === 'false' || is_fast_override === 'FALSE') {
-                setFastExecutionOverride(false);
             }
 
             const isFastMode = blockFastOn || isFastModeActive();

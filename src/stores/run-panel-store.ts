@@ -15,6 +15,7 @@ import { Buy, ProposalOpenContract } from '@deriv/api-types';
 import { localize } from '@deriv-com/translations';
 import RootStore from './root-store';
 import { proposalsReady as proposalsReadyAction } from '@/external/bot-skeleton/services/tradeEngine/trade/state/actions';
+import { setFastExecutionOverride } from '@/external/bot-skeleton/services/tradeEngine/utils/fastMode';
 
 type TStores = any;
 type TDbot = any;
@@ -149,6 +150,7 @@ export default class RunPanelStore {
             localStorage.setItem('dbot_every_tick_mode', String(this.is_every_tick_mode));
             localStorage.setItem('bot_execution_speed', this.is_every_tick_mode ? '2' : '1');
         }
+        setFastExecutionOverride(this.is_every_tick_mode);
         if (typeof window !== 'undefined') {
             window.dispatchEvent(
                 new CustomEvent('dbot_speed_mode_changed', { detail: { isFast: this.is_every_tick_mode } })

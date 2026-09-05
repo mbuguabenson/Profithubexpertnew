@@ -98,8 +98,6 @@ window.Blockly.JavaScript.javascriptGenerator.forBlock.purchase = block => {
     const fastField = block.getFieldValue('FAST_EXECUTION');
     const isFast = fastField === 'TRUE' || fastField === true || fastField === 'true';
 
-    return `
-        if (typeof window !== 'undefined') { window.__dbot_fast_execution = ${isFast}; }
-        Bot.purchase('${purchaseList}', ${isFast});
-    `;
+    return `Bot.purchase('${purchaseList}', ${isFast});
+`;
 };
