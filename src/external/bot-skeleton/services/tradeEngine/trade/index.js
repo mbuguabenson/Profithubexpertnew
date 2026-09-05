@@ -45,6 +45,7 @@ const watchBefore = store => {
         stopScope: constants.DURING_PURCHASE,
         passScope: constants.BEFORE_PURCHASE,
         passFlag: 'proposalsReady',
+        allowImmediate: true,
     });
 };
 
@@ -54,6 +55,7 @@ const watchDuring = store =>
         stopScope: constants.STOP,
         passScope: constants.DURING_PURCHASE,
         passFlag: 'openContract',
+        allowImmediate: false,
     });
 
 /* The watchScope function is called randomly and resets the prevTick
@@ -64,10 +66,14 @@ export const resetPrevTick = () => {
     prevTick = undefined;
 };
 
-const watchScope = ({ store, stopScope, passScope, passFlag }) => {
+const watchScope = ({ store, stopScope, passScope, passFlag, allowImmediate = false }) => {
     const currentState = store.getState();
     if (currentState.scope === stopScope) {
         return Promise.resolve(false);
+    }
+
+    if (allowImmediate && currentState.scope === passScope && currentState[passFlag]) {
+        return Promise.resolve(true);
     }
 
     return new Promise(resolve => {
@@ -80,6 +86,14 @@ const watchScope = ({ store, stopScope, passScope, passFlag }) => {
                 isResolved = true;
                 unsubscribe();
                 resolve(false);
+                return;
+            }
+
+            // If scope and passFlag are already satisfied, resolve immediately without tick delay
+            if (allowImmediate && newState.scope === passScope && newState[passFlag]) {
+                isResolved = true;
+                unsubscribe();
+                resolve(true);
                 return;
             }
 

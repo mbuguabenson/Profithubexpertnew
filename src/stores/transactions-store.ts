@@ -60,6 +60,8 @@ export default class TransactionsStore {
     elements: TElement;
     active_transaction_id: null | number = null;
     recovered_completed_transactions: number[] = [];
+    private _recovered_set = new Set<number>();
+    private _recovered_completed_set = new Set<number>();
     // Persistent counter that survives array truncation
     total_completed_runs = 0;
     total_profit_accumulator = 0;
@@ -134,21 +136,45 @@ export default class TransactionsStore {
         const incoming_buy_id = data.transaction_ids?.buy;
 
         const account_elements = this.elements[current_account] || [];
-        const same_contract_index = account_elements.findIndex(c => {
-            if (typeof c.data === 'string' || c.type !== transaction_elements.CONTRACT) return false;
-            const cData = c.data as TContractInfo;
-            const existing_contract_id =
-                (cData as any).contract_id || (cData as any).id || (cData as any).transaction_id;
-            const existing_buy_id = cData.transaction_ids?.buy;
 
-            if (incoming_contract_id && existing_contract_id) {
-                return String(incoming_contract_id) === String(existing_contract_id);
+        // Fast-path: 99% of contract updates are for the most recent contract (index 0 or 1 if divider was added)
+        let same_contract_index = -1;
+        const checkCount = Math.min(account_elements.length, 6);
+        for (let i = 0; i < checkCount; i++) {
+            const c = account_elements[i];
+            if (c.type === transaction_elements.CONTRACT && typeof c.data === 'object' && c.data !== null) {
+                const cData = c.data as TContractInfo;
+                const existing_contract_id =
+                    (cData as any).contract_id || (cData as any).id || (cData as any).transaction_id;
+                const existing_buy_id = cData.transaction_ids?.buy;
+
+                if (
+                    (incoming_contract_id && existing_contract_id && String(incoming_contract_id) === String(existing_contract_id)) ||
+                    (incoming_buy_id && existing_buy_id && String(incoming_buy_id) === String(existing_buy_id))
+                ) {
+                    same_contract_index = i;
+                    break;
+                }
             }
-            if (incoming_buy_id && existing_buy_id) {
-                return String(incoming_buy_id) === String(existing_buy_id);
-            }
-            return false;
-        });
+        }
+
+        if (same_contract_index === -1 && account_elements.length > 6) {
+            same_contract_index = account_elements.findIndex(c => {
+                if (typeof c.data === 'string' || c.type !== transaction_elements.CONTRACT) return false;
+                const cData = c.data as TContractInfo;
+                const existing_contract_id =
+                    (cData as any).contract_id || (cData as any).id || (cData as any).transaction_id;
+                const existing_buy_id = cData.transaction_ids?.buy;
+
+                if (incoming_contract_id && existing_contract_id) {
+                    return String(incoming_contract_id) === String(existing_contract_id);
+                }
+                if (incoming_buy_id && existing_buy_id) {
+                    return String(incoming_buy_id) === String(existing_buy_id);
+                }
+                return false;
+            });
+        }
 
         if (same_contract_index === -1) {
             // Render a divider if the "run_id" for this contract is different.
@@ -189,9 +215,9 @@ export default class TransactionsStore {
                 }
             }
 
-            // Limit history to 5000 items for UI performance
-            if (account_elements.length > 5000) {
-                account_elements.length = 5000;
+            // Keep in-memory drawer elements bounded to 500 items for high-performance rendering
+            if (account_elements.length > 500) {
+                account_elements.length = 500;
             }
         } else {
             // Update existing contract data in-place
@@ -236,6 +262,8 @@ export default class TransactionsStore {
         }
         this.recovered_completed_transactions = this.recovered_completed_transactions?.slice(0, 0);
         this.recovered_transactions = this.recovered_transactions?.slice(0, 0);
+        this._recovered_set.clear();
+        this._recovered_completed_set.clear();
         this.is_transaction_details_modal_open = false;
         this.total_completed_runs = 0;
         this.total_profit_accumulator = 0;
@@ -265,11 +293,15 @@ export default class TransactionsStore {
         );
 
         // User could've left the page mid-contract. On initial load, try
-        // to recover any pending contracts so we can reflect accurate stats
-        // and transactions.
+        // to recover any pending contracts so we can reflect accurate stats.
+        // Guarded so it does NOT execute on every single trade while the bot is running.
         const disposeRecoverContracts = reaction(
             () => this.transactions.length,
-            () => this.recoverPendingContracts()
+            () => {
+                if (!this.root_store.run_panel?.is_running) {
+                    this.recoverPendingContracts();
+                }
+            }
         );
 
         return () => {
@@ -285,6 +317,7 @@ export default class TransactionsStore {
                 typeof trx === 'string' ||
                 trx?.is_completed ||
                 !trx?.contract_id ||
+                this._recovered_set.has(trx.contract_id) ||
                 this.recovered_transactions.includes(trx?.contract_id)
             )
                 return;
@@ -300,14 +333,16 @@ export default class TransactionsStore {
         if (contract.contract_id !== contract_info?.contract_id) {
             this.onBotContractEvent(contract);
 
-            if (contract.contract_id && !this.recovered_transactions.includes(contract.contract_id)) {
+            if (contract.contract_id && !this._recovered_set.has(contract.contract_id)) {
+                this._recovered_set.add(contract.contract_id);
                 this.recovered_transactions.push(contract.contract_id);
             }
             if (
                 contract.contract_id &&
-                !this.recovered_completed_transactions.includes(contract.contract_id) &&
+                !this._recovered_completed_set.has(contract.contract_id) &&
                 isEnded(contract)
             ) {
+                this._recovered_completed_set.add(contract.contract_id);
                 this.recovered_completed_transactions.push(contract.contract_id);
 
                 journal.onLogSuccess({

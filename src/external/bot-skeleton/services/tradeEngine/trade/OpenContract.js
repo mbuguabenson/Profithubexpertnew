@@ -16,6 +16,14 @@ export default Engine =>
                         return;
                     }
 
+                    // Deriv delivers subscription.id at the root message level, not inside proposal_open_contract
+                    if (data.subscription?.id && contract.contract_id) {
+                        if (!this.contract_subscription_ids) {
+                            this.contract_subscription_ids = new Map();
+                        }
+                        this.contract_subscription_ids.set(String(contract.contract_id), data.subscription.id);
+                    }
+
                     if (this.bulk_group_map && this.bulk_group_map[contract.contract_id]) {
                         contract.bulk_group_id = this.bulk_group_map[contract.contract_id];
                     }
@@ -49,14 +57,20 @@ export default Engine =>
             // Post win/loss result in Journal & update statistics for this contract
             this.updateTotals(contract);
 
+            // Clean up Deriv contract stream immediately so WebSocket does not accumulate subscriptions
+            try {
+                const subId = this.contract_subscription_ids?.get(cId) || contract?.subscription?.id;
+                if (subId) {
+                    api_base.api?.send({ forget: subId }).catch(() => {});
+                    this.contract_subscription_ids?.delete(cId);
+                }
+            } catch (e) {}
+
             const isBulk = Boolean(this.bulk_contract_ids && this.bulk_contract_ids.size > 1);
             const allBulkDone = !isBulk || this.bulk_sold_contract_ids.size >= this.bulk_contract_ids.size;
 
             if (allBulkDone) {
-                // ─── Bug 1 fix: Cancel any pending watchdog timers immediately ──────
-                // Watchdog timers only need to fire if the contract never settled via
-                // the normal subscription stream. Now that it HAS settled, clear them
-                // so they don't fire stale API calls and slow the engine over time.
+                // Cancel any pending watchdog timers immediately
                 if (typeof this._clearWatchdog === 'function') {
                     this._clearWatchdog();
                 }
@@ -81,10 +95,10 @@ export default Engine =>
                     this.afterPromise = null;
                 }
 
-                // Clean up Deriv contract stream so WebSocket does not accumulate hundreds of subscriptions
+                // If no more open contracts, ensure all contract streams on WebSocket are forgotten
                 try {
-                    if (contract?.subscription?.id) {
-                        api_base.api?.send({ forget: contract.subscription.id }).catch(() => {});
+                    if (!this.contract_subscription_ids || this.contract_subscription_ids.size === 0) {
+                        api_base.api?.send({ forget_all: 'proposal_open_contract' }).catch(() => {});
                     }
                 } catch (e) {}
 

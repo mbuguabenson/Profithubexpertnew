@@ -4,6 +4,7 @@ import getIndicatorsInterface from './IndicatorsInterface';
 import getMiscInterface from './MiscInterface';
 
 const _blockCache = new Map();
+let _lastHighlightTime = 0;
 
 const getToolsInterface = tradeEngine => {
     return {
@@ -60,6 +61,11 @@ const getToolsInterface = tradeEngine => {
                 return;
             }
             if (!window.Blockly?.derivWorkspace) return;
+            const now = Date.now();
+            if (_lastHighlightTime && now - _lastHighlightTime < 80) {
+                return;
+            }
+            _lastHighlightTime = now;
             let block = _blockCache.get(block_id);
             if (!block || !block.svgGroup_ || !block.workspace) {
                 block = window.Blockly.derivWorkspace.getBlockById(block_id);
