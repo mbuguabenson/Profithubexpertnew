@@ -10,6 +10,7 @@ import Tabs from '@/components/shared_ui/tabs/tabs';
 import TradingViewModal from '@/components/trading-view-chart/trading-view-modal';
 import ProfihubModal from '@/components/profihub-analysis/profihub-modal';
 import { DBOT_TABS, TAB_IDS } from '@/constants/bot-contents';
+import { contract_stages } from '@/constants/contract-stage';
 import { updateWorkspaceName } from '@/external/bot-skeleton';
 import { CONNECTION_STATUS } from '@/external/bot-skeleton/services/api/observables/connection-status-stream';
 import { isDbotRTL } from '@/external/bot-skeleton/utils/workspace';
@@ -260,9 +261,18 @@ const AppWrapper = observer(() => {
         const isConnectedNow = connectionStatus === CONNECTION_STATUS.OPENED;
 
         if (wasDisconnected && isConnectedNow) {
+            // Check if there was an actual trade in progress at the time of disconnection
+            const hasRealActiveTrade =
+                run_panel.is_running &&
+                (run_panel.contract_stage === contract_stages.PURCHASE_SENT ||
+                    run_panel.contract_stage === contract_stages.PURCHASE_RECEIVED);
+
             // Only show bot stopped dialog if bot was running a real open contract and NOT switching accounts
-            if (run_panel.is_running && run_panel.has_open_contract && !isAccountSwitching.current) {
+            if (hasRealActiveTrade && !isAccountSwitching.current) {
                 setWebSocketState(false);
+                if (typeof run_panel.stopBot === 'function') {
+                    run_panel.stopBot();
+                }
             } else {
                 setWebSocketState(true);
             }
@@ -272,7 +282,7 @@ const AppWrapper = observer(() => {
         }
 
         prevConnectionStatus.current = connectionStatus;
-    }, [connectionStatus, setWebSocketState, run_panel.is_running, run_panel.has_open_contract]);
+    }, [connectionStatus, setWebSocketState, run_panel.is_running, run_panel.contract_stage]);
 
     React.useEffect(() => {
         if (active_tab === BOT_BUILDER) {

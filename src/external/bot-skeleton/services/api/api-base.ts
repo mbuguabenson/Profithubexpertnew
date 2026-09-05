@@ -9,7 +9,7 @@ import { resolveValidDerivWSToken } from '@/utils/token-bridge';
 import { handleBackendError, isBackendError } from '@/utils/error-handler';
 import { activeSymbolsProcessorService } from '../../../../services/active-symbols-processor.service';
 import { observer as globalObserver } from '../../utils/observer';
-import { doUntilDone, socket_state } from '../tradeEngine/utils/helpers';
+import { socket_state } from '../tradeEngine/utils/helpers';
 import {
     CONNECTION_STATUS,
     setAccountList,
@@ -118,6 +118,7 @@ class APIBase {
     ENRICHMENT_TIMEOUT_MS = 10000;
     private rate_limit_backoff_delay = 3000; // starts at 3s, doubles on rate limits up to 30s
     private rate_limit_retry_timer: ReturnType<typeof setTimeout> | null = null;
+    private reconnect_timeout: ReturnType<typeof setTimeout> | null = null;
     private readonly MAX_RECONNECTION_ATTEMPTS = 15;
     private init_promise: Promise<void> | null = null;
     // Bump this version whenever the shape/content of cached_active_symbols changes
@@ -182,6 +183,12 @@ class APIBase {
 
         // Reset reconnection attempts on successful connection
         this.reconnection_attempts = 0;
+        if (this.reconnect_timeout) {
+            clearTimeout(this.reconnect_timeout);
+            this.reconnect_timeout = null;
+        }
+
+        this.startHeartbeat();
 
         const currentClientStore = globalObserver.getState('client.store');
         if (currentClientStore) {
@@ -253,6 +260,7 @@ class APIBase {
     }
 
     onsocketclose() {
+        this.stopHeartbeat();
         setConnectionStatus(CONNECTION_STATUS.CLOSED);
 
         if (!this.is_authorized) {
@@ -377,17 +385,83 @@ class APIBase {
         return 'Socket not initialized';
     }
 
+    startHeartbeat() {
+        this.stopHeartbeat();
+        this.time_interval = setInterval(async () => {
+            if (this.api?.connection?.readyState === 1) {
+                const start = performance.now();
+                try {
+                    const res = await (this.api as any).send({ ping: 1 });
+                    if (res?.ping === 'pong') {
+                        const latency = Math.round(performance.now() - start);
+                        if (this.common_store) {
+                            this.common_store.latency = latency;
+                        }
+                        try {
+                            const { systemCenterStore } = require('@/stores/system-center-store');
+                            systemCenterStore?.updateWsLatency?.(latency);
+                        } catch {}
+                    }
+                } catch (e) {
+                    console.warn('[APIBase] Heartbeat ping notice:', e);
+                }
+            }
+        }, 15000);
+    }
+
+    stopHeartbeat() {
+        if (this.time_interval) {
+            clearInterval(this.time_interval);
+            this.time_interval = null;
+        }
+    }
+
     terminate() {
-        // eslint-disable-next-line no-console
+        this.stopHeartbeat();
         if (this.api) this.api.disconnect();
     }
 
     initEventListeners() {
-        if (window) {
-            window.addEventListener('online', this.reconnectIfNotConnected);
-            window.addEventListener('focus', this.reconnectIfNotConnected);
+        if (typeof window !== 'undefined') {
+            window.addEventListener('online', () => {
+                console.log('[APIBase] Network online event detected, reviving WebSocket immediately');
+                this.reconnectIfNotConnected(true);
+            });
+            window.addEventListener('focus', () => {
+                this.checkAndReviveConnection();
+            });
+            if (typeof document !== 'undefined') {
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        this.checkAndReviveConnection();
+                    }
+                });
+            }
         }
     }
+
+    checkAndReviveConnection = async () => {
+        const readyState = this.api?.connection?.readyState;
+        // If connection is dead or closing, immediately reconnect
+        if (!this.api || readyState === undefined || readyState > 1) {
+            console.log('[APIBase] Page resumed and WebSocket is inactive. Forcing immediate reconnect.');
+            this.reconnectIfNotConnected(true);
+            return;
+        }
+        // If connection claims to be OPEN, verify responsiveness with a fast ping probe
+        if (readyState === 1) {
+            try {
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Ping probe timeout')), 3000)
+                );
+                const pingPromise = (this.api as any).send({ ping: 1 });
+                await Promise.race([pingPromise, timeoutPromise]);
+            } catch (err) {
+                console.warn('[APIBase] Probed socket failed after page resume, re-initializing:', err);
+                this.reconnectIfNotConnected(true);
+            }
+        }
+    };
 
     async createNewInstance(account_id: string) {
         if (this.account_id !== account_id) {
@@ -395,20 +469,32 @@ class APIBase {
         }
     }
 
-    reconnectIfNotConnected = () => {
-        if (this.api?.connection?.readyState && this.api?.connection?.readyState > 1) {
+    reconnectIfNotConnected = (immediate = false) => {
+        if (this.reconnect_timeout) {
+            clearTimeout(this.reconnect_timeout);
+            this.reconnect_timeout = null;
+        }
+
+        const readyState = this.api?.connection?.readyState;
+        if (!this.api || readyState === undefined || readyState > 1) {
             this.reconnection_attempts += 1;
 
             if (this.reconnection_attempts >= this.MAX_RECONNECTION_ATTEMPTS) {
-                // Reset reconnection counter but do NOT clear auth data.
-                // Network issues should never destroy the user's login session.
                 this.reconnection_attempts = 0;
                 console.warn('[APIBase] Max reconnection attempts reached, will continue retrying with backoff');
             }
 
-            // Add exponential backoff delay to avoid hammering the server
-            const delay = Math.min(1000 * Math.pow(1.5, Math.min(this.reconnection_attempts, 10)), 30000);
-            setTimeout(() => this.init(true), delay);
+            // On immediate trigger (visibility change/online) or 1st attempt, reconnect quickly (250ms)
+            // Progressive backoff capped at 15s instead of 30s
+            const delay =
+                immediate || this.reconnection_attempts <= 1
+                    ? 250
+                    : Math.min(1000 * Math.pow(1.4, Math.min(this.reconnection_attempts - 1, 8)), 15000);
+
+            this.reconnect_timeout = setTimeout(() => {
+                this.reconnect_timeout = null;
+                this.init(true).catch(() => {});
+            }, delay);
         }
     };
 

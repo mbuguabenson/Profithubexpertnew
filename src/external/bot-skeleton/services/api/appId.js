@@ -23,10 +23,50 @@ const normalizeWsUrl = url => {
     }
 };
 
+let pingInterval = null;
+let pongWatchdog = null;
+const PING_INTERVAL_MS = 15000;
+const PONG_TIMEOUT_MS = 10000;
+
+const stopKeepAlive = () => {
+    if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+    }
+    if (pongWatchdog) {
+        clearTimeout(pongWatchdog);
+        pongWatchdog = null;
+    }
+};
+
+const startKeepAlive = socket => {
+    stopKeepAlive();
+    pingInterval = setInterval(() => {
+        if (socket?.readyState === WebSocket.OPEN) {
+            try {
+                socket.send(JSON.stringify({ ping: 1 }));
+                if (!pongWatchdog) {
+                    pongWatchdog = setTimeout(() => {
+                        console.warn(
+                            '[DerivAPI] Keep-alive ping timeout (no response in 10s). Terminating zombie socket to trigger reconnect.'
+                        );
+                        try {
+                            socket.close();
+                        } catch {}
+                    }, PONG_TIMEOUT_MS);
+                }
+            } catch (e) {
+                console.error('[DerivAPI] Error sending keepalive ping:', e);
+            }
+        }
+    }, PING_INTERVAL_MS);
+};
+
 /**
  * Clears the singleton instance (useful for logout or forced reconnection)
  */
 export const clearDerivApiInstance = () => {
+    stopKeepAlive();
     if (derivApiInstance?.connection) {
         try {
             derivApiInstance.connection.onopen = null;
@@ -122,18 +162,28 @@ export const generateDerivApiInstance = async (forceNew = false) => {
                 };
             }
 
-            // Set up close handler to clear instance
+            // Reset keepalive pong watchdog on any incoming message (proof of active connection)
+            deriv_socket.addEventListener('message', () => {
+                if (pongWatchdog) {
+                    clearTimeout(pongWatchdog);
+                    pongWatchdog = null;
+                }
+            });
+
+            // Set up close handler to clear instance and stop keepalive
             deriv_socket.addEventListener('close', () => {
                 console.log('[DerivAPI] WebSocket connection closed');
+                stopKeepAlive();
                 if (derivApiInstance === deriv_api) {
                     derivApiInstance = null;
                     currentWebSocketURL = null;
                 }
             });
 
-            // Log when connection opens
+            // Log when connection opens and start keep-alive ping loop
             deriv_socket.addEventListener('open', () => {
                 console.log('[DerivAPI] WebSocket connection established');
+                startKeepAlive(deriv_socket);
                 try {
                     sessionStorage.removeItem('api_derivws_failures');
                 } catch {}
@@ -141,6 +191,7 @@ export const generateDerivApiInstance = async (forceNew = false) => {
 
             deriv_socket.addEventListener('error', error => {
                 console.error('[DerivAPI] WebSocket connection error:', error);
+                stopKeepAlive();
             });
 
             return deriv_api;
