@@ -234,10 +234,20 @@ const DynamicThemeStyle = () => {
         }
 
         /* Custom Login / Signup button overrides */
-        .app-header__login-btn {
+        body.theme--dark .app-header__login-btn {
             background-color: var(--ph-login-bg) !important;
             color: var(--ph-login-text) !important;
             border: 1px solid var(--ph-login-text) !important;
+        }
+        body.theme--light .app-header__login-btn,
+        .theme--light .app-header__login-btn {
+            background-color: rgba(0, 0, 0, 0.04) !important;
+            color: var(--text-prominent, #181c25) !important;
+            border: 1px solid rgba(255, 68, 79, 0.5) !important;
+        }
+        body.theme--light .app-header__login-btn .dc-btn__text,
+        .theme--light .app-header__login-btn .dc-btn__text {
+            color: var(--text-prominent, #181c25) !important;
         }
         .app-header__signup-btn {
             background-color: var(--ph-signup-bg) !important;

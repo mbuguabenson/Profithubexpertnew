@@ -269,6 +269,7 @@
     display: flex;
     padding-block: 8px;
     align-items: center;
+    margin-inline-end: 1.6rem;
 
     button {
         font-weight: 400;
@@ -584,6 +585,31 @@
     }
 }
 
+// Light theme / white mode override for Login Button
+body.theme--light,
+.theme--light {
+    .app-header__login-btn,
+    .modern-login-btn {
+        background: rgba(0, 0, 0, 0.04) !important;
+        border: 1px solid rgba(255, 68, 79, 0.5) !important;
+        color: #181c25 !important;
+
+        .dc-btn__text {
+            color: #181c25 !important;
+        }
+
+        &:hover {
+            background: rgba(255, 68, 79, 0.12) !important;
+            border-color: #ff444f !important;
+            color: #ff444f !important;
+
+            .dc-btn__text {
+                color: #ff444f !important;
+            }
+        }
+    }
+}
+
 /* 3. Signup Button (Premium Gradient) */
 .app-header__signup-btn {
     background: linear-gradient(135deg, #ff444f 0%, #ea3943 100%) !important;
@@ -613,12 +639,13 @@
     border-radius: 20px !important;
     min-width: unset !important;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%) !important;
+    background: linear-gradient(135deg, #ff444f 0%, #ea3943 100%) !important;
     border: none !important;
     color: #fff !important;
     padding: 6px 16px !important;
     font-weight: 600 !important;
     font-size: 12px !important;
+    box-shadow: 0 2px 8px rgba(255, 68, 79, 0.35) !important;
 
     .dc-btn__text {
         color: #fff !important;
@@ -630,8 +657,8 @@
 
     &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
-        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%) !important;
+        box-shadow: 0 4px 14px rgba(255, 68, 79, 0.5) !important;
+        background: linear-gradient(135deg, #eb3e48 0%, #d42e38 100%) !important;
     }
 
     @media (max-width: 926px) {
