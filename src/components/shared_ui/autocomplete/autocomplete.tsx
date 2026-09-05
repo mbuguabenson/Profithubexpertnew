@@ -7,9 +7,9 @@ import { getEnglishCharacters, matchStringByChar } from '@/components/shared/uti
 import { useBlockScroll } from '@/hooks/useBlockscroll';
 import { LabelPairedChevronDownLgRegularIcon } from '@deriv/quill-icons/LabelPaired';
 import DropdownList, { TItem } from '../dropdown-list';
-import Input from '../input';
+import Input, { TInputProps } from '../input';
 
-type TAutocompleteProps = {
+type TAutocompleteProps = Omit<TInputProps, 'value' | 'onBlur'> & {
     autoComplete?: string;
     className?: string;
     disabled?: boolean;
@@ -38,8 +38,7 @@ type TAutocompleteProps = {
     data_testid?: string;
     'data-testid'?: string;
     readOnly?: boolean;
-    inputMode?: string;
-    [key: string]: any;
+    inputMode?: React.HTMLAttributes<HTMLInputElement | HTMLTextAreaElement>['inputMode'];
 };
 
 const KEY_CODE = {
@@ -89,6 +88,7 @@ const Autocomplete = React.memo((props: TAutocompleteProps) => {
         input_id,
         is_alignment_top,
         is_list_visible = false,
+        list_height = '220px',
         list_items,
         list_portal_id,
         not_found_text = NO_SEARCH_RESULT,
@@ -391,7 +391,7 @@ const Autocomplete = React.memo((props: TAutocompleteProps) => {
                 }}
                 is_visible={should_show_list || is_list_visible}
                 list_items={filtered_items}
-                list_height={other_props.list_height}
+                list_height={list_height}
                 // Autocomplete must use the `text` property and not the `value`, however DropdownList provides access to both
                 onItemSelection={onSelectItem}
                 setActiveIndex={setActiveIndex}
