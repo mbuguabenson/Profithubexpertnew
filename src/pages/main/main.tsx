@@ -752,7 +752,7 @@ const AppWrapper = observer(() => {
                                 position: 'fixed',
                                 top: '5rem',
                                 right: '1.6rem',
-                                width: '35rem',
+                                width: '36.6rem',
                                 height: '5rem',
                                 zIndex: 1100,
                                 display: 'flex',
@@ -761,6 +761,7 @@ const AppWrapper = observer(() => {
                                 background: 'var(--general-main-2)',
                                 borderBottom: '1px solid var(--general-section-1)',
                                 padding: '0 1.6rem',
+                                boxSizing: 'border-box',
                             }}
                         >
                             <TopBarTradeController currentTabKey={currentTabKey} />
