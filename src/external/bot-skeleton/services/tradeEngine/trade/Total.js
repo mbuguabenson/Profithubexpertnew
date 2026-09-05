@@ -38,9 +38,30 @@ export default Engine =>
         updateTotals(contract) {
             try {
                 if (!contract) return;
-                const { sell_price: sellPrice = 0, buy_price: buyPrice = 0, currency = 'USD' } = contract;
+                const buyPrice = Number(contract.buy_price || 0);
+                const currency = contract.currency || 'USD';
 
-                const profit = getRoundedNumber(Number(sellPrice) - Number(buyPrice), currency);
+                let sellPrice = contract.sell_price;
+                let profit;
+
+                if (contract.profit !== undefined && contract.profit !== null) {
+                    profit = Number(contract.profit);
+                    if (sellPrice === undefined || sellPrice === null) {
+                        sellPrice = buyPrice + profit;
+                    }
+                } else if (sellPrice !== undefined && sellPrice !== null) {
+                    profit = Number(sellPrice) - buyPrice;
+                } else if (contract.status === 'won') {
+                    sellPrice = Number(contract.payout || buyPrice * 1.95);
+                    profit = sellPrice - buyPrice;
+                } else {
+                    sellPrice = 0;
+                    profit = -buyPrice;
+                }
+
+                profit = getRoundedNumber(profit, currency);
+                sellPrice = getRoundedNumber(sellPrice, currency);
+
                 const win = profit > 0;
                 const accountStat = this.getAccountStat();
                 const accountID = this.accountInfo?.loginid || api_base?.account_info?.loginid || 'CR_DEFAULT';

@@ -17,16 +17,17 @@
     - Direct checkbox on the block: `Purchase [ CONTRACT_TYPE ▼ ] ⚡ Fast: [ ☑ ]`.
     - Generates `Bot.purchase('TYPE', isFast)` to control zero-latency execution per block.
 - **Run Panel Card**: Keep clean in original dimensions and layout.
-- **Trade Engine Speed**:
+- **Trade Engine Speed & 2-Tick Span**:
     - Plain Indices: Trade once every 2.0s tick without skipping.
     - 1s Indices (`1HZ...`): Trade once every 1.0s tick without skipping.
     - Direct buy parameters used in Fast mode to eliminate proposal wait times (0ms round-trip latency).
     - Immediate Buy Dispatch (Zero-Skip Breakthrough): In Fast Mode, as soon as a trade concludes and `Trade Again` triggers, `watchBefore` instantly resolves and dispatches the next buy order over WebSocket before the next tick occurs. Deriv receives the buy order ahead of time and locks in the **exact next incoming tick as the entry spot**, eliminating the 1-2 tick gap between consecutive trades.
     - Epoch Gating Removed: Eliminated `lastPurchasedTickEpoch` timestamp comparison in `Purchase.js` that was blocking immediate back-to-back purchases.
+    - **2-Tick Contract Span (Instant Exit Settlement)**: Reduced contract cycle span from 3 ticks down to 2 ticks. The engine settles and marks trades complete immediately at Tick 2 upon `is_expired: 1` or `status !== 'open'` instead of waiting for Deriv's delayed secondary `is_sold: 1` accounting packet at Tick 3.
 
 ### 2. Trade Settlement & Result Posting
 
-- Contracts settle via normal `proposal_open_contract` with `is_sold: 1`.
+- Contracts settle instantly upon conclusion (`is_expired: 1`, `is_sold: 1`, or `status !== 'open'`).
 - `handleContractSold` updates Journal, totals, and triggers `sell()`.
 - Stream Cleanup (`forget`): Every completed contract immediately sends a `forget` command to Deriv to prevent accumulating hundreds of open WebSocket streams that throttle and pause the bot after 60+ trades.
 - JS Interpreter Microtask Scheduling: `interpreter.js` loop schedules iterations asynchronously to allow full garbage collection and prevent call stack exhaustion on long bot sessions.

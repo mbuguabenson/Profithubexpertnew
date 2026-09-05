@@ -128,7 +128,10 @@ export default Engine =>
                             });
                             if (res && res.proposal_open_contract) {
                                 const poc = res.proposal_open_contract;
-                                if (poc.is_sold) {
+                                const isFinished = Boolean(
+                                    poc.is_sold || poc.is_expired || (poc.status && poc.status !== 'open')
+                                );
+                                if (isFinished) {
                                     this.handleContractSold(poc);
                                 }
                             }
@@ -282,8 +285,11 @@ export default Engine =>
                                             proposal_open_contract: 1,
                                             contract_id: Number(cid),
                                         });
-                                        if (res?.proposal_open_contract?.is_sold) {
-                                            const poc = res.proposal_open_contract;
+                                        const poc = res?.proposal_open_contract;
+                                        const isFinished = Boolean(
+                                            poc?.is_sold || poc?.is_expired || (poc?.status && poc?.status !== 'open')
+                                        );
+                                        if (poc && isFinished) {
                                             if (this.bulk_group_map && this.bulk_group_map[poc.contract_id]) {
                                                 poc.bulk_group_id = this.bulk_group_map[poc.contract_id];
                                             }

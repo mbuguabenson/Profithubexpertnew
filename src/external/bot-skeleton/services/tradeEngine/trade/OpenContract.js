@@ -30,7 +30,13 @@ export default Engine =>
 
                     broadcastContract({ accountID: api_base.account_info?.loginid, ...contract });
 
-                    if (contract.is_sold) {
+                    const isContractFinished = Boolean(
+                        contract.is_sold ||
+                        contract.is_expired ||
+                        (contract.status && contract.status !== 'open')
+                    );
+
+                    if (isContractFinished) {
                         this.handleContractSold(contract);
                     } else {
                         this.setContractFlags(contract);
@@ -54,8 +60,26 @@ export default Engine =>
             }
             this.bulk_sold_contract_ids.add(cId);
 
+            // Enrich contract if sell_price is not yet populated on immediate is_expired exit
+            const enrichedContract = { ...contract };
+            const buyPrice = Number(enrichedContract.buy_price || 0);
+            if (enrichedContract.sell_price === undefined || enrichedContract.sell_price === null) {
+                if (enrichedContract.profit !== undefined && enrichedContract.profit !== null) {
+                    enrichedContract.sell_price = buyPrice + Number(enrichedContract.profit);
+                } else if (enrichedContract.status === 'won') {
+                    enrichedContract.sell_price = Number(enrichedContract.payout || buyPrice * 1.95);
+                } else if (enrichedContract.status === 'lost') {
+                    enrichedContract.sell_price = 0;
+                }
+            }
+            if (enrichedContract.profit === undefined || enrichedContract.profit === null) {
+                if (enrichedContract.sell_price !== undefined) {
+                    enrichedContract.profit = Number(enrichedContract.sell_price) - buyPrice;
+                }
+            }
+
             // Post win/loss result in Journal & update statistics for this contract
-            this.updateTotals(contract);
+            this.updateTotals(enrichedContract);
 
             // Clean up Deriv contract stream immediately so WebSocket does not accumulate subscriptions
             try {
@@ -133,9 +157,9 @@ export default Engine =>
         }
 
         setContractFlags(contract) {
-            const { is_expired, is_valid_to_sell, is_sold, entry_tick } = contract;
+            const { is_expired, is_valid_to_sell, is_sold, entry_tick, status } = contract;
 
-            this.isSold = Boolean(is_sold);
+            this.isSold = Boolean(is_sold || is_expired || (status && status !== 'open'));
             this.isSellAvailable = !this.isSold && Boolean(is_valid_to_sell);
             this.isExpired = Boolean(is_expired);
             this.hasEntryTick = Boolean(entry_tick);
