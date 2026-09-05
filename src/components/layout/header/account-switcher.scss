@@ -118,7 +118,7 @@
         }
     }
 
-    // ── Currency / Avatar circle icon ─────────────────────────
+    // ── Currency / Avatar circle icon (Standard Deriv Coin) ──
     &__currency-icon {
         flex-shrink: 0;
         width: 30px;
@@ -128,34 +128,26 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        transition:
-            box-shadow 0.25s ease,
-            transform 0.2s ease;
+        background: transparent;
+        transition: transform 0.2s ease;
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
 
         &--demo {
-            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            color: #ffffff;
+            background: transparent;
+            border: none;
+            box-shadow: none;
         }
 
         &--real {
             background: transparent;
-            box-shadow:
-                0 0 0 1.5px rgba(245, 197, 66, 0.7),
-                0 2px 8px rgba(0, 0, 0, 0.4);
             border: none;
-            overflow: hidden;
+            box-shadow: none;
         }
-    }
-
-    &__real-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: scale(1.18);
-        border-radius: 50%;
-        display: block;
     }
 
     // ── Balance display ───────────────────────────────────────
@@ -262,7 +254,7 @@
 }
 
 // ════════════════════════════════════════════════════════════════
-//  ACC-ICON — Reusable Account Avatar Icon
+//  ACC-ICON — Deriv Standard Currency Avatar Icon
 // ════════════════════════════════════════════════════════════════
 .acc-icon {
     width: 28px;
@@ -273,49 +265,20 @@
     justify-content: center;
     flex-shrink: 0;
     overflow: hidden;
+    background: transparent;
+
+    svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
 
     &--demo {
-        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        background: transparent;
     }
 
     &--real {
         background: transparent;
-        box-shadow:
-            0 0 0 1.5px rgba(245, 197, 66, 0.6),
-            0 2px 6px rgba(0, 0, 0, 0.35);
-        overflow: hidden;
-    }
-
-    &__text-demo {
-        display: flex;
-        align-items: baseline;
-        justify-content: center;
-        gap: 0.5px;
-    }
-
-    &__d {
-        font-size: 12px;
-        font-weight: 900;
-        color: #ffffff;
-        line-height: 1;
-    }
-
-    &__dollar {
-        font-size: 9px;
-        font-weight: 800;
-        color: #f5c542;
-        line-height: 1;
-    }
-
-    &__img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: scale(1.18);
-        display: block;
-        border-radius: 50%;
     }
 }
 
@@ -350,13 +313,14 @@
         max-width: 320px;
     }
 
-    // ── Tabs ───────────────────────────────────────────────────
+    // ── Tabs (Standard Deriv Quill UI Tabs) ────────────────────
     &__tabs {
         display: flex;
-        background: rgba(255, 255, 255, 0.04);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-        body:not(.theme--dark) & {
+        body:not(.theme--dark) &,
+        body.theme--light & {
             background: #f8fafc;
             border-color: #e2e8f0;
         }
@@ -368,9 +332,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 12px 8px;
-        font-size: 13px;
-        font-weight: 700;
+        padding: 12px 16px;
+        font-family: var(--ph-font, 'IBM Plex Sans', sans-serif);
+        font-size: 14px;
+        font-weight: 600;
         color: #94a3b8;
         border: none;
         background: transparent;
@@ -378,9 +343,10 @@
         transition:
             color 0.15s ease,
             background-color 0.15s ease;
-        line-height: 1;
+        line-height: 1.4;
 
-        body:not(.theme--dark) & {
+        body:not(.theme--dark) &,
+        body.theme--light & {
             color: #64748b;
         }
 
@@ -388,19 +354,21 @@
             color: #ffffff;
             background: rgba(255, 255, 255, 0.04);
 
-            body:not(.theme--dark) & {
+            body:not(.theme--dark) &,
+            body.theme--light & {
                 color: #0f172a;
                 background: #f1f5f9;
             }
         }
 
+        &--active,
         &--active-real,
-        &--active-demo,
-        &--active-wallets {
+        &--active-demo {
             color: #ffffff !important;
-            font-weight: 800;
+            font-weight: 700;
 
-            body:not(.theme--dark) & {
+            body:not(.theme--dark) &,
+            body.theme--light & {
                 color: #0f172a !important;
             }
         }
@@ -411,18 +379,20 @@
         bottom: 0;
         left: 0;
         right: 0;
-        height: 2.5px;
+        height: 2px;
+        background: var(--brand-coral, #ff444f);
+        border-radius: 1px 1px 0 0;
 
         &--real {
-            background: #10b981;
+            background: var(--brand-coral, #ff444f);
         }
 
         &--demo {
-            background: #3b82f6;
+            background: var(--brand-coral, #ff444f);
         }
 
         &--wallets {
-            background: #ff444f;
+            background: var(--brand-coral, #ff444f);
         }
     }
 

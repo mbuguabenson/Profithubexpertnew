@@ -6,7 +6,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 :root,
-.theme--light,
 body.theme--dark,
 .theme--dark {
     --dash-bg: #0e1117;
@@ -47,6 +46,26 @@ body.theme--dark,
     --glass-card-bg: #181c25;
     --glass-card-border: #262c3b;
     --glass-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+body.theme--light,
+.theme--light {
+    --dash-bg: #f8fafc;
+    --dash-card-bg: #ffffff;
+    --dash-card-border: #e2e8f0;
+    --dash-shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.05);
+    --dash-shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --dash-text-main: #0f172a;
+    --dash-text-sub: #64748b;
+
+    --gold-banner-bg: #ffffff;
+    --gold-banner-border: #e2e8f0;
+    --wa-card-bg: #ffffff;
+    --wa-card-border: #e2e8f0;
+
+    --glass-card-bg: #ffffff;
+    --glass-card-border: #e2e8f0;
+    --glass-card-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .bot-dashboard {
@@ -122,6 +141,23 @@ body.theme--dark,
             -webkit-text-fill-color: transparent;
         }
     }
+
+    body.theme--light &,
+    .theme--light & {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+
+        .notice-text {
+            color: #334155;
+
+            strong {
+                color: #0f172a;
+                -webkit-text-fill-color: initial;
+                background: none;
+            }
+        }
+    }
 }
 
 .tab__dashboard__table {
@@ -151,6 +187,18 @@ body.theme--dark,
         transition:
             transform 0.2s ease,
             border-color 0.2s ease;
+
+        body.theme--light &,
+        .theme--light & {
+            background: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            color: #475569;
+
+            strong {
+                color: #0f172a;
+            }
+        }
 
         &:hover {
             transform: translateY(-2px);
@@ -233,6 +281,19 @@ body.theme--dark,
             border-color: #9333ea;
             background: #111a30;
             box-shadow: 0 6px 20px rgba(147, 51, 234, 0.25);
+        }
+
+        body.theme--light &,
+        .theme--light & {
+            background: #ffffff;
+            border-color: #e2e8f0;
+            color: #0f172a;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+
+            &:hover {
+                background: #f8fafc;
+                border-color: #cbd5e1;
+            }
         }
     }
 }
@@ -506,6 +567,43 @@ body.theme--dark,
                     color 0.2s ease;
             }
         }
+
+        body.theme--light &,
+        .theme--light & {
+            background: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+
+            &:hover {
+                background: #f8fafc;
+                border-color: #cbd5e1;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
+
+                .glass-explore-arrow {
+                    color: #0f172a;
+                }
+            }
+
+            .glass-title {
+                color: #0f172a;
+            }
+
+            .glass-subtitle {
+                color: #64748b;
+            }
+
+            .glass-card-footer {
+                border-top-color: #f1f5f9;
+
+                .glass-explore-text {
+                    color: #64748b;
+                }
+
+                .glass-explore-arrow {
+                    color: #64748b;
+                }
+            }
+        }
     }
 }
 
@@ -558,6 +656,32 @@ body.theme--dark,
             color: var(--dash-text-sub);
             margin: 0;
             line-height: 1.4;
+        }
+
+        body.theme--light &,
+        .theme--light & {
+            .wa-title {
+                color: #0f172a;
+            }
+            .whatsapp-desc {
+                color: #64748b;
+            }
+        }
+    }
+
+    body.theme--light &,
+    .theme--light & {
+        background: #ffffff;
+        border-color: #e2e8f0;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+
+        .whatsapp-info .whatsapp-icon-circle {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+
+            .wa-icon {
+                color: #059669;
+            }
         }
     }
 

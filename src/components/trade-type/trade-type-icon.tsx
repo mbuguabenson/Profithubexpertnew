@@ -95,6 +95,57 @@ const TRADE_TYPE_ICONS = {
     LOWER: lazy(() =>
         import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesHighsAndLowsLowerIcon }))
     ),
+    TURBOSLONG: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesTurboLongIcon }))
+    ),
+    TURBOSSHORT: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesTurboShortIcon }))
+    ),
+    VANILLALONGCALL: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesVanillaCallIcon }))
+    ),
+    VANILLALONGPUT: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesVanillaPutIcon }))
+    ),
+    ACCUMULATOR: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesAccumulatorStayInIcon }))
+    ),
+    BREAK_OUT: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesAccumulatorBreakOutIcon }))
+    ),
+    STAY_IN: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesAccumulatorStayInIcon }))
+    ),
+    RISE: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesUpsAndDownsRiseIcon }))
+    ),
+    FALL: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesUpsAndDownsFallIcon }))
+    ),
+    MATCHES: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesDigitsMatchesIcon }))
+    ),
+    DIFFERS: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesDigitsDiffersIcon }))
+    ),
+    EVEN: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesDigitsEvenIcon }))
+    ),
+    ODD: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesDigitsOddIcon }))
+    ),
+    OVER: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesDigitsOverIcon }))
+    ),
+    UNDER: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesDigitsUnderIcon }))
+    ),
+    HIGH_LOW: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesHighsAndLowsHighIcon }))
+    ),
+    TOUCH: lazy(() =>
+        import('@deriv/quill-icons/TradeTypes').then(module => ({ default: module.TradeTypesHighsAndLowsTouchIcon }))
+    ),
     unknown: lazy(() =>
         import('@deriv/quill-icons/Illustrative').then(module => ({ default: module.IllustrativeMarketsIcon }))
     ),

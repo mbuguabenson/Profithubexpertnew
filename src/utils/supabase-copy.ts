@@ -326,10 +326,11 @@ export const getDefaultTabConfig = (): TabConfigItem[] => [
     { key: 'poverty_hunter', label: 'Poverty Hunter 🎯', enabled: true, order: 16 },
     { key: 'auto_x_eo', label: 'AUTO X E/O ⚡', enabled: true, order: 17 },
     { key: 'overlord_ai', label: 'OVERLORD AI 👑', enabled: true, order: 18 },
+    { key: 'dtrader', label: 'DTrader 📈', enabled: true, order: 19 },
 ];
 
 // Bump this when new tabs are added or removed to force clients to pick up new defaults
-const TAB_CONFIG_VERSION = 20;
+const TAB_CONFIG_VERSION = 21;
 
 export const getSiteConfig = (): SiteConfig => {
     try {

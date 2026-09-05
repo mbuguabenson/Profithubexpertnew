@@ -34,6 +34,7 @@ const TAB_ICONS: Record<string, TQuillIcon> = {
     poverty_hunter: LabelPairedBarsFilterSmRegularIcon,
     auto_x_eo: LabelPairedBarsFilterSmRegularIcon,
     overlord_ai: LabelPairedBarsFilterSmRegularIcon,
+    dtrader: LabelPairedChartLineSmRegularIcon,
     copy_trading: LabelPairedCircleUserSmRegularIcon,
     account_center: LabelPairedCircleUserSmRegularIcon,
     pro_journal: LabelPairedBookCircleQuestionSmRegularIcon,

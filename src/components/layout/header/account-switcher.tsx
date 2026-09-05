@@ -10,8 +10,7 @@ import { Localize, localize } from '@deriv-com/translations';
 import { DerivAccountWalletService } from '@/services/deriv-account-wallet.service';
 import { AccountSwitcherService } from '@/services/account-switcher.service';
 import { getAccountsList } from '@/utils/token-bridge';
-import { AccountsDerivAccountLightIcon } from '@deriv/quill-icons';
-import { CurrencyDemoIcon } from '@deriv/quill-icons/Currencies';
+import { CurrencyIcon } from '@/components/currency/currency-icon';
 import { TAccountSwitcher } from './common/types';
 import AccountInfoWrapper from './account-info-wrapper';
 import './account-switcher.scss';
@@ -31,17 +30,15 @@ const getCurrencyLabel = (currency: string): string => {
     return labels[currency] || currency;
 };
 
-// ─── Demo account icon (Sleek Grey with D$) ────────────────────────────────────
-const DemoIcon = () => (
-    <div className='acc-icon acc-icon--demo'>
-        <CurrencyDemoIcon iconSize='sm' aria-label='Demo account' />
-    </div>
-);
-
-// ─── Real account icon (Enlarged Flag Avatar) ──────────────────────────────────
-const RealIcon = () => (
-    <div className='acc-icon acc-icon--real'>
-        <AccountsDerivAccountLightIcon iconSize='sm' aria-label='Real account' />
+// ─── Deriv Standard Account Avatar Icon ──────────────────────────────────────
+const AccountAvatar = ({ currency, isVirtual }: { currency?: string; isVirtual?: boolean }) => (
+    <div
+        className={classNames('acc-icon', {
+            'acc-icon--demo': isVirtual,
+            'acc-icon--real': !isVirtual,
+        })}
+    >
+        <CurrencyIcon currency={currency} isVirtual={isVirtual} />
     </div>
 );
 
@@ -195,7 +192,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                     };
                 });
             }
-        } catch {}
+        } catch {
+            // Ignore parse errors from stale localStorage cache
+        }
 
         // 4. Merge from client_account_details
         try {
@@ -217,7 +216,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                     });
                 }
             }
-        } catch {}
+        } catch {
+            // Ignore parse errors from stale localStorage cache
+        }
 
         // 5. Merge from tokens list
         const tokensList = getAccountsList();
@@ -519,14 +520,14 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                         }
                     }}
                 >
-                    {/* Currency / Avatar circle icon */}
+                    {/* Currency / Avatar circle icon (Standard Deriv Currency Icon) */}
                     <div
                         className={classNames('acc-chip__currency-icon', {
                             'acc-chip__currency-icon--demo': isVirtual,
                             'acc-chip__currency-icon--real': !isVirtual,
                         })}
                     >
-                        {isVirtual ? <CurrencyDemoIcon iconSize='sm' aria-label='Demo account' /> : <AccountsDerivAccountLightIcon iconSize='sm' aria-label='Real account' />}
+                        <CurrencyIcon currency={currency} isVirtual={isVirtual} />
                         <span className='acc-chip__online-dot'></span>
                     </div>
 
@@ -635,11 +636,14 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
             {/* ── Dropdown Panel (Real / Demo only) ────────────────────────── */}
             {isOpen && (
                 <div className='acc-panel' role='dialog' aria-label={localize('Account switcher')}>
-                    {/* Real / Demo tab toggle */}
-                    <div className='acc-panel__tabs'>
+                    {/* Real / Demo tab toggle (Standard Deriv Quill UI Tabs) */}
+                    <div className='acc-panel__tabs' role='tablist' aria-label={localize('Account types')}>
                         <button
                             type='button'
+                            role='tab'
+                            aria-selected={activeTab === 'real'}
                             className={classNames('acc-panel__tab', {
+                                'acc-panel__tab--active': activeTab === 'real',
                                 'acc-panel__tab--active-real': activeTab === 'real',
                                 'acc-panel__tab--inactive': activeTab !== 'real',
                             })}
@@ -649,14 +653,19 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             }}
                             id='acc-tab-real'
                         >
-                            <Localize i18n_default_text='Real' />
+                            <span className='acc-panel__tab-text'>
+                                <Localize i18n_default_text='Real' />
+                            </span>
                             {activeTab === 'real' && (
                                 <span className='acc-panel__tab-underline acc-panel__tab-underline--real' />
                             )}
                         </button>
                         <button
                             type='button'
+                            role='tab'
+                            aria-selected={activeTab === 'demo'}
                             className={classNames('acc-panel__tab', {
+                                'acc-panel__tab--active': activeTab === 'demo',
                                 'acc-panel__tab--active-demo': activeTab === 'demo',
                                 'acc-panel__tab--inactive': activeTab !== 'demo',
                             })}
@@ -666,7 +675,9 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             }}
                             id='acc-tab-demo'
                         >
-                            <Localize i18n_default_text='Demo' />
+                            <span className='acc-panel__tab-text'>
+                                <Localize i18n_default_text='Demo' />
+                            </span>
                             {activeTab === 'demo' && (
                                 <span className='acc-panel__tab-underline acc-panel__tab-underline--demo' />
                             )}
@@ -763,7 +774,10 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         }}
                                     >
                                         <div className='acc-panel__account-icon'>
-                                            {account.isVirtual ? <DemoIcon /> : <RealIcon />}
+                                            <AccountAvatar
+                                                currency={account.rawCurrency || account.currency}
+                                                isVirtual={account.isVirtual}
+                                            />
                                         </div>
                                         <div className='acc-panel__account-info'>
                                             <span className='acc-panel__account-name'>
