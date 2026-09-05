@@ -129,7 +129,8 @@ export const getLastDigit = tick => {
 };
 
 export const getLastDigitForList = (tick, pip_size = 0) => {
-    const value = Number(tick).toFixed(pip_size);
+    const safe_pip_size = Math.max(0, Math.min(Number(pip_size) || 0, 20));
+    const value = Number(tick).toFixed(safe_pip_size);
     return value[value.length - 1];
 };
 

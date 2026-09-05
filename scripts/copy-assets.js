@@ -17,6 +17,14 @@ function copySmartCharts(destBase) {
     // Copy entire smartcharts dist directory to js/smartcharts (including chart/, assets/, and all chunk files)
     fs.cpSync(smartchartsDist, smartchartsTarget, { recursive: true });
 
+    // The Flutter adapter resolves its async chunks from the bundle root in
+    // RSBuild builds, so expose the generated SmartCharts chunks there too.
+    for (const file of fs.readdirSync(smartchartsDist)) {
+        if (file.endsWith('.smartcharts.js') || file.endsWith('.smartcharts.js.map')) {
+            fs.copyFileSync(path.join(smartchartsDist, file), path.join(destBase, file));
+        }
+    }
+
     // Also ensure top-level assets directory has smartcharts assets
     const assetsSrc = path.join(smartchartsDist, 'assets');
     const assetsTarget = path.join(destBase, 'assets');

@@ -25,9 +25,12 @@ export function createTransport(): TTransport {
          * Send one-shot API request
          */
         async send(request: any): Promise<any> {
-            if (!chart_api.api) {
+            if (typeof chart_api.waitForConnection === 'function') {
+                await chart_api.waitForConnection(10000);
+            } else if (!chart_api.api) {
                 await chart_api.init();
             }
+            if (!chart_api.api) throw new Error('Chart API not initialized');
             return chart_api.api.send(request);
         },
 
@@ -38,88 +41,135 @@ export function createTransport(): TTransport {
          * @returns subscription ID
          */
         subscribe(request: any, callback: (response: any) => void): string {
-            if (!chart_api.api) {
-                throw new Error('Chart API not initialized');
-            }
             // Generate a unique temporary ID for tracking
             const tempId = `temp-${Date.now()}-${Math.random()}`;
 
             // Send initial subscription request
             const subscribeRequest = { ...request, subscribe: 1 };
 
-            // Set up global message listener first (before sending request)
-            const messageSubscription = chart_api.api.onMessage()?.subscribe(({ data }: { data: any }) => {
-                const subscriptionId = data?.subscription?.id;
-
-                // Check if this message belongs to our subscription
-                const storedSub = subscriptions.get(tempId);
-                if (storedSub && subscriptionId) {
-                    // Update the subscription with the real ID
-                    if (!storedSub.realSubscriptionId) {
-                        storedSub.realSubscriptionId = subscriptionId;
-                        subscriptions.set(tempId, storedSub);
-                    }
-
-                    // Forward the message if it matches our subscription
-                    if (subscriptionId === storedSub.realSubscriptionId) {
-                        callback(data);
-                    }
-                }
-            });
-
             // Store subscription info with temp ID
             subscriptions.set(tempId, {
                 request: subscribeRequest,
                 callback,
-                messageSubscription,
-                realSubscriptionId: null, // Will be set when we get the first response
+                messageSubscription: null,
+                realSubscriptionId: null,
             });
 
-            // Send the subscription request
-            chart_api.api
-                .send(subscribeRequest)
-                .then((response: any) => {
-                    if (response?.error) {
-                        logger.warn('Subscription returned API error:', response.error?.message || response.error);
+            const sendSubscription = async () => {
+                try {
+                    if (typeof chart_api.waitForConnection === 'function') {
+                        await chart_api.waitForConnection(10000);
+                    } else if (!chart_api.api) {
+                        await chart_api.init();
+                    }
+                    if (!chart_api.api) return;
+
+                    // Set up global message listener first
+                    const messageSubscription = chart_api.api.onMessage()?.subscribe(({ data }: { data: any }) => {
+                        const subscriptionId = data?.subscription?.id;
+                        const symbolToMatch = subscribeRequest.ticks_history || subscribeRequest.symbol;
+
+                        // Check if this message belongs to our subscription
                         const storedSub = subscriptions.get(tempId);
-                        if (storedSub?.messageSubscription) {
-                            storedSub.messageSubscription.unsubscribe();
+                        if (storedSub) {
+                            const matchesSubId = Boolean(
+                                subscriptionId &&
+                                storedSub.realSubscriptionId &&
+                                subscriptionId === storedSub.realSubscriptionId
+                            );
+                            const matchesSymbol = Boolean(
+                                (data?.tick && (data.tick.symbol === symbolToMatch || data.tick.underlying === symbolToMatch)) ||
+                                (data?.ohlc && (data.ohlc.symbol === symbolToMatch || data.ohlc.underlying === symbolToMatch))
+                            );
+
+                            if (matchesSubId || matchesSymbol) {
+                                if (subscriptionId && !storedSub.realSubscriptionId) {
+                                    storedSub.realSubscriptionId = subscriptionId;
+                                    subscriptions.set(tempId, storedSub);
+                                }
+                                if (data?.tick || data?.ohlc) {
+                                    callback(data);
+                                }
+                            }
+                        }
+                    });
+
+                    const storedSub = subscriptions.get(tempId);
+                    if (storedSub) {
+                        storedSub.messageSubscription = messageSubscription;
+                    }
+
+                    const response = await chart_api.api.send(subscribeRequest);
+                    const isAlreadySubscribed =
+                        response?.error?.code === 'AlreadySubscribed' ||
+                        String(response?.error?.message || '').toLowerCase().includes('already subscribed');
+
+                    if (response?.error && !isAlreadySubscribed) {
+                        logger.warn('Subscription returned API error:', response.error?.message || response.error);
+                        const currentSub = subscriptions.get(tempId);
+                        if (currentSub?.messageSubscription) {
+                            currentSub.messageSubscription.unsubscribe();
                         }
                         subscriptions.delete(tempId);
+                        return;
+                    }
+
+                    if (isAlreadySubscribed) {
+                        const currentSub = subscriptions.get(tempId);
+                        if (currentSub) {
+                            currentSub.isReusedStream = true;
+                            subscriptions.set(tempId, currentSub);
+                        }
+                        logger.log('[SmartCharts Transport] Reusing active socket stream for:', subscribeRequest.ticks_history || subscribeRequest.symbol);
                         return;
                     }
 
                     const subscriptionId = response?.subscription?.id;
 
                     if (subscriptionId) {
-                        // Update stored subscription with real ID
-                        const storedSub = subscriptions.get(tempId);
-                        if (storedSub) {
-                            storedSub.realSubscriptionId = subscriptionId;
-                            subscriptions.set(tempId, storedSub);
+                        const currentSub = subscriptions.get(tempId);
+                        if (currentSub) {
+                            currentSub.realSubscriptionId = subscriptionId;
+                            subscriptions.set(tempId, currentSub);
                         }
-
-                        // Call callback with initial response
-                        callback(response);
-                    } else if (response?.history || response?.candles || response?.tick) {
+                        if (response?.tick || response?.ohlc) {
+                            callback(response);
+                        }
+                    } else if (response?.tick || response?.ohlc) {
                         callback(response);
                     } else {
                         logger.warn('No subscription ID in response:', response);
                     }
-                })
-                .catch((error: any) => {
+                } catch (error: any) {
+                    const errorMsg = String(error?.error?.message || error?.message || error || '');
+                    const isAlreadySubscribed =
+                        error?.error?.code === 'AlreadySubscribed' ||
+                        error?.code === 'AlreadySubscribed' ||
+                        errorMsg.toLowerCase().includes('already subscribed');
+
+                    if (isAlreadySubscribed) {
+                        const currentSub = subscriptions.get(tempId);
+                        if (currentSub) {
+                            currentSub.isReusedStream = true;
+                            subscriptions.set(tempId, currentSub);
+                        }
+                        logger.log('[SmartCharts Transport] Reusing active socket stream (caught) for:', subscribeRequest.ticks_history || subscribeRequest.symbol);
+                        return;
+                    }
+
                     logger.warn(
                         'Subscription request failed gracefully:',
-                        error?.error?.message || error?.message || error
+                        errorMsg
                     );
-                    // Clean up failed subscription
-                    const storedSub = subscriptions.get(tempId);
-                    if (storedSub?.messageSubscription) {
-                        storedSub.messageSubscription.unsubscribe();
+                    const currentSub = subscriptions.get(tempId);
+                    if (currentSub?.messageSubscription) {
+                        currentSub.messageSubscription.unsubscribe();
                     }
                     subscriptions.delete(tempId);
-                });
+                }
+            };
 
+            sendSubscription();
             return tempId;
         },
 
@@ -136,8 +186,8 @@ export function createTransport(): TTransport {
                     subscription.messageSubscription.unsubscribe();
                 }
 
-                // Send forget request to server using the real subscription ID
-                if (chart_api.api && subscription.realSubscriptionId) {
+                // Only send server forget request if we are not sharing an external reused stream
+                if (chart_api.api && subscription.realSubscriptionId && !subscription.isReusedStream) {
                     chart_api.api.forget(subscription.realSubscriptionId);
                 }
 

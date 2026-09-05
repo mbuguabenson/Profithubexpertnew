@@ -452,7 +452,20 @@ export class ActiveSymbolCategorizationService {
                 const displayName = symbol.display_name || symbolCode;
                 symbols[symbolCode] = {
                     display_name: displayName,
-                    pip_size: `${symbol.pip || symbol.pip_size || 0.01}`.length - 2,
+                    pip_size: (() => {
+                        const raw = symbol.pip_size ?? symbol.pip;
+                        if (raw === undefined || raw === null) return 2;
+                        const num = typeof raw === 'number' ? raw : parseFloat(String(raw));
+                        if (Number.isFinite(num) && num >= 0) {
+                            if (num >= 1 && Number.isInteger(num)) return Math.min(num, 20);
+                            if (num < 1 && num > 0) {
+                                const str = num.toString();
+                                const dec = str.split('.')[1];
+                                return dec ? dec.length : 2;
+                            }
+                        }
+                        return 2;
+                    })(),
                     is_active: !symbol.is_trading_suspended && !!symbol.exchange_is_open,
                 };
             }

@@ -70,7 +70,7 @@ const LastDigitPrediction = observer(
                             // Assuming deriv passes actual last digits if it's numbers.
                         }
                     } else if (typeof item === 'object' && item !== null && item.quote !== undefined) {
-                        const pip_size = item.pip_size || 0;
+                        const pip_size = Math.max(0, Math.min(Number(item.pip_size) || 0, 20));
                         const quoteStr = Number(item.quote).toFixed(pip_size);
                         const last_char = quoteStr.slice(-1);
                         digit = parseInt(last_char, 10);
@@ -96,7 +96,7 @@ const LastDigitPrediction = observer(
         // Extract current digit and spot from live tick or store fallback
         const latest_digit = useMemo(() => {
             if (tick) {
-                const pip_size = tick.pip_size || 0;
+                const pip_size = Math.max(0, Math.min(Number(tick.pip_size) || 0, 20));
                 const quote_price = typeof tick.quote === 'number' ? tick.quote.toFixed(pip_size) : '';
                 const last_char = quote_price.slice(-1);
                 const digit = last_char ? parseInt(last_char, 10) : null;

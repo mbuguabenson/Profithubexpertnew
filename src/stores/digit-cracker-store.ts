@@ -339,12 +339,16 @@ export default class DigitCrackerStore {
                     }
                 },
                 (err: any) => {
+                    const code = err?.error?.code || err?.code;
                     const isAlreadySub =
-                        err?.error?.code === 'AlreadySubscribed' ||
-                        err?.code === 'AlreadySubscribed' ||
+                        code === 'AlreadySubscribed' ||
                         String(err?.message || '').toLowerCase().includes('already subscribed') ||
                         String(err?.error?.message || '').toLowerCase().includes('already subscribed');
                     if (isAlreadySub) return;
+                    if (code === 'InvalidSymbol') {
+                        console.info(`[DigitCrackerStore] Symbol ${sym} unavailable for streaming.`);
+                        return;
+                    }
                     console.warn(`[DigitCrackerStore] Stream error for ${sym}:`, err);
                 }
             );
@@ -360,7 +364,14 @@ export default class DigitCrackerStore {
             });
 
             console.log(`[DigitCrackerStore] Subscribed to ${sym}`);
-        } catch (e) {
+        } catch (e: any) {
+            const errCode = e?.error?.code || e?.code;
+            if (errCode === 'InvalidSymbol') {
+                runInAction(() => {
+                    this.is_subscribing = false;
+                });
+                return;
+            }
             console.error('[DigitCrackerStore] Subscription failed:', e);
             runInAction(() => {
                 this.is_subscribing = false;

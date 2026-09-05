@@ -5,6 +5,14 @@
     background: var(--general-main-1) !important;
     border-bottom: 1px solid var(--border-normal);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-family: var(--ph-font, 'IBM Plex Sans', sans-serif);
+
+    button,
+    a,
+    input,
+    select {
+        font-family: inherit;
+    }
 
     &__account-settings {
         padding-inline-end: 1.2rem;
@@ -204,7 +212,7 @@
     }
 
     &__container--mobile {
-        min-height: auto;
+        min-height: 0;
         max-width: 600px;
     }
 
@@ -398,8 +406,8 @@
     }
 
     &__select {
-        appearance: none;
         -webkit-appearance: none;
+        appearance: none;
         background: transparent;
         border: none;
         outline: none;
@@ -716,9 +724,11 @@
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
+    -webkit-user-select: none;
     user-select: none;
 
     .speed-toggle__icon {

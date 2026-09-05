@@ -186,7 +186,7 @@ const DynamicThemeStyle = () => {
     const primary = cfg.primaryColor || '#f5c542';
     const secondary = cfg.secondaryColor || '#0e0e0e';
     const accent = cfg.accentColor || '#3b82f6';
-    const fontFamily = cfg.fontFamily || 'Inter';
+    const fontFamily = cfg.fontFamily || 'IBM Plex Sans';
 
     const tabColor = cfg.tabColor || 'rgba(255,255,255,0.6)';
     const activeTabColor = cfg.activeTabColor || '#ffffff';

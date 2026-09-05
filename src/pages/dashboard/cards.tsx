@@ -21,12 +21,12 @@ const GlassImportIcon = () => (
     <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
         <defs>
             <linearGradient id='gImpBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#c084fc' stop-opacity='0.8' />
-                <stop offset='100%' stop-color='#6366f1' stop-opacity='0.8' />
+                <stop offset='0%' stopColor='#c084fc' stopOpacity='0.8' />
+                <stop offset='100%' stopColor='#6366f1' stopOpacity='0.8' />
             </linearGradient>
             <linearGradient id='gImpSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#ffffff' stop-opacity='0.6' />
-                <stop offset='100%' stop-color='#ffffff' stop-opacity='0.05' />
+                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.6' />
+                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
             </linearGradient>
         </defs>
         <rect
@@ -36,23 +36,23 @@ const GlassImportIcon = () => (
             height='30'
             rx='8'
             fill='url(#gImpBg)'
-            fill-opacity='0.25'
+            fillOpacity='0.25'
             stroke='url(#gImpSheen)'
-            stroke-width='1.5'
+            strokeWidth='1.5'
         />
         <path
             d='M14 18 H22 L26 22 H34 C36.2 22 38 23.8 38 26 V36 C38 38.2 36.2 40 34 40 H14 C11.8 40 10 38.2 10 36 V22 C10 19.8 11.8 18 14 18 Z'
             fill='url(#gImpBg)'
-            fill-opacity='0.4'
+            fillOpacity='0.4'
             stroke='#c084fc'
-            stroke-width='1.5'
+            strokeWidth='1.5'
         />
         <path
             d='M24 34 V24 M20 28 L24 24 L28 28'
             stroke='#ffffff'
-            stroke-width='2.5'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeWidth='2.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <circle cx='34' cy='14' r='3' fill='#a855f7' />
     </svg>
@@ -62,12 +62,12 @@ const GlassSmartIcon = () => (
     <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
         <defs>
             <linearGradient id='gSmartBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#34d399' stop-opacity='0.85' />
-                <stop offset='100%' stop-color='#059669' stop-opacity='0.85' />
+                <stop offset='0%' stopColor='#34d399' stopOpacity='0.85' />
+                <stop offset='100%' stopColor='#059669' stopOpacity='0.85' />
             </linearGradient>
             <linearGradient id='gSmartSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#ffffff' stop-opacity='0.65' />
-                <stop offset='100%' stop-color='#ffffff' stop-opacity='0.05' />
+                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.65' />
+                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
             </linearGradient>
         </defs>
         <rect
@@ -77,9 +77,9 @@ const GlassSmartIcon = () => (
             height='32'
             rx='10'
             fill='url(#gSmartBg)'
-            fill-opacity='0.22'
+            fillOpacity='0.22'
             stroke='url(#gSmartSheen)'
-            stroke-width='1.5'
+            strokeWidth='1.5'
         />
         <rect
             x='14'
@@ -88,16 +88,16 @@ const GlassSmartIcon = () => (
             height='20'
             rx='5'
             fill='url(#gSmartBg)'
-            fill-opacity='0.35'
+            fillOpacity='0.35'
             stroke='#34d399'
-            stroke-width='1.5'
+            strokeWidth='1.5'
         />
         <path
             d='M25 18 L20 26 H27 L23 31'
             stroke='#ffffff'
-            stroke-width='2.5'
-            stroke-linecap='round'
-            stroke-linejoin='round'
+            strokeWidth='2.5'
+            strokeLinecap='round'
+            strokeLinejoin='round'
         />
         <circle cx='8' cy='24' r='2' fill='#10b981' />
         <circle cx='40' cy='24' r='2' fill='#10b981' />
@@ -110,12 +110,12 @@ const GlassFreeIcon = () => (
     <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
         <defs>
             <linearGradient id='gFreeBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#38bdf8' stop-opacity='0.85' />
-                <stop offset='100%' stop-color='#2563eb' stop-opacity='0.85' />
+                <stop offset='0%' stopColor='#38bdf8' stopOpacity='0.85' />
+                <stop offset='100%' stopColor='#2563eb' stopOpacity='0.85' />
             </linearGradient>
             <linearGradient id='gFreeSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#ffffff' stop-opacity='0.65' />
-                <stop offset='100%' stop-color='#ffffff' stop-opacity='0.05' />
+                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.65' />
+                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
             </linearGradient>
         </defs>
         <rect
@@ -125,20 +125,20 @@ const GlassFreeIcon = () => (
             height='32'
             rx='10'
             fill='url(#gFreeBg)'
-            fill-opacity='0.22'
+            fillOpacity='0.22'
             stroke='url(#gFreeSheen)'
-            stroke-width='1.5'
+            strokeWidth='1.5'
         />
         <path
             d='M24 14 V17 M16 20 H32 C34.2 20 36 21.8 36 24 V31 C36 33.2 34.2 35 32 35 H16 C13.8 35 12 33.2 12 31 V24 C12 21.8 13.8 20 16 20 Z'
             fill='url(#gFreeBg)'
-            fill-opacity='0.35'
+            fillOpacity='0.35'
             stroke='#38bdf8'
-            stroke-width='1.5'
+            strokeWidth='1.5'
         />
         <circle cx='19' cy='27' r='2.5' fill='#ffffff' />
         <circle cx='29' cy='27' r='2.5' fill='#ffffff' />
-        <path d='M20 31 H28' stroke='#38bdf8' stroke-width='1.8' stroke-linecap='round' />
+        <path d='M20 31 H28' stroke='#38bdf8' strokeWidth='1.8' strokeLinecap='round' />
     </svg>
 );
 
@@ -146,12 +146,12 @@ const GlassSignalsIcon = () => (
     <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
         <defs>
             <linearGradient id='gSigBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#fbbf24' stop-opacity='0.85' />
-                <stop offset='100%' stop-color='#ea580c' stop-opacity='0.85' />
+                <stop offset='0%' stopColor='#fbbf24' stopOpacity='0.85' />
+                <stop offset='100%' stopColor='#ea580c' stopOpacity='0.85' />
             </linearGradient>
             <linearGradient id='gSigSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stop-color='#ffffff' stop-opacity='0.65' />
-                <stop offset='100%' stop-color='#ffffff' stop-opacity='0.05' />
+                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.65' />
+                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
             </linearGradient>
         </defs>
         <rect
@@ -161,24 +161,24 @@ const GlassSignalsIcon = () => (
             height='32'
             rx='10'
             fill='url(#gSigBg)'
-            fill-opacity='0.22'
+            fillOpacity='0.22'
             stroke='url(#gSigSheen)'
-            stroke-width='1.5'
+            strokeWidth='1.5'
         />
         <path
             d='M15 33 C12 29 12 23 15 19 M33 19 C36 23 36 29 33 33'
             stroke='#fbbf24'
-            stroke-width='2'
-            stroke-linecap='round'
+            strokeWidth='2'
+            strokeLinecap='round'
         />
         <path
             d='M19 29 C17.5 27 17.5 24 19 22 M29 22 C30.5 24 30.5 27 29 29'
             stroke='#fb923c'
-            stroke-width='2'
-            stroke-linecap='round'
+            strokeWidth='2'
+            strokeLinecap='round'
         />
-        <circle cx='24' cy='26' r='3' fill='#ffffff' stroke='#f59e0b' stroke-width='1.5' />
-        <path d='M24 13 V17' stroke='#ffffff' stroke-width='2' stroke-linecap='round' />
+        <circle cx='24' cy='26' r='3' fill='#ffffff' stroke='#f59e0b' strokeWidth='1.5' />
+        <path d='M24 13 V17' stroke='#ffffff' strokeWidth='2' strokeLinecap='round' />
     </svg>
 );
 

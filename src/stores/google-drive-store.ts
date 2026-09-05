@@ -62,10 +62,12 @@ export default class GoogleDriveStore {
         this.setKey();
         this.client = null;
         this.access_token = localStorage.getItem('google_access_token') ?? '';
-        setTimeout(() => {
-            importExternal('https://accounts.google.com/gsi/client').then(() => this.initialiseClient());
-            importExternal('https://apis.google.com/js/api.js').then(() => this.initialise());
-        }, 3000);
+        if (this.client_id && this.api_key) {
+            setTimeout(() => {
+                importExternal('https://accounts.google.com/gsi/client').then(() => this.initialiseClient());
+                importExternal('https://apis.google.com/js/api.js').then(() => this.initialise());
+            }, 3000);
+        }
     }
 
     is_google_drive_token_valid = true;
@@ -85,6 +87,9 @@ export default class GoogleDriveStore {
     };
 
     initialise = () => {
+        if (!this.client_id || !this.api_key || typeof gapi === 'undefined') {
+            return;
+        }
         gapi.load('client:picker', () => gapi.client.load(this.discovery_docs));
     };
 
@@ -95,8 +100,7 @@ export default class GoogleDriveStore {
     };
 
     initialiseClient = () => {
-        if (!this.client_id) {
-            console.warn('Google Drive client_id is missing, skipping initialization');
+        if (!this.client_id || typeof google === 'undefined' || !google.accounts?.oauth2) {
             return;
         }
 

@@ -10,9 +10,10 @@ import { Localize, localize } from '@deriv-com/translations';
 import { DerivAccountWalletService } from '@/services/deriv-account-wallet.service';
 import { AccountSwitcherService } from '@/services/account-switcher.service';
 import { getAccountsList } from '@/utils/token-bridge';
+import { AccountsDerivAccountLightIcon } from '@deriv/quill-icons';
+import { CurrencyDemoIcon } from '@deriv/quill-icons/Currencies';
 import { TAccountSwitcher } from './common/types';
 import AccountInfoWrapper from './account-info-wrapper';
-const realAccountImg = '/real-account.jpg';
 import './account-switcher.scss';
 
 const getCurrencyLabel = (currency: string): string => {
@@ -33,17 +34,14 @@ const getCurrencyLabel = (currency: string): string => {
 // ─── Demo account icon (Sleek Grey with D$) ────────────────────────────────────
 const DemoIcon = () => (
     <div className='acc-icon acc-icon--demo'>
-        <span className='acc-icon__text-demo'>
-            <span className='acc-icon__d'>D</span>
-            <span className='acc-icon__dollar'>$</span>
-        </span>
+        <CurrencyDemoIcon iconSize='sm' aria-label='Demo account' />
     </div>
 );
 
 // ─── Real account icon (Enlarged Flag Avatar) ──────────────────────────────────
-const RealIcon = ({ src }: { src: string }) => (
+const RealIcon = () => (
     <div className='acc-icon acc-icon--real'>
-        <img src={src} alt='Real Account' className='acc-icon__img' />
+        <AccountsDerivAccountLightIcon iconSize='sm' aria-label='Real account' />
     </div>
 );
 
@@ -528,21 +526,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                             'acc-chip__currency-icon--real': !isVirtual,
                         })}
                     >
-                        {isVirtual ? (
-                            <span
-                                className='acc-icon__text-demo'
-                                style={{ display: 'flex', alignItems: 'baseline', gap: '0.5px' }}
-                            >
-                                <span style={{ fontSize: 13, fontWeight: 900, color: '#ffffff', lineHeight: 1 }}>
-                                    D
-                                </span>
-                                <span style={{ fontSize: 9.5, fontWeight: 800, color: '#f5c542', lineHeight: 1 }}>
-                                    $
-                                </span>
-                            </span>
-                        ) : (
-                            <img src={realAccountImg} alt='Real Account' className='acc-chip__real-img' />
-                        )}
+                        {isVirtual ? <CurrencyDemoIcon iconSize='sm' aria-label='Demo account' /> : <AccountsDerivAccountLightIcon iconSize='sm' aria-label='Real account' />}
                         <span className='acc-chip__online-dot'></span>
                     </div>
 
@@ -779,7 +763,7 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
                                         }}
                                     >
                                         <div className='acc-panel__account-icon'>
-                                            {account.isVirtual ? <DemoIcon /> : <RealIcon src={realAccountImg} />}
+                                            {account.isVirtual ? <DemoIcon /> : <RealIcon />}
                                         </div>
                                         <div className='acc-panel__account-info'>
                                             <span className='acc-panel__account-name'>

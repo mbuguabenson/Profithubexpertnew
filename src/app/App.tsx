@@ -53,11 +53,15 @@ const router = createBrowserRouter(
                 </Suspense>
             }
         >
-            {/* All child routes will be passed as children to Layout */}
             <Route index element={<AppRoot />} />
             <Route path='admin/*' element={<AdminDashboard />} />
         </Route>
-    )
+    ),
+    {
+        future: {
+            v7_relativeSplatPath: true,
+        },
+    }
 );
 
 import { isDemoAccount } from '@/utils/account-helpers';
@@ -166,7 +170,7 @@ function App() {
         }
     }, [isProcessing, isValid, params.code, error, cleanupURL]);
 
-    return <RouterProvider router={router} />;
+    return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
 }
 
 export default App;

@@ -95,13 +95,26 @@ export class ActiveSymbolsProcessorService {
 
         activeSymbols.forEach((symbol: ActiveSymbolInput) => {
             const underlyingSymbol = symbol.underlying_symbol || symbol.symbol;
-            const pipSize = symbol.pip_size || symbol.pip;
-
-            if (underlyingSymbol && pipSize) {
-                // Calculate decimal places from pip size (e.g., 0.01 -> 2, 0.0001 -> 4)
-                // This converts pip size to exponential notation and extracts the exponent
-                const exponent = +(+pipSize).toExponential().substring(3);
-                pipSizes[underlyingSymbol] = Math.abs(exponent);
+            const rawPip = symbol.pip_size ?? symbol.pip;
+            if (underlyingSymbol && rawPip !== undefined && rawPip !== null) {
+                const num = typeof rawPip === 'number' ? rawPip : parseFloat(String(rawPip));
+                if (Number.isFinite(num) && num >= 0) {
+                    if (num >= 1 && Number.isInteger(num)) {
+                        pipSizes[underlyingSymbol] = Math.min(num, 20);
+                    } else if (num < 1 && num > 0) {
+                        const str = num.toString();
+                        if (str.includes('e-')) {
+                            pipSizes[underlyingSymbol] = parseInt(str.split('e-')[1], 10) || 2;
+                        } else {
+                            const dec = str.split('.')[1];
+                            pipSizes[underlyingSymbol] = dec ? dec.length : 2;
+                        }
+                    } else {
+                        pipSizes[underlyingSymbol] = 2;
+                    }
+                } else {
+                    pipSizes[underlyingSymbol] = 2;
+                }
             }
         });
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 /* [AI] - Analytics removed - rudderstack event tracking removed */
@@ -15,37 +15,40 @@ import '@deriv-com/smartcharts-champion/dist/smartcharts.css';
 
 const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
     const barriers: [] = [];
-    const { common, ui } = useStore();
-    const { chart_store, run_panel, dashboard } = useStore();
+    const store = useStore();
     const [isSafari, setIsSafari] = useState(false);
 
-    const {
-        chart_type,
-        getMarketsOrder,
-        granularity,
-        onSymbolChange,
-        setChartStatus,
-        symbol,
-        updateChartType,
-        updateGranularity,
-        updateSymbol,
-    } = chart_store;
+    const common = store?.common;
+    const ui = store?.ui;
+    const chart_store = store?.chart_store;
+    const run_panel = store?.run_panel;
+    const dashboard = store?.dashboard;
+
+    const chart_type = chart_store?.chart_type;
+    const getMarketsOrder = chart_store?.getMarketsOrder;
+    const granularity = chart_store?.granularity;
+    const onSymbolChange = chart_store?.onSymbolChange || (() => {});
+    const setChartStatus = chart_store?.setChartStatus || (() => {});
+    const symbol = chart_store?.symbol;
+    const updateChartType = chart_store?.updateChartType || (() => {});
+    const updateGranularity = chart_store?.updateGranularity || (() => {});
+    const updateSymbol = chart_store?.updateSymbol || (() => {});
 
     // Use the custom hook for SmartChart Adaptor
     const { chartData, getQuotes, subscribeQuotes, unsubscribeQuotes } = useSmartChartAdaptor();
 
     const { isDesktop, isMobile } = useDevice();
-    const { is_drawer_open } = run_panel;
-    const { is_chart_modal_visible } = dashboard;
+    const is_drawer_open = run_panel?.is_drawer_open ?? false;
+    const is_chart_modal_visible = dashboard?.is_chart_modal_visible ?? false;
 
-    const settings = {
+    const settings = useMemo(() => ({
         assetInformation: false, // ui.is_chart_asset_info_visible,
         countdown: true,
         isHighestLowestMarkerEnabled: false, // TODO: Pending UI,
-        language: common.current_language.toLowerCase(),
-        position: ui.is_chart_layout_default ? 'bottom' : 'left',
-        theme: ui.is_dark_mode_on ? 'dark' : 'light',
-    };
+        language: common?.current_language ? common.current_language.toLowerCase() : 'en',
+        position: (ui?.is_chart_layout_default ? 'bottom' : 'left') as 'bottom' | 'left',
+        theme: (ui?.is_dark_mode_on ? 'dark' : 'light') as 'dark' | 'light',
+    }), [common?.current_language, ui?.is_chart_layout_default, ui?.is_dark_mode_on]);
 
     useEffect(() => {
         // Safari browser detection using feature detection
@@ -121,7 +124,65 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         };
     }, [is_drawer_open]);
 
-    const is_connection_opened = chart_api?.api?.connection?.readyState === WebSocket.OPEN;
+    // Manage reactive connection state for SmartChart
+    const [isSocketConnected, setIsSocketConnected] = useState(() =>
+        Boolean(common?.is_socket_opened || chart_api?.api?.connection?.readyState === WebSocket.OPEN)
+    );
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const updateConnectionStatus = () => {
+            if (!isMounted) return;
+            const isOpen = Boolean(
+                common?.is_socket_opened ||
+                chart_api?.api?.connection?.readyState === WebSocket.OPEN
+            );
+            setIsSocketConnected(prev => (prev !== isOpen ? isOpen : prev));
+        };
+
+        updateConnectionStatus();
+
+        // Proactively request chart API initialization if not already done
+        chart_api.init?.().then(() => {
+            updateConnectionStatus();
+            const conn = chart_api.api?.connection;
+            if (conn) {
+                conn.addEventListener('open', updateConnectionStatus);
+                conn.addEventListener('close', updateConnectionStatus);
+                conn.addEventListener('error', updateConnectionStatus);
+            }
+        }).catch(() => {});
+
+        const conn = chart_api.api?.connection;
+        if (conn) {
+            conn.addEventListener('open', updateConnectionStatus);
+            conn.addEventListener('close', updateConnectionStatus);
+            conn.addEventListener('error', updateConnectionStatus);
+        }
+
+        // Fast poll every 100ms for 3 seconds to catch early socket state transitions
+        const intervalId = setInterval(updateConnectionStatus, 100);
+        const timeoutId = setTimeout(() => clearInterval(intervalId), 3000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+            const currentConn = chart_api.api?.connection;
+            if (currentConn) {
+                currentConn.removeEventListener('open', updateConnectionStatus);
+                currentConn.removeEventListener('close', updateConnectionStatus);
+                currentConn.removeEventListener('error', updateConnectionStatus);
+            }
+        };
+    }, [common?.is_socket_opened]);
+
+    const is_connection_opened = Boolean(
+        isSocketConnected ||
+        common?.is_socket_opened ||
+        chart_api?.api?.connection?.readyState === WebSocket.OPEN
+    );
 
     const handleStateChange: TStateChangeListener = (state, _options) => {
         /* [AI] - Analytics removed - rudderstack event call removed */
@@ -144,6 +205,33 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         return times;
     }, [chartData.tradingTimes, symbol]);
 
+    const chartDataProp = useMemo(() => ({
+        activeSymbols: chartData.activeSymbols,
+        tradingTimes: effectiveTradingTimes,
+    }), [chartData.activeSymbols, effectiveTradingTimes]);
+
+    const renderToolbarWidget = useCallback(() => (
+        <ToolbarWidgets
+            updateChartType={updateChartType}
+            updateGranularity={updateGranularity}
+            position={!isDesktop ? 'bottom' : 'top'}
+            isDesktop={isDesktop}
+        />
+    ), [updateChartType, updateGranularity, isDesktop]);
+
+    const renderTopWidgets = useCallback(() => (
+        <ChartTitle onChange={onSymbolChange} />
+    ), [onSymbolChange]);
+
+    const renderBottomWidgets = useCallback((props: any) => (
+        <div
+            className='bottom-widgets'
+            style={{ display: 'flex', justifyContent: 'center', width: '100%' }}
+        >
+            <DigitDistributionCircles digits={props?.digits} tick={props?.tick} />
+        </div>
+    ), []);
+
     // isSymbolReady: allow render if activeSymbols loaded and symbol is either valid
     // OR has a fallback default ready — avoids infinite spinner on stale stored symbols
     const isSymbolReady =
@@ -155,7 +243,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
             (chartData.activeSymbols.length > 0 && Boolean(symbol))
         );
 
-    if (!isSymbolReady) {
+    if (!store || !chart_store || !isSymbolReady) {
         return <ChunkLoader message='' />;
     }
 
@@ -172,30 +260,12 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 id={`dbot-${symbol}`}
                 key={`chart-${symbol}`}
                 barriers={barriers}
-                bottomWidgets={
-                    show_digits_stats
-                        ? (((props: any) => (
-                              <div
-                                  className='bottom-widgets'
-                                  style={{ display: 'flex', justifyContent: 'center', width: '100%' }}
-                              >
-                                  <DigitDistributionCircles digits={props?.digits} tick={props?.tick} />
-                              </div>
-                          )) as any)
-                        : undefined
-                }
+                bottomWidgets={show_digits_stats ? (renderBottomWidgets as any) : undefined}
                 showLastDigitStats={show_digits_stats}
                 chartControlsWidgets={null}
                 enabledChartFooter={false}
                 stateChangeListener={handleStateChange}
-                toolbarWidget={() => (
-                    <ToolbarWidgets
-                        updateChartType={updateChartType}
-                        updateGranularity={updateGranularity}
-                        position={!isDesktop ? 'bottom' : 'top'}
-                        isDesktop={isDesktop}
-                    />
-                )}
+                toolbarWidget={renderToolbarWidget}
                 chartType={chart_type}
                 isMobile={isMobile}
                 enabledNavigationWidget={isDesktop}
@@ -203,10 +273,10 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 getQuotes={getQuotes}
                 subscribeQuotes={subscribeQuotes}
                 unsubscribeQuotes={unsubscribeQuotes}
-                chartData={{ activeSymbols: chartData.activeSymbols, tradingTimes: effectiveTradingTimes }}
+                chartData={chartDataProp}
                 settings={settings}
                 symbol={symbol}
-                topWidgets={() => <ChartTitle onChange={onSymbolChange} />}
+                topWidgets={renderTopWidgets}
                 isConnectionOpened={is_connection_opened}
                 getMarketsOrder={getMarketsOrder}
                 isLive

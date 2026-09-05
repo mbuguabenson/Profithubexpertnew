@@ -1,5 +1,5 @@
 import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
-import { api_base, ApiHelpers, observer as globalObserver } from '@/external/bot-skeleton';
+import { api_base, observer as globalObserver } from '@/external/bot-skeleton';
 import { DigitStatsEngine } from '@/lib/digit-stats-engine';
 import { DigitTradeEngine } from '@/lib/digit-trade-engine';
 import { getGroupedMarkets } from '@/constants/markets';
@@ -474,12 +474,16 @@ export default class AnalysisStore {
                     }
                 },
                 (err: any) => {
+                    const code = err?.error?.code || err?.code;
                     const isAlreadySub =
-                        err?.error?.code === 'AlreadySubscribed' ||
-                        err?.code === 'AlreadySubscribed' ||
+                        code === 'AlreadySubscribed' ||
                         String(err?.message || '').toLowerCase().includes('already subscribed') ||
                         String(err?.error?.message || '').toLowerCase().includes('already subscribed');
                     if (isAlreadySub) return;
+                    if (code === 'InvalidSymbol') {
+                        console.info(`[AnalysisStore] Symbol ${sym} unavailable for streaming.`);
+                        return;
+                    }
                     console.warn(`[AnalysisStore] Stream error for ${sym}:`, err);
                 }
             );
@@ -497,6 +501,14 @@ export default class AnalysisStore {
 
             console.log(`[AnalysisStore] Subscribed to ${sym} (Depth: ${safeCount})`);
         } catch (e: unknown) {
+            const errCode = (e as any)?.error?.code || (e as any)?.code;
+            if (errCode === 'InvalidSymbol') {
+                runInAction(() => {
+                    this.is_loading = false;
+                    this.is_subscribing = false;
+                });
+                return;
+            }
             console.error('[AnalysisStore] Subscribe error:', e);
             runInAction(() => {
                 this.error_message = (e as Error)?.message || 'Failed to subscribe';

@@ -14,27 +14,27 @@
     --color-local-accent-6: #000000;
 
     /* Typography Variables */
-    --font-type-1-family: 'Inter', sans-serif;
+    --font-type-1-family: var(--ph-font, 'IBM Plex Sans', sans-serif);
     --font-type-1-size: 16px;
     --font-type-1-weight: 400;
     --font-type-1-line-height: 24px;
 
-    --font-type-2-family: 'Inter', sans-serif;
+    --font-type-2-family: var(--ph-font, 'IBM Plex Sans', sans-serif);
     --font-type-2-size: 14px;
     --font-type-2-weight: 700;
     --font-type-2-line-height: 20px;
 
-    --font-type-3-family: 'Inter', sans-serif;
+    --font-type-3-family: var(--ph-font, 'IBM Plex Sans', sans-serif);
     --font-type-3-size: 14px;
     --font-type-3-weight: 400;
     --font-type-3-line-height: 20px;
 
-    --font-type-4-family: 'Inter', sans-serif;
+    --font-type-4-family: var(--ph-font, 'IBM Plex Sans', sans-serif);
     --font-type-4-size: 12px;
     --font-type-4-weight: 500;
     --font-type-4-line-height: 16px;
 
-    --font-type-5-family: 'Inter', sans-serif;
+    --font-type-5-family: var(--ph-font, 'IBM Plex Sans', sans-serif);
     --font-type-5-size: 14px;
     --font-type-5-weight: 600;
     --font-type-5-line-height: 20px;

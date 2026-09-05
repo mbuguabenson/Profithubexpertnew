@@ -275,12 +275,16 @@ export default class FreeBotsStore {
                     }
                 },
                 (err: any) => {
+                    const code = err?.error?.code || err?.code;
                     const isAlreadySub =
-                        err?.error?.code === 'AlreadySubscribed' ||
-                        err?.code === 'AlreadySubscribed' ||
+                        code === 'AlreadySubscribed' ||
                         String(err?.message || '').toLowerCase().includes('already subscribed') ||
                         String(err?.error?.message || '').toLowerCase().includes('already subscribed');
                     if (isAlreadySub) return;
+                    if (code === 'InvalidSymbol') {
+                        console.info(`[FreeBotsStore] Symbol ${sym} unavailable for streaming.`);
+                        return;
+                    }
                     console.warn(`[FreeBotsStore] Stream error for ${sym}:`, err);
                 }
             );
@@ -294,7 +298,14 @@ export default class FreeBotsStore {
             runInAction(() => {
                 this.is_subscribing = false;
             });
-        } catch (e) {
+        } catch (e: any) {
+            const errCode = e?.error?.code || e?.code;
+            if (errCode === 'InvalidSymbol') {
+                runInAction(() => {
+                    this.is_subscribing = false;
+                });
+                return;
+            }
             console.error('[FreeBotsStore] Subscription failed:', e);
             runInAction(() => {
                 this.is_subscribing = false;

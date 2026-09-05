@@ -40,10 +40,11 @@ const transformations = {
             const { prices: tick_prices, times: tick_times } = history;
             if (tick_prices && tick_times) {
                 for (let i = 0; i < tick_prices.length; i++) {
+                    const epoch = tick_times[i];
                     quotes.push({
-                        Date: String(tick_times[i]),
+                        Date: new Date(epoch * 1000).toISOString(),
                         Close: tick_prices[i],
-                        DT: new Date(tick_times[i] * 1000),
+                        DT: new Date(epoch * 1000),
                     });
                 }
             }
@@ -51,29 +52,45 @@ const transformations = {
         // Handle candles (granularity > 0)
         else if (granularity > 0 && candles) {
             candles.forEach((candle: any) => {
+                const epoch = candle.epoch || candle.open_time;
                 quotes.push({
-                    Date: String(candle.epoch),
-                    Open: candle.open,
-                    High: candle.high,
-                    Low: candle.low,
-                    Close: candle.close,
-                    DT: new Date(candle.epoch * 1000),
+                    Date: new Date(epoch * 1000).toISOString(),
+                    Open: typeof candle.open === 'number' ? candle.open : parseFloat(candle.open),
+                    High: typeof candle.high === 'number' ? candle.high : parseFloat(candle.high),
+                    Low: typeof candle.low === 'number' ? candle.low : parseFloat(candle.low),
+                    Close: typeof candle.close === 'number' ? candle.close : parseFloat(candle.close),
+                    DT: new Date(epoch * 1000),
                 });
             });
         }
         // Fallback for direct prices/times arrays
         else if (prices && times) {
             for (let i = 0; i < prices.length; i++) {
+                const epoch = times[i];
                 quotes.push({
-                    Date: String(times[i]),
+                    Date: new Date(epoch * 1000).toISOString(),
                     Close: prices[i],
-                    DT: new Date(times[i] * 1000),
+                    DT: new Date(epoch * 1000),
                 });
             }
         }
 
+        const rawHistory = history || (prices && times ? { prices, times } : undefined);
+        const rawCandles = candles || undefined;
+
         return {
             quotes,
+            history: rawHistory ? {
+                prices: rawHistory.prices.map((p: any) => +p),
+                times: rawHistory.times.map((t: any) => +t),
+            } : undefined,
+            candles: rawCandles && Array.isArray(rawCandles) ? rawCandles.map((c: any) => ({
+                open: +(c.open || 0),
+                high: +(c.high || 0),
+                low: +(c.low || 0),
+                close: +(c.close || 0),
+                epoch: +(c.epoch || c.open_time || 0),
+            })) : undefined,
             meta: {
                 symbol,
                 granularity,
@@ -86,32 +103,61 @@ const transformations = {
      * Transform streaming tick/candle message to TQuote
      */
     toTQuoteFromStream(message: any, granularity: TGranularity): TQuote {
-        if (granularity === 0 && message.tick) {
-            const { tick } = message;
-            return {
-                Date: String(tick.epoch),
-                Close: tick.quote,
-                tick,
-                DT: new Date(tick.epoch * 1000),
-            };
-        } else if (granularity > 0 && message.ohlc) {
-            const { ohlc } = message;
-            return {
-                Date: String(ohlc.epoch),
-                Open: ohlc.open,
-                High: ohlc.high,
-                Low: ohlc.low,
-                Close: ohlc.close,
-                ohlc,
-                DT: new Date(ohlc.epoch * 1000),
-            };
+        if (granularity === 0) {
+            if (message.tick) {
+                const { tick } = message;
+                const epoch = typeof tick.epoch === 'number' ? tick.epoch : parseInt(tick.epoch);
+                return {
+                    Date: new Date(epoch * 1000).toISOString(),
+                    Close: typeof tick.quote === 'number' ? tick.quote : parseFloat(tick.quote),
+                    tick,
+                    DT: new Date(epoch * 1000),
+                };
+            }
+            if (message.history?.prices?.length) {
+                const lastIdx = message.history.prices.length - 1;
+                const epoch = message.history.times[lastIdx];
+                const quote = message.history.prices[lastIdx];
+                return {
+                    Date: new Date(epoch * 1000).toISOString(),
+                    Close: quote,
+                    DT: new Date(epoch * 1000),
+                };
+            }
+        } else if (granularity > 0) {
+            if (message.ohlc) {
+                const { ohlc } = message;
+                const epoch = typeof ohlc.open_time === 'number' ? ohlc.open_time : parseInt(ohlc.open_time || ohlc.epoch);
+                return {
+                    Date: new Date(epoch * 1000).toISOString(),
+                    Open: parseFloat(ohlc.open),
+                    High: parseFloat(ohlc.high),
+                    Low: parseFloat(ohlc.low),
+                    Close: parseFloat(ohlc.close),
+                    ohlc,
+                    DT: new Date(epoch * 1000),
+                };
+            }
+            if (message.candles?.length) {
+                const last = message.candles[message.candles.length - 1];
+                const epoch = last.epoch || last.open_time;
+                return {
+                    Date: new Date(epoch * 1000).toISOString(),
+                    Open: parseFloat(last.open),
+                    High: parseFloat(last.high),
+                    Low: parseFloat(last.low),
+                    Close: parseFloat(last.close),
+                    DT: new Date(epoch * 1000),
+                };
+            }
         }
 
         // Fallback for direct tick data
+        const epoch = typeof message.epoch === 'number' ? message.epoch : parseInt(message.epoch || Date.now() / 1000);
         return {
-            Date: String(message.epoch || Date.now() / 1000),
-            Close: message.quote || message.price || 0,
-            DT: new Date((message.epoch || Date.now() / 1000) * 1000),
+            Date: new Date(epoch * 1000).toISOString(),
+            Close: typeof (message.quote ?? message.price) === 'number' ? (message.quote ?? message.price) : parseFloat(message.quote ?? message.price ?? 0),
+            DT: new Date(epoch * 1000),
         };
     },
 
@@ -130,9 +176,20 @@ const transformations = {
             const symbolCode = symbol.underlying_symbol || symbol.symbol;
             if (!symbolCode) continue;
 
-            const rawPip = symbol.pip ?? symbol.pip_size ?? 0.01;
+            let validPip = 0.01;
+            const rawPip = symbol.pip ?? symbol.pip_size;
             const pipNum = typeof rawPip === 'number' ? rawPip : parseFloat(rawPip);
-            const validPip = Number.isFinite(pipNum) && pipNum > 0 ? pipNum : 0.01;
+            if (Number.isFinite(pipNum) && pipNum > 0) {
+                if (pipNum < 1) {
+                    validPip = pipNum;
+                } else if (Number.isInteger(pipNum)) {
+                    const dec = Math.max(1, Math.min(pipNum, 8));
+                    validPip = Number((1 / Math.pow(10, dec)).toFixed(dec));
+                }
+            }
+            if (validPip.toString().length - 2 < 0) {
+                validPip = 0.01;
+            }
 
             symbols.push({
                 display_name: symbol.display_name || symbolCode,
@@ -321,7 +378,7 @@ export function buildSmartchartsChampionAdapter(
                     // Process all streaming messages for this subscription
                     // The transport layer already filters by subscription ID
                     try {
-                        const quote = response;
+                        const quote = transformations.toTQuoteFromStream(response, request.granularity);
                         if (response?.tick && typeof window !== 'undefined') {
                             window.dispatchEvent(new CustomEvent('live_tick_update', { detail: response.tick }));
                         }

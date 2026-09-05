@@ -33,7 +33,7 @@
     },
     "typography": {
         "font_family": {
-            "primary": "-apple-system, BlinkMacSystemFont, 'Inter', 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif",
+            "primary": "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
             "secondary": "Georgia, 'Times New Roman', Times, serif",
             "monospace": "'JetBrains Mono', 'Courier New', Courier, monospace"
         },

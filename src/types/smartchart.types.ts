@@ -37,9 +37,19 @@ export interface TGetQuotesRequest {
     count?: number;
 }
 
-// Response from getQuotes function
 export interface TGetQuotesResult {
     quotes: TQuote[];
+    history?: {
+        prices: number[];
+        times: number[];
+    };
+    candles?: Array<{
+        open: number;
+        high: number;
+        low: number;
+        close: number;
+        epoch: number;
+    }>;
     meta?: {
         symbol: string;
         granularity: TGranularity;

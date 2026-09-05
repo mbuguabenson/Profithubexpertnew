@@ -25,7 +25,7 @@ export const getMarketPipSize = (symbol: string, fallback = 2) => {
 };
 
 export const getLastDigitFromQuote = (quote: number | string, symbol: string, fallback_pip_size = 2) => {
-    const pip_size = getMarketPipSize(symbol, fallback_pip_size);
+    const pip_size = Math.max(0, Math.min(getMarketPipSize(symbol, fallback_pip_size), 20));
     const normalized_quote = Number(quote).toFixed(pip_size);
     const digit = normalized_quote.replace(/\D/g, '').slice(-1);
 

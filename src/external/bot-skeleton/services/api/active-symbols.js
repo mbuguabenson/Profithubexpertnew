@@ -61,7 +61,7 @@ export default class ActiveSymbols {
                 submarket_display_name: m.group || 'Continuous Indices',
                 subgroup: 'synthetics',
                 subgroup_display_name: 'Synthetics',
-                pip: 2,
+                pip: 0.01,
                 pip_size: 2,
                 delay_amount: 0,
                 exchange_is_open: true,

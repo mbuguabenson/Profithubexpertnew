@@ -16,24 +16,54 @@ class ChartAPI {
         if (this.api?.connection?.readyState === WebSocket.OPEN) return true;
 
         return new Promise(resolve => {
-            const start = Date.now();
-            const check = () => {
-                if (this.api?.connection?.readyState === WebSocket.OPEN) {
+            let settled = false;
+            let timer;
+            let interval;
+
+            const cleanup = () => {
+                if (timer) clearTimeout(timer);
+                if (interval) clearInterval(interval);
+                this.api?.connection?.removeEventListener?.('open', onOpen);
+            };
+
+            const onOpen = () => {
+                if (!settled) {
+                    settled = true;
+                    cleanup();
                     resolve(true);
-                } else if (Date.now() - start >= timeoutMs) {
-                    resolve(false);
-                } else {
-                    setTimeout(check, 50);
                 }
             };
-            check();
+
+            this.api?.connection?.addEventListener?.('open', onOpen);
+
+            interval = setInterval(() => {
+                if (this.api?.connection?.readyState === WebSocket.OPEN) {
+                    if (!settled) {
+                        settled = true;
+                        cleanup();
+                        resolve(true);
+                    }
+                }
+            }, 25);
+
+            timer = setTimeout(() => {
+                if (!settled) {
+                    settled = true;
+                    cleanup();
+                    resolve(this.api?.connection?.readyState === WebSocket.OPEN);
+                }
+            }, timeoutMs);
         });
     };
 
     init = async (forceNew = false) => {
         const connectionState = this.api?.connection?.readyState;
         if (!this.api || connectionState === WebSocket.CLOSED || connectionState === WebSocket.CLOSING || forceNew) {
-            this.api = await generateDerivApiInstance(forceNew);
+            if (typeof window !== 'undefined' && window.api_base?.api?.connection?.readyState === WebSocket.OPEN && !forceNew) {
+                this.api = window.api_base.api;
+            } else {
+                this.api = await generateDerivApiInstance(forceNew);
+            }
         }
         this.getTime();
         return this.api;
@@ -268,5 +298,9 @@ class ChartAPI {
 }
 
 const chart_api = new ChartAPI();
+
+if (typeof window !== 'undefined') {
+    window.chart_api = chart_api;
+}
 
 export default chart_api;

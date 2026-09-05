@@ -412,12 +412,16 @@ export default class MarketkillerStore {
                     }
                 },
                 (err: any) => {
+                    const code = err?.error?.code || err?.code;
                     const isAlreadySub =
-                        err?.error?.code === 'AlreadySubscribed' ||
-                        err?.code === 'AlreadySubscribed' ||
+                        code === 'AlreadySubscribed' ||
                         String(err?.message || '').toLowerCase().includes('already subscribed') ||
                         String(err?.error?.message || '').toLowerCase().includes('already subscribed');
                     if (isAlreadySub) return;
+                    if (code === 'InvalidSymbol') {
+                        console.info(`[Marketkiller] Symbol ${sym} unavailable for streaming.`);
+                        return;
+                    }
                     console.warn(`[Marketkiller] Stream error for ${sym}:`, err);
                 }
             );
@@ -430,6 +434,11 @@ export default class MarketkillerStore {
                 },
             };
         } catch (error: any) {
+            const errCode = error?.error?.code || error?.code;
+            if (errCode === 'InvalidSymbol') {
+                this.is_subscribing = false;
+                return;
+            }
             console.warn('[Marketkiller] tick sub note:', error?.message || error);
             if (retry_count < 5) {
                 setTimeout(() => this.subscribeToTicks(retry_count + 1), 2000);

@@ -154,7 +154,7 @@ const getFallbackSymbols = () =>
         submarket_display_name: m.group || 'Continuous Indices',
         subgroup: 'synthetics',
         subgroup_display_name: 'Synthetics',
-        pip: 2,
+        pip: 0.01,
         delay_amount: 0,
         exchange_is_open: 1,
         is_trading_suspended: 0,
@@ -202,10 +202,24 @@ export function createServices(): TServices {
                 if (!apiHelpers || !apiHelpers.trading_times) {
                     return buildDefaultTradingTimes();
                 }
-                // Initialize trading times if not already done
-                await apiHelpers.trading_times.initialise().catch(() => {});
 
-                // Get the trading times data - this is the actual data structure from TradingTimes class
+                // If trading_times is already populated, return immediately
+                const existing = apiHelpers.trading_times.trading_times;
+                if (existing && typeof existing === 'object' && Object.keys(existing).length > 0) {
+                    const transformed = transformTradingTimesData(existing);
+                    if (Object.keys(transformed).length > 0) {
+                        return transformed;
+                    }
+                }
+
+                // Race initialise with a fast 400ms timeout so chart connects to markets ASAP
+                const timeoutPromise = new Promise(resolve => setTimeout(resolve, 400));
+                await Promise.race([
+                    apiHelpers.trading_times.initialise().catch(() => {}),
+                    timeoutPromise,
+                ]);
+
+                // Get the trading times data
                 const tradingTimesData = apiHelpers.trading_times.trading_times;
 
                 if (tradingTimesData && typeof tradingTimesData === 'object' && Object.keys(tradingTimesData).length > 0) {

@@ -928,17 +928,20 @@ export const isProduction = () => {
     return !!DOMAIN_CONFIG[hostname];
 };
 
-// The Deriv v3 WebSocket base URL
-const DERIV_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
+// Modern Deriv public options trading WebSocket endpoint for reliable unauthenticated market data
+export const DERIV_PUBLIC_WS_BASE = 'wss://api.derivws.com/trading/v1/options/ws/public';
+// The Deriv v3 WebSocket base URL (for authenticated accounts / OTP)
+export const DERIV_WS_BASE = 'wss://ws.derivws.com/websockets/v3';
 const PUBLIC_APP_ID = '1089';
 
 /**
  * Returns a public (unauthenticated) WebSocket URL for pre-login market data.
- * Uses registered Deriv App ID with fallback to standard public app ID 1089.
+ * Uses the official Deriv public options trading endpoint which reliably serves
+ * active_symbols, ticks, candles, and contracts without geo-restriction blocks.
  */
 export const getLegacyServerURL = () => {
     const appId = getAppId() || PUBLIC_APP_ID;
-    return `${DERIV_WS_BASE}?app_id=${encodeURIComponent(appId)}&l=EN&brand=deriv`;
+    return `${DERIV_PUBLIC_WS_BASE}?app_id=${encodeURIComponent(appId)}`;
 };
 
 export const getDefaultServerURL = () => getLegacyServerURL();

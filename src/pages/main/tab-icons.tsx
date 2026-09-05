@@ -1,8 +1,43 @@
 import React from 'react';
+import {
+    LabelPairedBarsFilterSmRegularIcon,
+    LabelPairedBookCircleQuestionSmRegularIcon,
+    LabelPairedChartAreaSmRegularIcon,
+    LabelPairedChartLineSmRegularIcon,
+    LabelPairedCircleUserSmRegularIcon,
+} from '@deriv/quill-icons/LabelPaired';
+
+type TQuillIcon = React.ComponentType<React.SVGProps<SVGSVGElement> & { iconSize?: string }>;
 
 type TTabIconProps = {
     iconKey: string;
     label: string;
+};
+
+const TAB_ICONS: Record<string, TQuillIcon> = {
+    dashboard: LabelPairedChartAreaSmRegularIcon,
+    bot_builder: LabelPairedBookCircleQuestionSmRegularIcon,
+    chart: LabelPairedChartLineSmRegularIcon,
+    trading_bots: LabelPairedBarsFilterSmRegularIcon,
+    analysis_tool: LabelPairedBarsFilterSmRegularIcon,
+    tradingview: LabelPairedChartLineSmRegularIcon,
+    signals: LabelPairedChartLineSmRegularIcon,
+    scanner: LabelPairedBarsFilterSmRegularIcon,
+    manual_trading: LabelPairedChartLineSmRegularIcon,
+    easy_tool: LabelPairedBarsFilterSmRegularIcon,
+    marketkiller: LabelPairedBarsFilterSmRegularIcon,
+    multi_trader: LabelPairedChartAreaSmRegularIcon,
+    market_hunter_pro: LabelPairedBarsFilterSmRegularIcon,
+    ai_trading_engine: LabelPairedBarsFilterSmRegularIcon,
+    digitflow: LabelPairedChartLineSmRegularIcon,
+    elite_pro: LabelPairedChartAreaSmRegularIcon,
+    poverty_hunter: LabelPairedBarsFilterSmRegularIcon,
+    auto_x_eo: LabelPairedBarsFilterSmRegularIcon,
+    overlord_ai: LabelPairedBarsFilterSmRegularIcon,
+    copy_trading: LabelPairedCircleUserSmRegularIcon,
+    account_center: LabelPairedCircleUserSmRegularIcon,
+    pro_journal: LabelPairedBookCircleQuestionSmRegularIcon,
+    reports: LabelPairedBookCircleQuestionSmRegularIcon,
 };
 
 export const TabIcon: React.FC<TTabIconProps> = ({ iconKey, label }) => {
@@ -485,9 +520,11 @@ export const TabIcon: React.FC<TTabIconProps> = ({ iconKey, label }) => {
         }
     };
 
+    const Icon = TAB_ICONS[iconKey];
+
     return (
         <span className='main-tab-icon-wrapper' title={label}>
-            {renderIcon()}
+            {Icon ? <Icon aria-hidden='true' /> : renderIcon()}
             <span className='main-tab-label-text'>{label}</span>
         </span>
     );

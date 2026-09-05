@@ -223,9 +223,7 @@ export default class ContractsFor {
                 ) {
                     try {
                         response = await new Promise(resolve => {
-                            const wsUrl = isProduction()
-                                ? 'wss://api.derivws.com/trading/v1/options/ws/public'
-                                : 'wss://staging-api.derivws.com/trading/v1/options/ws/public';
+                            const wsUrl = 'wss://api.derivws.com/trading/v1/options/ws/public';
                             const ws = new WebSocket(wsUrl);
                             ws.onopen = () => {
                                 ws.send(JSON.stringify({ contracts_for: symbol }));

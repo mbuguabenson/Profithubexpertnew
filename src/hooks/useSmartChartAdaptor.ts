@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { buildSmartchartsChampionAdapter, transformations } from '@/adapters/smartcharts-champion';
 import { createServices } from '@/adapters/smartcharts-champion/services';
 import { createTransport } from '@/adapters/smartcharts-champion/transport';
@@ -83,7 +83,7 @@ const getStaticFallbackChartData = (): { activeSymbols: ActiveSymbols; tradingTi
             submarket_display_name: m.group || 'Continuous Indices',
             subgroup: 'synthetics',
             subgroup_display_name: 'Synthetics',
-            pip: 2,
+            pip: 0.01,
             delay_amount: 0,
             exchange_is_open: 1,
             is_trading_suspended: 0,
@@ -101,7 +101,7 @@ const getStaticFallbackChartData = (): { activeSymbols: ActiveSymbols; tradingTi
 export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     // State management
     // Bump this when cached_active_symbols data shape changes
-    const CHART_CACHE_VERSION = 'v3_submarket_fix';
+    const CHART_CACHE_VERSION = 'v5_safe_fraction_pip';
 
     const getInitialChartData = (): { activeSymbols: ActiveSymbols; tradingTimes: TradingTimesMap } => {
         try {
@@ -109,6 +109,10 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                 const cachedVersion = localStorage.getItem('cached_active_symbols_version');
                 if (cachedVersion !== CHART_CACHE_VERSION) {
                     // Stale cache - discard and use static fallback
+                    try {
+                        localStorage.removeItem('cached_active_symbols');
+                        localStorage.setItem('cached_active_symbols_version', CHART_CACHE_VERSION);
+                    } catch {}
                     return getStaticFallbackChartData();
                 }
                 const cached = localStorage.getItem('cached_active_symbols');
@@ -125,8 +129,14 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         return getStaticFallbackChartData();
     };
 
-    const [adapter, setAdapter] = useState<SmartchartsChampionAdapter | null>(null);
-    const [adapterInitialized, setAdapterInitialized] = useState(false);
+    const adapter = useMemo(
+        () =>
+            buildSmartchartsChampionAdapter(createTransport(), createServices(), {
+                debug: false,
+                subscriptionTimeout: 30000,
+            }),
+        []
+    );
     const [chartData, setChartData] = useState<{
         activeSymbols: ActiveSymbols;
         tradingTimes: TradingTimesMap;
@@ -142,6 +152,9 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     // Track mounted state
     useEffect(() => {
         isMountedRef.current = true;
+        // Proactively initialize chart_api in parallel
+        chart_api.init?.().catch(() => {});
+
         return () => {
             isMountedRef.current = false;
 
@@ -153,69 +166,21 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
         };
     }, []);
 
-    // Initialize adapter - proactively ensures chart_api is initialized
+    // Load chart data on mount
     useEffect(() => {
-        let isCancelled = false;
-
-        const initAdapter = async () => {
-            if (adapterInitialized) return;
-
-            try {
-                if (!chart_api.api) {
-                    await chart_api.init?.();
-                }
-
-                await chart_api.waitForConnection?.(10000);
-
-                if (isCancelled || !isMountedRef.current) return;
-
-                const transport = createTransport();
-                const services = createServices();
-                const championAdapter = buildSmartchartsChampionAdapter(transport, services, {
-                    debug: true,
-                    subscriptionTimeout: 30000,
-                });
-
-                if (isMountedRef.current) {
-                    setAdapter(championAdapter);
-                    setAdapterInitialized(true);
-                    setError(null);
-                }
-            } catch (err) {
-                if (isMountedRef.current) {
-                    setError(err instanceof Error ? err : new Error('Failed to initialize adapter'));
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        initAdapter();
-
-        return () => {
-            isCancelled = true;
-        };
-    }, [adapterInitialized]);
-
-    // Load chart data when adapter is initialized
-    useEffect(() => {
-        if (!adapter || !adapterInitialized) return;
-
         let cancelled = false;
 
-        const loadChartData = async (retryCount = 0, maxRetries = 10, delayMs = 200) => {
+        const loadChartData = async (retryCount = 0, maxRetries = 5, delayMs = 150) => {
             try {
-                setIsLoading(true);
                 const data = await adapter.getChartData();
 
                 if (!cancelled && isMountedRef.current) {
                     // Check if activeSymbols is empty and we have retries left
                     if (data.activeSymbols.length === 0 && retryCount < maxRetries) {
-                        // Clear any existing timeout
                         if (retryTimeoutRef.current) {
                             clearTimeout(retryTimeoutRef.current);
                         }
 
-                        // Wait for the specified delay before retrying
                         retryTimeoutRef.current = setTimeout(() => {
                             if (!cancelled && isMountedRef.current) {
                                 loadChartData(retryCount + 1, maxRetries, delayMs);
@@ -225,16 +190,17 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                         return;
                     }
 
-                    setChartData({
-                        activeSymbols: data.activeSymbols,
-                        tradingTimes: data.tradingTimes,
-                    });
+                    if (data.activeSymbols.length > 0) {
+                        setChartData({
+                            activeSymbols: data.activeSymbols,
+                            tradingTimes: data.tradingTimes,
+                        });
+                    }
+                    setIsLoading(false);
                     setError(null);
                 }
             } catch (err) {
-                // If we have retries left, try again
                 if (!cancelled && isMountedRef.current && retryCount < maxRetries) {
-                    // Clear any existing timeout
                     if (retryTimeoutRef.current) {
                         clearTimeout(retryTimeoutRef.current);
                     }
@@ -249,15 +215,6 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                 }
 
                 if (!cancelled && isMountedRef.current) {
-                    setError(err instanceof Error ? err : new Error('Failed to load chart data'));
-                    // Set fallback data to prevent undefined
-                    setChartData({
-                        activeSymbols: [] as ActiveSymbols,
-                        tradingTimes: {} as TradingTimesMap,
-                    });
-                }
-            } finally {
-                if (!cancelled && isMountedRef.current) {
                     setIsLoading(false);
                 }
             }
@@ -265,24 +222,19 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
 
         loadChartData();
 
-        // Cleanup function to cancel async operations
         return () => {
             cancelled = true;
-
-            // Clear any pending retry timeouts
             if (retryTimeoutRef.current) {
                 clearTimeout(retryTimeoutRef.current);
                 retryTimeoutRef.current = null;
             }
         };
-    }, [adapter, adapterInitialized]);
+    }, [adapter]);
 
     // Memoized getQuotes function
     const getQuotes: TGetQuotes = useCallback(
         async params => {
-            if (!adapter) {
-                throw new Error('Adapter not initialized');
-            }
+            console.log('[SmartCharts] getQuotes called with params:', params);
 
             const result = await adapter.getQuotes({
                 symbol: params.symbol,
@@ -292,25 +244,55 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
                 end: params.end,
             });
 
-            // Transform adapter result to SmartCharts Champion format
+            console.log('[SmartCharts] getQuotes received quotes count:', result?.quotes?.length);
+
+            // Prefer raw history and candles if provided by adapter
             if (params.granularity === 0) {
-                // For ticks, return history format
+                if (result.history) {
+                    return {
+                        history: {
+                            prices: result.history.prices.map((p: any) => +p),
+                            times: result.history.times.map((t: any) => +t),
+                        },
+                    };
+                }
                 return {
                     history: {
                         prices: result.quotes.map(q => q.Close),
-                        times: result.quotes.map(q => parseInt(q.Date)),
+                        times: result.quotes.map(q => {
+                            const dtEpoch = q.DT ? Math.floor(q.DT.getTime() / 1000) : NaN;
+                            if (Number.isFinite(dtEpoch) && dtEpoch > 100000) return dtEpoch;
+                            const parsed = parseInt(q.Date);
+                            return Number.isFinite(parsed) && parsed > 100000 ? parsed : Math.floor(Date.now() / 1000);
+                        }),
                     },
                 };
             } else {
-                // For candles, return candles format
+                if (result.candles) {
+                    return {
+                        candles: result.candles.map((c: any) => ({
+                            open: +(c.open || 0),
+                            high: +(c.high || 0),
+                            low: +(c.low || 0),
+                            close: +(c.close || 0),
+                            epoch: +(c.epoch || 0),
+                        })),
+                    };
+                }
                 return {
-                    candles: result.quotes.map(q => ({
-                        open: q.Open || q.Close,
-                        high: q.High || q.Close,
-                        low: q.Low || q.Close,
-                        close: q.Close,
-                        epoch: parseInt(q.Date),
-                    })),
+                    candles: result.quotes.map(q => {
+                        const dtEpoch = q.DT ? Math.floor(q.DT.getTime() / 1000) : NaN;
+                        const epoch = Number.isFinite(dtEpoch) && dtEpoch > 100000
+                            ? dtEpoch
+                            : (parseInt(q.Date) || Math.floor(Date.now() / 1000));
+                        return {
+                            open: +(q.Open || q.Close || 0),
+                            high: +(q.High || q.Close || 0),
+                            low: +(q.Low || q.Close || 0),
+                            close: +(q.Close || 0),
+                            epoch,
+                        };
+                    }),
                 };
             }
         },
@@ -320,6 +302,7 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     // Memoized subscribeQuotes function
     const subscribeQuotes: TSubscribeQuotes = useCallback(
         (params, callback) => {
+            console.log('[SmartCharts] subscribeQuotes called with params:', params);
             if (!adapter) {
                 return () => {};
             }
@@ -412,7 +395,7 @@ export const useSmartChartAdaptor = (): UseSmartChartAdaptorReturn => {
     // Return object without useMemo wrapper (callbacks are already memoized)
     return {
         adapter,
-        adapterInitialized,
+        adapterInitialized: true,
         chartData,
         getQuotes,
         subscribeQuotes,
