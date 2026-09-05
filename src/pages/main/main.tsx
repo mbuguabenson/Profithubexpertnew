@@ -715,6 +715,7 @@ const AppWrapper = observer(() => {
         'trading_bots',
         'free_bots',
         'trading-bots',
+        'dtrader',
     ].includes(currentTabKey);
 
     return (

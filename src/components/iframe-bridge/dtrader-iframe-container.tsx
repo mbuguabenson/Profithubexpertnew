@@ -4,7 +4,6 @@ import { useStore } from '@/hooks/useStore';
 import { resolveValidDerivWSToken, isInvalidBearerToken } from '@/utils/token-bridge';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
-import { generateOAuthURL } from '@/components/shared';
 import { Loader2 } from 'lucide-react';
 import './dtrader-iframe-container.scss';
 
@@ -142,7 +141,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const [sessionData, setSessionData] = useState(() => {
         const current = extractCurrentSession();
         const activeId = client?.loginid || current.loginid;
-        const activeTok = (activeId && client?.accounts?.[activeId]?.token) || current.token;
+        const activeTok = (activeId && current.accounts[activeId]) || current.token;
         return {
             loginid: activeId,
             token: activeTok,
@@ -163,7 +162,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const refreshSession = useCallback(async () => {
         const current = extractCurrentSession();
         const activeId = client?.loginid || current.loginid;
-        let activeTok = (activeId && client?.accounts?.[activeId]?.token) || current.token;
+        let activeTok = (activeId && current.accounts[activeId]) || current.token;
 
         if (activeId && (!activeTok || isInvalidBearerToken(activeTok))) {
             const resolved = await resolveValidDerivWSToken(activeId);
@@ -176,7 +175,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             currency: client?.currency || current.currency,
             accounts: current.accounts,
         });
-    }, [client?.loginid, client?.currency, client?.accounts]);
+    }, [client?.loginid, client?.currency]);
 
     useEffect(() => {
         refreshSession();
@@ -202,40 +201,25 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const isDemo = activeLoginId.startsWith('VR') || activeLoginId.toLowerCase().includes('demo');
     const isAuthenticated = Boolean(activeLoginId && activeToken);
 
-    // Automatic login redirection if user has no session stored yet
-    useEffect(() => {
-        if (!isAuthenticated && !activeToken) {
-            const hasAttempted = sessionStorage.getItem('dtrader_auto_login_attempted');
-            if (!hasAttempted) {
-                sessionStorage.setItem('dtrader_auto_login_attempted', 'true');
-                generateOAuthURL().then(oauthUrl => {
-                    if (oauthUrl) {
-                        window.location.replace(oauthUrl);
-                    }
-                }).catch(() => {});
-            }
-        }
-    }, [isAuthenticated, activeToken]);
-
     // Build the query URL ensuring credentials & embed flags are passed for auto-login
     const iframeSrc = useMemo(() => {
         const params = new URLSearchParams();
 
-        // 1. Mandatory token parameter (guaranteed non-empty to bypass anti-clickjack on deriv-dtrader-ten):
-        const effectiveToken = activeToken || 'guest';
-        params.set('token', effectiveToken);
-
-        // 2. Overridden App ID and Client ID
-        params.set('app_id', activeAppId);
-        params.set('client_id', activeAppId);
-
-        // 3. User account details for automatic login
-        if (activeLoginId && activeToken) {
+        // 1. Mandatory token parameter:
+        // deriv-dtrader-ten requires `has('token')` to bypass anti-clickjack.
+        // When unauthenticated, token='' satisfies has('token') without sending an invalid token to the WebSocket.
+        // When authenticated, real token is passed to automatically authorize the session.
+        if (isAuthenticated && activeToken && !isInvalidBearerToken(activeToken)) {
+            params.set('token', activeToken);
+            params.set('token1', activeToken);
             params.set('loginid', activeLoginId);
             params.set('account', activeLoginId);
             params.set('acct1', activeLoginId);
-            params.set('token1', activeToken);
             params.set('cur1', currency);
+            params.set('app_id', activeAppId);
+            params.set('client_id', activeAppId);
+        } else {
+            params.set('token', '');
         }
 
         // 4. Secondary accounts mapped from storage
@@ -267,7 +251,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         params.set('has_top_bar', 'false');
 
         return `${DTRADER_BASE_URL}/?${params.toString()}`;
-    }, [activeAppId, activeLoginId, activeToken, currency, sessionData.accounts]);
+    }, [activeAppId, activeLoginId, activeToken, currency, sessionData.accounts, isAuthenticated]);
 
     // Dispatch authentication postMessage directly into iframe on load or account switch
     const syncSessionToIframe = useCallback(() => {

@@ -122,24 +122,6 @@ const AppHeader = observer(() => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const is_account_regenerating = client?.is_account_regenerating || false;
 
-    const [isDTraderTab, setIsDTraderTab] = useState(() => {
-        return typeof window !== 'undefined' && window.location.hash?.toLowerCase()?.includes('dtrader');
-    });
-
-    useEffect(() => {
-        const checkDTrader = () => {
-            setIsDTraderTab(window.location.hash?.toLowerCase()?.includes('dtrader'));
-        };
-        window.addEventListener('hashchange', checkDTrader);
-        window.addEventListener('popstate', checkDTrader);
-        const interval = setInterval(checkDTrader, 500);
-        return () => {
-            window.removeEventListener('hashchange', checkDTrader);
-            window.removeEventListener('popstate', checkDTrader);
-            clearInterval(interval);
-        };
-    }, []);
-
     const handleMobileRefresh = useCallback(() => {
         setIsRefreshing(true);
         setTimeout(() => {
@@ -147,17 +129,10 @@ const AppHeader = observer(() => {
         }, 200);
     }, []);
 
-    // Detect OAuth callback on mount (before App.tsx cleans up the URL).
-    // Also check sessionStorage/localStorage for an in-progress PKCE code_verifier
-    // which persists even after App.tsx strips the query params from the URL.
+    // Detect OAuth callback on mount (only pending if active code & state in URL)
     const [isOAuthPending, setIsOAuthPending] = useState(() => {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('code') && params.get('state')) return true;
-        // PKCE verifier present means we initiated a login flow and are waiting for completion
-        const hasVerifier =
-            !!sessionStorage.getItem('oauth_code_verifier') ||
-            !!localStorage.getItem('oauth_code_verifier');
-        return hasVerifier;
+        return Boolean(params.get('code') && params.get('state'));
     });
 
     const { data: activeAccount } = useActiveAccount({
@@ -293,15 +268,8 @@ const AppHeader = observer(() => {
                     );
                 }
             }
-            // Show login button only when fully settled (not during OAuth flow)
-            else if (
-                position === 'right' &&
-                !isOAuthPending &&
-                ((!is_account_regenerating && !isAuthorizing && !activeLoginid) || authTimeout)
-            ) {
-                if (isDTraderTab) {
-                    return null;
-                }
+            // Show login button only when not logged in (and not actively exchanging an OAuth code)
+            else if (position === 'right' && !isOAuthPending && !activeLoginid) {
                 return (
                     <div className='auth-actions'>
                         <Button tertiary className='app-header__login-btn modern-login-btn' onClick={handleLogin}>
