@@ -3,15 +3,16 @@
 
 .dc-contract-card {
     box-sizing: border-box;
-    border-radius: $BORDER_RADIUS;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     text-decoration: none;
     position: relative;
-    padding: 0.8rem;
+    padding: 1.2rem;
+    min-height: 160px;
     background-color: var(--general-main-1);
     color: var(--text-prominent);
-    padding-bottom: 0.8rem;
+    padding-bottom: 1.2rem;
 
     .dc-btn--sell {
         width: 100%;
@@ -39,7 +40,7 @@
     &:before {
         content: '';
         position: absolute;
-        border-radius: $BORDER_RADIUS;
+        border-radius: 12px;
         height: 52px;
         width: 100%;
         left: 0;
