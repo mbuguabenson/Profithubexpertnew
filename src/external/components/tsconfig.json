@@ -10,9 +10,6 @@
     },
     "include": [
         "src",
-        "./@types/react-div-100vh/react-div-100vh-config.d.ts",
-        "./@types/@enykeev/react-virtualized/dist/es/AutoSizer.d.ts",
-        "./@types/react-drag-drawer/react-drag-drawer-config.d.ts",
-        "./@types/@contentpass/zxcvbn/contentpass-zxcvbn-config.d.ts"
+        "./@types/**/*.d.ts"
     ]
 }
