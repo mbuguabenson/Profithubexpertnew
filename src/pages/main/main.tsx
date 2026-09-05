@@ -752,7 +752,7 @@ const AppWrapper = observer(() => {
                                 position: 'fixed',
                                 top: '5rem',
                                 right: '1.6rem',
-                                width: '36.6rem',
+                                width: '35.8rem',
                                 height: '5rem',
                                 zIndex: 1100,
                                 display: 'flex',
