@@ -3,7 +3,7 @@ import { config } from '../constants/config';
 import { api_base } from '../services/api/api-base';
 import ApiHelpers from '../services/api/api-helpers';
 import Interpreter from '../services/tradeEngine/utils/interpreter';
-import { isFastModeActive, syncFastExecutionOverride } from '../services/tradeEngine/utils/fastMode';
+import { syncFastExecutionOverride } from '../services/tradeEngine/utils/fastMode';
 import { compareXml, observer as globalObserver } from '../utils';
 import { getSavedWorkspaces, saveWorkspaceToRecent } from '../utils/local-storage';
 import { isDbotRTL } from '../utils/workspace';
@@ -397,8 +397,10 @@ class DBot {
             );
         }
 
+        // Fast mode is intentionally NOT snapshotted here. sleep() below re-checks
+        // isFastModeActive() live on every call, so toggling the header speed icon
+        // mid-run takes effect immediately without needing to regenerate/restart the bot.
         syncFastExecutionOverride();
-        const isFast = isFastModeActive();
 
         return `
             var BinaryBotPrivateInit;
@@ -436,7 +438,7 @@ class DBot {
                     var currentTickTime = Bot.getLastTick(true);
                     var retryCount = 0;
                     while (currentTickTime === 'MarketIsClosed' && retryCount < 5) {
-                        sleep(${isFast ? 0 : 2});
+                        sleep(2);
                         retryCount++;
                         currentTickTime = Bot.getLastTick(true);
                     }
@@ -462,7 +464,7 @@ class DBot {
                 BinaryBotPrivateTickAnalysis();
                 BinaryBotPrivateRun(BinaryBotPrivateStart);
                 if (!BinaryBotPrivateHasCalledTradeOptions) {
-                    sleep(${isFast ? 0 : 1});
+                    sleep(1);
                     continue;
                 }
                 while (watch('before')) {
