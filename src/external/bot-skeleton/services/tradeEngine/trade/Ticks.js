@@ -14,29 +14,37 @@ let tickListenerKey;
 export default Engine =>
     class Ticks extends Engine {
         async watchTicks(symbol) {
-            if (symbol && this.symbol !== symbol) {
-                this.symbol = symbol;
-                const { ticksService } = this.$scope;
+            if (!symbol) return;
 
+            const { ticksService } = this.$scope;
+            const alreadyWatching = this.symbol === symbol && tickListenerKey;
+            if (alreadyWatching) {
+                return;
+            }
+
+            if (tickListenerKey) {
                 await ticksService.stopMonitor({
-                    symbol,
+                    symbol: this.symbol || symbol,
                     key: tickListenerKey,
                 });
-                const callback = ticks => {
-                    if (this.is_proposal_subscription_required) {
-                        this.checkProposalReady();
-                    }
-                    const lastTick = ticks.slice(-1)[0];
-                    if (!lastTick || typeof lastTick.epoch !== 'number') return;
-
-                    const { epoch } = lastTick;
-                    this.lastTickEpoch = epoch;
-                    this.store.dispatch({ type: constants.NEW_TICK, payload: epoch });
-                };
-
-                const key = await ticksService.monitor({ symbol, callback });
-                tickListenerKey = key;
+                tickListenerKey = null;
             }
+
+            this.symbol = symbol;
+            const callback = ticks => {
+                if (this.is_proposal_subscription_required) {
+                    this.checkProposalReady();
+                }
+                const lastTick = ticks.slice(-1)[0];
+                if (!lastTick || typeof lastTick.epoch !== 'number') return;
+
+                const { epoch } = lastTick;
+                this.lastTickEpoch = epoch;
+                this.store.dispatch({ type: constants.NEW_TICK, payload: epoch });
+            };
+
+            const key = await ticksService.monitor({ symbol, callback });
+            tickListenerKey = key;
         }
 
         checkTicksPromiseExists() {

@@ -1,4 +1,5 @@
 import { localize } from '@deriv-com/translations';
+import { isFastModeActive } from '../utils/fastMode';
 import getCandleInterface from './CandleInterface';
 import getIndicatorsInterface from './IndicatorsInterface';
 import getMiscInterface from './MiscInterface';
@@ -53,11 +54,7 @@ const getToolsInterface = tradeEngine => {
         // Highlight the block that is being executed
         highlightBlock: block_id => {
             // In Fast Mode, bypass SVG DOM highlighting to maximize CPU throughput
-            if (
-                typeof localStorage !== 'undefined' &&
-                (localStorage.getItem('dbot_every_tick_mode') === 'true' ||
-                    localStorage.getItem('bot_execution_speed') === '2')
-            ) {
+            if (isFastModeActive()) {
                 return;
             }
             if (!window.Blockly?.derivWorkspace) return;

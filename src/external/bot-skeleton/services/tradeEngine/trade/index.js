@@ -4,6 +4,7 @@ import { getLocalizedErrorMessage } from '@/constants/backend-error-messages';
 import { createError } from '../../../utils/error';
 import { observer as globalObserver } from '../../../utils/observer';
 import { api_base } from '../../api/api-base';
+import { isFastModeActive, syncFastExecutionOverride } from '../utils/fastMode';
 import { checkBlocksForProposalRequest, doUntilDone } from '../utils/helpers';
 import { expectInitArg } from '../utils/sanitize';
 import { proposalsReady, start } from './state/actions';
@@ -17,13 +18,7 @@ import Sell from './Sell';
 import Ticks from './Ticks';
 import Total from './Total';
 
-export const isFastModeActive = () => {
-    if (typeof localStorage === 'undefined') return false;
-    return (
-        localStorage.getItem('dbot_every_tick_mode') === 'true' ||
-        localStorage.getItem('bot_execution_speed') === '2'
-    );
-};
+export { isFastModeActive } from '../utils/fastMode';
 
 const watchBefore = store => {
     const currentState = store.getState();
@@ -55,7 +50,11 @@ const watchDuring = store =>
         stopScope: constants.STOP,
         passScope: constants.DURING_PURCHASE,
         passFlag: 'openContract',
-        allowImmediate: false,
+        // Fast mode: enter during-purchase as soon as the contract stream is live.
+        // Subsequent loops still wait for a new tick via hasFiredDuring.
+        allowImmediate: isFastModeActive(),
+        fireOnceFlag: 'hasFiredDuring',
+        fireOnceAction: 'DURING_FIRED',
     });
 
 /* The watchScope function is called randomly and resets the prevTick
@@ -66,13 +65,27 @@ export const resetPrevTick = () => {
     prevTick = undefined;
 };
 
-const watchScope = ({ store, stopScope, passScope, passFlag, allowImmediate = false }) => {
+const watchScope = ({
+    store,
+    stopScope,
+    passScope,
+    passFlag,
+    allowImmediate = false,
+    fireOnceFlag = null,
+    fireOnceAction = null,
+}) => {
     const currentState = store.getState();
     if (currentState.scope === stopScope) {
         return Promise.resolve(false);
     }
 
-    if (allowImmediate && currentState.scope === passScope && currentState[passFlag]) {
+    const canPassNow = state =>
+        state.scope === passScope && state[passFlag] && (!fireOnceFlag || !state[fireOnceFlag]);
+
+    if (allowImmediate && canPassNow(currentState)) {
+        if (fireOnceAction) {
+            store.dispatch({ type: fireOnceAction });
+        }
         return Promise.resolve(true);
     }
 
@@ -89,10 +102,13 @@ const watchScope = ({ store, stopScope, passScope, passFlag, allowImmediate = fa
                 return;
             }
 
-            // If scope and passFlag are already satisfied, resolve immediately without tick delay
-            if (allowImmediate && newState.scope === passScope && newState[passFlag]) {
+            // Fast / immediate: resolve as soon as the flag is set, do not wait for another tick.
+            if (allowImmediate && canPassNow(newState)) {
                 isResolved = true;
                 unsubscribe();
+                if (fireOnceAction) {
+                    store.dispatch({ type: fireOnceAction });
+                }
                 resolve(true);
                 return;
             }
@@ -103,6 +119,9 @@ const watchScope = ({ store, stopScope, passScope, passFlag, allowImmediate = fa
             if (newState.scope === passScope && newState[passFlag]) {
                 isResolved = true;
                 unsubscribe();
+                if (fireOnceAction && fireOnceFlag && !newState[fireOnceFlag]) {
+                    store.dispatch({ type: fireOnceAction });
+                }
                 resolve(true);
             }
         });
@@ -154,6 +173,7 @@ export default class TradeEngine extends Balance(Purchase(Sell(OpenContract(Prop
         const validated_trade_options = this.validateTradeOptions(tradeOptions);
 
         this.tradeOptions = { ...validated_trade_options, symbol: this.options.symbol };
+        syncFastExecutionOverride();
         this.store.dispatch(start());
         this.checkLimits(validated_trade_options);
 

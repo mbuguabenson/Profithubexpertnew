@@ -25,9 +25,9 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     height: auto;
-    padding: 2px 4px;
+    padding: 1px 4px;
     border-radius: 6px;
     background: transparent;
     border: none;
@@ -43,38 +43,38 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 1px;
-        line-height: 1.2;
+        gap: 0;
+        line-height: 1.15;
     }
 
     &__label-row {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 3px;
     }
 
     &__account-label {
-        font-size: 12.5px;
+        font-size: 11.5px;
         font-weight: 700;
         color: var(--brand-orange, var(--ph-primary, #f5c542));
         white-space: nowrap;
-        line-height: 1.3;
+        line-height: 1.2;
         text-decoration: underline;
         text-decoration-color: var(--ph-primary, #f5c542);
         text-underline-offset: 2px;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
     }
 
     &__type-badge {
-        font-size: 9.5px;
+        font-size: 8.5px;
         font-weight: 800;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        padding: 1px 5px;
-        border-radius: 4px;
-        line-height: 1.2;
+        padding: 0.5px 4px;
+        border-radius: 3px;
+        line-height: 1.1;
 
         &--demo {
             background: rgba(156, 163, 175, 0.2);
@@ -86,17 +86,6 @@
             background: rgba(16, 185, 129, 0.2);
             color: #34d399;
             border: 1px solid rgba(16, 185, 129, 0.4);
-        }
-    }
-
-    &__currency-tag {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-less-prominent, #cbd5e1);
-        letter-spacing: 0.02em;
-
-        body:not(.theme--dark) & {
-            color: var(--text-less-prominent, #475569);
         }
     }
 
@@ -121,8 +110,8 @@
     // ── Currency / Avatar circle icon (Standard Deriv Coin) ──
     &__currency-icon {
         flex-shrink: 0;
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -152,11 +141,11 @@
 
     // ── Balance display ───────────────────────────────────────
     &__balance {
-        font-size: 14px;
-        font-weight: 800;
+        font-size: 12.5px;
+        font-weight: 700;
         color: var(--text-prominent, #ffffff);
         letter-spacing: -0.01em;
-        line-height: 1.2;
+        line-height: 1.15;
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
 
@@ -165,13 +154,13 @@
         }
 
         &--no-currency {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
             color: #94a3b8;
         }
 
         &--loading {
-            min-width: 75px;
+            min-width: 65px;
         }
     }
 
@@ -179,14 +168,14 @@
     &__balance-loader {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        height: 16px;
+        gap: 4px;
+        height: 14px;
         padding: 0 2px;
     }
 
     &__spinner {
-        width: 10px;
-        height: 10px;
+        width: 9px;
+        height: 9px;
         border: 2px solid rgba(245, 197, 66, 0.3);
         border-top-color: #f5c542;
         border-radius: 50%;
@@ -195,7 +184,7 @@
     }
 
     &__loading-text {
-        font-size: 11.5px;
+        font-size: 10.5px;
         font-weight: 700;
         color: #f5c542;
         letter-spacing: 0.01em;
@@ -204,12 +193,13 @@
 
     // ── Visibility Eye Button ─────────────────────────────────
     &__visibility-btn {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 4px;
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border-radius: 3px;
         border: none;
         background: transparent;
         color: var(--text-less-prominent, #cbd5e1);
@@ -218,6 +208,7 @@
             color 0.15s ease,
             background-color 0.15s ease;
         flex-shrink: 0;
+        margin-left: 1px;
 
         &:hover {
             background: rgba(255, 255, 255, 0.12);
@@ -225,20 +216,13 @@
         }
     }
 
-    // ── Actions wrapper ───────────────────────────────────────
-    &__actions {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        margin-left: 2px;
-    }
-
+    // ── Chevron wrapper next to eye icon ───────────────────────
     &__chevron-wrapper {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
         color: #cbd5e1;
         transition: transform 0.2s ease;
     }

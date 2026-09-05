@@ -1,15 +1,12 @@
 import TradeEngine from '../trade';
+import { isFastModeActive } from '../utils/fastMode';
 import getBotInterface from './BotInterface';
 import getTicksInterface from './TicksInterface';
 import getToolsInterface from './ToolsInterface';
 import getScannerInterface from './ScannerInterface';
 
 const sleep = (observer, arg = 1) => {
-    const isFast =
-        typeof localStorage !== 'undefined' &&
-        (localStorage.getItem('dbot_every_tick_mode') === 'true' ||
-            localStorage.getItem('bot_execution_speed') === '2');
-    const delayMs = isFast ? Math.min(arg * 1000, 100) : arg * 1000;
+    const delayMs = isFastModeActive() ? 0 : Number(arg) * 1000;
 
     return new Promise(
         r =>

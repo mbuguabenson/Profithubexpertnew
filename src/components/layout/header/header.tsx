@@ -350,7 +350,7 @@ const AppHeader = observer(() => {
                     {isDesktop ? <MenuItems /> : renderAccountSection('left')}
                 </Wrapper>
                 <Wrapper variant='right'>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingRight: '1.6rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: isDesktop ? '8px' : '4px', paddingRight: isDesktop ? '1.6rem' : '0.4rem' }}>
                         <HeaderSpeedToggle />
                         {!isDesktop && (
                             <button

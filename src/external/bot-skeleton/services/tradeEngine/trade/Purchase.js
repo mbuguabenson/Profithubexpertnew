@@ -2,8 +2,9 @@ import { LogTypes } from '../../../constants/messages';
 import DBotStore from '../../../scratch/dbot-store';
 import { api_base } from '../../api/api-base';
 import { contractStatus, info, log } from '../utils/broadcast';
+import { isFastModeActive, setFastExecutionOverride } from '../utils/fastMode';
 import { doUntilDone, getUUID, recoverFromError, tradeOptionToBuy } from '../utils/helpers';
-import { purchaseSuccessful, sell } from './state/actions';
+import { proposalsReady, purchaseSuccessful, sell } from './state/actions';
 import { BEFORE_PURCHASE } from './state/constants';
 import { observer as globalObserver } from '../../../utils/observer';
 
@@ -34,11 +35,24 @@ export default Engine =>
 
         // ─── Purchase (single trade) ───────────────────────────────────────────────
         async purchase(contract_type, is_fast_override) {
-            const isFastMode =
-                is_fast_override ||
-                (typeof localStorage !== 'undefined' &&
-                    (localStorage.getItem('dbot_every_tick_mode') === 'true' ||
-                        localStorage.getItem('bot_execution_speed') === '2'));
+            const blockFastOn =
+                is_fast_override === true ||
+                is_fast_override === 'true' ||
+                is_fast_override === 'TRUE' ||
+                is_fast_override === 1;
+            if (blockFastOn) {
+                setFastExecutionOverride(true);
+            } else if (is_fast_override === false || is_fast_override === 'false' || is_fast_override === 'FALSE') {
+                setFastExecutionOverride(false);
+            }
+
+            const isFastMode = blockFastOn || isFastModeActive();
+            if (isFastMode) {
+                this.is_proposal_subscription_required = false;
+                if (!this.store.getState().proposalsReady) {
+                    this.store.dispatch(proposalsReady());
+                }
+            }
 
             if (this.multiple_trades_count > 1) {
                 const count = this.multiple_trades_count;

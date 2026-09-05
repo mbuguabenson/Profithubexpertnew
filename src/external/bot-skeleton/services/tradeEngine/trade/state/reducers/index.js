@@ -3,6 +3,8 @@ import * as constants from '../constants';
 const initialState = {
     scope: constants.STOP,
     proposalsReady: false,
+    hasFiredBefore: false,
+    hasFiredDuring: false,
 };
 
 // eslint-disable-next-line default-param-last
@@ -13,11 +15,17 @@ const signal = (state = initialState, action) => {
                 ...state,
                 scope: constants.BEFORE_PURCHASE,
                 hasFiredBefore: false,
+                hasFiredDuring: false,
             };
         case 'BEFORE_FIRED':
             return {
                 ...state,
                 hasFiredBefore: true,
+            };
+        case 'DURING_FIRED':
+            return {
+                ...state,
+                hasFiredDuring: true,
             };
         case constants.PROPOSALS_READY:
             return {
@@ -34,6 +42,7 @@ const signal = (state = initialState, action) => {
                 ...state,
                 scope: constants.DURING_PURCHASE,
                 openContract: false,
+                hasFiredDuring: false,
             };
         case constants.OPEN_CONTRACT:
             return {
