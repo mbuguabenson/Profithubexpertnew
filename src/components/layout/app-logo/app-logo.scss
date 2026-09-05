@@ -4,7 +4,7 @@
     &__logo {
         padding-inline-start: 3.2rem;
         padding-inline-end: 2rem;
-        height: 32px;
+        height: 36px;
         display: flex;
         align-items: center;
         text-decoration: none;
@@ -76,110 +76,90 @@
 // ─── Universal Brand Logo Component Styles (User Brand Identity) ───
 .lth-brand-logo {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
+    align-items: center;
     user-select: none;
     cursor: pointer;
+    text-decoration: none;
+    border-radius: 12px;
+    padding: 2px 6px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(8px);
+        transform: translateY(-1px);
+
+        .lth-brand-logo__icon {
+            transform: scale(1.08) rotate(-1.5deg);
+            filter: drop-shadow(0 6px 16px rgba(16, 185, 129, 0.5));
+        }
+    }
 
     &__row {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 11px;
     }
 
     &__icon {
         display: block;
         object-fit: contain;
-        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-
-        &:hover {
-            transform: scale(1.06);
-        }
-
-        // SVG Theme Styles
-        .base-fill { fill: url(#baseGrad); }
-        .base-stroke { stroke: url(#baseGrad); }
-        
-        .logo-glow {
-            :global(.theme--dark) & {
-                filter: drop-shadow(0px 4px 5px rgba(255, 255, 255, 0.2));
-            }
-            :global(.theme--light) & {
-                filter: drop-shadow(0px 4px 5px rgba(0, 0, 0, 0.2));
-            }
-        }
-
-        // Define gradient stops for light and dark modes
-        :global(.theme--dark) & {
-            .base-stop-1 { stop-color: #f8fafc; }
-            .base-stop-2 { stop-color: #cbd5e1; }
-            .base-stop-3 { stop-color: #94a3b8; }
-        }
-
-        :global(.theme--light) & {
-            .base-stop-1 { stop-color: #064e3b; }
-            .base-stop-2 { stop-color: #022c1e; }
-            .base-stop-3 { stop-color: #011a12; }
-        }
+        flex-shrink: 0;
+        filter: drop-shadow(0 4px 10px rgba(16, 185, 129, 0.3));
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     &__text-col {
         display: flex;
         flex-direction: column;
-        line-height: 1.1;
-    }
-
-    &__title-row {
-        display: flex;
-        align-items: center;
-    }
-
-    &__legacy {
-        font-size: 1.45rem;
-        font-weight: 800;
-        letter-spacing: 1.8px;
-        font-family: 'Cinzel', 'Playfair Display', 'Times New Roman', serif;
+        justify-content: center;
         line-height: 1;
+        gap: 2px;
+    }
+
+    &__title {
+        font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+        font-size: 1.55rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        line-height: 1;
+        text-transform: uppercase;
         transition: color 0.2s ease;
 
-        :global(.theme--dark) & {
+        :global(.theme--dark) &,
+        .theme--dark & {
             color: #ffffff;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
         }
 
-        :global(.theme--light) & {
-            color: #033d26;
+        :global(.theme--light) &,
+        .theme--light & {
+            color: #0f172a;
             text-shadow: none;
         }
     }
 
-    &__trading-hub {
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 3.5px;
-        font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-        color: #8dc63f;
-        text-transform: uppercase;
-        margin-top: 1px;
-        line-height: 1;
-    }
-
     &__subtitle {
-        font-size: 0.48rem;
-        margin-top: 2px;
-        letter-spacing: 1.1px;
-        font-weight: 700;
-        text-transform: uppercase;
-        font-family: 'Cinzel', 'Times New Roman', serif;
+        font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+        font-size: 0.88rem;
+        font-weight: 800;
+        letter-spacing: 2.2px;
         line-height: 1;
+        text-transform: uppercase;
+        display: inline-block;
 
-        :global(.theme--dark) & {
-            color: #94a3b8;
+        :global(.theme--dark) &,
+        .theme--dark & {
+            background: linear-gradient(135deg, #34d399 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        :global(.theme--light) & {
-            color: #033d26;
+        :global(.theme--light) &,
+        .theme--light & {
+            background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
     }
 }

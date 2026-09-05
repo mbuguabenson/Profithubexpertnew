@@ -17,7 +17,7 @@ export const AppLogo = () => {
 
     return (
         <a href={logoUrl} className='app-header__logo' aria-label={localize('Home')}>
-            <BrandLogo width={120} height={32} fill='var(--text-general)' />
+            <BrandLogo height={34} fill='var(--text-general)' />
         </a>
     );
 };
