@@ -216,8 +216,8 @@ export const BrandLogo = observer(({ height = 36, className = '' }: TBrandLogoPr
                     </svg>
                 )}
                 <div className='lth-brand-logo__text-col'>
-                    <span className='lth-brand-logo__title'>LEGACY</span>
-                    <span className='lth-brand-logo__subtitle'>TRADING HUB</span>
+                    <span className='lth-brand-logo__title lth-brand-logo__legacy'>LEGACY</span>
+                    <span className='lth-brand-logo__subtitle lth-brand-logo__trading-hub'>TRADING HUB</span>
                 </div>
             </div>
         </div>

@@ -113,53 +113,63 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        line-height: 1;
+        line-height: 1.15;
         gap: 2px;
     }
 
-    &__title {
+    &__title,
+    &__legacy {
         font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
-        font-size: 1.55rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        line-height: 1;
+        font-size: 1.65rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+        line-height: 1.05;
         text-transform: uppercase;
+        display: block;
+        color: var(--text-prominent, #0f172a);
         transition: color 0.2s ease;
 
-        :global(.theme--dark) &,
-        .theme--dark & {
-            color: #ffffff;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+        body.theme--dark &,
+        .theme--dark &,
+        :global(.theme--dark) & {
+            color: #ffffff !important;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
         }
 
-        :global(.theme--light) &,
-        .theme--light & {
-            color: #0f172a;
+        body:not(.theme--dark) &,
+        body.theme--light &,
+        .theme--light &,
+        :global(.theme--light) & {
+            color: #0f172a !important;
             text-shadow: none;
         }
     }
 
-    &__subtitle {
+    &__subtitle,
+    &__trading-hub {
         font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
-        font-size: 0.88rem;
+        font-size: 1.15rem;
         font-weight: 800;
         letter-spacing: 2.2px;
-        line-height: 1;
+        line-height: 1.05;
         text-transform: uppercase;
-        display: inline-block;
+        display: block;
+        color: #047857;
+        transition: color 0.2s ease;
 
-        :global(.theme--dark) &,
-        .theme--dark & {
-            background: linear-gradient(135deg, #34d399 0%, #06b6d4 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        body.theme--dark &,
+        .theme--dark &,
+        :global(.theme--dark) & {
+            color: #10b981 !important;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
         }
 
-        :global(.theme--light) &,
-        .theme--light & {
-            background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        body:not(.theme--dark) &,
+        body.theme--light &,
+        .theme--light &,
+        :global(.theme--light) & {
+            color: #047857 !important;
+            text-shadow: none;
         }
     }
 }
