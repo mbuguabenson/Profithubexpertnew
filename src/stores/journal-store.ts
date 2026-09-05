@@ -201,14 +201,22 @@ export default class JournalStore {
                     // Determine which error code to use based on the message content
                     let errorCode = 'InvalidtoBuy'; // default
                     if (message.includes('Current payout')) {
-                        errorCode = message.includes('stake') ? 'StakeLimits' : 'PayoutLimits';
+                        errorCode = 'PayoutLimits';
                     } else if (message.includes('Current stake')) {
                         errorCode = 'StakeLimits';
                     }
 
-                    processedMessage = getLocalizedErrorMessage(errorCode, details);
+                    const localized = getLocalizedErrorMessage(errorCode, details);
+                    if (localized && !localized.includes('{{param')) {
+                        processedMessage = localized;
+                    }
                 }
             }
+        }
+
+        // Final guard: Ensure no unpopulated template placeholders are pushed to the journal
+        if (typeof processedMessage === 'string' && processedMessage.includes('{{')) {
+            processedMessage = processedMessage.replace(/\{\{[^}]+\}\}/g, '').replace(/\s{2,}/g, ' ').trim();
         }
 
         this.pushMessage(processedMessage, MessageTypes.ERROR);

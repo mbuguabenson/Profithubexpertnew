@@ -1030,13 +1030,17 @@ export default class RunPanelStore {
                     // Determine which error code to use based on the message content
                     let errorCode = 'InvalidtoBuy'; // default
                     if (rawMessage.includes('Current payout')) {
-                        errorCode = rawMessage.includes('stake') ? 'StakeLimits' : 'PayoutLimits';
+                        errorCode = 'PayoutLimits';
                     } else if (rawMessage.includes('Current stake')) {
                         errorCode = 'StakeLimits';
                     }
 
                     const processedMessage = getLocalizedErrorMessage(errorCode, details);
-                    this.showErrorMessage(processedMessage);
+                    const finalDisplay =
+                        processedMessage && !processedMessage.includes('{{param')
+                            ? processedMessage
+                            : rawMessage;
+                    this.showErrorMessage(finalDisplay);
                     return;
                 }
             }
@@ -1072,7 +1076,11 @@ export default class RunPanelStore {
             }
 
             // Default behavior for other errors or when we can't find a match
-            this.showErrorMessage(rawMessage);
+            let finalMsg =
+                typeof rawMessage === 'string' && rawMessage.includes('{{')
+                    ? rawMessage.replace(/\{\{[^}]+\}\}/g, '').replace(/\s{2,}/g, ' ').trim()
+                    : rawMessage;
+            this.showErrorMessage(finalMsg);
         };
 
         observer.register('ui.log.error', handleUiLogError);

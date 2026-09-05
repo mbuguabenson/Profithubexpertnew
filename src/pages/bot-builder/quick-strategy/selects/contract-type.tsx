@@ -168,7 +168,7 @@ const ContractTypes: React.FC<TContractTypes> = observer(({ name }) => {
                         const maxPayout = maxPayoutMatch[1];
                         const currentPayout = currentPayoutMatch[1];
                         // Use the translation key with parameter substitution
-                        translated_error_message = localize(
+                        let localized = localize(
                             'Minimum stake of {{param1}} and maximum payout of {{param2}}. Current payout is {{param3}}.',
                             {
                                 param1: minStake,
@@ -176,6 +176,10 @@ const ContractTypes: React.FC<TContractTypes> = observer(({ name }) => {
                                 param3: currentPayout,
                             }
                         );
+                        if (!localized || localized.includes('{{param')) {
+                            localized = `Minimum stake of ${minStake} and maximum payout of ${maxPayout}. Current payout is ${currentPayout}.`;
+                        }
+                        translated_error_message = localized;
                     } else {
                         // Fallback to direct translation if we can't extract the values
                         translated_error_message = localize(error_message);
@@ -188,9 +192,13 @@ const ContractTypes: React.FC<TContractTypes> = observer(({ name }) => {
                     if (amountMatch && amountMatch[1]) {
                         const maxAmount = amountMatch[1];
                         // Use the translation key with parameter substitution
-                        translated_error_message = localize("Please enter a stake amount that's at most {{param1}}.", {
+                        let localized = localize("Please enter a stake amount that's at most {{param1}}.", {
                             param1: maxAmount,
                         });
+                        if (!localized || localized.includes('{{param')) {
+                            localized = `Please enter a stake amount that's at most ${maxAmount}.`;
+                        }
+                        translated_error_message = localized;
                     } else {
                         // Fallback to direct translation if we can't extract the amount
                         translated_error_message = localize(error_message);

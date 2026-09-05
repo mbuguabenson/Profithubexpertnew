@@ -81,5 +81,38 @@ describe('Backend Error Messages', () => {
             expect(message).toContain('5');
             expect(message).toContain('12345');
         });
+
+        it('should extract parameters from raw backend message for InvalidtoBuy without code_args', () => {
+            const message = getLocalizedErrorMessage('InvalidtoBuy', {
+                code: 'InvalidtoBuy',
+                message: 'Minimum stake of 0.35 and maximum payout of 50000. Current payout is 0.20.',
+            });
+            expect(message).not.toContain('{{param');
+            expect(message).toContain('0.35');
+            expect(message).toContain('50000');
+            expect(message).toContain('0.20');
+        });
+
+        it('should not display raw template placeholders if errorResponse is a string with numbers', () => {
+            const message = getLocalizedErrorMessage('InvalidtoBuy', {
+                error: {
+                    code: 'InvalidtoBuy',
+                    message: 'Minimum stake of 0.50 and maximum payout of 20000. Current payout is 0.10.',
+                },
+            });
+            expect(message).not.toContain('{{param1}}');
+            expect(message).not.toContain('{{param2}}');
+            expect(message).not.toContain('{{param3}}');
+            expect(message).toContain('0.50');
+            expect(message).toContain('20000');
+            expect(message).toContain('0.10');
+        });
+
+        it('should never expose unresolved {{param}} placeholders in output', () => {
+            const message = getLocalizedErrorMessage('InvalidtoBuy');
+            expect(message).not.toContain('{{param1}}');
+            expect(message).not.toContain('{{param2}}');
+            expect(message).not.toContain('{{param3}}');
+        });
     });
 });

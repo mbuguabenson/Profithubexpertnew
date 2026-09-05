@@ -71,13 +71,68 @@ const processBackendParameters = (errorResponse?: Record<string, any>) => {
         if (errorResponse._5 !== undefined) {
             params.param5 = sanitizeParameterValue(String(errorResponse._5).replace(/\.+$/, ''));
         }
-
         // Also include any named parameters
         Object.keys(errorResponse).forEach(key => {
             if (!key.startsWith('_') && !['code', 'subcode', 'message'].includes(key)) {
                 params[key] = sanitizeParameterValue(String(errorResponse[key]).replace(/\.+$/, ''));
             }
         });
+    }
+
+    // Extract dynamic parameter values from message strings if not already extracted
+    const rawMessage =
+        typeof errorResponse === 'string'
+            ? errorResponse
+            : errorResponse?.message ||
+              errorResponse?.error?.message ||
+              errorResponse?.details?.message;
+
+    if (typeof rawMessage === 'string' && !rawMessage.includes('{{param')) {
+        const minStakeMatch = rawMessage.match(/Minimum stake of ([\d.]+)/i);
+        const maxPayoutMatch = rawMessage.match(/maximum payout of ([\d.]+)/i);
+        const currentMatch = rawMessage.match(/Current (?:payout|stake) is ([\d.]+)/i);
+
+        if (minStakeMatch && !params.param1) {
+            params.param1 = sanitizeParameterValue(minStakeMatch[1]);
+        }
+        if (maxPayoutMatch && !params.param2) {
+            params.param2 = sanitizeParameterValue(maxPayoutMatch[1]);
+        }
+        if (currentMatch && !params.param3) {
+            params.param3 = sanitizeParameterValue(currentMatch[1]);
+        }
+
+        // Match: at least X / at most X
+        const atLeastMatch = rawMessage.match(/at least ([\d.]+)/i);
+        if (atLeastMatch && !params.param1) {
+            params.param1 = sanitizeParameterValue(atLeastMatch[1]);
+        }
+
+        const atMostMatch = rawMessage.match(/at most ([\d.]+)/i);
+        if (atMostMatch && !params.param1) {
+            params.param1 = sanitizeParameterValue(atMostMatch[1]);
+        }
+
+        const higherThanMatch = rawMessage.match(/equal to or higher than ([\d.]+)/i);
+        if (higherThanMatch && !params.param1) {
+            params.param1 = sanitizeParameterValue(higherThanMatch[1]);
+        }
+
+        const lowerThanMatch = rawMessage.match(/equal to or lower than ([\d.]+)/i);
+        if (lowerThanMatch && !params.param1) {
+            params.param1 = sanitizeParameterValue(lowerThanMatch[1]);
+        }
+
+        const ticksBetweenMatch = rawMessage.match(/Number of ticks must be between (\d+) and (\d+)/i);
+        if (ticksBetweenMatch) {
+            if (!params.param1) params.param1 = sanitizeParameterValue(ticksBetweenMatch[1]);
+            if (!params.param2) params.param2 = sanitizeParameterValue(ticksBetweenMatch[2]);
+        } else {
+            const singleTickMatch = rawMessage.match(/Number of ticks must be (\d+)/i);
+            if (singleTickMatch && !params.param1) {
+                params.param1 = sanitizeParameterValue(singleTickMatch[1]);
+            }
+        }
     }
 
     return params;
@@ -367,6 +422,13 @@ export const getLocalizedErrorMessage = (errorCode: string, errorResponse?: Reco
     const errorMessages = getBackendErrorMessages();
     let message = errorMessages[errorCode as keyof typeof errorMessages];
 
+    const rawBackendMessage =
+        typeof errorResponse === 'string'
+            ? errorResponse
+            : errorResponse?.message ||
+              errorResponse?.error?.message ||
+              errorResponse?.details?.message;
+
     if (!message) {
         // Log unknown error codes for monitoring and improvement
         console.warn(`Unknown error code encountered: ${errorCode}`, {
@@ -377,10 +439,7 @@ export const getLocalizedErrorMessage = (errorCode: string, errorResponse?: Reco
 
         // If no predefined message, use the backend message if available
         message =
-            errorResponse?.message ||
-            errorResponse?.error?.message ||
-            errorResponse?.details?.message ||
-            (typeof errorResponse === 'string' ? errorResponse : '') ||
+            rawBackendMessage ||
             localize('An error occurred. Please try again.');
     }
 
@@ -412,6 +471,15 @@ export const getLocalizedErrorMessage = (errorCode: string, errorResponse?: Reco
     } else {
         // Only use localize() for static messages without dynamic parameters
         finalMessage = localize(message, processedParams);
+    }
+
+    // Safety fallback: ensure no unresolved {{param...}} placeholders are ever exposed
+    if (finalMessage.includes('{{param') || finalMessage.includes('{{')) {
+        if (rawBackendMessage && typeof rawBackendMessage === 'string' && !rawBackendMessage.includes('{{')) {
+            finalMessage = rawBackendMessage;
+        } else {
+            finalMessage = finalMessage.replace(/\{\{[^}]+\}\}/g, '').replace(/\s{2,}/g, ' ').trim();
+        }
     }
 
     // Clean up empty parentheses or dangling ID placeholders if request ID is omitted
