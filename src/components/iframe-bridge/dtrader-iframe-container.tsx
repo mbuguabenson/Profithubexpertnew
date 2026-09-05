@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { resolveValidDerivWSToken, isInvalidBearerToken } from '@/utils/token-bridge';
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { Loader2 } from 'lucide-react';
@@ -207,35 +208,56 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 
         // 1. Mandatory token parameter:
         // deriv-dtrader-ten requires `has('token')` to bypass anti-clickjack.
-        // When unauthenticated, token='' satisfies has('token') without sending an invalid token to the WebSocket.
-        // When authenticated, real token is passed to automatically authorize the session.
-        if (isAuthenticated && activeToken && !isInvalidBearerToken(activeToken)) {
-            params.set('token', activeToken);
-            params.set('token1', activeToken);
-            params.set('loginid', activeLoginId);
-            params.set('account', activeLoginId);
-            params.set('acct1', activeLoginId);
+        // It specifically expects an OAuth2 PKCE Bearer JWT token (starts with 'ey') for its /trading/v1/options/accounts REST endpoint.
+        // If a WebSocket token (e.g. 15-char token) or invalid token is passed, deriv-dtrader-ten's fetchAccounts() fails with 401
+        // and crashes with "Failed to load market data. Please refresh the page."
+        const authInfo = OAuthTokenExchangeService.getAuthInfo();
+        const isValidOAuthBearer = Boolean(
+            authInfo?.access_token &&
+            typeof authInfo.access_token === 'string' &&
+            authInfo.access_token.startsWith('ey') &&
+            (!authInfo.expires_at || Date.now() < authInfo.expires_at)
+        );
+
+        if (isValidOAuthBearer && authInfo?.access_token) {
+            params.set('token', authInfo.access_token);
+            params.set('token1', authInfo.access_token);
+            if (activeLoginId) {
+                params.set('loginid', activeLoginId);
+                params.set('account', activeLoginId);
+                params.set('acct1', activeLoginId);
+            }
             params.set('cur1', currency);
             params.set('app_id', activeAppId);
             params.set('client_id', activeAppId);
-        } else {
-            params.set('token', '');
-        }
 
-        // 4. Secondary accounts mapped from storage
-        try {
-            let index = 1;
-            for (const accId in sessionData.accounts) {
-                const accToken = sessionData.accounts[accId];
-                if (accToken && accId !== activeLoginId) {
-                    index++;
-                    params.set(`acct${index}`, accId);
-                    params.set(`token${index}`, accToken);
-                    params.set(`cur${index}`, currency || 'USD');
+            // Secondary accounts mapped from storage
+            try {
+                let index = 1;
+                for (const accId in sessionData.accounts) {
+                    const accToken = sessionData.accounts[accId];
+                    if (accToken && accId !== activeLoginId && accToken.startsWith('ey')) {
+                        index++;
+                        params.set(`acct${index}`, accId);
+                        params.set(`token${index}`, accToken);
+                        params.set(`cur${index}`, currency || 'USD');
+                    }
                 }
+            } catch (e) {
+                void e;
             }
-        } catch (e) {
-            void e;
+        } else {
+            // Unauthenticated or WebSocket-only session:
+            // 1. token='' satisfies has('token') so anti-clickjack does not redirect top.location.
+            // 2. code=clear&state=1 triggers clearTokens() in deriv-dtrader-ten's App.tsx to purge
+            //    any stale, invalid tokens previously stored in the iframe's sessionStorage['auth_info'].
+            // 3. This allows DTrader to boot cleanly into guest mode using the public WebSocket endpoint
+            //    (wss://api.derivws.com/trading/v1/options/ws/public) without throwing 401 or crashing market data.
+            params.set('token', '');
+            params.set('code', 'clear');
+            params.set('state', '1');
+            params.set('app_id', activeAppId);
+            params.set('client_id', activeAppId);
         }
 
         // 5. Environment & theme flags - hide login, signup and top header
