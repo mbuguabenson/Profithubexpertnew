@@ -10,33 +10,36 @@ import DropdownList, { TItem } from '../dropdown-list';
 import Input from '../input';
 
 type TAutocompleteProps = {
-    autoComplete: string;
-    className: string;
+    autoComplete?: string;
+    className?: string;
     disabled?: boolean;
-    dropdown_offset: string;
+    dropdown_offset?: string;
     error?: string;
     has_updating_list?: boolean;
     hide_list?: boolean;
-    historyValue: string;
-    input_id: string;
-    is_alignment_top: boolean;
+    historyValue?: string;
+    input_id?: string;
+    is_alignment_top?: boolean;
     is_list_visible?: boolean;
-    list_height: string;
+    list_height?: string;
     list_items: TItem[];
-    list_portal_id: string;
-    not_found_text: string;
+    list_portal_id?: string;
+    not_found_text?: string;
     onBlur?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-    onHideDropdownList: () => void;
+    onHideDropdownList?: () => void;
     onItemSelection: (item: TItem) => void;
     onScrollStop?: () => void;
     onShowDropdownList?: () => void;
-    should_filter_by_char: boolean;
+    should_filter_by_char?: boolean;
     show_list?: boolean;
     trailing_icon?: React.ReactElement;
     value: string;
     onSearch?: (value: string, items: TItem[]) => [];
-    data_testid: string;
+    data_testid?: string;
+    'data-testid'?: string;
     readOnly?: boolean;
+    inputMode?: string;
+    [key: string]: any;
 };
 
 const KEY_CODE = {
@@ -337,7 +340,7 @@ const Autocomplete = React.memo((props: TAutocompleteProps) => {
     };
 
     return (
-        <div data-testid={data_testid} className={classNames('dc-autocomplete', className)}>
+        <div data-testid={data_testid || other_props['data-testid']} className={classNames('dc-autocomplete', className)}>
             <div ref={input_wrapper_ref} className='dc-autocomplete__input-field'>
                 <Input
                     {...other_props}
