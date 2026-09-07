@@ -108,7 +108,7 @@ export const StatementReportModal = observer(({ isOpen, onClose, initialLoginId 
         } finally {
             setIsLoading(false);
         }
-    }, [selectedLoginId, activeLoginId, client?.loginid, limit, dateFrom, dateTo, actionFilter]);
+    }, [selectedLoginId, activeLoginid, client?.loginid, limit, dateFrom, dateTo, actionFilter]);
 
     useEffect(() => {
         if (isOpen) {

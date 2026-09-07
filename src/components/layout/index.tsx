@@ -510,8 +510,12 @@ const Layout = observer(() => {
             {!isCallbackPage && !isAdminPage && isDesktop && <Footer />}
             {!isAdminPage && <RiskDisclaimer />}
             <AccountInfoModal isOpen={isAccountInfoOpen} onClose={() => setIsAccountInfoOpen(false)} />
-            <StatementReportModal isOpen={isStatementReportOpen} onClose={() => setIsStatementReportOpen(false)} />
-            <WalletManagementModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />
+            {isStatementReportOpen && (
+                <StatementReportModal isOpen={isStatementReportOpen} onClose={() => setIsStatementReportOpen(false)} />
+            )}
+            {isWalletModalOpen && (
+                <WalletManagementModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />
+            )}
 
             {/* Floating Chat Widget (only on client-facing pages) */}
             {!isAdminPage && !isCallbackPage && <FloatingChat />}
