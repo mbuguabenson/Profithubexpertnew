@@ -51,6 +51,7 @@ export default class RunPanelStore {
             show_bot_stop_message: observable,
             is_every_tick_mode: observable,
             toggleEveryTickMode: action,
+            setEveryTickMode: action,
             is_stop_button_visible: computed,
             is_stop_button_disabled: computed,
             is_clear_stat_disabled: computed,
@@ -123,8 +124,17 @@ export default class RunPanelStore {
             });
         };
 
+        const handleSpeedModeRequest = (event: any) => {
+            if (event?.detail && typeof event.detail.isFast === 'boolean') {
+                runInAction(() => {
+                    this.setEveryTickMode(event.detail.isFast);
+                });
+            }
+        };
+
         if (typeof window !== 'undefined') {
             window.addEventListener('account_switched', handleAccountSwitch);
+            window.addEventListener('set_dbot_speed_mode', handleSpeedModeRequest);
         }
         observer.register('api.authorize', handleAccountSwitch);
     }
@@ -144,8 +154,9 @@ export default class RunPanelStore {
     is_every_tick_mode =
         typeof localStorage !== 'undefined' ? localStorage.getItem('dbot_every_tick_mode') === 'true' : false;
 
-    toggleEveryTickMode = () => {
-        this.is_every_tick_mode = !this.is_every_tick_mode;
+    setEveryTickMode = (enabled: boolean) => {
+        if (this.is_every_tick_mode === enabled) return;
+        this.is_every_tick_mode = enabled;
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem('dbot_every_tick_mode', String(this.is_every_tick_mode));
             localStorage.setItem('bot_execution_speed', this.is_every_tick_mode ? '2' : '1');
@@ -156,6 +167,10 @@ export default class RunPanelStore {
                 new CustomEvent('dbot_speed_mode_changed', { detail: { isFast: this.is_every_tick_mode } })
             );
         }
+    };
+
+    toggleEveryTickMode = () => {
+        this.setEveryTickMode(!this.is_every_tick_mode);
     };
 
     run_id = '';

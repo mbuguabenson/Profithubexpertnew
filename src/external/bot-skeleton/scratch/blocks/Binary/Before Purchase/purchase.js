@@ -1,6 +1,11 @@
 import { localize } from '@deriv-com/translations';
 import { getContractTypeOptions } from '../../../shared';
 import { excludeOptionFromContextMenu, modifyContextMenu } from '../../../utils';
+import {
+    isFastModeActive,
+    getIsSyncingWorkspace,
+    syncBlocklyPurchaseBlocks,
+} from '../../../../services/tradeEngine/utils/fastMode';
 
 window.Blockly.Blocks.purchase = {
     init() {
@@ -8,6 +13,12 @@ window.Blockly.Blocks.purchase = {
 
         // Ensure one of this type per statement-stack
         this.setNextStatement(false);
+
+        // Synchronize with active fast mode state from header/localStorage
+        const fastField = this.getField('FAST_EXECUTION');
+        if (fastField && typeof isFastModeActive === 'function') {
+            fastField.setValue(isFastModeActive() ? 'TRUE' : 'FALSE');
+        }
     },
     definition() {
         return {
@@ -24,7 +35,7 @@ window.Blockly.Blocks.purchase = {
                 {
                     type: 'field_checkbox',
                     name: 'FAST_EXECUTION',
-                    checked: true,
+                    checked: typeof isFastModeActive === 'function' ? isFastModeActive() : true,
                 },
             ],
             previousStatement: null,
@@ -51,8 +62,30 @@ window.Blockly.Blocks.purchase = {
             return;
         }
 
+        // Two-way synchronization: if user toggles Fast checkbox in Blockly, update header button & other purchase blocks
+        if (
+            event.type === window.Blockly.Events.BLOCK_CHANGE &&
+            event.blockId === this.id &&
+            event.name === 'FAST_EXECUTION' &&
+            !getIsSyncingWorkspace()
+        ) {
+            const isChecked = event.newValue === 'TRUE' || event.newValue === true || event.newValue === 'true';
+            window.dispatchEvent(
+                new CustomEvent('set_dbot_speed_mode', { detail: { isFast: isChecked, source: 'blockly' } })
+            );
+            syncBlocklyPurchaseBlocks(isChecked);
+        }
+
         if (event.type === window.Blockly.Events.BLOCK_CREATE && event.ids.includes(this.id)) {
             this.populatePurchaseList(event);
+            // Newly created block reflects the active fast mode
+            const fastField = this.getField('FAST_EXECUTION');
+            if (fastField && !getIsSyncingWorkspace() && typeof isFastModeActive === 'function') {
+                const isFast = isFastModeActive();
+                if (fastField.getValue() !== (isFast ? 'TRUE' : 'FALSE')) {
+                    fastField.setValue(isFast ? 'TRUE' : 'FALSE');
+                }
+            }
         } else if (event.type === window.Blockly.Events.BLOCK_CHANGE) {
             if (event.name === 'TYPE_LIST' || event.name === 'TRADETYPE_LIST') {
                 this.populatePurchaseList(event);

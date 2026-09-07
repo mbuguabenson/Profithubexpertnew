@@ -15,6 +15,7 @@ import EntryScanner from '../entry-scanner/entry-scanner';
 import WorkspaceWrapper from './workspace-wrapper';
 import DraggableResizeWrapper from '@/components/draggable/draggable-resize-wrapper';
 import { DBOT_TABS } from '@/constants/bot-contents';
+import { syncBlocklyPurchaseBlocks } from '@/external/bot-skeleton/services/tradeEngine/utils/fastMode';
 
 import Signals from '@/pages/signals/signals';
 import MobileFullPageModal from '@/components/shared_ui/mobile-full-page-modal';
@@ -40,6 +41,13 @@ const BotBuilder = observer(() => {
         onMount();
         return () => onUnmount();
     }, [onMount, onUnmount]);
+
+    // Keep Blockly purchase blocks synchronized with header speed toggle
+    React.useEffect(() => {
+        if (active_tab === DBOT_TABS.BOT_BUILDER) {
+            syncBlocklyPurchaseBlocks(run_panel.is_every_tick_mode);
+        }
+    }, [active_tab, run_panel.is_every_tick_mode]);
 
     React.useEffect(() => {
         const workspace = window.Blockly?.derivWorkspace;

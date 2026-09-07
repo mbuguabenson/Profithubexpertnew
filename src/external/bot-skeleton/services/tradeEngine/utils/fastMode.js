@@ -51,3 +51,43 @@ export const isHeaderFastModeEnabled = () => {
 export const syncFastExecutionOverride = () => {
     setFastExecutionOverride(isHeaderFastModeEnabled() || isPurchaseFastExecutionEnabled());
 };
+
+let isSyncingWorkspace = false;
+
+export const getIsSyncingWorkspace = () => isSyncingWorkspace;
+
+/**
+ * Synchronizes all purchase blocks in the active Blockly workspace
+ * to match the fast execution state.
+ */
+export const syncBlocklyPurchaseBlocks = isFast => {
+    if (typeof window === 'undefined' || !window.Blockly) return;
+    const workspace = window.Blockly.derivWorkspace || window.Blockly.getMainWorkspace?.();
+    if (!workspace || typeof workspace.getAllBlocks !== 'function') return;
+
+    const targetValue = isFast ? 'TRUE' : 'FALSE';
+    isSyncingWorkspace = true;
+    try {
+        const blocks = workspace.getAllBlocks(false);
+        blocks.forEach(block => {
+            if (block && block.type === 'purchase' && typeof block.getField === 'function') {
+                const field = block.getField('FAST_EXECUTION');
+                if (field && field.getValue() !== targetValue) {
+                    field.setValue(targetValue);
+                }
+            }
+        });
+    } catch (e) {
+        console.warn('[syncBlocklyPurchaseBlocks] Error updating purchase blocks:', e);
+    } finally {
+        isSyncingWorkspace = false;
+    }
+};
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('dbot_speed_mode_changed', event => {
+        if (event?.detail && typeof event.detail.isFast === 'boolean') {
+            syncBlocklyPurchaseBlocks(event.detail.isFast);
+        }
+    });
+}
