@@ -515,8 +515,101 @@ export const EntryScanner = observer(() => {
                     </button>
                 </div>
             </div>
+
+            {/* ── Signal Prompt Modal (Load and Run / Load Only) ── */}
+            {entry_scanner.show_signal_modal && entry_scanner.pending_signal_prompt && (
+                <div className='scanner-prompt-backdrop' onClick={() => entry_scanner.dismissSignalPrompt()}>
+                    <div className='scanner-prompt-modal' onClick={e => e.stopPropagation()}>
+                        <div className='modal-glow-bar' />
+
+                        <div className='modal-header'>
+                            <div className='header-left'>
+                                <div className='signal-orb-icon'>⚡</div>
+                                <div className='header-text'>
+                                    <h3 className='modal-title'>AI Signal Detected</h3>
+                                    <span className='modal-subtitle'>
+                                        {entry_scanner.pending_signal_prompt.displayName}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className='confidence-badge'>
+                                {entry_scanner.pending_signal_prompt.confidence.toFixed(0)}% MATCH
+                            </div>
+                        </div>
+
+                        <div className='modal-signal-summary'>
+                            <div className='summary-pill'>
+                                <span className='lbl'>Strategy</span>
+                                <span className='val'>
+                                    {entry_scanner.pending_signal_prompt.strategy.replace('_', '/').toUpperCase()}
+                                </span>
+                            </div>
+                            <div className='summary-pill'>
+                                <span className='lbl'>Direction</span>
+                                <span className='val text-emerald'>
+                                    {entry_scanner.pending_signal_prompt.direction}
+                                </span>
+                            </div>
+                            <div className='summary-pill'>
+                                <span className='lbl'>Target/Barrier</span>
+                                <span className='val text-cyan'>
+                                    Digit {entry_scanner.pending_signal_prompt.prediction}
+                                </span>
+                            </div>
+                        </div>
+
+                        {entry_scanner.pending_signal_prompt.waitDescription && (
+                            <div className='modal-trigger-box'>
+                                <span className='trigger-tag'>TRIGGER</span>
+                                <span className='trigger-text'>
+                                    {entry_scanner.pending_signal_prompt.waitDescription}
+                                </span>
+                            </div>
+                        )}
+
+                        <p className='modal-instructions'>
+                            Choose how you would like to proceed with this AI-generated strategy:
+                        </p>
+
+                        <div className='modal-actions-row'>
+                            <button
+                                type='button'
+                                className='btn-action btn-load-and-run'
+                                onClick={() => entry_scanner.handleSignalPromptAction(true)}
+                            >
+                                <span className='btn-icon'>⚡</span>
+                                <div className='btn-label-group'>
+                                    <span className='btn-primary-text'>Load and Run</span>
+                                    <span className='btn-secondary-text'>Send to Builder & Auto-Start</span>
+                                </div>
+                            </button>
+
+                            <button
+                                type='button'
+                                className='btn-action btn-load-only'
+                                onClick={() => entry_scanner.handleSignalPromptAction(false)}
+                            >
+                                <span className='btn-icon'>🤖</span>
+                                <div className='btn-label-group'>
+                                    <span className='btn-primary-text'>Load Only</span>
+                                    <span className='btn-secondary-text'>Send to Builder without Running</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        <button
+                            type='button'
+                            className='btn-modal-dismiss'
+                            onClick={() => entry_scanner.dismissSignalPrompt()}
+                        >
+                            Dismiss & Continue Scanning
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 });
 
 export default EntryScanner;
+

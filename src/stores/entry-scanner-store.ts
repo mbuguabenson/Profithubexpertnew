@@ -101,6 +101,8 @@ export default class EntryScannerStore {
     @observable accessor selected_market: string = '';
     @observable accessor selected_symbol: string = '';
     @observable accessor trade_type: string = '';
+    @observable accessor show_signal_modal: boolean = false;
+    @observable accessor pending_signal_prompt: TScanResult | null = null;
 
     // Analytics / Logging
     @observable accessor wins: number = 0;
@@ -517,6 +519,10 @@ export default class EntryScannerStore {
             this.wait_sequence = [];
             this.scan_progress = 100;
             this.scan_status = `🎯 High-confidence signal on ${bestMatch.displayName} (${bestMatch.confidence.toFixed(1)}% match). Strictly waiting for entry point: ${bestMatch.waitDescription}`;
+            if (!this.show_signal_modal) {
+                this.pending_signal_prompt = bestMatch;
+                this.show_signal_modal = true;
+            }
         } else {
             const count = this.market_stats.size;
             this.scan_status = `🔍 Scanning ${count} market(s) for ${this.selected_strategies.map(s => s.replace('_', '/')).join(', ')} patterns...`;
@@ -779,12 +785,21 @@ export default class EntryScannerStore {
 
         if (triggered) {
             this.scan_phase = 'trading';
-            if (this.auto_load_on_match && !this.is_in_recovery_mode) {
-                this.loadBotToBuilderAndRun(true);
-            } else {
-                this.executeTrade();
-            }
+            this.pending_signal_prompt = result;
+            this.show_signal_modal = true;
         }
+    }
+
+    @action public dismissSignalPrompt() {
+        this.show_signal_modal = false;
+        this.pending_signal_prompt = null;
+        this.scan_phase = 'scanning';
+        this.scan_status = 'Scanning for new algorithmic patterns...';
+    }
+
+    @action public async handleSignalPromptAction(autoRun: boolean) {
+        this.show_signal_modal = false;
+        await this.loadBotToBuilderAndRun(autoRun);
     }
 
     // ═══════════════════════════════════════════════════════════

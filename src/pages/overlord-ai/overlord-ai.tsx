@@ -927,147 +927,218 @@ const OverlordAi: React.FC = observer(() => {
     const winRate = totalTrades > 0 ? Math.round((winsCount / totalTrades) * 100) : 0;
 
     return (
-        <div className={`overlord-ai-wrapper ${isWideViewOpen ? 'wide-view-active' : ''}`}>
-            {/* ── Top Header & Cyber Wallet Bar ── */}
-            <header className='overlord-top-bar'>
-                <div className='brand-section'>
-                    <div className='brand-icon-box'>
-                        <Zap size={24} />
-                    </div>
-                    <div className='brand-info'>
-                        <div className='brand-title-row'>
-                            <h1 className='brand-title'>OVERLORD AI</h1>
-                            <span className='version-tag'>QUANTUM TRADER v4.0</span>
-                            <span className='status-live-badge'>
-                                <span className='pulse-dot' />
-                                24/7 ONLINE
-                            </span>
-                        </div>
-                        <span className='brand-subtitle'>
-                            Neural Pattern Detection • 7–12 Run Continuous Bursts • Dynamic Market Rotation
-                        </span>
-                    </div>
-                </div>
+        <div className='overlord-ai-wrapper'>
+            {/* ── Master Configuration Deck (Market & Trading Parameters) ── */}
+            <div className='overlord-master-config-deck'>
+                {/* Row 1: Execution Control & Market Configuration */}
+                <div className='config-deck-row'>
+                    <div className='deck-action-group'>
+                        {botState === 'IDLE' || botState === 'PAUSED' || botState === 'TP_REACHED' || botState === 'SL_REACHED' ? (
+                            <button
+                                type='button'
+                                className='btn-control btn-autotrade-start'
+                                onClick={handleStartTrading}
+                            >
+                                <Play size={16} /> START AI TRADER
+                            </button>
+                        ) : (
+                            <button
+                                type='button'
+                                className='btn-control btn-autotrade-stop'
+                                onClick={handleStopTrading}
+                            >
+                                <Square size={16} /> STOP TRADING
+                            </button>
+                        )}
 
-                {/* Cyber Wallet Card */}
-                <div className='cyber-wallet-card'>
-                    <div className='wallet-account-header'>
-                        <span
-                            className={`account-badge ${client?.is_virtual ? 'badge-demo' : 'badge-real'}`}
-                        >
-                            {client?.is_virtual ? 'DEMO ACCOUNT' : 'REAL ACCOUNT'}
-                        </span>
-                        <span className='account-loginid'>{client?.loginid || 'CR000000'}</span>
-                    </div>
-                    <div className='wallet-balance-row'>
-                        <div className='balance-icon-wrap'>
-                            <Wallet size={18} />
-                        </div>
-                        <div className='balance-data'>
-                            <span className='balance-label'>AVAILABLE BALANCE</span>
-                            <span className='balance-amount'>
-                                {rawBalance.toLocaleString('en-US', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                })}
-                                <span className='currency-code'>{currency}</span>
-                            </span>
-                        </div>
                         <button
-                            className='refresh-balance-btn'
-                            title='Toggle Sound'
+                            type='button'
+                            className={`btn-control btn-best-market ${autoPickBestMarket ? 'active' : ''}`}
+                            onClick={() => setAutoPickBestMarket(!autoPickBestMarket)}
+                            title='Auto-select the highest scoring volatility market'
+                        >
+                            <Sparkles size={14} />
+                            {autoPickBestMarket ? 'AUTO-MARKET ACTIVE' : 'MANUAL MARKET'}
+                        </button>
+                    </div>
+
+                    {/* Market Configs: Active Market Dropdown & Market Rotation */}
+                    <div className='deck-market-configs'>
+                        <div className='config-field'>
+                            <label className='field-label'>
+                                <Radio size={12} className='field-icon' /> TARGET MARKET
+                            </label>
+                            <select
+                                className='config-select'
+                                value={selectedSymbol}
+                                onChange={e => {
+                                    setSelectedSymbol(e.target.value);
+                                    setAutoPickBestMarket(false);
+                                }}
+                            >
+                                {DERIVED_SYNTHETIC_MARKETS.map(m => (
+                                    <option key={m.symbol} value={m.symbol}>
+                                        {m.label} ({m.symbol})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className='config-field'>
+                            <label className='field-label'>
+                                <RotateCcw size={12} className='field-icon' /> MARKET ROTATION
+                            </label>
+                            <select
+                                className='config-select'
+                                value={marketRotationRuns}
+                                onChange={e => setMarketRotationRuns(Number(e.target.value))}
+                            >
+                                <option value={3}>Every 3 Runs</option>
+                                <option value={4}>Every 4 Runs</option>
+                                <option value={6}>Every 6 Runs</option>
+                                <option value={10}>After Every Burst</option>
+                            </select>
+                        </div>
+
+                        <button
+                            type='button'
+                            className='btn-sound-toggle'
+                            title='Toggle Sound Cues'
                             onClick={() => setSoundEnabled(!soundEnabled)}
                         >
                             {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                         </button>
                     </div>
-                    <div className='wallet-chips-row'>
-                        <span
-                            className={`chip chip-profit ${sessionProfit >= 0 ? 'profit-pos' : 'profit-neg'}`}
-                        >
-                            P&L: {sessionProfit >= 0 ? `+$${sessionProfit.toFixed(2)}` : `-$${Math.abs(sessionProfit).toFixed(2)}`}
-                        </span>
-                        <span className='chip chip-winrate'>
-                            WIN: {winRate}% ({winsCount}W / {lossesCount}L)
-                        </span>
-                        <button
-                            className='sound-chip-btn'
-                            title='Reset Session Stats'
-                            onClick={handleResetStats}
-                        >
-                            <RotateCcw size={12} />
-                        </button>
+                </div>
+
+                {/* Row 2: Strategy, Stake, Burst Runs, TP, SL, Martingale */}
+                <div className='config-deck-row parameters-row'>
+                    <div className='strategy-mode-group'>
+                        <span className='field-label'>STRATEGY MODE</span>
+                        <div className='strategy-pills-wrap'>
+                            <button
+                                type='button'
+                                className={`strat-pill ${strategyMode === 'ALL_AUTO' ? 'active' : ''}`}
+                                onClick={() => setStrategyMode('ALL_AUTO')}
+                            >
+                                <Sparkles size={11} /> ALL AUTO
+                            </button>
+                            <button
+                                type='button'
+                                className={`strat-pill ${strategyMode === 'OVER_1_UNDER_8' ? 'active' : ''}`}
+                                onClick={() => setStrategyMode('OVER_1_UNDER_8')}
+                            >
+                                Over 1 / Under 8
+                            </button>
+                            <button
+                                type='button'
+                                className={`strat-pill ${strategyMode === 'OVER_2_UNDER_7' ? 'active' : ''}`}
+                                onClick={() => setStrategyMode('OVER_2_UNDER_7')}
+                            >
+                                Over 2 / Under 7
+                            </button>
+                            <button
+                                type='button'
+                                className={`strat-pill ${strategyMode === 'OVER_3_UNDER_6' ? 'active' : ''}`}
+                                onClick={() => setStrategyMode('OVER_3_UNDER_6')}
+                            >
+                                Over 3 / Under 6
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className='deck-inputs-grid'>
+                        <div className='config-field mini-field'>
+                            <label className='field-label'>STAKE ({currency})</label>
+                            <div className='input-with-quick'>
+                                <input
+                                    type='number'
+                                    step='0.1'
+                                    min='0.35'
+                                    className='config-input'
+                                    value={manualStake}
+                                    onChange={e => setManualStake(e.target.value)}
+                                />
+                                <div className='quick-stake-pills'>
+                                    <button type='button' className='quick-pill' onClick={() => handleAdjustStake(1)}>+1</button>
+                                    <button type='button' className='quick-pill' onClick={() => handleAdjustStake(5)}>+5</button>
+                                    <button type='button' className='quick-pill' onClick={() => setManualStake('1.00')}>$1</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className='config-field mini-field'>
+                            <label className='field-label'>BURST RUNS</label>
+                            <select
+                                className='config-select'
+                                value={burstRunSize}
+                                onChange={e => setBurstRunSize(Number(e.target.value))}
+                            >
+                                <option value={7}>7 Runs</option>
+                                <option value={8}>8 Runs</option>
+                                <option value={10}>10 Runs</option>
+                                <option value={12}>12 Runs</option>
+                            </select>
+                        </div>
+
+                        <div className='config-field mini-field'>
+                            <label className='field-label'>TAKE PROFIT ($)</label>
+                            <input
+                                type='number'
+                                className='config-input'
+                                value={takeProfit}
+                                onChange={e => setTakeProfit(e.target.value)}
+                            />
+                        </div>
+
+                        <div className='config-field mini-field'>
+                            <label className='field-label'>STOP LOSS ($)</label>
+                            <input
+                                type='number'
+                                className='config-input'
+                                value={stopLoss}
+                                onChange={e => setStopLoss(e.target.value)}
+                            />
+                        </div>
+
+                        <div className='config-field mini-field'>
+                            <label className='field-label'>MARTINGALE</label>
+                            <input
+                                type='number'
+                                step='0.1'
+                                className='config-input'
+                                value={martingaleMultiplier}
+                                onChange={e => setMartingaleMultiplier(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
-            </header>
+            </div>
 
             {/* ── Mobile Segmented Navigation Bar ── */}
             <nav className='mobile-segmented-nav'>
                 <button
+                    type='button'
                     className={`nav-pill ${mobileActiveTab === 'DASHBOARD' ? 'active' : ''}`}
                     onClick={() => setMobileActiveTab('DASHBOARD')}
                 >
                     <BarChart2 size={14} /> DASHBOARD
                 </button>
                 <button
-                    className={`nav-pill ${mobileActiveTab === 'AUTOTRADER' ? 'active' : ''}`}
-                    onClick={() => setMobileActiveTab('AUTOTRADER')}
-                >
-                    <Cpu size={14} /> AI TRADER
-                </button>
-                <button
+                    type='button'
                     className={`nav-pill ${mobileActiveTab === 'MARKETS' ? 'active' : ''}`}
                     onClick={() => setMobileActiveTab('MARKETS')}
                 >
                     <Radio size={14} /> MARKETS
                 </button>
                 <button
+                    type='button'
                     className={`nav-pill ${mobileActiveTab === 'TRADES' ? 'active' : ''}`}
                     onClick={() => setMobileActiveTab('TRADES')}
                 >
                     <Layers size={14} /> JOURNAL
                 </button>
             </nav>
-
-            {/* ── Control Ribbon & Strategy Selector ── */}
-            <div className='overlord-controls-ribbon'>
-                <div className='left-controls'>
-                    {botState === 'IDLE' || botState === 'PAUSED' || botState === 'TP_REACHED' || botState === 'SL_REACHED' ? (
-                        <button
-                            className='btn-control btn-autotrade-start'
-                            onClick={handleStartTrading}
-                        >
-                            <Play size={16} /> START AI TRADER
-                        </button>
-                    ) : (
-                        <button
-                            className='btn-control btn-autotrade-stop'
-                            onClick={handleStopTrading}
-                        >
-                            <Square size={16} /> STOP TRADING
-                        </button>
-                    )}
-
-                    <button
-                        className={`btn-control btn-best-market ${autoPickBestMarket ? 'active' : ''}`}
-                        onClick={() => setAutoPickBestMarket(!autoPickBestMarket)}
-                        title='Auto-select the highest scoring volatility market'
-                    >
-                        <Sparkles size={14} />
-                        {autoPickBestMarket ? 'AUTO-MARKET ACTIVE' : 'MANUAL MARKET'}
-                    </button>
-                </div>
-
-                <div className='right-controls'>
-                    <button
-                        className={`btn-control ${isWideViewOpen ? 'active' : ''}`}
-                        onClick={() => setIsWideViewOpen(!isWideViewOpen)}
-                    >
-                        {isWideViewOpen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                        {isWideViewOpen ? 'COMPACT VIEW' : 'EXPAND VIEW'}
-                    </button>
-                </div>
-            </div>
 
             {/* ── Main 3-Column Grid Layout ── */}
             <div className='overlord-main-layout'>
@@ -1366,37 +1437,6 @@ const OverlordAi: React.FC = observer(() => {
                             : ''
                     }`}
                 >
-                    {/* Strategy Mode Selector */}
-                    <div className='right-panel-tabs'>
-                        <button
-                            className={`tab-btn ${strategyMode === 'OVER_1_UNDER_8' ? 'active' : ''}`}
-                            onClick={() => setStrategyMode('OVER_1_UNDER_8')}
-                        >
-                            Over 1 / Under 8
-                        </button>
-                        <button
-                            className={`tab-btn ${strategyMode === 'OVER_2_UNDER_7' ? 'active' : ''}`}
-                            onClick={() => setStrategyMode('OVER_2_UNDER_7')}
-                        >
-                            Over 2 / Under 7
-                        </button>
-                    </div>
-
-                    <div className='right-panel-tabs' style={{ marginTop: '-8px' }}>
-                        <button
-                            className={`tab-btn ${strategyMode === 'OVER_3_UNDER_6' ? 'active' : ''}`}
-                            onClick={() => setStrategyMode('OVER_3_UNDER_6')}
-                        >
-                            Over 3 / Under 6
-                        </button>
-                        <button
-                            className={`tab-btn ${strategyMode === 'ALL_AUTO' ? 'active' : ''}`}
-                            onClick={() => setStrategyMode('ALL_AUTO')}
-                        >
-                            <Sparkles size={12} /> ALL AUTO-CHOOSE
-                        </button>
-                    </div>
-
                     {/* Continuous Burst Monitor */}
                     <div className='compounding-timer-hud'>
                         <div className='timer-header'>
@@ -1424,107 +1464,6 @@ const OverlordAi: React.FC = observer(() => {
                                     }}
                                 />
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Stake & Risk Controls */}
-                    <div className='form-row'>
-                        <div className='form-group'>
-                            <label>MANUAL STAKE ({currency})</label>
-                            <input
-                                type='number'
-                                step='0.1'
-                                min='0.35'
-                                value={manualStake}
-                                onChange={e => setManualStake(e.target.value)}
-                            />
-                        </div>
-                        <div className='form-group'>
-                            <label>BURST RUNS (7–12)</label>
-                            <select
-                                value={burstRunSize}
-                                onChange={e => setBurstRunSize(Number(e.target.value))}
-                            >
-                                <option value={7}>7 Consecutive Runs</option>
-                                <option value={8}>8 Consecutive Runs</option>
-                                <option value={10}>10 Consecutive Runs</option>
-                                <option value={12}>12 Consecutive Runs</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Quick Stake Adjustment Pills */}
-                    <div className='wallet-chips-row' style={{ marginBottom: '12px' }}>
-                        <button
-                            className='chip'
-                            onClick={() => handleAdjustStake(1)}
-                            style={{ cursor: 'pointer', background: 'rgba(0, 245, 255, 0.15)', color: '#00f5ff' }}
-                        >
-                            +$1
-                        </button>
-                        <button
-                            className='chip'
-                            onClick={() => handleAdjustStake(5)}
-                            style={{ cursor: 'pointer', background: 'rgba(0, 245, 255, 0.15)', color: '#00f5ff' }}
-                        >
-                            +$5
-                        </button>
-                        <button
-                            className='chip'
-                            onClick={() => handleAdjustStake(10)}
-                            style={{ cursor: 'pointer', background: 'rgba(0, 245, 255, 0.15)', color: '#00f5ff' }}
-                        >
-                            +$10
-                        </button>
-                        <button
-                            className='chip'
-                            onClick={() => setManualStake('1.00')}
-                            style={{ cursor: 'pointer', background: 'rgba(255, 255, 255, 0.1)', color: '#cbd5e1' }}
-                        >
-                            Reset ($1.00)
-                        </button>
-                    </div>
-
-                    <div className='form-row'>
-                        <div className='form-group'>
-                            <label>TAKE PROFIT (${currency})</label>
-                            <input
-                                type='number'
-                                value={takeProfit}
-                                onChange={e => setTakeProfit(e.target.value)}
-                            />
-                        </div>
-                        <div className='form-group'>
-                            <label>STOP LOSS (${currency})</label>
-                            <input
-                                type='number'
-                                value={stopLoss}
-                                onChange={e => setStopLoss(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className='form-row'>
-                        <div className='form-group'>
-                            <label>MARTINGALE MULTIPLIER</label>
-                            <input
-                                type='number'
-                                step='0.1'
-                                value={martingaleMultiplier}
-                                onChange={e => setMartingaleMultiplier(e.target.value)}
-                            />
-                        </div>
-                        <div className='form-group'>
-                            <label>MARKET ROTATION</label>
-                            <select
-                                value={marketRotationRuns}
-                                onChange={e => setMarketRotationRuns(Number(e.target.value))}
-                            >
-                                <option value={3}>Every 3 Runs</option>
-                                <option value={4}>Every 4 Runs</option>
-                                <option value={6}>Every 6 Runs</option>
-                                <option value={10}>After Every Burst</option>
-                            </select>
                         </div>
                     </div>
 
