@@ -449,3 +449,145 @@ body.theme--dark,
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ✦ MOBILE MODE — FIT AT LEAST 3 BOTS HORIZONTALLY
+// ═══════════════════════════════════════════════════════════════
+@media (max-width: 768px) {
+    .trading-bots-view {
+        padding: 12px 6px 80px;
+
+        .trading-bots-container {
+            gap: 12px;
+        }
+    }
+
+    .tb-controls-bar {
+        padding: 12px 14px;
+        border-radius: 16px;
+        gap: 10px;
+
+        .tb-header-title-box {
+            .tb-page-title {
+                font-size: 1.15rem;
+            }
+            .tb-count-badge {
+                font-size: 0.64rem;
+                padding: 3px 10px;
+            }
+        }
+
+        .tb-search-box {
+            min-width: 100%;
+        }
+    }
+
+    .tb-cards-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    .pro-bot-card {
+        border-radius: 12px !important;
+
+        &__inner {
+            padding: 8px 6px !important;
+            gap: 6px !important;
+        }
+
+        &__header {
+            align-items: flex-start;
+        }
+
+        &__icon-box {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 8px !important;
+
+            .icon-emoji {
+                font-size: 15px !important;
+            }
+        }
+
+        &__badges {
+            .type-tag {
+                font-size: 0.52rem !important;
+                padding: 2px 4px !important;
+                letter-spacing: 0 !important;
+            }
+        }
+
+        &__title-group {
+            gap: 2px !important;
+        }
+
+        &__name {
+            font-size: 0.68rem !important;
+            line-height: 1.15 !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+            height: 2.3em !important;
+        }
+
+        &__sub-tags {
+            display: none !important;
+        }
+
+        &__desc {
+            display: none !important;
+        }
+
+        &__meter-box {
+            padding: 4px 5px !important;
+            border-radius: 8px !important;
+            gap: 3px !important;
+
+            .meter-label-row {
+                .meter-title {
+                    font-size: 0.54rem !important;
+                    gap: 3px !important;
+
+                    svg {
+                        display: none;
+                    }
+                }
+
+                .meter-val {
+                    font-size: 0.68rem !important;
+                }
+            }
+
+            .meter-track {
+                height: 3px !important;
+            }
+        }
+
+        &__specs-grid {
+            display: none !important;
+        }
+
+        &__actions {
+            margin-top: 2px !important;
+            gap: 4px !important;
+
+            .btn-preview {
+                display: none !important;
+            }
+
+            .btn-load-bot {
+                padding: 5px 2px !important;
+                font-size: 0.64rem !important;
+                border-radius: 6px !important;
+                gap: 3px !important;
+
+                .btn-icon {
+                    width: 10px !important;
+                    height: 10px !important;
+                }
+            }
+        }
+    }
+}
+

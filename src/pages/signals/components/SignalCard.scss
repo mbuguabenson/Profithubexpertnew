@@ -1,295 +1,366 @@
-// ─── Dual Mode Soft Signal Card Component Styles ────────────────
+// ─── Modernized Institutional Signal Card Styles ────────────────
 
 :root,
 body.theme--light,
 .theme--light {
-    --sig-card-bg: linear-gradient(145deg, #ffffff, #f0edf9);
-    --sig-card-border: rgba(124, 58, 237, 0.16);
-    --sig-shadow-raised: 8px 8px 20px #e0dcfa, -6px -6px 16px #ffffff;
-    --sig-shadow-hover: 12px 12px 28px #d6cef7, -8px -8px 20px #ffffff, 0 0 25px rgba(124, 58, 237, 0.2);
-    --sig-shadow-inset: inset 4px 4px 10px #e0dcfa, inset -3px -3px 8px #ffffff;
-    --sig-text-main: #1e1438;
-    --sig-text-sub: #584b7a;
-    --sig-orb-bg: linear-gradient(145deg, #eeeafd, #ffffff);
-    --sig-orb-shadow: inset 4px 4px 8px #dcd5f7, inset -2px -2px 6px #ffffff;
+    --m-sig-bg: rgba(255, 255, 255, 0.9);
+    --m-sig-border: rgba(124, 58, 237, 0.14);
+    --m-sig-shadow: 0 4px 20px rgba(124, 58, 237, 0.08);
+    --m-sig-shadow-hover: 0 10px 28px rgba(124, 58, 237, 0.16);
+    --m-sig-text-title: #110d29;
+    --m-sig-text-sub: #544b78;
+    --m-sig-box-bg: rgba(124, 58, 237, 0.05);
+    --m-sig-track-bg: rgba(124, 58, 237, 0.1);
 }
 
 body.theme--dark,
 .theme--dark {
-    --sig-card-bg: linear-gradient(145deg, #161033, #100b27);
-    --sig-card-border: rgba(168, 85, 247, 0.18);
-    --sig-shadow-raised: 12px 12px 28px rgba(4, 2, 12, 0.75), -8px -8px 20px rgba(168, 85, 247, 0.05);
-    --sig-shadow-hover:
-        16px 16px 36px rgba(4, 2, 12, 0.85), -10px -10px 24px rgba(168, 85, 247, 0.08), 0 0 30px rgba(124, 58, 237, 0.3);
-    --sig-shadow-inset: inset 6px 6px 14px rgba(4, 2, 12, 0.8), inset -4px -4px 10px rgba(168, 85, 247, 0.06);
-    --sig-text-main: #ffffff;
-    --sig-text-sub: #e9d5ff;
-    --sig-orb-bg: linear-gradient(145deg, #110c28, #1c1444);
-    --sig-orb-shadow: inset 4px 4px 10px rgba(4, 2, 12, 0.7), inset -3px -3px 8px rgba(168, 85, 247, 0.12);
+    --m-sig-bg: rgba(17, 24, 39, 0.82);
+    --m-sig-border: rgba(255, 255, 255, 0.08);
+    --m-sig-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    --m-sig-shadow-hover: 0 12px 32px rgba(124, 58, 237, 0.28);
+    --m-sig-text-title: #f8fafc;
+    --m-sig-text-sub: #94a3b8;
+    --m-sig-box-bg: rgba(15, 23, 42, 0.6);
+    --m-sig-track-bg: rgba(255, 255, 255, 0.08);
 }
 
-.soft-signal-card {
+.modern-signal-card {
     position: relative;
-    border-radius: 24px;
-    background: var(--sig-card-bg);
-    border: 1px solid var(--sig-card-border);
-    padding: 24px;
-    color: var(--sig-text-main);
-    box-shadow: var(--sig-shadow-raised);
+    border-radius: 18px;
+    background: var(--m-sig-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--m-sig-border);
+    padding: 16px 16px 14px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
+    box-shadow: var(--m-sig-shadow);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
-    transition:
-        transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-        box-shadow 0.3s ease,
-        border-color 0.3s ease;
+    box-sizing: border-box;
+    width: 100%;
 
     &:hover {
-        transform: translateY(-6px);
-        border-color: rgba(124, 58, 237, 0.5);
-        box-shadow: var(--sig-shadow-hover);
+        transform: translateY(-3px);
+        border-color: rgba(124, 58, 237, 0.45);
+        box-shadow: var(--m-sig-shadow-hover);
 
-        .soft-signal-card__top-glow {
+        .modern-signal-card__top-bar {
             opacity: 1;
         }
     }
 
-    &__top-glow {
+    &__top-bar {
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 3.5px;
-        background: linear-gradient(90deg, #7c3aed, #a855f7, #06b6d4);
-        opacity: 0.85;
-        transition: opacity 0.3s ease;
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #00d2ff, #10b981);
+        opacity: 0.75;
+        transition: opacity 0.25s ease;
     }
 
     &--super {
-        background: var(--sig-card-bg);
-        border-color: rgba(124, 58, 237, 0.4);
+        border-color: rgba(168, 85, 247, 0.35);
+
+        .modern-signal-card__top-bar {
+            background: linear-gradient(90deg, #a855f7, #ec4899, #8b5cf6);
+            opacity: 1;
+        }
 
         &:hover {
-            border-color: rgba(124, 58, 237, 0.7);
-            box-shadow: var(--sig-shadow-hover);
+            border-color: rgba(168, 85, 247, 0.65);
         }
     }
 
     // Header
     &__header {
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid var(--sig-card-border);
-        padding-bottom: 14px;
-
-        .title-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        gap: 8px;
+        flex-wrap: wrap;
     }
 
-    &__title {
-        font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.12rem;
-        font-weight: 800;
-        color: var(--sig-text-main);
-        margin: 0;
-    }
-
-    &__symbol-badge {
-        font-size: 0.68rem;
-        font-weight: 800;
-        padding: 3px 9px;
-        border-radius: 8px;
-        background: rgba(124, 58, 237, 0.18);
-        color: #7c3aed;
-        border: 1px solid rgba(124, 58, 237, 0.35);
-        letter-spacing: 0.05em;
-    }
-
-    &__status-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        padding: 5px 12px;
-        border-radius: 9999px;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-
-        &.status-strong,
-        &.status-trade-now {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: #ffffff;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-        }
-
-        &.status-wait {
-            background: rgba(245, 158, 11, 0.18);
-            color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.4);
-        }
-
-        &.status-neutral {
-            background: rgba(124, 58, 237, 0.08);
-            color: var(--sig-text-sub);
-            border: 1px solid var(--sig-card-border);
-        }
-    }
-
-    // Body
-    &__body {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-
-    &__power-orb-wrap {
-        flex-shrink: 0;
-    }
-
-    &__power-orb {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 0 24px rgba(124, 58, 237, 0.2);
-        transition: transform 0.3s ease;
-
-        .soft-signal-card:hover & {
-            transform: scale(1.05);
-        }
-    }
-
-    &__power-orb-inner {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background: var(--sig-orb-bg);
-        box-shadow: var(--sig-orb-shadow);
-        border: 1px solid var(--sig-card-border);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-
-        .power-text {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.08rem;
-            font-weight: 800;
-            color: var(--sig-text-main);
-            line-height: 1;
-        }
-
-        .power-label {
-            font-size: 0.55rem;
-            font-weight: 800;
-            color: var(--sig-text-sub);
-            letter-spacing: 0.08em;
-            margin-top: 2px;
-        }
-    }
-
-    &__details {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        min-width: 0;
-    }
-
-    &__recommendation {
-        margin: 0;
-        font-size: 0.88rem;
-        color: var(--sig-text-main);
-        line-height: 1.45;
-        font-weight: 600;
-    }
-
-    &__entry-box {
-        font-size: 0.78rem;
-        color: var(--sig-text-sub);
-        font-weight: 500;
-        background: var(--sig-card-bg);
-        padding: 9px 13px;
-        border-radius: 12px;
-        border-left: 3px solid #7c3aed;
-        border: 1px solid var(--sig-card-border);
-
-        .entry-label {
-            color: #7c3aed;
-            font-weight: 800;
-            font-size: 0.68rem;
-            letter-spacing: 0.06em;
-            margin-right: 4px;
-        }
-    }
-
-    &__target {
+    &__title-row {
         display: flex;
         align-items: center;
         gap: 6px;
-        font-size: 0.78rem;
-        color: var(--sig-text-sub);
-        font-weight: 600;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
 
-        .target-icon {
-            color: #f59e0b;
+    &__type {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--m-sig-text-title);
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &__symbol {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 6px;
+        background: rgba(124, 58, 237, 0.15);
+        color: #a855f7;
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        letter-spacing: 0.04em;
+    }
+
+    &__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 9999px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        flex-shrink: 0;
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
         }
 
-        .target-digit-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #7c3aed, #6d28d9);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-weight: 800;
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+        &.status-strong,
+        &.status-trade-now {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+
+            .badge-dot {
+                background: #10b981;
+                box-shadow: 0 0 8px #10b981;
+                animation: sigDotPulse 1.4s infinite ease-in-out;
+            }
+        }
+
+        &.status-wait {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #f59e0b;
+
+            .badge-dot {
+                background: #f59e0b;
+                box-shadow: 0 0 8px #f59e0b;
+            }
+        }
+
+        &.status-neutral {
+            background: rgba(148, 163, 184, 0.15);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: var(--m-sig-text-sub);
+
+            .badge-dot {
+                background: #94a3b8;
+            }
         }
     }
 
-    // Footer Button
-    &__footer {
+    // Meter
+    &__meter {
         display: flex;
-        justify-content: flex-end;
-        border-top: 1px solid var(--sig-card-border);
-        padding-top: 14px;
+        flex-direction: column;
+        gap: 5px;
 
-        .soft-signal-card__trade-btn {
-            display: inline-flex;
+        .meter-header {
+            display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 11px 20px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #7c3aed, #9333ea);
-            border: none;
-            color: #ffffff;
-            font-size: 0.84rem;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 4px 18px rgba(124, 58, 237, 0.45);
-            transition:
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
+            justify-content: space-between;
 
-            &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 24px rgba(124, 58, 237, 0.65);
+            .meter-label {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 0.68rem;
+                font-weight: 700;
+                color: var(--m-sig-text-sub);
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+
+                .meter-icon {
+                    color: #7c3aed;
+                }
             }
 
-            &:active {
-                transform: translateY(0);
+            .meter-val {
+                font-family: 'Space Grotesk', monospace;
+                font-size: 0.86rem;
+                font-weight: 800;
+                color: #10b981;
             }
         }
+
+        .meter-track {
+            width: 100%;
+            height: 5px;
+            border-radius: 9999px;
+            background: var(--m-sig-track-bg);
+            overflow: hidden;
+
+            .meter-bar {
+                height: 100%;
+                border-radius: 9999px;
+                transition: width 0.4s ease;
+            }
+        }
+    }
+
+    // Content
+    &__content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+    }
+
+    &__recom-wrap {
+        display: flex;
+        align-items: baseline;
+        gap: 7px;
+
+        .recom-tag {
+            font-size: 0.58rem;
+            font-weight: 800;
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: rgba(124, 58, 237, 0.2);
+            color: #7c3aed;
+            letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        .recom-text {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--m-sig-text-title);
+            line-height: 1.35;
+        }
+    }
+
+    &__trigger-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        padding: 7px 10px;
+        border-radius: 10px;
+        background: var(--m-sig-box-bg);
+        border: 1px solid var(--m-sig-border);
+
+        .trigger-tag {
+            font-size: 0.58rem;
+            font-weight: 800;
+            color: #7c3aed;
+            letter-spacing: 0.06em;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .trigger-text {
+            font-size: 0.73rem;
+            font-weight: 500;
+            color: var(--m-sig-text-sub);
+            line-height: 1.3;
+            word-break: break-word;
+        }
+    }
+
+    &__target-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.72rem;
+        color: var(--m-sig-text-sub);
+        font-weight: 600;
+        padding: 0 2px;
+
+        .target-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+
+            .target-icon {
+                color: #f59e0b;
+            }
+        }
+
+        .target-val {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #7c3aed, #9333ea);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+    }
+
+    // Trade Button
+    &__btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        padding: 9px 12px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        border: none;
+        color: #ffffff;
+        font-size: 0.78rem;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+        transition: all 0.2s ease;
+        margin-top: 2px;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.55);
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        &:active {
+            transform: translateY(0);
+        }
+
+        .btn-zap {
+            color: #facc15;
+            flex-shrink: 0;
+        }
+
+        .btn-arrow {
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        &:hover .btn-arrow {
+            transform: translateX(2px);
+        }
+    }
+}
+
+@keyframes sigDotPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.4;
+        transform: scale(0.7);
     }
 }

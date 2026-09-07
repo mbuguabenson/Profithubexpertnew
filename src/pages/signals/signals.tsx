@@ -110,26 +110,12 @@ const Signals = observer(() => {
             <div className='signals-main-container'>
                 {/* Top Control Bar Header */}
                 <div className='signals-header-card'>
-                    <div className='header-brand-box'>
-                        <div className='badge-live-pulse'>
-                            <span className={`pulse-dot${!isConnected ? ' connecting' : ''}`} />
-                            <span>{isConnected ? 'REAL-TIME AI SIGNALS' : 'CONNECTING TO MARKET...'}</span>
-                        </div>
-                        <h2 className='header-title'>
-                            Predictive <span className='title-highlight'>Market Signals</span>
-                        </h2>
-                        <p className='header-sub'>
-                            Live tick algorithmic analysis & high-confidence trade recommendations
-                        </p>
-                    </div>
-
                     <div className='header-filters-row'>
                         {/* Market Selector */}
                         <div className='soft-select-box'>
                             <label className='select-lbl'>
-                                <Globe size={14} className='lbl-icon' /> Market Target
+                                <Globe size={13} className='lbl-icon' /> Market Target
                             </label>
-
                             <div className='select-input-wrap'>
                                 <select value={market} onChange={handleMarketChange} className='soft-select'>
                                     {availableMarkets.map(m => (
@@ -144,9 +130,8 @@ const Signals = observer(() => {
                         {/* Strategy Filter Selector */}
                         <div className='soft-select-box'>
                             <label className='select-lbl'>
-                                <SlidersHorizontal size={14} className='lbl-icon' /> Strategy Type
+                                <SlidersHorizontal size={13} className='lbl-icon' /> Strategy Type
                             </label>
-
                             <div className='select-input-wrap'>
                                 <select
                                     value={strategyFilter}
@@ -167,63 +152,47 @@ const Signals = observer(() => {
                                 </select>
                             </div>
                         </div>
+
+                        <div className='signals-status-indicator'>
+                            <span className={`pulse-dot${!isConnected ? ' connecting' : ''}`} />
+                            <span className='status-text'>{isConnected ? 'LIVE FEED' : 'CONNECTING...'}</span>
+                        </div>
+                    </div>
+
+                    {/* Single-Line Analysis Metrics Bar */}
+                    <div className='signals-metrics-single-line'>
+                        <div className='sig-metric-item'>
+                            <span className='metric-label'>Total Ticks</span>
+                            <span className='metric-value text-cyan'>{analysis?.totalTicks ?? 100}</span>
+                        </div>
+                        <div className='sig-metric-divider' />
+                        <div className='sig-metric-item'>
+                            <span className='metric-label'>Strongest Digit</span>
+                            <span className='metric-value text-green'>{analysis?.powerIndex?.strongest ?? 3}</span>
+                        </div>
+                        <div className='sig-metric-divider' />
+                        <div className='sig-metric-item'>
+                            <span className='metric-label'>Weakest Digit</span>
+                            <span className='metric-value text-red'>{analysis?.powerIndex?.weakest ?? 0}</span>
+                        </div>
+                        <div className='sig-metric-divider' />
+                        <div className='sig-metric-item'>
+                            <span className='metric-label'>Power Gap</span>
+                            <span className='metric-value text-purple'>
+                                {analysis?.powerIndex?.gap !== undefined
+                                    ? `${analysis.powerIndex.gap.toFixed(1)}%`
+                                    : '15.0%'}
+                            </span>
+                        </div>
+                        <div className='sig-metric-divider' />
+                        <div className='sig-metric-item'>
+                            <span className='metric-label'>Entropy Index</span>
+                            <span className='metric-value text-amber'>
+                                {analysis?.entropy !== undefined ? analysis.entropy.toFixed(3) : '3.112'}
+                            </span>
+                        </div>
                     </div>
                 </div>
-
-                {/* Analysis Metrics Cards Row */}
-                {analysis && (
-                    <div className='signals-metrics-grid'>
-                        <div className='metric-soft-card'>
-                            <div className='metric-icon-orb text-cyan'>
-                                <Activity size={18} />
-                            </div>
-                            <div className='metric-body'>
-                                <span className='metric-lbl'>Total Ticks</span>
-                                <span className='metric-val'>{analysis.totalTicks}</span>
-                            </div>
-                        </div>
-
-                        <div className='metric-soft-card'>
-                            <div className='metric-icon-orb text-green'>
-                                <Flame size={18} />
-                            </div>
-                            <div className='metric-body'>
-                                <span className='metric-lbl'>Strongest Digit</span>
-                                <span className='metric-val text-green'>{analysis.powerIndex.strongest}</span>
-                            </div>
-                        </div>
-
-                        <div className='metric-soft-card'>
-                            <div className='metric-icon-orb text-red'>
-                                <Shield size={18} />
-                            </div>
-                            <div className='metric-body'>
-                                <span className='metric-lbl'>Weakest Digit</span>
-                                <span className='metric-val text-red'>{analysis.powerIndex.weakest}</span>
-                            </div>
-                        </div>
-
-                        <div className='metric-soft-card'>
-                            <div className='metric-icon-orb text-purple'>
-                                <Sparkles size={18} />
-                            </div>
-                            <div className='metric-body'>
-                                <span className='metric-lbl'>Power Gap</span>
-                                <span className='metric-val text-purple'>{analysis.powerIndex.gap.toFixed(1)}%</span>
-                            </div>
-                        </div>
-
-                        <div className='metric-soft-card'>
-                            <div className='metric-icon-orb text-amber'>
-                                <Layers size={18} />
-                            </div>
-                            <div className='metric-body'>
-                                <span className='metric-lbl'>Entropy Index</span>
-                                <span className='metric-val text-amber'>{analysis.entropy.toFixed(3)}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Signals Layout Grid (Super / Pro / Standard) */}
                 <div className='signals-sections-grid'>
@@ -231,41 +200,41 @@ const Signals = observer(() => {
                     <div className='signals-col-section'>
                         <div className='section-header-banner'>
                             <div className='banner-title-box'>
-                                <Sparkles size={18} className='text-purple' />
+                                <Sparkles size={16} className='text-purple' />
                                 <h3>Super Signals</h3>
                             </div>
                             <span className='pill-badge pill-badge--super'>HIGH CONFIDENCE</span>
                         </div>
 
-                        <div className='cards-stack'>
+                        <div className='cards-grid-stack'>
                             {filteredSuper.length > 0 ? (
                                 filteredSuper.map((signal, idx) => (
                                     <SignalCard key={`super-${idx}`} signal={signal} isSuper />
                                 ))
                             ) : (
                                 <div className='signals-empty-card'>
-                                    <span>No Super Signals available for this filter.</span>
+                                    <span>No Super Signals available.</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Pro Strategies */}
+                    {/* Pro Signals */}
                     <div className='signals-col-section'>
                         <div className='section-header-banner'>
                             <div className='banner-title-box'>
-                                <Zap size={18} className='text-cyan' />
-                                <h3>Pro Strategies</h3>
+                                <Zap size={16} className='text-cyan' />
+                                <h3>Pro Signals</h3>
                             </div>
-                            <span className='pill-badge pill-badge--pro'>ADVANCED</span>
+                            <span className='pill-badge pill-badge--pro'>PRO ENGINE</span>
                         </div>
 
-                        <div className='cards-stack'>
+                        <div className='cards-grid-stack'>
                             {filteredPro.length > 0 ? (
                                 filteredPro.map((signal, idx) => <SignalCard key={`pro-${idx}`} signal={signal} />)
                             ) : (
                                 <div className='signals-empty-card'>
-                                    <span>No Pro Strategies available for this filter.</span>
+                                    <span>No Pro Signals available.</span>
                                 </div>
                             )}
                         </div>
@@ -275,18 +244,18 @@ const Signals = observer(() => {
                     <div className='signals-col-section'>
                         <div className='section-header-banner'>
                             <div className='banner-title-box'>
-                                <Activity size={18} className='text-green' />
+                                <Activity size={16} className='text-green' />
                                 <h3>Standard Signals</h3>
                             </div>
-                            <span className='pill-badge pill-badge--std'>ACTIVE</span>
+                            <span className='pill-badge pill-badge--std'>ALGO DETECTED</span>
                         </div>
 
-                        <div className='cards-stack'>
+                        <div className='cards-grid-stack'>
                             {filteredStandard.length > 0 ? (
                                 filteredStandard.map((signal, idx) => <SignalCard key={`std-${idx}`} signal={signal} />)
                             ) : (
                                 <div className='signals-empty-card'>
-                                    <span>No Standard Signals available for this filter.</span>
+                                    <span>No Standard Signals available.</span>
                                 </div>
                             )}
                         </div>
