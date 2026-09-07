@@ -59,24 +59,47 @@ export interface DerivPortfolioPosition {
     contract_id: number | string;
     symbol: string;
     contract_type: string;
+    currency?: string;
     buy_price: number;
     payout: number;
     purchase_time: number;
+    date_start?: number;
     expiry_time?: number;
     longcode?: string;
+    shortcode?: string;
+    transaction_id?: number | string;
+    app_id?: number;
 }
 
 export interface DerivProfitTableEntry {
     contract_id: number | string;
-    app_id: number;
+    app_id?: number;
     buy_price: number;
     sell_price: number;
     profit_loss: number;
     sell_time: number;
     purchase_time: number;
     transaction_id: number | string;
+    duration_type?: string;
     shortcode?: string;
     longcode?: string;
+}
+
+export interface DerivTransactionStreamItem {
+    action: string;
+    amount: number;
+    balance: number;
+    barrier?: string | null;
+    contract_id?: number | string;
+    currency: string;
+    date_expiry?: number;
+    display_name?: string;
+    id?: string;
+    longcode?: string;
+    purchase_time?: number;
+    symbol?: string;
+    transaction_id: number | string;
+    transaction_time: number;
 }
 
 export interface DerivStatementEntry {
@@ -512,22 +535,28 @@ export class DerivAccountWalletService {
 
     /**
      * Get active open positions / portfolio
+     * @see https://developers.deriv.com/docs/account/portfolio/
      * WebSocket: { portfolio: 1 }
      */
     public static async getPortfolio(): Promise<DerivPortfolioPosition[]> {
         try {
-            const api = await this.getConnectedApi();
+            const api = (api_base.api as any) || (await this.getConnectedApi());
             const res = (await api.send({ portfolio: 1 })) as any;
             if (res?.portfolio?.contracts) {
                 return res.portfolio.contracts.map((c: any) => ({
                     contract_id: c.contract_id,
                     symbol: c.symbol,
                     contract_type: c.contract_type,
+                    currency: c.currency || 'USD',
                     buy_price: parseFloat(c.buy_price || '0'),
                     payout: parseFloat(c.payout || '0'),
                     purchase_time: c.purchase_time,
+                    date_start: c.date_start,
                     expiry_time: c.expiry_time,
                     longcode: c.longcode,
+                    shortcode: c.shortcode,
+                    transaction_id: c.transaction_id,
+                    app_id: c.app_id,
                 }));
             }
         } catch (err) {
@@ -538,43 +567,87 @@ export class DerivAccountWalletService {
 
     /**
      * Get historical profit / loss table
-     * WebSocket: { profit_table: 1, description: 1, limit: limit }
+     * @see https://developers.deriv.com/docs/account/profit-table/
+     * WebSocket: { profit_table: 1, description: 1, limit, offset, sort, date_from, date_to }
      */
-    public static async getProfitTable(limit = 50): Promise<DerivProfitTableEntry[]> {
+    public static async getProfitTable(params: {
+        limit?: number;
+        offset?: number;
+        sort?: 'ASC' | 'DESC';
+        date_from?: number;
+        date_to?: number;
+    } = {}): Promise<{ count: number; transactions: DerivProfitTableEntry[] }> {
         try {
-            const api = await this.getConnectedApi();
-            const res = (await api.send({ profit_table: 1, description: 1, limit })) as any;
+            const api = (api_base.api as any) || (await this.getConnectedApi());
+            const req: any = {
+                profit_table: 1,
+                description: 1,
+                limit: params.limit || 50,
+                offset: params.offset || 0,
+                sort: params.sort || 'DESC',
+            };
+            if (params.date_from) req.date_from = Math.floor(params.date_from);
+            if (params.date_to) req.date_to = Math.floor(params.date_to);
+
+            const res = (await api.send(req)) as any;
             if (res?.profit_table?.transactions) {
-                return res.profit_table.transactions.map((t: any) => ({
-                    contract_id: t.contract_id,
-                    app_id: t.app_id,
-                    buy_price: parseFloat(t.buy_price || '0'),
-                    sell_price: parseFloat(t.sell_price || '0'),
-                    profit_loss: parseFloat(t.sell_price || '0') - parseFloat(t.buy_price || '0'),
-                    sell_time: t.sell_time,
-                    purchase_time: t.purchase_time,
-                    transaction_id: t.transaction_id,
-                    shortcode: t.shortcode,
-                    longcode: t.longcode,
-                }));
+                const transactions: DerivProfitTableEntry[] = res.profit_table.transactions.map((t: any) => {
+                    const buy = parseFloat(t.buy_price || '0');
+                    const sell = parseFloat(t.sell_price || '0');
+                    return {
+                        contract_id: t.contract_id,
+                        app_id: t.app_id,
+                        buy_price: buy,
+                        sell_price: sell,
+                        profit_loss: sell - buy,
+                        sell_time: t.sell_time,
+                        purchase_time: t.purchase_time,
+                        transaction_id: t.transaction_id,
+                        duration_type: t.duration_type,
+                        shortcode: t.shortcode,
+                        longcode: t.longcode,
+                    };
+                });
+                return {
+                    count: res.profit_table.count ?? transactions.length,
+                    transactions,
+                };
             }
         } catch (err) {
             console.warn('[DerivAccountWalletService] getProfitTable error:', err);
         }
-        return [];
+        return { count: 0, transactions: [] };
     }
 
     /**
      * Get account statement transactions
-     * WebSocket: { statement: 1, description: 1, limit: limit }
+     * @see https://developers.deriv.com/docs/account/statement/
+     * WebSocket: { statement: 1, description: 1, limit, offset, date_from, date_to, action_type }
      */
-    public static async getStatement(limit = 50): Promise<DerivStatementEntry[]> {
+    public static async getStatement(params: {
+        limit?: number;
+        offset?: number;
+        date_from?: number;
+        date_to?: number;
+        action_type?: string;
+    } = {}): Promise<{ count: number; transactions: DerivStatementTransaction[] }> {
         try {
-            const api = await this.getConnectedApi();
-            const res = (await api.send({ statement: 1, description: 1, limit })) as any;
+            const api = (api_base.api as any) || (await this.getConnectedApi());
+            const req: any = {
+                statement: 1,
+                description: 1,
+                limit: params.limit || 100,
+                offset: params.offset || 0,
+            };
+            if (params.date_from) req.date_from = Math.floor(params.date_from);
+            if (params.date_to) req.date_to = Math.floor(params.date_to);
+            if (params.action_type && params.action_type !== 'all') req.action_type = params.action_type;
+
+            const res = (await api.send(req)) as any;
             if (res?.statement?.transactions) {
-                return res.statement.transactions.map((s: any) => ({
-                    action_type: s.action_type,
+                const transactions: DerivStatementTransaction[] = res.statement.transactions.map((s: any) => ({
+                    transaction_id: s.transaction_id,
+                    action_type: (s.action_type || 'transaction').toLowerCase(),
                     amount: parseFloat(s.amount || '0'),
                     balance_after: parseFloat(s.balance_after || '0'),
                     contract_id: s.contract_id,
@@ -583,14 +656,106 @@ export class DerivAccountWalletService {
                     payout: s.payout ? parseFloat(s.payout) : undefined,
                     purchase_time: s.purchase_time,
                     reference_id: s.reference_id,
-                    transaction_id: s.transaction_id,
                     transaction_time: s.transaction_time,
+                    app_id: s.app_id,
                 }));
+                return {
+                    count: res.statement.count ?? transactions.length,
+                    transactions,
+                };
             }
         } catch (err) {
             console.warn('[DerivAccountWalletService] getStatement error:', err);
         }
-        return [];
+        // Fall back to getStatementReport
+        const fallback = await this.getStatementReport(params);
+        return {
+            count: fallback.count,
+            transactions: fallback.transactions,
+        };
+    }
+
+    /**
+     * Subscribe to real-time account transaction updates
+     * @see https://developers.deriv.com/docs/account/transaction/
+     * WebSocket: { transaction: 1, subscribe: 1 }
+     */
+    public static subscribeTransactions(
+        onTransaction: (tx: DerivTransactionStreamItem) => void,
+        onError?: (error: any) => void
+    ): () => void {
+        let subscriptionId: string | null = null;
+        let rxSub: any = null;
+
+        const setup = async () => {
+            try {
+                const api = (api_base.api as any) || (await this.getConnectedApi());
+                if (!api) return;
+
+                if (api.onMessage) {
+                    rxSub = api.onMessage().subscribe((msg: any) => {
+                        const data = msg?.data || msg;
+                        if (data?.msg_type === 'transaction' && data?.transaction) {
+                            const t = data.transaction;
+                            onTransaction({
+                                action: t.action,
+                                amount: parseFloat(t.amount || '0'),
+                                balance: parseFloat(t.balance || '0'),
+                                barrier: t.barrier,
+                                contract_id: t.contract_id,
+                                currency: t.currency || 'USD',
+                                date_expiry: t.date_expiry,
+                                display_name: t.display_name,
+                                id: t.id,
+                                longcode: t.longcode,
+                                purchase_time: t.purchase_time,
+                                symbol: t.symbol,
+                                transaction_id: t.transaction_id,
+                                transaction_time: t.transaction_time,
+                            });
+                        }
+                    });
+                }
+
+                const res = (await api.send({ transaction: 1, subscribe: 1 })) as any;
+                if (res?.subscription?.id) {
+                    subscriptionId = res.subscription.id;
+                }
+                if (res?.transaction) {
+                    const t = res.transaction;
+                    onTransaction({
+                        action: t.action,
+                        amount: parseFloat(t.amount || '0'),
+                        balance: parseFloat(t.balance || '0'),
+                        barrier: t.barrier,
+                        contract_id: t.contract_id,
+                        currency: t.currency || 'USD',
+                        date_expiry: t.date_expiry,
+                        display_name: t.display_name,
+                        id: t.id,
+                        longcode: t.longcode,
+                        purchase_time: t.purchase_time,
+                        symbol: t.symbol,
+                        transaction_id: t.transaction_id,
+                        transaction_time: t.transaction_time,
+                    });
+                }
+            } catch (e) {
+                console.warn('[DerivAccountWalletService] subscribeTransactions error:', e);
+                onError?.(e);
+            }
+        };
+
+        setup();
+
+        return () => {
+            if (rxSub?.unsubscribe) {
+                rxSub.unsubscribe();
+            }
+            if (subscriptionId && api_base.api) {
+                api_base.api.send({ forget: subscriptionId }).catch(() => {});
+            }
+        };
     }
 
     /**
