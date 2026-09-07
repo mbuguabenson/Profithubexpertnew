@@ -300,6 +300,7 @@ body.theme--dark,
         margin: 0;
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
         flex-grow: 1;
@@ -526,6 +527,7 @@ body.theme--dark,
             line-height: 1.15 !important;
             display: -webkit-box !important;
             -webkit-line-clamp: 2 !important;
+            line-clamp: 2 !important;
             -webkit-box-orient: vertical !important;
             overflow: hidden !important;
             height: 2.3em !important;
