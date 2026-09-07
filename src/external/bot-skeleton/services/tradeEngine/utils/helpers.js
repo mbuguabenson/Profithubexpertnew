@@ -325,20 +325,54 @@ export const doUntilDone = (promiseFn, errors_to_ignore, api_base) => {
 };
 
 export const createDetails = contract => {
-    const { sell_price: sellPrice, buy_price: buyPrice, currency } = contract;
-    const profit = getRoundedNumber(sellPrice - buyPrice, currency);
-    const result = profit < 0 ? 'loss' : 'win';
+    if (!contract) {
+        return ['', 0, 0, 0, '', '', 0, '', 0, 0, 'loss'];
+    }
+
+    const currency = contract.currency || 'USD';
+    const buyPrice = Number(contract.buy_price || 0);
+
+    let sellPrice;
+    if (contract.sell_price !== undefined && contract.sell_price !== null && !isNaN(Number(contract.sell_price))) {
+        sellPrice = Number(contract.sell_price);
+    } else if (contract.profit !== undefined && contract.profit !== null && !isNaN(Number(contract.profit))) {
+        sellPrice = buyPrice + Number(contract.profit);
+    } else if (contract.status === 'won' || contract.status === 'win') {
+        sellPrice = Number(contract.payout || buyPrice * 1.95);
+    } else if (contract.status === 'lost' || contract.status === 'loss') {
+        sellPrice = 0;
+    } else {
+        sellPrice = buyPrice;
+    }
+
+    let profit;
+    if (contract.profit !== undefined && contract.profit !== null && !isNaN(Number(contract.profit))) {
+        profit = getRoundedNumber(Number(contract.profit), currency);
+    } else {
+        profit = getRoundedNumber(sellPrice - buyPrice, currency);
+    }
+
+    let result;
+    if (contract.status === 'won' || contract.status === 'win') {
+        result = 'win';
+    } else if (contract.status === 'lost' || contract.status === 'loss') {
+        result = 'loss';
+    } else if (profit < 0) {
+        result = 'loss';
+    } else {
+        result = 'win';
+    }
 
     return [
-        contract.transaction_ids.buy,
-        +contract.buy_price,
-        +contract.sell_price,
+        contract.transaction_ids?.buy || '',
+        buyPrice,
+        sellPrice,
         profit,
-        contract.contract_type,
-        formatTime(parseInt(`${contract.entry_tick_time}000`), 'HH:mm:ss'),
-        +contract.entry_tick,
-        formatTime(parseInt(`${contract.exit_tick_time}000`), 'HH:mm:ss'),
-        +contract.exit_tick,
+        contract.contract_type || '',
+        contract.entry_tick_time ? formatTime(parseInt(`${contract.entry_tick_time}000`), 'HH:mm:ss') : '',
+        +(contract.entry_tick || 0),
+        contract.exit_tick_time ? formatTime(parseInt(`${contract.exit_tick_time}000`), 'HH:mm:ss') : '',
+        +(contract.exit_tick || 0),
         +(contract.barrier ? contract.barrier : 0),
         result,
     ];

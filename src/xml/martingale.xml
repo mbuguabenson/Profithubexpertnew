@@ -115,7 +115,7 @@
             <field name="OP">EQ</field>
             <value name="A">
               <block type="variables_get" id="f.km2[vh(%]*F2SuNU%G">
-                <field name="VAR" id="*p5|Lkk9Q^ZuPBQ-48g2" variabletype="">martingale:ProfitThreshold</field>
+                <field name="VAR" id="*p5|Lkk9Q^ZuPBQ-48g2" variabletype="">martingale:profitThreshold</field>
               </block>
             </value>
             <value name="B">
@@ -125,7 +125,7 @@
         </value>
         <statement name="DO0">
           <block type="variables_set" id="{}-XA:3=]2W.Aq|zIiP(">
-            <field name="VAR" id="*p5|Lkk9Q^ZuPBQ-48g2" variabletype="">martingale:ProfitThreshold</field>
+            <field name="VAR" id="*p5|Lkk9Q^ZuPBQ-48g2" variabletype="">martingale:profitThreshold</field>
             <value name="VALUE" strategy_value="profit">
               <block type="text_prompt_ext" id="Xk/kdhNk!8S=H#k(z8ZK">
                 <field name="TYPE">NUMBER</field>
@@ -582,7 +582,7 @@
                                         </value>
                                         <value name="B">
                                           <block type="variables_get" id="5m`a=f+P*-wT*3b-Acg=">
-                                            <field name="VAR" id="*p5|Lkk9Q^ZuPBQ-48g2" variabletype="">martingale:ProfitThreshold</field>
+                                            <field name="VAR" id="*p5|Lkk9Q^ZuPBQ-48g2" variabletype="">martingale:profitThreshold</field>
                                           </block>
                                         </value>
                                       </block>

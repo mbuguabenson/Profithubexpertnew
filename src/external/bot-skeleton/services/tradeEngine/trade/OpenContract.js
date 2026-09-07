@@ -100,8 +100,8 @@ export default Engine =>
                     this._clearWatchdog();
                 }
 
-                this.setContractFlags(contract);
-                this.data.contract = contract;
+                this.setContractFlags(enrichedContract);
+                this.data.contract = enrichedContract;
                 this.isSold = true;
                 this.contractId = '';
                 if (this.bulk_contract_ids) this.bulk_contract_ids.clear();
@@ -111,8 +111,8 @@ export default Engine =>
 
                 contractStatus({
                     id: 'contract.sold',
-                    data: contract.transaction_ids?.sell,
-                    contract,
+                    data: enrichedContract.transaction_ids?.sell,
+                    contract: enrichedContract,
                 });
 
                 if (this.afterPromise) {
