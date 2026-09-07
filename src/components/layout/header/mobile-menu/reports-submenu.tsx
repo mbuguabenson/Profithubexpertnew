@@ -1,6 +1,11 @@
 import { standalone_routes } from '@/components/shared';
 import { generateUrlWithRedirect } from '@/utils/url-redirect-utils';
-import { LegacyOpenPositionIcon, LegacyProfitTableIcon, LegacyStatementIcon } from '@deriv/quill-icons/Legacy';
+import {
+    LegacyOpenPositionIcon,
+    LegacyProfitTableIcon,
+    LegacyStatementIcon,
+    LegacyWalletIcon,
+} from '@deriv/quill-icons/Legacy';
 import { useTranslations } from '@deriv-com/translations';
 import { MenuItem, Text } from '@deriv-com/ui';
 
@@ -21,20 +26,30 @@ const ReportsSubmenu = () => {
         },
         {
             icon: LegacyStatementIcon,
-            label: localize('Statement'),
-            href: generateUrlWithRedirect(standalone_routes.statement),
+            label: localize('Statement Report'),
+            onClick: () => {
+                window.dispatchEvent(new Event('open_statement_report'));
+            },
+        },
+        {
+            icon: LegacyWalletIcon,
+            label: localize('Wallets & Transfers'),
+            onClick: () => {
+                window.dispatchEvent(new Event('open_wallet_management'));
+            },
         },
     ];
 
     return (
         <div className='mobile-menu__content__items'>
             <div className='mobile-menu__content__items--padding'>
-                {reportItems.map(({ icon: Icon, label, href }) => (
+                {reportItems.map(({ icon: Icon, label, href, onClick }) => (
                     <MenuItem
-                        as='a'
+                        as={onClick ? 'button' : 'a'}
                         className='mobile-menu__content__items__item mobile-menu__content__items__icons'
                         disableHover
                         href={href}
+                        onClick={onClick}
                         key={label}
                         leftComponent={<Icon className='mobile-menu__content__items--right-margin' iconSize='xs' />}
                     >

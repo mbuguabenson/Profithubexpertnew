@@ -11,6 +11,8 @@ import AppHeader from './header';
 import Body from './main-body';
 import { RiskDisclaimer } from '../shared_ui/risk-disclaimer/risk-disclaimer';
 import AccountInfoModal from './footer/AccountInfoModal';
+import { StatementReportModal } from '@/components/statement-report';
+import { WalletManagementModal } from '@/components/wallet-management';
 import { getSiteConfig, initSiteConfigSync, SiteConfig, sendChatMessage, getChatMessages, ChatMessage } from '@/utils/supabase-copy';
 import './layout.scss';
 
@@ -342,11 +344,23 @@ const MaintenanceOverlay = () => {
 
 const Layout = observer(() => {
     const [isAccountInfoOpen, setIsAccountInfoOpen] = useState(false);
+    const [isStatementReportOpen, setIsStatementReportOpen] = useState(false);
+    const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
 
     useEffect(() => {
-        const handleOpen = () => setIsAccountInfoOpen(true);
-        window.addEventListener('open_account_info', handleOpen);
-        return () => window.removeEventListener('open_account_info', handleOpen);
+        const handleOpenAccountInfo = () => setIsAccountInfoOpen(true);
+        const handleOpenStatement = () => setIsStatementReportOpen(true);
+        const handleOpenWallet = () => setIsWalletModalOpen(true);
+
+        window.addEventListener('open_account_info', handleOpenAccountInfo);
+        window.addEventListener('open_statement_report', handleOpenStatement);
+        window.addEventListener('open_wallet_management', handleOpenWallet);
+
+        return () => {
+            window.removeEventListener('open_account_info', handleOpenAccountInfo);
+            window.removeEventListener('open_statement_report', handleOpenStatement);
+            window.removeEventListener('open_wallet_management', handleOpenWallet);
+        };
     }, []);
     const { isDesktop } = useDevice();
     const store = useStore();
@@ -496,6 +510,8 @@ const Layout = observer(() => {
             {!isCallbackPage && !isAdminPage && isDesktop && <Footer />}
             {!isAdminPage && <RiskDisclaimer />}
             <AccountInfoModal isOpen={isAccountInfoOpen} onClose={() => setIsAccountInfoOpen(false)} />
+            <StatementReportModal isOpen={isStatementReportOpen} onClose={() => setIsStatementReportOpen(false)} />
+            <WalletManagementModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />
 
             {/* Floating Chat Widget (only on client-facing pages) */}
             {!isAdminPage && !isCallbackPage && <FloatingChat />}

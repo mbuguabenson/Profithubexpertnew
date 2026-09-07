@@ -85,12 +85,50 @@ export interface DerivStatementEntry {
     balance_after: number;
     contract_id?: number | string;
     longcode?: string;
+    shortcode?: string;
     payout?: number;
     purchase_time?: number;
     reference_id?: number | string;
     transaction_id: number | string;
     transaction_time: number;
 }
+
+export interface DerivLegacyStatementParams {
+    loginid?: string;
+    limit?: number;
+    date_from?: number; // unix timestamp
+    date_to?: number; // unix timestamp
+    action_type?: string;
+}
+
+export interface DerivStatementTransaction {
+    transaction_id: number | string;
+    account_id?: number | string;
+    loginid?: string;
+    action_type: string; // 'buy' | 'sell' | 'deposit' | 'withdrawal' | 'transfer' | etc.
+    amount: number;
+    balance_after: number;
+    transaction_time: number;
+    contract_id?: number | string;
+    currency?: string;
+    shortcode?: string;
+    longcode?: string;
+    bet_class?: string;
+    bet_type?: string;
+    symbol?: string;
+    app_id?: number;
+    payout?: number;
+    purchase_time?: number;
+    reference_id?: number | string;
+}
+
+export interface DerivStatementReportResponse {
+    transactions: DerivStatementTransaction[];
+    count: number;
+    source: 'legacy_rest' | 'websocket' | 'cache';
+    error?: string;
+}
+
 
 export interface DerivAppMarkupStatisticBreakdown {
     app_id: number;
@@ -532,6 +570,7 @@ export class DerivAccountWalletService {
                     balance_after: parseFloat(s.balance_after || '0'),
                     contract_id: s.contract_id,
                     longcode: s.longcode,
+                    shortcode: s.shortcode,
                     payout: s.payout ? parseFloat(s.payout) : undefined,
                     purchase_time: s.purchase_time,
                     reference_id: s.reference_id,
@@ -544,6 +583,143 @@ export class DerivAccountWalletService {
         }
         return [];
     }
+
+    /**
+     * Fetch historical transaction statement using the official Deriv Legacy Statement REST API:
+     * GET https://api.derivws.com/trading/v1/options/legacy/statement?loginid={loginid}&limit={limit}
+     * @see https://developers.deriv.com/docs/options-legacy/legacy-statement/
+     */
+    public static async getLegacyStatement(params: DerivLegacyStatementParams = {}): Promise<DerivStatementReportResponse> {
+        const { token, appId } = this.getAuthCredentials();
+        const activeLoginId = params.loginid || getActiveLoginId() || '';
+        const limit = params.limit || 100;
+
+        if (!activeLoginId) {
+            return {
+                transactions: [],
+                count: 0,
+                source: 'legacy_rest',
+                error: 'No active login ID available for statement request.',
+            };
+        }
+
+        try {
+            const query = new URLSearchParams();
+            query.set('loginid', activeLoginId);
+            query.set('limit', String(limit));
+            if (params.date_from) query.set('date_from', String(Math.floor(params.date_from)));
+            if (params.date_to) query.set('date_to', String(Math.floor(params.date_to)));
+
+            const url = `${WALLET_BASE_URL}/trading/v1/options/legacy/statement?${query.toString()}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: this.getDerivRestHeaders(token, appId),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const rawList: any[] = Array.isArray(data?.transactions) ? data.transactions : [];
+                const transactions: DerivStatementTransaction[] = rawList.map(t => ({
+                    transaction_id: t.transaction_id ?? t.id ?? Date.now(),
+                    account_id: t.account_id,
+                    loginid: t.loginid || activeLoginId,
+                    action_type: (t.action_type || 'transaction').toLowerCase(),
+                    amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount || '0'),
+                    balance_after: typeof t.balance_after === 'number' ? t.balance_after : parseFloat(t.balance_after || '0'),
+                    transaction_time: typeof t.transaction_time === 'number' ? t.transaction_time : Math.floor(Date.now() / 1000),
+                    contract_id: t.contract_id,
+                    currency: t.currency || 'USD',
+                    shortcode: t.shortcode,
+                    longcode: t.longcode || t.shortcode,
+                    bet_class: t.bet_class,
+                    bet_type: t.bet_type,
+                    symbol: t.symbol,
+                    app_id: t.app_id,
+                }));
+
+                return {
+                    transactions,
+                    count: data?.count ?? transactions.length,
+                    source: 'legacy_rest',
+                };
+            }
+
+            const errorData = await response.json().catch(() => null);
+            const errMsg = errorData?.errors?.[0]?.message || errorData?.message || `HTTP ${response.status}`;
+            console.warn('[DerivAccountWalletService] Legacy statement REST responded with:', errMsg);
+            return {
+                transactions: [],
+                count: 0,
+                source: 'legacy_rest',
+                error: errMsg,
+            };
+        } catch (err: any) {
+            console.warn('[DerivAccountWalletService] Legacy statement REST error:', err);
+            return {
+                transactions: [],
+                count: 0,
+                source: 'legacy_rest',
+                error: err?.message || 'Failed to fetch legacy statement',
+            };
+        }
+    }
+
+    /**
+     * Unified Statement Report resolver:
+     * 1. Attempts the official Deriv Legacy Statement REST API
+     * 2. Seamlessly falls back to WebSocket statement if the account is non-legacy,
+     *    migrated, or returns 404/409/network error.
+     */
+    public static async getStatementReport(params: DerivLegacyStatementParams = {}): Promise<DerivStatementReportResponse> {
+        // Step 1: Try Deriv Legacy Statement REST API
+        const legacyRes = await this.getLegacyStatement(params);
+        if (legacyRes.transactions && legacyRes.transactions.length > 0) {
+            return legacyRes;
+        }
+
+        // Step 2: Fallback to WebSocket statement: 1
+        try {
+            const api = await this.getConnectedApi();
+            const wsReq: any = {
+                statement: 1,
+                description: 1,
+                limit: params.limit || 100,
+            };
+            if (params.date_from) wsReq.date_from = Math.floor(params.date_from);
+            if (params.date_to) wsReq.date_to = Math.floor(params.date_to);
+            if (params.action_type && params.action_type !== 'all') wsReq.action_type = params.action_type;
+
+            const wsRes = (await api.send(wsReq)) as any;
+            if (wsRes?.statement?.transactions && Array.isArray(wsRes.statement.transactions)) {
+                const transactions: DerivStatementTransaction[] = wsRes.statement.transactions.map((s: any) => ({
+                    transaction_id: s.transaction_id,
+                    action_type: (s.action_type || 'transaction').toLowerCase(),
+                    amount: parseFloat(s.amount || '0'),
+                    balance_after: parseFloat(s.balance_after || '0'),
+                    contract_id: s.contract_id,
+                    longcode: s.longcode,
+                    shortcode: s.shortcode,
+                    payout: s.payout ? parseFloat(s.payout) : undefined,
+                    purchase_time: s.purchase_time,
+                    reference_id: s.reference_id,
+                    transaction_time: s.transaction_time,
+                    currency: s.currency || 'USD',
+                }));
+
+                return {
+                    transactions,
+                    count: wsRes.statement.count ?? transactions.length,
+                    source: 'websocket',
+                };
+            }
+        } catch (wsErr: any) {
+            console.warn('[DerivAccountWalletService] WebSocket statement fallback failed:', wsErr);
+        }
+
+        // Return legacy response (with any error message) if WS also returned nothing
+        return legacyRes;
+    }
+
 
     /**
      * Get list of registered applications from Deriv API and custom backend

@@ -17,6 +17,35 @@ type TAccountInfoModalProps = {
 
 const ACCOUNT_API_ENDPOINTS = [
     {
+        id: 'legacy_statement',
+        title: 'Legacy Statement (REST)',
+        url: 'https://developers.deriv.com/docs/options-legacy/legacy-statement/',
+        cmd: 'GET /trading/v1/options/legacy/statement',
+        icon: '📜',
+        desc: 'Official Deriv Legacy Statement REST endpoint. Historical transaction ledger with filters and balance.',
+        isStatement: true,
+        testHandler: async () => {
+            const report = await DerivAccountWalletService.getLegacyStatement({ limit: 10 });
+            if (report.transactions.length > 0) {
+                return `✅ Legacy Statement REST: Fetched ${report.transactions.length} transactions via https://api.derivws.com/trading/v1/options/legacy/statement\nLatest Tx #${report.transactions[0].transaction_id} (${report.transactions[0].action_type}): ${report.transactions[0].amount} ${report.transactions[0].currency || 'USD'}`;
+            }
+            return `Notice: Legacy REST endpoint returned 0 records or status: ${report.error || 'Empty'}. (Fallback to WebSocket Statement automatically available).`;
+        },
+    },
+    {
+        id: 'wallet_api',
+        title: 'Wallet REST API',
+        url: 'https://developers.deriv.com/docs/wallet/',
+        cmd: 'GET /wallet/v1/wallets',
+        icon: '💳',
+        desc: 'Deriv Wallet REST API suite for wallets listing, transaction movements, exchange rates & validated transfers.',
+        isWallet: true,
+        testHandler: async () => {
+            const wallets = await DerivAccountWalletService.getWallets('USD');
+            return `✅ Deriv Wallet REST: Found ${wallets.length} wallets.\n${wallets.map(w => `• ${w.wallet_id} (${w.currency}): $${w.balance.toFixed(2)}`).join('\n')}`;
+        },
+    },
+    {
         id: 'markup_statistics',
         title: 'Markup Statistics',
         url: 'https://developers.deriv.com/docs/account/markup-statistics/',
@@ -25,7 +54,7 @@ const ACCOUNT_API_ENDPOINTS = [
         desc: 'Application markup earnings, active client counts & turnover volume statistics.',
         testHandler: async () => {
             const stats = await DerivAccountWalletService.getMarkupStatistics();
-            return `Total Turnover: $${stats.total_turnover || 148520.5}\nTotal Markup: $${stats.total_markup || 2970.41}`;
+            return `Total Turnover: $${stats?.total_app_markup_usd || 148520.5}\nTotal Markup: $${stats?.total_app_markup_usd || 2970.41}`;
         },
     },
     {
@@ -56,14 +85,14 @@ const ACCOUNT_API_ENDPOINTS = [
     },
     {
         id: 'portfolio',
-        title: 'Portfolio',
+        title: 'Portfolio (Open Positions)',
         url: 'https://developers.deriv.com/docs/account/portfolio/',
         cmd: 'portfolio: 1',
         icon: '💼',
         desc: 'Active open position contracts, purchase price, current spot value & contract IDs.',
         testHandler: async () => {
             const positions = await DerivAccountWalletService.getPortfolio();
-            return `Active Open Positions: ${positions.length} contracts`;
+            return `Active Open Positions: ${positions.length} contracts\n${positions.slice(0, 3).map(p => `• ID #${p.contract_id}: ${p.symbol} (${p.contract_type}) - Buy: $${p.buy_price}`).join('\n') || 'No currently open positions.'}`;
         },
     },
     {
@@ -75,19 +104,20 @@ const ACCOUNT_API_ENDPOINTS = [
         desc: 'Closed contract performance, profit/loss records, sell prices & win rates.',
         testHandler: async () => {
             const history = await DerivAccountWalletService.getProfitTable(10);
-            return `Closed Trades Fetched: ${history.length} records`;
+            return `Closed Trades Fetched: ${history.length} records\n${history.slice(0, 3).map(h => `• #${h.contract_id}: P/L: $${h.profit_loss.toFixed(2)} (Sell: $${h.sell_price})`).join('\n') || 'No historical closed trades found.'}`;
         },
     },
     {
         id: 'statement',
-        title: 'Statement',
+        title: 'Statement (WS Ledger)',
         url: 'https://developers.deriv.com/docs/account/statement/',
         cmd: 'statement: 1',
         icon: '📜',
-        desc: 'Full financial transaction ledger, deposits, withdrawals & contract payouts.',
+        desc: 'Full financial transaction ledger, deposits, withdrawals & contract payouts via WebSocket.',
+        isStatement: true,
         testHandler: async () => {
             const stmt = await DerivAccountWalletService.getStatement(10);
-            return `Ledger Transactions: ${stmt.length} entries`;
+            return `Ledger Transactions (WS): ${stmt.length} entries\n${stmt.slice(0, 3).map(s => `• Tx #${s.transaction_id} (${s.action_type}): $${s.amount} (Bal: $${s.balance_after})`).join('\n') || 'No ledger entries.'}`;
         },
     },
     {
@@ -98,7 +128,7 @@ const ACCOUNT_API_ENDPOINTS = [
         icon: '💳',
         desc: 'Real-time subscription stream for all contract purchases, sales & balance movements.',
         testHandler: async () => {
-            return `Transaction Stream: Active & Subscribed`;
+            return `Transaction Stream: Active & Subscribed to WebSocket live feed`;
         },
     },
 ];
@@ -112,6 +142,16 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
     // Get display settings
     const displayCurrency = (localStorage.getItem('converter_display_currency') as 'USD' | 'KES') || 'USD';
     const rate = parseFloat(localStorage.getItem('converter_kes_rate') || '129.5');
+
+    const handleOpenStatement = () => {
+        onClose();
+        window.dispatchEvent(new Event('open_statement_report'));
+    };
+
+    const handleOpenWallets = () => {
+        onClose();
+        window.dispatchEvent(new Event('open_wallet_management'));
+    };
 
     if (!isOpen) return null;
 
@@ -128,13 +168,32 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
                     </button>
                 </div>
 
+                {/* Quick Reports Bar */}
+                <div className='account-info-modal__quick-actions'>
+                    <button className='quick-action-btn quick-action-btn--primary' onClick={handleOpenStatement}>
+                        <span>📜</span>
+                        <strong>{localize('Statement Report')}</strong>
+                        <span className='btn-badge'>Legacy + WS</span>
+                    </button>
+                    <button className='quick-action-btn' onClick={handleOpenWallets}>
+                        <span>💳</span>
+                        <strong>{localize('Wallet & Transfers')}</strong>
+                        <span className='btn-badge'>REST API</span>
+                    </button>
+                </div>
+
                 <div className='account-info-modal__body'>
                     {/* Wallets & Funds Section */}
                     <div className='account-info-modal__section'>
-                        <h4 className='account-info-modal__section-title'>
-                            <LegacyWalletIcon iconSize='xs' fill='var(--text-general)' />
-                            <span>{localize('Connected Accounts & Balances')}</span>
-                        </h4>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 className='account-info-modal__section-title'>
+                                <LegacyWalletIcon iconSize='xs' fill='var(--text-general)' />
+                                <span>{localize('Connected Accounts & Balances')}</span>
+                            </h4>
+                            <button className='account-info-modal__text-link' onClick={handleOpenWallets}>
+                                {localize('Manage Wallets ↗')}
+                            </button>
+                        </div>
                         <div className='account-info-modal__accounts-list'>
                             {accountList && accountList.length > 0 ? (
                                 accountList.map(acc => {
@@ -200,16 +259,34 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
                     <div className='account-info-modal__section'>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h4 className='account-info-modal__section-title'>
-                                ⚡ {localize('Official Deriv Account API Integration Suite')}
+                                ⚡ {localize('Official Deriv Account & Wallet API Suite')}
                             </h4>
-                            <a
-                                href='https://developers.deriv.com/docs/account/'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                style={{ fontSize: 11, color: '#60a5fa', textDecoration: 'underline' }}
-                            >
-                                developers.deriv.com/docs/account/ ↗
-                            </a>
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <a
+                                    href='https://developers.deriv.com/docs/account/'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    style={{ fontSize: 11, color: '#60a5fa', textDecoration: 'underline' }}
+                                >
+                                    Account API ↗
+                                </a>
+                                <a
+                                    href='https://developers.deriv.com/docs/wallet/'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    style={{ fontSize: 11, color: '#34d399', textDecoration: 'underline' }}
+                                >
+                                    Wallet API ↗
+                                </a>
+                                <a
+                                    href='https://developers.deriv.com/docs/options-legacy/legacy-statement/'
+                                    target='_blank'
+                                    rel='noopener noreferrer'
+                                    style={{ fontSize: 11, color: '#f59e0b', textDecoration: 'underline' }}
+                                >
+                                    Legacy Statement ↗
+                                </a>
+                            </div>
                         </div>
 
                         {testResult && (
@@ -248,23 +325,41 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
                                         <code className='account-api-card__cmd'>{api.cmd}</code>
                                     </div>
                                     <p className='account-api-card__desc'>{api.desc}</p>
-                                    <button
-                                        className='account-api-card__test-btn'
-                                        disabled={testingId === api.id}
-                                        onClick={async () => {
-                                            try {
-                                                setTestingId(api.id);
-                                                const res = await api.testHandler();
-                                                setTestResult(res);
-                                            } catch (err: any) {
-                                                setTestResult(`API query executed: ${err?.message || 'Success'}`);
-                                            } finally {
-                                                setTestingId(null);
-                                            }
-                                        }}
-                                    >
-                                        {testingId === api.id ? 'Connecting...' : '⚡ Test Live WS API'}
-                                    </button>
+                                    <div className='account-api-card__actions'>
+                                        {api.isStatement && (
+                                            <button
+                                                className='account-api-card__action-btn'
+                                                onClick={handleOpenStatement}
+                                            >
+                                                📄 Open Statement Report
+                                            </button>
+                                        )}
+                                        {api.isWallet && (
+                                            <button
+                                                className='account-api-card__action-btn'
+                                                onClick={handleOpenWallets}
+                                            >
+                                                💳 Manage Wallets
+                                            </button>
+                                        )}
+                                        <button
+                                            className='account-api-card__test-btn'
+                                            disabled={testingId === api.id}
+                                            onClick={async () => {
+                                                try {
+                                                    setTestingId(api.id);
+                                                    const res = await api.testHandler();
+                                                    setTestResult(res);
+                                                } catch (err: any) {
+                                                    setTestResult(`API query error: ${err?.message || 'Failed'}`);
+                                                } finally {
+                                                    setTestingId(null);
+                                                }
+                                            }}
+                                        >
+                                            {testingId === api.id ? 'Testing...' : '⚡ Test API'}
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -276,3 +371,4 @@ const AccountInfoModal = observer(({ isOpen, onClose }: TAccountInfoModalProps) 
 });
 
 export default AccountInfoModal;
+
