@@ -7,12 +7,10 @@ import { DerivAccountWalletService, DerivStatementTransaction } from '@/services
 import { AccountSwitcherService } from '@/services/account-switcher.service';
 import { addComma, getCurrencyDisplayCode, getDecimalPlaces } from '@/components/shared';
 import { isDemoAccount } from '@/utils/account-helpers';
-import { getAccountsList } from '@/utils/token-bridge';
+import { api_base } from '@/external/bot-skeleton/services/api/api-base';
 import { localize } from '@deriv-com/translations';
 import {
     ArrowLeft,
-    ArrowUpRight,
-    ArrowDownLeft,
     CheckCircle2,
     Copy,
     Download,
@@ -183,10 +181,10 @@ const AccountPage = observer(() => {
             return;
         }
         setSelectedLoginId(targetId);
-        const tokens = getAccountsList();
-        const targetToken = tokens[targetId];
-        if (targetToken) {
-            await AccountSwitcherService.switchAccount(targetId, targetToken);
+        try {
+            await AccountSwitcherService.switchAccount(targetId, client);
+        } catch (err) {
+            console.error('[AccountPage] Switch error:', err);
         }
     };
 
@@ -194,12 +192,20 @@ const AccountPage = observer(() => {
         setIsResetting(true);
         setResetMsg(null);
         try {
-            const res = await AccountSwitcherService.resetDemoBalance();
-            if (res.success) {
-                setResetMsg(localize('Demo balance successfully reset to $10,000.00'));
-                fetchStatement();
+            if (api_base.api) {
+                const topupRes = await api_base.api.send({ topup_virtual: 1 });
+                if (topupRes?.topup_virtual) {
+                    const newAmount = topupRes.topup_virtual.amount ?? 10000;
+                    if (client?.setBalance) {
+                        client.setBalance(String(newAmount));
+                    }
+                    setResetMsg(localize('Demo balance successfully reset to $10,000.00'));
+                    fetchStatement();
+                } else if (topupRes?.error) {
+                    setResetMsg(topupRes.error.message || localize('Unable to reset demo balance'));
+                }
             } else {
-                setResetMsg(res.message || localize('Unable to reset demo balance'));
+                setResetMsg(localize('Connection not available to reset balance'));
             }
         } catch (e: any) {
             setResetMsg(e?.message || localize('Error resetting balance'));
