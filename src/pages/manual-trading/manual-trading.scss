@@ -17,11 +17,11 @@
     box-sizing: border-box;
     width: 100%;
     min-height: 100%;
-    padding: 1.2rem 1.4rem 4rem;
+    padding: 1.2rem 1.4rem calc(84px + env(safe-area-inset-bottom, 16px));
     overflow-y: auto;
     background: var(--manual-page-bg);
     color: var(--manual-text);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--ph-font, 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
 
     *,
     *::before,
@@ -566,27 +566,27 @@
     }
 
     .manual-trading-digit {
-        width: 6.2rem;
-        height: 7rem;
-    }
-
-    .manual-trading-digit__circle {
-        width: 6.2rem;
+        width: 5.2rem;
         height: 6.2rem;
     }
 
+    .manual-trading-digit__circle {
+        width: 5.2rem;
+        height: 5.2rem;
+    }
+
     .manual-trading-digit__inner {
-        width: 5rem;
-        height: 5rem;
+        width: 4.2rem;
+        height: 4.2rem;
     }
 
     .manual-trading-digit__number {
-        margin-bottom: 0.8rem;
-        font-size: 1.3rem;
+        margin-bottom: 0.4rem;
+        font-size: 1.2rem;
     }
 
     .manual-trading-digit__percent {
-        font-size: 1rem;
+        font-size: 0.85rem;
     }
 
     .manual-trading-ticket {
@@ -637,15 +637,16 @@
 
 @media (max-width: 38rem) {
     .manual-trading-toolbar {
-        grid-template-columns: 1fr 7.8rem;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+    }
+
+    .manual-trading-field--market {
+        grid-column: 1 / -1;
     }
 
     .manual-trading-toolbar__apply {
-        grid-column: 2;
-    }
-
-    .manual-trading-field:not(.manual-trading-field--market) {
-        grid-column: 1;
+        grid-column: 1 / -1;
     }
 
     .manual-trading-ticket__inputs,

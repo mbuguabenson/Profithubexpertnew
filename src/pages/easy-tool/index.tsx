@@ -77,7 +77,12 @@ const EasyTool = observer(() => {
                 {/* 1. Digit Distribution */}
                 <div className='easy-tool__section'>
                     <div className='section-card distribution-v2'>
-                        <DigitDistributionCircles onSelect={setSelectedDigit} selected_digit={selected_digit} />
+                        <DigitDistributionCircles
+                            digits={ticks}
+                            tick={current_price ? { quote: current_price, pip_size: 2, last_digit } : undefined}
+                            onSelect={setSelectedDigit}
+                            selected_digit={selected_digit}
+                        />
                     </div>
                 </div>
 

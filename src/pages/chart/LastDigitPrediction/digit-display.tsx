@@ -85,8 +85,8 @@ const DigitDisplay = ({
                 percentage={percentage}
                 value={value}
             />
-            {isMobile && is_latest && (
-                <span className='digits__pointer digits__pointer--mobile'>
+            {is_latest && (
+                <span className='digits__pointer digits__pointer--live' title={`Active Digit: ${value}`}>
                     <svg
                         className={classNames('digits__icon', {
                             'digits__icon--win': is_won,

@@ -400,7 +400,7 @@ const AppWrapper = observer(() => {
             if (el_id) {
                 const el_tab = document.getElementById(el_id);
                 setTimeout(() => {
-                    el_tab?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    el_tab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 }, 10);
             }
         },
@@ -441,7 +441,7 @@ const AppWrapper = observer(() => {
                 content: (
                     <TabErrorBoundary tabId='id-charts' tabName='Charts'>
                         <Suspense fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}>
-                            <ChartWrapper show_digits_stats={true} />
+                            <ChartWrapper show_digits_stats={false} />
                         </Suspense>
                     </TabErrorBoundary>
                 ),
@@ -708,7 +708,7 @@ const AppWrapper = observer(() => {
                     if (el_id) {
                         const el_tab = document.getElementById(el_id);
                         setTimeout(() => {
-                            el_tab?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                            el_tab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         }, 10);
                     }
                 }

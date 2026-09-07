@@ -26,22 +26,12 @@ const Marketkiller = observer(() => {
     return (
         <div className='marketkiller-wrapper'>
             <div className='mk-global-header'>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '24px' }}>🔪</span>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <h2
-                                style={{
-                                    margin: 0,
-                                    color: '#fff',
-                                    fontSize: '18px',
-                                    fontWeight: 800,
-                                    letterSpacing: '2px',
-                                }}
-                            >
-                                MARKETKILLER
-                            </h2>
-                            <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold' }}>
+                <div className='mk-header-left'>
+                    <div className='mk-header-title-wrap'>
+                        <span className='mk-header-icon'>🔪</span>
+                        <div className='mk-header-title-text'>
+                            <h2>MARKETKILLER</h2>
+                            <span className='mk-connection-status'>
                                 {is_connected ? '● LIVE CONNECTION' : '○ RECONNECTING...'}
                             </span>
                         </div>
@@ -73,9 +63,8 @@ const Marketkiller = observer(() => {
                     <button
                         className={classNames('mk-btn-primary', { running: is_running })}
                         onClick={() => marketkiller.toggleEngine()}
-                        style={{ marginLeft: '16px', padding: '12px 24px' }}
                     >
-                        {is_running ? 'TERMINATE ENGINE' : 'ACTIVATE KILLER'}
+                        {is_running ? 'TERMINATE' : 'ACTIVATE KILLER'}
                     </button>
                 </div>
             </div>

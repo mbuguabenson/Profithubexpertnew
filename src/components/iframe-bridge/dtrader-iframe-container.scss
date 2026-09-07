@@ -24,6 +24,11 @@
         display: block;
     }
 
+    @media (max-width: 768px) {
+        min-height: calc(100vh - 120px);
+        padding-bottom: 80px;
+    }
+
     // Masks the iframe's internal top-right auth buttons (Log in / Sign up) when unauthenticated
     &__auth-mask {
         position: absolute;
@@ -35,6 +40,10 @@
         z-index: 5;
         pointer-events: none;
         transition: opacity 0.3s ease;
+
+        @media (max-width: 768px) {
+            display: none !important;
+        }
     }
 
     &__loader {

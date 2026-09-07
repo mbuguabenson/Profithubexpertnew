@@ -1548,3 +1548,23 @@
         transform: translateY(0);
     }
 }
+
+// ── Mobile Responsive Adjustments ──────────────────────────────────────────
+@media (max-width: 768px) {
+    .poverty-hunter {
+        padding: 0.8rem 0.6rem calc(84px + env(safe-area-inset-bottom, 16px));
+
+        &__header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+            padding: 1rem;
+
+            .ph-header-controls {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+        }
+    }
+}

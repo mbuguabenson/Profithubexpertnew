@@ -10,10 +10,9 @@ import { useStore } from '@/hooks/useStore';
 import { ChartTitle, SmartChart, TGranularity, TStateChangeListener } from '@deriv-com/smartcharts-champion';
 import { useDevice } from '@deriv-com/ui';
 import ToolbarWidgets from './toolbar-widgets';
-import DigitDistributionCircles from './digit-distribution-circles';
 import '@deriv-com/smartcharts-champion/dist/smartcharts.css';
 
-const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
+const Chart = observer(({ show_digits_stats: _show_digits_stats }: { show_digits_stats?: boolean }) => {
     const barriers: [] = [];
     const store = useStore();
     const [isSafari, setIsSafari] = useState(false);
@@ -223,15 +222,6 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         <ChartTitle onChange={onSymbolChange} />
     ), [onSymbolChange]);
 
-    const renderBottomWidgets = useCallback((props: any) => (
-        <div
-            className='bottom-widgets'
-            style={{ display: 'flex', justifyContent: 'center', width: '100%' }}
-        >
-            <DigitDistributionCircles digits={props?.digits} tick={props?.tick} />
-        </div>
-    ), []);
-
     // isSymbolReady: allow render if activeSymbols loaded and symbol is either valid
     // OR has a fallback default ready — avoids infinite spinner on stale stored symbols
     const isSymbolReady =
@@ -260,8 +250,8 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 id={`dbot-${symbol}`}
                 key={`chart-${symbol}`}
                 barriers={barriers}
-                bottomWidgets={show_digits_stats ? (renderBottomWidgets as any) : undefined}
-                showLastDigitStats={show_digits_stats}
+                bottomWidgets={undefined}
+                showLastDigitStats={false}
                 chartControlsWidgets={null}
                 enabledChartFooter={false}
                 stateChangeListener={handleStateChange}

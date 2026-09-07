@@ -168,16 +168,18 @@ main {
                 }
 
                 @include mobile-or-tablet-screen {
-                    padding: 2px 4px !important;
+                    padding: 4px 6px !important;
                     margin: 0 !important;
                     width: 100% !important;
                     border-radius: 0 !important;
-                    gap: 2px !important;
+                    gap: 4px !important;
                     background: #131722 !important;
                     border-left: none !important;
                     border-right: none !important;
                     overflow-x: auto !important;
                     -webkit-overflow-scrolling: touch !important;
+                    overscroll-behavior-x: contain !important;
+                    scroll-padding: 0 16px !important;
 
                     :global(.theme--light) &,
                     :global(body.theme--light) &,
@@ -420,6 +422,11 @@ main {
                     width: 100%;
                     overflow-x: auto;
                     overflow-y: auto !important;
+                    padding-bottom: calc(84px + env(safe-area-inset-bottom, 16px)) !important;
+
+                    > div {
+                        padding-bottom: calc(84px + env(safe-area-inset-bottom, 16px)) !important;
+                    }
 
                     &--no-result {
                         @include flex-center;

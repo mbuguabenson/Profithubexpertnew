@@ -196,10 +196,10 @@ const BotBuilder = observer(() => {
                         boundary='.main'
                         header={localize('Premium AI Signals Engine')}
                         onClose={() => dashboard.setProToolAssistantVisibility(false)}
-                        modalWidth={530}
-                        modalHeight={660}
-                        minWidth={350}
-                        minHeight={400}
+                        modalWidth={420}
+                        modalHeight={540}
+                        minWidth={320}
+                        minHeight={380}
                         enableResizing
                     >
                         <div
@@ -222,10 +222,10 @@ const BotBuilder = observer(() => {
                         boundary='.main'
                         header={localize('Entry Scanner')}
                         onClose={() => (entry_scanner.is_scanner_open = false)}
-                        modalWidth={700}
-                        modalHeight={600}
-                        minWidth={500}
-                        minHeight={400}
+                        modalWidth={520}
+                        modalHeight={500}
+                        minWidth={340}
+                        minHeight={380}
                         enableResizing
                     >
                         <div

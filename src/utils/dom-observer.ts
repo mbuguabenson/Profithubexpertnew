@@ -1,16 +1,25 @@
-export const waitForDomElement = (selector: string, observingParent?: Element) => {
+export const waitForDomElement = (selector: string, observingParent?: Element, timeoutMs = 1500) => {
     return new Promise(resolve => {
-        if (document.querySelector(selector)) {
-            resolve(document.querySelector(selector));
+        const el = document.querySelector(selector);
+        if (el) {
+            resolve(el);
             return;
         }
 
+        let timeoutId: any;
         const observer = new MutationObserver(() => {
-            if (document.querySelector(selector)) {
-                resolve(document.querySelector(selector));
+            const foundEl = document.querySelector(selector);
+            if (foundEl) {
+                if (timeoutId) clearTimeout(timeoutId);
                 observer.disconnect();
+                resolve(foundEl);
             }
         });
+
+        timeoutId = setTimeout(() => {
+            observer.disconnect();
+            resolve(null);
+        }, timeoutMs);
 
         observer.observe(observingParent ?? document.body, {
             childList: true,

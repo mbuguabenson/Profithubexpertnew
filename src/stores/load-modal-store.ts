@@ -89,6 +89,7 @@ export default class LoadModalStore {
                     const saved_workspaces = await getSavedWorkspaces();
                     if (!saved_workspaces) return;
                     this.setRecentStrategies(saved_workspaces);
+                    this.setDashboardStrategies(saved_workspaces);
                     if (saved_workspaces.length > 0 && !this.selected_strategy_id) {
                         this.setSelectedStrategyId(saved_workspaces[0].id);
                     }
@@ -125,9 +126,10 @@ export default class LoadModalStore {
     }
 
     get selected_strategy(): TStrategy {
+        const list = this.recent_strategies?.length ? this.recent_strategies : this.dashboard_strategies;
         return (
-            this.dashboard_strategies.find((ws: { id: string }) => ws.id === this.selected_strategy_id) ??
-            this.dashboard_strategies[0]
+            list.find((ws: { id: string }) => ws.id === this.selected_strategy_id) ??
+            list[0]
         );
     }
 
@@ -247,8 +249,14 @@ export default class LoadModalStore {
 
     toggleLoadModal = (): void => {
         this.is_load_modal_open = !this.is_load_modal_open;
-        this.recent_workspace?.dispose();
+        try {
+            this.recent_workspace?.dispose();
+        } catch (e) {}
         this.recent_workspace = null;
+        try {
+            this.local_workspace?.dispose();
+        } catch (e) {}
+        this.local_workspace = null;
         this.setLoadedLocalFile(null);
     };
 
@@ -368,7 +376,9 @@ export default class LoadModalStore {
             setTimeout(() => {
                 // Dispose of recent workspace when switching away from Recent tab.
                 // Process in next cycle so user doesn't have to wait.
-                this.recent_workspace?.dispose();
+                try {
+                    this.recent_workspace?.dispose();
+                } catch (e) {}
                 this.recent_workspace = null;
             });
         }
@@ -386,7 +396,9 @@ export default class LoadModalStore {
         // Dispose of local workspace when switching away from Local tab.
         else if (this.local_workspace) {
             setTimeout(() => {
-                this.local_workspace?.dispose();
+                try {
+                    this.local_workspace?.dispose();
+                } catch (e) {}
                 this.local_workspace = null;
                 this.setLoadedLocalFile(null);
             }, 0);
@@ -482,13 +494,17 @@ export default class LoadModalStore {
     };
 
     updateXmlValuesOnStrategySelection = () => {
-        if (this.recent_strategies.length === 0) return;
-        updateXmlValues({
-            strategy_id: this.selected_strategy_id,
-            convertedDom: window?.Blockly?.utils?.xml?.textToDom(this.selected_strategy?.xml),
-            file_name: this.selected_strategy?.name,
-            from: this.selected_strategy?.save_type || save_types.UNSAVED,
-        });
+        if (this.recent_strategies.length === 0 || !this.selected_strategy?.xml) return;
+        try {
+            updateXmlValues({
+                strategy_id: this.selected_strategy_id,
+                convertedDom: window?.Blockly?.utils?.xml?.textToDom(this.selected_strategy.xml),
+                file_name: this.selected_strategy?.name,
+                from: this.selected_strategy?.save_type || save_types.UNSAVED,
+            });
+        } catch (e) {
+            console.warn('Failed to update XML values:', e);
+        }
     };
 
     loadStrategyOnModalRecentPreview = async workspace_id => {
@@ -503,41 +519,53 @@ export default class LoadModalStore {
         this.setLoadedLocalFile(null);
         this.setSelectedStrategyId(workspace_id);
 
-        await waitForDomElement('#load-strategy__blockly-container');
-        const ref_preview = document.getElementById('load-strategy__blockly-container');
+        try {
+            await waitForDomElement('#load-strategy__blockly-container');
+            const ref_preview = document.getElementById('load-strategy__blockly-container');
 
-        if (ref_preview) {
-            if (!this.recent_workspace) this.recent_workspace = window.Blockly.inject(ref_preview, inject_options);
-            (this.recent_workspace as any).RTL = isDbotRTL();
+            if (ref_preview && window.Blockly) {
+                if (!this.recent_workspace) this.recent_workspace = window.Blockly.inject(ref_preview, inject_options);
+                if (this.recent_workspace) {
+                    (this.recent_workspace as any).RTL = isDbotRTL();
 
-            const convertedDom = window.Blockly?.utils?.xml?.textToDom(this.selected_strategy?.xml);
-            const mainWorkspace = window.Blockly?.getMainWorkspace();
-
-            window.Blockly?.Xml?.clearWorkspaceAndLoadFromXml(convertedDom, mainWorkspace);
+                    if (this.selected_strategy?.xml) {
+                        const convertedDom = window.Blockly?.utils?.xml?.textToDom(this.selected_strategy.xml);
+                        if (convertedDom) {
+                            window.Blockly?.Xml?.clearWorkspaceAndLoadFromXml(convertedDom, this.recent_workspace);
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('Error loading recent preview:', e);
+        } finally {
+            setLoading(false);
+            this.setOpenButtonDisabled(false);
         }
-        setLoading(false);
-        this.setOpenButtonDisabled(false);
     };
 
     loadStrategyOnModalLocalPreview = async load_options => {
         this.setOpenButtonDisabled(true);
         const injectWorkspace = { ...inject_workspace_options, theme: window?.Blockly?.Themes?.zelos_renderer };
 
-        await waitForDomElement('#load-strategy__blockly-container');
-        const ref_preview = document.getElementById('load-strategy__blockly-container');
-        if (!this.local_workspace) this.local_workspace = await window.Blockly.inject(ref_preview, injectWorkspace);
+        try {
+            await waitForDomElement('#load-strategy__blockly-container');
+            const ref_preview = document.getElementById('load-strategy__blockly-container');
+            if (ref_preview && window.Blockly) {
+                if (!this.local_workspace) this.local_workspace = await window.Blockly.inject(ref_preview, injectWorkspace);
 
-        load_options.workspace = this.local_workspace;
+                load_options.workspace = this.local_workspace;
 
-        if (load_options.workspace) {
-            (load_options.workspace as any).RTL = isDbotRTL();
+                if (load_options.workspace) {
+                    (load_options.workspace as any).RTL = isDbotRTL();
+                }
+
+                await load({ ...load_options, show_snackbar: false });
+            }
+        } catch (e) {
+            console.warn('Error loading local preview:', e);
+        } finally {
+            this.setOpenButtonDisabled(false);
         }
-
-        /* [AI] - Analytics event tracking removed - see migrate-docs/MONITORING_PACKAGES.md for re-implementation guide */
-        /* [/AI] */
-
-        const result = await load({ ...load_options, show_snackbar: false });
-        /* [AI] - Analytics event tracking removed - see migrate-docs/MONITORING_PACKAGES.md for re-implementation guide */
-        /* [/AI] */
     };
 }

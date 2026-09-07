@@ -39,8 +39,12 @@ interface LastDigitPredictionProps {
 const LastDigitPrediction = observer(
     ({ onSelect, selected_digit, dimension = 52, digits: propDigits, tick }: LastDigitPredictionProps) => {
         const store = useStore();
-        const ticks = store?.smart_trading?.ticks || [];
-        const storeDigit = store?.smart_trading?.last_digit;
+        const ticks =
+            (propDigits && propDigits.length > 0 ? propDigits : null) ||
+            (store?.easy_tool?.ticks && store.easy_tool.ticks.length > 0 ? store.easy_tool.ticks : null) ||
+            store?.smart_trading?.ticks ||
+            [];
+        const storeDigit = store?.easy_tool?.last_digit ?? store?.smart_trading?.last_digit;
         const { isMobile } = useDevice();
 
         // Build digit stats from the tick stream or prop
@@ -150,7 +154,6 @@ const LastDigitPrediction = observer(
                         isMobile={isMobile}
                     />
                 ))}
-                {!isMobile && <LastDigitPointer is_lost={is_lost} is_won={is_won} position={position} />}
             </div>
         );
     }

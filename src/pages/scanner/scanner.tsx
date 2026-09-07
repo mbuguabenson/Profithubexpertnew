@@ -20,9 +20,7 @@ type TScannerStrategy =
     | 'Differs'
     | 'Even & Odd'
     | 'Over & Under'
-    | 'Rise & Fall'
-    | 'Only Ups'
-    | 'Only Downs';
+    | 'Rise & Fall';
 
 type TScannerTab = 'scanner' | 'stats';
 type TMartingale = 1 | 1.5 | 2 | 2.5 | 3;
@@ -96,8 +94,6 @@ const STRATEGIES: TScannerStrategy[] = [
     'Even & Odd',
     'Over & Under',
     'Rise & Fall',
-    'Only Ups',
-    'Only Downs',
 ];
 
 const MARTINGALE_OPTIONS: TMartingale[] = [1, 1.5, 2, 2.5, 3];
@@ -229,13 +225,25 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
                 mostCommon = Number(d);
             }
         }
-        const matchPct = ((maxCount / sampleSize) * 100).toFixed(1);
-        lines.push(`MATCH with ${mostCommon} → ${matchPct}%`);
+        // Cluster momentum in the recent 20 ticks
+        const recent20 = digits.slice(-20);
+        const recentCount = recent20.filter(d => d === mostCommon).length;
+        const baseFreq = (maxCount / sampleSize) * 100;
+        const recentClusterRate = (recentCount / Math.max(recent20.length, 1)) * 100;
+        // Calculated confidence index based on baseline presence and recent cluster momentum:
+        // When a digit clusters (e.g. 4+ in last 20 = 20%+ frequency vs 10% expected), confidence reaches 58%-90%
+        const matchConfidence = Math.min(
+            95,
+            Math.max(0, Number((baseFreq * 1.2 + recentClusterRate * 2.2).toFixed(1)))
+        );
+
+        lines.push(`MATCH candidate: ${mostCommon} (Frequency: ${baseFreq.toFixed(1)}%, Recent: ${recentCount}/20)`);
+        lines.push(`Confidence index → ${matchConfidence}%`);
         signal = {
             barrier: String(mostCommon),
             contractType: 'DIGITMATCH',
             label: `Matches ${mostCommon}`,
-            confidence: Number(matchPct),
+            confidence: matchConfidence,
         };
     } else if (strategy === 'Differs') {
         const digitCounts: Record<number, number> = {};
@@ -257,14 +265,14 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
             const pct = (count / sampleSize) * 100;
             if (pct < 10) {
                 targetDigit = i;
-                targetConfidence = 100 - pct;
+                targetConfidence = Number((100 - pct).toFixed(1));
                 differsTargetPrevCount = count;
                 break;
             }
         }
 
         if (targetDigit !== -1) {
-            lines.push(`DIFFERS with ${targetDigit} → ${targetConfidence.toFixed(1)}%`);
+            lines.push(`DIFFERS with ${targetDigit} → ${targetConfidence}%`);
             lines.push(`Excluded digits: [${excludedDigits.join(', ')}]`);
             signal = {
                 barrier: String(targetDigit),
@@ -278,68 +286,59 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
         }
     } else if (strategy === 'Even & Odd') {
         const evenCount = digits.filter(d => d % 2 === 0).length;
-        const oddCount = sampleSize - evenCount;
-        const evenPct = ((evenCount / sampleSize) * 100).toFixed(1);
-        const oddPct = ((oddCount / sampleSize) * 100).toFixed(1);
-        if (evenCount >= oddCount) {
-            lines.push(`EVEN dominates → ${evenPct}%`);
-            signal = { contractType: 'DIGITEVEN', label: 'Even', confidence: Number(evenPct) };
+        const recent30 = digits.slice(-30);
+        const recentEven = recent30.filter(d => d % 2 === 0).length;
+
+        // Blend 120-tick ratio (35%) with recent 30 momentum (65%) for responsive edge detection
+        const overallEvenPct = (evenCount / sampleSize) * 100;
+        const recentEvenPct = (recentEven / Math.max(recent30.length, 1)) * 100;
+        const blendedEvenPct = Number((overallEvenPct * 0.35 + recentEvenPct * 0.65).toFixed(1));
+        const blendedOddPct = Number((100 - blendedEvenPct).toFixed(1));
+
+        if (blendedEvenPct >= blendedOddPct) {
+            lines.push(`EVEN dominates → ${blendedEvenPct}% (Recent 30: ${recentEvenPct.toFixed(1)}%)`);
+            signal = { contractType: 'DIGITEVEN', label: 'Even', confidence: blendedEvenPct };
         } else {
-            lines.push(`ODD dominates → ${oddPct}%`);
-            signal = { contractType: 'DIGITODD', label: 'Odd', confidence: Number(oddPct) };
+            lines.push(`ODD dominates → ${blendedOddPct}% (Recent 30: ${(100 - recentEvenPct).toFixed(1)}%)`);
+            signal = { contractType: 'DIGITODD', label: 'Odd', confidence: blendedOddPct };
         }
     } else if (strategy === 'Over & Under') {
         const last7 = digits.slice(-7);
         const allUnder = last7.length === 7 && last7.every(d => d <= 4);
         const allOver = last7.length === 7 && last7.every(d => d >= 5);
 
-        const underCount = digits.filter(d => d <= 4).length;
-        const overCount = sampleSize - underCount;
-        const underPct = ((underCount / sampleSize) * 100).toFixed(1);
-        const overPct = ((overCount / sampleSize) * 100).toFixed(1);
-
         if (allUnder) {
-            // Highest digit in the under sequence determines barrier
-            // 4 → Under 6, 3 → Under 7, ≤2 → Under 8
             const maxUnder = Math.max(...last7);
             const barrierMap: Record<number, number> = { 4: 6, 3: 7, 2: 8, 1: 8, 0: 8 };
             const barrier = barrierMap[maxUnder] ?? 6;
-            lines.push(`UNDER sequence detected → ${underPct}% | Entry: Under ${barrier}`);
+            const countUnder = digits.filter(d => d < barrier).length;
+            const barrierConfidence = Number(((countUnder / sampleSize) * 100).toFixed(1));
+            lines.push(`UNDER sequence detected (7 consecutive ≤ 4)`);
+            lines.push(`Barrier: Under ${barrier} | Historical probability: ${barrierConfidence}%`);
             signal = {
                 barrier: String(barrier),
                 contractType: 'DIGITUNDER',
                 label: `Under ${barrier}`,
-                confidence: Number(underPct),
+                confidence: barrierConfidence,
             };
         } else if (allOver) {
-            // Lowest digit in the over sequence determines barrier
-            // 5 → Over 3, 6 → Over 2, ≥7 → Over 1
             const minOver = Math.min(...last7);
             const barrierMap: Record<number, number> = { 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 };
             const barrier = barrierMap[minOver] ?? 3;
-            lines.push(`OVER sequence detected → ${overPct}% | Entry: Over ${barrier}`);
+            const countOver = digits.filter(d => d > barrier).length;
+            const barrierConfidence = Number(((countOver / sampleSize) * 100).toFixed(1));
+            lines.push(`OVER sequence detected (7 consecutive ≥ 5)`);
+            lines.push(`Barrier: Over ${barrier} | Historical probability: ${barrierConfidence}%`);
             signal = {
                 barrier: String(barrier),
                 contractType: 'DIGITOVER',
                 label: `Over ${barrier}`,
-                confidence: Number(overPct),
+                confidence: barrierConfidence,
             };
         } else {
-            lines.push(`UNDER/OVER sequence waiting...`);
+            lines.push(`UNDER/OVER sequence waiting (requires 7 consecutive ≤4 or ≥5)...`);
             signal = { barrier: '5', contractType: 'DIGITOVER', label: 'Over/Under (Waiting)', confidence: 0 };
         }
-    } else if (strategy === 'Only Ups') {
-        let ups = 0;
-        for (let i = 1; i < window.length; i++) if (window[i].quote > window[i - 1].quote) ups++;
-        const pct = window.length > 1 ? ((ups / (window.length - 1)) * 100).toFixed(1) : '0';
-        lines.push(`Upward moves → ${pct}%`);
-        signal = { contractType: 'CALL', label: 'Only Ups (Rise)', confidence: Number(pct) };
-    } else if (strategy === 'Only Downs') {
-        let downs = 0;
-        for (let i = 1; i < window.length; i++) if (window[i].quote < window[i - 1].quote) downs++;
-        const pct = window.length > 1 ? ((downs / (window.length - 1)) * 100).toFixed(1) : '0';
-        lines.push(`Downward moves → ${pct}%`);
-        signal = { contractType: 'PUT', label: 'Only Downs (Fall)', confidence: Number(pct) };
     } else {
         // Rise & Fall
         let ups = 0,
@@ -348,15 +347,26 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
             if (window[i].quote > window[i - 1].quote) ups++;
             else if (window[i].quote < window[i - 1].quote) downs++;
         }
+        const recent30Ticks = window.slice(-30);
+        let recentUps = 0,
+            recentDowns = 0;
+        for (let i = 1; i < recent30Ticks.length; i++) {
+            if (recent30Ticks[i].quote > recent30Ticks[i - 1].quote) recentUps++;
+            else if (recent30Ticks[i].quote < recent30Ticks[i - 1].quote) recentDowns++;
+        }
         const total = ups + downs || 1;
-        const risePct = ((ups / total) * 100).toFixed(1);
-        const fallPct = ((downs / total) * 100).toFixed(1);
-        if (ups >= downs) {
-            lines.push(`RISE dominates → ${risePct}%`);
-            signal = { contractType: 'CALL', label: 'Rise', confidence: Number(risePct) };
+        const overallRisePct = (ups / total) * 100;
+        const recentTotal = recentUps + recentDowns || 1;
+        const recentRisePct = (recentUps / recentTotal) * 100;
+        const blendedRise = Number((overallRisePct * 0.35 + recentRisePct * 0.65).toFixed(1));
+        const blendedFall = Number((100 - blendedRise).toFixed(1));
+
+        if (blendedRise >= blendedFall) {
+            lines.push(`RISE dominates → ${blendedRise}% (Recent: ${recentRisePct.toFixed(1)}%)`);
+            signal = { contractType: 'CALL', label: 'Rise', confidence: blendedRise };
         } else {
-            lines.push(`FALL dominates → ${fallPct}%`);
-            signal = { contractType: 'PUT', label: 'Fall', confidence: Number(fallPct) };
+            lines.push(`FALL dominates → ${blendedFall}% (Recent: ${(100 - recentRisePct).toFixed(1)}%)`);
+            signal = { contractType: 'PUT', label: 'Fall', confidence: blendedFall };
         }
     }
 
@@ -365,9 +375,9 @@ const buildAnalysis = (strategy: TScannerStrategy, ticks: TTickPoint[], symbol: 
 
 /**
  * Three-layer alignment gate:
- * 1. Main signal confidence > 50% (from 120-tick window)
- * 2. 30-min candle matches direction (directional strategies)
- * 3. Last 15-tick momentum matches direction
+ * 1. Main signal confidence >= 58%
+ * 2. 30-min candle matches direction (for Rise & Fall)
+ * 3. Recent 15-tick momentum / pattern confirmation
  */
 const isSignalAligned = (
     signal: TScannerSignal,
@@ -375,20 +385,43 @@ const isSignalAligned = (
     ticks: TTickPoint[],
     candleDir: 1 | -1 | 0
 ): boolean => {
-    if (signal.confidence <= 50) return false;
+    // Strategy rule 1: Must strictly be above 58% confidence
+    if (signal.confidence < 58) return false;
 
-    const isDirectional = ['Rise & Fall', 'Only Ups', 'Only Downs'].includes(strategy);
-    const momentum = getMomentumDirection(ticks.slice(-CONFIRM_TICKS));
-
-    if (isDirectional) {
+    if (strategy === 'Rise & Fall') {
+        const momentum = getMomentumDirection(ticks.slice(-CONFIRM_TICKS));
         const signalDir = signal.contractType === 'CALL' ? 1 : -1;
         const candleOk = candleDir === 0 || candleDir === signalDir;
         const momentumOk = momentum === 0 || momentum === signalDir;
         return candleOk && momentumOk;
     }
 
-    // Digit strategies: just need confidence > 50% (already checked above)
-    // Also verify last 15 ticks agree (same digit pattern dominance)
+    // Digit strategies: verify last 15-tick confirmation window agrees
+    const recentDigits = ticks.slice(-CONFIRM_TICKS).map(t => Math.floor(t.quote * 100) % 10);
+    if (strategy === 'Even & Odd') {
+        const recentEven = recentDigits.filter(d => d % 2 === 0).length;
+        const recentOdd = CONFIRM_TICKS - recentEven;
+        if (signal.contractType === 'DIGITEVEN' && recentEven < recentOdd) return false;
+        if (signal.contractType === 'DIGITODD' && recentOdd < recentEven) return false;
+    } else if (strategy === 'Matches') {
+        const target = Number(signal.barrier);
+        const count = recentDigits.filter(d => d === target).length;
+        if (count < 2) return false; // Must have recent presence
+    } else if (strategy === 'Differs') {
+        const target = Number(signal.barrier);
+        const count = recentDigits.filter(d => d === target).length;
+        if (count > 2) return false; // Target shouldn't be frequent
+    } else if (strategy === 'Over & Under') {
+        const target = Number(signal.barrier);
+        if (signal.contractType === 'DIGITOVER') {
+            const overCount = recentDigits.filter(d => d > target).length;
+            if (overCount / CONFIRM_TICKS < 0.5) return false;
+        } else {
+            const underCount = recentDigits.filter(d => d < target).length;
+            if (underCount / CONFIRM_TICKS < 0.5) return false;
+        }
+    }
+
     return true;
 };
 
@@ -463,6 +496,8 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     const handleTradeTickRef = useRef<(ticks: TTickPoint[]) => void>(() => undefined);
     const timerSoundRef = useRef<HTMLAudioElement | null>(null);
     const scanTickCountRef = useRef(0);
+    const lastTradeConfidenceRef = useRef(58);
+    const lastTradeTickEpochRef = useRef(0);
 
     // Differs auto-trade waiting state
     const differsExcludedDigitsRef = useRef<number[]>([]);
@@ -605,6 +640,8 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
     const stopTrading = useCallback(() => {
         shouldStopRef.current = true;
         tradeActiveRef.current = false;
+        lastTradeConfidenceRef.current = 58;
+        lastTradeTickEpochRef.current = 0;
         setIsWorking(false);
         setIsPaused(false);
         isPausedRef.current = false;
@@ -669,7 +706,7 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
         // Auto-pause: check market power shift every tick during trading
         if (tradeActiveRef.current && !tradeInFlightRef.current && confirmedSignalRef.current) {
             const momentum = getMomentumDirection(next.slice(-CONFIRM_TICKS));
-            const isDirectional = ['Rise & Fall', 'Only Ups', 'Only Downs'].includes(activeStrategyRef.current);
+            const isDirectional = activeStrategyRef.current === 'Rise & Fall';
             if (isDirectional && momentum !== 0) {
                 const signalDir = confirmedSignalRef.current.contractType === 'CALL' ? 1 : -1;
                 if (momentum !== signalDir && !isPausedRef.current) {
@@ -865,6 +902,16 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
             );
             if (!aligned) return;
 
+            // Strategy Rule 1: strictly trade above 58% only
+            if (analysis.signal.confidence < 58) return;
+
+            // Strategy Rule 2: trade increasingly (confidence must match or exceed previous trade in sequence)
+            if (analysis.signal.confidence < lastTradeConfidenceRef.current) return;
+
+            // Strategy Rule 3: avoid firing consecutively on identical tick epoch
+            const currentTickEpoch = currentTicks[currentTicks.length - 1]?.epoch || 0;
+            if (currentTickEpoch && currentTickEpoch === lastTradeTickEpochRef.current) return;
+
             // ── Differs waiting logic ──────────────────────────────────────────
             if (effectiveStrategy === 'Differs' && analysis.signal.confidence > 0) {
                 const lastDigit = getLastDigitFromQuote(
@@ -941,6 +988,9 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
             }
 
             tradeInFlightRef.current = true;
+            lastTradeTickEpochRef.current = currentTickEpoch;
+            lastTradeConfidenceRef.current = analysis.signal.confidence;
+
             if (useAlternate) setTerminalDashboard(prev => [...prev, `⚡ Alternate strategy: ${effectiveStrategy}`]);
             setTerminalDashboard(prev => [
                 ...prev,
@@ -958,9 +1008,12 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                 if (won) {
                     consecutiveLossesRef.current = 0;
                     currentStakeRef.current = stakeRef.current;
+                    lastTradeConfidenceRef.current = 58; // Reset to 58 on win
                 } else {
                     consecutiveLossesRef.current += 1;
                     currentStakeRef.current = Number((currentStakeRef.current * martingaleRef.current).toFixed(2));
+                    // Require next recovery trade to maintain or increase confidence
+                    lastTradeConfidenceRef.current = Math.min(analysis.signal.confidence, 90);
                 }
 
                 // Update oldest pending signal record outcome
@@ -1220,12 +1273,6 @@ const Scanner = observer(({ forceShow = false, isEmbed = false }: { forceShow?: 
                         } else if (strategy === 'Over & Under') {
                             tradetype = 'overunder';
                             type = confirmedSignal ? confirmedSignal.contractType : 'DIGITUNDER';
-                        } else if (strategy === 'Only Ups') {
-                            tradetype = 'risefall';
-                            type = 'CALL';
-                        } else if (strategy === 'Only Downs') {
-                            tradetype = 'risefall';
-                            type = 'PUT';
                         } else if (strategy === 'Rise & Fall') {
                             tradetype = 'risefall';
                             type = confirmedSignal ? confirmedSignal.contractType : 'CALL';

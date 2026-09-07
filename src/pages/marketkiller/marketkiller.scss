@@ -32,6 +32,54 @@
         backdrop-filter: blur(20px);
         box-shadow: 0 4px 50px rgba(0, 0, 0, 0.6);
 
+        @media (max-width: 768px) {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 1rem 1.2rem;
+            gap: 12px;
+        }
+
+        .mk-header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+
+            @media (max-width: 768px) {
+                justify-content: space-between;
+                width: 100%;
+                gap: 8px;
+            }
+        }
+
+        .mk-header-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .mk-header-icon {
+                font-size: 20px;
+            }
+
+            .mk-header-title-text {
+                display: flex;
+                flex-direction: column;
+
+                h2 {
+                    margin: 0;
+                    color: #fff;
+                    font-size: 16px;
+                    font-weight: 800;
+                    letter-spacing: 1.5px;
+                }
+
+                .mk-connection-status {
+                    font-size: 9px;
+                    color: #10b981;
+                    font-weight: bold;
+                }
+            }
+        }
+
         .mk-market-selector {
             display: flex;
             align-items: center;
@@ -71,6 +119,17 @@
             display: flex;
             align-items: center;
             gap: 2.4rem;
+
+            @media (max-width: 768px) {
+                justify-content: space-between;
+                width: 100%;
+                gap: 10px;
+
+                .mk-btn-primary {
+                    padding: 8px 16px;
+                    font-size: 1.1rem;
+                }
+            }
 
             @media (width <= 480px) {
                 gap: 1.2rem;
@@ -243,6 +302,11 @@
         display: flex;
         flex-direction: column;
         gap: 24px;
+
+        @media (max-width: 768px) {
+            padding: 12px 10px 90px;
+            gap: 16px;
+        }
     }
 
     .mk-glass-card {
@@ -304,12 +368,20 @@
         flex-direction: column;
         gap: 24px;
         padding: 10px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
 
         .mk-ribbon {
             display: flex;
             gap: 12px;
             overflow-x: auto;
             padding-bottom: 8px;
+            width: 100%;
+            max-width: 100%;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
 
             &::-webkit-scrollbar {
                 height: 4px;
@@ -378,7 +450,7 @@
             grid-template-columns: 1fr 340px;
             gap: 24px;
 
-            @include tablet-screen {
+            @include mobile-or-tablet-screen {
                 grid-template-columns: 1fr;
             }
         }
@@ -434,7 +506,30 @@
                 padding: 10px;
 
                 @include mobile-screen {
-                    grid-template-columns: repeat(2, 1fr);
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 6px;
+                    padding: 4px 0;
+
+                    .reactor-core {
+                        width: 100%;
+                        max-width: 58px;
+                        height: 58px;
+
+                        svg {
+                            width: 100%;
+                            height: 100%;
+                        }
+
+                        .core-display {
+                            .digit {
+                                font-size: 1.4rem;
+                            }
+
+                            .pct {
+                                font-size: 0.65rem;
+                            }
+                        }
+                    }
                 }
 
                 .reactor-core {
@@ -704,7 +799,7 @@
             grid-template-columns: 1fr 340px;
             gap: 24px;
 
-            @include tablet-screen {
+            @include mobile-or-tablet-screen {
                 grid-template-columns: 1fr;
             }
         }

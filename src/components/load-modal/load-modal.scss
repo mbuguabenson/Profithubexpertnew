@@ -152,7 +152,7 @@
 
         &__container {
             &--has-footer {
-                height: calc(80vh - 21rem);
+                height: 350px;
                 margin-top: -1rem;
             }
         }
@@ -166,5 +166,72 @@
         min-height: unset;
         height: unset;
         margin: 0;
+    }
+}
+
+.load-strategy__wrapper {
+    @media (max-width: 768px) {
+        .dc-page-overlay {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: rgba(0, 0, 0, 0.65) !important;
+            padding: 1.6rem !important;
+            box-sizing: border-box !important;
+        }
+
+        .dc-mobile-full-page-modal {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            width: 100% !important;
+            max-width: 420px !important;
+            height: auto !important;
+            max-height: 72vh !important;
+            border-radius: 12px !important;
+            background: var(--general-main-1, #181c25) !important;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        .dc-page-overlay__header {
+            padding: 1rem 1.6rem !important;
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .dc-page-overlay__content {
+            overflow-y: auto !important;
+            max-height: calc(72vh - 56px) !important;
+        }
+
+        .dc-tabs {
+            &__list {
+                height: 3.6rem !important;
+                padding: 0 0.8rem !important;
+            }
+
+            &__item {
+                font-size: 1.2rem !important;
+                padding: 0.6rem 1.2rem !important;
+                height: 3.6rem !important;
+            }
+        }
+
+        .load-strategy__container {
+            padding: 1.2rem;
+            min-height: unset;
+        }
+
+        .load-strategy__local-icon {
+            transform: scale(0.8);
+            margin-bottom: 0.8rem;
+        }
+
+        .load-strategy__local-dropzone-area {
+            padding: 1.6rem 1rem !important;
+            min-height: 140px !important;
+        }
     }
 }

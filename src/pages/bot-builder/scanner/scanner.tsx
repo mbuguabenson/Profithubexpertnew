@@ -1286,7 +1286,7 @@ const Scanner = observer(() => {
                 <DraggableResizeWrapper
                     boundary='.main'
                     header={
-                        <div style={{ display: 'flex', alignItems: 'center', width: '100%', paddingRight: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', paddingRight: 10 }}>
                             <span>{localize('AI Market Scanner')}</span>
                             <span className={classNames('mhp-conn-badge', connection_status)}>
                                 <span className='mhp-conn-dot' />
@@ -1295,10 +1295,10 @@ const Scanner = observer(() => {
                         </div>
                     }
                     onClose={setScannerVisibility}
-                    modalWidth={560}
-                    modalHeight={700}
-                    minWidth={360}
-                    minHeight={500}
+                    modalWidth={420}
+                    modalHeight={540}
+                    minWidth={320}
+                    minHeight={380}
                     enableResizing
                 >
                     <div className='mhp-scanner'>
@@ -1617,8 +1617,8 @@ const Scanner = observer(() => {
                                         </div>
                                     </div>
 
-                                    {/* Active Signals Card (Increased Size) */}
-                                    <div className='mhp-card mhp-signals-card' style={{ minHeight: 220 }}>
+                                    {/* Active Signals Card */}
+                                    <div className='mhp-card mhp-signals-card'>
                                         <span className='mhp-card-title' style={{ marginBottom: 8, display: 'block' }}>
                                             {localize('Active Signals')} (
                                             {selected_strategies.join(', ').toUpperCase() || 'ALL'})
@@ -1629,7 +1629,7 @@ const Scanner = observer(() => {
                                             )}
                                         </span>
                                         {activeSelectedStrategySignals.length === 0 ? (
-                                            <div className='mhp-empty-signals' style={{ padding: '24px 0' }}>
+                                            <div className='mhp-empty-signals' style={{ padding: '12px 0' }}>
                                                 <div className='mhp-empty-icon' style={{ fontSize: 24 }}>
                                                     ⚡
                                                 </div>
@@ -2903,7 +2903,7 @@ const Scanner = observer(() => {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {store.dollarflipper.recent_trades.map(t => (
+                                                    {store.dollarflipper.recent_trades.map((t: any) => (
                                                         <tr key={t.id}>
                                                             <td style={{ fontWeight: 600, color: '#cbd5e1' }}>
                                                                 {t.symbol}

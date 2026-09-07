@@ -43,24 +43,6 @@ export const DBOT_ONBOARDING = [
         disableOverlay: false,
     },
     {
-        target: '#id-charts',
-        content: (
-            <TourSteps
-                label={<Localize i18n_default_text='Monitor the market' />}
-                content={[
-                    <Localize
-                        key='view the market'
-                        i18n_default_text='View the market price of your favourite assets.'
-                    />,
-                ]}
-                media={'/assets/videos/dbot-onboarding-tour-step-2.mp4'}
-                step_index={2}
-            />
-        ),
-        ...joyride_props,
-        disableOverlay: false,
-    },
-    {
         target: '#id-tutorials',
         content: (
             <TourSteps
@@ -72,7 +54,7 @@ export const DBOT_ONBOARDING = [
                     />,
                 ]}
                 media={'/assets/videos/dbot-onboarding-tour-step-3.mp4'}
-                step_index={3}
+                step_index={2}
             />
         ),
         ...joyride_props,
@@ -89,7 +71,7 @@ export const DBOT_ONBOARDING = [
                         i18n_default_text='You can also import or build your bot using any of these shortcuts.'
                     />,
                 ]}
-                step_index={4}
+                step_index={3}
             />
         ),
         placement: isDbotRTL() ? 'right' : 'left',
@@ -108,7 +90,7 @@ export const DBOT_ONBOARDING = [
                     />,
                 ]}
                 media={'/assets/videos/dbot-onboarding-tour-step-5.mp4'}
-                step_index={5}
+                step_index={4}
             />
         ),
         placement: isDbotRTL() ? 'left' : 'right',
@@ -128,7 +110,7 @@ export const DBOT_ONBOARDING = [
                     />,
                 ]}
                 media={'/assets/videos/dbot-onboarding-tour-step-6.mp4'}
-                step_index={6}
+                step_index={5}
             />
         ),
         ...joyride_props,
@@ -144,7 +126,7 @@ export const DBOT_ONBOARDING = [
                         <Localize i18n_default_text='Head to the Tutorials tab to do so.' />
                     </Text>,
                 ]}
-                step_index={7}
+                step_index={6}
                 show_actions={false}
                 has_localize_component
             />
@@ -504,19 +486,6 @@ export const DBOT_ONBOARDING_MOBILE: TMobileTourConfig[] = [
         tour_step_key: 2,
     },
     {
-        header: <Localize i18n_default_text='Monitor the market' />,
-        content: [
-            <span key='monitor-the-market-wrapper'>
-                <Localize
-                    key='monitor-the-market'
-                    i18n_default_text='View the market price of your favourite assets.'
-                />
-            </span>,
-        ],
-        media: '/assets/videos/dbot-mobile-onboarding-step-2.mp4',
-        tour_step_key: 3,
-    },
-    {
         header: <Localize i18n_default_text='Learn more with our tutorials' />,
         content: [
             <span key='learn-more-with-our-tutorials-wrapper'>
@@ -527,7 +496,7 @@ export const DBOT_ONBOARDING_MOBILE: TMobileTourConfig[] = [
             </span>,
         ],
         media: '/assets/videos/dbot-mobile-onboarding-step-3.mp4',
-        tour_step_key: 4,
+        tour_step_key: 3,
     },
     {
         header: <Localize i18n_default_text='Use these shortcuts' />,
@@ -540,7 +509,7 @@ export const DBOT_ONBOARDING_MOBILE: TMobileTourConfig[] = [
                 />
             </span>,
         ],
-        tour_step_key: 5,
+        tour_step_key: 4,
     },
     {
         header: <Localize i18n_default_text='Check your bot’s performance' />,
@@ -553,7 +522,7 @@ export const DBOT_ONBOARDING_MOBILE: TMobileTourConfig[] = [
                 />
             </span>,
         ],
-        tour_step_key: 6,
+        tour_step_key: 5,
     },
     {
         header: <Localize i18n_default_text='Run your bot' />,
@@ -567,7 +536,7 @@ export const DBOT_ONBOARDING_MOBILE: TMobileTourConfig[] = [
                 />
             </span>,
         ],
-        tour_step_key: 7,
+        tour_step_key: 6,
     },
     {
         header: <Localize i18n_default_text='Want to retake the tour?' />,
@@ -577,7 +546,7 @@ export const DBOT_ONBOARDING_MOBILE: TMobileTourConfig[] = [
                 <Localize key='want-to-retake-the-tour' i18n_default_text='Head to the Tutorials tab to do so.' />
             </span>,
         ],
-        tour_step_key: 8,
+        tour_step_key: 7,
     },
 ];
 

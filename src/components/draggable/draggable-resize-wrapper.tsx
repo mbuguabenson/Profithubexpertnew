@@ -28,28 +28,20 @@ const DraggableResizeWrapper: React.FC<DraggableResizeWrapperProps> = ({
     modalWidth = 400,
 }) => {
     const [show, setShow] = useState(false);
-    const xAxisValue = (window.innerWidth - modalWidth) / 2;
-    const yAxisValue = (window.innerHeight - modalHeight) / 2;
+    const getInitialBounds = () => {
+        const maxW = Math.max(minWidth, (typeof window !== 'undefined' ? window.innerWidth : 1000) - 24);
+        const maxH = Math.max(minHeight, (typeof window !== 'undefined' ? window.innerHeight : 800) - 70);
+        const width = Math.min(modalWidth, maxW);
+        const height = Math.min(modalHeight, maxH);
+        const xAxis = Math.max(0, ((typeof window !== 'undefined' ? window.innerWidth : 1000) - width) / 2);
+        const yAxis = Math.max(0, ((typeof window !== 'undefined' ? window.innerHeight : 800) - height) / 2);
+        return { width, height, xAxis, yAxis };
+    };
 
-    const [initialValues, setInitialValues] = React.useState({
-        width: modalWidth,
-        height: modalHeight,
-        xAxis: xAxisValue >= 0 ? xAxisValue : 0,
-        yAxis: yAxisValue >= 0 ? yAxisValue : 0,
-    });
+    const [initialValues, setInitialValues] = React.useState(getInitialBounds());
 
     const handleResize = debounce(() => {
-        const newWidth = window.innerWidth > modalWidth ? modalWidth : window.innerWidth - 50;
-        const newHeight = window.innerHeight > modalHeight ? modalHeight : window.innerHeight - 50;
-        const newx = (window.innerWidth - newWidth) / 2;
-        const newy = (window.innerHeight - newHeight) / 2;
-
-        setInitialValues({
-            width: newWidth,
-            height: newHeight,
-            xAxis: newx >= 0 ? newx : 0,
-            yAxis: newy >= 0 ? newy : 0,
-        });
+        setInitialValues(getInitialBounds());
         setShow(true);
     }, 0);
 

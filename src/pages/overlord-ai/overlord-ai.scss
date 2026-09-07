@@ -1753,7 +1753,7 @@
 // 2. Small Tablet & Mobile Screens (< 1024px)
 @media (max-width: 1024px) {
     .overlord-ai-wrapper {
-        padding: 12px 14px 40px;
+        padding: 12px 14px 90px;
     }
 
     .overlord-top-bar {
@@ -1866,5 +1866,10 @@
     .btn-control {
         padding: 8px 12px;
         font-size: 11px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 8px;
     }
 }

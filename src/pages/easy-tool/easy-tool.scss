@@ -706,22 +706,16 @@
         }
 
         .digit-bar-v2.large {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            overflow-x: auto !important;
-            justify-content: flex-start !important;
-            gap: 10px !important;
+            display: grid !important;
+            grid-template-columns: repeat(5, 1fr) !important;
+            gap: 8px !important;
             width: 100% !important;
-            padding: 0 10px !important;
-
-            &::-webkit-scrollbar {
-                display: none;
-            }
+            max-width: 340px !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
 
             .digit-btn-v2 {
-                flex-shrink: 0 !important;
-                width: 4.4rem !important;
+                width: 100% !important;
                 height: 4.4rem !important;
                 font-size: 1.6rem !important;
                 border-radius: 10px !important;
@@ -732,7 +726,7 @@
 
 @media (width <= 480px) {
     .easy-tool {
-        padding: 8px;
+        padding: 8px 8px calc(84px + env(safe-area-inset-bottom, 16px));
 
         &__header {
             flex-direction: row !important;
@@ -746,14 +740,14 @@
         }
 
         &__vitals-row {
-            gap: 12px;
+            gap: 8px 12px;
             justify-content: center;
-            flex-wrap: nowrap; // Force one line
-            width: fit-content;
+            flex-wrap: wrap !important;
+            width: 100% !important;
             margin: 0 auto;
 
             .v-item {
-                flex-shrink: 0; // Prevent squishing
+                flex-shrink: 0;
 
                 .v {
                     font-size: 1.3rem !important;
