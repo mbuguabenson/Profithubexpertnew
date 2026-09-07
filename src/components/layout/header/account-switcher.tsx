@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { addComma, getCurrencyDisplayCode, getDecimalPlaces } from '@/components/shared';
@@ -44,6 +45,7 @@ const AccountAvatar = ({ currency, isVirtual }: { currency?: string; isVirtual?:
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'real' | 'demo'>('real');
     const [userNickname, setUserNickname] = useState<string>('');
@@ -270,8 +272,12 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
 
     const toggleDropdown = useCallback(() => {
         if (is_bot_running) return;
+        if (window.innerWidth <= 768) {
+            navigate('/account');
+            return;
+        }
         setIsOpen(prev => !prev);
-    }, [is_bot_running]);
+    }, [is_bot_running, navigate]);
 
     const handleAccountSelect = useCallback(
         async (loginid: string) => {

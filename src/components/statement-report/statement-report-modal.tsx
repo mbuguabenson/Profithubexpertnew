@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import {
     DerivAccountWalletService,
@@ -22,7 +22,6 @@ import {
     Loader2,
     RefreshCw,
     Search,
-    Wallet,
     X,
 } from 'lucide-react';
 import './statement-report-modal.scss';
@@ -42,7 +41,6 @@ export const StatementReportModal = observer(({ isOpen, onClose, initialLoginId 
     );
     const [transactions, setTransactions] = useState<DerivStatementTransaction[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [apiSource, setApiSource] = useState<'legacy_rest' | 'websocket' | 'cache'>('legacy_rest');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Filters
@@ -97,7 +95,6 @@ export const StatementReportModal = observer(({ isOpen, onClose, initialLoginId 
             });
 
             setTransactions(response.transactions || []);
-            setApiSource(response.source);
             if (response.error && response.transactions.length === 0) {
                 setErrorMessage(response.error);
             }
@@ -267,17 +264,8 @@ export const StatementReportModal = observer(({ isOpen, onClose, initialLoginId 
                         <div>
                             <div className='statement-report-modal__title-wrapper'>
                                 <h3>{localize('Account Statement Report')}</h3>
-                                <span
-                                    className={`statement-report-modal__source-badge ${
-                                        apiSource === 'legacy_rest' ? 'source-rest' : 'source-ws'
-                                    }`}
-                                    title={
-                                        apiSource === 'legacy_rest'
-                                            ? 'Connected via Deriv Legacy Statement REST API (developers.deriv.com/docs/options-legacy/legacy-statement/)'
-                                            : 'Connected via Live Deriv WebSocket Ledger API'
-                                    }
-                                >
-                                    {apiSource === 'legacy_rest' ? '⚡ Deriv Legacy REST' : '🌐 Deriv WS Ledger'}
+                                <span className={isDemo ? 'statement-report-modal__account-type-badge badge-demo' : 'statement-report-modal__account-type-badge badge-real'}>
+                                     {isDemo ? localize('Demo') : localize('Real')}
                                 </span>
                             </div>
                             <p className='statement-report-modal__subtitle'>

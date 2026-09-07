@@ -218,15 +218,24 @@ export class DerivAccountWalletService {
     /**
      * Helper to get effective OAuth or WS token
      */
-    public static getAuthCredentials(): { token: string; appId: string } {
-        const adminToken =
-            (typeof localStorage !== 'undefined' &&
-                (localStorage.getItem('deriv_admin_token') || localStorage.getItem('admin_deriv_token'))) ||
-            '';
-        const authInfo = OAuthTokenExchangeService.getAuthInfo();
-        const activeToken = getActiveToken() || '';
+    public static getAuthCredentials(targetLoginId?: string): { token: string; appId: string } {
         const appId = getAppId() || '121856';
-        const token = adminToken || authInfo?.access_token || activeToken;
+        const accountsMap = getAccountsList();
+
+        let token = '';
+        if (targetLoginId && accountsMap[targetLoginId]) {
+            token = accountsMap[targetLoginId];
+        }
+
+        if (!token) {
+            const adminToken =
+                (typeof localStorage !== 'undefined' &&
+                    (localStorage.getItem('deriv_admin_token') || localStorage.getItem('admin_deriv_token'))) ||
+                '';
+            const authInfo = OAuthTokenExchangeService.getAuthInfo();
+            const activeToken = getActiveToken() || '';
+            token = adminToken || authInfo?.access_token || activeToken;
+        }
 
         return { token, appId };
     }
@@ -590,8 +599,8 @@ export class DerivAccountWalletService {
      * @see https://developers.deriv.com/docs/options-legacy/legacy-statement/
      */
     public static async getLegacyStatement(params: DerivLegacyStatementParams = {}): Promise<DerivStatementReportResponse> {
-        const { token, appId } = this.getAuthCredentials();
         const activeLoginId = params.loginid || getActiveLoginId() || '';
+        const { token, appId } = this.getAuthCredentials(activeLoginId);
         const limit = params.limit || 100;
 
         if (!activeLoginId) {
@@ -1262,26 +1271,29 @@ export class DerivAccountWalletService {
         const activeId = getActiveLoginId();
         const wallets: DerivWallet[] = [];
 
+        let clientAccounts: Record<string, any> = {};
+        try {
+            const raw = localStorage.getItem('clientAccounts') || localStorage.getItem('client.accounts');
+            if (raw) clientAccounts = JSON.parse(raw);
+        } catch {}
+
         for (const loginid in accounts) {
             const isDemo = loginid.startsWith('VR');
+            const accData = clientAccounts[loginid] || {};
+            const realBalance =
+                typeof accData.balance === 'number'
+                    ? accData.balance
+                    : parseFloat(accData.balance || (loginid === activeId ? localStorage.getItem('balance') || '0' : '0'));
+            const realCurrency = accData.currency || (isDemo ? 'USD' : 'USD');
+            const isCrypto = ['BTC', 'ETH', 'LTC', 'USDT', 'USDC'].includes(realCurrency.toUpperCase());
+
             wallets.push({
-                wallet_id: `wallet-${loginid}`,
-                wallet_type: isDemo ? 'demo_fiat' : 'fiat',
-                currency: isDemo ? 'USD (Demo)' : 'USD',
-                balance: isDemo ? 10000 : 0,
+                wallet_id: loginid,
+                wallet_type: isDemo ? 'demo_fiat' : isCrypto ? 'crypto' : 'fiat',
+                currency: realCurrency,
+                balance: isNaN(realBalance) ? 0 : realBalance,
                 status: 'active',
                 is_default: loginid === activeId,
-            });
-        }
-
-        if (wallets.length === 0) {
-            wallets.push({
-                wallet_id: 'default-demo-wallet',
-                wallet_type: 'demo_fiat',
-                currency: 'USD',
-                balance: 10000,
-                status: 'active',
-                is_default: true,
             });
         }
 

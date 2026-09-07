@@ -101,6 +101,30 @@
     }
 }
 
+// ─── Account footer button ───────────────────────────────────────────────────
+.app-footer__account {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.6rem;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-prominent);
+    transition: color 0.18s, background-color 0.18s, transform 0.18s;
+
+    &:hover {
+        color: #3b82f6;
+        background-color: rgba(59, 130, 246, 0.12);
+        transform: translateY(-1px);
+    }
+
+    svg {
+        stroke: currentColor;
+    }
+}
+
 .languages-modal__body {
     padding-inline: 1.6rem;
 

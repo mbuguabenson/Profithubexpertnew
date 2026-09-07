@@ -34,6 +34,24 @@ const WhatsAppFooterLink = () => (
     </a>
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Account icon button
+// ─────────────────────────────────────────────────────────────────────────────
+const AccountFooterButton = () => (
+    <button
+        type='button'
+        className='app-footer__account'
+        onClick={() => window.dispatchEvent(new Event('open_account_info'))}
+        title='Account Details & Settings'
+        aria-label='Account Details'
+    >
+        <svg viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+            <path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' />
+            <circle cx='12' cy='7' r='4' />
+        </svg>
+    </button>
+);
+
 const Footer = () => {
     const { currentLang = 'EN', localize, switchLanguage } = useTranslations();
     const { hideModal, isModalOpenFor, showModal } = useModalManager();
@@ -48,7 +66,13 @@ const Footer = () => {
     return (
         <footer className='app-footer'>
             <FullScreen />
-            {(isAuthorized || isLoggedIn()) && <LogoutFooter />}
+            {(isAuthorized || isLoggedIn()) && (
+                <>
+                    <LogoutFooter />
+                    <div className='app-footer__vertical-line' />
+                    <AccountFooterButton />
+                </>
+            )}
             <div className='app-footer__vertical-line' />
 
             {/* WhatsApp contact link (migrated from header) */}

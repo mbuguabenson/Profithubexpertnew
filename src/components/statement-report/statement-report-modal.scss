@@ -93,6 +93,27 @@
         }
     }
 
+    &__account-type-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 9999px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+
+        &.badge-demo {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
+        &.badge-real {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+    }
+
     &__subtitle {
         font-size: 12px;
         color: var(--text-less-prominent, #94a3b8);

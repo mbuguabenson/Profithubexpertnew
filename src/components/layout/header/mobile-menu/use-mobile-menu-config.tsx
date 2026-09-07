@@ -1,4 +1,5 @@
 import { ComponentProps, ReactNode, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useThemeSwitcher from '@/hooks/useThemeSwitcher';
 import RootStore from '@/stores/root-store';
 import { LegacyLogout1pxIcon, LegacyTheme1pxIcon } from '@deriv/quill-icons/Legacy';
@@ -74,6 +75,7 @@ const useMobileMenuConfig = (
     enableThemeToggle: boolean = true,
     onOpenDisclaimer?: () => void
 ) => {
+    const navigate = useNavigate();
     const { localize } = useTranslations();
     const { is_dark_mode_on, toggleTheme } = useThemeSwitcher();
 
@@ -100,10 +102,10 @@ const useMobileMenuConfig = (
                 // Mobile Account Info Option
                 client?.is_logged_in && {
                     as: 'button',
-                    label: localize('Account Info'),
+                    label: localize('Account & Statements'),
                     LeftComponent: UserIcon,
                     onClick: () => {
-                        window.dispatchEvent(new Event('open_account_info'));
+                        navigate('/account');
                     },
                 },
 
@@ -126,7 +128,7 @@ const useMobileMenuConfig = (
                     },
             ].filter(Boolean) as TMenuConfig,
         ].filter(section => section.length > 0);
-    }, [client, onLogout, is_dark_mode_on, toggleTheme, localize, enableThemeToggle]);
+    }, [client, onLogout, is_dark_mode_on, toggleTheme, localize, enableThemeToggle, navigate]);
 
     // Check if menu has any items to determine if mobile menu should be shown
     const hasMenuItems = menuConfig.some(section => section.length > 0);
