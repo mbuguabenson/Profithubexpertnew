@@ -557,6 +557,34 @@ export const StatementReportModal = observer(({ isOpen, onClose, initialLoginId 
                                         );
                                     })}
                                 </tbody>
+                                <tfoot>
+                                    <tr className='statement-table__totals-row'>
+                                        <td colSpan={4} className='cell-totals-label'>
+                                            <div className='totals-meta'>
+                                                <span className='totals-title'>{localize('Ledger Totals')}</span>
+                                                <span className='totals-badge'>
+                                                    {metrics.count} {metrics.count === 1 ? localize('entry') : localize('entries')}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className={`cell-amount text-right ${metrics.netCashFlow >= 0 ? 'text-success' : 'text-danger'}`}>
+                                            <div className='totals-amount-cell'>
+                                                <div className='totals-net-flow'>{formatAmount(metrics.netCashFlow)}</div>
+                                                <div className='totals-breakdown'>
+                                                    <span className='text-success' title={localize('Total Credits')}>+{formatAmount(metrics.totalCredits)}</span>
+                                                    <span className='breakdown-divider'>/</span>
+                                                    <span className='text-danger' title={localize('Total Debits')}>-{formatAmount(metrics.totalDebits)}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className='cell-balance text-right'>
+                                            <div className='totals-balance-cell'>
+                                                <div className='totals-balance-label'>{localize('Current Balance')}</div>
+                                                <div className='totals-balance-val'>{formatAmount(metrics.currentBalance)}</div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     )}
