@@ -54,7 +54,10 @@ const FloatingChat = () => {
     useEffect(() => {
         if (!open) return;
         refreshMessages();
-        const iv = setInterval(refreshMessages, 3000);
+        // Poll only when chat is open AND document is visible — 5s is enough
+        const iv = setInterval(() => {
+            if (document.visibilityState !== 'hidden') refreshMessages();
+        }, 5000);
         return () => clearInterval(iv);
     }, [open, refreshMessages]);
 
@@ -149,11 +152,10 @@ const DynamicThemeStyle = () => {
             if (detail) setCfg(detail);
         };
         window.addEventListener('profithub_config_changed', handler);
-        // Also poll periodically in case the event was missed (cross-tab)
-        const iv = setInterval(() => setCfg(getSiteConfig()), 5000);
+        // Polling is now handled by the shared Layout interval (see below).
+        // Keep event listener only for cross-tab updates.
         return () => {
             window.removeEventListener('profithub_config_changed', handler);
-            clearInterval(iv);
         };
     }, []);
 
@@ -293,11 +295,8 @@ const MaintenanceOverlay = () => {
             if (detail) setCfg(detail);
         };
         window.addEventListener('profithub_config_changed', handler);
-        const iv = setInterval(() => setCfg(getSiteConfig()), 5000);
-        return () => {
-            window.removeEventListener('profithub_config_changed', handler);
-            clearInterval(iv);
-        };
+        // Polling is handled by the shared Layout interval.
+        return () => window.removeEventListener('profithub_config_changed', handler);
     }, []);
 
     if (!cfg.maintenanceMode) return null;
@@ -362,6 +361,22 @@ const Layout = observer(() => {
             window.removeEventListener('open_wallet_management', handleOpenWallet);
         };
     }, []);
+
+    // ─── Single shared polling interval (replaces 3 separate intervals) ─────────
+    // Fires every 15s, ONLY when the document is visible, to refresh site config
+    // and maintenance state. This prevents interval accumulation from freezing
+    // the UI while the trade engine is running.
+    useEffect(() => {
+        const sharedPoll = () => {
+            if (document.visibilityState === 'hidden') return;
+            // Dispatch the event so all subscribers (DynamicThemeStyle, MaintenanceOverlay) update
+            const latestCfg = getSiteConfig();
+            window.dispatchEvent(new CustomEvent('profithub_config_changed', { detail: latestCfg }));
+        };
+        const iv = setInterval(sharedPoll, 15_000);
+        return () => clearInterval(iv);
+    }, []);
+
     const { isDesktop } = useDevice();
     const store = useStore();
     const is_quick_strategy_active = store?.quick_strategy?.is_open;

@@ -45,17 +45,79 @@ const watchBefore = store => {
 };
 
 const watchDuring = store =>
-    watchScope({
-        store,
-        stopScope: constants.STOP,
-        passScope: constants.DURING_PURCHASE,
-        passFlag: 'openContract',
-        // Fast mode: enter during-purchase as soon as the contract stream is live.
-        // Subsequent loops still wait for a new tick via hasFiredDuring.
-        allowImmediate: isFastModeActive(),
-        fireOnceFlag: 'hasFiredDuring',
-        fireOnceAction: 'DURING_FIRED',
+    new Promise(resolve => {
+        const currentState = store.getState();
+        if (currentState.scope === constants.STOP) {
+            resolve(false);
+            return;
+        }
+
+        // Check immediately: if fast mode is ON and conditions are already met, pass now.
+        const canPassImmediately = state =>
+            state.scope === constants.DURING_PURCHASE &&
+            state.openContract &&
+            !state.hasFiredDuring;
+
+        if (isFastModeActive() && canPassImmediately(currentState)) {
+            store.dispatch({ type: 'DURING_FIRED' });
+            resolve(true);
+            return;
+        }
+
+        let isResolved = false;
+
+        const unsubscribe = store.subscribe(() => {
+            if (isResolved) return;
+            const newState = store.getState();
+
+            if (newState.scope === constants.STOP) {
+                isResolved = true;
+                unsubscribe();
+                window.removeEventListener('dbot_speed_mode_changed', onSpeedChange);
+                resolve(false);
+                return;
+            }
+
+            // Re-check fast mode on every state change (supports mid-run toggle)
+            if (isFastModeActive() && canPassImmediately(newState)) {
+                isResolved = true;
+                unsubscribe();
+                window.removeEventListener('dbot_speed_mode_changed', onSpeedChange);
+                store.dispatch({ type: 'DURING_FIRED' });
+                resolve(true);
+                return;
+            }
+
+            if (newState.newTick === prevTick) return;
+            prevTick = newState.newTick;
+
+            if (newState.scope === constants.DURING_PURCHASE && newState.openContract) {
+                if (!newState.hasFiredDuring) {
+                    isResolved = true;
+                    unsubscribe();
+                    window.removeEventListener('dbot_speed_mode_changed', onSpeedChange);
+                    store.dispatch({ type: 'DURING_FIRED' });
+                    resolve(true);
+                }
+            }
+        });
+
+        // Also listen for speed mode toggle mid-run: if user switches to FAST while
+        // we are waiting for a tick, immediately unblock the during-purchase phase.
+        const onSpeedChange = () => {
+            if (isResolved) return;
+            const state = store.getState();
+            if (isFastModeActive() && canPassImmediately(state)) {
+                isResolved = true;
+                unsubscribe();
+                window.removeEventListener('dbot_speed_mode_changed', onSpeedChange);
+                store.dispatch({ type: 'DURING_FIRED' });
+                resolve(true);
+            }
+        };
+        window.addEventListener('dbot_speed_mode_changed', onSpeedChange);
     });
+
 
 /* The watchScope function is called randomly and resets the prevTick
  * which leads to the same problem we try to solve. So prevTick is isolated

@@ -93,15 +93,15 @@ const HeaderSpeedToggle = observer(() => {
             })}
             title={
                 isActive
-                    ? 'Fast Execution Mode ACTIVE: Direct parameter trading with instant cycle execution (Matches 360 speed)'
-                    : 'Fast Execution Mode OFF: Click to enable 2x fast direct execution'
+                    ? 'FAST MODE ON — Instant purchase cycle, skips proposal negotiation (max speed)'
+                    : 'NORMAL MODE — Proposal-based tick-paced trading (default). Click to enable Fast Mode.'
             }
             onClick={() => run_panel.toggleEveryTickMode()}
         >
             <span className='speed-toggle__icon'>⚡</span>
             {isDesktop && (
                 <>
-                    <span className='speed-toggle__text'>Fast</span>
+            <span className='speed-toggle__text'>{isActive ? 'FAST' : 'Normal'}</span>
                     <div className='speed-toggle__track'>
                         <div className='speed-toggle__thumb' />
                     </div>

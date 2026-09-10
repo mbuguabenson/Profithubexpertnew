@@ -460,7 +460,7 @@ export const StatementReportModal = observer(({ isOpen, onClose, initialLoginId 
                     {isLoading ? (
                         <div className='statement-report-modal__loading'>
                             <Loader2 size={32} className='animate-spin' />
-                            <p>{localize('Fetching statement ledger from Deriv Gateway...')}</p>
+                            <p>{localize('Fetching statement via Deriv WebSocket API (statement: 1)...')}</p>
                         </div>
                     ) : errorMessage && filteredTransactions.length === 0 ? (
                         <div className='statement-report-modal__error'>
@@ -585,11 +585,11 @@ export const StatementReportModal = observer(({ isOpen, onClose, initialLoginId 
                         <span>
                             {localize('Official Deriv Ledger')} &bull;{' '}
                             <a
-                                href='https://developers.deriv.com/docs/options-legacy/legacy-statement/'
+                                href='https://developers.deriv.com/llms/statement.md'
                                 target='_blank'
                                 rel='noopener noreferrer'
                             >
-                                Legacy Statement API Spec ↗
+                                Deriv Statement API Spec ↗
                             </a>
                         </span>
                     </div>

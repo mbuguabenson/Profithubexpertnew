@@ -839,59 +839,70 @@ export class DerivAccountWalletService {
     }
 
     /**
-     * Unified Statement Report resolver:
-     * 1. Attempts the official Deriv Legacy Statement REST API
-     * 2. Seamlessly falls back to WebSocket statement if the account is non-legacy,
-     *    migrated, or returns 404/409/network error.
+     * Unified Statement Report resolver — implements the Deriv Statement WebSocket API:
+     *   https://developers.deriv.com/llms/statement.md
+     *
+     * Priority:
+     *   1. WebSocket: { statement: 1, description: 1, limit, offset, action_type, date_from, date_to }
+     *   2. Fallback:  Legacy REST GET /trading/v1/options/legacy/statement
+     *
+     * Auth: OTP WebSocket (scopes: trade) per the new Deriv API gateway.
      */
     public static async getStatementReport(params: DerivLegacyStatementParams = {}): Promise<DerivStatementReportResponse> {
-        // Step 1: Try Deriv Legacy Statement REST API
-        const legacyRes = await this.getLegacyStatement(params);
-        if (legacyRes.transactions && legacyRes.transactions.length > 0) {
-            return legacyRes;
-        }
-
-        // Step 2: Fallback to WebSocket statement: 1
+        // ── Step 1: WebSocket Statement API (primary) ──────────────────────
         try {
             const api = await this.getConnectedApi();
             const wsReq: any = {
                 statement: 1,
                 description: 1,
-                limit: params.limit || 100,
+                limit: Math.min(params.limit || 100, 999),  // max 999 per spec
             };
+            // Optional filters per API spec
             if (params.date_from) wsReq.date_from = Math.floor(params.date_from);
-            if (params.date_to) wsReq.date_to = Math.floor(params.date_to);
-            if (params.action_type && params.action_type !== 'all') wsReq.action_type = params.action_type;
+            if (params.date_to)   wsReq.date_to   = Math.floor(params.date_to);
+            if (params.action_type && params.action_type !== 'all') {
+                wsReq.action_type = params.action_type;
+            }
+            // offset support (skip N transactions)
+            if ((params as any).offset && (params as any).offset > 0) {
+                wsReq.offset = Math.floor((params as any).offset);
+            }
 
             const wsRes = (await api.send(wsReq)) as any;
+
             if (wsRes?.statement?.transactions && Array.isArray(wsRes.statement.transactions)) {
                 const transactions: DerivStatementTransaction[] = wsRes.statement.transactions.map((s: any) => ({
-                    transaction_id: s.transaction_id,
-                    action_type: (s.action_type || 'transaction').toLowerCase(),
-                    amount: parseFloat(s.amount || '0'),
-                    balance_after: parseFloat(s.balance_after || '0'),
-                    contract_id: s.contract_id,
-                    longcode: s.longcode,
-                    shortcode: s.shortcode,
-                    payout: s.payout ? parseFloat(s.payout) : undefined,
-                    purchase_time: s.purchase_time,
-                    reference_id: s.reference_id,
+                    transaction_id:   s.transaction_id,
+                    action_type:      (s.action_type || 'transaction').toLowerCase(),
+                    amount:           parseFloat(s.amount  ?? '0'),
+                    balance_after:    parseFloat(s.balance_after ?? '0'),
+                    contract_id:      s.contract_id,
+                    longcode:         s.longcode,
+                    shortcode:        s.shortcode,
+                    payout:           s.payout != null ? parseFloat(s.payout) : undefined,
+                    purchase_time:    s.purchase_time,
+                    reference_id:     s.reference_id,
                     transaction_time: s.transaction_time,
-                    currency: s.currency || 'USD',
+                    currency:         s.currency || 'USD',
+                    symbol:           s.symbol,
+                    bet_type:         s.bet_type,
+                    bet_class:        s.bet_class,
+                    app_id:           s.app_id,
                 }));
 
                 return {
                     transactions,
-                    count: wsRes.statement.count ?? transactions.length,
+                    count:  wsRes.statement.count ?? transactions.length,
                     source: 'websocket',
                 };
             }
         } catch (wsErr: any) {
-            console.warn('[DerivAccountWalletService] WebSocket statement fallback failed:', wsErr);
+            console.warn('[DerivAccountWalletService] WebSocket statement (primary) failed:', wsErr);
         }
 
-        // Return legacy response (with any error message) if WS also returned nothing
-        return legacyRes;
+        // ── Step 2: Legacy REST fallback ───────────────────────────────────
+        const fallback = await this.getLegacyStatement(params);
+        return fallback;
     }
 
 

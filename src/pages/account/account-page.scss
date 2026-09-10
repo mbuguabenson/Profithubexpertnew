@@ -1181,6 +1181,124 @@
         }
     }
 
+    /* ─── Balances-Only Account List ─── */
+    .balances-only-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .balance-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background 0.15s;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &--active {
+            background: rgba(99, 102, 241, 0.07);
+            border-left: 3px solid #6366f1;
+        }
+
+        &__left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        &__type-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+
+            &.dot--real {
+                background: #10b981;
+                box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+            }
+            &.dot--demo {
+                background: #f59e0b;
+                box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+            }
+        }
+
+        &__loginid {
+            font-family: var(--font-mono, monospace);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-prominent, #f1f5f9);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        &__badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+
+            &.badge-real {
+                background: rgba(16, 185, 129, 0.15);
+                color: #34d399;
+                border: 1px solid rgba(16, 185, 129, 0.3);
+            }
+            &.badge-demo {
+                background: rgba(245, 158, 11, 0.15);
+                color: #fbbf24;
+                border: 1px solid rgba(245, 158, 11, 0.3);
+            }
+        }
+
+        &__active-tag {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            flex-shrink: 0;
+        }
+
+        &__right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        &__currency {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        &__amount {
+            font-family: var(--font-mono, monospace);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-prominent, #f1f5f9);
+        }
+    }
+
     /* Utility typography */
     .font-mono {
         font-family: var(--font-mono, monospace);

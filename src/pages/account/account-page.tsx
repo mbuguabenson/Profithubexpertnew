@@ -10,7 +10,7 @@ import {
     DerivProfitTableEntry,
     DerivTransactionStreamItem,
 } from '@/services/deriv-account-wallet.service';
-import { AccountSwitcherService } from '@/services/account-switcher.service';
+
 import { addComma, getCurrencyDisplayCode, getDecimalPlaces } from '@/components/shared';
 import { isDemoAccount } from '@/utils/account-helpers';
 import { api_base } from '@/external/bot-skeleton/services/api/api-base';
@@ -27,7 +27,7 @@ import {
     FileSpreadsheet,
     FileText,
     Filter,
-    Layers,
+    BarChart2,
     LogOut,
     Radio,
     RefreshCw,
@@ -317,18 +317,7 @@ const AccountPage = observer(() => {
         setTimeout(() => setCopiedId(false), 2000);
     };
 
-    const handleSwitchAccount = async (targetId: string) => {
-        if (targetId === activeLoginid) {
-            setSelectedLoginId(targetId);
-            return;
-        }
-        setSelectedLoginId(targetId);
-        try {
-            await AccountSwitcherService.switchAccount(targetId, client);
-        } catch (err) {
-            console.error('[AccountPage] Switch error:', err);
-        }
-    };
+
 
     const handleResetDemoBalance = async () => {
         setIsResetting(true);
@@ -543,46 +532,40 @@ const AccountPage = observer(() => {
                     {resetMsg && <div className='hero-toast-msg'>{resetMsg}</div>}
                 </div>
 
-                {/* 2. Linked Accounts Switcher Card */}
-                {accountList && accountList.length > 1 && (
+                {/* 2. Account Balances Strip */}
+                {accountList && accountList.length > 0 && (
                     <div className='account-card'>
                         <div className='card-header'>
                             <div className='card-header-left'>
-                                <Layers size={18} className='card-icon' />
-                                <h3>{localize('Linked Accounts')}</h3>
+                                <BarChart2 size={18} className='card-icon' />
+                                <h3>{localize('Account Balances')}</h3>
                             </div>
                             <span className='card-badge'>{accountList.length} {localize('accounts')}</span>
                         </div>
 
-                        <div className='linked-accounts-grid'>
+                        <div className='balances-only-list'>
                             {accountList.map(acc => {
                                 const isDemo = isDemoAccount(acc.loginid);
-                                const isSelected = acc.loginid === selectedLoginId;
                                 const isActive = acc.loginid === activeLoginid;
                                 const accCurr = acc.currency || 'USD';
                                 const balanceVal = Number(acc.balance ?? 0);
 
                                 return (
-                                    <div
-                                        key={acc.loginid}
-                                        className={`account-tile ${isSelected ? 'account-tile--selected' : ''}`}
-                                        onClick={() => handleSwitchAccount(acc.loginid)}
-                                    >
-                                        <div className='tile-top'>
-                                            <span className='tile-loginid'>{acc.loginid}</span>
-                                            <span className={`tile-badge ${isDemo ? 'badge-demo' : 'badge-real'}`}>
-                                                {isDemo ? 'Demo' : 'Real'}
+                                    <div key={acc.loginid} className={`balance-row ${isActive ? 'balance-row--active' : ''}`}>
+                                        <div className='balance-row__left'>
+                                            <span className={`balance-row__type-dot ${isDemo ? 'dot--demo' : 'dot--real'}`} />
+                                            <span className='balance-row__loginid'>{acc.loginid}</span>
+                                            <span className={`balance-row__badge ${isDemo ? 'badge-demo' : 'badge-real'}`}>
+                                                {isDemo ? localize('Demo') : localize('Real')}
+                                            </span>
+                                            {isActive && <span className='balance-row__active-tag'>{localize('Active')}</span>}
+                                        </div>
+                                        <div className='balance-row__right'>
+                                            <span className='balance-row__currency'>{accCurr}</span>
+                                            <span className='balance-row__amount'>
+                                                {formatAmount(balanceVal, accCurr)}
                                             </span>
                                         </div>
-                                        <div className='tile-balance'>
-                                            {formatAmount(balanceVal, accCurr)}
-                                        </div>
-                                        {isActive && (
-                                            <div className='tile-active-indicator'>
-                                                <span className='active-dot' />
-                                                <span>{localize('Active Session')}</span>
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })}
@@ -759,7 +742,7 @@ const AccountPage = observer(() => {
                             {isLoadingStatement ? (
                                 <div className='table-loading-state'>
                                     <RefreshCw size={24} className='animate-spin' />
-                                    <p>{localize('Fetching statement ledger...')}</p>
+                                    <p>{localize('Fetching statement via WebSocket API (statement: 1)...')}</p>
                                 </div>
                             ) : filteredTransactions.length === 0 ? (
                                 <div className='table-empty-state'>

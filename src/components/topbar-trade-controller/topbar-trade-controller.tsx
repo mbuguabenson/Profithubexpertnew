@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import RunStrategy from '@/pages/dashboard/run-strategy';
+import { useStore } from '@/hooks/useStore';
+import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
 import './topbar-trade-controller.scss';
 
 export interface TopBarTradeControllerProps {
@@ -14,6 +16,7 @@ type EngineStatus = {
 
 export const TopBarTradeController: React.FC<TopBarTradeControllerProps> = ({ currentTabKey }) => {
     const [engineStatuses, setEngineStatuses] = useState<Record<string, EngineStatus>>({});
+    const store = useStore();
 
     // Listen to real-time status updates dispatched by individual trading pages
     useEffect(() => {
@@ -42,61 +45,80 @@ export const TopBarTradeController: React.FC<TopBarTradeControllerProps> = ({ cu
 
     // Trigger action on the active trading engine
     const handleTriggerAction = useCallback(() => {
-        // 1. Dispatch custom event
-        window.dispatchEvent(
-            new CustomEvent('PH_TRIGGER_ENGINE_ACTION', {
-                detail: {
-                    tab: normalizedTab,
-                    action: 'toggle',
-                },
-            })
-        );
+        const isRunning = Boolean(currentStatus.isRunning);
 
-        // 2. DOM fallback trigger in case page hasn't mounted listener yet
-        setTimeout(() => {
-            if (normalizedTab === 'elite_pro') {
-                const btn = document.querySelector(
-                    '.ep-btn--start, .ep-btn--stop, button[data-testid="elite_pro_toggle"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
-            } else if (normalizedTab === 'poverty_hunter') {
-                const btn = document.querySelector(
-                    '.ph-btn--start, .ph-btn--stop, button[data-testid="poverty_hunter_toggle"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
-            } else if (normalizedTab === 'auto_x_eo') {
-                const btn = document.querySelector(
-                    '.btn-start-auto, .btn-stop-auto, button[data-testid="auto_x_eo_toggle"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
-            } else if (normalizedTab === 'marketkiller') {
-                const btn = document.querySelector(
-                    '.strike-btn, .mkill-btn, button[data-testid="marketkiller_strike"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
-            } else if (normalizedTab === 'market_hunter_pro') {
-                const btn = document.querySelector(
-                    '.mhp-auto-btn, .proai-btn-load, button[data-testid="market_hunter_start"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
-            } else if (normalizedTab === 'ai_trading_engine') {
-                const btn = document.querySelector(
-                    '.entry-scanner-start, .ai-engine-run-btn, button[data-testid="ai_engine_start"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
-            } else if (normalizedTab === 'scanner') {
-                const btn = document.querySelector(
-                    '.scanner-auto-btn, .scanner-run-btn, button[data-testid="scanner_start"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
-            } else if (normalizedTab === 'manual_trading') {
-                const btn = document.querySelector(
-                    '.manual-trade-btn, .smart-trading-buy, button[data-testid="manual_trade_buy"]'
-                ) as HTMLElement;
-                if (btn) btn.click();
+        if (isRunning) {
+            // ── STOP ─────────────────────────────────────────────────────────────
+            // Primary: call the MobX store stop directly — most reliable path
+            try {
+                if (store?.run_panel?.onStopBotClick) {
+                    store.run_panel.onStopBotClick();
+                } else if (store?.run_panel?.stopBot) {
+                    store.run_panel.stopBot();
+                }
+            } catch (e) {
+                console.warn('[TopBarTradeController] stop via store failed:', e);
             }
-        }, 10);
-    }, [normalizedTab]);
+
+            // Secondary: emit the global observer event (works for bots not on run_panel)
+            try {
+                globalObserver.emit('bot.stop_button_click');
+                globalObserver.emit('bot.stop');
+            } catch {}
+
+            // Tertiary: DOM fallback + PH event for non-bot strategies (Elite Pro, etc.)
+            window.dispatchEvent(
+                new CustomEvent('PH_TRIGGER_ENGINE_ACTION', {
+                    detail: { tab: normalizedTab, action: 'stop' },
+                })
+            );
+
+            // DOM click fallback (for pages that listen to their own stop button)
+            setTimeout(() => {
+                const stopSelectors: Record<string, string> = {
+                    elite_pro: '.ep-btn--stop, button[data-testid="elite_pro_toggle"]',
+                    poverty_hunter: '.ph-btn--stop, button[data-testid="poverty_hunter_toggle"]',
+                    auto_x_eo: '.btn-stop-auto, button[data-testid="auto_x_eo_toggle"]',
+                    marketkiller: '.mkill-btn, button[data-testid="marketkiller_strike"]',
+                    market_hunter_pro: '.mhp-auto-btn, button[data-testid="market_hunter_start"]',
+                    ai_trading_engine: '.ai-engine-run-btn, button[data-testid="ai_engine_start"]',
+                    scanner: '.scanner-auto-btn, button[data-testid="scanner_start"]',
+                };
+                const sel = stopSelectors[normalizedTab];
+                if (sel) {
+                    const btn = document.querySelector(sel) as HTMLElement;
+                    if (btn) btn.click();
+                }
+            }, 10);
+        } else {
+            // ── START ─────────────────────────────────────────────────────────────
+            window.dispatchEvent(
+                new CustomEvent('PH_TRIGGER_ENGINE_ACTION', {
+                    detail: { tab: normalizedTab, action: 'toggle' },
+                })
+            );
+
+            setTimeout(() => {
+                const startSelectors: Record<string, string> = {
+                    elite_pro: '.ep-btn--start, button[data-testid="elite_pro_toggle"]',
+                    poverty_hunter: '.ph-btn--start, button[data-testid="poverty_hunter_toggle"]',
+                    auto_x_eo: '.btn-start-auto, button[data-testid="auto_x_eo_toggle"]',
+                    marketkiller: '.strike-btn, button[data-testid="marketkiller_strike"]',
+                    market_hunter_pro: '.mhp-auto-btn, .proai-btn-load, button[data-testid="market_hunter_start"]',
+                    ai_trading_engine: '.entry-scanner-start, .ai-engine-run-btn, button[data-testid="ai_engine_start"]',
+                    scanner: '.scanner-auto-btn, .scanner-run-btn, button[data-testid="scanner_start"]',
+                    manual_trading: '.manual-trade-btn, .smart-trading-buy, button[data-testid="manual_trade_buy"]',
+                };
+                const sel = startSelectors[normalizedTab];
+                if (sel) {
+                    const btn = document.querySelector(sel) as HTMLElement;
+                    if (btn) btn.click();
+                }
+            }, 10);
+        }
+    }, [normalizedTab, currentStatus.isRunning, store]);
+
+
 
     const tabConfig = useMemo(() => {
         switch (normalizedTab) {
