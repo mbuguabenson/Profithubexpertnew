@@ -1,11 +1,12 @@
 // Updated to use brand configuration for mobile menu elements visibility
 // Controls language settings and theme toggle via brand.config.json
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import brandConfig from '@/../brand.config.json';
 import useModalManager from '@/hooks/useModalManager';
 import RiskDisclaimer from '@/pages/dashboard/risk-disclaimer';
 // [AI] Import useStore to check if menu has items
 import { useStore } from '@/hooks/useStore';
+import { useApiBase } from '@/hooks/useApiBase';
 // [/AI]
 import { getActiveTabUrl } from '@/utils/getActiveTabUrl';
 import { FILTERED_LANGUAGES } from '@/utils/languages';
@@ -13,6 +14,7 @@ import { useTranslations } from '@deriv-com/translations';
 import { Drawer, MobileLanguagesDrawer, useDevice } from '@deriv-com/ui';
 import NetworkStatus from './../../footer/NetworkStatus';
 import ServerTime from './../../footer/ServerTime';
+import AccountSwitcher from '../account-switcher';
 import BackButton from './back-button';
 import MenuContent from './menu-content';
 import MenuHeader from './menu-header';
@@ -31,31 +33,45 @@ const MobileMenu = ({ onLogout }: TMobileMenuProps) => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
     const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
+    const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
     const { currentLang = 'EN', localize, switchLanguage } = useTranslations();
     const { hideModal, isModalOpenFor, showModal } = useModalManager();
     const { isDesktop } = useDevice();
     // [AI] Get client from store to check menu items
     const { client } = useStore() ?? {};
+    const { activeLoginid } = useApiBase();
     // [/AI]
+
+    // Listen for the Switch Account event dispatched from the hamburger menu item
+    useEffect(() => {
+        const handleOpenSwitcher = () => {
+            setIsDrawerOpen(true);
+            setShowAccountSwitcher(true);
+        };
+        window.addEventListener('open_mobile_account_switcher', handleOpenSwitcher);
+        return () => window.removeEventListener('open_mobile_account_switcher', handleOpenSwitcher);
+    }, []);
 
     // Get mobile menu configuration from brand.config.json
     const enableLanguageSettings = brandConfig.platform.footer?.enable_language_settings ?? true;
     const enableThemeToggle = brandConfig.platform.footer?.enable_theme_toggle ?? true;
 
-    // Check if menu has any items to determine if mobile menu should be shown
-    const { hasMenuItems } = useMobileMenuConfig(client, onLogout, enableThemeToggle, () => {
-        closeDrawer();
-        setIsDisclaimerOpen(true);
-    });
-
     const openDrawer = () => setIsDrawerOpen(true);
     const closeDrawer = () => {
         setIsDrawerOpen(false);
         setActiveSubmenu(null);
+        setShowAccountSwitcher(false);
     };
 
     const openSubmenu = (submenu: string) => setActiveSubmenu(submenu);
     const closeSubmenu = () => setActiveSubmenu(null);
+
+    // Check if menu has any items to determine if mobile menu should be shown
+    const { hasMenuItems } = useMobileMenuConfig(client, onLogout, enableThemeToggle, () => {
+        closeDrawer();
+        setIsDisclaimerOpen(true);
+    }, closeDrawer);
+
     const openLanguageSetting = () => showModal('MobileLanguagesDrawer');
     const isLanguageSettingVisible = Boolean(isModalOpenFor('MobileLanguagesDrawer'));
 
@@ -81,7 +97,22 @@ const MobileMenu = ({ onLogout }: TMobileMenuProps) => {
 
                 <Drawer.Content>
                     {/* [AI] Conditionally render language drawer based on brand config */}
-                    {enableLanguageSettings && isLanguageSettingVisible ? (
+                    {showAccountSwitcher ? (
+                        // ── Mobile Account Switcher Panel ──────────────────────────
+                        <>
+                            <div className='mobile-menu__back-btn'>
+                                <BackButton
+                                    buttonText={localize('Switch Account')}
+                                    onClick={() => setShowAccountSwitcher(false)}
+                                />
+                            </div>
+                            {activeLoginid && (
+                                <div style={{ padding: '0 16px 16px' }}>
+                                    <AccountSwitcher activeAccount={undefined} forceDropdown={true} />
+                                </div>
+                            )}
+                        </>
+                    ) : enableLanguageSettings && isLanguageSettingVisible ? (
                         <>
                             <div className='mobile-menu__back-btn'>
                                 <BackButton buttonText={localize('Language')} onClick={hideModal} />

@@ -44,9 +44,9 @@ const AccountAvatar = ({ currency, isVirtual }: { currency?: string; isVirtual?:
 );
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
+const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAccountSwitcher & { forceDropdown?: boolean }) => {
     const navigate = useNavigate();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(forceDropdown);
     const [activeTab, setActiveTab] = useState<'real' | 'demo'>('real');
     const [userNickname, setUserNickname] = useState<string>('');
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -272,12 +272,12 @@ const AccountSwitcher = observer(({ activeAccount }: TAccountSwitcher) => {
 
     const toggleDropdown = useCallback(() => {
         if (is_bot_running) return;
-        if (window.innerWidth <= 768) {
+        if (!forceDropdown && window.innerWidth <= 768) {
             navigate('/account');
             return;
         }
         setIsOpen(prev => !prev);
-    }, [is_bot_running, navigate]);
+    }, [is_bot_running, navigate, forceDropdown]);
 
     const handleAccountSelect = useCallback(
         async (loginid: string) => {

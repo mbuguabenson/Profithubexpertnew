@@ -69,11 +69,33 @@ const InfoIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+// Icon for Switch Accounts in mobile menu
+const SwitchAccountIcon = ({ className }: { className?: string }) => (
+    <svg
+        className={className}
+        viewBox='0 0 24 24'
+        width='16'
+        height='16'
+        fill='none'
+        stroke='currentColor'
+        strokeWidth='2'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        style={{ color: 'var(--text-general)' }}
+    >
+        <path d='M17 1l4 4-4 4' />
+        <path d='M3 11V9a4 4 0 014-4h14' />
+        <path d='M7 23l-4-4 4-4' />
+        <path d='M21 13v2a4 4 0 01-4 4H3' />
+    </svg>
+);
+
 const useMobileMenuConfig = (
     client?: RootStore['client'],
     onLogout?: () => void,
     enableThemeToggle: boolean = true,
-    onOpenDisclaimer?: () => void
+    onOpenDisclaimer?: () => void,
+    onCloseDrawer?: () => void
 ) => {
     const navigate = useNavigate();
     const { localize } = useTranslations();
@@ -99,12 +121,25 @@ const useMobileMenuConfig = (
                 },
             ].filter(Boolean) as TMenuConfig,
             [
-                // Mobile Account Info Option
+                // Switch Account — opens account switcher overlay on mobile
                 client?.is_logged_in && {
                     as: 'button',
-                    label: localize('Account & Statements'),
+                    label: localize('Switch Account'),
+                    LeftComponent: SwitchAccountIcon,
+                    onClick: () => {
+                        onCloseDrawer?.();
+                        // Dispatch event to open the account switcher panel
+                        window.dispatchEvent(new CustomEvent('open_mobile_account_switcher'));
+                    },
+                },
+
+                // Account Overview & Reports page
+                client?.is_logged_in && {
+                    as: 'button',
+                    label: localize('Account Overview & Reports'),
                     LeftComponent: UserIcon,
                     onClick: () => {
+                        onCloseDrawer?.();
                         navigate('/account');
                     },
                 },
@@ -128,7 +163,7 @@ const useMobileMenuConfig = (
                     },
             ].filter(Boolean) as TMenuConfig,
         ].filter(section => section.length > 0);
-    }, [client, onLogout, is_dark_mode_on, toggleTheme, localize, enableThemeToggle, navigate]);
+    }, [client, onLogout, is_dark_mode_on, toggleTheme, localize, enableThemeToggle, navigate, onCloseDrawer]);
 
     // Check if menu has any items to determine if mobile menu should be shown
     const hasMenuItems = menuConfig.some(section => section.length > 0);
