@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
 import { addComma, getCurrencyDisplayCode, getDecimalPlaces } from '@/components/shared';
@@ -45,7 +45,6 @@ const AccountAvatar = ({ currency, isVirtual }: { currency?: string; isVirtual?:
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAccountSwitcher & { forceDropdown?: boolean }) => {
-    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(forceDropdown);
     const [activeTab, setActiveTab] = useState<'real' | 'demo'>('real');
     const [userNickname, setUserNickname] = useState<string>('');
@@ -273,11 +272,14 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
     const toggleDropdown = useCallback(() => {
         if (is_bot_running) return;
         if (!forceDropdown && window.innerWidth <= 768) {
-            navigate('/account');
+            // On mobile: open the hamburger account-switcher panel instead of
+            // navigating away to the Account Overview & Reports page.
+            // The /account page is accessible from the hamburger menu item.
+            window.dispatchEvent(new CustomEvent('open_mobile_account_switcher'));
             return;
         }
         setIsOpen(prev => !prev);
-    }, [is_bot_running, navigate, forceDropdown]);
+    }, [is_bot_running, forceDropdown]);
 
     const handleAccountSelect = useCallback(
         async (loginid: string) => {

@@ -305,13 +305,27 @@ export const recoverFromError = (promiseFn, recoverFn, errors_to_ignore, delay_i
  * @param {*} promiseFn api call - it could be api call or subscription
  * @param {*} errors_to_ignore list of errors to ignore
  * @param {*} api_base instance of APIBase class to check if the bot is running or not
+ * @param {*} maxRetries maximum number of retry attempts before giving up (default: 20).
+ *   Without this cap, ignorable errors like RateLimit/DisconnectError cause infinite
+ *   retry loops that grow exponentially — the engine never unblocks and the bot freezes.
  * @returns a new promise
  */
-export const doUntilDone = (promiseFn, errors_to_ignore, api_base) => {
+export const doUntilDone = (promiseFn, errors_to_ignore, api_base, maxRetries = 20) => {
     let delay_index = 1;
 
     return new Promise((resolve, reject) => {
         const recoverFn = (error_code, makeDelay) => {
+            if (delay_index > maxRetries) {
+                // Cap reached — reject with a clear error so the run-panel's
+                // onError handler can display it and unfreeze the panel.
+                reject({
+                    error: {
+                        code: 'MaxRetriesExceeded',
+                        message: `Operation failed after ${maxRetries} retries (last error: ${error_code}). Bot stopped to prevent freeze.`,
+                    },
+                });
+                return;
+            }
             delay_index++;
             makeDelay().then(repeatFn);
         };
@@ -323,6 +337,7 @@ export const doUntilDone = (promiseFn, errors_to_ignore, api_base) => {
         repeatFn();
     });
 };
+
 
 export const createDetails = contract => {
     if (!contract) {

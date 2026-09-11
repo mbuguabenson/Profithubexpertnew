@@ -116,8 +116,12 @@ export default Engine =>
                 });
 
                 if (this.afterPromise) {
-                    this.afterPromise();
+                    // Null-guard: capture and clear BEFORE calling, so a racing
+                    // watchdog / subscription double-fire can't resolve the NEXT
+                    // run cycle's waitForAfter() promise.
+                    const ap = this.afterPromise;
                     this.afterPromise = null;
+                    ap();
                 }
 
                 // If no more open contracts, ensure all contract streams on WebSocket are forgotten

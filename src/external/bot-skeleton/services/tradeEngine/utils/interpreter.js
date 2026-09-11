@@ -192,11 +192,25 @@ const Interpreter = () => {
 
                 if (watchName === 'before' && typeof window !== 'undefined' && window.is_bot_paused) {
                     await new Promise(resolve => {
+                        // ── Fix: register BEFORE checking the flag ──────────────────────────────
+                        // Old code checked is_bot_paused then registered the listener — if resume
+                        // fired between those two operations the event was missed and the engine
+                        // hung forever (visible freeze after Pause → Resume).
+                        // We register first; if resume already happened we cancel and pass through.
+                        let resolved = false;
                         const onResume = () => {
+                            if (resolved) return;
+                            resolved = true;
                             globalObserver.unregister('bot.resume', onResume);
                             resolve();
                         };
                         globalObserver.register('bot.resume', onResume);
+
+                        // Re-check the flag after registration to catch a resume that arrived
+                        // in the tiny window between the outer check and the register() call.
+                        if (!window.is_bot_paused) {
+                            onResume();
+                        }
                     });
                 }
 

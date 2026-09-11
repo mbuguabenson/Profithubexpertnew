@@ -372,6 +372,11 @@ export default Engine =>
 
                                 log(LogTypes.ERROR, { message: `❌ [PURCHASE FAILED] ${errMsg}` });
 
+                                // ── Fix 1: always reset buying flag on failure ──────────────
+                                // Without this reset, every subsequent purchase() call returns
+                                // immediately as a no-op → bot freezes silently after 1 error.
+                                this.is_contract_buying_in_progress = false;
+
                                 globalObserver.emit('Error', {
                                     code: errCode,
                                     message: errMsg,
@@ -389,7 +394,10 @@ export default Engine =>
 
                                 this.store.dispatch(purchaseSuccessful());
                                 if (this.afterPromise) {
-                                    this.afterPromise();
+                                    // ── Fix 2: null-guard to prevent resolving next cycle's promise ─
+                                    const ap = this.afterPromise;
+                                    this.afterPromise = null;
+                                    ap();
                                 }
                             });
                     });
