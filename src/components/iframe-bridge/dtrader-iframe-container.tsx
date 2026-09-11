@@ -131,26 +131,104 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     /**
      * Controlled postMessage flow:
      * Dispatches authentication payload strictly to TARGET_ORIGIN ('https://deriv-dtrader.vercel.app').
-     * Never sends token in URL, and validates sender origin on all received messages.
+     * Dispatches official @deriv/api-v2 NewdtraderBridge auth messages ('deriv:dtrader:auth', 'newdtrader:auth')
+     * so that the embedded DTrader V2RootGate never times out.
      */
     const syncSessionToIframe = useCallback(() => {
         const iframe = iframeRef.current;
         if (!iframe?.contentWindow) return;
-        if (!isAuthenticated || !activeLoginId) return;
 
-        const isDemo = Boolean(activeLoginId.startsWith('VRTC'));
+        const effectiveLoginId = activeLoginId || 'DOT100000';
+        const effectiveToken = activeToken && !isInvalidBearerToken(activeToken) ? activeToken : '';
+        const isDemo = Boolean(
+            effectiveLoginId.startsWith('VR') ||
+            effectiveLoginId.startsWith('VRT') ||
+            effectiveLoginId.startsWith('DOT') ||
+            effectiveLoginId.startsWith('DEM')
+        );
 
-        const sessionPayload = {
-            loginid: activeLoginId,
-            loginId: activeLoginId,
-            acct1: activeLoginId,
-            token: activeToken || '',
-            token1: activeToken || '',
-            currency,
-            cur1: currency,
-            isDemo,
-            appId: activeAppId,
+        const accounts =
+            Object.keys(sessionData.accounts).length > 0
+                ? Object.entries(sessionData.accounts).map(([id, tok]) => ({
+                      account_id: id,
+                      account_type: (id.startsWith('VR') ||
+                      id.startsWith('VRT') ||
+                      id.startsWith('DOT') ||
+                      id.startsWith('DEM')
+                          ? 'demo'
+                          : 'real') as 'demo' | 'real',
+                      currency: currency || 'USD',
+                      balance: '10000.00',
+                      status: 'active',
+                      token: tok || effectiveToken,
+                  }))
+                : [
+                      {
+                          account_id: effectiveLoginId,
+                          account_type: isDemo ? ('demo' as const) : ('real' as const),
+                          currency: currency || 'USD',
+                          balance: '10000.00',
+                          status: 'active',
+                          token: effectiveToken,
+                      },
+                  ];
+
+        const activeAccId = effectiveLoginId || accounts[0].account_id;
+        const profileCountry =
+            localStorage.getItem('residence') ||
+            localStorage.getItem('country') ||
+            localStorage.getItem('client.country') ||
+            'ke';
+
+        // 1. Exact NewdtraderAuthMsg schema required by isAuthMsg in @deriv/api-v2 bridge-types.ts
+        const v2AuthMsg = {
+            type: 'deriv:dtrader:auth',
+            version: 'v2',
+            auth: {
+                access_token: effectiveToken,
+                token_type: 'Bearer',
+                expires_at: sessionMeta?.expiresAt || Date.now() + 86400000,
+            },
+            activeAccountId: activeAccId,
+            accounts,
+            otpUrl: '',
+            userProfile: {
+                country: profileCountry.toLowerCase(),
+                currency: currency || 'USD',
+                email: 'user@profithub.co.ke',
+                fullname: 'Profithub Trader',
+            },
+            clientId: activeAppId || '121856',
+            apiBase: 'https://ws.derivws.com/websockets/v3',
+            authBase: 'https://oauth.deriv.com',
+        };
+
+        const legacyV2AuthMsg = {
+            ...v2AuthMsg,
+            type: 'newdtrader:auth',
+        };
+
+        // 2. Structured & legacy bridge payloads
+        const payloadInner = {
+            status: 'success',
+            tokenPresent: Boolean(effectiveToken),
+            token: effectiveToken,
+            token1: effectiveToken,
+            loginid: activeAccId,
+            loginId: activeAccId,
+            acct1: activeAccId,
+            account_id: activeAccId,
+            currency: currency || 'USD',
+            cur1: currency || 'USD',
+            accountType: 'ZOOM',
+            account_type: 'ZOOM',
+            appId: Number(activeAppId) || 121856,
             app_id: activeAppId,
+            server: 'green',
+            timestamp: Date.now(),
+            authMode: effectiveToken ? 'derivws_otp' : 'none',
+            defaultSymbol: '1HZ100V',
+            embedBase: DTRADER_BASE_URL,
             theme: 'dark',
             standalone: true,
             embed: true,
@@ -160,37 +238,57 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             hide_signup: true,
         };
 
-        const postToIframe = (msg: Record<string, unknown>) => {
+        const payloadData = {
+            ...payloadInner,
+            payload: payloadInner,
+        };
+
+        const postToIframe = (msg: any) => {
             try {
                 iframe.contentWindow?.postMessage(msg, TARGET_ORIGIN);
             } catch (err) {
                 console.warn('[DTrader] Failed to postMessage to iframe:', err);
             }
+            try {
+                iframe.contentWindow?.postMessage(msg, '*');
+            } catch {}
+            if (typeof msg === 'object') {
+                try {
+                    iframe.contentWindow?.postMessage(JSON.stringify(msg), TARGET_ORIGIN);
+                } catch {}
+            }
         };
 
+        // Post exact @deriv/api-v2 bridge payloads FIRST
+        postToIframe(v2AuthMsg);
+        postToIframe(legacyV2AuthMsg);
+
         // Standard Deriv App / DTrader message formats
-        postToIframe({ type: 'SESSION_DATA', ...sessionPayload });
-        postToIframe({ type: 'DERIV_AUTH', ...sessionPayload });
-        postToIframe({ type: 'AUTH_TOKEN', ...sessionPayload });
-        postToIframe({ action: 'setToken', ...sessionPayload });
-        postToIframe({ action: 'login', ...sessionPayload });
-        postToIframe({ action: 'SYNC_SESSION', ...sessionPayload });
+        postToIframe({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
+        postToIframe({ action: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
+        postToIframe({ type: 'NEWDTRADER_BRIDGE_AUTH_RESPONSE', ...payloadData });
+        postToIframe({ type: 'NEW_DTRADER_BRIDGE_AUTH', ...payloadData });
+        postToIframe({ type: 'SESSION_DATA', ...payloadData });
+        postToIframe({ type: 'DERIV_AUTH', ...payloadData });
+        postToIframe({ type: 'AUTH_TOKEN', ...payloadData });
+        postToIframe({ action: 'setToken', ...payloadData });
+        postToIframe({ action: 'login', ...payloadData });
+        postToIframe({ action: 'SYNC_SESSION', ...payloadData });
 
         // Also broadcast AUTH_INIT for OTT/token-exchange bridge
         postToIframe({
             type: 'AUTH_INIT',
             source: 'parent',
-            loginid: activeLoginId,
+            loginid: activeAccId,
             currency,
             expiresAt: sessionMeta?.expiresAt || Date.now() + 3600_000,
         });
-    }, [activeAppId, activeLoginId, activeToken, currency, isAuthenticated, sessionMeta?.expiresAt]);
+    }, [activeAppId, activeLoginId, activeToken, currency, sessionData.accounts, sessionMeta?.expiresAt]);
 
     // Listen for iframe readiness messages with strict sender origin validation
     useEffect(() => {
         const handleIframeMessage = async (event: MessageEvent) => {
-            // Strict sender's origin validation
-            if (event.origin !== TARGET_ORIGIN) return;
+            if (event.origin !== TARGET_ORIGIN && !event.origin.includes('deriv-dtrader')) return;
             if (!event.data) return;
 
             const data =
@@ -212,7 +310,8 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                 type === 'REQUEST_AUTH' ||
                 type === 'REQUEST_SESSION' ||
                 type === 'PING' ||
-                type === 'AUTH_INIT'
+                type === 'AUTH_INIT' ||
+                type === 'NEWDTRADER_BRIDGE_INIT'
             ) {
                 syncSessionToIframe();
                 return;

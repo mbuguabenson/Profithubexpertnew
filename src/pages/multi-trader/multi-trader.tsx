@@ -10,8 +10,32 @@ import './multi-trader.scss';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type TradeType = 'highlow' | 'risefall' | 'evenodd' | 'overunder' | 'matchesdiffers' | 'accumulator' | 'multiplier';
+export type TradeType =
+    | 'risefall'
+    | 'highlow'
+    | 'risefallequal'
+    | 'overunder'
+    | 'evenodd'
+    | 'matchesdiffers'
+    | 'touchnotouch'
+    | 'reset'
+    | 'asians'
+    | 'highlowticks'
+    | 'runs'
+    | 'accumulator'
+    | 'multiplier';
+
 export type StatusVariant = 'connected' | 'disconnected' | 'connecting';
+
+export interface StrategyParams {
+    over: number;
+    under: number;
+    matchDiff: number;
+    highLowOffset: number;
+    touchOffset: number;
+    accuGrowthRate: number;
+    multiplierVal: number;
+}
 
 export interface TradeConfig {
     proposal: number;
@@ -77,7 +101,7 @@ function getTradeConfigs(
     type: TradeType,
     stake: number,
     ticks: number,
-    predictions: { over: number; under: number },
+    params: StrategyParams,
     currency: string = 'USD'
 ): TradeConfig[] {
     const common = {
@@ -95,11 +119,37 @@ function getTradeConfigs(
                 { ...common, contract_type: 'CALL', label: 'Rise', strategyId: 'risefall_CALL' },
                 { ...common, contract_type: 'PUT', label: 'Fall', strategyId: 'risefall_PUT' },
             ];
-        case 'highlow':
+
+        case 'highlow': {
+            const offset = Math.abs(params.highLowOffset || 0.5);
+            // High / Low requires minimum 5 ticks duration on Deriv
+            const hlDuration = Math.max(5, ticks);
             return [
-                { ...common, contract_type: 'CALL', label: 'Higher', strategyId: 'highlow_CALL' },
-                { ...common, contract_type: 'PUT', label: 'Lower', strategyId: 'highlow_PUT' },
+                {
+                    ...common,
+                    duration: hlDuration,
+                    contract_type: 'CALL',
+                    barrier: `+${offset}`,
+                    label: `Higher (+${offset})`,
+                    strategyId: 'highlow_CALL',
+                },
+                {
+                    ...common,
+                    duration: hlDuration,
+                    contract_type: 'PUT',
+                    barrier: `-${offset}`,
+                    label: `Lower (-${offset})`,
+                    strategyId: 'highlow_PUT',
+                },
             ];
+        }
+
+        case 'risefallequal':
+            return [
+                { ...common, contract_type: 'CALLE', label: 'Rise Equals', strategyId: 'risefallequal_CALLE' },
+                { ...common, contract_type: 'PUTE', label: 'Fall Equals', strategyId: 'risefallequal_PUTE' },
+            ];
+
         case 'evenodd':
             return [
                 {
@@ -117,45 +167,156 @@ function getTradeConfigs(
                     strategyId: 'evenodd_DIGITODD',
                 },
             ];
-        case 'overunder':
+
+        case 'overunder': {
+            const overVal = Math.min(8, Math.max(0, Math.round(params.over)));
+            const underVal = Math.min(9, Math.max(1, Math.round(params.under)));
             return [
                 {
                     ...common,
                     duration: 1,
                     contract_type: 'DIGITOVER',
-                    barrier: String(predictions.over),
-                    label: `Over ${predictions.over}`,
+                    barrier: String(overVal),
+                    label: `Over ${overVal}`,
                     strategyId: 'overunder_DIGITOVER',
                 },
                 {
                     ...common,
                     duration: 1,
                     contract_type: 'DIGITUNDER',
-                    barrier: String(predictions.under),
-                    label: `Under ${predictions.under}`,
+                    barrier: String(underVal),
+                    label: `Under ${underVal}`,
                     strategyId: 'overunder_DIGITUNDER',
                 },
             ];
-        case 'matchesdiffers':
+        }
+
+        case 'matchesdiffers': {
+            const digit = Math.min(9, Math.max(0, Math.round(params.matchDiff)));
             return [
                 {
                     ...common,
                     duration: 1,
                     contract_type: 'DIGITMATCH',
-                    barrier: String(predictions.over),
-                    label: `Match ${predictions.over}`,
+                    barrier: String(digit),
+                    label: `Match ${digit}`,
                     strategyId: 'matchesdiffers_DIGITMATCH',
                 },
                 {
                     ...common,
                     duration: 1,
                     contract_type: 'DIGITDIFF',
-                    barrier: String(predictions.over),
-                    label: `Diff ${predictions.over}`,
+                    barrier: String(digit),
+                    label: `Diff ${digit}`,
                     strategyId: 'matchesdiffers_DIGITDIFF',
                 },
             ];
-        case 'accumulator':
+        }
+
+        case 'touchnotouch': {
+            const tOffset = Math.abs(params.touchOffset || 0.5);
+            const tnDuration = Math.max(5, ticks);
+            return [
+                {
+                    ...common,
+                    duration: tnDuration,
+                    contract_type: 'ONETOUCH',
+                    barrier: `+${tOffset}`,
+                    label: `Touch (+${tOffset})`,
+                    strategyId: 'touchnotouch_ONETOUCH',
+                },
+                {
+                    ...common,
+                    duration: tnDuration,
+                    contract_type: 'NOTOUCH',
+                    barrier: `+${tOffset}`,
+                    label: `No Touch (+${tOffset})`,
+                    strategyId: 'touchnotouch_NOTOUCH',
+                },
+            ];
+        }
+
+        case 'reset': {
+            return [
+                {
+                    ...common,
+                    duration: 5,
+                    contract_type: 'RESETCALL',
+                    label: 'Reset Call (5t)',
+                    strategyId: 'reset_RESETCALL',
+                },
+                {
+                    ...common,
+                    duration: 5,
+                    contract_type: 'RESETPUT',
+                    label: 'Reset Put (5t)',
+                    strategyId: 'reset_RESETPUT',
+                },
+            ];
+        }
+
+        case 'asians': {
+            const asianDuration = Math.max(5, ticks);
+            return [
+                {
+                    ...common,
+                    duration: asianDuration,
+                    contract_type: 'ASIANU',
+                    label: 'Asian Up',
+                    strategyId: 'asians_ASIANU',
+                },
+                {
+                    ...common,
+                    duration: asianDuration,
+                    contract_type: 'ASIAND',
+                    label: 'Asian Down',
+                    strategyId: 'asians_ASIAND',
+                },
+            ];
+        }
+
+        case 'highlowticks': {
+            return [
+                {
+                    ...common,
+                    duration: 5,
+                    contract_type: 'TICKHIGH',
+                    selected_tick: 5,
+                    label: 'High Tick (5t)',
+                    strategyId: 'highlowticks_TICKHIGH',
+                },
+                {
+                    ...common,
+                    duration: 5,
+                    contract_type: 'TICKLOW',
+                    selected_tick: 5,
+                    label: 'Low Tick (5t)',
+                    strategyId: 'highlowticks_TICKLOW',
+                },
+            ];
+        }
+
+        case 'runs': {
+            return [
+                {
+                    ...common,
+                    duration: 5,
+                    contract_type: 'RUNHIGH',
+                    label: 'Only Ups (5t)',
+                    strategyId: 'runs_RUNHIGH',
+                },
+                {
+                    ...common,
+                    duration: 5,
+                    contract_type: 'RUNLOW',
+                    label: 'Only Downs (5t)',
+                    strategyId: 'runs_RUNLOW',
+                },
+            ];
+        }
+
+        case 'accumulator': {
+            const rate = params.accuGrowthRate || 0.01;
             return [
                 {
                     proposal: 1,
@@ -163,12 +324,15 @@ function getTradeConfigs(
                     basis: 'stake',
                     currency: currency || 'USD',
                     contract_type: 'ACCU',
-                    growth_rate: 0.01,
-                    label: 'Accumulator',
+                    growth_rate: rate,
+                    label: `Accumulator (${(rate * 100).toFixed(0)}%)`,
                     strategyId: 'accumulator_ACCU',
                 },
             ];
-        case 'multiplier':
+        }
+
+        case 'multiplier': {
+            const mult = params.multiplierVal || 10;
             return [
                 {
                     proposal: 1,
@@ -176,8 +340,8 @@ function getTradeConfigs(
                     basis: 'stake',
                     currency: currency || 'USD',
                     contract_type: 'MULTUP',
-                    multiplier: 10,
-                    label: 'Multiplier Up',
+                    multiplier: mult,
+                    label: `Multiplier Up (x${mult})`,
                     strategyId: 'multiplier_MULTUP',
                 },
                 {
@@ -186,15 +350,35 @@ function getTradeConfigs(
                     basis: 'stake',
                     currency: currency || 'USD',
                     contract_type: 'MULTDOWN',
-                    multiplier: 10,
-                    label: 'Multiplier Down',
+                    multiplier: mult,
+                    label: `Multiplier Down (x${mult})`,
                     strategyId: 'multiplier_MULTDOWN',
                 },
             ];
+        }
+
         default:
             return [];
     }
 }
+
+// ─── Strategy Catalog ────────────────────────────────────────────────────────
+
+export const ALL_STRATEGIES: { id: TradeType; label: string; icon: string; category: string }[] = [
+    { id: 'risefall', label: 'Rise / Fall', icon: '↕️', category: 'Classic' },
+    { id: 'highlow', label: 'High / Low', icon: '📈', category: 'Classic' },
+    { id: 'risefallequal', label: 'Rise/Fall Equals', icon: '🟰', category: 'Classic' },
+    { id: 'overunder', label: 'Over / Under', icon: '🎯', category: 'Digits' },
+    { id: 'evenodd', label: 'Even / Odd', icon: '🔢', category: 'Digits' },
+    { id: 'matchesdiffers', label: 'Matches / Differs', icon: '⚡', category: 'Digits' },
+    { id: 'touchnotouch', label: 'Touch / No Touch', icon: '👆', category: 'Barriers' },
+    { id: 'reset', label: 'Reset Call / Put', icon: '🔄', category: 'Exotics' },
+    { id: 'asians', label: 'Asian Up / Down', icon: '🌏', category: 'Exotics' },
+    { id: 'highlowticks', label: 'High / Low Ticks', icon: '⏱️', category: 'Ticks' },
+    { id: 'runs', label: 'Only Ups / Downs', icon: '🏃', category: 'Ticks' },
+    { id: 'accumulator', label: 'Accumulator', icon: '🔋', category: 'Growth' },
+    { id: 'multiplier', label: 'Multiplier', icon: '✖️', category: 'Leverage' },
+];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -218,6 +402,15 @@ const MultiTrader: React.FC = observer(() => {
     const [stopLoss, setStopLoss] = useState(5);
     const [tradeTypes, setTradeTypes] = useState<TradeType[]>(['risefall']);
 
+    // Strategy Parameters
+    const [overPrediction, setOverPrediction] = useState(5);
+    const [underPrediction, setUnderPrediction] = useState(4);
+    const [matchDiffPrediction, setMatchDiffPrediction] = useState(5);
+    const [highLowOffset, setHighLowOffset] = useState(0.5);
+    const [touchOffset, setTouchOffset] = useState(0.5);
+    const [accuGrowthRate, setAccuGrowthRate] = useState(0.01);
+    const [multiplierVal, setMultiplierVal] = useState(10);
+
     // State
     const [running, setRunning] = useState(false);
     const [totalProfit, setTotalProfit] = useState(0);
@@ -227,8 +420,6 @@ const MultiTrader: React.FC = observer(() => {
     const [totalStakeUsed, setTotalStakeUsed] = useState(0);
     const [totalPayout, setTotalPayout] = useState(0);
     const [totalTrades, setTotalTrades] = useState(0);
-    const [overPrediction, setOverPrediction] = useState(5);
-    const [underPrediction, setUnderPrediction] = useState(4);
     const [logs, setLogs] = useState<LogEntry[]>([
         { id: 0, time: '', message: 'Awaiting connection…', type: 'default' },
     ]);
@@ -522,19 +713,33 @@ const MultiTrader: React.FC = observer(() => {
         (stake: number) => {
             strategyStakes.current = {};
             const activeCurr = client?.currency || 'USD';
+            const params: StrategyParams = {
+                over: overPrediction,
+                under: underPrediction,
+                matchDiff: matchDiffPrediction,
+                highLowOffset,
+                touchOffset,
+                accuGrowthRate,
+                multiplierVal,
+            };
             tradeTypes.forEach(type => {
-                getTradeConfigs(
-                    type,
-                    stake,
-                    ticks,
-                    { over: overPrediction, under: underPrediction },
-                    activeCurr
-                ).forEach(c => {
+                getTradeConfigs(type, stake, ticks, params, activeCurr).forEach(c => {
                     strategyStakes.current[c.strategyId] = stake;
                 });
             });
         },
-        [tradeTypes, ticks, overPrediction, underPrediction, client?.currency]
+        [
+            tradeTypes,
+            ticks,
+            overPrediction,
+            underPrediction,
+            matchDiffPrediction,
+            highLowOffset,
+            touchOffset,
+            accuGrowthRate,
+            multiplierVal,
+            client?.currency,
+        ]
     );
 
     // ── Track contract ────────────────────────────────────────────────────────
@@ -634,12 +839,21 @@ const MultiTrader: React.FC = observer(() => {
             // Build configs for all active strategies
             const activeCurr = client?.currency || 'USD';
             const allConfigs: TradeConfig[] = [];
+            const params: StrategyParams = {
+                over: overPrediction,
+                under: underPrediction,
+                matchDiff: matchDiffPrediction,
+                highLowOffset,
+                touchOffset,
+                accuGrowthRate,
+                multiplierVal,
+            };
             _tradeTypes.forEach(t => {
                 const configs = getTradeConfigs(
                     t,
                     _baseStake,
                     _ticks,
-                    { over: overPrediction, under: underPrediction },
+                    params,
                     activeCurr
                 );
                 allConfigs.push(...configs);
@@ -795,13 +1009,30 @@ const MultiTrader: React.FC = observer(() => {
                 placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes);
             }
         },
-        [addLog, sendJSON, trackContract, overPrediction, underPrediction, client?.currency]
+        [
+            addLog,
+            sendJSON,
+            trackContract,
+            overPrediction,
+            underPrediction,
+            matchDiffPrediction,
+            highLowOffset,
+            touchOffset,
+            accuGrowthRate,
+            multiplierVal,
+            client?.currency,
+        ]
     );
 
     // ── Controls ──────────────────────────────────────────────────────────────
 
     const startBot = useCallback(async () => {
         if (runningRef.current) return;
+
+        if (tradeTypes.length === 0) {
+            addLog('Please select at least one trading strategy to start MultiTrader.', 'error');
+            return;
+        }
 
         if (status !== 'connected') {
             addLog('Connecting to Deriv WebSocket...', 'info');
@@ -869,6 +1100,32 @@ const MultiTrader: React.FC = observer(() => {
         initStakes(round2(Math.max(0.35, baseStake)));
         setLogs([{ id: logId.current++, time: '', message: 'Session statistics reset.', type: 'warning' }]);
     }, [baseStake, initStakes]);
+
+    // Presets
+    const setAllStrategies = useCallback(() => {
+        if (running) return;
+        setTradeTypes(ALL_STRATEGIES.map(s => s.id));
+    }, [running]);
+
+    const setClassicPreset = useCallback(() => {
+        if (running) return;
+        setTradeTypes(['risefall', 'highlow', 'risefallequal']);
+    }, [running]);
+
+    const setDigitsPreset = useCallback(() => {
+        if (running) return;
+        setTradeTypes(['evenodd', 'overunder', 'matchesdiffers']);
+    }, [running]);
+
+    const setExoticsPreset = useCallback(() => {
+        if (running) return;
+        setTradeTypes(['asians', 'reset', 'highlowticks', 'runs']);
+    }, [running]);
+
+    const clearStrategies = useCallback(() => {
+        if (running) return;
+        setTradeTypes([]);
+    }, [running]);
 
     const isConnected = status === 'connected';
     const winRate = totalRounds > 0 ? ((roundWins / totalRounds) * 100).toFixed(1) : '--';
@@ -961,18 +1218,56 @@ const MultiTrader: React.FC = observer(() => {
                     </div>
 
                     <div className='multi-trader__config-strategies'>
-                        <label>Active Trading Strategies</label>
+                        <div className='multi-trader__strategies-header'>
+                            <label>Active Trading Strategies ({tradeTypes.length}/{ALL_STRATEGIES.length})</label>
+                            <div className='multi-trader__strategy-presets'>
+                                <span className='multi-trader__preset-label'>Quick Select:</span>
+                                <button
+                                    type='button'
+                                    className='multi-trader__preset-btn'
+                                    onClick={setAllStrategies}
+                                    disabled={running}
+                                >
+                                    Select All (13)
+                                </button>
+                                <button
+                                    type='button'
+                                    className='multi-trader__preset-btn'
+                                    onClick={setClassicPreset}
+                                    disabled={running}
+                                >
+                                    Rise & High/Low
+                                </button>
+                                <button
+                                    type='button'
+                                    className='multi-trader__preset-btn'
+                                    onClick={setDigitsPreset}
+                                    disabled={running}
+                                >
+                                    Digits
+                                </button>
+                                <button
+                                    type='button'
+                                    className='multi-trader__preset-btn'
+                                    onClick={setExoticsPreset}
+                                    disabled={running}
+                                >
+                                    Ticks & Exotics
+                                </button>
+                                <button
+                                    type='button'
+                                    className='multi-trader__preset-btn multi-trader__preset-btn--clear'
+                                    onClick={clearStrategies}
+                                    disabled={running}
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+
                         <div className='multi-trader__strategy-grid'>
-                            {[
-                                { id: 'risefall', label: 'Rise / Fall', icon: '↕️' },
-                                { id: 'evenodd', label: 'Even / Odd', icon: '🔢' },
-                                { id: 'overunder', label: 'Over / Under', icon: '🎯' },
-                                { id: 'matchesdiffers', label: 'Matches / Differs', icon: '⚡' },
-                                { id: 'highlow', label: 'High / Low', icon: '📈' },
-                                { id: 'accumulator', label: 'Accumulator', icon: '🔋' },
-                                { id: 'multiplier', label: 'Multiplier', icon: '✖️' },
-                            ].map(strat => {
-                                const isActive = tradeTypes.includes(strat.id as TradeType);
+                            {ALL_STRATEGIES.map(strat => {
+                                const isActive = tradeTypes.includes(strat.id);
                                 return (
                                     <div
                                         key={strat.id}
@@ -980,12 +1275,13 @@ const MultiTrader: React.FC = observer(() => {
                                         onClick={() => {
                                             if (running) return;
                                             setTradeTypes(prev =>
-                                                prev.includes(strat.id as TradeType)
+                                                prev.includes(strat.id)
                                                     ? prev.filter(t => t !== strat.id)
-                                                    : [...prev, strat.id as TradeType]
+                                                    : [...prev, strat.id]
                                             );
                                         }}
                                     >
+                                        <div className='category-tag'>{strat.category}</div>
                                         <span className='icon'>{strat.icon}</span>
                                         <span className='label'>{strat.label}</span>
                                         <div className='indicator'></div>
@@ -994,30 +1290,138 @@ const MultiTrader: React.FC = observer(() => {
                             })}
                         </div>
 
-                        {tradeTypes.includes('overunder') && (
+                        {(tradeTypes.includes('overunder') ||
+                            tradeTypes.includes('matchesdiffers') ||
+                            tradeTypes.includes('highlow') ||
+                            tradeTypes.includes('touchnotouch') ||
+                            tradeTypes.includes('accumulator') ||
+                            tradeTypes.includes('multiplier')) && (
                             <div className='multi-trader__predictions-row animate-fade-in'>
-                                <div className='multi-trader__field'>
-                                    <label>Over Prediction (0-9)</label>
-                                    <input
-                                        type='number'
-                                        value={overPrediction}
-                                        min={0}
-                                        max={9}
-                                        disabled={running}
-                                        onChange={e => setOverPrediction(parseInt(e.target.value))}
-                                    />
-                                </div>
-                                <div className='multi-trader__field'>
-                                    <label>Under Prediction (0-9)</label>
-                                    <input
-                                        type='number'
-                                        value={underPrediction}
-                                        min={0}
-                                        max={9}
-                                        disabled={running}
-                                        onChange={e => setUnderPrediction(parseInt(e.target.value))}
-                                    />
-                                </div>
+                                {tradeTypes.includes('overunder') && (
+                                    <>
+                                        <div className='multi-trader__field'>
+                                            <label>Over Target (0–8)</label>
+                                            <input
+                                                type='number'
+                                                value={overPrediction}
+                                                min={0}
+                                                max={8}
+                                                step={1}
+                                                disabled={running}
+                                                onChange={e =>
+                                                    setOverPrediction(
+                                                        Math.min(8, Math.max(0, parseInt(e.target.value) || 0))
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className='multi-trader__field'>
+                                            <label>Under Target (1–9)</label>
+                                            <input
+                                                type='number'
+                                                value={underPrediction}
+                                                min={1}
+                                                max={9}
+                                                step={1}
+                                                disabled={running}
+                                                onChange={e =>
+                                                    setUnderPrediction(
+                                                        Math.min(9, Math.max(1, parseInt(e.target.value) || 1))
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </>
+                                )}
+
+                                {tradeTypes.includes('matchesdiffers') && (
+                                    <div className='multi-trader__field'>
+                                        <label>Match/Diff Digit (0–9)</label>
+                                        <input
+                                            type='number'
+                                            value={matchDiffPrediction}
+                                            min={0}
+                                            max={9}
+                                            step={1}
+                                            disabled={running}
+                                            onChange={e =>
+                                                setMatchDiffPrediction(
+                                                    Math.min(9, Math.max(0, parseInt(e.target.value) || 0))
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                {tradeTypes.includes('highlow') && (
+                                    <div className='multi-trader__field'>
+                                        <label>High/Low Barrier (±)</label>
+                                        <input
+                                            type='number'
+                                            value={highLowOffset}
+                                            min={0.01}
+                                            step={0.1}
+                                            disabled={running}
+                                            onChange={e =>
+                                                setHighLowOffset(
+                                                    Math.max(0.01, parseFloat(e.target.value) || 0.5)
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                {tradeTypes.includes('touchnotouch') && (
+                                    <div className='multi-trader__field'>
+                                        <label>Touch Barrier (+)</label>
+                                        <input
+                                            type='number'
+                                            value={touchOffset}
+                                            min={0.01}
+                                            step={0.1}
+                                            disabled={running}
+                                            onChange={e =>
+                                                setTouchOffset(
+                                                    Math.max(0.01, parseFloat(e.target.value) || 0.5)
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                {tradeTypes.includes('accumulator') && (
+                                    <div className='multi-trader__field'>
+                                        <label>Accumulator Growth</label>
+                                        <select
+                                            value={accuGrowthRate}
+                                            disabled={running}
+                                            onChange={e => setAccuGrowthRate(parseFloat(e.target.value) || 0.01)}
+                                        >
+                                            <option value={0.01}>1% Growth</option>
+                                            <option value={0.02}>2% Growth</option>
+                                            <option value={0.03}>3% Growth</option>
+                                            <option value={0.04}>4% Growth</option>
+                                            <option value={0.05}>5% Growth</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                {tradeTypes.includes('multiplier') && (
+                                    <div className='multi-trader__field'>
+                                        <label>Multiplier Leverage</label>
+                                        <select
+                                            value={multiplierVal}
+                                            disabled={running}
+                                            onChange={e => setMultiplierVal(parseInt(e.target.value) || 10)}
+                                        >
+                                            <option value={10}>x10</option>
+                                            <option value={20}>x20</option>
+                                            <option value={40}>x40</option>
+                                            <option value={100}>x100</option>
+                                            <option value={200}>x200</option>
+                                        </select>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
