@@ -298,6 +298,11 @@
     align-items: center;
     margin-inline-end: 1.6rem;
 
+    @include mobile-or-tablet-screen {
+        margin-inline-end: 0.4rem;
+        padding-block: 2px;
+    }
+
     button {
         font-weight: 400;
         margin-inline-end: 1.6rem;

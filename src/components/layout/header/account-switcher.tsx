@@ -468,9 +468,20 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
     const demoAccounts = formattedAccounts.filter(a => a.isVirtual);
     const tabAccounts = activeTab === 'real' ? realAccounts : demoAccounts;
 
-    if (!activeAccount) return null;
+    const activeFromList = formattedAccounts.find(a => a.isActive) || formattedAccounts[0];
+    const resolvedActiveAccount =
+        activeAccount ||
+        (activeFromList
+            ? {
+                  currency: activeFromList.rawCurrency || activeFromList.currency || 'USD',
+                  isVirtual: activeFromList.isVirtual,
+                  balance: String(activeFromList.balance ?? '0'),
+              }
+            : null);
 
-    const { currency, isVirtual, balance } = activeAccount;
+    if (!resolvedActiveAccount) return null;
+
+    const { currency, isVirtual, balance } = resolvedActiveAccount;
     const showChevron = !is_bot_running;
 
     // Use client.balance as the "live" balance source, but only if:

@@ -347,7 +347,7 @@ const AppHeader = observer(() => {
                 <Wrapper variant='left'>
                     <MobileMenu onLogout={handleLogout} />
                     <AppLogo />
-                    {isDesktop && <MenuItems />}
+                    {isDesktop ? <MenuItems /> : renderAccountSection('left')}
 
                 </Wrapper>
                 <Wrapper variant='right'>
