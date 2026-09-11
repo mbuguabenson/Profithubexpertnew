@@ -7,6 +7,43 @@
     position: relative;
     overflow: hidden;
 
+    &__expired-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 68, 79, 0.12);
+        border-bottom: 1px solid rgba(255, 68, 79, 0.35);
+        color: #ff6470;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 500;
+        gap: 12px;
+        z-index: 20;
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+            text-align: center;
+            padding: 8px 12px;
+        }
+    }
+
+    &__expired-btn {
+        background: #ff444f;
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+
+        &:hover {
+            background: #d43b44;
+        }
+    }
+
     &__frame-wrapper {
         flex: 1;
         width: 100%;

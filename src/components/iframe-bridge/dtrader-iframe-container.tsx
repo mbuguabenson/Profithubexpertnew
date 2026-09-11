@@ -2,8 +2,10 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
 import { secureSessionService } from '@/services/secure-session.service';
-import { getActiveToken } from '@/utils/token-bridge';
+import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
+import { getActiveToken, isInvalidBearerToken, getAccountsList } from '@/utils/token-bridge';
 import { getAppId } from '@/components/shared/utils/config/config';
+import { generateOAuthURL } from '@/components/shared';
 import { Loader2 } from 'lucide-react';
 import './dtrader-iframe-container.scss';
 
@@ -36,11 +38,79 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const activeLoginId = client?.loginid || sessionMeta?.loginid || localStorage.getItem('active_loginid') || '';
     const currency = client?.currency || sessionMeta?.currency || localStorage.getItem('client.currency') || 'USD';
     const activeToken = getActiveToken(activeLoginId) || (client?.accounts?.[activeLoginId] as any)?.token || '';
-    const isAuthenticated = Boolean(activeLoginId && (activeToken || sessionMeta?.loggedIn));
 
-    // Build iframe src — non-sensitive UI/embed flags ONLY; NEVER send token in URL
+    // Check OAuth2 token status
+    const authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+    const isOAuthBearerValid = Boolean(
+        authInfo?.access_token &&
+        typeof authInfo.access_token === 'string' &&
+        authInfo.access_token.startsWith('ey') &&
+        (!authInfo.expires_at || Date.now() < authInfo.expires_at)
+    );
+
+    const effectiveToken = isOAuthBearerValid && authInfo?.access_token
+        ? authInfo.access_token
+        : (activeToken && !isInvalidBearerToken(activeToken) ? activeToken : '');
+
+    const isAuthenticated = Boolean(activeLoginId && (effectiveToken || sessionMeta?.loggedIn));
+
+    const isSessionExpired = Boolean(
+        activeLoginId &&
+        !effectiveToken &&
+        authInfo?.expires_at &&
+        Date.now() >= authInfo.expires_at
+    );
+
+    const handleReAuthenticate = useCallback(async () => {
+        try {
+            const url = await generateOAuthURL();
+            if (url) {
+                window.location.assign(url);
+            }
+        } catch (err) {
+            console.error('[DTrader] Failed to generate OAuth URL:', err);
+        }
+    }, []);
+
+    // Build iframe src — Deriv DTrader requires either valid tokens or clear flags to avoid "Session expired"
     const iframeSrc = useMemo(() => {
         const params = new URLSearchParams();
+
+        if (effectiveToken) {
+            params.set('token', effectiveToken);
+            params.set('token1', effectiveToken);
+            if (activeLoginId) {
+                params.set('loginid', activeLoginId);
+                params.set('account', activeLoginId);
+                params.set('acct1', activeLoginId);
+            }
+            params.set('cur1', currency);
+
+            // Secondary accounts mapped from storage
+            try {
+                const accounts = getAccountsList();
+                let index = 1;
+                for (const accId in accounts) {
+                    const accToken = accounts[accId];
+                    if (accToken && accId !== activeLoginId && !isInvalidBearerToken(accToken)) {
+                        index++;
+                        params.set(`acct${index}`, accId);
+                        params.set(`token${index}`, accToken);
+                        params.set(`cur${index}`, currency || 'USD');
+                    }
+                }
+            } catch (e) {
+                void e;
+            }
+        } else {
+            // Unauthenticated or expired session:
+            // 1. token='' satisfies anti-clickjack check.
+            // 2. code=clear&state=1 clears stale invalid tokens from the iframe's internal storage,
+            //    preventing deriv-dtrader from crashing with "Session expired".
+            params.set('token', '');
+            params.set('code', 'clear');
+            params.set('state', '1');
+        }
 
         params.set('app_id', activeAppId);
         params.set('client_id', activeAppId);
@@ -56,7 +126,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         params.set('has_top_bar', 'false');
 
         return `${DTRADER_BASE_URL}/?${params.toString()}`;
-    }, [activeAppId]);
+    }, [activeAppId, activeLoginId, currency, effectiveToken]);
 
     /**
      * Controlled postMessage flow:
@@ -179,6 +249,14 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 
     return (
         <div className={`dtrader-container ${className}`}>
+            {isSessionExpired && (
+                <div className='dtrader-container__expired-banner'>
+                    <span>Your Deriv trading session has expired. Please re-authenticate to continue trading.</span>
+                    <button type='button' className='dtrader-container__expired-btn' onClick={handleReAuthenticate}>
+                        Log In Again
+                    </button>
+                </div>
+            )}
             <div className='dtrader-container__frame-wrapper'>
                 {isLoading && (
                     <div className='dtrader-container__loader'>
