@@ -1,6 +1,4 @@
-import React from 'react';
-import { makeLazyLoader, moduleLoader } from '@deriv/shared';
-import { Loading } from '@deriv/components';
+import AppMain from './App/index';
 import { TCoreStores } from '@deriv/stores/types';
 import { TWebSocket } from 'Types';
 
@@ -11,13 +9,8 @@ type Apptypes = {
     };
 };
 
-const AppLoader = makeLazyLoader(
-    () => moduleLoader(() => import(/* webpackChunkName: "trader-app", webpackPreload: true */ './App/index')),
-    () => <Loading />
-)() as React.ComponentType<Apptypes>;
-
 const App = ({ passthrough }: Apptypes) => {
-    return <AppLoader passthrough={passthrough} />;
+    return <AppMain passthrough={passthrough} />;
 };
 
 export default App;

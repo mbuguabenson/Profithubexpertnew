@@ -94,5 +94,30 @@
                 "derivatives": "derivatives/"
             }
         }
+    },
+    "legal_entities": {
+        "fx": "Deriv (FX) Ltd",
+        "malta": "Deriv (Europe) Ltd",
+        "maltainvest": "Deriv Investments (Europe) Limited",
+        "mx": "Deriv (MX) Ltd",
+        "samoa": "Deriv (Samoa) Ltd",
+        "svg": "Deriv (SVG) LLC",
+        "v": "Deriv (V) Ltd"
+    },
+    "platforms": {
+        "ctrader": { "name": "cTrader", "icon": "" },
+        "trader": { "name": "DTrader", "icon": "IcBrandDtrader" },
+        "dbot": { "name": "DBot", "icon": "IcBrandDbot" },
+        "mt5": { "name": "Deriv MT5", "icon": "IcBrandDmt5" },
+        "dxtrade": { "name": "Deriv X", "icon": "IcBrandDxtrade" },
+        "smarttrader": { "name": "SmartTrader", "icon": "IcBrandSmarttrader" },
+        "go": { "name": "Deriv GO", "icon": "IcBrandDerivGo" }
+    },
+    "platforms_appstore": {
+        "ctrader": { "name": "cTrader", "icon": "", "availability": "all" },
+        "trader": { "name": "DTrader", "icon": "IcBrandDtrader", "availability": "all" },
+        "dbot": { "name": "DBot", "icon": "IcBrandDbot", "availability": "all" },
+        "smarttrader": { "name": "SmartTrader", "icon": "IcBrandSmarttrader", "availability": "all" },
+        "go": { "name": "Deriv GO", "icon": "IcBrandDerivGo", "availability": "all" }
     }
 }
