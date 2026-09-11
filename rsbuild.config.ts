@@ -2,6 +2,7 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginSass } from '@rsbuild/plugin-sass';
 import path from 'path';
+import fs from 'fs';
 import 'dotenv/config';
 
 export default defineConfig({
@@ -107,6 +108,9 @@ export default defineConfig({
             '@deriv/translations': path.resolve(__dirname, './src/external/translations/src'),
             '@deriv/deriv-charts': path.resolve(__dirname, './node_modules/@deriv-com/smartcharts-champion'),
             '@deriv/utils': path.resolve(__dirname, './src/external/utils'),
+            ...(fs.existsSync(path.resolve(__dirname, './vendor/deriv/deriv-analytics/src/index.ts'))
+                ? { '@deriv-com/analytics': path.resolve(__dirname, './vendor/deriv/deriv-analytics/src/index.ts') }
+                : {}),
             withRouterShim: path.resolve(__dirname, './src/external/trader/src/withRouterShim'),
             'victory-vendor/d3-shape': path.resolve(__dirname, './node_modules/victory-vendor/es/d3-shape.js'),
             'victory-vendor/d3-array': path.resolve(__dirname, './node_modules/victory-vendor/es/d3-array.js'),

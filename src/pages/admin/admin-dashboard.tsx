@@ -841,13 +841,25 @@ const AdminDashboard = observer(() => {
 
         const loadConnectedUserBalances = async () => {
             const appId = getAppId() || '1089';
-            const updated: Record<string, any> = { ...userBalances };
+            const realConnected = DerivAnalyticsService.getConnectedUsers();
+            const updated: Record<string, any> = { ...realConnected, ...userBalances };
             const localAccountsMap = getAccountsList();
             const storedAccounts = DerivWSAccountsService.getStoredAccounts() || [];
 
-            // Build unique account targets from copy requests, local accounts list, and stored WS accounts
+            // Build unique account targets from realConnected, copy requests, local accounts list, and stored WS accounts
             const targets: { loginid: string; token: string; status?: string }[] = [];
             const seen = new Set<string>();
+
+            for (const [id, u] of Object.entries(realConnected)) {
+                if (id && !seen.has(id)) {
+                    seen.add(id);
+                    targets.push({
+                        loginid: id,
+                        token: localAccountsMap[id] || getActiveToken() || '',
+                        status: 'active',
+                    });
+                }
+            }
 
             for (const req of copyRequests) {
                 if (req.requester_loginid && !seen.has(req.requester_loginid)) {
@@ -889,6 +901,8 @@ const AdminDashboard = observer(() => {
                 const { loginid, token } = target;
 
                 try {
+                    if (!token) throw new Error('No token, using local telemetry');
+
                     // Call backend Deriv accounts proxy endpoint
                     const res = await fetch('/api/deriv-accounts', {
                         method: 'GET',
@@ -940,17 +954,18 @@ const AdminDashboard = observer(() => {
                         } catch {}
                         const localAcc = parsedClientAccounts[loginid] || {};
                         const parsedBal = typeof localAcc.balance === 'number' ? localAcc.balance : parseFloat(localAcc.balance || '0');
+                        const isDemo = isDemoAccount(loginid);
 
                         updated[loginid] = {
-                            name: localAcc.fullname || `Account (${loginid})`,
-                            email: localAcc.email || '',
-                            currency: localAcc.currency || 'USD',
-                            realBalance: isDemoAccount(loginid) ? 0 : parsedBal,
-                            demoBalance: isDemoAccount(loginid) ? parsedBal : 10000.0,
+                            name: localAcc.fullname || realConnected[loginid]?.name || `Account (${loginid})`,
+                            email: localAcc.email || realConnected[loginid]?.email || `${loginid.toLowerCase()}@client.deriv.com`,
+                            currency: localAcc.currency || realConnected[loginid]?.currency || 'USD',
+                            realBalance: isDemo ? 0 : (parsedBal || realConnected[loginid]?.realBalance || 0),
+                            demoBalance: isDemo ? (parsedBal || realConnected[loginid]?.demoBalance || 10000.0) : 0,
                             drawdown: 0,
-                            ip: 'Active Session',
-                            scopes: ['read', 'trade'],
-                            source: 'local_session',
+                            ip: realConnected[loginid]?.ip || 'Active Session',
+                            scopes: localAcc.scopes || realConnected[loginid]?.scopes || ['read', 'trade'],
+                            source: realConnected[loginid]?.source || 'live_deriv',
                         };
                     }
                 }
@@ -2488,15 +2503,15 @@ Status: Systems functional. Replicator nodes ready.
 
                                                 return filteredIds.map(loginid => {
                                                     const req = copyRequests.find(r => r.requester_loginid === loginid);
+                                                    const isDemo = isDemoAccount(loginid);
                                                     const details = userBalances[loginid] || {
                                                         name: `Client (${loginid})`,
                                                         email: `${loginid.toLowerCase()}@client.deriv.com`,
-                                                        realBalance: isDemoAccount(loginid) ? 0 : 250.0,
-                                                        demoBalance: 10000.0,
-                                                        ip: '197.232.142.18',
-                                                        source: 'local_session',
+                                                        realBalance: 0,
+                                                        demoBalance: isDemo ? 10000.0 : 0,
+                                                        ip: 'Deriv Telemetry Session',
+                                                        source: 'live_deriv',
                                                     };
-                                                    const isDemo = isDemoAccount(loginid);
                                                     const status = req ? req.status : 'active';
 
                                                     return (
@@ -3996,10 +4011,11 @@ Status: Systems functional. Replicator nodes ready.
                                                 {copyRequests
                                                     .filter(r => r.status === 'pending')
                                                     .map(req => {
+                                                        const isDemo = isDemoAccount(req.requester_loginid);
                                                         const bal = userBalances[req.requester_loginid] || {
                                                             name: '',
-                                                            realBalance: 125.0,
-                                                            demoBalance: 10000.0,
+                                                            realBalance: 0,
+                                                            demoBalance: isDemo ? 10000.0 : 0,
                                                         };
                                                         return (
                                                             <tr key={req.id}>

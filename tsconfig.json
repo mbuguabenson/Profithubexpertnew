@@ -41,6 +41,8 @@
             "@deriv/hooks/*": ["external/hooks/src/*"],
             "@deriv/utils": ["external/utils/index.ts"],
             "@deriv/utils/*": ["external/utils/*"],
+            "@deriv-com/analytics": ["../vendor/deriv/deriv-analytics/src/index.ts", "../node_modules/@deriv-com/analytics"],
+            "@deriv-com/analytics/*": ["../vendor/deriv/deriv-analytics/src/*", "../node_modules/@deriv-com/analytics/*"],
             "withRouterShim": ["external/trader/src/withRouterShim"]
         },
         "esModuleInterop": true,

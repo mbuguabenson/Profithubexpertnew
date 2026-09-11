@@ -61,3 +61,4 @@ profithubultimate-main/
 
 # Local Deriv repository references
 vendor/deriv/
+*.zip

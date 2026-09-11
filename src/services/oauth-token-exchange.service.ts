@@ -270,6 +270,19 @@ export class OAuthTokenExchangeService {
                             loginid: firstAccount.account_id,
                         });
 
+                        // Track real accounts in Deriv Analytics
+                        try {
+                            const { DerivAnalyticsService } = await import('@/services/deriv-analytics.service');
+                            accounts.forEach((acc: any) => {
+                                DerivAnalyticsService.identifyUser(acc.account_id, {
+                                    currency: acc.currency,
+                                    balance: acc.balance,
+                                    scopes: acc.scopes,
+                                    account_type: acc.account_type,
+                                });
+                            });
+                        } catch {}
+
                         // Trigger WebSocket initialization
                         const { api_base } = await import('@/external/bot-skeleton');
                         await api_base.init(true); // Force new connection with the account

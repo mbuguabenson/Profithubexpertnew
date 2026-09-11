@@ -238,6 +238,18 @@ export class AccountSwitcherService {
                             }
                         }
 
+                        try {
+                            const { DerivAnalyticsService } = await import('@/services/deriv-analytics.service');
+                            DerivAnalyticsService.identifyUser(authLoginid, {
+                                currency: authCurrency,
+                                balance: authBalance,
+                                fullname: res.authorize.fullname || res.authorize.email,
+                                email: res.authorize.email,
+                                scopes: res.authorize.scopes,
+                                country: res.authorize.country,
+                            });
+                        } catch {}
+
                         setAuthData({
                             loginid: authLoginid,
                             currency: authCurrency,
