@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
-import { generateOAuthURL, generateLegacyOAuthURL } from '@/components/shared';
+import { generateOAuthURL } from '@/components/shared';
 import Button from '@/components/shared_ui/button';
 import useActiveAccount from '@/hooks/api/account/useActiveAccount';
 import { useApiBase } from '@/hooks/useApiBase';
@@ -196,14 +196,6 @@ const AppHeader = observer(() => {
     const handleLogin = useCallback(async () => {
         try {
             setIsAuthorizing(true);
-            const isDTrader = typeof window !== 'undefined' && window.location.hash.includes('dtrader');
-            if (isDTrader) {
-                const legacyUrl = generateLegacyOAuthURL();
-                if (legacyUrl) {
-                    window.location.assign(legacyUrl);
-                    return;
-                }
-            }
             const oauthUrl = await generateOAuthURL();
             if (oauthUrl) {
                 window.location.replace(oauthUrl);

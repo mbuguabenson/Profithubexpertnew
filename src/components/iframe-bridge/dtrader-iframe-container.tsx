@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
-import { getLegacyAppId, generateLegacyOAuthURL } from '@/components/shared/utils/config/config';
+import { generateOAuthURL, DERIV_CONFIG } from '@/components/shared/utils/config/config';
 import {
     getLegacyDTraderToken,
     isLegacyToken,
@@ -47,10 +47,10 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         return () => window.removeEventListener('dtrader_session_expired', handleSessionExpired);
     }, []);
 
-    const activeAppId = useMemo(() => {
-        const appId = getLegacyAppId();
-        return appId && /^\d+$/.test(appId) ? appId : '121856';
-    }, []);
+    // DTrader's WebSocket v3 still requires a legacy app_id for its own API calls.
+    // We don't use this for auth any more — auth goes through the standard PKCE flow.
+    const activeAppId = DERIV_CONFIG.LEGACY_DTRADER_APP_ID || '121856';
+
 
     const activeLoginId = client?.loginid || getActiveLoginId();
     const currency = client?.currency || localStorage.getItem('client.currency') || 'USD';
@@ -63,12 +63,16 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const botToken = localStorage.getItem('bot_new_api_token') || localStorage.getItem('auth_info');
     const isBotLoggedInOnly = Boolean(botToken && !hasValidLegacyToken);
 
-    const handleConnectLegacyAuth = useCallback(() => {
-        const url = generateLegacyOAuthURL(activeAppId);
-        if (url) {
-            window.location.assign(url);
+    const handleConnectLegacyAuth = useCallback(async () => {
+        try {
+            const url = await generateOAuthURL();
+            if (url) {
+                window.location.replace(url);
+            }
+        } catch (e) {
+            console.error('[DTrader] OAuth redirect failed:', e);
         }
-    }, [activeAppId]);
+    }, []);
 
     // Build iframe src URL.
     // DTrader's bridge-client.ts checks event.origin against a whitelist — only Deriv production
