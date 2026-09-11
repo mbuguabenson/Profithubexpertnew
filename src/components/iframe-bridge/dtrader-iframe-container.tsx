@@ -5,7 +5,6 @@ import { getLegacyAppId, generateLegacyOAuthURL } from '@/components/shared/util
 import {
     getLegacyDTraderToken,
     isLegacyToken,
-    getAccountsList,
     getActiveLoginId,
     purgeInvalidToken,
 } from '@/utils/token-bridge';
@@ -119,41 +118,6 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         if (!iframe?.contentWindow || !hasValidLegacyToken || !legacyToken) return;
 
         const effectiveLoginId = activeLoginId || 'DOT100000';
-        const accountsList = getAccountsList();
-        const isDemo = Boolean(
-            effectiveLoginId.startsWith('VR') ||
-            effectiveLoginId.startsWith('VRT') ||
-            effectiveLoginId.startsWith('DOT') ||
-            effectiveLoginId.startsWith('DEM')
-        );
-
-        const accounts =
-            Object.keys(accountsList).length > 0
-                ? Object.entries(accountsList)
-                      .filter(([, tok]) => isLegacyToken(tok))
-                      .map(([id, tok]) => ({
-                          account_id: id,
-                          account_type: (id.startsWith('VR') ||
-                          id.startsWith('VRT') ||
-                          id.startsWith('DOT') ||
-                          id.startsWith('DEM')
-                              ? 'demo'
-                              : 'real') as 'demo' | 'real',
-                          currency: currency || 'USD',
-                          balance: '10000.00',
-                          status: 'active',
-                          token: tok,
-                      }))
-                : [
-                      {
-                          account_id: effectiveLoginId,
-                          account_type: isDemo ? ('demo' as const) : ('real' as const),
-                          currency: currency || 'USD',
-                          balance: '10000.00',
-                          status: 'active',
-                          token: legacyToken,
-                      },
-                  ];
 
         const payloadInner = {
             status: 'success',
@@ -196,10 +160,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         postToIframe({
             type: 'NEWDTRADER_BRIDGE_AUTH',
             msg_type: 'authorization',
-            token: legacyToken,
             accountName: effectiveLoginId,
-            appId: String(activeAppId || '121856'),
-            currency: currency || 'USD',
             payload: payloadInner,
             ...payloadInner,
         });
