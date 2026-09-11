@@ -5,10 +5,10 @@ import { ErrorLogger } from '@/utils/error-logger';
 import { reloadPage, replaceUrl } from '@/utils/navigation-utils';
 import { STORAGE_KEYS } from '@/utils/token-bridge';
 
-export type ErrorSource = 'bot' | 'dtrader';
+export type ErrorSource = 'bot' | 'dtrader' | 'legacy';
 
 export const handleInvalidToken = (source: ErrorSource) => {
-    if (source === 'dtrader') {
+    if (source === 'dtrader' || source === 'legacy') {
         // Only clear legacy storage and flag iframe for re-auth
         localStorage.removeItem(STORAGE_KEYS.LEGACY_DTRADER_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.LEGACY_TOKEN1);
