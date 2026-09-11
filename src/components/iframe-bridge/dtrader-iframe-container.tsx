@@ -7,6 +7,7 @@ import {
     isLegacyToken,
     getAccountsList,
     getActiveLoginId,
+    purgeInvalidToken,
 } from '@/utils/token-bridge';
 import './dtrader-iframe-container.scss';
 
@@ -33,6 +34,17 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasTokenMismatch, setHasTokenMismatch] = useState(false);
+    const [guestPreview, setGuestPreview] = useState(false);
+
+    // Listen for global dtrader_session_expired events
+    useEffect(() => {
+        const handleSessionExpired = () => {
+            setHasTokenMismatch(true);
+            setGuestPreview(false);
+        };
+        window.addEventListener('dtrader_session_expired', handleSessionExpired);
+        return () => window.removeEventListener('dtrader_session_expired', handleSessionExpired);
+    }, []);
 
     const activeAppId = useMemo(() => {
         const appId = getLegacyAppId();
@@ -286,8 +298,35 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                 }
             }
 
-            if (type === 'SESSION_EXPIRED' || type === 'INVALID_TOKEN') {
+            // Handle explicit login / auth requests from DTrader iframe
+            if (
+                type === 'LOGIN' ||
+                type === 'LOG_IN' ||
+                type === 'LOG_IN_AGAIN' ||
+                type === 'REQUEST_LOGIN' ||
+                type === 'OAUTH_REDIRECT' ||
+                data?.action === 'login' ||
+                data?.msg_type === 'login'
+            ) {
+                console.log('[ParentBridge] Received login request from DTrader iframe, redirecting to Legacy OAuth...');
+                handleConnectLegacyAuth();
+                return;
+            }
+
+            // Handle session expired, token rejection, or bridge timeout
+            if (
+                type === 'SESSION_EXPIRED' ||
+                type === 'INVALID_TOKEN' ||
+                type === 'NEWDTRADER_BRIDGE_AUTH_FAILED' ||
+                type === 'BRIDGE_AUTH_TIMEOUT'
+            ) {
+                console.warn('[ParentBridge] DTrader session expired or invalid token reported.');
+                if (legacyToken) {
+                    purgeInvalidToken(legacyToken);
+                }
                 setHasTokenMismatch(true);
+                setGuestPreview(false);
+                return;
             }
         };
 
@@ -296,12 +335,79 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             window.removeEventListener('message', handleIframeMessage);
             stopHandshakeLoop();
         };
-    }, [hasValidLegacyToken, legacyToken, startAuthBridgeHandshake, stopHandshakeLoop]);
+    }, [handleConnectLegacyAuth, hasValidLegacyToken, legacyToken, startAuthBridgeHandshake, stopHandshakeLoop]);
 
     const handleIframeLoad = () => {
         setIsLoading(false);
         startAuthBridgeHandshake();
     };
+
+    if (!hasValidLegacyToken && !guestPreview) {
+        return (
+            <div className={`dtrader-container ${className}`}>
+                {isBotLoggedInOnly && (
+                    <div className='dtrader-container__notice-banner'>
+                        <span>
+                            💡 Your Bot is authenticated via New Deriv API. To activate DTrader Terminal, connect your Legacy Deriv session.
+                        </span>
+                        <button
+                            type='button'
+                            className='dtrader-container__action-btn'
+                            onClick={handleConnectLegacyAuth}
+                        >
+                            Connect DTrader
+                        </button>
+                    </div>
+                )}
+
+                <div className='dtrader-container__gateway'>
+                    <div className='dtrader-gateway__card'>
+                        <div className='dtrader-gateway__badge'>
+                            <span className='dtrader-gateway__badge-dot' />
+                            INSTITUTIONAL SUITE • OPTIONS TERMINAL
+                        </div>
+                        <h2 className='dtrader-gateway__title'>
+                            {hasTokenMismatch ? 'Session Expired' : 'Deriv DTrader Terminal'}
+                        </h2>
+                        <p className='dtrader-gateway__desc'>
+                            {hasTokenMismatch
+                                ? 'Your DTrader trading session has expired or was revoked. Please log in again to restore live multi-barrier options, ticks, and account balance.'
+                                : 'Deriv DTrader requires an authenticated Deriv session to execute contracts, stream real-time ticks, and manage your account.'}
+                        </p>
+
+                        <div className='dtrader-gateway__actions'>
+                            <button
+                                type='button'
+                                className='dtrader-gateway__btn dtrader-gateway__btn--primary'
+                                onClick={handleConnectLegacyAuth}
+                            >
+                                <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+                                    <rect x='3' y='11' width='18' height='11' rx='2' ry='2' />
+                                    <path d='M7 11V7a5 5 0 0 1 10 0v4' />
+                                </svg>
+                                {hasTokenMismatch ? 'Log In Again' : 'Log In with Deriv'}
+                            </button>
+                            {!hasTokenMismatch && (
+                                <button
+                                    type='button'
+                                    className='dtrader-gateway__btn dtrader-gateway__btn--secondary'
+                                    onClick={() => setGuestPreview(true)}
+                                >
+                                    Launch Guest Demo Preview
+                                </button>
+                            )}
+                        </div>
+
+                        <div className='dtrader-gateway__footer'>
+                            <span className='dtrader-gateway__feature'>⚡ Low Latency Execution</span>
+                            <span className='dtrader-gateway__feature'>🛡️ Isolated Legacy Options API</span>
+                            <span className='dtrader-gateway__feature'>🔒 Secure Bridge (No URL Tokens)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`dtrader-container ${className}`}>
@@ -328,7 +434,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                         className='dtrader-container__action-btn dtrader-container__action-btn--danger'
                         onClick={handleConnectLegacyAuth}
                     >
-                        Re-connect DTrader
+                        Log In Again
                     </button>
                 </div>
             )}
@@ -356,7 +462,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                     src={iframeSrc}
                     title='Deriv DTrader'
                     className='dtrader-container__iframe'
-                    sandbox='allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads'
+                    sandbox='allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-downloads allow-top-navigation-by-user-activation'
                     allow='autoplay; clipboard-write; camera; microphone; geolocation'
                     onLoad={handleIframeLoad}
                 />

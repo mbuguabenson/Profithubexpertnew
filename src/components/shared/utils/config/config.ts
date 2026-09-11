@@ -1284,6 +1284,7 @@ export const getLegacyAppId = (): string => {
     return DERIV_CONFIG.LEGACY_DTRADER_APP_ID;
 };
 
-export const generateLegacyOAuthURL = (appId: string = getLegacyAppId()): string => {
-    return `https://oauth.deriv.com/oauth2/authorize?app_id=${appId}&l=en&brand=deriv`;
+export const generateLegacyOAuthURL = (appId: string = getLegacyAppId(), redirectUri?: string): string => {
+    const redirectParam = redirectUri ? `&redirect_uri=${encodeURIComponent(redirectUri)}` : '';
+    return `https://oauth.deriv.com/oauth2/authorize?app_id=${appId}&l=en&brand=deriv${redirectParam}`;
 };
