@@ -59,9 +59,8 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
         return parseFloat(localStorage.getItem('converter_kes_rate') || '129.5');
     });
 
-    // Reset balance & account creation state
+    // Reset balance state
     const [isResettingBalance, setIsResettingBalance] = useState(false);
-    const [isCreatingAccount, setIsCreatingAccount] = useState(false);
     const [resetMessage, setResetMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
     // Balance visibility state
@@ -392,78 +391,6 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
         [isResettingBalance, activeLoginid, client]
     );
 
-    // Create Options account handler (POST /trading/v1/options/accounts)
-    const handleCreateAccount = useCallback(
-        async (account_type: 'demo' | 'real') => {
-            if (isCreatingAccount) return;
-            setIsCreatingAccount(true);
-            setResetMessage({
-                type: 'info',
-                text: localize(`Creating new ${account_type === 'demo' ? 'Demo' : 'Real'} Options account...`),
-            });
-
-            try {
-                const { OAuthTokenExchangeService } = await import('@/services/oauth-token-exchange.service');
-                const { DerivWSAccountsService } = await import('@/services/derivws-accounts.service');
-
-                const authInfo = OAuthTokenExchangeService.getAuthInfo();
-                const token =
-                    authInfo?.access_token ||
-                    localStorage.getItem('authToken') ||
-                    localStorage.getItem('active_token') ||
-                    localStorage.getItem('deriv_api_token');
-
-                if (!token) {
-                    setResetMessage({
-                        type: 'error',
-                        text: localize('You must be logged in to create an account.'),
-                    });
-                    setTimeout(() => setResetMessage(null), 4000);
-                    return;
-                }
-
-                const newAccount = await DerivWSAccountsService.createAccount(token, {
-                    account_type,
-                    currency: 'USD',
-                    group: 'row',
-                });
-
-                setResetMessage({
-                    type: 'success',
-                    text: localize(`Options account ${newAccount.account_id} created successfully!`),
-                });
-
-                // Auto-switch to the new account
-                try {
-                    await AccountSwitcherService.switchAccount(newAccount.account_id, client, {
-                        balance: newAccount.balance,
-                        currency: newAccount.currency,
-                    });
-                } catch (switchErr) {
-                    console.warn('[AccountSwitcher] Auto-switch to new account failed:', switchErr);
-                }
-
-                setTimeout(() => {
-                    setResetMessage(null);
-                    setIsOpen(false);
-                }, 2000);
-            } catch (err: any) {
-                console.error('[AccountSwitcher] Error creating account:', err);
-                const errorMsg =
-                    err?.message ||
-                    localize('Could not create account. Please check your verification status.');
-                setResetMessage({
-                    type: 'error',
-                    text: errorMsg,
-                });
-                setTimeout(() => setResetMessage(null), 5000);
-            } finally {
-                setIsCreatingAccount(false);
-            }
-        },
-        [client, isCreatingAccount]
-    );
-
     const realAccounts = formattedAccounts.filter(a => !a.isVirtual);
     const demoAccounts = formattedAccounts.filter(a => a.isVirtual);
     const tabAccounts = activeTab === 'real' ? realAccounts : demoAccounts;
@@ -716,22 +643,6 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                                     ? `${localize('Deriv accounts')} (${userNickname})`
                                     : localize('Deriv accounts')}
                             </p>
-                            <button
-                                type='button'
-                                className='acc-panel__create-btn'
-                                disabled={isCreatingAccount}
-                                onClick={e => {
-                                    e.stopPropagation();
-                                    handleCreateAccount(activeTab);
-                                }}
-                                title={localize(`Create a new ${activeTab === 'real' ? 'Real' : 'Demo'} Options account`)}
-                            >
-                                {isCreatingAccount ? (
-                                    <span>{localize('Creating...')}</span>
-                                ) : (
-                                    `+ ${localize(`New ${activeTab === 'real' ? 'Real' : 'Demo'}`)}`
-                                )}
-                            </button>
                         </div>
 
                         {tabAccounts.length === 0 ? (
@@ -739,30 +650,11 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                                 className='acc-panel__empty-container'
                                 style={{ padding: '16px 8px', textAlign: 'center' }}
                             >
-                                <p className='acc-panel__empty' style={{ margin: '0 0 10px' }}>
+                                <p className='acc-panel__empty' style={{ margin: 0 }}>
                                     {activeTab === 'real'
                                         ? localize('No real accounts linked')
                                         : localize('No demo accounts linked')}
                                 </p>
-                                <button
-                                    type='button'
-                                    className='acc-panel__create-btn'
-                                    style={{
-                                        margin: '0 auto',
-                                        display: 'inline-flex',
-                                        padding: '5px 12px',
-                                        fontSize: '11.5px',
-                                    }}
-                                    disabled={isCreatingAccount}
-                                    onClick={e => {
-                                        e.stopPropagation();
-                                        handleCreateAccount(activeTab);
-                                    }}
-                                >
-                                    {isCreatingAccount
-                                        ? localize('Creating...')
-                                        : `+ ${localize(`Create ${activeTab === 'real' ? 'Real' : 'Demo'} Account`)}`}
-                                </button>
                             </div>
                         ) : (
                             <div className='acc-panel__account-list' role='listbox'>
@@ -829,68 +721,10 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                         )}
                     </div>
 
-                    {/* Quick Access Action Tools */}
-                    <div className='acc-panel__quick-actions'>
-                        <button
-                            type='button'
-                            className='acc-panel__tool-btn'
-                            onClick={e => {
-                                e.stopPropagation();
-                                setIsOpen(false);
-                                window.dispatchEvent(new Event('open_statement_report'));
-                            }}
-                            title={localize('View Deriv Legacy Statement Report')}
-                        >
-                            <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
-                                <path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z' />
-                                <polyline points='14 2 14 8 20 8' />
-                                <line x1='16' y1='13' x2='8' y2='13' />
-                                <line x1='16' y1='17' x2='8' y2='17' />
-                                <polyline points='10 9 9 9 8 9' />
-                            </svg>
-                            <span>{localize('Statement')}</span>
-                        </button>
-
-                        <button
-                            type='button'
-                            className='acc-panel__tool-btn'
-                            onClick={e => {
-                                e.stopPropagation();
-                                setIsOpen(false);
-                                window.dispatchEvent(new Event('open_wallet_management'));
-                            }}
-                            title={localize('Deriv Wallets & Transfers')}
-                        >
-                            <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
-                                <rect x='2' y='4' width='20' height='16' rx='2' />
-                                <path d='M7 15h0M2 9.5h20' />
-                            </svg>
-                            <span>{localize('Wallets')}</span>
-                        </button>
-
-                        <button
-                            type='button'
-                            className='acc-panel__tool-btn'
-                            onClick={e => {
-                                e.stopPropagation();
-                                setIsOpen(false);
-                                window.dispatchEvent(new Event('open_account_info'));
-                            }}
-                            title={localize('Account Details & API Settings')}
-                        >
-                            <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
-                                <circle cx='12' cy='12' r='10' />
-                                <line x1='12' y1='16' x2='12' y2='12' />
-                                <line x1='12' y1='8' x2='12.01' y2='8' />
-                            </svg>
-                            <span>{localize('Account Info')}</span>
-                        </button>
-                    </div>
-
                     {/* Footer */}
                     <div className='acc-panel__footer'>
                         {/* Demo tab: Reset balance button */}
-                        {activeTab === 'demo' ? (
+                        {activeTab === 'demo' && (
                             <button
                                 type='button'
                                 className='acc-panel__reset-btn'
@@ -930,21 +764,9 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                                 )}
                                 <span>{isResettingBalance ? localize('Resetting...') : localize('Reset Balance')}</span>
                             </button>
-                        ) : (
-                            <button
-                                type='button'
-                                className='acc-panel__manage-btn'
-                                onClick={e => {
-                                    e.stopPropagation();
-                                    window.open('https://app.deriv.com/redirect?action=add_account', '_blank');
-                                    setIsOpen(false);
-                                }}
-                            >
-                                {localize('Manage accounts')}
-                            </button>
                         )}
 
-                        <div className='acc-panel__footer-right'>
+                        <div className='acc-panel__footer-right' style={{ marginLeft: activeTab === 'real' ? 'auto' : undefined }}>
                             <button
                                 type='button'
                                 className='acc-panel__logout-btn'
