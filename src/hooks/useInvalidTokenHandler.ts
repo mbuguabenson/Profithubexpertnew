@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { observer as globalObserver } from '@/external/bot-skeleton/utils/observer';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { ErrorLogger } from '@/utils/error-logger';
+import { reloadPage, replaceUrl } from '@/utils/navigation-utils';
 
 /**
  * Hook to handle invalid token events by clearing auth data and redirecting to OAuth login
@@ -48,16 +49,16 @@ export const useInvalidTokenHandler = (): { unregisterHandler: () => void } => {
 
             if (oauthUrl) {
                 // Use replace to prevent back button from returning to invalid state
-                window.location.replace(oauthUrl);
+                replaceUrl(oauthUrl);
             } else {
                 // Fallback: reload if OAuth URL generation fails
                 ErrorLogger.error('InvalidToken', 'Failed to generate OAuth URL, falling back to reload');
-                window.location.reload();
+                reloadPage();
             }
         } catch (error) {
             ErrorLogger.error('InvalidToken', 'Error handling invalid token', error);
             // Last resort: reload the page
-            window.location.reload();
+            reloadPage();
         }
     };
 
