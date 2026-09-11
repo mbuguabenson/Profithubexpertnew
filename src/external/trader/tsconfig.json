@@ -1,5 +1,32 @@
 {
+    "extends": "../../../tsconfig.json",
     "compilerOptions": {
-        "noEmit": true
-    }
+        "jsx": "react-jsx",
+        "baseUrl": "./src",
+        "paths": {
+            "App/*": ["App/*"],
+            "AppV2/*": ["AppV2/*"],
+            "Modules/*": ["Modules/*"],
+            "Stores/*": ["Stores/*"],
+            "Sass/*": ["sass/*"],
+            "Assets/*": ["Assets/*"],
+            "Types": ["Types"],
+            "_common/*": ["_common/*"],
+            "@deriv/stores/types": ["../../stores/types.ts"],
+            "@deriv/stores": ["../../stores/src/index.ts"],
+            "@deriv/stores/*": ["../../stores/src/*"],
+            "@deriv/shared": ["../../shared/index.ts"],
+            "@deriv/shared/*": ["../../shared/*"],
+            "@deriv/components": ["../../components/src/index.ts"],
+            "@deriv/components/*": ["../../components/src/*"],
+            "@deriv/translations": ["../../translations/src/index.ts"],
+            "@deriv/translations/*": ["../../translations/src/*"],
+            "@deriv/hooks": ["../../hooks/src/index.ts"],
+            "@deriv/hooks/*": ["../../hooks/src/*"],
+            "@deriv/utils": ["../../utils/index.ts"],
+            "@deriv/utils/*": ["../../utils/*"],
+            "withRouterShim": ["withRouterShim"]
+        }
+    },
+    "include": ["src/**/*"]
 }

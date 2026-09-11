@@ -1,6 +1,7 @@
+import React from 'react';
 import AppMain from './App/index';
-import { TCoreStores } from '@deriv/stores/types';
-import { TWebSocket } from 'Types';
+import type { TCoreStores } from '@deriv/stores/types';
+import type { TWebSocket } from 'Types';
 
 type Apptypes = {
     passthrough: {

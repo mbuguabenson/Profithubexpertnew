@@ -27,7 +27,21 @@
             "Sass/*": ["external/trader/src/sass/*"],
             "Assets/*": ["external/trader/src/Assets/*"],
             "Types": ["external/trader/src/Types"],
-            "_common/*": ["external/trader/src/_common/*"]
+            "_common/*": ["external/trader/src/_common/*"],
+            "@deriv/stores/types": ["external/stores/types.ts"],
+            "@deriv/stores": ["external/stores/src/index.ts"],
+            "@deriv/stores/*": ["external/stores/src/*"],
+            "@deriv/shared": ["external/shared/index.ts"],
+            "@deriv/shared/*": ["external/shared/*"],
+            "@deriv/components": ["external/components/src/index.ts"],
+            "@deriv/components/*": ["external/components/src/*"],
+            "@deriv/translations": ["external/translations/src/index.ts"],
+            "@deriv/translations/*": ["external/translations/src/*"],
+            "@deriv/hooks": ["external/hooks/src/index.ts"],
+            "@deriv/hooks/*": ["external/hooks/src/*"],
+            "@deriv/utils": ["external/utils/index.ts"],
+            "@deriv/utils/*": ["external/utils/*"],
+            "withRouterShim": ["external/trader/src/withRouterShim"]
         },
         "esModuleInterop": true,
         "types": ["jest", "@testing-library/jest-dom"]
