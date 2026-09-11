@@ -248,11 +248,11 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                     if (id) {
                         const isVirt = acc.account_type === 'demo' || isDemoAccount(id);
                         accountsMap[id] = {
+                            ...accountsMap[id],
                             loginid: id,
                             currency: acc.currency || accountsMap[id]?.currency || 'USD',
                             balance: accountsMap[id]?.balance ?? acc.balance ?? 0,
                             is_virtual: isVirt ? 1 : 0,
-                            ...accountsMap[id],
                         };
                     }
                 });
@@ -623,7 +623,6 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                         >
                             {isMobile && (
                                 <div className='acc-panel__mobile-header'>
-                                    <span className='acc-panel__mobile-title'>{localize('Account Switcher')}</span>
                                     <button
                                         type='button'
                                         className='acc-panel__mobile-close-btn'

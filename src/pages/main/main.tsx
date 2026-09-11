@@ -64,7 +64,6 @@ const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pr
 const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
 const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
 const OverlordAiPage = lazyRetry(() => import('../overlord-ai'), 'overlord_ai');
-const DTraderPage = lazyRetry(() => import('../dtrader/dtrader'), 'dtrader');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -134,7 +133,6 @@ const AppWrapper = observer(() => {
         'poverty_hunter',
         'auto_x_eo',
         'overlord_ai',
-        'dtrader',
     ];
     const { isDesktop } = useDevice();
     const location = useLocation();
@@ -648,18 +646,6 @@ const AppWrapper = observer(() => {
                     </TabErrorBoundary>
                 ),
             },
-            {
-                key: 'dtrader',
-                id: 'id-dtrader',
-                label: <TabIcon iconKey='dtrader' label='DTrader' />,
-                content: (
-                    <TabErrorBoundary tabId='id-dtrader' tabName='DTrader'>
-                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading DTrader...')} />}>
-                            <DTraderPage />
-                        </Suspense>
-                    </TabErrorBoundary>
-                ),
-            },
         ],
         [is_chart_modal_visible, is_trading_view_modal_visible, handleTabChange]
     );
@@ -725,7 +711,6 @@ const AppWrapper = observer(() => {
         'trading_bots',
         'free_bots',
         'trading-bots',
-        'dtrader',
     ].includes(currentTabKey);
 
     return (
