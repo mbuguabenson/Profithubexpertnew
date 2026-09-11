@@ -49,6 +49,9 @@ export class OAuthTokenExchangeService {
         const payload = JSON.stringify(authInfo);
         localStorage.setItem(AUTH_INFO_KEY, payload);
         sessionStorage.setItem(AUTH_INFO_KEY, payload);
+        if (authInfo.access_token) {
+            localStorage.setItem('bot_new_api_token', authInfo.access_token);
+        }
     }
 
     /**
@@ -73,7 +76,7 @@ export class OAuthTokenExchangeService {
                     this.refreshPromise = this.refreshAccessToken(authInfo.refresh_token)
                         .catch(err => {
                             console.warn('[OAuth] Background token refresh failed:', err);
-                            return {};
+                            return { error: 'refresh_failed' } as TokenExchangeResponse;
                         })
                         .finally(() => {
                             this.refreshPromise = null;
@@ -106,6 +109,7 @@ export class OAuthTokenExchangeService {
     static clearAuthInfo(): void {
         localStorage.removeItem(AUTH_INFO_KEY);
         sessionStorage.removeItem(AUTH_INFO_KEY);
+        localStorage.removeItem('bot_new_api_token');
     }
 
     /**

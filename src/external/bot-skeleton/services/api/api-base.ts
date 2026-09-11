@@ -526,7 +526,8 @@ class APIBase {
             if (!authResult) {
                 const token = await resolveValidDerivWSToken(expectedId || '');
 
-                if (token) {
+                // 2. Only invoke WebSocket authorize with legacy or OTP tokens, never raw OAuth2 JWTs
+                if (token && !token.startsWith('ey')) {
                     try {
                         const res = await this.api.authorize(token);
                         if (res?.authorize) {
@@ -777,7 +778,7 @@ class APIBase {
             const permanentAuthErrors = ['InvalidToken', 'ExpiredToken', 'InvalidAppID'];
             if (permanentAuthErrors.includes(errorCode)) {
                 clearAuthData();
-                globalObserver.emit('InvalidToken');
+                globalObserver.emit('InvalidToken', { context: 'bot', error: e });
             } else {
                 console.warn(
                     '[APIBase] Authorization failed with transient error, preserving session:',

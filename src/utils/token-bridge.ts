@@ -111,6 +111,103 @@ export const isInvalidBearerToken = (token: string | null | undefined): boolean 
     token === 'guest' ||
     token.length > 512;
 
+export const STORAGE_KEYS = {
+    BOT_NEW_API_TOKEN: 'bot_new_api_token',
+    LEGACY_DTRADER_TOKEN: 'legacy_dtrader_token',
+    LEGACY_TOKEN1: 'token1',
+    LEGACY_ACCT1: 'acct1',
+} as const;
+
+/**
+ * Validates whether a token conforms to Deriv Legacy API token format (e.g. "a1-..." or non-JWT).
+ * Legacy DTrader and legacy WebSocket authorize only accept legacy tokens, NOT OAuth2 Bearer JWTs.
+ */
+export const isLegacyToken = (token: string | null | undefined): boolean =>
+    Boolean(token && !isInvalidBearerToken(token) && !token.startsWith('ey'));
+
+export const getBotNewApiToken = (): string | null => {
+    return localStorage.getItem(STORAGE_KEYS.BOT_NEW_API_TOKEN);
+};
+
+/**
+ * Returns the isolated New Deriv API token for Bot & Native Radar services.
+ * Stored under 'bot_new_api_token' or retrieved from OAuthTokenExchangeService.
+ */
+export const getBotNewAPIToken = (): string | null => {
+    try {
+        const direct = localStorage.getItem(STORAGE_KEYS.BOT_NEW_API_TOKEN) || sessionStorage.getItem(STORAGE_KEYS.BOT_NEW_API_TOKEN);
+        if (direct && !isInvalidBearerToken(direct)) return direct;
+        const authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
+        if (authInfo?.access_token && !isInvalidBearerToken(authInfo.access_token)) {
+            return authInfo.access_token;
+        }
+    } catch {}
+    return null;
+};
+
+/** Sets the isolated New Deriv API token for the Bot */
+export const setBotNewAPIToken = (token: string): void => {
+    try {
+        if (token) {
+            localStorage.setItem('bot_new_api_token', token);
+        } else {
+            localStorage.removeItem('bot_new_api_token');
+        }
+    } catch {}
+};
+
+/**
+ * Returns the isolated Legacy Deriv token strictly for DTrader (iframe & legacy WebSocket).
+ * Will NEVER return an OAuth2 JWT Bearer token, preventing "InvalidToken" / "Session Expired" in DTrader.
+ */
+export const getLegacyDTraderToken = (specificLoginId?: string): string | null => {
+    try {
+        const id = specificLoginId || getActiveLoginId();
+        const list = getAccountsList();
+        if (id && list[id] && isLegacyToken(list[id])) {
+            return list[id];
+        }
+
+        const explicitLegacy =
+            localStorage.getItem('legacy_dtrader_token') ||
+            localStorage.getItem('token1');
+        if (explicitLegacy && isLegacyToken(explicitLegacy)) {
+            return explicitLegacy;
+        }
+
+        if (!specificLoginId) {
+            for (const key in list) {
+                if (isLegacyToken(list[key])) {
+                    return list[key];
+                }
+            }
+            const direct = localStorage.getItem('active_token') || localStorage.getItem('authToken');
+            if (direct && isLegacyToken(direct)) {
+                return direct;
+            }
+        }
+    } catch {}
+    return null;
+};
+
+/** Sets the isolated Legacy Deriv token for DTrader */
+export const setLegacyDTraderToken = (token: string, loginid?: string): void => {
+    try {
+        if (token) {
+            localStorage.setItem('legacy_dtrader_token', token);
+            localStorage.setItem('token1', token);
+            if (loginid) {
+                const raw = localStorage.getItem('accountsList');
+                const list = raw ? JSON.parse(raw) : {};
+                list[loginid] = token;
+                localStorage.setItem('accountsList', JSON.stringify(list));
+            }
+        } else {
+            localStorage.removeItem('legacy_dtrader_token');
+        }
+    } catch {}
+};
+
 /** Synchronously checks if a valid token is available in storage or URL */
 export const getActiveToken = (specificLoginId?: string): string | null => {
     const list = getAccountsList();
@@ -130,6 +227,7 @@ export const getActiveToken = (specificLoginId?: string): string | null => {
             localStorage.getItem('active_token') ||
             localStorage.getItem('authToken') ||
             localStorage.getItem('token1') ||
+            localStorage.getItem('legacy_dtrader_token') ||
             localStorage.getItem('deriv_api_token');
         if (storedToken && !isInvalidBearerToken(storedToken)) {
             return storedToken;

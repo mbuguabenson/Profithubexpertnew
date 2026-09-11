@@ -4,7 +4,7 @@ import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage } from 
 import { secureSessionService } from '@/services/secure-session.service';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
-import { getAccountsList, getActiveToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { getAccountsList, getActiveToken, getLegacyDTraderToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
 
 export interface BridgeDiagnosticInfo {
     state: BridgeState;
@@ -110,6 +110,12 @@ export class ParentBridgeClient {
     ) {
         if (!targetWindow || targetWindow === window) return;
         try {
+            // Guard: Deriv Legacy DTrader iframe strictly rejects OAuth 2.0 PKCE JWTs (starting with 'ey')
+            const isDTrader = this.iframeOrigin && this.iframeOrigin.includes('deriv-dtrader');
+            if (isDTrader && tok && tok.startsWith('ey')) {
+                return;
+            }
+
             const hasToken =
                 Boolean(tok && tok !== 'null' && tok !== 'undefined' && tok !== 'a1-guest' && tok !== 'dummy_token');
             const authMode = hasToken ? 'derivws_otp' : 'none';
@@ -317,14 +323,17 @@ export class ParentBridgeClient {
                     localStorage.getItem('active_loginid') ||
                     localStorage.getItem('client.loginid') ||
                     'DOT100000';
-                const syncToken = getActiveToken() || '';
+                const isDTrader = Boolean(this.iframeOrigin && this.iframeOrigin.includes('deriv-dtrader'));
+                const syncToken = isDTrader ? (getLegacyDTraderToken(loginid) || '') : (getActiveToken() || '');
                 const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
                 const appIdStr = String(session?.appId || getAppId() || '121856');
 
-                this.sendAuthPayloadToWindow(this.iframeWindow, syncToken, loginid, currency, appIdStr);
+                if (syncToken) {
+                    this.sendAuthPayloadToWindow(this.iframeWindow, syncToken, loginid, currency, appIdStr);
+                }
                 this.sendAuthInit();
 
-                if (!syncToken) {
+                if (!syncToken && !isDTrader) {
                     const resolvedToken = await resolveValidDerivWSToken(loginid);
                     if (resolvedToken && resolvedToken !== syncToken && this.iframeWindow) {
                         this.sendAuthPayloadToWindow(this.iframeWindow, resolvedToken, loginid, currency, appIdStr);

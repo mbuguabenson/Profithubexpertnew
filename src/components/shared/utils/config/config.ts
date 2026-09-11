@@ -1267,3 +1267,23 @@ export const getClientId = (): string => {
     }
     return process.env.CLIENT_ID || '33Mmq9JHMrJaUKT2KIhKZ';
 };
+
+export const DERIV_CONFIG = {
+    NEW_API_CLIENT_ID: process.env.RSBUILD_NEW_API_CLIENT_ID || process.env.CLIENT_ID || '33Mmq9JHMrJaUKT2KIhKZ',
+    LEGACY_DTRADER_APP_ID: process.env.RSBUILD_LEGACY_DTRADER_APP_ID || process.env.LEGACY_APP_ID || '121856',
+    NEW_API_AUTH_URL: 'https://auth.deriv.com/oauth2/auth',
+    LEGACY_AUTH_URL: 'https://oauth.deriv.com/oauth2/authorize',
+};
+
+export const getLegacyOAuthURL = (redirectUri?: string): string => {
+    const redirectParam = redirectUri ? `&redirect_uri=${encodeURIComponent(redirectUri)}` : '';
+    return `${DERIV_CONFIG.LEGACY_AUTH_URL}?app_id=${DERIV_CONFIG.LEGACY_DTRADER_APP_ID}&l=en&brand=deriv${redirectParam}`;
+};
+
+export const getLegacyAppId = (): string => {
+    return DERIV_CONFIG.LEGACY_DTRADER_APP_ID;
+};
+
+export const generateLegacyOAuthURL = (appId: string = getLegacyAppId()): string => {
+    return `https://oauth.deriv.com/oauth2/authorize?app_id=${appId}&l=en&brand=deriv`;
+};

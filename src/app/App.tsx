@@ -106,6 +106,7 @@ function storeLegacyAccounts(accounts: import('@/hooks/useOAuthCallback').Legacy
         localStorage.setItem('authToken', realAccount.token);
         localStorage.setItem('active_token', realAccount.token);
         localStorage.setItem('token1', realAccount.token);
+        localStorage.setItem('legacy_dtrader_token', realAccount.token);
         localStorage.setItem('token', realAccount.token);
         localStorage.setItem('active_loginid', realAccount.loginid);
         localStorage.setItem('client.loginid', realAccount.loginid);
@@ -157,6 +158,9 @@ function App() {
             OAuthTokenExchangeService.exchangeCodeForToken(params.code)
                 .then(response => {
                     cleanupURL();
+                    if (response.access_token) {
+                        localStorage.setItem('bot_new_api_token', response.access_token);
+                    }
                     if (response.error) {
                         console.error('❌ Token exchange failed:', response.error);
                         console.error('Error description:', response.error_description);

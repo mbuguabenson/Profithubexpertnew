@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 
 import classNames from 'classnames';
 import { observer } from 'mobx-react-lite';
@@ -8,7 +9,9 @@ import { useApiBase } from '@/hooks/useApiBase';
 import { useStore } from '@/hooks/useStore';
 import { isDemoAccount } from '@/utils/account-helpers';
 import { Localize, localize } from '@deriv-com/translations';
+import { useDevice } from '@deriv-com/ui';
 import { DerivAccountWalletService } from '@/services/deriv-account-wallet.service';
+import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { AccountSwitcherService } from '@/services/account-switcher.service';
 import { getAccountsList } from '@/utils/token-bridge';
 import { CurrencyIcon } from '@/components/currency/currency-icon';
@@ -45,6 +48,8 @@ const AccountAvatar = ({ currency, isVirtual }: { currency?: string; isVirtual?:
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAccountSwitcher & { forceDropdown?: boolean }) => {
+    const { isDesktop } = useDevice();
+    const isMobile = !isDesktop || (typeof window !== 'undefined' && window.innerWidth <= 768);
     const [isOpen, setIsOpen] = useState(forceDropdown);
     const [activeTab, setActiveTab] = useState<'real' | 'demo'>('real');
     const [userNickname, setUserNickname] = useState<string>('');
@@ -119,6 +124,7 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
+            if (isMobile) return;
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
                 setIsOpen(false);
             }
@@ -132,7 +138,7 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, []);
+    }, [isMobile]);
 
     // ─── Format accounts list ────────────────────────────────────────────────
     const formattedAccounts = useMemo(() => {
@@ -233,6 +239,28 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
             }
         });
 
+        // 6. Merge from durable OAuth stored accounts (DerivWSAccountsService)
+        try {
+            const derivAccounts = DerivWSAccountsService.getStoredAccounts();
+            if (Array.isArray(derivAccounts)) {
+                derivAccounts.forEach(acc => {
+                    const id = acc.account_id;
+                    if (id) {
+                        const isVirt = acc.account_type === 'demo' || isDemoAccount(id);
+                        accountsMap[id] = {
+                            loginid: id,
+                            currency: acc.currency || accountsMap[id]?.currency || 'USD',
+                            balance: accountsMap[id]?.balance ?? acc.balance ?? 0,
+                            is_virtual: isVirt ? 1 : 0,
+                            ...accountsMap[id],
+                        };
+                    }
+                });
+            }
+        } catch {
+            // Ignore parse errors from stale localStorage cache
+        }
+
         const activeId = activeLoginid || localStorage.getItem('active_loginid') || client?.loginid || '';
 
         // Merge live balance from client store directly into active account if available
@@ -270,15 +298,8 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
 
     const toggleDropdown = useCallback(() => {
         if (is_bot_running) return;
-        if (!forceDropdown && window.innerWidth <= 768) {
-            // On mobile: open the hamburger account-switcher panel instead of
-            // navigating away to the Account Overview & Reports page.
-            // The /account page is accessible from the hamburger menu item.
-            window.dispatchEvent(new CustomEvent('open_mobile_account_switcher'));
-            return;
-        }
         setIsOpen(prev => !prev);
-    }, [is_bot_running, forceDropdown]);
+    }, [is_bot_running]);
 
     const handleAccountSelect = useCallback(
         async (loginid: string) => {
@@ -576,246 +597,331 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
             </AccountInfoWrapper>
 
             {/* ── Dropdown Panel (Real / Demo only) ────────────────────────── */}
-            {isOpen && (
-                <div className='acc-panel' role='dialog' aria-label={localize('Account switcher')}>
-                    {/* Real / Demo tab toggle (Standard Deriv Quill UI Tabs) */}
-                    <div className='acc-panel__tabs' role='tablist' aria-label={localize('Account types')}>
-                        <button
-                            type='button'
-                            role='tab'
-                            aria-selected={activeTab === 'real'}
-                            className={classNames('acc-panel__tab', {
-                                'acc-panel__tab--active': activeTab === 'real',
-                                'acc-panel__tab--active-real': activeTab === 'real',
-                                'acc-panel__tab--inactive': activeTab !== 'real',
-                            })}
-                            onClick={e => {
-                                e.stopPropagation();
-                                setActiveTab('real');
-                            }}
-                            id='acc-tab-real'
-                        >
-                            <span className='acc-panel__tab-text'>
-                                <Localize i18n_default_text='Real' />
-                            </span>
-                            {activeTab === 'real' && (
-                                <span className='acc-panel__tab-underline acc-panel__tab-underline--real' />
-                            )}
-                        </button>
-                        <button
-                            type='button'
-                            role='tab'
-                            aria-selected={activeTab === 'demo'}
-                            className={classNames('acc-panel__tab', {
-                                'acc-panel__tab--active': activeTab === 'demo',
-                                'acc-panel__tab--active-demo': activeTab === 'demo',
-                                'acc-panel__tab--inactive': activeTab !== 'demo',
-                            })}
-                            onClick={e => {
-                                e.stopPropagation();
-                                setActiveTab('demo');
-                            }}
-                            id='acc-tab-demo'
-                        >
-                            <span className='acc-panel__tab-text'>
-                                <Localize i18n_default_text='Demo' />
-                            </span>
-                            {activeTab === 'demo' && (
-                                <span className='acc-panel__tab-underline acc-panel__tab-underline--demo' />
-                            )}
-                        </button>
-                    </div>
-
-                    {/* Account list */}
-                    <div className='acc-panel__body'>
-                        <div
-                            className='acc-panel__section-header'
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                padding: '0 4px',
-                                marginBottom: '8px',
-                            }}
-                        >
-                            <p className='acc-panel__section-label' style={{ margin: 0 }}>
-                                {userNickname
-                                    ? `${localize('Deriv accounts')} (${userNickname})`
-                                    : localize('Deriv accounts')}
-                            </p>
-                        </div>
-
-                        {tabAccounts.length === 0 ? (
+            {isOpen && (() => {
+                const panelContent = (
+                    <>
+                        {isMobile && (
                             <div
-                                className='acc-panel__empty-container'
-                                style={{ padding: '16px 8px', textAlign: 'center' }}
-                            >
-                                <p className='acc-panel__empty' style={{ margin: 0 }}>
-                                    {activeTab === 'real'
-                                        ? localize('No real accounts linked')
-                                        : localize('No demo accounts linked')}
-                                </p>
-                            </div>
-                        ) : (
-                            <div className='acc-panel__account-list' role='listbox'>
-                                {tabAccounts.map(account => (
-                                    <div
-                                        key={account.loginid}
-                                        role='option'
-                                        aria-selected={account.isActive}
-                                        tabIndex={0}
-                                        className={classNames('acc-panel__account', {
-                                            'acc-panel__account--active': account.isActive,
-                                        })}
-                                        onClick={e => {
-                                            e.stopPropagation();
-                                            if (!account.isActive) {
-                                                handleAccountSelect(account.loginid);
-                                            }
-                                        }}
-                                        onKeyDown={e => {
-                                            if ((e.key === 'Enter' || e.key === ' ') && !account.isActive) {
-                                                e.preventDefault();
-                                                handleAccountSelect(account.loginid);
-                                            }
-                                        }}
-                                    >
-                                        <div className='acc-panel__account-icon'>
-                                            <AccountAvatar
-                                                currency={account.rawCurrency || account.currency}
-                                                isVirtual={account.isVirtual}
-                                            />
-                                        </div>
-                                        <div className='acc-panel__account-info'>
-                                            <span className='acc-panel__account-name'>
-                                                {account.isVirtual
-                                                    ? localize('Demo Account')
-                                                    : getCurrencyLabel(account.rawCurrency)}
-                                            </span>
-                                            <span className='acc-panel__account-id'>{account.loginid}</span>
-                                        </div>
-                                        <div className='acc-panel__account-right'>
-                                            <span className='acc-panel__account-balance'>
-                                                {account.balance} {account.currency}
-                                            </span>
-                                            {account.isActive && (
-                                                <span className='acc-panel__account-check'>
-                                                    <svg
-                                                        width='12'
-                                                        height='12'
-                                                        viewBox='0 0 24 24'
-                                                        fill='none'
-                                                        stroke='currentColor'
-                                                        strokeWidth='3'
-                                                        strokeLinecap='round'
-                                                        strokeLinejoin='round'
-                                                    >
-                                                        <polyline points='20 6 9 17 4 12' />
-                                                    </svg>
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Footer */}
-                    <div className='acc-panel__footer'>
-                        {/* Demo tab: Reset balance button */}
-                        {activeTab === 'demo' && (
-                            <button
-                                type='button'
-                                className='acc-panel__reset-btn'
-                                onClick={handleResetBalance}
-                                disabled={isResettingBalance}
-                                title={localize('Reset virtual balance to $10,000')}
-                            >
-                                {isResettingBalance ? (
-                                    <svg
-                                        className='acc-panel__reset-spinner'
-                                        width='12'
-                                        height='12'
-                                        viewBox='0 0 24 24'
-                                        fill='none'
-                                        stroke='currentColor'
-                                        strokeWidth='2.5'
-                                    >
-                                        <circle cx='12' cy='12' r='10' strokeOpacity='0.25' />
-                                        <path d='M12 2a10 10 0 0 1 10 10' />
-                                    </svg>
-                                ) : (
-                                    <svg
-                                        width='12'
-                                        height='12'
-                                        viewBox='0 0 24 24'
-                                        fill='none'
-                                        stroke='currentColor'
-                                        strokeWidth='2.5'
-                                        strokeLinecap='round'
-                                        strokeLinejoin='round'
-                                    >
-                                        <path d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8' />
-                                        <path d='M21 3v5h-5' />
-                                        <path d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16' />
-                                        <path d='M8 16H3v5' />
-                                    </svg>
-                                )}
-                                <span>{isResettingBalance ? localize('Resetting...') : localize('Reset Balance')}</span>
-                            </button>
-                        )}
-
-                        <div className='acc-panel__footer-right' style={{ marginLeft: activeTab === 'real' ? 'auto' : undefined }}>
-                            <button
-                                type='button'
-                                className='acc-panel__logout-btn'
+                                className='acc-panel__mobile-backdrop'
                                 onClick={e => {
                                     e.stopPropagation();
                                     setIsOpen(false);
-                                    if (client?.logout) {
-                                        client.logout();
-                                    } else {
-                                        localStorage.clear();
-                                        sessionStorage.clear();
-                                        window.location.reload();
-                                    }
                                 }}
-                            >
-                                <svg
-                                    className='acc-panel__logout-icon'
-                                    width='12'
-                                    height='12'
-                                    viewBox='0 0 24 24'
-                                    fill='none'
-                                    stroke='currentColor'
-                                    strokeWidth='2.5'
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                >
-                                    <path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />
-                                    <polyline points='16 17 21 12 16 7' />
-                                    <line x1='21' y1='12' x2='9' y2='12' />
-                                </svg>
-                                <span>{localize('Log out')}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Reset / Create toast message */}
-                    {resetMessage && (
+                                onTouchEnd={e => {
+                                    e.stopPropagation();
+                                    setIsOpen(false);
+                                }}
+                                aria-hidden='true'
+                            />
+                        )}
                         <div
-                            className={classNames('acc-panel__toast', {
-                                'acc-panel__toast--success': resetMessage.type === 'success',
-                                'acc-panel__toast--error': resetMessage.type === 'error',
-                                'acc-panel__toast--info': resetMessage.type === 'info',
+                            className={classNames('acc-panel', {
+                                'acc-panel--mobile': isMobile,
                             })}
+                            role='dialog'
+                            aria-label={localize('Account switcher')}
                         >
-                            {resetMessage.text}
+                            {isMobile && (
+                                <div className='acc-panel__mobile-header'>
+                                    <span className='acc-panel__mobile-title'>{localize('Account Switcher')}</span>
+                                    <button
+                                        type='button'
+                                        className='acc-panel__mobile-close-btn'
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            setIsOpen(false);
+                                        }}
+                                        aria-label={localize('Close')}
+                                    >
+                                        <svg
+                                            width='14'
+                                            height='14'
+                                            viewBox='0 0 24 24'
+                                            fill='none'
+                                            stroke='currentColor'
+                                            strokeWidth='2.5'
+                                            strokeLinecap='round'
+                                            strokeLinejoin='round'
+                                        >
+                                            <line x1='18' y1='6' x2='6' y2='18' />
+                                            <line x1='6' y1='6' x2='18' y2='18' />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Real / Demo tab toggle (Standard Deriv Quill UI Tabs) */}
+                            <div className='acc-panel__tabs' role='tablist' aria-label={localize('Account types')}>
+                                <button
+                                    type='button'
+                                    role='tab'
+                                    aria-selected={activeTab === 'real'}
+                                    className={classNames('acc-panel__tab', {
+                                        'acc-panel__tab--active': activeTab === 'real',
+                                        'acc-panel__tab--active-real': activeTab === 'real',
+                                        'acc-panel__tab--inactive': activeTab !== 'real',
+                                    })}
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        setActiveTab('real');
+                                    }}
+                                    onTouchEnd={e => {
+                                        e.stopPropagation();
+                                        setActiveTab('real');
+                                    }}
+                                    id='acc-tab-real'
+                                >
+                                    <span className='acc-panel__tab-text'>
+                                        <Localize i18n_default_text='Real' />
+                                    </span>
+                                    {activeTab === 'real' && (
+                                        <span className='acc-panel__tab-underline acc-panel__tab-underline--real' />
+                                    )}
+                                </button>
+                                <button
+                                    type='button'
+                                    role='tab'
+                                    aria-selected={activeTab === 'demo'}
+                                    className={classNames('acc-panel__tab', {
+                                        'acc-panel__tab--active': activeTab === 'demo',
+                                        'acc-panel__tab--active-demo': activeTab === 'demo',
+                                        'acc-panel__tab--inactive': activeTab !== 'demo',
+                                    })}
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        setActiveTab('demo');
+                                    }}
+                                    onTouchEnd={e => {
+                                        e.stopPropagation();
+                                        setActiveTab('demo');
+                                    }}
+                                    id='acc-tab-demo'
+                                >
+                                    <span className='acc-panel__tab-text'>
+                                        <Localize i18n_default_text='Demo' />
+                                    </span>
+                                    {activeTab === 'demo' && (
+                                        <span className='acc-panel__tab-underline acc-panel__tab-underline--demo' />
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Account list */}
+                            <div className='acc-panel__body'>
+                                <div
+                                    className='acc-panel__section-header'
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '0 4px',
+                                        marginBottom: '8px',
+                                    }}
+                                >
+                                    <p className='acc-panel__section-label' style={{ margin: 0 }}>
+                                        {userNickname
+                                            ? `${localize('Deriv accounts')} (${userNickname})`
+                                            : localize('Deriv accounts')}
+                                    </p>
+                                </div>
+
+                                {tabAccounts.length === 0 ? (
+                                    <div
+                                        className='acc-panel__empty-container'
+                                        style={{ padding: '16px 8px', textAlign: 'center' }}
+                                    >
+                                        <p className='acc-panel__empty' style={{ margin: '0 0 10px 0' }}>
+                                            {activeTab === 'real'
+                                                ? localize('No real accounts linked')
+                                                : localize('No demo accounts linked')}
+                                        </p>
+                                        {activeTab === 'real' && (
+                                            <button
+                                                type='button'
+                                                className='acc-panel__action-link'
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    setIsOpen(false);
+                                                    window.open('https://app.deriv.com', '_blank');
+                                                }}
+                                            >
+                                                {localize('Open a Real Account on Deriv')}
+                                            </button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className='acc-panel__account-list' role='listbox'>
+                                        {tabAccounts.map(account => (
+                                            <div
+                                                key={account.loginid}
+                                                role='option'
+                                                aria-selected={account.isActive}
+                                                tabIndex={0}
+                                                className={classNames('acc-panel__account', {
+                                                    'acc-panel__account--active': account.isActive,
+                                                })}
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    if (!account.isActive) {
+                                                        handleAccountSelect(account.loginid);
+                                                    }
+                                                }}
+                                                onTouchEnd={e => {
+                                                    e.stopPropagation();
+                                                    if (!account.isActive) {
+                                                        handleAccountSelect(account.loginid);
+                                                    }
+                                                }}
+                                                onKeyDown={e => {
+                                                    if ((e.key === 'Enter' || e.key === ' ') && !account.isActive) {
+                                                        e.preventDefault();
+                                                        handleAccountSelect(account.loginid);
+                                                    }
+                                                }}
+                                            >
+                                                <div className='acc-panel__account-icon'>
+                                                    <AccountAvatar
+                                                        currency={account.rawCurrency || account.currency}
+                                                        isVirtual={account.isVirtual}
+                                                    />
+                                                </div>
+                                                <div className='acc-panel__account-info'>
+                                                    <span className='acc-panel__account-name'>
+                                                        {account.isVirtual
+                                                            ? localize('Demo Account')
+                                                            : getCurrencyLabel(account.rawCurrency)}
+                                                    </span>
+                                                    <span className='acc-panel__account-id'>{account.loginid}</span>
+                                                </div>
+                                                <div className='acc-panel__account-right'>
+                                                    <span className='acc-panel__account-balance'>
+                                                        {account.balance} {account.currency}
+                                                    </span>
+                                                    {account.isActive && (
+                                                        <span className='acc-panel__account-check'>
+                                                            <svg
+                                                                width='12'
+                                                                height='12'
+                                                                viewBox='0 0 24 24'
+                                                                fill='none'
+                                                                stroke='currentColor'
+                                                                strokeWidth='3'
+                                                                strokeLinecap='round'
+                                                                strokeLinejoin='round'
+                                                            >
+                                                                <polyline points='20 6 9 17 4 12' />
+                                                            </svg>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer */}
+                            <div className='acc-panel__footer'>
+                                {/* Demo tab: Reset balance button */}
+                                {activeTab === 'demo' && (
+                                    <button
+                                        type='button'
+                                        className='acc-panel__reset-btn'
+                                        onClick={handleResetBalance}
+                                        disabled={isResettingBalance}
+                                        title={localize('Reset virtual balance to $10,000')}
+                                    >
+                                        {isResettingBalance ? (
+                                            <svg
+                                                className='acc-panel__reset-spinner'
+                                                width='12'
+                                                height='12'
+                                                viewBox='0 0 24 24'
+                                                fill='none'
+                                                stroke='currentColor'
+                                                strokeWidth='2.5'
+                                            >
+                                                <circle cx='12' cy='12' r='10' strokeOpacity='0.25' />
+                                                <path d='M12 2a10 10 0 0 1 10 10' />
+                                            </svg>
+                                        ) : (
+                                            <svg
+                                                width='12'
+                                                height='12'
+                                                viewBox='0 0 24 24'
+                                                fill='none'
+                                                stroke='currentColor'
+                                                strokeWidth='2.5'
+                                                strokeLinecap='round'
+                                                strokeLinejoin='round'
+                                            >
+                                                <path d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8' />
+                                                <path d='M21 3v5h-5' />
+                                                <path d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16' />
+                                                <path d='M8 16H3v5' />
+                                            </svg>
+                                        )}
+                                        <span>{isResettingBalance ? localize('Resetting...') : localize('Reset Balance')}</span>
+                                    </button>
+                                )}
+
+                                <div className='acc-panel__footer-right' style={{ marginLeft: activeTab === 'real' ? 'auto' : undefined }}>
+                                    <button
+                                        type='button'
+                                        className='acc-panel__logout-btn'
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            setIsOpen(false);
+                                            if (client?.logout) {
+                                                client.logout();
+                                            } else {
+                                                localStorage.clear();
+                                                sessionStorage.clear();
+                                                window.location.reload();
+                                            }
+                                        }}
+                                    >
+                                        <svg
+                                            className='acc-panel__logout-icon'
+                                            width='12'
+                                            height='12'
+                                            viewBox='0 0 24 24'
+                                            fill='none'
+                                            stroke='currentColor'
+                                            strokeWidth='2.5'
+                                            strokeLinecap='round'
+                                            strokeLinejoin='round'
+                                        >
+                                            <path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />
+                                            <polyline points='16 17 21 12 16 7' />
+                                            <line x1='21' y1='12' x2='9' y2='12' />
+                                        </svg>
+                                        <span>{localize('Log out')}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Reset / Create toast message */}
+                            {resetMessage && (
+                                <div
+                                    className={classNames('acc-panel__toast', {
+                                        'acc-panel__toast--success': resetMessage.type === 'success',
+                                        'acc-panel__toast--error': resetMessage.type === 'error',
+                                        'acc-panel__toast--info': resetMessage.type === 'info',
+                                    })}
+                                >
+                                    {resetMessage.text}
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
-            )}
+                    </>
+                );
+
+                if (isMobile && typeof document !== 'undefined') {
+                    return ReactDOM.createPortal(panelContent, document.body);
+                }
+                return panelContent;
+            })()}
         </div>
     );
 });

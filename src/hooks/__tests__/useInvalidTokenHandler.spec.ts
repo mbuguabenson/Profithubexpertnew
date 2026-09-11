@@ -21,14 +21,19 @@ jest.mock('@/components/shared', () => ({
     generateOAuthURL: jest.fn(),
 }));
 
+jest.mock('@/utils/navigation-utils', () => ({
+    replaceUrl: jest.fn(),
+    reloadPage: jest.fn(),
+}));
+
 // Import after mocking
 import { generateOAuthURL } from '@/components/shared';
+import { replaceUrl, reloadPage } from '@/utils/navigation-utils';
 
 describe('useInvalidTokenHandler', () => {
     let mockGenerateOAuthURL: jest.Mock;
     let mockWindowLocationReplace: jest.Mock;
     let mockWindowLocationReload: jest.Mock;
-    let originalLocation: Location;
 
     beforeEach(() => {
         // Clear all mocks before each test
@@ -36,19 +41,8 @@ describe('useInvalidTokenHandler', () => {
 
         // Setup mock functions
         mockGenerateOAuthURL = generateOAuthURL as jest.Mock;
-        mockWindowLocationReplace = jest.fn();
-        mockWindowLocationReload = jest.fn();
-
-        // Save original location
-        originalLocation = window.location;
-
-        // Mock window.location
-        delete (window as any).location;
-        window.location = {
-            ...originalLocation,
-            replace: mockWindowLocationReplace,
-            reload: mockWindowLocationReload,
-        } as any;
+        mockWindowLocationReplace = replaceUrl as jest.Mock;
+        mockWindowLocationReload = reloadPage as jest.Mock;
 
         // Mock storage
         Storage.prototype.removeItem = jest.fn();
@@ -56,8 +50,6 @@ describe('useInvalidTokenHandler', () => {
     });
 
     afterEach(() => {
-        // Restore original location
-        window.location = originalLocation;
         jest.restoreAllMocks();
     });
 

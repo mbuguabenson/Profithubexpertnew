@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { clearCSRFToken, validateCSRFToken } from '@/components/shared/utils/config/config';
-import { clearAuthData } from '@/utils/auth-utils';
+import { STORAGE_KEYS } from '@/utils/token-bridge';
 
 /**
  * A single account entry parsed from the legacy Deriv OAuth callback URL.
@@ -126,6 +126,10 @@ export const useOAuthCallback = (): OAuthCallbackResult => {
         // exchange needed. Detect it before checking for OAuth2 params.
         const legacyAccounts = parseLegacyAccounts(urlParams);
         if (legacyAccounts.length > 0) {
+            const first = legacyAccounts[0];
+            localStorage.setItem(STORAGE_KEYS.LEGACY_DTRADER_TOKEN, first.token);
+            localStorage.setItem(STORAGE_KEYS.LEGACY_TOKEN1, first.token);
+            localStorage.setItem(STORAGE_KEYS.LEGACY_ACCT1, first.loginid);
             setResult({
                 isProcessing: false,
                 isValid: false,

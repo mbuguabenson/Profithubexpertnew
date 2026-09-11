@@ -3,6 +3,24 @@ import { observer as globalObserver } from '@/external/bot-skeleton/utils/observ
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { ErrorLogger } from '@/utils/error-logger';
 import { reloadPage, replaceUrl } from '@/utils/navigation-utils';
+import { STORAGE_KEYS } from '@/utils/token-bridge';
+
+export type ErrorSource = 'bot' | 'dtrader';
+
+export const handleInvalidToken = (source: ErrorSource) => {
+    if (source === 'dtrader') {
+        // Only clear legacy storage and flag iframe for re-auth
+        localStorage.removeItem(STORAGE_KEYS.LEGACY_DTRADER_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.LEGACY_TOKEN1);
+        window.dispatchEvent(new CustomEvent('dtrader_session_expired'));
+    } else if (source === 'bot') {
+        // Only clear bot storage
+        localStorage.removeItem(STORAGE_KEYS.BOT_NEW_API_TOKEN);
+        OAuthTokenExchangeService.clearAuthInfo();
+        window.dispatchEvent(new CustomEvent('bot_session_expired'));
+    }
+    // DO NOT call window.location.reload() or clear all keys
+};
 
 /**
  * Hook to handle invalid token events by clearing auth data and redirecting to OAuth login
@@ -14,7 +32,7 @@ import { reloadPage, replaceUrl } from '@/utils/navigation-utils';
  * @returns {{ unregisterHandler: () => void }} An object containing a function to unregister the event handler
  */
 export const useInvalidTokenHandler = (): { unregisterHandler: () => void } => {
-    const handleInvalidToken = async () => {
+    const onInvalidToken = async (eventData?: any) => {
         try {
             const authInfo = OAuthTokenExchangeService.getAuthInfo({ allowExpiredWithRefresh: true });
             if (authInfo?.refresh_token) {
@@ -26,14 +44,29 @@ export const useInvalidTokenHandler = (): { unregisterHandler: () => void } => {
                 }
             }
 
+            const tokenContext = String(eventData?.context || eventData?.source || '');
+
+            if (tokenContext === 'legacy' || tokenContext === 'dtrader') {
+                handleInvalidToken('dtrader');
+                return;
+            }
+
+            if (tokenContext === 'bot') {
+                handleInvalidToken('bot');
+                return;
+            }
+
             // Clear invalid session data to prevent infinite reload loop
             localStorage.removeItem('auth_info');
             sessionStorage.removeItem('auth_info');
+            localStorage.removeItem(STORAGE_KEYS.BOT_NEW_API_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.LEGACY_DTRADER_TOKEN);
             localStorage.removeItem('active_loginid');
             localStorage.removeItem('client.loginid');
             localStorage.removeItem('client.currency');
             localStorage.removeItem('authToken');
             localStorage.removeItem('active_token');
+            localStorage.removeItem('token1');
             localStorage.removeItem('deriv_api_token');
             localStorage.removeItem('oidc_access_token');
             localStorage.removeItem('accountsList');
@@ -64,18 +97,18 @@ export const useInvalidTokenHandler = (): { unregisterHandler: () => void } => {
 
     // Subscribe to the InvalidToken event
     useEffect(() => {
-        globalObserver.register('InvalidToken', handleInvalidToken);
+        globalObserver.register('InvalidToken', onInvalidToken);
 
         // Cleanup the subscription when the component unmounts
         return () => {
-            globalObserver.unregister('InvalidToken', handleInvalidToken);
+            globalObserver.unregister('InvalidToken', onInvalidToken);
         };
     }, []);
 
     // Return a function to unregister the handler manually if needed
     return {
         unregisterHandler: () => {
-            globalObserver.unregister('InvalidToken', handleInvalidToken);
+            globalObserver.unregister('InvalidToken', onInvalidToken);
         },
     };
 };

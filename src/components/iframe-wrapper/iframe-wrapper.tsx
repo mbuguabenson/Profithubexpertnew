@@ -4,6 +4,8 @@ import './iframe-wrapper.scss';
 import { useStore } from '@/hooks/useStore';
 import { contract_stages } from '@/constants/contract-stage';
 import { ParentBridgeClient } from '../iframe-bridge';
+import { STORAGE_KEYS, getLegacyDTraderToken } from '@/utils/token-bridge';
+import { DERIV_CONFIG } from '@/components/shared/utils/config/config';
 
 interface IframeWrapperProps {
     src: string;
@@ -281,5 +283,36 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
         </div>
     );
 });
+
+export const DTraderIframe: React.FC = () => {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const legacyToken = getLegacyDTraderToken();
+    const legacyAccount = localStorage.getItem(STORAGE_KEYS.LEGACY_ACCT1) || '';
+
+    const iframeSrc = legacyToken
+        ? `https://deriv-dtrader.vercel.app/?app_id=${DERIV_CONFIG.LEGACY_DTRADER_APP_ID}&acct1=${legacyAccount}&token1=${legacyToken}`
+        : `https://deriv-dtrader.vercel.app/?app_id=${DERIV_CONFIG.LEGACY_DTRADER_APP_ID}`;
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.origin !== 'https://deriv-dtrader.vercel.app') return;
+            if (event.data?.error?.code === 'InvalidToken') {
+                window.dispatchEvent(new CustomEvent('dtrader_session_expired'));
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    return (
+        <iframe
+            ref={iframeRef}
+            src={iframeSrc}
+            className="w-full h-full border-none"
+            allow="clipboard-write"
+        />
+    );
+};
 
 export default IframeWrapper;
