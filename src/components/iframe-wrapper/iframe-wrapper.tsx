@@ -286,56 +286,72 @@ const IframeWrapper: React.FC<IframeWrapperProps> = observer(({ src, title, clas
 
 export const DTraderIframe: React.FC = () => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const legacyToken = getLegacyDTraderToken();
-    const legacyAccount = localStorage.getItem(STORAGE_KEYS.LEGACY_ACCT1) || '';
+    const intervalRef = useRef<any>(null);
 
-    const iframeSrc = legacyToken
-        ? `https://deriv-dtrader.vercel.app/?app_id=${DERIV_CONFIG.LEGACY_DTRADER_APP_ID}&acct1=${legacyAccount}&token1=${legacyToken}`
-        : `https://deriv-dtrader.vercel.app/?app_id=${DERIV_CONFIG.LEGACY_DTRADER_APP_ID}`;
-
-    const handleIframeLoad = (event: React.SyntheticEvent<HTMLIFrameElement>) => {
-        const iframeWindow = (event.target as HTMLIFrameElement).contentWindow;
+    const startAuthBridgeHandshake = () => {
+        const iframeWindow = iframeRef.current?.contentWindow;
         if (!iframeWindow) return;
 
+        const legacyToken = getLegacyDTraderToken() || localStorage.getItem('token1');
+        const legacyAccount = localStorage.getItem('legacy_acct1') || localStorage.getItem('acct1') || '';
+
         if (!legacyToken || legacyToken.startsWith('ey')) {
-            console.warn('[ParentBridge] Aborting: No valid legacy token found.');
+            console.warn('[ParentBridge] Aborting: No valid legacy token available.');
             return;
         }
 
-        // 1. Dispatch the expected NewdtraderBridge Auth Handshake
-        iframeWindow.postMessage(
-            {
-                type: 'NEWDTRADER_BRIDGE_AUTH',
-                msg_type: 'authorization',
-                token: legacyToken,
-                accountName: legacyAccount,
-                appId: DERIV_CONFIG.LEGACY_DTRADER_APP_ID || '121856',
-                currency: 'USD',
-            },
-            'https://deriv-dtrader.vercel.app'
-        );
+        const payload = {
+            type: 'NEWDTRADER_BRIDGE_AUTH',
+            msg_type: 'authorization',
+            token: legacyToken,
+            accountName: legacyAccount,
+            appId: '121856',
+            currency: 'USD',
+        };
 
-        // 2. Dispatch legacy fallback payload
-        iframeWindow.postMessage(
-            {
-                action: 'authorize',
-                token: legacyToken,
-                loginid: legacyAccount,
-            },
-            'https://deriv-dtrader.vercel.app'
-        );
+        const fallbackPayload = {
+            action: 'authorize',
+            token: legacyToken,
+            loginid: legacyAccount,
+        };
+
+        // Clear any existing handshake loop
+        if (intervalRef.current) clearInterval(intervalRef.current);
+
+        // 1. Send immediate message
+        iframeWindow.postMessage(payload, 'https://deriv-dtrader.vercel.app');
+        iframeWindow.postMessage(fallbackPayload, 'https://deriv-dtrader.vercel.app');
+
+        // 2. Poll every 300ms until DTrader's bridge-client acknowledges receiving it
+        intervalRef.current = setInterval(() => {
+            iframeWindow.postMessage(payload, 'https://deriv-dtrader.vercel.app');
+            iframeWindow.postMessage(fallbackPayload, 'https://deriv-dtrader.vercel.app');
+        }, 300);
+
+        // Safety fallback: stop polling after 6 seconds
+        setTimeout(() => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        }, 6000);
     };
 
     useEffect(() => {
         const handleBridgeAck = (event: MessageEvent) => {
             if (event.origin !== 'https://deriv-dtrader.vercel.app') return;
 
-            if (event.data?.type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS') {
-                console.log('[ParentBridge] DTrader Bridge authenticated successfully.');
-            }
-
-            if (event.data?.type === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
-                console.error('[ParentBridge] Bridge rejected credentials:', event.data?.error);
+            // Stop handshake interval upon successful handshake or failure response
+            if (
+                event.data?.type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS' ||
+                event.data?.type === 'NEWDTRADER_BRIDGE_AUTH_FAILED' ||
+                event.data?.msg_type === 'authorize'
+            ) {
+                console.log('[ParentBridge] Handshake acknowledged by DTrader V2RootGate.');
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }
             }
 
             if (event.data?.error?.code === 'InvalidToken') {
@@ -344,16 +360,22 @@ export const DTraderIframe: React.FC = () => {
         };
 
         window.addEventListener('message', handleBridgeAck);
-        return () => window.removeEventListener('message', handleBridgeAck);
+        return () => {
+            window.removeEventListener('message', handleBridgeAck);
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
     }, []);
 
     return (
         <iframe
             ref={iframeRef}
-            src={iframeSrc}
+            src="https://deriv-dtrader.vercel.app/?app_id=121856"
+            onLoad={startAuthBridgeHandshake}
             className="w-full h-full border-none"
             allow="clipboard-write"
-            onLoad={handleIframeLoad}
         />
     );
 };

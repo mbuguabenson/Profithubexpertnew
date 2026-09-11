@@ -213,6 +213,37 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         postToIframe({ action: 'login', ...payloadInner });
     }, [activeAppId, activeLoginId, currency, hasValidLegacyToken, legacyToken]);
 
+    const intervalRef = useRef<any>(null);
+    const safetyTimeoutRef = useRef<any>(null);
+
+    const stopHandshakeLoop = useCallback(() => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        if (safetyTimeoutRef.current) {
+            clearTimeout(safetyTimeoutRef.current);
+            safetyTimeoutRef.current = null;
+        }
+    }, []);
+
+    const startAuthBridgeHandshake = useCallback(() => {
+        stopHandshakeLoop();
+
+        // 1. Send immediate message
+        syncSessionToIframe();
+
+        // 2. Poll every 300ms until DTrader's bridge-client acknowledges receiving it
+        intervalRef.current = setInterval(() => {
+            syncSessionToIframe();
+        }, 300);
+
+        // Safety fallback: stop polling after 6 seconds
+        safetyTimeoutRef.current = setTimeout(() => {
+            stopHandshakeLoop();
+        }, 6000);
+    }, [stopHandshakeLoop, syncSessionToIframe]);
+
     // Handle postMessage events from the DTrader iframe
     useEffect(() => {
         const handleIframeMessage = (event: MessageEvent) => {
@@ -232,16 +263,23 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 
             const type = data?.type || data?.action || '';
 
-            if (type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS') {
-                console.log('[ParentBridge] DTrader Bridge authenticated successfully.');
-                setHasTokenMismatch(false);
-                setIsLoading(false);
-                return;
-            }
+            // Stop handshake interval upon successful handshake or failure response
+            if (
+                type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS' ||
+                type === 'NEWDTRADER_BRIDGE_AUTH_FAILED' ||
+                data?.msg_type === 'authorize' ||
+                data?.msg_type === 'authorization'
+            ) {
+                console.log('[ParentBridge] Handshake acknowledged by DTrader V2RootGate.');
+                stopHandshakeLoop();
 
-            if (type === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
-                console.error('[ParentBridge] Bridge rejected credentials:', data?.error);
-                setHasTokenMismatch(true);
+                if (type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS' || data?.msg_type === 'authorize') {
+                    setHasTokenMismatch(false);
+                    setIsLoading(false);
+                } else if (type === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
+                    console.error('[ParentBridge] Bridge rejected credentials:', data?.error);
+                    setHasTokenMismatch(true);
+                }
                 return;
             }
 
@@ -253,7 +291,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                 type === 'PING' ||
                 type === 'NEWDTRADER_BRIDGE_INIT'
             ) {
-                syncSessionToIframe();
+                startAuthBridgeHandshake();
                 return;
             }
 
@@ -272,23 +310,15 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         };
 
         window.addEventListener('message', handleIframeMessage);
-        return () => window.removeEventListener('message', handleIframeMessage);
-    }, [hasValidLegacyToken, legacyToken, syncSessionToIframe]);
+        return () => {
+            window.removeEventListener('message', handleIframeMessage);
+            stopHandshakeLoop();
+        };
+    }, [hasValidLegacyToken, legacyToken, startAuthBridgeHandshake, stopHandshakeLoop]);
 
     const handleIframeLoad = () => {
         setIsLoading(false);
-        syncSessionToIframe();
-
-        // Staggered synchronizations for iframe mount readiness
-        const t1 = setTimeout(syncSessionToIframe, 400);
-        const t2 = setTimeout(syncSessionToIframe, 1200);
-        const t3 = setTimeout(syncSessionToIframe, 2500);
-
-        return () => {
-            clearTimeout(t1);
-            clearTimeout(t2);
-            clearTimeout(t3);
-        };
+        startAuthBridgeHandshake();
     };
 
     return (

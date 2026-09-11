@@ -500,11 +500,19 @@ export class ParentBridgeClient {
                 this.sendOTT(event.source as Window, event.origin);
             } else if (msgType === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS') {
                 console.log('[ParentBridge] DTrader Bridge authenticated successfully.');
+                if (this.retryIntervalId) {
+                    clearInterval(this.retryIntervalId);
+                    this.retryIntervalId = null;
+                }
                 this.stateMachine.transitionTo(BridgeState.AUTHENTICATED);
                 this.safeTimeout(() => this.stateMachine.transitionTo(BridgeState.CONNECTED), 100);
                 return;
             } else if (msgType === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
                 console.error('[ParentBridge] Bridge rejected credentials:', parsedData?.error);
+                if (this.retryIntervalId) {
+                    clearInterval(this.retryIntervalId);
+                    this.retryIntervalId = null;
+                }
                 this.diagnostics.lastError = parsedData?.error?.message || 'Bridge Auth Failed';
                 this.stateMachine.transitionTo(BridgeState.FAILED);
                 return;
