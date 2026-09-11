@@ -279,16 +279,32 @@ export class DerivAccountWalletService {
         const effectiveAppId = clientId || overrideAppId || defaultAppId;
 
         const headers: Record<string, string> = {
-            'Deriv-App-ID': String(effectiveAppId),
             'Content-Type': 'application/json',
         };
 
         if (token && !isInvalidBearerToken(token)) {
-            headers['Authorization'] = `Bearer ${token.replace(/^Bearer\s+/i, '')}`;
+            const cleanToken = token.replace(/^Bearer\s+/i, '');
+            headers['Authorization'] = `Bearer ${cleanToken}`;
+
+            // Per official Deriv specification:
+            // - OAuth token: send Authorization: Bearer <token>; do NOT add Deriv-App-ID.
+            // - Personal Access Token (PAT): send Authorization: Bearer <token> and Deriv-App-ID header.
+            const isPat =
+                (typeof window !== 'undefined' && localStorage.getItem('auth_method') === 'api_token') ||
+                cleanToken.startsWith('pat_') ||
+                cleanToken.startsWith('PAT_');
+
+            if (isPat) {
+                headers['Deriv-App-ID'] = String(effectiveAppId);
+            }
+        } else {
+            // Unauthenticated requests include Deriv-App-ID if available
+            headers['Deriv-App-ID'] = String(effectiveAppId);
         }
 
         return headers;
     }
+
 
     // ═════════════════════════════════════════════════════════════════════════
     // 1. WALLET REST API (https://developers.deriv.com/docs/wallet/)

@@ -14,7 +14,7 @@ export const handleInvalidToken = (source: ErrorSource) => {
         localStorage.removeItem(STORAGE_KEYS.LEGACY_TOKEN1);
         window.dispatchEvent(new CustomEvent('dtrader_session_expired'));
     } else if (source === 'bot') {
-        // Only clear bot storage
+        // Clear bot storage
         localStorage.removeItem(STORAGE_KEYS.BOT_NEW_API_TOKEN);
         OAuthTokenExchangeService.clearAuthInfo();
         window.dispatchEvent(new CustomEvent('bot_session_expired'));
@@ -62,8 +62,12 @@ export const useInvalidTokenHandler = (): { unregisterHandler: () => void } => {
             localStorage.removeItem(STORAGE_KEYS.BOT_NEW_API_TOKEN);
             localStorage.removeItem(STORAGE_KEYS.LEGACY_DTRADER_TOKEN);
             localStorage.removeItem('active_loginid');
+            localStorage.removeItem('active_account');
             localStorage.removeItem('client.loginid');
             localStorage.removeItem('client.currency');
+            localStorage.removeItem('client.accounts');
+            localStorage.removeItem('client.tokens');
+            localStorage.removeItem('client_account_details');
             localStorage.removeItem('authToken');
             localStorage.removeItem('active_token');
             localStorage.removeItem('token1');
@@ -72,6 +76,7 @@ export const useInvalidTokenHandler = (): { unregisterHandler: () => void } => {
             localStorage.removeItem('accountsList');
             localStorage.removeItem('clientAccounts');
             localStorage.removeItem('account_type');
+
 
             // Clear sessionStorage completely to remove any stale auth data
             sessionStorage.clear();

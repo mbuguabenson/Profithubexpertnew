@@ -58,35 +58,16 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     }, [activeAppId]);
 
     // Build iframe src URL with isolated legacy parameters
+    // Build iframe src URL without exposing tokens in the URL (per Deriv guidelines & user requirement: "on tokens hide them")
     const iframeSrc = useMemo(() => {
         const params = new URLSearchParams();
 
-        if (hasValidLegacyToken && legacyToken) {
-            params.set('token', legacyToken);
-            params.set('token1', legacyToken);
-            if (activeLoginId) {
-                params.set('loginid', activeLoginId);
-                params.set('account', activeLoginId);
-                params.set('acct1', activeLoginId);
-            }
+        // Safe display and routing parameters only - tokens are NEVER passed in iframe URLs
+        if (activeLoginId) {
+            params.set('loginid', activeLoginId);
+            params.set('account', activeLoginId);
+            params.set('acct1', activeLoginId);
             params.set('cur1', currency);
-
-            // Secondary legacy accounts
-            try {
-                const accounts = getAccountsList();
-                let index = 1;
-                for (const accId in accounts) {
-                    const accToken = accounts[accId];
-                    if (accToken && accId !== activeLoginId && isLegacyToken(accToken)) {
-                        index++;
-                        params.set(`acct${index}`, accId);
-                        params.set(`token${index}`, accToken);
-                        params.set(`cur${index}`, currency || 'USD');
-                    }
-                }
-            } catch (e) {
-                void e;
-            }
         }
 
         params.set('app_id', activeAppId);
@@ -102,7 +83,8 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         params.set('has_top_bar', 'false');
 
         return `${DTRADER_BASE_URL}/?${params.toString()}`;
-    }, [activeAppId, activeLoginId, currency, hasValidLegacyToken, legacyToken]);
+    }, [activeAppId, activeLoginId, currency]);
+
 
     /**
      * Dispatch session synchronization strictly with legacy token schema

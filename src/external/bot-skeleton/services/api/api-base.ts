@@ -5,7 +5,8 @@ import CommonStore from '@/stores/common-store';
 import { DerivWSAccountsService } from '@/services/derivws-accounts.service';
 import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
 import { clearAuthData } from '@/utils/auth-utils';
-import { resolveValidDerivWSToken } from '@/utils/token-bridge';
+import { purgeInvalidToken, resolveValidDerivWSToken } from '@/utils/token-bridge';
+
 import { handleBackendError, isBackendError } from '@/utils/error-handler';
 import { activeSymbolsProcessorService } from '../../../../services/active-symbols-processor.service';
 import { observer as globalObserver } from '../../utils/observer';
@@ -545,10 +546,8 @@ class APIBase {
                                 res.error.code === 'InputValidationFailed' ||
                                 String(res.error.message).includes('authorize')
                             ) {
-                                localStorage.removeItem('active_token');
-                                localStorage.removeItem('deriv_api_token');
-                                localStorage.removeItem('token');
-                                localStorage.removeItem('authToken');
+                                purgeInvalidToken(token);
+                                if (expectedId) purgeInvalidToken(expectedId);
                             }
                         }
                     } catch (tokErr: any) {
@@ -560,12 +559,11 @@ class APIBase {
                             code === 'InputValidationFailed' ||
                             String(msg).includes('authorize')
                         ) {
-                            localStorage.removeItem('active_token');
-                            localStorage.removeItem('deriv_api_token');
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('authToken');
+                            purgeInvalidToken(token);
+                            if (expectedId) purgeInvalidToken(expectedId);
                         }
                     }
+
                 }
             }
 

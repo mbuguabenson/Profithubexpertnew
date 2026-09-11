@@ -109,11 +109,26 @@ export class DerivWSAccountsService {
             throw new Error('Deriv OAuth access token is missing.');
         }
 
-        return {
-            Authorization: `Bearer ${accessToken}`,
-            'Deriv-App-ID': this.getDerivAppID(),
+        const cleanToken = accessToken.replace(/^Bearer\s+/i, '');
+        const headers: Record<string, string> = {
+            Authorization: `Bearer ${cleanToken}`,
         };
+
+        // Per official Deriv specification:
+        // - OAuth token: send Authorization: Bearer <token>; do NOT add Deriv-App-ID.
+        // - Personal Access Token (PAT): send Authorization: Bearer <token> and Deriv-App-ID header.
+        const isPat =
+            (typeof window !== 'undefined' && localStorage.getItem('auth_method') === 'api_token') ||
+            cleanToken.startsWith('pat_') ||
+            cleanToken.startsWith('PAT_');
+
+        if (isPat) {
+            headers['Deriv-App-ID'] = this.getDerivAppID();
+        }
+
+        return headers;
     }
+
 
     /**
      * Clears all cached promises (useful for testing or forced refresh).

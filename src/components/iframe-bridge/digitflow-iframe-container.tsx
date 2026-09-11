@@ -153,24 +153,18 @@ export const DigitFlowIframeContainer: React.FC<DigitFlowIframeContainerProps> =
         queryParams.set('client_id', appId);
         queryParams.set('api_version', 'v2');
 
-        const activeToken = tokenData.token || '';
         if (loginId) {
             queryParams.set('acct1', loginId);
             queryParams.set('cur1', currency);
-            if (activeToken) {
-                queryParams.set('token1', activeToken);
-            }
         }
 
         try {
             const accountsList = getAccountsList();
             let index = 1;
             for (const accId in accountsList) {
-                const accToken = accountsList[accId];
-                if (accToken && accId !== loginId) {
+                if (accId !== loginId) {
                     index++;
                     queryParams.set(`acct${index}`, accId);
-                    queryParams.set(`token${index}`, accToken);
                     queryParams.set(`cur${index}`, currency || 'USD');
                 }
             }
@@ -179,6 +173,7 @@ export const DigitFlowIframeContainer: React.FC<DigitFlowIframeContainerProps> =
         }
 
         const iframeSrc = `${targetBase}?${queryParams.toString()}`;
+
 
         useEffect(() => {
             const iframe = iframeRef.current;
