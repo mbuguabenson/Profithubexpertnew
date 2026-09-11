@@ -16,7 +16,6 @@ export default defineConfig({
                         'color-functions',
                         'global-builtin',
                         'import',
-                        'mixed-decls',
                         'legacy-js-api',
                     ],
                     includePaths: [
