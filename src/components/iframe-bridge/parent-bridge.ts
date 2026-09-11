@@ -111,7 +111,7 @@ export class ParentBridgeClient {
 
         const targetOrigin = this.iframeOrigin && this.iframeOrigin !== '*'
             ? this.iframeOrigin
-            : '*';
+            : 'https://deriv-dtrader.vercel.app';
 
         try {
             this.iframeWindow.postMessage({
@@ -136,7 +136,7 @@ export class ParentBridgeClient {
             this.logger.debug('OTT_FETCH_FAILED', {});
             return;
         }
-        const targetOrigin = replyOrigin && replyOrigin !== '*' ? replyOrigin : this.iframeOrigin;
+        const targetOrigin = replyOrigin && replyOrigin !== '*' ? replyOrigin : (this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : 'https://deriv-dtrader.vercel.app');
         try {
             targetWindow.postMessage({ type: 'OTT', ott }, targetOrigin);
         } catch (e) {
@@ -226,19 +226,11 @@ export class ParentBridgeClient {
         const msg = createMessage(type, appId, 'parent', payload);
         this.logMessage('out', msg);
         this.logger.messageSent(this.iframeOrigin, msg.type as string);
-        const origin = this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : '*';
+        const origin = this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : 'https://deriv-dtrader.vercel.app';
         try {
             this.iframeWindow.postMessage(msg, origin);
         } catch (error) {
-            if (origin !== '*') {
-                try {
-                    this.iframeWindow.postMessage(msg, '*');
-                } catch (fallbackErr) {
-                    console.error('[ParentBridge] Failed to send message', fallbackErr);
-                }
-            } else {
-                console.error('[ParentBridge] Failed to send message', error);
-            }
+            console.error('[ParentBridge] Failed to send message', error);
         }
     }
 

@@ -7,13 +7,6 @@
     "strategy": "Multi-Strategy"
   },
   {
-    "name": "AUTOTRADER",
-    "file": "AUTOTRADER.xml",
-    "description": "Fully automated trading bot with intelligent market analysis and auto-execution for hands-free trading.",
-    "difficulty": "Beginner",
-    "strategy": "Auto Trading"
-  },
-  {
     "name": "Differs Bulk",
     "file": "Differs Bulk.xml",
     "description": "Advanced trading strategy: Differs Bulk. Optimized for consistent returns and automated execution.",
