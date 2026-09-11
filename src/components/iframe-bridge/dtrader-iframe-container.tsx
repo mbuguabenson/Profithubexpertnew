@@ -147,9 +147,10 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             effectiveLoginId.startsWith('DEM')
         );
 
+        const accountsList = getAccountsList();
         const accounts =
-            Object.keys(sessionData.accounts).length > 0
-                ? Object.entries(sessionData.accounts).map(([id, tok]) => ({
+            Object.keys(accountsList).length > 0
+                ? Object.entries(accountsList).map(([id, tok]) => ({
                       account_id: id,
                       account_type: (id.startsWith('VR') ||
                       id.startsWith('VRT') ||
@@ -283,7 +284,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             currency,
             expiresAt: sessionMeta?.expiresAt || Date.now() + 3600_000,
         });
-    }, [activeAppId, activeLoginId, activeToken, currency, sessionData.accounts, sessionMeta?.expiresAt]);
+    }, [activeAppId, activeLoginId, activeToken, currency, sessionMeta?.expiresAt]);
 
     // Listen for iframe readiness messages with strict sender origin validation
     useEffect(() => {
