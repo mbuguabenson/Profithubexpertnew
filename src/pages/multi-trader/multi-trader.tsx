@@ -10,7 +10,7 @@ import './multi-trader.scss';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type TradeType = 'highlow' | 'risefall' | 'evenodd' | 'overunder' | 'accumulator' | 'multiplier';
+export type TradeType = 'highlow' | 'risefall' | 'evenodd' | 'overunder' | 'matchesdiffers' | 'accumulator' | 'multiplier';
 export type StatusVariant = 'connected' | 'disconnected' | 'connecting';
 
 export interface TradeConfig {
@@ -60,6 +60,19 @@ export interface TradeResult {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+export const formatErrorMessage = (err: any): string => {
+    if (!err) return 'Unknown error';
+    if (typeof err === 'string') return err;
+    if (err?.error?.message) return err.error.message;
+    if (err?.message) return err.message;
+    if (err?.error?.code) return err.error.code;
+    try {
+        return JSON.stringify(err?.error || err);
+    } catch {
+        return String(err);
+    }
+};
+
 function getTradeConfigs(
     type: TradeType,
     stake: number,
@@ -77,29 +90,15 @@ function getTradeConfigs(
     };
 
     switch (type) {
-        case 'highlow':
-            return [
-                {
-                    ...common,
-                    duration: 5,
-                    contract_type: 'TICKHIGH',
-                    selected_tick: 1,
-                    label: 'High Tick',
-                    strategyId: 'highlow_TICKHIGH',
-                },
-                {
-                    ...common,
-                    duration: 5,
-                    contract_type: 'TICKLOW',
-                    selected_tick: 1,
-                    label: 'Low Tick',
-                    strategyId: 'highlow_TICKLOW',
-                },
-            ];
         case 'risefall':
             return [
                 { ...common, contract_type: 'CALL', label: 'Rise', strategyId: 'risefall_CALL' },
                 { ...common, contract_type: 'PUT', label: 'Fall', strategyId: 'risefall_PUT' },
+            ];
+        case 'highlow':
+            return [
+                { ...common, contract_type: 'CALL', label: 'Higher', strategyId: 'highlow_CALL' },
+                { ...common, contract_type: 'PUT', label: 'Lower', strategyId: 'highlow_PUT' },
             ];
         case 'evenodd':
             return [
@@ -135,6 +134,25 @@ function getTradeConfigs(
                     barrier: String(predictions.under),
                     label: `Under ${predictions.under}`,
                     strategyId: 'overunder_DIGITUNDER',
+                },
+            ];
+        case 'matchesdiffers':
+            return [
+                {
+                    ...common,
+                    duration: 1,
+                    contract_type: 'DIGITMATCH',
+                    barrier: String(predictions.over),
+                    label: `Match ${predictions.over}`,
+                    strategyId: 'matchesdiffers_DIGITMATCH',
+                },
+                {
+                    ...common,
+                    duration: 1,
+                    contract_type: 'DIGITDIFF',
+                    barrier: String(predictions.over),
+                    label: `Diff ${predictions.over}`,
+                    strategyId: 'matchesdiffers_DIGITDIFF',
                 },
             ];
         case 'accumulator':
@@ -198,7 +216,7 @@ const MultiTrader: React.FC = observer(() => {
     const [martingale, setMartingale] = useState(2.0);
     const [takeProfit, setTakeProfit] = useState(10);
     const [stopLoss, setStopLoss] = useState(5);
-    const [tradeTypes, setTradeTypes] = useState<TradeType[]>(['highlow']);
+    const [tradeTypes, setTradeTypes] = useState<TradeType[]>(['risefall']);
 
     // State
     const [running, setRunning] = useState(false);
@@ -250,13 +268,19 @@ const MultiTrader: React.FC = observer(() => {
             try {
                 const res = await api_base.api.send(obj);
                 if (res?.error) {
-                    throw new Error(res.error.message || 'API Error');
+                    const msg = formatErrorMessage(res.error);
+                    const error = new Error(msg);
+                    (error as any).error = res.error;
+                    throw error;
                 }
                 return res;
             } catch (err: any) {
                 // If it's a subscription or standard call, pass error or fallback
                 if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-                    throw err;
+                    const msg = formatErrorMessage(err);
+                    const error = new Error(msg);
+                    (error as any).error = err?.error || err;
+                    throw error;
                 }
             }
         }
@@ -267,7 +291,24 @@ const MultiTrader: React.FC = observer(() => {
                 return reject(new Error('WebSocket not connected. Please connect your account.'));
             }
             const req_id = reqCounter.current++;
-            resolvers.current.set(req_id, { resolve, reject });
+            resolvers.current.set(req_id, {
+                resolve: (data: any) => {
+                    if (data?.error) {
+                        const msg = formatErrorMessage(data.error);
+                        const err = new Error(msg);
+                        (err as any).error = data.error;
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
+                },
+                reject: (err: any) => {
+                    const msg = formatErrorMessage(err);
+                    const error = new Error(msg);
+                    (error as any).error = err?.error || err;
+                    reject(error);
+                },
+            });
             wsRef.current.send(JSON.stringify({ ...obj, req_id }));
         });
     }, []);
@@ -286,14 +327,23 @@ const MultiTrader: React.FC = observer(() => {
                             resolve(data);
                             resolvers.current.delete(req_id);
                         } else if (data.error) {
-                            reject(data.error.message);
+                            const msg = formatErrorMessage(data.error);
+                            const err = new Error(msg);
+                            (err as any).error = data.error;
+                            reject(err);
                             resolvers.current.delete(req_id);
                         }
                         return;
                     }
                     resolvers.current.delete(req_id);
-                    if (data.error) reject(data.error.message);
-                    else resolve(data);
+                    if (data.error) {
+                        const msg = formatErrorMessage(data.error);
+                        const err = new Error(msg);
+                        (err as any).error = data.error;
+                        reject(err);
+                    } else {
+                        resolve(data);
+                    }
                     return;
                 }
 
@@ -491,68 +541,62 @@ const MultiTrader: React.FC = observer(() => {
 
     const trackContract = useCallback(
         (contractId: number, strategyId: string, label: string, stakeUsed: number): Promise<TradeResult> => {
-            return new Promise((resolve, reject) => {
-                const timeout = setTimeout(async () => {
-                    // If contract hasn't resolved in 45s, query explicitly
+            return new Promise((resolve) => {
+                let resolved = false;
+
+                const finish = (poc: any) => {
+                    if (resolved) return;
+                    resolved = true;
+                    clearInterval(pollInterval);
+                    clearTimeout(fallbackTimeout);
+
+                    const profit = parseFloat(poc?.profit ?? 0);
+                    const contractStatus = (poc?.status || (profit >= 0 ? 'WON' : 'LOST')).toUpperCase();
+                    const entry = poc?.entry_tick_display_value || poc?.entry_spot_display_value || 'N/A';
+                    const exit = poc?.exit_tick_display_value || poc?.exit_spot_display_value || 'N/A';
+
+                    resolve({
+                        strategyId,
+                        label,
+                        stakeUsed,
+                        profit,
+                        message: `[${label}] ${contractStatus} ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} USD`,
+                        transaction: {
+                            id: contractId,
+                            time: new Date().toLocaleTimeString(),
+                            type: label,
+                            entry,
+                            exit,
+                            buy_price: stakeUsed,
+                            profit,
+                        },
+                    } as TradeResult);
+                };
+
+                // Active 1s polling for contract resolution
+                const pollInterval = setInterval(async () => {
+                    if (resolved) return;
                     try {
                         const res = await sendJSON({ proposal_open_contract: 1, contract_id: contractId });
                         const poc = res?.proposal_open_contract;
-                        if (poc) {
-                            const profit = parseFloat(poc.profit ?? 0);
-                            const stat = (poc.status || 'CLOSED').toUpperCase();
-                            resolve({
-                                strategyId,
-                                label,
-                                stakeUsed,
-                                profit,
-                                message: `[${label}] ${stat} ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} USD`,
-                                transaction: {
-                                    id: contractId,
-                                    time: new Date().toLocaleTimeString(),
-                                    type: label,
-                                    entry: poc.entry_tick_display_value || poc.entry_spot_display_value || 'N/A',
-                                    exit: poc.exit_tick_display_value || poc.exit_spot_display_value || 'N/A',
-                                    buy_price: stakeUsed,
-                                    profit,
-                                },
-                            });
+                        if (poc?.is_sold || poc?.status === 'won' || poc?.status === 'lost') {
+                            finish(poc);
                         }
                     } catch {}
+                }, 1000);
+
+                // Fallback timeout after 45s
+                const fallbackTimeout = setTimeout(async () => {
+                    if (resolved) return;
+                    try {
+                        const res = await sendJSON({ proposal_open_contract: 1, contract_id: contractId });
+                        finish(res?.proposal_open_contract || {});
+                    } catch {
+                        finish({});
+                    }
                 }, 45000);
 
-                const req_id = reqCounter.current++;
-                resolvers.current.set(req_id, {
-                    isSubscription: true,
-                    resolve: (data: any) => {
-                        clearTimeout(timeout);
-                        const poc = data.proposal_open_contract;
-                        const profit = parseFloat(poc?.profit ?? 0);
-                        const contractStatus = (poc?.status || 'CLOSED').toUpperCase();
-                        const entry = poc?.entry_tick_display_value || poc?.entry_spot_display_value || 'N/A';
-                        const exit = poc?.exit_tick_display_value || poc?.exit_spot_display_value || 'N/A';
-                        resolve({
-                            strategyId,
-                            label,
-                            stakeUsed,
-                            profit,
-                            message: `[${label}] ${contractStatus} ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} USD`,
-                            transaction: {
-                                id: contractId,
-                                time: new Date().toLocaleTimeString(),
-                                type: label,
-                                entry,
-                                exit,
-                                buy_price: stakeUsed,
-                                profit,
-                            },
-                        } as TradeResult);
-                    },
-                    reject: err => {
-                        clearTimeout(timeout);
-                        reject(err);
-                    },
-                });
-
+                // Also subscribe on socket if available
                 sendJSON({ proposal_open_contract: 1, contract_id: contractId, subscribe: 1 }).catch(() => {});
             });
         },
@@ -613,15 +657,16 @@ const MultiTrader: React.FC = observer(() => {
                 'info'
             );
 
-            // Fetch proposals concurrently
+            // Fetch proposals concurrently using both symbol and underlying_symbol (Deriv API standard)
             const proposalPromises = allConfigs.map(c => {
                 const currentStake = strategyStakes.current[c.strategyId] || _baseStake;
                 const payload: Record<string, any> = {
                     proposal: 1,
                     amount: currentStake,
-                    basis: c.basis,
+                    basis: c.basis || 'stake',
                     currency: activeCurr,
                     symbol: _market,
+                    underlying_symbol: _market,
                     contract_type: c.contract_type,
                 };
                 if (c.duration && c.duration > 0 && c.duration_unit) {
@@ -636,27 +681,28 @@ const MultiTrader: React.FC = observer(() => {
                 return sendJSON(payload);
             });
 
-            let proposalResults: any[] = [];
-            try {
-                proposalResults = await Promise.all(proposalPromises);
-            } catch (err: any) {
-                addLog(`Proposal error: ${err?.message || err}`, 'error');
-                await new Promise(r => setTimeout(r, 3000));
-                if (runningRef.current)
-                    placeTrades(_market, _baseStake, _ticks, _martingale, _takeProfit, _stopLoss, _tradeTypes);
-                return;
-            }
+            const proposalResults = await Promise.allSettled(proposalPromises);
 
             // Buy proposals concurrently
             const buyPromises: Promise<any>[] = [];
             const buyMeta: { config: TradeConfig; idx: number }[] = [];
 
-            proposalResults.forEach((res, i) => {
-                if (res?.proposal) {
-                    const id = res.proposal.id;
-                    const stakeUsed = strategyStakes.current[allConfigs[i].strategyId] || _baseStake;
-                    buyMeta.push({ config: { ...allConfigs[i], amount: stakeUsed }, idx: buyPromises.length });
-                    buyPromises.push(sendJSON({ buy: id, price: stakeUsed }));
+            proposalResults.forEach((result, i) => {
+                const config = allConfigs[i];
+                if (result.status === 'fulfilled' && result.value?.proposal) {
+                    const proposal = result.value.proposal;
+                    const id = proposal.id;
+                    const stakeUsed = strategyStakes.current[config.strategyId] || _baseStake;
+                    const askPrice =
+                        typeof proposal.ask_price === 'number'
+                            ? proposal.ask_price
+                            : parseFloat(proposal.ask_price) || stakeUsed;
+                    buyMeta.push({ config: { ...config, amount: stakeUsed }, idx: buyPromises.length });
+                    buyPromises.push(sendJSON({ buy: id, price: askPrice }));
+                } else {
+                    const reason = result.status === 'rejected' ? result.reason : (result as any).value?.error;
+                    const errMsg = formatErrorMessage(reason);
+                    addLog(`[${config.label}] Proposal rejected: ${errMsg}`, 'error');
                 }
             });
 
@@ -669,21 +715,21 @@ const MultiTrader: React.FC = observer(() => {
             }
 
             addLog(`Executing ${buyPromises.length} simultaneous contracts…`, 'info');
-            const buyResults = await Promise.all(buyPromises);
+            const buyResults = await Promise.allSettled(buyPromises);
 
             // Track contracts
             const trackPromises: Promise<TradeResult>[] = [];
             let bought = 0;
             buyMeta.forEach(({ config, idx }) => {
-                const contractId = buyResults[idx]?.buy?.contract_id;
+                const buyResult = buyResults[idx];
+                const contractId = buyResult.status === 'fulfilled' ? buyResult.value?.buy?.contract_id : null;
                 if (contractId) {
                     trackPromises.push(trackContract(contractId, config.strategyId, config.label, config.amount));
                     bought++;
                 } else {
-                    addLog(
-                        `[${config.label}] Purchase failed: ${buyResults[idx]?.error?.message || 'Rejected'}`,
-                        'error'
-                    );
+                    const reason = buyResult.status === 'rejected' ? buyResult.reason : (buyResult as any).value?.error;
+                    const errMsg = formatErrorMessage(reason);
+                    addLog(`[${config.label}] Purchase failed: ${errMsg}`, 'error');
                 }
             });
 
@@ -916,10 +962,11 @@ const MultiTrader: React.FC = observer(() => {
                         <label>Active Trading Strategies</label>
                         <div className='multi-trader__strategy-grid'>
                             {[
-                                { id: 'highlow', label: 'High / Low', icon: '📈' },
                                 { id: 'risefall', label: 'Rise / Fall', icon: '↕️' },
                                 { id: 'evenodd', label: 'Even / Odd', icon: '🔢' },
                                 { id: 'overunder', label: 'Over / Under', icon: '🎯' },
+                                { id: 'matchesdiffers', label: 'Matches / Differs', icon: '⚡' },
+                                { id: 'highlow', label: 'High / Low', icon: '📈' },
                                 { id: 'accumulator', label: 'Accumulator', icon: '🔋' },
                                 { id: 'multiplier', label: 'Multiplier', icon: '✖️' },
                             ].map(strat => {
