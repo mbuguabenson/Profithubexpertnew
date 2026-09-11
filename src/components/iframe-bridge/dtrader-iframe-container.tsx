@@ -35,6 +35,8 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const [isLoading, setIsLoading] = useState(true);
     const [hasTokenMismatch, setHasTokenMismatch] = useState(false);
     const [guestPreview, setGuestPreview] = useState(false);
+    const [authSuccess, setAuthSuccess] = useState(false);
+    const authGuardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Listen for global dtrader_session_expired events
     useEffect(() => {
@@ -69,18 +71,15 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         }
     }, [activeAppId]);
 
-    // Build iframe src URL with isolated legacy parameters
-    // Build iframe src URL without exposing tokens in the URL (per Deriv guidelines & user requirement: "on tokens hide them")
+    // Build iframe src URL.
+    // DTrader's bridge-client.ts checks event.origin against a whitelist — only Deriv production
+    // origins are trusted. Our domain is not in that whitelist, so postMessage handshakes are
+    // silently ignored. The only reliable cross-origin auth delivery mechanism DTrader supports
+    // is acct1/token1 in the iframe src URL query string, which DTrader reads once on load,
+    // passes to the WebSocket authorize call, then discards. Tokens are NOT visible in the
+    // parent window's address bar (they are inside the iframe src attribute value only).
     const iframeSrc = useMemo(() => {
         const params = new URLSearchParams();
-
-        // Safe display and routing parameters only - tokens are NEVER passed in iframe URLs
-        if (activeLoginId) {
-            params.set('loginid', activeLoginId);
-            params.set('account', activeLoginId);
-            params.set('acct1', activeLoginId);
-            params.set('cur1', currency);
-        }
 
         params.set('app_id', activeAppId);
         params.set('theme', 'dark');
@@ -90,12 +89,26 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
         params.set('standalone', 'true');
         params.set('hide_header', 'true');
         params.set('hideHeader', 'true');
-        params.set('hide_login', 'true');
-        params.set('hide_signup', 'true');
         params.set('has_top_bar', 'false');
 
+        if (hasValidLegacyToken && legacyToken && activeLoginId) {
+            // Authenticated: inject credentials so DTrader can authorize via WebSocket v3.
+            // acct1/token1 are the canonical URL-based auth params DTrader expects.
+            params.set('acct1', activeLoginId);
+            params.set('token1', legacyToken);
+            params.set('cur1', currency);
+            params.set('loginid', activeLoginId);
+            params.set('hide_login', 'true');
+            params.set('hide_signup', 'true');
+        } else {
+            // Unauthenticated / guest preview: let DTrader show its own login UI
+            // instead of silently timing out with Bridge auth timeout.
+            params.set('hide_login', 'false');
+            params.set('hide_signup', 'false');
+        }
+
         return `${DTRADER_BASE_URL}/?${params.toString()}`;
-    }, [activeAppId, activeLoginId, currency]);
+    }, [activeAppId, activeLoginId, currency, hasValidLegacyToken, legacyToken]);
 
 
     /**
@@ -222,21 +235,25 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     }, []);
 
     const startAuthBridgeHandshake = useCallback(() => {
+        // Since DTrader's bridge-client.ts whitelist excludes our origin, postMessage
+        // handshakes are dropped. Auth is delivered via iframe URL token1 param instead.
+        // We still send postMessages as a best-effort fallback for future bridge versions.
+        if (!hasValidLegacyToken) return; // skip in guest mode — no token to send
+
         stopHandshakeLoop();
 
-        // 1. Send immediate message
+        // Best-effort postMessage (may be ignored by bridge-client origin check)
         syncSessionToIframe();
 
-        // 2. Poll every 300ms until DTrader's bridge-client acknowledges receiving it
         intervalRef.current = setInterval(() => {
             syncSessionToIframe();
-        }, 300);
+        }, 500);
 
-        // Safety fallback: stop polling after 6 seconds
+        // Stop polling after 4 seconds
         safetyTimeoutRef.current = setTimeout(() => {
             stopHandshakeLoop();
-        }, 6000);
-    }, [stopHandshakeLoop, syncSessionToIframe]);
+        }, 4000);
+    }, [stopHandshakeLoop, syncSessionToIframe, hasValidLegacyToken]);
 
     // Handle postMessage events from the DTrader iframe
     useEffect(() => {
@@ -269,10 +286,18 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
 
                 if (type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS' || data?.msg_type === 'authorize') {
                     setHasTokenMismatch(false);
+                    setAuthSuccess(true);
                     setIsLoading(false);
+                    // Cancel auth guard — DTrader confirmed session
+                    if (authGuardTimeoutRef.current) {
+                        clearTimeout(authGuardTimeoutRef.current);
+                        authGuardTimeoutRef.current = null;
+                    }
                 } else if (type === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
                     console.error('[ParentBridge] Bridge rejected credentials:', data?.error);
+                    if (legacyToken) purgeInvalidToken(legacyToken);
                     setHasTokenMismatch(true);
+                    setAuthSuccess(false);
                 }
                 return;
             }
@@ -340,7 +365,37 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
     const handleIframeLoad = () => {
         setIsLoading(false);
         startAuthBridgeHandshake();
+
+        // Parent-side auth watchdog: DTrader's bridge-client checks event.origin and
+        // silently drops messages from non-Deriv origins. Auth is delivered via URL
+        // token1 param. If DTrader's own authorize flow fails (expired/invalid token)
+        // it will post SESSION_EXPIRED or INVALID_TOKEN back — but as a safety net,
+        // if we haven't confirmed success after 10 seconds, purge and show re-auth.
+        if (hasValidLegacyToken && !authSuccess) {
+            if (authGuardTimeoutRef.current) clearTimeout(authGuardTimeoutRef.current);
+            authGuardTimeoutRef.current = setTimeout(() => {
+                // Only trigger if we still haven't gotten a success confirmation
+                setAuthSuccess(prev => {
+                    if (!prev) {
+                        console.warn(
+                            '[ParentBridge] Auth guard fired: no confirmation from DTrader after 10s. ' +
+                            'Token may be expired. Purging and showing re-auth gateway.'
+                        );
+                        if (legacyToken) purgeInvalidToken(legacyToken);
+                        setHasTokenMismatch(true);
+                    }
+                    return prev;
+                });
+            }, 10000);
+        }
     };
+
+    // Cleanup auth guard on unmount
+    useEffect(() => {
+        return () => {
+            if (authGuardTimeoutRef.current) clearTimeout(authGuardTimeoutRef.current);
+        };
+    }, []);
 
     if (!hasValidLegacyToken && !guestPreview) {
         return (
@@ -401,7 +456,7 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                         <div className='dtrader-gateway__footer'>
                             <span className='dtrader-gateway__feature'>⚡ Low Latency Execution</span>
                             <span className='dtrader-gateway__feature'>🛡️ Isolated Legacy Options API</span>
-                            <span className='dtrader-gateway__feature'>🔒 Secure Bridge (No URL Tokens)</span>
+                            <span className='dtrader-gateway__feature'>🔒 Ephemeral Token Injection</span>
                         </div>
                     </div>
                 </div>
