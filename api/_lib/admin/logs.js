@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const DATA_DIR = path.resolve(process.cwd(), 'data');
 const LOGS_FILE = path.join(DATA_DIR, 'system-logs.json');
 
 const ensureDataDir = () => {

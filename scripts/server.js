@@ -3,16 +3,9 @@
 const http = require('http');
 const url = require('url');
 
-const authHandler = require('../api/admin/auth');
-const siteConfigHandler = require('../api/admin/site-config');
-const systemHealthHandler = require('../api/admin/system-health');
-const copyRequestsHandler = require('../api/admin/copy-requests');
-const transactionsHandler = require('../api/admin/transactions');
-const logsHandler = require('../api/admin/logs');
-const notificationsHandler = require('../api/admin/notifications');
-const botsHandler = require('../api/admin/bots');
+const adminHandler = require('../api/admin-handler');
+const sessionHandler = require('../api/session-handler');
 const derivAccountsHandler = require('../api/deriv-accounts');
-const derivAppsHandler = require('../api/admin/deriv-apps');
 const derivOtpHandler = require('../api/deriv-otp/[accountId]');
 const supabaseProxyHandler = require('../api/supabase-proxy');
 
@@ -96,35 +89,14 @@ const server = http.createServer(async (req, res) => {
             });
         }
 
-        if (pathname === '/api/admin/auth') {
-            return await authHandler(req, res);
+        if (pathname === '/api/admin' || pathname.startsWith('/api/admin/')) {
+            return await adminHandler(req, res);
         }
-        if (pathname === '/api/admin/site-config') {
-            return await siteConfigHandler(req, res);
-        }
-        if (pathname === '/api/admin/system-health') {
-            return await systemHealthHandler(req, res);
-        }
-        if (pathname === '/api/admin/copy-requests') {
-            return await copyRequestsHandler(req, res);
-        }
-        if (pathname === '/api/admin/transactions') {
-            return await transactionsHandler(req, res);
-        }
-        if (pathname === '/api/admin/logs') {
-            return await logsHandler(req, res);
-        }
-        if (pathname === '/api/admin/notifications') {
-            return await notificationsHandler(req, res);
-        }
-        if (pathname === '/api/admin/bots') {
-            return await botsHandler(req, res);
+        if (pathname === '/api/session' || pathname.startsWith('/api/session/')) {
+            return await sessionHandler(req, res);
         }
         if (pathname === '/api/deriv-accounts') {
             return await derivAccountsHandler(req, res);
-        }
-        if (pathname === '/api/admin/deriv-apps') {
-            return await derivAppsHandler(req, res);
         }
         if (pathname.startsWith('/api/deriv-otp/')) {
             const parts = pathname.split('/');

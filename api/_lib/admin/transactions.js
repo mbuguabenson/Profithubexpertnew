@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const DATA_DIR = path.resolve(process.cwd(), 'data');
 const TXN_FILE = path.join(DATA_DIR, 'mpesa-transactions.json');
 const COMM_FILE = path.join(DATA_DIR, 'commissions.json');
 

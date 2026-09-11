@@ -1,6 +1,6 @@
 'use strict';
 
-const brandConfig = require('../../brand.config.json');
+const brandConfig = require('../../../brand.config.json');
 
 const getDerivBaseURL = () => {
     const environment = process.env.NODE_ENV === 'production' ? 'production' : 'staging';
