@@ -1,7 +1,7 @@
 import { BridgeStateMachine, BridgeState } from './bridge-state-machine';
 import { SessionManager as _SessionManager, sessionManager } from './session-manager';
 import { BridgeEvent, BridgeMessage, createMessage, isValidBridgeMessage } from './protocol';
-import { getActiveToken, resolveValidDerivWSToken, getAccountsList } from '@/utils/token-bridge';
+import { secureSessionService } from '@/services/secure-session.service';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { makeBridgeLogger, generateInstanceId } from './bridge-diagnostics';
 
@@ -100,210 +100,70 @@ export class ParentBridgeClient {
         }, 500);
     }
 
-    private sendAuthPayloadToWindow(
-        targetWindow: Window,
-        tok: string,
-        loginid: string,
-        currency: string,
-        appIdStr: string
-    ) {
-        if (!targetWindow || targetWindow === window) return;
+    /**
+     * Sends AUTH_INIT to the iframe: loginid + expiresAt ONLY, NO raw token.
+     * The iframe will reply with REQUEST_TOKEN, which triggers sendOTT().
+     */
+    private sendAuthInit() {
+        if (!this.iframeWindow) return;
+        const meta = secureSessionService.getSessionMeta();
+        if (!meta?.loggedIn || !meta.loginid) return;
+
+        const targetOrigin = this.iframeOrigin && this.iframeOrigin !== '*'
+            ? this.iframeOrigin
+            : '*';
+
         try {
-            const hasToken =
-                !!tok && tok !== 'null' && tok !== 'undefined' && tok !== 'a1-guest' && tok !== 'dummy_token';
-            const authMode = hasToken ? 'derivws_otp' : 'none';
-            const effectiveToken = hasToken ? tok : '';
-
-            const accountsList = getAccountsList();
-            const isDemo =
-                loginid.startsWith('VR') ||
-                loginid.startsWith('VRT') ||
-                loginid.startsWith('DOT') ||
-                loginid.startsWith('DEM');
-
-            const accounts =
-                Object.keys(accountsList).length > 0
-                    ? Object.entries(accountsList).map(([id]) => ({
-                          account_id: id,
-                          account_type: (id.startsWith('VR') ||
-                          id.startsWith('VRT') ||
-                          id.startsWith('DOT') ||
-                          id.startsWith('DEM')
-                              ? 'demo'
-                              : 'real') as 'demo' | 'real',
-                          currency: currency || 'USD',
-                          balance: '10000.00',
-                          status: 'active',
-                      }))
-                    : [
-                          {
-                              account_id: loginid || 'DOT100000',
-                              account_type: isDemo ? ('demo' as const) : ('real' as const),
-                              currency: currency || 'USD',
-                              balance: '10000.00',
-                              status: 'active',
-                          },
-                      ];
-
-            const activeAccId = loginid || accounts[0].account_id;
-            const profileCountry =
-                localStorage.getItem('residence') ||
-                localStorage.getItem('country') ||
-                localStorage.getItem('client.country') ||
-                'ke';
-
-            // Exact NewdtraderAuthMsg schema required by isAuthMsg in @deriv/api-v2 bridge-types.ts
-            const v2AuthMsg = {
-                type: 'deriv:dtrader:auth',
-                version: 'v2',
-                auth: {
-                    access_token: effectiveToken,
-                    token_type: 'Bearer',
-                    expires_at: Date.now() + 86400000,
-                },
-                activeAccountId: activeAccId,
-                accounts: accounts,
-                otpUrl: '',
-                userProfile: {
-                    country: profileCountry.toLowerCase(),
-                    currency: currency || 'USD',
-                    email: 'user@profithub.co.ke',
-                    fullname: 'Profithub Trader',
-                },
-                clientId: appIdStr || '121856',
-                apiBase: 'https://ws.derivws.com/websockets/v3',
-                authBase: 'https://oauth.deriv.com',
-            };
-
-            const legacyV2AuthMsg = {
-                ...v2AuthMsg,
-                type: 'newdtrader:auth',
-            };
-
-            const payloadInner = {
-                status: 'success',
-                tokenPresent: hasToken,
-                token: effectiveToken,
-                token1: effectiveToken,
-                loginid: activeAccId,
-                loginId: activeAccId,
-                acct1: activeAccId,
-                account_id: activeAccId,
-                currency: currency || 'USD',
-                cur1: currency || 'USD',
-                accountType: 'ZOOM',
-                account_type: 'ZOOM',
-                appId: Number(appIdStr) || 121856,
-                app_id: appIdStr,
-                server: 'green',
-                timestamp: Date.now(),
-                authMode: authMode,
-                defaultSymbol: '1HZ100V',
-                embedBase: 'https://deriv-dtrader.vercel.app',
-            };
-
-            const payloadData = {
-                ...payloadInner,
-                payload: payloadInner,
-            };
-
-            const structuredMsg = createMessage('NEWDTRADER_BRIDGE_AUTH', appIdStr, 'parent', payloadInner);
-
-            const postBoth = (msg: any) => {
-                try {
-                    const targetOrigin = this.iframeOrigin && this.iframeOrigin !== '*' ? this.iframeOrigin : '*';
-                    try {
-                        targetWindow.postMessage(msg, targetOrigin);
-                    } catch {
-                        if (targetOrigin !== '*') {
-                            try {
-                                targetWindow.postMessage(msg, '*');
-                            } catch {}
-                        }
-                    }
-                    if (typeof msg === 'object') {
-                        try {
-                            targetWindow.postMessage(JSON.stringify(msg), targetOrigin);
-                        } catch {
-                            if (targetOrigin !== '*') {
-                                try {
-                                    targetWindow.postMessage(JSON.stringify(msg), '*');
-                                } catch {}
-                            }
-                        }
-                    }
-                } catch (e) {
-                    // ignore
-                }
-            };
-
-            // Post exact @deriv/api-v2 bridge payloads FIRST
-            postBoth(v2AuthMsg);
-            postBoth(legacyV2AuthMsg);
-
-            // Post fallback & legacy variations
-            postBoth(structuredMsg);
-            postBoth({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
-            postBoth({ action: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
-            postBoth({ type: 'NEWDTRADER_BRIDGE_AUTH_RESPONSE', ...payloadData });
-            postBoth({ type: 'NEW_DTRADER_BRIDGE_AUTH', ...payloadData });
-            postBoth({ type: 'SESSION_DATA', ...payloadData });
-            postBoth({ type: 'DERIV_AUTH', ...payloadData });
-            postBoth({ type: 'AUTH_TOKEN', ...payloadData });
-            postBoth({ type: 'HANDSHAKE_RESPONSE', ...payloadData });
-            postBoth({ type: 'BRIDGE_AUTH_SUCCESS', ...payloadData });
-            postBoth({ type: 'AUTH_SUCCESS', ...payloadData });
-            postBoth({ action: 'setToken', ...payloadData });
-            postBoth({ action: 'AUTHORIZE', ...payloadData });
+            this.iframeWindow.postMessage({
+                type:      'AUTH_INIT',
+                source:    'parent',
+                loginid:   meta.loginid,
+                currency:  meta.currency,
+                expiresAt: meta.expiresAt,
+            }, targetOrigin);
         } catch (e) {
-            // ignore
+            this.logger.debug('AUTH_INIT_SEND_FAILED', { error: String(e) });
         }
     }
 
-    private startProactiveAuthLoop() {
-        if (this.retryIntervalId) {
-            clearInterval(this.retryIntervalId);
+    /**
+     * Fetches a One-Time Token from the server and posts it to the iframe.
+     * Called when the iframe sends REQUEST_TOKEN.
+     */
+    private async sendOTT(targetWindow: Window, replyOrigin: string) {
+        const ott = await secureSessionService.getOTT();
+        if (!ott) {
+            this.logger.debug('OTT_FETCH_FAILED', {});
+            return;
         }
+        const targetOrigin = replyOrigin && replyOrigin !== '*' ? replyOrigin : this.iframeOrigin;
+        try {
+            targetWindow.postMessage({ type: 'OTT', ott }, targetOrigin);
+        } catch (e) {
+            this.logger.debug('OTT_SEND_FAILED', { error: String(e) });
+        }
+    }
+
+
+    private startProactiveAuthLoop() {
+        if (this.retryIntervalId) clearInterval(this.retryIntervalId);
 
         let attempts = 0;
-        const maxAttempts = 100; // 25 seconds @ 250ms interval
+        const maxAttempts = 20; // ~5s @ 250ms
 
-        const postAuth = async () => {
+        const tryInit = () => {
             if (!this.iframeWindow) return;
-            try {
-                const session = sessionManager.getSession();
-                let loginid =
-                    session?.loginid ||
-                    localStorage.getItem('active_loginid') ||
-                    localStorage.getItem('client.loginid') ||
-                    'DOT100000';
-                const syncToken = getActiveToken() || '';
-                const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
-                const appIdStr = String(session?.appId || getAppId() || '121856');
-
-                // Send synchronous payload immediately (<1ms)
-                this.sendAuthPayloadToWindow(this.iframeWindow, syncToken, loginid, currency, appIdStr);
-
-                // Refine with async token resolution if syncToken was empty
-                if (!syncToken) {
-                    const resolvedToken = await resolveValidDerivWSToken(loginid);
-                    if (resolvedToken && resolvedToken !== syncToken && this.iframeWindow) {
-                        this.sendAuthPayloadToWindow(this.iframeWindow, resolvedToken, loginid, currency, appIdStr);
-                    }
-                }
-            } catch (e) {
-                // ignore
-            }
+            this.sendAuthInit();
         };
 
-        postAuth();
+        tryInit();
         this.retryIntervalId = setInterval(() => {
             attempts++;
             if (!this.iframeWindow || attempts >= maxAttempts) {
                 if (this.retryIntervalId) clearInterval(this.retryIntervalId);
                 return;
             }
-            postAuth();
+            tryInit();
         }, 250);
     }
 
@@ -425,33 +285,18 @@ export class ParentBridgeClient {
             }
         }
 
-        // On ANY message from iframe window, immediately reply with full auth payload
+        // On ANY message from the iframe, reply with AUTH_INIT (no raw token)
         if (event.source && typeof (event.source as Window).postMessage === 'function') {
-            (async () => {
-                try {
-                    const session = sessionManager.getSession();
-                    let loginid =
-                        session?.loginid ||
-                        localStorage.getItem('active_loginid') ||
-                        localStorage.getItem('client.loginid') ||
-                        '';
-                    const syncToken = getActiveToken() || '';
-                    const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
-                    const appIdStr = String(session?.appId || getAppId() || '121856');
-                    const targetWin = event.source as Window;
-
-                    this.sendAuthPayloadToWindow(targetWin, syncToken, loginid, currency, appIdStr);
-
-                    if (!syncToken) {
-                        const resolvedToken = await resolveValidDerivWSToken(loginid);
-                        if (resolvedToken && resolvedToken !== syncToken) {
-                            this.sendAuthPayloadToWindow(targetWin, resolvedToken, loginid, currency, appIdStr);
-                        }
-                    }
-                } catch (e) {
-                    // ignore
-                }
-            })();
+            const msgType = parsedData?.type || parsedData?.action || '';
+            if (msgType === 'REQUEST_TOKEN') {
+                // Iframe is explicitly asking for an OTT — fetch and relay it
+                this.sendOTT(event.source as Window, event.origin);
+            } else if (
+                msgType === 'IFRAME_READY' || msgType === 'BRIDGE_READY' ||
+                msgType === 'REQUEST_SESSION' || msgType === 'REQUEST_AUTH'
+            ) {
+                this.sendAuthInit();
+            }
         }
 
         if (!isValidBridgeMessage(parsedData)) {
@@ -497,21 +342,8 @@ export class ParentBridgeClient {
     }
 
     private handleSessionRequest = () => {
-        const session = sessionManager.getSession();
-        let loginid =
-            session?.loginid || localStorage.getItem('active_loginid') || localStorage.getItem('client.loginid') || '';
-        let token = session?.token || getActiveToken() || localStorage.getItem('token') || '';
-        const currency = session?.currency || localStorage.getItem('client.currency') || 'USD';
-        const appIdStr = String(session?.appId || getAppId() || '121856');
-
-        this.diagnostics.sessionStatus = 'valid';
-        this.diagnostics.appId = appIdStr;
-        this.stateMachine.transitionTo(BridgeState.REQUESTING_SESSION);
-
-        if (this.iframeWindow) {
-            this.sendAuthPayloadToWindow(this.iframeWindow, token, loginid, currency, appIdStr);
-        }
-
+        // Secure: send AUTH_INIT (loginid only) instead of raw session tokens
+        this.sendAuthInit();
         this.stateMachine.transitionTo(BridgeState.AUTHENTICATING);
         this.sendMessage(BridgeEvent.AUTH_START, { timestamp: Date.now() });
 
@@ -529,7 +361,8 @@ export class ParentBridgeClient {
             return;
         }
         this.diagnostics.sessionStatus = 'valid';
-        this.handleSessionRequest();
+        // Re-send AUTH_INIT when session changes (e.g. account switch)
+        this.sendAuthInit();
     };
 
     private attemptRecovery() {

@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useStore } from '@/hooks/useStore';
-import { resolveValidDerivWSToken, isInvalidBearerToken } from '@/utils/token-bridge';
-import { OAuthTokenExchangeService } from '@/services/oauth-token-exchange.service';
-import { V2GetActiveClientId } from '@/external/bot-skeleton/services/api/appId';
+import { secureSessionService } from '@/services/secure-session.service';
 import { getAppId } from '@/components/shared/utils/config/config';
 import { Loader2 } from 'lucide-react';
 import './dtrader-iframe-container.scss';
@@ -14,361 +12,118 @@ interface DTraderIframeContainerProps {
     className?: string;
 }
 
-/**
- * Deeply extracts the active Deriv session & all accounts from all possible storage locations.
- * Ensures synchronous resolution so initial render and iframe src already contain the credentials.
- */
-const extractCurrentSession = () => {
-    let loginid = '';
-    let token = '';
-    let currency = 'USD';
-    const accounts: Record<string, string> = {};
-
-    try {
-        // 1. Scan accountsList
-        const rawAccountsList = localStorage.getItem('accountsList');
-        if (rawAccountsList) {
-            const parsed = JSON.parse(rawAccountsList);
-            if (parsed && typeof parsed === 'object') {
-                for (const k in parsed) {
-                    const t = typeof parsed[k] === 'string' ? parsed[k] : parsed[k]?.token;
-                    if (t && !isInvalidBearerToken(t)) {
-                        accounts[k] = t;
-                    }
-                }
-            }
-        }
-    } catch (e) {
-        void e;
-    }
-
-    try {
-        // 2. Scan client.accounts & clientAccounts
-        const rawClientAccounts = localStorage.getItem('client.accounts') || localStorage.getItem('clientAccounts');
-        if (rawClientAccounts) {
-            const parsed = JSON.parse(rawClientAccounts);
-            if (parsed && typeof parsed === 'object') {
-                for (const k in parsed) {
-                    const t = parsed[k]?.token || (typeof parsed[k] === 'string' ? parsed[k] : '');
-                    if (t && !isInvalidBearerToken(t)) {
-                        accounts[k] = t;
-                    }
-                    if (parsed[k]?.currency) {
-                        currency = parsed[k].currency;
-                    }
-                }
-            }
-        }
-    } catch (e) {
-        void e;
-    }
-
-    try {
-        // 3. Scan client_account_details
-        const rawDetails = localStorage.getItem('client_account_details');
-        if (rawDetails) {
-            const parsed = JSON.parse(rawDetails);
-            if (Array.isArray(parsed)) {
-                parsed.forEach(item => {
-                    const id = item?.loginid || item?.account_id;
-                    const t = item?.token;
-                    if (id && t && !isInvalidBearerToken(t)) {
-                        accounts[id] = t;
-                    }
-                    if (item?.currency) {
-                        currency = item.currency;
-                    }
-                });
-            }
-        }
-    } catch (e) {
-        void e;
-    }
-
-    // 4. Scan acct1..acct10 & token1..token10
-    for (let i = 1; i <= 10; i++) {
-        const a = localStorage.getItem(`acct${i}`) || sessionStorage.getItem(`acct${i}`);
-        const t = localStorage.getItem(`token${i}`) || sessionStorage.getItem(`token${i}`);
-        if (a && t && !isInvalidBearerToken(t)) {
-            accounts[a] = t;
-        }
-    }
-
-    // 5. Determine active loginid
-    loginid =
-        localStorage.getItem('active_loginid') ||
-        localStorage.getItem('client.loginid') ||
-        localStorage.getItem('acct1') ||
-        sessionStorage.getItem('active_loginid') ||
-        sessionStorage.getItem('acct1') ||
-        V2GetActiveClientId() ||
-        '';
-
-    // If active loginid is still empty, pick the first account key (preferring real account)
-    if (!loginid && Object.keys(accounts).length > 0) {
-        const keys = Object.keys(accounts);
-        loginid = keys.find(k => !k.startsWith('VR')) || keys[0];
-    }
-
-    // 6. Determine active token
-    if (loginid && accounts[loginid]) {
-        token = accounts[loginid];
-    } else {
-        token =
-            localStorage.getItem('token1') ||
-            localStorage.getItem('active_token') ||
-            localStorage.getItem('authToken') ||
-            localStorage.getItem('token') ||
-            sessionStorage.getItem('token1') ||
-            sessionStorage.getItem('active_token') ||
-            '';
-        if ((!token || isInvalidBearerToken(token)) && Object.keys(accounts).length > 0) {
-            token = accounts[Object.keys(accounts)[0]] || '';
-        }
-    }
-
-    // 7. Currency fallback
-    const storedCur = localStorage.getItem('currency') || localStorage.getItem('cur1');
-    if (storedCur) currency = storedCur;
-
-    return { loginid, token, currency, accounts };
-};
 
 export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = observer(({ className = '' }) => {
     const { client } = useStore();
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const [sessionData, setSessionData] = useState(() => {
-        const current = extractCurrentSession();
-        const activeId = client?.loginid || current.loginid;
-        const activeTok = (activeId && current.accounts[activeId]) || current.token;
-        return {
-            loginid: activeId,
-            token: activeTok,
-            currency: client?.currency || current.currency,
-            accounts: current.accounts,
-        };
-    });
+    // Session metadata from server — NO raw token in the browser
+    const [sessionMeta, setSessionMeta] = useState(() => secureSessionService.getSessionMeta());
 
     const activeAppId = useMemo(() => {
         const appId = getAppId();
-        if (appId && /^\d+$/.test(appId)) {
-            return appId;
-        }
-        return '121856';
+        return appId && /^\d+$/.test(appId) ? appId : '121856';
     }, []);
 
-    // Sync session on mount, store updates, and account switch events
-    const refreshSession = useCallback(async () => {
-        const current = extractCurrentSession();
-        const activeId = client?.loginid || current.loginid;
-        let activeTok = (activeId && current.accounts[activeId]) || current.token;
-
-        if (activeId && (!activeTok || isInvalidBearerToken(activeTok))) {
-            const resolved = await resolveValidDerivWSToken(activeId);
-            if (resolved) activeTok = resolved;
-        }
-
-        setSessionData({
-            loginid: activeId,
-            token: activeTok,
-            currency: client?.currency || current.currency,
-            accounts: current.accounts,
-        });
-    }, [client?.loginid, client?.currency]);
-
+    // Subscribe to server-side session updates
     useEffect(() => {
-        refreshSession();
+        secureSessionService.init().then(meta => setSessionMeta(meta));
+        return secureSessionService.subscribe(meta => setSessionMeta(meta));
+    }, []);
 
-        const handleStorageOrAuthChange = () => {
-            refreshSession();
-        };
+    const activeLoginId   = client?.loginid || sessionMeta?.loginid || '';
+    const currency        = client?.currency || sessionMeta?.currency || 'USD';
+    const isAuthenticated = Boolean(sessionMeta?.loggedIn && activeLoginId);
 
-        window.addEventListener('account_switched', handleStorageOrAuthChange);
-        window.addEventListener('storage', handleStorageOrAuthChange);
-        window.addEventListener('session_updated', handleStorageOrAuthChange);
-
-        return () => {
-            window.removeEventListener('account_switched', handleStorageOrAuthChange);
-            window.removeEventListener('storage', handleStorageOrAuthChange);
-            window.removeEventListener('session_updated', handleStorageOrAuthChange);
-        };
-    }, [refreshSession]);
-
-    const activeLoginId = sessionData.loginid;
-    const activeToken = sessionData.token;
-    const currency = sessionData.currency || 'USD';
-    const isDemo = activeLoginId.startsWith('VR') || activeLoginId.toLowerCase().includes('demo');
-    const isAuthenticated = Boolean(activeLoginId && activeToken);
-
-    // Build the query URL ensuring credentials & embed flags are passed for auto-login
+    // Build iframe src — only non-sensitive UI flags; NO token in URL
     const iframeSrc = useMemo(() => {
         const params = new URLSearchParams();
 
-        // 1. Mandatory token parameter:
-        // deriv-dtrader-ten requires `has('token')` to bypass anti-clickjack.
-        // It specifically expects an OAuth2 PKCE Bearer JWT token (starts with 'ey') for its /trading/v1/options/accounts REST endpoint.
-        // If a WebSocket token (e.g. 15-char token) or invalid token is passed, deriv-dtrader-ten's fetchAccounts() fails with 401
-        // and crashes with "Failed to load market data. Please refresh the page."
-        const authInfo = OAuthTokenExchangeService.getAuthInfo();
-        const isValidOAuthBearer = Boolean(
-            authInfo?.access_token &&
-            typeof authInfo.access_token === 'string' &&
-            authInfo.access_token.startsWith('ey') &&
-            (!authInfo.expires_at || Date.now() < authInfo.expires_at)
-        );
-
-        if (isValidOAuthBearer && authInfo?.access_token) {
-            params.set('token', authInfo.access_token);
-            params.set('token1', authInfo.access_token);
-            if (activeLoginId) {
-                params.set('loginid', activeLoginId);
-                params.set('account', activeLoginId);
-                params.set('acct1', activeLoginId);
-            }
-            params.set('cur1', currency);
-            params.set('app_id', activeAppId);
-            params.set('client_id', activeAppId);
-
-            // Secondary accounts mapped from storage
-            try {
-                let index = 1;
-                for (const accId in sessionData.accounts) {
-                    const accToken = sessionData.accounts[accId];
-                    if (accToken && accId !== activeLoginId && accToken.startsWith('ey')) {
-                        index++;
-                        params.set(`acct${index}`, accId);
-                        params.set(`token${index}`, accToken);
-                        params.set(`cur${index}`, currency || 'USD');
-                    }
-                }
-            } catch (e) {
-                void e;
-            }
-        } else {
-            // Unauthenticated or WebSocket-only session:
-            // 1. token='' satisfies has('token') so anti-clickjack does not redirect top.location.
-            // 2. code=clear&state=1 triggers clearTokens() in deriv-dtrader-ten's App.tsx to purge
-            //    any stale, invalid tokens previously stored in the iframe's sessionStorage['auth_info'].
-            // 3. This allows DTrader to boot cleanly into guest mode using the public WebSocket endpoint
-            //    (wss://api.derivws.com/trading/v1/options/ws/public) without throwing 401 or crashing market data.
-            params.set('token', '');
-            params.set('code', 'clear');
-            params.set('state', '1');
-            params.set('app_id', activeAppId);
-            params.set('client_id', activeAppId);
-        }
-
-        // 5. Environment & theme flags - hide login, signup and top header
-        params.set('theme', 'dark');
-        params.set('lang', 'EN');
-        params.set('embed', 'true');
+        // Embed + UI flags only — credentials are sent via the secure postMessage OTT flow
+        params.set('app_id',      activeAppId);
+        params.set('client_id',   activeAppId);
+        params.set('theme',       'dark');
+        params.set('lang',        'EN');
+        params.set('embed',       'true');
         params.set('is_embedded', 'true');
-        params.set('standalone', 'true');
+        params.set('standalone',  'true');
         params.set('hide_header', 'true');
-        params.set('hideHeader', 'true');
-        params.set('hide_login', 'true');
+        params.set('hideHeader',  'true');
+        params.set('hide_login',  'true');
         params.set('hide_signup', 'true');
         params.set('has_top_bar', 'false');
 
         return `${DTRADER_BASE_URL}/?${params.toString()}`;
-    }, [activeAppId, activeLoginId, activeToken, currency, sessionData.accounts, isAuthenticated]);
+    }, [activeAppId]);
 
-    // Dispatch authentication postMessage directly into iframe on load or account switch
-    const syncSessionToIframe = useCallback(() => {
+    /**
+     * Sends AUTH_INIT to the iframe (contains only loginid, expiresAt — NO token).
+     * The iframe will reply with REQUEST_TOKEN; the parent then fetches an OTT from
+     * /api/session/iframe-token and posts it back.
+     */
+    const sendAuthInit = useCallback(() => {
         const iframe = iframeRef.current;
-        if (!iframe || !iframe.contentWindow) return;
-
-        const sessionPayload = {
-            loginid: activeLoginId,
-            loginId: activeLoginId,
-            acct1: activeLoginId,
-            token: activeToken,
-            token1: activeToken,
-            currency,
-            cur1: currency,
-            isDemo,
-            appId: activeAppId,
-            app_id: activeAppId,
-            theme: 'dark',
-            standalone: true,
-            embed: true,
-            is_embedded: true,
-            hideHeader: true,
-            hide_login: true,
-            hide_signup: true,
-        };
+        if (!iframe?.contentWindow) return;
+        if (!isAuthenticated || !activeLoginId) return;
 
         const targetOrigin = (() => {
-            try {
-                return new URL(DTRADER_BASE_URL).origin;
-            } catch {
-                return '*';
-            }
+            try { return new URL(DTRADER_BASE_URL).origin; } catch { return DTRADER_BASE_URL; }
         })();
 
-        const safePost = (msg: Record<string, unknown> | string) => {
-            try {
-                iframe.contentWindow?.postMessage(msg, targetOrigin);
-            } catch (e1) {
-                void e1;
-                try {
-                    iframe.contentWindow?.postMessage(msg, '*');
-                } catch (e2) {
-                    void e2;
-                }
-            }
-        };
+        iframe.contentWindow.postMessage({
+            type:      'AUTH_INIT',
+            source:    'parent',
+            loginid:   activeLoginId,
+            currency,
+            expiresAt: sessionMeta?.expiresAt || (Date.now() + 3600_000),
+        }, targetOrigin);
+    }, [activeLoginId, currency, isAuthenticated, sessionMeta?.expiresAt]);
 
-        safePost({ type: 'SESSION_DATA', ...sessionPayload });
-        safePost({ type: 'DERIV_AUTH', ...sessionPayload });
-        safePost({ type: 'AUTH_TOKEN', ...sessionPayload });
-        safePost({ action: 'setToken', ...sessionPayload });
-        safePost({ action: 'login', ...sessionPayload });
-        safePost({ action: 'SYNC_SESSION', ...sessionPayload });
-    }, [activeLoginId, activeToken, activeAppId, currency, isDemo]);
-
-    // Listen for iframe readiness messages to respond with session data immediately
+    // Listen for iframe REQUEST_TOKEN and reply with OTT (no raw credentials in transit)
     useEffect(() => {
-        const handleIframeMessage = (event: MessageEvent) => {
+        const iframeOrigin = (() => {
+            try { return new URL(DTRADER_BASE_URL).origin; } catch { return DTRADER_BASE_URL; }
+        })();
+
+        const handleIframeMessage = async (event: MessageEvent) => {
+            // Strict origin check
+            if (event.origin !== iframeOrigin) return;
             if (!event.data) return;
-            const data = typeof event.data === 'string' ? (() => {
-                try { return JSON.parse(event.data); } catch { return null; }
-            })() : event.data;
+
+            const data = typeof event.data === 'string'
+                ? (() => { try { return JSON.parse(event.data); } catch { return null; } })()
+                : event.data;
 
             const type = data?.type || data?.action || '';
-            if (
-                type === 'IFRAME_READY' ||
-                type === 'BRIDGE_READY' ||
-                type === 'REQUEST_AUTH' ||
-                type === 'REQUEST_SESSION' ||
-                type === 'PING'
-            ) {
-                syncSessionToIframe();
+
+            if (type === 'IFRAME_READY' || type === 'BRIDGE_READY' || type === 'REQUEST_AUTH' ||
+                type === 'REQUEST_SESSION' || type === 'AUTH_INIT') {
+                sendAuthInit();
+                return;
+            }
+
+            if (type === 'REQUEST_TOKEN') {
+                // Iframe is requesting the credential — issue a 60s OTT from the server
+                const ott = await secureSessionService.getOTT();
+                if (ott && event.source && typeof (event.source as Window).postMessage === 'function') {
+                    (event.source as Window).postMessage({ type: 'OTT', ott }, iframeOrigin);
+                }
             }
         };
 
         window.addEventListener('message', handleIframeMessage);
         return () => window.removeEventListener('message', handleIframeMessage);
-    }, [syncSessionToIframe]);
+    }, [sendAuthInit]);
 
     const handleIframeLoad = () => {
         setIsLoading(false);
-        syncSessionToIframe();
-
-        // Repeat session broadcast at intervals to ensure React tree inside iframe ingests tokens
-        const t1 = setTimeout(syncSessionToIframe, 400);
-        const t2 = setTimeout(syncSessionToIframe, 1200);
-        const t3 = setTimeout(syncSessionToIframe, 2500);
-        const t4 = setTimeout(syncSessionToIframe, 4500);
-
-        return () => {
-            clearTimeout(t1);
-            clearTimeout(t2);
-            clearTimeout(t3);
-            clearTimeout(t4);
-        };
+        // Send AUTH_INIT immediately on load — no raw token in transit
+        sendAuthInit();
+        // Retry a couple of times to handle slow React bootstraps inside the iframe
+        const t1 = setTimeout(sendAuthInit, 600);
+        const t2 = setTimeout(sendAuthInit, 2000);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
     };
 
     return (
