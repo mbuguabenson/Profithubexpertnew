@@ -657,7 +657,7 @@ const MultiTrader: React.FC = observer(() => {
                 'info'
             );
 
-            // Fetch proposals concurrently using both symbol and underlying_symbol (Deriv API standard)
+            // Fetch proposals concurrently using underlying_symbol (Deriv API standard)
             const proposalPromises = allConfigs.map(c => {
                 const currentStake = strategyStakes.current[c.strategyId] || _baseStake;
                 const payload: Record<string, any> = {
@@ -665,7 +665,6 @@ const MultiTrader: React.FC = observer(() => {
                     amount: currentStake,
                     basis: c.basis || 'stake',
                     currency: activeCurr,
-                    symbol: _market,
                     underlying_symbol: _market,
                     contract_type: c.contract_type,
                 };
@@ -673,8 +672,11 @@ const MultiTrader: React.FC = observer(() => {
                     payload.duration = c.duration;
                     payload.duration_unit = c.duration_unit;
                 }
-                if (c.barrier !== undefined) payload.barrier = String(c.barrier);
-                if (c.prediction !== undefined) payload.prediction = c.prediction;
+                if (c.barrier !== undefined) {
+                    payload.barrier = String(c.barrier);
+                } else if (c.prediction !== undefined) {
+                    payload.barrier = String(c.prediction);
+                }
                 if (c.selected_tick !== undefined) payload.selected_tick = c.selected_tick;
                 if (c.growth_rate !== undefined) payload.growth_rate = c.growth_rate;
                 if (c.multiplier !== undefined) payload.multiplier = c.multiplier;
