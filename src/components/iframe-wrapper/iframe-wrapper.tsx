@@ -293,16 +293,58 @@ export const DTraderIframe: React.FC = () => {
         ? `https://deriv-dtrader.vercel.app/?app_id=${DERIV_CONFIG.LEGACY_DTRADER_APP_ID}&acct1=${legacyAccount}&token1=${legacyToken}`
         : `https://deriv-dtrader.vercel.app/?app_id=${DERIV_CONFIG.LEGACY_DTRADER_APP_ID}`;
 
+    const handleIframeLoad = (event: React.SyntheticEvent<HTMLIFrameElement>) => {
+        const iframeWindow = (event.target as HTMLIFrameElement).contentWindow;
+        if (!iframeWindow) return;
+
+        if (!legacyToken || legacyToken.startsWith('ey')) {
+            console.warn('[ParentBridge] Aborting: No valid legacy token found.');
+            return;
+        }
+
+        // 1. Dispatch the expected NewdtraderBridge Auth Handshake
+        iframeWindow.postMessage(
+            {
+                type: 'NEWDTRADER_BRIDGE_AUTH',
+                msg_type: 'authorization',
+                token: legacyToken,
+                accountName: legacyAccount,
+                appId: DERIV_CONFIG.LEGACY_DTRADER_APP_ID || '121856',
+                currency: 'USD',
+            },
+            'https://deriv-dtrader.vercel.app'
+        );
+
+        // 2. Dispatch legacy fallback payload
+        iframeWindow.postMessage(
+            {
+                action: 'authorize',
+                token: legacyToken,
+                loginid: legacyAccount,
+            },
+            'https://deriv-dtrader.vercel.app'
+        );
+    };
+
     useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
+        const handleBridgeAck = (event: MessageEvent) => {
             if (event.origin !== 'https://deriv-dtrader.vercel.app') return;
+
+            if (event.data?.type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS') {
+                console.log('[ParentBridge] DTrader Bridge authenticated successfully.');
+            }
+
+            if (event.data?.type === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
+                console.error('[ParentBridge] Bridge rejected credentials:', event.data?.error);
+            }
+
             if (event.data?.error?.code === 'InvalidToken') {
                 window.dispatchEvent(new CustomEvent('dtrader_session_expired'));
             }
         };
 
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+        window.addEventListener('message', handleBridgeAck);
+        return () => window.removeEventListener('message', handleBridgeAck);
     }, []);
 
     return (
@@ -311,6 +353,7 @@ export const DTraderIframe: React.FC = () => {
             src={iframeSrc}
             className="w-full h-full border-none"
             allow="clipboard-write"
+            onLoad={handleIframeLoad}
         />
     );
 };

@@ -109,6 +109,11 @@ export const isInvalidBearerToken = (token: string | null | undefined): boolean 
     token === 'undefined' ||
     token === 'a1-guest' ||
     token === 'guest' ||
+    token.startsWith('demo_token') ||
+    token.startsWith('real_token') ||
+    token.startsWith('dummy_token') ||
+    token.startsWith('mock_token') ||
+    token.startsWith('test_token') ||
     token.length > 512;
 
 export const STORAGE_KEYS = {

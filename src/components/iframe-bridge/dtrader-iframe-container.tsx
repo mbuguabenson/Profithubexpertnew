@@ -185,8 +185,27 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
             }
         };
 
-        postToIframe({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadInner, payload: payloadInner });
-        postToIframe({ action: 'NEWDTRADER_BRIDGE_AUTH', ...payloadInner, payload: payloadInner });
+        // 1. Dispatch the expected NewdtraderBridge Auth Handshake
+        postToIframe({
+            type: 'NEWDTRADER_BRIDGE_AUTH',
+            msg_type: 'authorization',
+            token: legacyToken,
+            accountName: effectiveLoginId,
+            appId: String(activeAppId || '121856'),
+            currency: currency || 'USD',
+            payload: payloadInner,
+            ...payloadInner,
+        });
+
+        // 2. Dispatch legacy fallback payload
+        postToIframe({
+            action: 'authorize',
+            token: legacyToken,
+            loginid: effectiveLoginId,
+        });
+
+        // 3. Dispatch compatibility messages
+        postToIframe({ action: 'NEWDTRADER_BRIDGE_AUTH', msg_type: 'authorization', ...payloadInner, payload: payloadInner });
         postToIframe({ type: 'SESSION_DATA', ...payloadInner });
         postToIframe({ type: 'DERIV_AUTH', ...payloadInner });
         postToIframe({ type: 'AUTH_TOKEN', ...payloadInner });
@@ -212,6 +231,19 @@ export const DTraderIframeContainer: React.FC<DTraderIframeContainerProps> = obs
                     : event.data;
 
             const type = data?.type || data?.action || '';
+
+            if (type === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS') {
+                console.log('[ParentBridge] DTrader Bridge authenticated successfully.');
+                setHasTokenMismatch(false);
+                setIsLoading(false);
+                return;
+            }
+
+            if (type === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
+                console.error('[ParentBridge] Bridge rejected credentials:', data?.error);
+                setHasTokenMismatch(true);
+                return;
+            }
 
             if (
                 type === 'IFRAME_READY' ||

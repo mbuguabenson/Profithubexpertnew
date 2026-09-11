@@ -247,8 +247,23 @@ export class ParentBridgeClient {
             postBoth(v2AuthMsg);
             postBoth(legacyV2AuthMsg);
             postBoth(structuredMsg);
-            postBoth({ type: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
-            postBoth({ action: 'NEWDTRADER_BRIDGE_AUTH', ...payloadData });
+            // 1. Dispatch expected NewdtraderBridge Auth Handshake
+            postBoth({
+                type: 'NEWDTRADER_BRIDGE_AUTH',
+                msg_type: 'authorization',
+                token: effectiveToken,
+                accountName: activeAccId,
+                appId: appIdStr || '121856',
+                currency: currency || 'USD',
+                ...payloadData,
+            });
+            // 2. Dispatch legacy authorize fallback
+            postBoth({
+                action: 'authorize',
+                token: effectiveToken,
+                loginid: activeAccId,
+            });
+            postBoth({ action: 'NEWDTRADER_BRIDGE_AUTH', msg_type: 'authorization', ...payloadData });
             postBoth({ type: 'NEWDTRADER_BRIDGE_AUTH_RESPONSE', ...payloadData });
             postBoth({ type: 'NEW_DTRADER_BRIDGE_AUTH', ...payloadData });
             postBoth({ type: 'SESSION_DATA', ...payloadData });
@@ -483,6 +498,16 @@ export class ParentBridgeClient {
             if (msgType === 'REQUEST_TOKEN') {
                 // Iframe is explicitly asking for an OTT — fetch and relay it
                 this.sendOTT(event.source as Window, event.origin);
+            } else if (msgType === 'NEWDTRADER_BRIDGE_AUTH_SUCCESS') {
+                console.log('[ParentBridge] DTrader Bridge authenticated successfully.');
+                this.stateMachine.transitionTo(BridgeState.AUTHENTICATED);
+                this.safeTimeout(() => this.stateMachine.transitionTo(BridgeState.CONNECTED), 100);
+                return;
+            } else if (msgType === 'NEWDTRADER_BRIDGE_AUTH_FAILED') {
+                console.error('[ParentBridge] Bridge rejected credentials:', parsedData?.error);
+                this.diagnostics.lastError = parsedData?.error?.message || 'Bridge Auth Failed';
+                this.stateMachine.transitionTo(BridgeState.FAILED);
+                return;
             } else {
                 this.sendAuthInit();
             }
