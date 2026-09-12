@@ -25,7 +25,10 @@ import {
     MessageCircle,
     Layers,
     Wand2,
-    UserCheck
+    Compass,
+    Activity,
+    Lock,
+    SlidersHorizontal
 } from 'lucide-react';
 
 type TCardProps = {
@@ -66,13 +69,13 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         setFormVisibility(true);
     };
 
-    // ─── Top Row: 5 Compact Strategy Loading Cards in ONE Single Line ─────
+    // ─── Top Row: 5 Strategy Loading Cards in ONE Single Line on Desktop ─
     const loadingCards = [
         {
             id: 'bot-builder',
             title: 'Bot Builder',
-            subtitle: 'Visual IDE workspace',
-            icon: <Layers size={18} className='load-card__icon text-indigo' />,
+            subtitle: 'Visual IDE logic architect',
+            icon: <Layers size={22} className='text-indigo' />,
             badge: 'IDE',
             theme: 'card--indigo',
             callback: () => setActiveTab(DBOT_TABS.BOT_BUILDER),
@@ -80,8 +83,8 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         {
             id: 'quick-strategy',
             title: 'Quick Strategy',
-            subtitle: 'Automated wizard',
-            icon: <Wand2 size={18} className='load-card__icon text-cyan' />,
+            subtitle: 'Automated strategy wizard',
+            icon: <Wand2 size={22} className='text-cyan' />,
             badge: 'WIZARD',
             theme: 'card--cyan',
             callback: () => handleOpenQuickStrategy(),
@@ -89,8 +92,8 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         {
             id: 'import-xml',
             title: 'Import XML',
-            subtitle: 'Load local file/cloud',
-            icon: <FolderPlus size={18} className='load-card__icon text-purple' />,
+            subtitle: 'Load local bot file or drive',
+            icon: <FolderPlus size={22} className='text-purple' />,
             badge: 'FILE',
             theme: 'card--purple',
             callback: () => openFileLoader(),
@@ -98,71 +101,103 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         {
             id: 'free-bots',
             title: '24+ Free Bots',
-            subtitle: 'Pre-loaded systems',
-            icon: <Zap size={18} className='load-card__icon text-amber' />,
-            badge: 'PRE-BUILT',
+            subtitle: 'Verified pre-loaded systems',
+            icon: <Zap size={22} className='text-amber' />,
+            badge: 'PRE-LOADED',
             theme: 'card--amber',
             callback: () => setActiveTab(DBOT_TABS.TRADING_BOTS),
         },
         {
             id: 'smart-trader',
             title: 'AI Smart Trader',
-            subtitle: 'Live execution terminal',
-            icon: <TrendingUp size={18} className='load-card__icon text-emerald' />,
+            subtitle: 'Live auto & manual terminal',
+            icon: <TrendingUp size={22} className='text-emerald' />,
             badge: 'LIVE',
             theme: 'card--emerald',
             callback: () => setActiveTab(DBOT_TABS.MANUAL_TRADING),
         },
     ];
 
-    // ─── Secondary Modules: 4 Compact Quantitative Intelligence Cards ───
+    // ─── Secondary Modules: 4 Quantitative Intelligence Cards ─────────────
     const intelligenceModules = [
         {
             id: 'ai-engine',
             title: 'AI Trading Engine',
-            desc: 'Neural entry scanner & high-probability signals',
-            icon: <Cpu size={18} className='text-purple' />,
+            desc: 'Neural pattern entry scanner with real-time probability triggers',
+            icon: <Cpu size={22} className='text-purple' />,
+            theme: 'mod--purple',
             callback: () => setActiveTab(DBOT_TABS.AI_TRADING_ENGINE),
         },
         {
             id: 'market-hunter',
             title: 'Market Hunter Pro',
-            desc: 'Multi-symbol volatility pattern & trend alert suite',
-            icon: <Target size={18} className='text-amber' />,
+            desc: 'Multi-symbol volatility scanner tracking momentum breakouts',
+            icon: <Target size={22} className='text-amber' />,
+            theme: 'mod--amber',
             callback: () => setActiveTab(DBOT_TABS.MARKET_HUNTER_PRO),
         },
         {
             id: 'signals',
             title: 'Market Radar & Signals',
-            desc: 'Real-time digit flow, bias heatmap & momentum',
-            icon: <Radio size={18} className='text-rose' />,
+            desc: 'Live statistical digit bias, tick velocity and streak analytics',
+            icon: <Radio size={22} className='text-rose' />,
+            theme: 'mod--rose',
             callback: () => setActiveTab(DBOT_TABS.SIGNALS),
         },
         {
             id: 'charts',
             title: 'Live Interactive Charts',
-            desc: 'High-speed ticks, indicators & barrier analysis',
-            icon: <BarChart3 size={18} className='text-cyan' />,
+            desc: 'High-resolution tick feeds, technical indicators & price barriers',
+            icon: <BarChart3 size={22} className='text-cyan' />,
+            theme: 'mod--cyan',
             callback: () => setActiveTab(DBOT_TABS.CHART),
+        },
+    ];
+
+    // ─── Institutional Feature Spotlight ─────────────────────────────────
+    const platformHighlights = [
+        {
+            id: 'high-speed',
+            title: 'Ultra-Low Latency Execution',
+            desc: 'Direct WebSocket pipeline connected to Deriv trading servers with sub-millisecond dispatch.',
+            icon: <Activity size={20} className='text-cyan' />,
+        },
+        {
+            id: 'privacy',
+            title: '100% Client-Side Privacy',
+            desc: 'Your API tokens, custom algorithms, and XML parameters run locally in your browser sandbox.',
+            icon: <Lock size={20} className='text-emerald' />,
+        },
+        {
+            id: 'risk',
+            title: 'Algorithmic Risk Shield',
+            desc: 'Dynamic stop-loss triggers, consecutive loss ceiling barriers, and capital protection rules.',
+            icon: <SlidersHorizontal size={20} className='text-amber' />,
         },
     ];
 
     return React.useMemo(
         () => (
             <div
-                className={classNames('dash-compact-cockpit', {
-                    'dash-compact-cockpit--minimized': has_dashboard_strategies && is_mobile,
+                className={classNames('dash-cockpit', {
+                    'dash-cockpit--minimized': has_dashboard_strategies && is_mobile,
                 })}
             >
-                {/* ─── 1. Welcome Greeting Header Strip ───────────────────────── */}
+                {/* ═══════════════════════════════════════════════════════════════
+                    1. BEAUTIFUL FROSTED SPONGY WELCOME BANNER (NO DERIV CONNECTED)
+                ═══════════════════════════════════════════════════════════════ */}
                 <div className='dash-welcome-strip'>
+                    <div className='dash-welcome-glow' />
+                    <div className='dash-welcome-glow-secondary' />
+
                     <div className='dash-welcome-strip__left'>
                         <div className='dash-welcome-avatar'>
-                            <UserCheck size={18} />
+                            <Sparkles size={24} className='welcome-avatar-icon' />
                         </div>
                         <div className='dash-welcome-texts'>
                             <h1 className='dash-welcome-title'>
-                                Welcome user{accountName ? ` (${accountName})` : ''}! Start your trading journey here.
+                                Welcome user{accountName ? ` (${accountName})` : ''}!{' '}
+                                <span className='dash-welcome-title-accent'>Start your trading journey here.</span>
                             </h1>
                             <p className='dash-welcome-sub'>
                                 Institutional quantitative bot execution, AI market radar, and low-latency Deriv API trading.
@@ -176,14 +211,42 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                                 {isVirtual ? 'DEMO' : 'REAL'} • {accountName}
                             </span>
                         )}
-                        <div className='dash-pill-status'>
-                            <span className='dash-live-dot' />
-                            <span>API CONNECTED</span>
-                        </div>
                     </div>
                 </div>
 
-                {/* ─── 2. Top Strategy Loading Cards (IN ONE SINGLE LINE) ─────── */}
+                {/* ═══════════════════════════════════════════════════════════════
+                    2. TELEMETRY METRIC PILLS TICKER
+                ═══════════════════════════════════════════════════════════════ */}
+                <div className='dash-telemetry-row'>
+                    <div className='telemetry-pill'>
+                        <span className='telemetry-value text-cyan'>&lt; 20ms</span>
+                        <span className='telemetry-label'>Execution Speed</span>
+                    </div>
+                    <div className='telemetry-pill'>
+                        <span className='telemetry-value text-emerald'>24+ Bots</span>
+                        <span className='telemetry-label'>Verified Algorithms</span>
+                    </div>
+                    <div className='telemetry-pill'>
+                        <span className='telemetry-value text-purple'>100%</span>
+                        <span className='telemetry-label'>Client-Side Private</span>
+                    </div>
+                    <div className='telemetry-pill'>
+                        <span className='telemetry-value text-amber'>5,000+</span>
+                        <span className='telemetry-label'>Active VIP Traders</span>
+                    </div>
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════════
+                    3. TOP ROW: 5 STRATEGY LAUNCHERS (ONE SINGLE LINE ON DESKTOP)
+                ═══════════════════════════════════════════════════════════════ */}
+                <div className='dash-section-header'>
+                    <div className='dash-section-title-wrap'>
+                        <span className='dash-section-dot' />
+                        <h3 className='dash-section-title'>Quick Strategy Launchers</h3>
+                    </div>
+                    <span className='dash-section-tag'>ONE-CLICK DEPLOY</span>
+                </div>
+
                 <div className='dash-load-cards-row'>
                     {loadingCards.map(card => (
                         <div
@@ -193,6 +256,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                             role='button'
                             tabIndex={0}
                         >
+                            <div className='dash-card-glow-halo' />
                             <div className='dash-load-card__top'>
                                 <div className='dash-load-card__icon-box'>{card.icon}</div>
                                 <span className='dash-load-card__badge'>{card.badge}</span>
@@ -202,40 +266,73 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                                 <span className='dash-load-card__sub'>{card.subtitle}</span>
                             </div>
                             <div className='dash-load-card__arrow'>
-                                <ArrowUpRight size={13} />
+                                <ArrowUpRight size={17} />
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* ─── 3. Intelligence & Scanner Grid (4 Compact Cards) ────────── */}
+                {/* ═══════════════════════════════════════════════════════════════
+                    4. QUANTITATIVE INTELLIGENCE & SCANNERS (4 GLOWING CARDS)
+                ═══════════════════════════════════════════════════════════════ */}
+                <div className='dash-section-header'>
+                    <div className='dash-section-title-wrap'>
+                        <span className='dash-section-dot dash-section-dot--purple' />
+                        <h3 className='dash-section-title'>Quantitative Intelligence & Scanners</h3>
+                    </div>
+                    <span className='dash-section-tag'>LIVE MARKET DATA</span>
+                </div>
+
                 <div className='dash-intel-grid'>
                     {intelligenceModules.map(mod => (
                         <div
                             key={mod.id}
-                            className='dash-intel-card'
+                            className={classNames('dash-intel-card', mod.theme)}
                             onClick={mod.callback}
                             role='button'
                             tabIndex={0}
                         >
+                            <div className='dash-card-glow-halo' />
                             <div className='dash-intel-card__icon-box'>{mod.icon}</div>
                             <div className='dash-intel-card__text'>
                                 <h5 className='dash-intel-card__title'>{mod.title}</h5>
                                 <p className='dash-intel-card__desc'>{mod.desc}</p>
                             </div>
-                            <ArrowUpRight size={14} className='dash-intel-card__arrow' />
+                            <div className='dash-intel-card__arrow-circle'>
+                                <ArrowUpRight size={16} className='dash-intel-card__arrow' />
+                            </div>
                         </div>
                     ))}
                 </div>
 
-                {/* ─── 4. Broker Partnership & Community Compact Row ─────────── */}
+                {/* ═══════════════════════════════════════════════════════════════
+                    5. INSTITUTIONAL PLATFORM HIGHLIGHTS (3 SPONGY CARDS)
+                ═══════════════════════════════════════════════════════════════ */}
+                <div className='dash-features-row'>
+                    {platformHighlights.map(feat => (
+                        <div key={feat.id} className='dash-feature-card'>
+                            <div className='dash-feature-icon-box'>{feat.icon}</div>
+                            <div className='dash-feature-content'>
+                                <h5 className='dash-feature-title'>{feat.title}</h5>
+                                <p className='dash-feature-desc'>{feat.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* ═══════════════════════════════════════════════════════════════
+                    6. BROKER PARTNERSHIP & COMMUNITY ROW
+                ═══════════════════════════════════════════════════════════════ */}
                 <div className='dash-partner-row'>
                     <div className='dash-partner-box dash-partner-box--deriv'>
+                        <div className='dash-card-glow-halo' />
                         <div className='dash-partner-box__left'>
-                            <ShieldCheck size={20} className='text-amber' />
+                            <div className='partner-icon-circle partner-icon-circle--gold'>
+                                <ShieldCheck size={24} className='text-amber' />
+                            </div>
                             <div>
                                 <h5 className='partner-title'>Deriv Verified Live Account</h5>
-                                <span className='partner-desc'>Instant deposits, fast withdrawals & tight spreads</span>
+                                <span className='partner-desc'>Instant deposits, fast withdrawals, tight spreads & zero slippage</span>
                             </div>
                         </div>
                         <a
@@ -244,17 +341,20 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                             rel='noopener noreferrer'
                             className='partner-btn partner-btn--gold'
                         >
-                            <span>Open Account</span>
-                            <ArrowUpRight size={13} />
+                            <span>Open Live Account</span>
+                            <ArrowUpRight size={16} />
                         </a>
                     </div>
 
                     <div className='dash-partner-box dash-partner-box--community'>
+                        <div className='dash-card-glow-halo' />
                         <div className='dash-partner-box__left'>
-                            <MessageCircle size={20} className='text-emerald' />
+                            <div className='partner-icon-circle partner-icon-circle--emerald'>
+                                <MessageCircle size={24} className='text-emerald' />
+                            </div>
                             <div>
                                 <h5 className='partner-title'>VIP Trading Community</h5>
-                                <span className='partner-desc'>5,000+ traders, free bot XML releases & daily setups</span>
+                                <span className='partner-desc'>Join 5,000+ traders for daily setups, bot XML drops & mentorship</span>
                             </div>
                         </div>
                         <a
@@ -263,35 +363,43 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                             rel='noopener noreferrer'
                             className='partner-btn partner-btn--emerald'
                         >
-                            <span>Join WhatsApp</span>
-                            <ArrowUpRight size={13} />
+                            <span>Join WhatsApp VIP</span>
+                            <ArrowUpRight size={16} />
                         </a>
                     </div>
                 </div>
 
-                {/* ─── 5. Strategy Workspace / Bot List ───────────────────────── */}
-                <div className='dash-workspace-compact'>
-                    <div className='dash-workspace-compact__header'>
-                        <div className='dash-workspace-compact__title-wrap'>
-                            <Bot size={17} className='text-emerald' />
-                            <h4 className='dash-workspace-compact__title'>Saved Bots & Local Workspaces</h4>
+                {/* ═══════════════════════════════════════════════════════════════
+                    7. STRATEGY WORKSPACE & LOCAL SAVED BOTS
+                ═══════════════════════════════════════════════════════════════ */}
+                <div className='dash-workspace-card'>
+                    <div className='dash-card-glow-halo' />
+                    <div className='dash-workspace-card__header'>
+                        <div className='dash-workspace-card__title-wrap'>
+                            <div className='dash-workspace-icon-wrap'>
+                                <Compass size={22} className='text-emerald' />
+                            </div>
+                            <div>
+                                <h4 className='dash-workspace-card__title'>Strategy Workspace & Local Bots</h4>
+                                <span className='dash-workspace-card__sub'>Saved strategies stored locally in your browser cache</span>
+                            </div>
                         </div>
-                        <div className='dash-workspace-compact__btns'>
+                        <div className='dash-workspace-card__btns'>
                             <button
                                 type='button'
-                                className='dash-btn-mini'
+                                className='dash-btn-tactile'
                                 onClick={() => openFileLoader()}
                             >
-                                <FolderPlus size={13} />
+                                <FolderPlus size={15} />
                                 <span>Import XML</span>
                             </button>
                             <button
                                 type='button'
-                                className='dash-btn-mini dash-btn-mini--highlight'
+                                className='dash-btn-tactile dash-btn-tactile--highlight'
                                 onClick={() => setActiveTab(DBOT_TABS.TRADING_BOTS)}
                             >
-                                <Sparkles size={13} />
-                                <span>Free Bots Vault</span>
+                                <Sparkles size={15} />
+                                <span>24+ Free Bots</span>
                             </button>
                         </div>
                     </div>
@@ -302,14 +410,20 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                         </div>
                     ) : (
                         <div className='dash-workspace-empty'>
+                            <div className='dash-empty-icon'>
+                                <Bot size={32} />
+                            </div>
+                            <p className='empty-title'>No Custom Strategies Saved Yet</p>
                             <p className='empty-text'>
-                                No custom strategies saved in this browser yet. Build one in the IDE or choose from 24+ free bots.
+                                Create custom logic in the Blockly Bot Builder, or choose from our 24+ free institutional strategies to get started.
                             </p>
                         </div>
                     )}
                 </div>
 
-                {/* ─── 6. Google Drive Modal Dialog ───────────────────────────── */}
+                {/* ═══════════════════════════════════════════════════════════════
+                    8. GOOGLE DRIVE MODAL DIALOG
+                ═══════════════════════════════════════════════════════════════ */}
                 {!isDesktop ? (
                     <Dialog
                         title={dialog_options.title}
