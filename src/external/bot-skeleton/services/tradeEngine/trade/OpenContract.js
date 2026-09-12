@@ -134,7 +134,7 @@ export default Engine =>
                 // In Normal Mode, request fresh balance upon contract settlement.
                 // In Fast Mode, Deriv already streams balance updates via the active balance subscription,
                 // so skipping redundant manual balance requests prevents WebSocket backlog.
-                if (!isFast) {
+                if (!isFastModeActive()) {
                     try {
                         if (api_base.api) {
                             api_base.api.send({ balance: 1 }).then(res => {

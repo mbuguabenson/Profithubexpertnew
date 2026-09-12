@@ -484,8 +484,11 @@ export class DerivAccountWalletService {
     public static async getAccountNickname(): Promise<string> {
         if (this.cachedNickname) return this.cachedNickname;
 
+        const activeLoginId = getActiveLoginId();
+        const isDemo = !activeLoginId || activeLoginId.startsWith('VRTC') || activeLoginId.startsWith('DOT');
+
         const { token, appId } = this.getAuthCredentials();
-        if (token) {
+        if (token && !isDemo) {
             try {
                 const response = await fetch(`${WALLET_BASE_URL}/account/v1/nickname`, {
                     method: 'GET',
