@@ -188,15 +188,14 @@ const Interpreter = () => {
             scope,
             'watch',
             createAsync(js_interpreter, async watchName => {
+                if ($scope.stopped || !api_base.is_running) {
+                    return false;
+                }
+
                 const { watch } = bot.getInterface();
 
                 if (watchName === 'before' && typeof window !== 'undefined' && window.is_bot_paused) {
                     await new Promise(resolve => {
-                        // ── Fix: register BEFORE checking the flag ──────────────────────────────
-                        // Old code checked is_bot_paused then registered the listener — if resume
-                        // fired between those two operations the event was missed and the engine
-                        // hung forever (visible freeze after Pause → Resume).
-                        // We register first; if resume already happened we cancel and pass through.
                         let resolved = false;
                         const onResume = () => {
                             if (resolved) return;
@@ -206,12 +205,14 @@ const Interpreter = () => {
                         };
                         globalObserver.register('bot.resume', onResume);
 
-                        // Re-check the flag after registration to catch a resume that arrived
-                        // in the tiny window between the outer check and the register() call.
                         if (!window.is_bot_paused) {
                             onResume();
                         }
                     });
+
+                    if ($scope.stopped || !api_base.is_running) {
+                        return false;
+                    }
                 }
 
                 if (timeMachineEnabled(bot)) {
@@ -231,57 +232,24 @@ const Interpreter = () => {
     }
 
     async function stop() {
-        return new Promise(resolve => {
-            const safetyTimeout = setTimeout(() => {
-                api_base.is_stopping = false;
-                $scope.stopped = true;
-                globalObserver.emit('bot.stop');
-                resolve();
-            }, 1200);
+        $scope.stopped = true;
+        api_base.is_stopping = false;
+        api_base.setIsRunning(false);
 
-            try {
-                const global_timeouts = globalObserver.getState('global_timeouts') ?? [];
-                const is_timeouts_cancellable = Object.keys(global_timeouts).every(
-                    timeout => global_timeouts[timeout].is_cancellable
-                );
+        try {
+            const global_timeouts = globalObserver.getState('global_timeouts') ?? [];
+            Object.keys(global_timeouts).forEach(timeout => {
+                try {
+                    clearTimeout(global_timeouts[timeout]);
+                } catch {}
+            });
+        } catch {}
 
-                if (!bot.tradeEngine.contractId && is_timeouts_cancellable) {
-                    api_base.is_stopping = true;
-                    global_timeouts.forEach(timeout => clearTimeout(global_timeouts[timeout]));
-                    terminateSession().finally(() => {
-                        clearTimeout(safetyTimeout);
-                        api_base.is_stopping = false;
-                        resolve();
-                    });
-                } else if (
-                    bot.tradeEngine.isSold === false &&
-                    !$scope.is_error_triggered &&
-                    isMultiplierContract(bot?.tradeEngine?.data?.contract?.contract_type ?? '')
-                ) {
-                    const statusListener = async contractStatus => {
-                        if (contractStatus.id === 'contract.sold') {
-                            globalObserver.unregister('contract.status', statusListener);
-                            terminateSession().finally(() => {
-                                clearTimeout(safetyTimeout);
-                                resolve();
-                            });
-                        }
-                    };
-                    globalObserver.register('contract.status', statusListener);
-                } else {
-                    api_base.is_stopping = true;
-                    terminateSession().finally(() => {
-                        clearTimeout(safetyTimeout);
-                        api_base.is_stopping = false;
-                        resolve();
-                    });
-                }
-            } catch (e) {
-                clearTimeout(safetyTimeout);
-                api_base.is_stopping = false;
-                resolve();
-            }
-        });
+        globalObserver.emit('bot.stop');
+
+        // Clean up session in background asynchronously without blocking stop
+        terminateSession().catch(() => {});
+        return Promise.resolve();
     }
 
     async function terminateSession() {

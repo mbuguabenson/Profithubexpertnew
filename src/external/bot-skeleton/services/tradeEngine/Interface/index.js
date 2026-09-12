@@ -6,7 +6,13 @@ import getToolsInterface from './ToolsInterface';
 import getScannerInterface from './ScannerInterface';
 
 const sleep = (observer, arg = 1) => {
-    const delayMs = isFastModeActive() ? 0 : Number(arg) * 1000;
+    if (isFastModeActive()) {
+        return Promise.resolve().then(() => {
+            observer.emit('CONTINUE');
+        });
+    }
+
+    const delayMs = Number(arg) * 1000;
 
     return new Promise(
         r =>

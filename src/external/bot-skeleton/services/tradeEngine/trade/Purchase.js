@@ -58,10 +58,29 @@ export default Engine =>
                 return this.bulkPurchase(contract_type, count);
             }
 
-            // Prevent duplicate parallel purchases
-            if (this.is_contract_buying_in_progress) {
+            // Prevent duplicate parallel purchases or purchases when stopped
+            if (this.is_contract_buying_in_progress || !api_base.is_running || this.$scope?.stopped) {
                 return Promise.resolve();
             }
+
+            // If paused, wait for resume before proceeding with purchase
+            if (typeof window !== 'undefined' && window.is_bot_paused) {
+                await new Promise(resolve => {
+                    let resolved = false;
+                    const onResume = () => {
+                        if (resolved) return;
+                        resolved = true;
+                        globalObserver.unregister('bot.resume', onResume);
+                        resolve();
+                    };
+                    globalObserver.register('bot.resume', onResume);
+                    if (!window.is_bot_paused) onResume();
+                });
+                if (!api_base.is_running || this.$scope?.stopped) {
+                    return Promise.resolve();
+                }
+            }
+
             this.is_contract_buying_in_progress = true;
 
             if (this.store.getState().scope !== BEFORE_PURCHASE) {
@@ -71,6 +90,11 @@ export default Engine =>
 
             const onSuccess = response => {
                 this.is_contract_buying_in_progress = false;
+
+                if (!api_base.is_running || this.$scope?.stopped) {
+                    return;
+                }
+
                 const { buy } = response;
 
                 if (buy && typeof buy.balance_after === 'number') {

@@ -131,22 +131,26 @@ export default Engine =>
                     }
                 } catch (e) {}
 
-                // Request fresh balance upon contract settlement
-                try {
-                    if (api_base.api) {
-                        api_base.api.send({ balance: 1 }).then(res => {
-                            if (res?.balance && typeof res.balance.balance === 'number') {
-                                const { client } = DBotStore.instance || {};
-                                if (client?.setBalance) {
-                                    client.setBalance(
-                                        res.balance.balance.toString(),
-                                        res.balance.loginid || this.accountInfo?.loginid || client.loginid
-                                    );
+                // In Normal Mode, request fresh balance upon contract settlement.
+                // In Fast Mode, Deriv already streams balance updates via the active balance subscription,
+                // so skipping redundant manual balance requests prevents WebSocket backlog.
+                if (!isFast) {
+                    try {
+                        if (api_base.api) {
+                            api_base.api.send({ balance: 1 }).then(res => {
+                                if (res?.balance && typeof res.balance.balance === 'number') {
+                                    const { client } = DBotStore.instance || {};
+                                    if (client?.setBalance) {
+                                        client.setBalance(
+                                            res.balance.balance.toString(),
+                                            res.balance.loginid || this.accountInfo?.loginid || client.loginid
+                                        );
+                                    }
                                 }
-                            }
-                        }).catch(() => {});
-                    }
-                } catch (e) {}
+                            }).catch(() => {});
+                        }
+                    } catch (e) {}
+                }
 
                 this.store.dispatch(sell());
             }

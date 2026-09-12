@@ -170,10 +170,21 @@
     opacity: 0.32;
 }
 
+.animation__controls-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
 .animation__run-stop-group {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.animation__run-button--fast-active {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.45) !important;
 }
 
 .animation__header-row {

@@ -488,28 +488,25 @@ class DBot {
      * Instructs the interpreter to stop the bot. If there is an active trade
      * that trade will be completed first to reflect correct contract status in UI.
      */
+    /**
+     * Instructs the interpreter to stop the bot immediately.
+     */
     async stopBot() {
         api_base.setIsRunning(false);
-        api_base.is_stopping = true;
+        api_base.is_stopping = false;
+        this.is_bot_running = false;
 
         try {
             if (this.interpreter) {
-                const stopPromise = this.interpreter.stop();
-                const timeoutPromise = new Promise(res => setTimeout(res, 1500));
-                await Promise.race([stopPromise, timeoutPromise]);
-            } else {
-                globalObserver.emit('bot.stop');
+                await this.interpreter.stop();
             }
         } catch (err) {
             console.warn('[DBot] stopBot caught non-fatal notice:', err);
         } finally {
-            api_base.is_stopping = false;
             this.is_bot_running = false;
+            api_base.is_stopping = false;
             this.interpreter = null;
             this.interpreter = Interpreter();
-            if (this.symbol) {
-                this.interpreter.bot.tradeEngine.watchTicks(this.symbol).catch(() => {});
-            }
             forgetAccumulatorsProposalRequest(this);
             globalObserver.emit('bot.stop');
         }
@@ -519,12 +516,15 @@ class DBot {
      * Immediately instructs the interpreter to terminate the WS connection and bot.
      */
     async terminateBot() {
+        api_base.setIsRunning(false);
+        api_base.is_stopping = false;
+        this.is_bot_running = false;
         if (this.interpreter) {
-            await this.interpreter.terminateSession();
+            await this.interpreter.terminateSession().catch(() => {});
             this.interpreter = null;
             this.interpreter = Interpreter();
-            await this.interpreter.bot.tradeEngine.watchTicks(this.symbol);
         }
+        globalObserver.emit('bot.stop');
     }
 
     terminateConnection = () => {

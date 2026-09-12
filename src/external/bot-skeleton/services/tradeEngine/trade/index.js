@@ -22,8 +22,27 @@ export { isFastModeActive } from '../utils/fastMode';
 
 const watchBefore = store => {
     const currentState = store.getState();
-    if (currentState.scope === constants.DURING_PURCHASE) {
+    if (currentState.scope === constants.DURING_PURCHASE || currentState.scope === constants.STOP) {
         return Promise.resolve(false);
+    }
+
+    if (typeof window !== 'undefined' && window.is_bot_paused) {
+        return new Promise(resolve => {
+            let resolved = false;
+            const onResume = () => {
+                if (resolved) return;
+                resolved = true;
+                globalObserver.unregister('bot.resume', onResume);
+                const state = store.getState();
+                if (state.scope === constants.STOP) {
+                    resolve(false);
+                    return;
+                }
+                resolve(watchBefore(store));
+            };
+            globalObserver.register('bot.resume', onResume);
+            if (!window.is_bot_paused) onResume();
+        });
     }
 
     if (

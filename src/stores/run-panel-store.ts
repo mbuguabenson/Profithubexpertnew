@@ -15,7 +15,7 @@ import { Buy, ProposalOpenContract } from '@deriv/api-types';
 import { localize } from '@deriv-com/translations';
 import RootStore from './root-store';
 import { proposalsReady as proposalsReadyAction } from '@/external/bot-skeleton/services/tradeEngine/trade/state/actions';
-import { setFastExecutionOverride } from '@/external/bot-skeleton/services/tradeEngine/utils/fastMode';
+import { setFastExecutionOverride, syncFastExecutionOverride } from '@/external/bot-skeleton/services/tradeEngine/utils/fastMode';
 
 type TStores = any;
 type TDbot = any;
@@ -187,12 +187,7 @@ export default class RunPanelStore {
     }
 
     get is_stop_button_disabled() {
-        if (this.is_contract_buying_in_progress) {
-            return false;
-        }
-        return [contract_stages.PURCHASE_SENT as number, contract_stages.IS_STOPPING as number].includes(
-            this.contract_stage
-        );
+        return false;
     }
 
     get is_clear_stat_disabled() {
@@ -241,6 +236,12 @@ export default class RunPanelStore {
         const { summary_card } = this.root_store;
         const { client, ui } = this.core;
         const is_ios = mobileOSDetect() === 'iOS';
+        // Ensure fast execution override is synced immediately on run click
+        syncFastExecutionOverride();
+        if (this.is_every_tick_mode) {
+            setFastExecutionOverride(true);
+        }
+
         // Run workspace save asynchronously so UI thread starts bot instantly
         if (this.dbot?.saveRecentWorkspace) {
             setTimeout(() => {
@@ -462,6 +463,11 @@ export default class RunPanelStore {
         this.setHasOpenContract(false);
         this.is_contract_buying_in_progress = false;
         this.is_sell_requested = false;
+        this.is_paused = false;
+        if (typeof window !== 'undefined') {
+            (window as any).is_bot_paused = false;
+        }
+        observer.emit('bot.stop');
 
         // Halt automations & forget sequences when user explicitly stops the bot
         if (scanner?.is_full_ai_automation) {
