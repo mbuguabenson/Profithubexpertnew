@@ -31,15 +31,7 @@ const DashboardComponent = observer(({ handleTabChange }: TMobileIconGuide) => {
                         <Announcements is_mobile={!isDesktop} is_tablet={isTablet} handleTabChange={handleTabChange} />
                     )}
                     <div className='quick-panel'>
-                        {/* Top Hub Welcome Notice */}
-                        <div className='dash-hub-header-notice'>
-                            <p className='notice-text'>
-                                Welcome to <strong>Legacy Trading Hub</strong> — Institutional algorithmic trading suite
-                                with next-generation automated bots, AI intelligence, and precision execution.
-                            </p>
-                        </div>
-
-                        {/* Clean Glassmorphic Dashboard UI Components */}
+                        {/* Redesigned Institutional Dashboard Cockpit */}
                         <Cards has_dashboard_strategies={has_dashboard_strategies} is_mobile={!isDesktop} />
                     </div>
                 </div>

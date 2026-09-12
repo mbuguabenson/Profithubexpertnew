@@ -15,6 +15,15 @@ export const RiskDisclaimer: React.FC = () => {
         }
     }, []);
 
+    useEffect(() => {
+        const handleOpen = () => {
+            setIsClosing(false);
+            setIsVisible(true);
+        };
+        window.addEventListener('open_risk_disclaimer', handleOpen);
+        return () => window.removeEventListener('open_risk_disclaimer', handleOpen);
+    }, []);
+
     const handleDismiss = () => {
         setIsClosing(true);
         setTimeout(() => {
@@ -29,7 +38,8 @@ export const RiskDisclaimer: React.FC = () => {
     return (
         <aside
             className={`risk-disclaimer-float ${isClosing ? 'risk-disclaimer-float--closing' : ''}`}
-            role='complementary'
+            role='dialog'
+            aria-modal='true'
             aria-label='Risk Disclaimer'
         >
             <div className='risk-disclaimer-float__card'>
@@ -49,7 +59,7 @@ export const RiskDisclaimer: React.FC = () => {
                             <line x1='12' y1='8' x2='12' y2='12' />
                             <line x1='12' y1='16' x2='12.01' y2='16' />
                         </svg>
-                        <span className='risk-disclaimer-float__title'>Risk Notice</span>
+                        <span className='risk-disclaimer-float__title'>Risk Notice & Legal Warning</span>
                     </div>
                     <button
                         className='risk-disclaimer-float__close'
@@ -65,8 +75,9 @@ export const RiskDisclaimer: React.FC = () => {
                 </div>
 
                 <p className='risk-disclaimer-float__text'>
-                    Financial derivatives and automated trading carry a high level of risk and may not be suitable for all investors.
-                    You may lose some or all of your invested capital. Trade responsibly and test strategies on demo accounts first.
+                    Trading derivatives, synthetic indices, and automated bots involves substantial risk and may not be suitable for all investors.
+                    You may lose some or all of your invested capital. Never risk funds you cannot afford to lose.
+                    Past performance is not an indicator of future results. Please test strategies on demo accounts first.
                 </p>
 
                 <div className='risk-disclaimer-float__footer'>

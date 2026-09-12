@@ -125,6 +125,33 @@
     }
 }
 
+// ─── Risk Disclaimer footer button ───────────────────────────────────────────
+.app-footer__risk-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 6px;
+    background: rgba(245, 197, 66, 0.08);
+    border: 1px solid rgba(245, 197, 66, 0.25);
+    color: #f5c542;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(245, 197, 66, 0.18);
+        border-color: rgba(245, 197, 66, 0.5);
+        color: #ffd600;
+        box-shadow: 0 0 10px rgba(245, 197, 66, 0.2);
+    }
+
+    svg {
+        stroke: currentColor;
+    }
+}
+
 .languages-modal__body {
     padding-inline: 1.6rem;
 

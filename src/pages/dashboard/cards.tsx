@@ -9,178 +9,29 @@ import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
 import DashboardBotList from './bot-list/dashboard-bot-list';
-import { TrendingUp, MessageCircle, ShieldCheck, Zap, BarChart3, ArrowUpRight } from 'lucide-react';
+import {
+    TrendingUp,
+    Bot,
+    Cpu,
+    Zap,
+    BarChart3,
+    ShieldCheck,
+    ArrowUpRight,
+    FolderPlus,
+    Target,
+    Radio,
+    Sparkles,
+    MessageCircle,
+    Layers,
+    CheckCircle2,
+    Play,
+    Activity
+} from 'lucide-react';
 
 type TCardProps = {
     has_dashboard_strategies: boolean;
     is_mobile: boolean;
 };
-
-// ─── Custom Glassmorphism Vector Icons ─────────────────────────────────────
-const GlassImportIcon = () => (
-    <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
-        <defs>
-            <linearGradient id='gImpBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#c084fc' stopOpacity='0.8' />
-                <stop offset='100%' stopColor='#6366f1' stopOpacity='0.8' />
-            </linearGradient>
-            <linearGradient id='gImpSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.6' />
-                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
-            </linearGradient>
-        </defs>
-        <rect
-            x='6'
-            y='10'
-            width='36'
-            height='30'
-            rx='8'
-            fill='url(#gImpBg)'
-            fillOpacity='0.25'
-            stroke='url(#gImpSheen)'
-            strokeWidth='1.5'
-        />
-        <path
-            d='M14 18 H22 L26 22 H34 C36.2 22 38 23.8 38 26 V36 C38 38.2 36.2 40 34 40 H14 C11.8 40 10 38.2 10 36 V22 C10 19.8 11.8 18 14 18 Z'
-            fill='url(#gImpBg)'
-            fillOpacity='0.4'
-            stroke='#c084fc'
-            strokeWidth='1.5'
-        />
-        <path
-            d='M24 34 V24 M20 28 L24 24 L28 28'
-            stroke='#ffffff'
-            strokeWidth='2.5'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-        <circle cx='34' cy='14' r='3' fill='#a855f7' />
-    </svg>
-);
-
-const GlassSmartIcon = () => (
-    <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
-        <defs>
-            <linearGradient id='gSmartBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#34d399' stopOpacity='0.85' />
-                <stop offset='100%' stopColor='#059669' stopOpacity='0.85' />
-            </linearGradient>
-            <linearGradient id='gSmartSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.65' />
-                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
-            </linearGradient>
-        </defs>
-        <rect
-            x='8'
-            y='8'
-            width='32'
-            height='32'
-            rx='10'
-            fill='url(#gSmartBg)'
-            fillOpacity='0.22'
-            stroke='url(#gSmartSheen)'
-            strokeWidth='1.5'
-        />
-        <rect
-            x='14'
-            y='14'
-            width='20'
-            height='20'
-            rx='5'
-            fill='url(#gSmartBg)'
-            fillOpacity='0.35'
-            stroke='#34d399'
-            strokeWidth='1.5'
-        />
-        <path
-            d='M25 18 L20 26 H27 L23 31'
-            stroke='#ffffff'
-            strokeWidth='2.5'
-            strokeLinecap='round'
-            strokeLinejoin='round'
-        />
-        <circle cx='8' cy='24' r='2' fill='#10b981' />
-        <circle cx='40' cy='24' r='2' fill='#10b981' />
-        <circle cx='24' cy='8' r='2' fill='#34d399' />
-        <circle cx='24' cy='40' r='2' fill='#34d399' />
-    </svg>
-);
-
-const GlassFreeIcon = () => (
-    <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
-        <defs>
-            <linearGradient id='gFreeBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#38bdf8' stopOpacity='0.85' />
-                <stop offset='100%' stopColor='#2563eb' stopOpacity='0.85' />
-            </linearGradient>
-            <linearGradient id='gFreeSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.65' />
-                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
-            </linearGradient>
-        </defs>
-        <rect
-            x='8'
-            y='8'
-            width='32'
-            height='32'
-            rx='10'
-            fill='url(#gFreeBg)'
-            fillOpacity='0.22'
-            stroke='url(#gFreeSheen)'
-            strokeWidth='1.5'
-        />
-        <path
-            d='M24 14 V17 M16 20 H32 C34.2 20 36 21.8 36 24 V31 C36 33.2 34.2 35 32 35 H16 C13.8 35 12 33.2 12 31 V24 C12 21.8 13.8 20 16 20 Z'
-            fill='url(#gFreeBg)'
-            fillOpacity='0.35'
-            stroke='#38bdf8'
-            strokeWidth='1.5'
-        />
-        <circle cx='19' cy='27' r='2.5' fill='#ffffff' />
-        <circle cx='29' cy='27' r='2.5' fill='#ffffff' />
-        <path d='M20 31 H28' stroke='#38bdf8' strokeWidth='1.8' strokeLinecap='round' />
-    </svg>
-);
-
-const GlassSignalsIcon = () => (
-    <svg width='34' height='34' viewBox='0 0 48 48' fill='none' className='glass-icon-svg'>
-        <defs>
-            <linearGradient id='gSigBg' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#fbbf24' stopOpacity='0.85' />
-                <stop offset='100%' stopColor='#ea580c' stopOpacity='0.85' />
-            </linearGradient>
-            <linearGradient id='gSigSheen' x1='0%' y1='0%' x2='100%' y2='100%'>
-                <stop offset='0%' stopColor='#ffffff' stopOpacity='0.65' />
-                <stop offset='100%' stopColor='#ffffff' stopOpacity='0.05' />
-            </linearGradient>
-        </defs>
-        <rect
-            x='8'
-            y='8'
-            width='32'
-            height='32'
-            rx='10'
-            fill='url(#gSigBg)'
-            fillOpacity='0.22'
-            stroke='url(#gSigSheen)'
-            strokeWidth='1.5'
-        />
-        <path
-            d='M15 33 C12 29 12 23 15 19 M33 19 C36 23 36 29 33 33'
-            stroke='#fbbf24'
-            strokeWidth='2'
-            strokeLinecap='round'
-        />
-        <path
-            d='M19 29 C17.5 27 17.5 24 19 22 M29 22 C30.5 24 30.5 27 29 29'
-            stroke='#fb923c'
-            strokeWidth='2'
-            strokeLinecap='round'
-        />
-        <circle cx='24' cy='26' r='3' fill='#ffffff' stroke='#f59e0b' strokeWidth='1.5' />
-        <path d='M24 13 V17' stroke='#ffffff' strokeWidth='2' strokeLinecap='round' />
-    </svg>
-);
 
 const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => {
     const { dashboard, load_modal } = useStore();
@@ -194,41 +45,78 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         setActiveTab(DBOT_TABS.BOT_BUILDER);
     };
 
-    const actionTiles = [
+    // 6 Core Quantitative Modules
+    const actionModules = [
         {
             id: 'smart-trader',
             title: 'AI Smart Trader',
-            subtitle: 'AI Automated & Manual Execution',
-            badge: 'LIVE TRADING',
-            icon: <GlassSmartIcon />,
-            cardTheme: 'glass-emerald',
+            tagline: 'Autonomous AI & Manual Order Execution',
+            badge: 'LIVE EXECUTION',
+            badgeColor: 'emerald',
+            glowColor: 'emerald',
+            icon: <Bot className='module-icon' size={24} />,
+            features: ['Zero-latency ticks', 'Auto stop-loss & take-profit', 'One-click entries'],
+            actionText: 'Open Terminal',
             callback: () => setActiveTab(DBOT_TABS.MANUAL_TRADING),
         },
         {
             id: 'bot-builder',
-            title: 'Bot Builder IDE',
-            subtitle: 'Visual Drag & Drop Workspace',
+            title: 'Visual Bot Builder IDE',
+            tagline: 'Blockly Visual Strategy Design Workspace',
             badge: 'BLOCKLY IDE',
-            icon: <GlassImportIcon />,
-            cardTheme: 'glass-purple',
+            badgeColor: 'indigo',
+            glowColor: 'indigo',
+            icon: <Layers className='module-icon' size={24} />,
+            features: ['Drag & drop logic', 'Custom indicator formulas', 'XML export & import'],
+            actionText: 'Build Strategy',
             callback: () => openFileLoader(),
         },
         {
             id: 'free-bots',
-            title: '24+ Free Bots',
-            subtitle: 'Pre-loaded Institutional Systems',
-            badge: 'PRE-LOADED',
-            icon: <GlassFreeIcon />,
-            cardTheme: 'glass-blue',
+            title: '24+ Institutional Bots',
+            tagline: 'Pre-Loaded Algorithmic Trading Systems',
+            badge: 'FREE PRE-LOADED',
+            badgeColor: 'cyan',
+            glowColor: 'cyan',
+            icon: <Zap className='module-icon' size={24} />,
+            features: ['Speed Bot & Martingale', 'Accumulator sniper logic', 'Even / Odd algorithms'],
+            actionText: 'Browse Systems',
             callback: () => setActiveTab(DBOT_TABS.TRADING_BOTS),
         },
         {
-            id: 'signal-tools',
+            id: 'ai-engine',
+            title: 'AI Trading Engine',
+            tagline: 'Neural Market Scanner & Entry Filter',
+            badge: 'AI NEURAL',
+            badgeColor: 'purple',
+            glowColor: 'purple',
+            icon: <Cpu className='module-icon' size={24} />,
+            features: ['Real-time digit flow', 'High-probability triggers', 'Multi-timeframe scanner'],
+            actionText: 'Launch Engine',
+            callback: () => setActiveTab(DBOT_TABS.AI_TRADING_ENGINE),
+        },
+        {
+            id: 'market-hunter',
+            title: 'Market Hunter Pro',
+            tagline: 'Multi-Symbol Volatility Pattern Scanner',
+            badge: 'PRO SCANNER',
+            badgeColor: 'amber',
+            glowColor: 'amber',
+            icon: <Target className='module-icon' size={24} />,
+            features: ['Tick momentum analyzer', 'Volatility index alerts', 'Trend bias detection'],
+            actionText: 'Launch Hunter',
+            callback: () => setActiveTab(DBOT_TABS.MARKET_HUNTER_PRO),
+        },
+        {
+            id: 'signal-radar',
             title: 'Market Radar & Signals',
-            subtitle: 'Real-time Live Digit Analysis',
+            tagline: 'Live Statistical Digit Bias Intelligence',
             badge: 'RADAR INTEL',
-            icon: <GlassSignalsIcon />,
-            cardTheme: 'glass-amber',
+            badgeColor: 'rose',
+            glowColor: 'rose',
+            icon: <Radio className='module-icon' size={24} />,
+            features: ['Live frequency heatmap', 'Over/Under edge metrics', 'Consecutive tick alerts'],
+            actionText: 'Analyze Signals',
             callback: () => setActiveTab(DBOT_TABS.SIGNALS),
         },
     ];
@@ -236,120 +124,290 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
     return React.useMemo(
         () => (
             <div
-                className={classNames('tab__dashboard__table', {
-                    'tab__dashboard__table--minimized': has_dashboard_strategies && is_mobile,
+                className={classNames('dash-cockpit-container', {
+                    'dash-cockpit-container--minimized': has_dashboard_strategies && is_mobile,
                 })}
             >
-                {/* 1. Quick Platform Status & Metric Chips */}
-                <div className='dash-quick-metrics-row'>
-                    <div className='metric-pill'>
-                        <Zap size={14} className='text-emerald' />
-                        <span>
-                            <strong>24+</strong> Pre-Loaded Strategies
-                        </span>
-                    </div>
-                    <div className='metric-pill'>
-                        <BarChart3 size={14} className='text-blue' />
-                        <span>
-                            <strong>Live</strong> AI Market Radar
-                        </span>
-                    </div>
-                    <div className='metric-pill'>
-                        <ShieldCheck size={14} className='text-purple' />
-                        <span>
-                            <strong>High-Speed</strong> Deriv API WebSocket
-                        </span>
+                {/* ─── 1. Cockpit Hero Command Center ─────────────────────── */}
+                <div className='dash-cockpit-hero'>
+                    <div className='dash-cockpit-hero__mesh-bg' />
+                    <div className='dash-cockpit-hero__content'>
+                        <div className='dash-cockpit-hero__badge'>
+                            <span className='dash-pulse-dot' />
+                            <span className='dash-badge-text'>INSTITUTIONAL QUANT SUITE</span>
+                            <span className='dash-badge-ver'>v4.2 PRO</span>
+                        </div>
+
+                        <h1 className='dash-cockpit-hero__title'>
+                            Next-Generation <span className='text-gradient-gold'>Algorithmic Trading</span> Cockpit
+                        </h1>
+
+                        <p className='dash-cockpit-hero__desc'>
+                            Execute autonomous quantitative bots, craft custom visual Blockly logic, monitor real-time
+                            digit momentum, and trade synthetic indices with ultra-low latency on Deriv.
+                        </p>
+
+                        {/* Quick Metrics Bar */}
+                        <div className='dash-hero-stats-row'>
+                            <div className='hero-stat-card'>
+                                <div className='hero-stat-card__icon-wrap text-emerald'>
+                                    <Activity size={18} />
+                                </div>
+                                <div className='hero-stat-card__text'>
+                                    <span className='hero-stat-val'>&lt; 20ms</span>
+                                    <span className='hero-stat-label'>WebSocket Latency</span>
+                                </div>
+                            </div>
+
+                            <div className='hero-stat-card'>
+                                <div className='hero-stat-card__icon-wrap text-cyan'>
+                                    <Zap size={18} />
+                                </div>
+                                <div className='hero-stat-card__text'>
+                                    <span className='hero-stat-val'>24+ Bots</span>
+                                    <span className='hero-stat-label'>Pre-Loaded Vault</span>
+                                </div>
+                            </div>
+
+                            <div className='hero-stat-card'>
+                                <div className='hero-stat-card__icon-wrap text-purple'>
+                                    <BarChart3 size={18} />
+                                </div>
+                                <div className='hero-stat-card__text'>
+                                    <span className='hero-stat-val'>Real-Time</span>
+                                    <span className='hero-stat-label'>AI Market Radar</span>
+                                </div>
+                            </div>
+
+                            <div className='hero-stat-card'>
+                                <div className='hero-stat-card__icon-wrap text-amber'>
+                                    <ShieldCheck size={18} />
+                                </div>
+                                <div className='hero-stat-card__text'>
+                                    <span className='hero-stat-val'>Active</span>
+                                    <span className='hero-stat-label'>Drawdown Sentinel</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* 2. Primary 4-Tile Navigation Grid */}
-                <div className='dash-action-tiles-grid'>
-                    {actionTiles.map(tile => (
+                {/* ─── 2. Quick Execution Action Deck ─────────────────────── */}
+                <div className='dash-quick-action-deck'>
+                    <button
+                        type='button'
+                        className='dash-action-btn dash-action-btn--primary'
+                        onClick={() => setActiveTab(DBOT_TABS.MANUAL_TRADING)}
+                    >
+                        <div className='btn-inner-glow' />
+                        <TrendingUp size={18} className='btn-icon' />
+                        <span className='btn-text'>Launch AI Smart Trader</span>
+                        <ArrowUpRight size={16} className='btn-arrow' />
+                    </button>
+
+                    <button
+                        type='button'
+                        className='dash-action-btn dash-action-btn--secondary'
+                        onClick={() => openFileLoader()}
+                    >
+                        <FolderPlus size={18} className='btn-icon text-indigo' />
+                        <span className='btn-text'>Import Strategy XML</span>
+                    </button>
+
+                    <button
+                        type='button'
+                        className='dash-action-btn dash-action-btn--tertiary'
+                        onClick={() => setActiveTab(DBOT_TABS.CHART)}
+                    >
+                        <BarChart3 size={18} className='btn-icon text-cyan' />
+                        <span className='btn-text'>Live Interactive Charts</span>
+                    </button>
+
+                    <button
+                        type='button'
+                        className='dash-action-btn dash-action-btn--quaternary'
+                        onClick={() => setActiveTab(DBOT_TABS.AI_TRADING_ENGINE)}
+                    >
+                        <Cpu size={18} className='btn-icon text-purple' />
+                        <span className='btn-text'>AI Trading Engine</span>
+                    </button>
+                </div>
+
+                {/* ─── 3. Core Modules 6-Card Interactive Grid ────────────── */}
+                <div className='dash-section-header'>
+                    <div className='dash-section-header__title-group'>
+                        <h2 className='dash-section-title'>Institutional Trading Modules</h2>
+                        <p className='dash-section-subtitle'>
+                            Select a quantitative engine to launch instant automated execution or analytical scanner
+                        </p>
+                    </div>
+                </div>
+
+                <div className='dash-modules-grid'>
+                    {actionModules.map(module => (
                         <div
-                            key={tile.id}
-                            className={classNames('dash-glass-card', tile.cardTheme)}
-                            onClick={tile.callback}
+                            key={module.id}
+                            className={classNames('dash-module-card', `dash-module-card--${module.glowColor}`)}
+                            onClick={module.callback}
                         >
-                            <div className='glass-card-glow' />
-                            <div className='glass-card-header'>
-                                <div className='glass-icon-wrapper'>{tile.icon}</div>
-                                <span className='glass-badge'>{tile.badge}</span>
+                            <div className='card-sheen-line' />
+                            <div className='dash-module-card__header'>
+                                <div className={`dash-module-card__icon-box icon-box--${module.glowColor}`}>
+                                    {module.icon}
+                                </div>
+                                <span className={`dash-module-badge badge--${module.badgeColor}`}>
+                                    {module.badge}
+                                </span>
                             </div>
-                            <div className='glass-card-body'>
-                                <h4 className='glass-title'>{tile.title}</h4>
-                                <p className='glass-subtitle'>{tile.subtitle}</p>
+
+                            <div className='dash-module-card__body'>
+                                <h3 className='dash-module-card__title'>{module.title}</h3>
+                                <p className='dash-module-card__tagline'>{module.tagline}</p>
+
+                                <ul className='dash-module-card__features'>
+                                    {module.features.map((feat, idx) => (
+                                        <li key={idx} className='feature-item'>
+                                            <CheckCircle2 size={13} className={`check-icon check--${module.glowColor}`} />
+                                            <span>{feat}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                            <div className='glass-card-footer'>
-                                <span className='glass-explore-text'>Open Module</span>
-                                <ArrowUpRight size={14} className='glass-explore-arrow' />
+
+                            <div className='dash-module-card__footer'>
+                                <span className='action-label'>{module.actionText}</span>
+                                <div className='action-arrow-circle'>
+                                    <ArrowUpRight size={14} />
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* 3. Primary Execution Launcher Row */}
-                <div className='dash-launchers-row'>
-                    <button onClick={() => setActiveTab(DBOT_TABS.MANUAL_TRADING)} className='dash-manual-trader-btn'>
-                        <TrendingUp size={18} />
-                        <span>LAUNCH AI SMART TRADER</span>
-                        <ArrowUpRight size={16} />
-                    </button>
-                    <button onClick={() => openFileLoader()} className='dash-import-btn'>
-                        <Zap size={16} />
-                        <span>IMPORT STRATEGY XML</span>
-                    </button>
-                </div>
-
-                {/* 4. Utility & Community 2-Column Row */}
-                <div className='dash-utility-dual-grid'>
-                    {/* Account Registration Card */}
-                    <div className='dash-gold-notice-card'>
-                        <div className='notice-left-content'>
-                            <h5 className='notice-title'>
-                                <strong className='text-amber'>Deriv Verified Account</strong>
-                            </h5>
-                            <p className='notice-left-text'>
-                                Don't have an account? Open a live Deriv account with instant deposit & low latency
-                                trading.
+                {/* ─── 4. Broker Partnership & Community Row ─────────────── */}
+                <div className='dash-ecosystem-row'>
+                    {/* Deriv Account Card */}
+                    <div className='dash-ecosystem-card dash-ecosystem-card--deriv'>
+                        <div className='card-glow-mesh' />
+                        <div className='dash-ecosystem-card__content'>
+                            <div className='card-header-pill'>
+                                <ShieldCheck size={16} className='text-amber' />
+                                <span>OFFICIAL BROKER PARTNER</span>
+                            </div>
+                            <h3 className='card-title'>Deriv Verified Trading Account</h3>
+                            <p className='card-desc'>
+                                Trade with zero spread manipulation, instantaneous local deposits & withdrawals, and
+                                uninterrupted 24/7 liquidity feeds on synthetic indices.
                             </p>
+                            <a
+                                href='https://track.deriv.com/_b_FkYd-u53x-m-sZlUf1gWNd7ZgqdRLk/1/'
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='dash-partner-btn dash-partner-btn--gold'
+                            >
+                                <span>Open Live Account</span>
+                                <ArrowUpRight size={16} />
+                            </a>
                         </div>
-                        <a
-                            href='https://track.deriv.com/_b_FkYd-u53x-m-sZlUf1gWNd7ZgqdRLk/1/'
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='dash-gold-btn'
-                        >
-                            <span>Open Account</span>
-                            <ArrowUpRight size={15} />
-                        </a>
                     </div>
 
-                    {/* Community WhatsApp Card */}
-                    <div className='dash-whatsapp-card'>
-                        <div className='whatsapp-info'>
-                            <div className='whatsapp-icon-circle'>
-                                <MessageCircle size={22} className='wa-icon' />
+                    {/* VIP Trading Community Card */}
+                    <div className='dash-ecosystem-card dash-ecosystem-card--community'>
+                        <div className='card-glow-mesh' />
+                        <div className='dash-ecosystem-card__content'>
+                            <div className='card-header-pill'>
+                                <MessageCircle size={16} className='text-emerald' />
+                                <span>EXCLUSIVE VIP TRADERS GROUP</span>
+                            </div>
+                            <h3 className='card-title'>VIP Trading Network</h3>
+                            <p className='card-desc'>
+                                Join 5,000+ quantitative traders. Receive tested bot XML releases, daily high-probability
+                                market setups, and real-time community insights.
+                            </p>
+                            <a
+                                href='https://chat.whatsapp.com/L1n7hNl9ZJ8ErYVvXk1z6D'
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                className='dash-partner-btn dash-partner-btn--emerald'
+                            >
+                                <span>Join WhatsApp Group</span>
+                                <ArrowUpRight size={16} />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── 5. Strategy Management & Bot List ──────────────────── */}
+                <div className='dash-workspace-section'>
+                    <div className='dash-workspace-header'>
+                        <div className='dash-workspace-header__title-group'>
+                            <div className='dash-workspace-icon-box'>
+                                <Bot size={20} className='text-emerald' />
                             </div>
                             <div>
-                                <h5 className='wa-title'>VIP Trading Network</h5>
-                                <p className='whatsapp-desc'>
-                                    Join our community for daily setups, bot releases, and market signals.
-                                </p>
+                                <h3 className='dash-workspace-title'>Your Trading Bots & Workspaces</h3>
+                                <span className='dash-workspace-subtitle'>
+                                    Saved locally in your browser storage for instant execution
+                                </span>
                             </div>
                         </div>
-                        <a
-                            href='https://chat.whatsapp.com/L1n7hNl9ZJ8ErYVvXk1z6D'
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='dash-whatsapp-btn'
-                        >
-                            <span>Join Group</span>
-                            <ArrowUpRight size={15} />
-                        </a>
+
+                        <div className='dash-workspace-actions'>
+                            <button
+                                type='button'
+                                className='dash-mini-btn'
+                                onClick={() => openFileLoader()}
+                            >
+                                <FolderPlus size={14} />
+                                <span>Import XML</span>
+                            </button>
+                            <button
+                                type='button'
+                                className='dash-mini-btn dash-mini-btn--accent'
+                                onClick={() => setActiveTab(DBOT_TABS.TRADING_BOTS)}
+                            >
+                                <Sparkles size={14} />
+                                <span>Load Free Bot</span>
+                            </button>
+                        </div>
                     </div>
+
+                    {has_dashboard_strategies ? (
+                        <div className='dash-bot-list-container'>
+                            <DashboardBotList />
+                        </div>
+                    ) : (
+                        <div className='dash-empty-workspace'>
+                            <div className='dash-empty-workspace__icon'>
+                                <Layers size={32} />
+                            </div>
+                            <h4 className='dash-empty-workspace__title'>No Custom Strategies Saved Yet</h4>
+                            <p className='dash-empty-workspace__desc'>
+                                Build custom algorithmic strategies in the visual IDE, or choose from our 24+ pre-loaded institutional bots to see them here.
+                            </p>
+                            <div className='dash-empty-workspace__btns'>
+                                <button
+                                    type='button'
+                                    className='dash-empty-btn dash-empty-btn--primary'
+                                    onClick={() => setActiveTab(DBOT_TABS.TRADING_BOTS)}
+                                >
+                                    <Zap size={15} />
+                                    <span>Explore 24+ Free Bots</span>
+                                </button>
+                                <button
+                                    type='button'
+                                    className='dash-empty-btn dash-empty-btn--outline'
+                                    onClick={() => openFileLoader()}
+                                >
+                                    <FolderPlus size={15} />
+                                    <span>Import From XML</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* 6. Google Drive Modal Dialog */}
+                {/* ─── 6. Google Drive Modal Dialog ────────────────────────── */}
                 {!isDesktop ? (
                     <Dialog
                         title={dialog_options.title}
@@ -378,19 +436,9 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                         </div>
                     </MobileFullPageModal>
                 )}
-
-                {/* 7. Strategy Management & Bot List Table */}
-                <div className='dash-bot-list-wrapper'>
-                    <div className='dash-bot-list-header'>
-                        <h3 className='dash-bot-list-title'>Your Trading Bots & Strategies</h3>
-                        <span className='dash-bot-list-sub'>Saved locally in your browser workspace</span>
-                    </div>
-                    <DashboardBotList />
-                </div>
             </div>
         ),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [is_dialog_open, has_dashboard_strategies]
+        [is_dialog_open, has_dashboard_strategies, is_mobile, isDesktop, dialog_options.title, onCloseDialog, openFileLoader, setActiveTab, setPreviewOnPopup]
     );
 });
 

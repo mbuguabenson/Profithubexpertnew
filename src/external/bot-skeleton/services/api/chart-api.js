@@ -10,6 +10,10 @@ class ChartAPI {
 
     waitForConnection = async (timeoutMs = 5000) => {
         if (this.api?.connection?.readyState === WebSocket.OPEN) return true;
+        if (typeof window !== 'undefined' && window.api_base?.api?.connection?.readyState === WebSocket.OPEN) {
+            this.api = window.api_base.api;
+            return true;
+        }
         if (!this.api || this.api?.connection?.readyState > WebSocket.OPEN) {
             await this.init();
         }
@@ -57,13 +61,14 @@ class ChartAPI {
     };
 
     init = async (forceNew = false) => {
+        if (typeof window !== 'undefined' && window.api_base?.api?.connection?.readyState === WebSocket.OPEN && !forceNew) {
+            this.api = window.api_base.api;
+            this.getTime();
+            return this.api;
+        }
         const connectionState = this.api?.connection?.readyState;
         if (!this.api || connectionState === WebSocket.CLOSED || connectionState === WebSocket.CLOSING || forceNew) {
-            if (typeof window !== 'undefined' && window.api_base?.api?.connection?.readyState === WebSocket.OPEN && !forceNew) {
-                this.api = window.api_base.api;
-            } else {
-                this.api = await generateDerivApiInstance(forceNew);
-            }
+            this.api = await generateDerivApiInstance(forceNew);
         }
         this.getTime();
         return this.api;

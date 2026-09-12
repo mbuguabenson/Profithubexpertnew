@@ -13,133 +13,8 @@ import { RiskDisclaimer } from '../shared_ui/risk-disclaimer/risk-disclaimer';
 import AccountInfoModal from './footer/AccountInfoModal';
 import { StatementReportModal } from '@/components/statement-report';
 import { WalletManagementModal } from '@/components/wallet-management';
-import { getSiteConfig, initSiteConfigSync, SiteConfig, sendChatMessage, getChatMessages, ChatMessage } from '@/utils/supabase-copy';
+import { getSiteConfig, initSiteConfigSync, SiteConfig } from '@/utils/supabase-copy';
 import './layout.scss';
-
-// ─── Floating Chat Widget ─────────────────────────────────────────────────────
-const FloatingChat = () => {
-    const [open, setOpen] = useState(false);
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [draft, setDraft] = useState('');
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    // Open support chat automatically ONLY on user's first visit to the site
-    useEffect(() => {
-        const hasVisited = localStorage.getItem('ph_first_visit_done');
-        if (!hasVisited) {
-            setOpen(true);
-        }
-    }, []);
-
-    const handleClose = () => {
-        setOpen(false);
-        localStorage.setItem('ph_first_visit_done', 'true');
-    };
-
-    // Use a stable loginid for the client
-    const clientId = (() => {
-        try {
-            const accts = JSON.parse(localStorage.getItem('accountsList') || '{}');
-            const keys = Object.keys(accts);
-            return keys.length > 0 ? keys[0] : 'guest';
-        } catch {
-            return 'guest';
-        }
-    })();
-
-    const refreshMessages = useCallback(() => {
-        setMessages(getChatMessages(clientId));
-    }, [clientId]);
-
-    useEffect(() => {
-        if (!open) return;
-        refreshMessages();
-        // Poll only when chat is open AND document is visible — 5s is enough
-        const iv = setInterval(() => {
-            if (document.visibilityState !== 'hidden') refreshMessages();
-        }, 5000);
-        return () => clearInterval(iv);
-    }, [open, refreshMessages]);
-
-    useEffect(() => {
-        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }, [messages]);
-
-    const handleSend = () => {
-        const text = draft.trim();
-        if (!text) return;
-        sendChatMessage({ sender: 'client', loginid: clientId, text, timestamp: Date.now() });
-        setDraft('');
-        refreshMessages();
-    };
-
-    if (!open) return null;
-
-    return (
-        <div className='ph-chat-panel'>
-            <div className='ph-chat-panel__header'>
-                <div className='ph-chat-panel__hdr-left'>
-                    <span className='ph-chat-panel__dot' />
-                    <span>ProfitHub Support</span>
-                </div>
-                <button onClick={handleClose} className='ph-chat-panel__close' type='button'>
-                    <svg
-                        width='14'
-                        height='14'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='2.5'
-                        strokeLinecap='round'
-                    >
-                        <line x1='18' y1='6' x2='6' y2='18' />
-                        <line x1='6' y1='6' x2='18' y2='18' />
-                    </svg>
-                </button>
-            </div>
-            <div className='ph-chat-panel__body' ref={scrollRef}>
-                {messages.length === 0 && (
-                    <div className='ph-chat-panel__empty'>
-                        <p>👋 Welcome! How can we help?</p>
-                        <span>Send a message and our admin will reply shortly.</span>
-                    </div>
-                )}
-                {messages.map(m => (
-                    <div key={m.id} className={`ph-chat-bubble ph-chat-bubble--${m.sender}`}>
-                        <span className='ph-chat-bubble__text'>{m.text}</span>
-                        <span className='ph-chat-bubble__time'>
-                            {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                    </div>
-                ))}
-            </div>
-            <div className='ph-chat-panel__footer'>
-                <input
-                    type='text'
-                    placeholder='Type a message…'
-                    value={draft}
-                    onChange={e => setDraft(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleSend()}
-                />
-                <button onClick={handleSend} type='button' className='ph-chat-panel__send'>
-                    <svg
-                        width='16'
-                        height='16'
-                        viewBox='0 0 24 24'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='2.5'
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                    >
-                        <line x1='22' y1='2' x2='11' y2='13' />
-                        <polygon points='22 2 15 22 11 13 2 9 22 2' />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    );
-};
 
 // ─── Dynamic Theme Injector ───────────────────────────────────────────────────
 const DynamicThemeStyle = () => {
@@ -531,9 +406,6 @@ const Layout = observer(() => {
             {isWalletModalOpen && (
                 <WalletManagementModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />
             )}
-
-            {/* Floating Chat Widget (only on client-facing pages) */}
-            {!isAdminPage && !isCallbackPage && <FloatingChat />}
         </div>
     );
 });
