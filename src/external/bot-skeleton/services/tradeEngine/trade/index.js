@@ -59,7 +59,7 @@ const watchBefore = store => {
         stopScope: constants.DURING_PURCHASE,
         passScope: constants.BEFORE_PURCHASE,
         passFlag: 'proposalsReady',
-        allowImmediate: true,
+        allowImmediate: false,
     });
 };
 

@@ -12,8 +12,10 @@ import { useDevice } from '@deriv-com/ui';
 import ToolbarWidgets from './toolbar-widgets';
 import '@deriv-com/smartcharts-champion/dist/smartcharts.css';
 
+const EMPTY_BARRIERS: any[] = [];
+
 const Chart = observer(({ show_digits_stats: _show_digits_stats }: { show_digits_stats?: boolean }) => {
-    const barriers: [] = [];
+    const barriers = EMPTY_BARRIERS;
     const store = useStore();
     const [isSafari, setIsSafari] = useState(false);
 

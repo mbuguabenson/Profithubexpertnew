@@ -72,22 +72,25 @@ export function createTransport(): TTransport {
                         // Check if this message belongs to our subscription
                         const storedSub = subscriptions.get(tempId);
                         if (storedSub) {
+                            const isCandleSub = Boolean(subscribeRequest.granularity && Number(subscribeRequest.granularity) > 0);
                             const matchesSubId = Boolean(
                                 subscriptionId &&
                                 storedSub.realSubscriptionId &&
                                 subscriptionId === storedSub.realSubscriptionId
                             );
+                            const matchesType = isCandleSub ? Boolean(data?.ohlc) : Boolean(data?.tick);
                             const matchesSymbol = Boolean(
-                                (data?.tick && (data.tick.symbol === symbolToMatch || data.tick.underlying === symbolToMatch)) ||
-                                (data?.ohlc && (data.ohlc.symbol === symbolToMatch || data.ohlc.underlying === symbolToMatch))
+                                matchesType &&
+                                ((data?.tick && (data.tick.symbol === symbolToMatch || data.tick.underlying === symbolToMatch)) ||
+                                 (data?.ohlc && (data.ohlc.symbol === symbolToMatch || data.ohlc.underlying === symbolToMatch)))
                             );
 
                             if (matchesSubId || matchesSymbol) {
-                                if (subscriptionId && !storedSub.realSubscriptionId) {
+                                if (subscriptionId && !storedSub.realSubscriptionId && matchesType) {
                                     storedSub.realSubscriptionId = subscriptionId;
                                     subscriptions.set(tempId, storedSub);
                                 }
-                                if (data?.tick || data?.ohlc) {
+                                if ((!isCandleSub && data?.tick) || (isCandleSub && data?.ohlc)) {
                                     callback(data);
                                 }
                             }
