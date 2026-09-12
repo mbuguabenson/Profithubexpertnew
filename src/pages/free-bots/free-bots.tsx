@@ -4,7 +4,7 @@ import { DBOT_TABS } from '@/constants/bot-contents';
 import { useStore } from '@/hooks/useStore';
 import { TBotsManifestItem, getXmlUploadsManifest, fetchXmlWithCache } from '@/utils/freebots-cache';
 import { getUploadedBots } from '@/utils/supabase-copy';
-import { Search, Sparkles, Zap, Flame, BarChart3, Filter, Play, CheckCircle2, X } from 'lucide-react';
+import { Search, Sparkles, Zap, Flame, BarChart3, Filter, Play, CheckCircle2, X, RotateCw } from 'lucide-react';
 import './free-bots.scss';
 
 interface BotData {
@@ -353,6 +353,7 @@ const FreeBots = observer(() => {
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [previewBot, setPreviewBot] = useState<BotData | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const loadBotIntoBuilder = async (bot: BotData) => {
         if (!bot.xml) return;
@@ -360,61 +361,65 @@ const FreeBots = observer(() => {
         setActiveTab(DBOT_TABS.BOT_BUILDER);
     };
 
-    useEffect(() => {
-        const loadBots = async () => {
-            setError(null);
+    const loadBots = useCallback(async (isManual = false) => {
+        if (isManual) setIsRefreshing(true);
+        setError(null);
 
-            const manifest: TBotsManifestItem[] = (await getXmlUploadsManifest()) || [];
+        const manifest: TBotsManifestItem[] = (await getXmlUploadsManifest()) || [];
 
-            if (manifest.length === 0) {
-                setIsLoading(false);
-                return;
-            }
-
-            const initialSkeleton: BotData[] = manifest.map(item => {
-                const botName = (item.name || item.file.replace('.xml', '')).replace(/[_-]/g, ' ');
-                return {
-                    name: botName,
-                    description: item.description || getBotDescription(botName),
-                    difficulty: item.difficulty || 'Intermediate',
-                    strategy: item.strategy || 'Multi-Strategy',
-                    features: DEFAULT_FEATURES,
-                    xml: '',
-                };
-            });
-            setDefaultBots(initialSkeleton);
+        if (manifest.length === 0) {
             setIsLoading(false);
+            if (isManual) setIsRefreshing(false);
+            return;
+        }
 
-            try {
-                const loadedBots: BotData[] = [];
-                for (let i = 0; i < manifest.length; i++) {
-                    const item = manifest[i];
-                    try {
-                        const xml = await fetchXmlWithCache(item.file, item.basePath ?? '/xml-uploads/');
-                        if (xml) {
-                            const botName = (item.name || item.file.replace('.xml', '')).replace(/[_-]/g, ' ');
-                            loadedBots.push({
-                                name: botName,
-                                description: item.description || getBotDescription(botName),
-                                difficulty: item.difficulty || 'Intermediate',
-                                strategy: item.strategy || 'Multi-Strategy',
-                                features: DEFAULT_FEATURES,
-                                xml,
-                            });
-                            setDefaultBots([...loadedBots, ...initialSkeleton.slice(loadedBots.length)]);
-                        }
-                    } catch (err) {
-                        console.warn(`Failed to load ${item.file}:`, err);
+        const initialSkeleton: BotData[] = manifest.map(item => {
+            const botName = (item.name || item.file.replace('.xml', '')).replace(/[_-]/g, ' ');
+            return {
+                name: botName,
+                description: item.description || getBotDescription(botName),
+                difficulty: item.difficulty || 'Intermediate',
+                strategy: item.strategy || 'Multi-Strategy',
+                features: DEFAULT_FEATURES,
+                xml: '',
+            };
+        });
+        setDefaultBots(initialSkeleton);
+        setIsLoading(false);
+
+        try {
+            const loadedBots: BotData[] = [];
+            for (let i = 0; i < manifest.length; i++) {
+                const item = manifest[i];
+                try {
+                    const xml = await fetchXmlWithCache(item.file, item.basePath ?? '/xml-uploads/');
+                    if (xml) {
+                        const botName = (item.name || item.file.replace('.xml', '')).replace(/[_-]/g, ' ');
+                        loadedBots.push({
+                            name: botName,
+                            description: item.description || getBotDescription(botName),
+                            difficulty: item.difficulty || 'Intermediate',
+                            strategy: item.strategy || 'Multi-Strategy',
+                            features: DEFAULT_FEATURES,
+                            xml,
+                        });
+                        setDefaultBots([...loadedBots, ...initialSkeleton.slice(loadedBots.length)]);
                     }
+                } catch (err) {
+                    console.warn(`Failed to load ${item.file}:`, err);
                 }
-            } catch (err) {
-                console.error('Error loading bots:', err);
-                setError('Failed to load bots. Please try again.');
             }
-        };
-
-        loadBots();
+        } catch (err) {
+            console.error('Error loading bots:', err);
+            setError('Failed to load bots. Please try again.');
+        } finally {
+            if (isManual) setIsRefreshing(false);
+        }
     }, []);
+
+    useEffect(() => {
+        loadBots();
+    }, [loadBots, dashboard.active_tab]);
 
     const combinedBots = useMemo(() => {
         const uploaded = getUploadedBots().map(b => ({
@@ -450,21 +455,34 @@ const FreeBots = observer(() => {
                         <span className='tb-count-badge'>{combinedBots.length} Strategies Available</span>
                     </div>
 
-                    {/* Search Input Box */}
-                    <div className='tb-search-box'>
-                        <Search size={18} className='search-icon' />
-                        <input
-                            type='text'
-                            placeholder='Search strategy by name or market...'
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            className='search-input'
-                        />
-                        {searchQuery && (
-                            <button type='button' className='clear-search-btn' onClick={() => setSearchQuery('')}>
-                                <X size={16} />
-                            </button>
-                        )}
+                    {/* Right Controls: Search & Sync */}
+                    <div className='tb-right-controls'>
+                        <div className='tb-search-box'>
+                            <Search size={18} className='search-icon' />
+                            <input
+                                type='text'
+                                placeholder='Search strategy by name or market...'
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className='search-input'
+                            />
+                            {searchQuery && (
+                                <button type='button' className='clear-search-btn' onClick={() => setSearchQuery('')}>
+                                    <X size={16} />
+                                </button>
+                            )}
+                        </div>
+
+                        <button
+                            type='button'
+                            className='tb-sync-btn'
+                            onClick={() => loadBots(true)}
+                            disabled={isRefreshing}
+                            title='Sync latest bots from server'
+                        >
+                            <RotateCw size={15} className={isRefreshing ? 'sync-icon--spinning' : ''} />
+                            <span>{isRefreshing ? 'Syncing…' : 'Sync Bots'}</span>
+                        </button>
                     </div>
                 </div>
 
