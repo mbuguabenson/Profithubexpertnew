@@ -5,6 +5,7 @@ import GoogleDrive from '@/components/load-modal/google-drive';
 import Dialog from '@/components/shared_ui/dialog';
 import MobileFullPageModal from '@/components/shared_ui/mobile-full-page-modal';
 import { DBOT_TABS } from '@/constants/bot-contents';
+import { useApiBase } from '@/hooks/useApiBase';
 import { useStore } from '@/hooks/useStore';
 import { localize } from '@deriv-com/translations';
 import { useDevice } from '@deriv-com/ui';
@@ -23,9 +24,8 @@ import {
     Sparkles,
     MessageCircle,
     Layers,
-    CheckCircle2,
-    Play,
-    Activity
+    Wand2,
+    UserCheck
 } from 'lucide-react';
 
 type TCardProps = {
@@ -34,10 +34,26 @@ type TCardProps = {
 };
 
 const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => {
-    const { dashboard, load_modal } = useStore();
+    const { dashboard, load_modal, client, quick_strategy } = useStore();
     const { toggleLoadModal, setActiveTabIndex } = load_modal;
     const { isDesktop } = useDevice();
     const { onCloseDialog, dialog_options, is_dialog_open, setActiveTab, setPreviewOnPopup } = dashboard;
+    const { setFormVisibility } = quick_strategy;
+    const { accountList, activeLoginid } = useApiBase();
+
+    // Resolve active account details
+    const activeAccount =
+        accountList?.find(acc => acc.loginid === activeLoginid) ||
+        client?.account_list?.find(acc => acc.loginid === (client?.loginid || activeLoginid));
+
+    const accountName =
+        activeAccount?.loginid ||
+        client?.loginid ||
+        activeLoginid ||
+        localStorage.getItem('active_loginid') ||
+        '';
+
+    const isVirtual = Boolean(activeAccount?.is_virtual || client?.is_virtual || accountName.startsWith('VR'));
 
     const openFileLoader = () => {
         toggleLoadModal();
@@ -45,369 +61,255 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         setActiveTab(DBOT_TABS.BOT_BUILDER);
     };
 
-    // 6 Core Quantitative Modules
-    const actionModules = [
-        {
-            id: 'smart-trader',
-            title: 'AI Smart Trader',
-            tagline: 'Autonomous AI & Manual Order Execution',
-            badge: 'LIVE EXECUTION',
-            badgeColor: 'emerald',
-            glowColor: 'emerald',
-            icon: <Bot className='module-icon' size={24} />,
-            features: ['Zero-latency ticks', 'Auto stop-loss & take-profit', 'One-click entries'],
-            actionText: 'Open Terminal',
-            callback: () => setActiveTab(DBOT_TABS.MANUAL_TRADING),
-        },
+    const handleOpenQuickStrategy = () => {
+        setActiveTab(DBOT_TABS.BOT_BUILDER);
+        setFormVisibility(true);
+    };
+
+    // ─── Top Row: 5 Compact Strategy Loading Cards in ONE Single Line ─────
+    const loadingCards = [
         {
             id: 'bot-builder',
-            title: 'Visual Bot Builder IDE',
-            tagline: 'Blockly Visual Strategy Design Workspace',
-            badge: 'BLOCKLY IDE',
-            badgeColor: 'indigo',
-            glowColor: 'indigo',
-            icon: <Layers className='module-icon' size={24} />,
-            features: ['Drag & drop logic', 'Custom indicator formulas', 'XML export & import'],
-            actionText: 'Build Strategy',
+            title: 'Bot Builder',
+            subtitle: 'Visual IDE workspace',
+            icon: <Layers size={18} className='load-card__icon text-indigo' />,
+            badge: 'IDE',
+            theme: 'card--indigo',
+            callback: () => setActiveTab(DBOT_TABS.BOT_BUILDER),
+        },
+        {
+            id: 'quick-strategy',
+            title: 'Quick Strategy',
+            subtitle: 'Automated wizard',
+            icon: <Wand2 size={18} className='load-card__icon text-cyan' />,
+            badge: 'WIZARD',
+            theme: 'card--cyan',
+            callback: () => handleOpenQuickStrategy(),
+        },
+        {
+            id: 'import-xml',
+            title: 'Import XML',
+            subtitle: 'Load local file/cloud',
+            icon: <FolderPlus size={18} className='load-card__icon text-purple' />,
+            badge: 'FILE',
+            theme: 'card--purple',
             callback: () => openFileLoader(),
         },
         {
             id: 'free-bots',
-            title: '24+ Institutional Bots',
-            tagline: 'Pre-Loaded Algorithmic Trading Systems',
-            badge: 'FREE PRE-LOADED',
-            badgeColor: 'cyan',
-            glowColor: 'cyan',
-            icon: <Zap className='module-icon' size={24} />,
-            features: ['Speed Bot & Martingale', 'Accumulator sniper logic', 'Even / Odd algorithms'],
-            actionText: 'Browse Systems',
+            title: '24+ Free Bots',
+            subtitle: 'Pre-loaded systems',
+            icon: <Zap size={18} className='load-card__icon text-amber' />,
+            badge: 'PRE-BUILT',
+            theme: 'card--amber',
             callback: () => setActiveTab(DBOT_TABS.TRADING_BOTS),
         },
         {
+            id: 'smart-trader',
+            title: 'AI Smart Trader',
+            subtitle: 'Live execution terminal',
+            icon: <TrendingUp size={18} className='load-card__icon text-emerald' />,
+            badge: 'LIVE',
+            theme: 'card--emerald',
+            callback: () => setActiveTab(DBOT_TABS.MANUAL_TRADING),
+        },
+    ];
+
+    // ─── Secondary Modules: 4 Compact Quantitative Intelligence Cards ───
+    const intelligenceModules = [
+        {
             id: 'ai-engine',
             title: 'AI Trading Engine',
-            tagline: 'Neural Market Scanner & Entry Filter',
-            badge: 'AI NEURAL',
-            badgeColor: 'purple',
-            glowColor: 'purple',
-            icon: <Cpu className='module-icon' size={24} />,
-            features: ['Real-time digit flow', 'High-probability triggers', 'Multi-timeframe scanner'],
-            actionText: 'Launch Engine',
+            desc: 'Neural entry scanner & high-probability signals',
+            icon: <Cpu size={18} className='text-purple' />,
             callback: () => setActiveTab(DBOT_TABS.AI_TRADING_ENGINE),
         },
         {
             id: 'market-hunter',
             title: 'Market Hunter Pro',
-            tagline: 'Multi-Symbol Volatility Pattern Scanner',
-            badge: 'PRO SCANNER',
-            badgeColor: 'amber',
-            glowColor: 'amber',
-            icon: <Target className='module-icon' size={24} />,
-            features: ['Tick momentum analyzer', 'Volatility index alerts', 'Trend bias detection'],
-            actionText: 'Launch Hunter',
+            desc: 'Multi-symbol volatility pattern & trend alert suite',
+            icon: <Target size={18} className='text-amber' />,
             callback: () => setActiveTab(DBOT_TABS.MARKET_HUNTER_PRO),
         },
         {
-            id: 'signal-radar',
+            id: 'signals',
             title: 'Market Radar & Signals',
-            tagline: 'Live Statistical Digit Bias Intelligence',
-            badge: 'RADAR INTEL',
-            badgeColor: 'rose',
-            glowColor: 'rose',
-            icon: <Radio className='module-icon' size={24} />,
-            features: ['Live frequency heatmap', 'Over/Under edge metrics', 'Consecutive tick alerts'],
-            actionText: 'Analyze Signals',
+            desc: 'Real-time digit flow, bias heatmap & momentum',
+            icon: <Radio size={18} className='text-rose' />,
             callback: () => setActiveTab(DBOT_TABS.SIGNALS),
+        },
+        {
+            id: 'charts',
+            title: 'Live Interactive Charts',
+            desc: 'High-speed ticks, indicators & barrier analysis',
+            icon: <BarChart3 size={18} className='text-cyan' />,
+            callback: () => setActiveTab(DBOT_TABS.CHART),
         },
     ];
 
     return React.useMemo(
         () => (
             <div
-                className={classNames('dash-cockpit-container', {
-                    'dash-cockpit-container--minimized': has_dashboard_strategies && is_mobile,
+                className={classNames('dash-compact-cockpit', {
+                    'dash-compact-cockpit--minimized': has_dashboard_strategies && is_mobile,
                 })}
             >
-                {/* ─── 1. Cockpit Hero Command Center ─────────────────────── */}
-                <div className='dash-cockpit-hero'>
-                    <div className='dash-cockpit-hero__mesh-bg' />
-                    <div className='dash-cockpit-hero__content'>
-                        <div className='dash-cockpit-hero__badge'>
-                            <span className='dash-pulse-dot' />
-                            <span className='dash-badge-text'>INSTITUTIONAL QUANT SUITE</span>
-                            <span className='dash-badge-ver'>v4.2 PRO</span>
+                {/* ─── 1. Welcome Greeting Header Strip ───────────────────────── */}
+                <div className='dash-welcome-strip'>
+                    <div className='dash-welcome-strip__left'>
+                        <div className='dash-welcome-avatar'>
+                            <UserCheck size={18} />
                         </div>
+                        <div className='dash-welcome-texts'>
+                            <h1 className='dash-welcome-title'>
+                                Welcome user{accountName ? ` (${accountName})` : ''}! Start your trading journey here.
+                            </h1>
+                            <p className='dash-welcome-sub'>
+                                Institutional quantitative bot execution, AI market radar, and low-latency Deriv API trading.
+                            </p>
+                        </div>
+                    </div>
 
-                        <h1 className='dash-cockpit-hero__title'>
-                            Next-Generation <span className='text-gradient-gold'>Algorithmic Trading</span> Cockpit
-                        </h1>
-
-                        <p className='dash-cockpit-hero__desc'>
-                            Execute autonomous quantitative bots, craft custom visual Blockly logic, monitor real-time
-                            digit momentum, and trade synthetic indices with ultra-low latency on Deriv.
-                        </p>
-
-                        {/* Quick Metrics Bar */}
-                        <div className='dash-hero-stats-row'>
-                            <div className='hero-stat-card'>
-                                <div className='hero-stat-card__icon-wrap text-emerald'>
-                                    <Activity size={18} />
-                                </div>
-                                <div className='hero-stat-card__text'>
-                                    <span className='hero-stat-val'>&lt; 20ms</span>
-                                    <span className='hero-stat-label'>WebSocket Latency</span>
-                                </div>
-                            </div>
-
-                            <div className='hero-stat-card'>
-                                <div className='hero-stat-card__icon-wrap text-cyan'>
-                                    <Zap size={18} />
-                                </div>
-                                <div className='hero-stat-card__text'>
-                                    <span className='hero-stat-val'>24+ Bots</span>
-                                    <span className='hero-stat-label'>Pre-Loaded Vault</span>
-                                </div>
-                            </div>
-
-                            <div className='hero-stat-card'>
-                                <div className='hero-stat-card__icon-wrap text-purple'>
-                                    <BarChart3 size={18} />
-                                </div>
-                                <div className='hero-stat-card__text'>
-                                    <span className='hero-stat-val'>Real-Time</span>
-                                    <span className='hero-stat-label'>AI Market Radar</span>
-                                </div>
-                            </div>
-
-                            <div className='hero-stat-card'>
-                                <div className='hero-stat-card__icon-wrap text-amber'>
-                                    <ShieldCheck size={18} />
-                                </div>
-                                <div className='hero-stat-card__text'>
-                                    <span className='hero-stat-val'>Active</span>
-                                    <span className='hero-stat-label'>Drawdown Sentinel</span>
-                                </div>
-                            </div>
+                    <div className='dash-welcome-strip__right'>
+                        {accountName && (
+                            <span className={classNames('dash-pill-acc', isVirtual ? 'dash-pill-acc--demo' : 'dash-pill-acc--real')}>
+                                {isVirtual ? 'DEMO' : 'REAL'} • {accountName}
+                            </span>
+                        )}
+                        <div className='dash-pill-status'>
+                            <span className='dash-live-dot' />
+                            <span>API CONNECTED</span>
                         </div>
                     </div>
                 </div>
 
-                {/* ─── 2. Quick Execution Action Deck ─────────────────────── */}
-                <div className='dash-quick-action-deck'>
-                    <button
-                        type='button'
-                        className='dash-action-btn dash-action-btn--primary'
-                        onClick={() => setActiveTab(DBOT_TABS.MANUAL_TRADING)}
-                    >
-                        <div className='btn-inner-glow' />
-                        <TrendingUp size={18} className='btn-icon' />
-                        <span className='btn-text'>Launch AI Smart Trader</span>
-                        <ArrowUpRight size={16} className='btn-arrow' />
-                    </button>
-
-                    <button
-                        type='button'
-                        className='dash-action-btn dash-action-btn--secondary'
-                        onClick={() => openFileLoader()}
-                    >
-                        <FolderPlus size={18} className='btn-icon text-indigo' />
-                        <span className='btn-text'>Import Strategy XML</span>
-                    </button>
-
-                    <button
-                        type='button'
-                        className='dash-action-btn dash-action-btn--tertiary'
-                        onClick={() => setActiveTab(DBOT_TABS.CHART)}
-                    >
-                        <BarChart3 size={18} className='btn-icon text-cyan' />
-                        <span className='btn-text'>Live Interactive Charts</span>
-                    </button>
-
-                    <button
-                        type='button'
-                        className='dash-action-btn dash-action-btn--quaternary'
-                        onClick={() => setActiveTab(DBOT_TABS.AI_TRADING_ENGINE)}
-                    >
-                        <Cpu size={18} className='btn-icon text-purple' />
-                        <span className='btn-text'>AI Trading Engine</span>
-                    </button>
-                </div>
-
-                {/* ─── 3. Core Modules 6-Card Interactive Grid ────────────── */}
-                <div className='dash-section-header'>
-                    <div className='dash-section-header__title-group'>
-                        <h2 className='dash-section-title'>Institutional Trading Modules</h2>
-                        <p className='dash-section-subtitle'>
-                            Select a quantitative engine to launch instant automated execution or analytical scanner
-                        </p>
-                    </div>
-                </div>
-
-                <div className='dash-modules-grid'>
-                    {actionModules.map(module => (
+                {/* ─── 2. Top Strategy Loading Cards (IN ONE SINGLE LINE) ─────── */}
+                <div className='dash-load-cards-row'>
+                    {loadingCards.map(card => (
                         <div
-                            key={module.id}
-                            className={classNames('dash-module-card', `dash-module-card--${module.glowColor}`)}
-                            onClick={module.callback}
+                            key={card.id}
+                            className={classNames('dash-load-card', card.theme)}
+                            onClick={card.callback}
+                            role='button'
+                            tabIndex={0}
                         >
-                            <div className='card-sheen-line' />
-                            <div className='dash-module-card__header'>
-                                <div className={`dash-module-card__icon-box icon-box--${module.glowColor}`}>
-                                    {module.icon}
-                                </div>
-                                <span className={`dash-module-badge badge--${module.badgeColor}`}>
-                                    {module.badge}
-                                </span>
+                            <div className='dash-load-card__top'>
+                                <div className='dash-load-card__icon-box'>{card.icon}</div>
+                                <span className='dash-load-card__badge'>{card.badge}</span>
                             </div>
-
-                            <div className='dash-module-card__body'>
-                                <h3 className='dash-module-card__title'>{module.title}</h3>
-                                <p className='dash-module-card__tagline'>{module.tagline}</p>
-
-                                <ul className='dash-module-card__features'>
-                                    {module.features.map((feat, idx) => (
-                                        <li key={idx} className='feature-item'>
-                                            <CheckCircle2 size={13} className={`check-icon check--${module.glowColor}`} />
-                                            <span>{feat}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                            <div className='dash-load-card__info'>
+                                <h4 className='dash-load-card__title'>{card.title}</h4>
+                                <span className='dash-load-card__sub'>{card.subtitle}</span>
                             </div>
-
-                            <div className='dash-module-card__footer'>
-                                <span className='action-label'>{module.actionText}</span>
-                                <div className='action-arrow-circle'>
-                                    <ArrowUpRight size={14} />
-                                </div>
+                            <div className='dash-load-card__arrow'>
+                                <ArrowUpRight size={13} />
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* ─── 4. Broker Partnership & Community Row ─────────────── */}
-                <div className='dash-ecosystem-row'>
-                    {/* Deriv Account Card */}
-                    <div className='dash-ecosystem-card dash-ecosystem-card--deriv'>
-                        <div className='card-glow-mesh' />
-                        <div className='dash-ecosystem-card__content'>
-                            <div className='card-header-pill'>
-                                <ShieldCheck size={16} className='text-amber' />
-                                <span>OFFICIAL BROKER PARTNER</span>
+                {/* ─── 3. Intelligence & Scanner Grid (4 Compact Cards) ────────── */}
+                <div className='dash-intel-grid'>
+                    {intelligenceModules.map(mod => (
+                        <div
+                            key={mod.id}
+                            className='dash-intel-card'
+                            onClick={mod.callback}
+                            role='button'
+                            tabIndex={0}
+                        >
+                            <div className='dash-intel-card__icon-box'>{mod.icon}</div>
+                            <div className='dash-intel-card__text'>
+                                <h5 className='dash-intel-card__title'>{mod.title}</h5>
+                                <p className='dash-intel-card__desc'>{mod.desc}</p>
                             </div>
-                            <h3 className='card-title'>Deriv Verified Trading Account</h3>
-                            <p className='card-desc'>
-                                Trade with zero spread manipulation, instantaneous local deposits & withdrawals, and
-                                uninterrupted 24/7 liquidity feeds on synthetic indices.
-                            </p>
-                            <a
-                                href='https://track.deriv.com/_b_FkYd-u53x-m-sZlUf1gWNd7ZgqdRLk/1/'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='dash-partner-btn dash-partner-btn--gold'
-                            >
-                                <span>Open Live Account</span>
-                                <ArrowUpRight size={16} />
-                            </a>
+                            <ArrowUpRight size={14} className='dash-intel-card__arrow' />
                         </div>
+                    ))}
+                </div>
+
+                {/* ─── 4. Broker Partnership & Community Compact Row ─────────── */}
+                <div className='dash-partner-row'>
+                    <div className='dash-partner-box dash-partner-box--deriv'>
+                        <div className='dash-partner-box__left'>
+                            <ShieldCheck size={20} className='text-amber' />
+                            <div>
+                                <h5 className='partner-title'>Deriv Verified Live Account</h5>
+                                <span className='partner-desc'>Instant deposits, fast withdrawals & tight spreads</span>
+                            </div>
+                        </div>
+                        <a
+                            href='https://track.deriv.com/_b_FkYd-u53x-m-sZlUf1gWNd7ZgqdRLk/1/'
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='partner-btn partner-btn--gold'
+                        >
+                            <span>Open Account</span>
+                            <ArrowUpRight size={13} />
+                        </a>
                     </div>
 
-                    {/* VIP Trading Community Card */}
-                    <div className='dash-ecosystem-card dash-ecosystem-card--community'>
-                        <div className='card-glow-mesh' />
-                        <div className='dash-ecosystem-card__content'>
-                            <div className='card-header-pill'>
-                                <MessageCircle size={16} className='text-emerald' />
-                                <span>EXCLUSIVE VIP TRADERS GROUP</span>
+                    <div className='dash-partner-box dash-partner-box--community'>
+                        <div className='dash-partner-box__left'>
+                            <MessageCircle size={20} className='text-emerald' />
+                            <div>
+                                <h5 className='partner-title'>VIP Trading Community</h5>
+                                <span className='partner-desc'>5,000+ traders, free bot XML releases & daily setups</span>
                             </div>
-                            <h3 className='card-title'>VIP Trading Network</h3>
-                            <p className='card-desc'>
-                                Join 5,000+ quantitative traders. Receive tested bot XML releases, daily high-probability
-                                market setups, and real-time community insights.
-                            </p>
-                            <a
-                                href='https://chat.whatsapp.com/L1n7hNl9ZJ8ErYVvXk1z6D'
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='dash-partner-btn dash-partner-btn--emerald'
-                            >
-                                <span>Join WhatsApp Group</span>
-                                <ArrowUpRight size={16} />
-                            </a>
                         </div>
+                        <a
+                            href='https://chat.whatsapp.com/L1n7hNl9ZJ8ErYVvXk1z6D'
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='partner-btn partner-btn--emerald'
+                        >
+                            <span>Join WhatsApp</span>
+                            <ArrowUpRight size={13} />
+                        </a>
                     </div>
                 </div>
 
-                {/* ─── 5. Strategy Management & Bot List ──────────────────── */}
-                <div className='dash-workspace-section'>
-                    <div className='dash-workspace-header'>
-                        <div className='dash-workspace-header__title-group'>
-                            <div className='dash-workspace-icon-box'>
-                                <Bot size={20} className='text-emerald' />
-                            </div>
-                            <div>
-                                <h3 className='dash-workspace-title'>Your Trading Bots & Workspaces</h3>
-                                <span className='dash-workspace-subtitle'>
-                                    Saved locally in your browser storage for instant execution
-                                </span>
-                            </div>
+                {/* ─── 5. Strategy Workspace / Bot List ───────────────────────── */}
+                <div className='dash-workspace-compact'>
+                    <div className='dash-workspace-compact__header'>
+                        <div className='dash-workspace-compact__title-wrap'>
+                            <Bot size={17} className='text-emerald' />
+                            <h4 className='dash-workspace-compact__title'>Saved Bots & Local Workspaces</h4>
                         </div>
-
-                        <div className='dash-workspace-actions'>
+                        <div className='dash-workspace-compact__btns'>
                             <button
                                 type='button'
-                                className='dash-mini-btn'
+                                className='dash-btn-mini'
                                 onClick={() => openFileLoader()}
                             >
-                                <FolderPlus size={14} />
+                                <FolderPlus size={13} />
                                 <span>Import XML</span>
                             </button>
                             <button
                                 type='button'
-                                className='dash-mini-btn dash-mini-btn--accent'
+                                className='dash-btn-mini dash-btn-mini--highlight'
                                 onClick={() => setActiveTab(DBOT_TABS.TRADING_BOTS)}
                             >
-                                <Sparkles size={14} />
-                                <span>Load Free Bot</span>
+                                <Sparkles size={13} />
+                                <span>Free Bots Vault</span>
                             </button>
                         </div>
                     </div>
 
                     {has_dashboard_strategies ? (
-                        <div className='dash-bot-list-container'>
+                        <div className='dash-bot-list-area'>
                             <DashboardBotList />
                         </div>
                     ) : (
-                        <div className='dash-empty-workspace'>
-                            <div className='dash-empty-workspace__icon'>
-                                <Layers size={32} />
-                            </div>
-                            <h4 className='dash-empty-workspace__title'>No Custom Strategies Saved Yet</h4>
-                            <p className='dash-empty-workspace__desc'>
-                                Build custom algorithmic strategies in the visual IDE, or choose from our 24+ pre-loaded institutional bots to see them here.
+                        <div className='dash-workspace-empty'>
+                            <p className='empty-text'>
+                                No custom strategies saved in this browser yet. Build one in the IDE or choose from 24+ free bots.
                             </p>
-                            <div className='dash-empty-workspace__btns'>
-                                <button
-                                    type='button'
-                                    className='dash-empty-btn dash-empty-btn--primary'
-                                    onClick={() => setActiveTab(DBOT_TABS.TRADING_BOTS)}
-                                >
-                                    <Zap size={15} />
-                                    <span>Explore 24+ Free Bots</span>
-                                </button>
-                                <button
-                                    type='button'
-                                    className='dash-empty-btn dash-empty-btn--outline'
-                                    onClick={() => openFileLoader()}
-                                >
-                                    <FolderPlus size={15} />
-                                    <span>Import From XML</span>
-                                </button>
-                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* ─── 6. Google Drive Modal Dialog ────────────────────────── */}
+                {/* ─── 6. Google Drive Modal Dialog ───────────────────────────── */}
                 {!isDesktop ? (
                     <Dialog
                         title={dialog_options.title}
@@ -438,7 +340,20 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
                 )}
             </div>
         ),
-        [is_dialog_open, has_dashboard_strategies, is_mobile, isDesktop, dialog_options.title, onCloseDialog, openFileLoader, setActiveTab, setPreviewOnPopup]
+        [
+            is_dialog_open,
+            has_dashboard_strategies,
+            is_mobile,
+            isDesktop,
+            accountName,
+            isVirtual,
+            dialog_options.title,
+            onCloseDialog,
+            openFileLoader,
+            handleOpenQuickStrategy,
+            setActiveTab,
+            setPreviewOnPopup
+        ]
     );
 });
 

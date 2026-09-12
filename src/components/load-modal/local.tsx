@@ -80,7 +80,7 @@ const LocalComponent = observer(() => {
                     accept='application/xml, text/xml'
                     style={{ display: 'none' }}
                     onChange={e => {
-                        const is_supported = handleFileChange(e, false);
+                        const is_supported = handleFileChange(e as any, false);
                         !is_supported &&
                             botNotification(notification_message().xml_import_error, undefined, {
                                 className: 'error-toast',
@@ -110,8 +110,8 @@ const LocalComponent = observer(() => {
                     ) : (
                         <React.Fragment>
                             <DerivLightMyComputerIcon
-                                height='128px'
-                                width='128px'
+                                height='64px'
+                                width='64px'
                                 className='load-strategy__local-icon'
                             />
                             <div className='load-strategy__local-title'>

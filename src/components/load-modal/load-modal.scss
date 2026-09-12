@@ -96,6 +96,7 @@
                     font-size: var(--text-size-xs);
                     display: -webkit-box;
                     -webkit-line-clamp: 2;
+                    line-clamp: 2;
                     -webkit-box-orient: vertical;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -105,6 +106,7 @@
                     font-size: var(--text-size-xxs);
                     display: -webkit-box;
                     -webkit-line-clamp: 2;
+                    line-clamp: 2;
                     -webkit-box-orient: vertical;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -151,9 +153,58 @@
         }
 
         &__container {
+            height: 100%;
+            min-height: 340px;
+            display: flex;
+            flex-direction: column;
+
             &--has-footer {
                 height: 350px;
                 margin-top: -1rem;
+            }
+        }
+
+        &__local-dropzone {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 320px;
+        }
+
+        &__local-dropzone-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border-normal, rgba(255, 255, 255, 0.15));
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            box-sizing: border-box;
+            flex: 1;
+
+            .load-strategy__local-icon {
+                width: 64px !important;
+                height: 64px !important;
+                margin-bottom: 8px;
+            }
+
+            .load-strategy__local-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                color: var(--text-prominent, #ffffff);
+                margin-bottom: 2px;
+            }
+
+            .load-strategy__local-description {
+                font-size: 0.82rem;
+                color: var(--text-general, #94a3b8);
+                margin-bottom: 12px;
+            }
+
+            .dc-btn {
+                margin-top: 4px;
             }
         }
 
