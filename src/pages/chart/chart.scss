@@ -17,6 +17,75 @@
         width: 100% !important;
         height: 100% !important;
     }
+
+    // Chart canvas base font size for coordinate and axis labels (+1-2px over default)
+    .chartContainer {
+        font-size: 12px !important;
+    }
+
+    // Top Header Symbol Live Price (+3px over default)
+    .cq-chart-title {
+        .cq-symbol-select-btn {
+            .cq-chart-price {
+                display: flex !important;
+                align-items: baseline !important;
+                font-size: 17px !important;
+                line-height: 1.4 !important;
+                font-weight: 700 !important;
+                gap: 6px !important;
+
+                .cq-animated-price {
+                    font-size: 17px !important;
+                    font-weight: 700 !important;
+                    font-variant-numeric: tabular-nums !important;
+                }
+
+                .cq-change {
+                    font-size: 13px !important;
+                    font-weight: 600 !important;
+                }
+            }
+        }
+    }
+
+    // Live Spot Price Label & Markers on the Chart Canvas (+3px over original default 11px -> 14px)
+    .spot__label {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        padding: 4px 6px !important;
+        border-radius: 4px !important;
+        font-variant-numeric: tabular-nums !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    // Barrier and Drag Price Lines (Original default was 12px -> +3px is 15px)
+    .price {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        line-height: 20px !important;
+        padding: 2px 5px !important;
+        font-variant-numeric: tabular-nums !important;
+    }
+
+    .drag-price {
+        height: 26px !important;
+
+        .price {
+            font-size: 15px !important;
+            font-weight: 600 !important;
+        }
+    }
+
+    // Current Price Indicator on Y-Axis (+3px over original default 11px -> 14px)
+    .stx-current-hr,
+    .stx_current_hr_up,
+    .stx_current_hr_down,
+    .stx_current_price {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        padding: 2px 5px !important;
+        font-variant-numeric: tabular-nums !important;
+    }
 }
 
 .bot {
