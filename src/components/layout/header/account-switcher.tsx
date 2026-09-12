@@ -498,19 +498,30 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                         <span className='acc-chip__online-dot'></span>
                     </div>
 
-                    {/* Two-line text block */}
+                    {/* Balance and Controls Block */}
                     <div className='acc-chip__text-block'>
-                        <div className='acc-chip__label-row'>
+                        <div className='acc-chip__balance-row'>
+                            {/* Balance */}
                             <span
-                                className={classNames('acc-chip__type-badge', {
-                                    'acc-chip__type-badge--demo': isVirtual,
-                                    'acc-chip__type-badge--real': !isVirtual,
+                                data-testid='dt_balance'
+                                className={classNames('acc-chip__balance', {
+                                    'acc-chip__balance--no-currency': !currency && !isVirtual,
+                                    'acc-chip__balance--loading': isSwitchingAccount || client?.is_account_regenerating,
                                 })}
                             >
-                                {isVirtual ? 'DEMO' : 'REAL'}
+                                {isSwitchingAccount || client?.is_account_regenerating ? (
+                                    <div className='acc-chip__balance-loader' title={localize('Initializing balance...')}>
+                                        <span className='acc-chip__spinner' />
+                                        <span className='acc-chip__loading-text'>{localize('Updating...')}</span>
+                                    </div>
+                                ) : isBalanceVisible ? (
+                                    chipBalance
+                                ) : (
+                                    '••••••'
+                                )}
                             </span>
 
-                            {/* Eye toggle button next to demo/real badge */}
+                            {/* Eye toggle button */}
                             <button
                                 type='button'
                                 className='acc-chip__visibility-btn'
@@ -520,8 +531,8 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                             >
                                 {isBalanceVisible ? (
                                     <svg
-                                        width='12'
-                                        height='12'
+                                        width='13'
+                                        height='13'
                                         viewBox='0 0 24 24'
                                         fill='none'
                                         stroke='currentColor'
@@ -534,8 +545,8 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                                     </svg>
                                 ) : (
                                     <svg
-                                        width='12'
-                                        height='12'
+                                        width='13'
+                                        height='13'
                                         viewBox='0 0 24 24'
                                         fill='none'
                                         stroke='currentColor'
@@ -549,15 +560,15 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                                 )}
                             </button>
 
-                            {/* Dropdown chevron next to eye icon */}
+                            {/* Dropdown chevron */}
                             {showChevron && (
                                 <div className='acc-chip__chevron-wrapper'>
                                     <svg
                                         className={classNames('acc-chip__chevron', {
                                             'acc-chip__chevron--open': isOpen,
                                         })}
-                                        width='9'
-                                        height='9'
+                                        width='10'
+                                        height='10'
                                         viewBox='0 0 12 12'
                                         fill='none'
                                     >
@@ -572,26 +583,6 @@ const AccountSwitcher = observer(({ activeAccount, forceDropdown = false }: TAcc
                                 </div>
                             )}
                         </div>
-
-                        {/* Balance */}
-                        <span
-                            data-testid='dt_balance'
-                            className={classNames('acc-chip__balance', {
-                                'acc-chip__balance--no-currency': !currency && !isVirtual,
-                                'acc-chip__balance--loading': isSwitchingAccount || client?.is_account_regenerating,
-                            })}
-                        >
-                            {isSwitchingAccount || client?.is_account_regenerating ? (
-                                <div className='acc-chip__balance-loader' title={localize('Initializing balance...')}>
-                                    <span className='acc-chip__spinner' />
-                                    <span className='acc-chip__loading-text'>{localize('Updating...')}</span>
-                                </div>
-                            ) : isBalanceVisible ? (
-                                chipBalance
-                            ) : (
-                                '••••••'
-                            )}
-                        </span>
                     </div>
                 </div>
             </AccountInfoWrapper>

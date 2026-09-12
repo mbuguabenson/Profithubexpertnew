@@ -23,6 +23,8 @@ const BOT_ICONS: Record<string, string> = {
     UNDER: '📉',
     EVEN: '⚡',
     ODD: '🔄',
+    SPEED: '⚡',
+    DIFFER: '🎯',
     DEFAULT: '🤖',
 };
 
@@ -34,6 +36,20 @@ const getBotIcon = (name: string): string => {
 };
 
 const BOT_META: Record<string, { tags: string[]; win: string; type: string; risk: string; speed: string }> = {
+    'Auto Differ': {
+        tags: ['Differs', 'Poverty Hunter'],
+        win: '92%',
+        type: 'Pro',
+        risk: 'Low Risk',
+        speed: '3-Tick Confirm',
+    },
+    'Speed Bot': {
+        tags: ['Speed Run', 'SV1 Lite'],
+        win: '85%',
+        type: 'Speed',
+        risk: 'Optimized',
+        speed: 'Zero-Latency',
+    },
     'OVER DESTROYER': {
         tags: ['Over Market', 'R32'],
         win: '82%',

@@ -1,0 +1,486 @@
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <variables>
+    <variable id="sb_var_init_amt">Initial Amount</variable>
+    <variable id="sb_var_win_amt">Win Amount</variable>
+    <variable id="sb_var_target_profit">Expected Profit</variable>
+    <variable id="sb_var_stop_loss">Stop Loss</variable>
+    <variable id="sb_var_martingale">Martingle Leval</variable>
+    <variable id="sb_var_last_result">Last Result</variable>
+    <variable id="sb_var_text_win">text</variable>
+    <variable id="sb_var_text_loss">text1</variable>
+    <variable id="sb_var_text_total">text2</variable>
+    <variable id="sb_var_text_stop">text3</variable>
+    <variable id="sb_var_text_target">text4</variable>
+  </variables>
+  <block type="trade_definition" id="speed_bot_trade_def_root" deletable="false" x="0" y="0">
+    <statement name="TRADE_OPTIONS">
+      <block type="trade_definition_market" id="speed_bot_market_opt" deletable="false" movable="false">
+        <field name="MARKET_LIST">synthetic_index</field>
+        <field name="SUBMARKET_LIST">random_index</field>
+        <field name="SYMBOL_LIST">1HZ100V</field>
+        <next>
+          <block type="trade_definition_tradetype" id="speed_bot_tradetype_opt" deletable="false" movable="false">
+            <field name="TRADETYPECAT_LIST">digits</field>
+            <field name="TRADETYPE_LIST">overunder</field>
+            <next>
+              <block type="trade_definition_contracttype" id="speed_bot_contracttype_opt" deletable="false" movable="false">
+                <field name="TYPE_LIST">DIGITOVER</field>
+                <next>
+                  <block type="trade_definition_candleinterval" id="speed_bot_candle_opt" deletable="false" movable="false">
+                    <field name="CANDLEINTERVAL_LIST">60</field>
+                    <next>
+                      <block type="trade_definition_restartbuysell" id="speed_bot_restartbuysell_opt" deletable="false" movable="false">
+                        <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <next>
+                          <block type="trade_definition_restartonerror" id="speed_bot_restartonerror_opt" deletable="false" movable="false">
+                            <field name="RESTARTONERROR">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="INITIALIZATION">
+      <block type="notify" id="speed_bot_init_notify">
+        <field name="NOTIFICATION_TYPE">info</field>
+        <field name="NOTIFICATION_SOUND">silent</field>
+        <value name="MESSAGE">
+          <shadow type="text" id="speed_bot_init_notify_msg">
+            <field name="TEXT">⚡ Speed Bot Activated | Synced Fast Lite</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="variables_set" id="speed_bot_set_init_amt">
+            <field name="VAR" id="sb_var_init_amt">Initial Amount</field>
+            <value name="VALUE">
+              <block type="math_number" id="speed_bot_num_init_amt">
+                <field name="NUM">0.35</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="speed_bot_set_win_amt">
+                <field name="VAR" id="sb_var_win_amt">Win Amount</field>
+                <value name="VALUE">
+                  <block type="math_number" id="speed_bot_num_win_amt">
+                    <field name="NUM">0.35</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="speed_bot_set_expected_profit">
+                    <field name="VAR" id="sb_var_target_profit">Expected Profit</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="speed_bot_num_expected_profit">
+                        <field name="NUM">5</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="speed_bot_set_stop_loss">
+                        <field name="VAR" id="sb_var_stop_loss">Stop Loss</field>
+                        <value name="VALUE">
+                          <block type="math_number" id="speed_bot_num_stop_loss">
+                            <field name="NUM">50</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="speed_bot_set_martingale">
+                            <field name="VAR" id="sb_var_martingale">Martingle Leval</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="speed_bot_num_martingale">
+                                <field name="NUM">1.6</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="SUBMARKET">
+      <block type="trade_definition_tradeoptions" id="speed_bot_trade_options">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" has_first_barrier="false" has_second_barrier="false" has_prediction="true"></mutation>
+        <field name="DURATIONTYPE_LIST">t</field>
+        <value name="DURATION">
+          <shadow type="math_number" id="speed_bot_dur_sh">
+            <field name="NUM">1</field>
+          </shadow>
+          <block type="math_number" id="speed_bot_dur_num">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <value name="AMOUNT">
+          <shadow type="math_number" id="speed_bot_amt_sh">
+            <field name="NUM">0.35</field>
+          </shadow>
+          <block type="variables_get" id="speed_bot_amt_get">
+            <field name="VAR" id="sb_var_init_amt">Initial Amount</field>
+          </block>
+        </value>
+        <value name="PREDICTION">
+          <shadow type="math_number_positive" id="speed_bot_pred_sh" inline="true">
+            <field name="NUM">2</field>
+          </shadow>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="during_purchase" id="speed_bot_during_purchase_root" collapsed="true" x="714" y="0">
+    <statement name="DURING_PURCHASE_STACK">
+      <block type="controls_if" id="speed_bot_during_sell_if">
+        <value name="IF0">
+          <block type="check_sell" id="speed_bot_check_sell"></block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="after_purchase" id="speed_bot_after_purchase_root" collapsed="true" x="714" y="96">
+    <statement name="AFTERPURCHASE_STACK">
+      <block type="controls_if" id="speed_bot_check_result_if">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="contract_check_result" id="speed_bot_contract_win_chk">
+            <field name="CHECK_RESULT">win</field>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="text_join" id="speed_bot_join_win_text">
+            <field name="VARIABLE" id="sb_var_text_win">text</field>
+            <statement name="STACK">
+              <block type="text_statement" id="speed_bot_win_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="speed_bot_win_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="speed_bot_win_label">
+                    <field name="TEXT">⚡ [SPEED BOT WIN] Profit $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="speed_bot_win_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="speed_bot_win_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="speed_bot_read_win_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="speed_bot_win_notify">
+                <field name="NOTIFICATION_TYPE">success</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="speed_bot_win_notif_sh">
+                    <field name="TEXT">Win</field>
+                  </shadow>
+                  <block type="variables_get" id="speed_bot_get_win_text">
+                    <field name="VAR" id="sb_var_text_win">text</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="speed_bot_set_last_res_win">
+                    <field name="VAR" id="sb_var_last_result">Last Result</field>
+                    <value name="VALUE">
+                      <block type="text" id="speed_bot_str_win">
+                        <field name="TEXT">Win $ </field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="speed_bot_reset_initial_amt">
+                        <field name="VAR" id="sb_var_init_amt">Initial Amount</field>
+                        <value name="VALUE">
+                          <block type="variables_get" id="speed_bot_get_win_amt">
+                            <field name="VAR" id="sb_var_win_amt">Win Amount</field>
+                          </block>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="text_join" id="speed_bot_join_loss_text">
+            <field name="VARIABLE" id="sb_var_text_loss">text1</field>
+            <statement name="STACK">
+              <block type="text_statement" id="speed_bot_loss_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="speed_bot_loss_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="speed_bot_loss_label">
+                    <field name="TEXT">⚠️ [SPEED BOT LOSS] Recovering $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="speed_bot_loss_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="speed_bot_loss_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="speed_bot_read_loss_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="speed_bot_loss_notify">
+                <field name="NOTIFICATION_TYPE">error</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="speed_bot_loss_notif_sh">
+                    <field name="TEXT">Loss</field>
+                  </shadow>
+                  <block type="variables_get" id="speed_bot_get_loss_text">
+                    <field name="VAR" id="sb_var_text_loss">text1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="math_change" id="speed_bot_apply_martingale_change">
+                    <field name="VAR" id="sb_var_init_amt">Initial Amount</field>
+                    <value name="DELTA">
+                      <shadow type="math_number" id="speed_bot_change_num_sh">
+                        <field name="NUM">1</field>
+                      </shadow>
+                      <block type="math_arithmetic" id="speed_bot_calc_martingale">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <shadow type="math_number" id="speed_bot_m1_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="speed_bot_get_current_amt">
+                            <field name="VAR" id="sb_var_init_amt">Initial Amount</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <shadow type="math_number" id="speed_bot_m2_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="speed_bot_get_martingale_multiplier">
+                            <field name="VAR" id="sb_var_martingale">Martingle Leval</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="speed_bot_set_last_res_loss">
+                        <field name="VAR" id="sb_var_last_result">Last Result</field>
+                        <value name="VALUE">
+                          <block type="text" id="speed_bot_str_loss">
+                            <field name="TEXT">Loss $ </field>
+                          </block>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="text_join" id="speed_bot_join_total_text">
+            <field name="VARIABLE" id="sb_var_text_total">text2</field>
+            <statement name="STACK">
+              <block type="text_statement" id="speed_bot_total_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="speed_bot_tot_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="speed_bot_tot_label">
+                    <field name="TEXT">📊 SPEED BOT Total Net Profit: $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="speed_bot_total_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="speed_bot_tot_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="total_profit" id="speed_bot_read_total_profit"></block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="speed_bot_total_notify">
+                <field name="NOTIFICATION_TYPE">info</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="speed_bot_tot_notif_sh">
+                    <field name="TEXT">Total</field>
+                  </shadow>
+                  <block type="variables_get" id="speed_bot_get_total_text">
+                    <field name="VAR" id="sb_var_text_total">text2</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="controls_if" id="speed_bot_target_and_stop_if">
+                    <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1" else="1"></mutation>
+                    <value name="IF0">
+                      <block type="logic_compare" id="speed_bot_cmp_stop_loss">
+                        <field name="OP">LTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="speed_bot_tot_prof_for_sl"></block>
+                        </value>
+                        <value name="B">
+                          <block type="math_single" id="speed_bot_neg_stop_loss">
+                            <field name="OP">NEG</field>
+                            <value name="NUM">
+                              <shadow type="math_number" id="speed_bot_sl_neg_sh">
+                                <field name="NUM">9</field>
+                              </shadow>
+                              <block type="variables_get" id="speed_bot_get_sl_val">
+                                <field name="VAR" id="sb_var_stop_loss">Stop Loss</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="text_join" id="speed_bot_join_stop_text">
+                        <field name="VARIABLE" id="sb_var_text_stop">text3</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="speed_bot_stop_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="speed_bot_stop_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="speed_bot_stop_label">
+                                <field name="TEXT">🔴 [STOP LOSS REACHED] Speed Bot stopped to protect capital! Total Loss: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="speed_bot_stop_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="speed_bot_stop_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="speed_bot_read_sl_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="speed_bot_notify_stop_loss">
+                            <field name="NOTIFICATION_TYPE">error</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="speed_bot_sl_notif_sh">
+                                <field name="TEXT">Stop Loss</field>
+                              </shadow>
+                              <block type="variables_get" id="speed_bot_get_stop_text">
+                                <field name="VAR" id="sb_var_text_stop">text3</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <value name="IF1">
+                      <block type="logic_compare" id="speed_bot_cmp_target_profit">
+                        <field name="OP">GTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="speed_bot_tot_prof_for_tp"></block>
+                        </value>
+                        <value name="B">
+                          <block type="variables_get" id="speed_bot_get_tp_val">
+                            <field name="VAR" id="sb_var_target_profit">Expected Profit</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO1">
+                      <block type="text_join" id="speed_bot_join_target_text">
+                        <field name="VARIABLE" id="sb_var_text_target">text4</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="speed_bot_target_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="speed_bot_tp_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="speed_bot_target_label">
+                                <field name="TEXT">🟢 [TARGET PROFIT ACHIEVED] ⚡ Speed Bot Fast Lite Success! Total Profit: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="speed_bot_target_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="speed_bot_tp_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="speed_bot_read_tp_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="speed_bot_notify_target_profit">
+                            <field name="NOTIFICATION_TYPE">success</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="speed_bot_tp_notif_sh">
+                                <field name="TEXT">Target Profit</field>
+                              </shadow>
+                              <block type="variables_get" id="speed_bot_get_target_text">
+                                <field name="VAR" id="sb_var_text_target">text4</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <statement name="ELSE">
+                      <block type="timeout" id="speed_bot_restart_timeout">
+                        <statement name="TIMEOUTSTACK">
+                          <block type="trade_again" id="speed_bot_trade_again_act"></block>
+                        </statement>
+                        <value name="SECONDS">
+                          <shadow type="math_number" id="speed_bot_timeout_sec">
+                            <field name="NUM">0</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </statement>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="before_purchase" id="speed_bot_before_purchase_root" deletable="false" x="0" y="916">
+    <statement name="BEFOREPURCHASE_STACK">
+      <block type="purchase" id="speed_bot_exec_purchase_over">
+        <field name="PURCHASE_LIST">DIGITOVER</field>
+        <field name="FAST_EXECUTION">TRUE</field>
+      </block>
+    </statement>
+  </block>
+</xml>

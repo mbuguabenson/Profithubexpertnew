@@ -25,9 +25,9 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     height: auto;
-    padding: 1px 4px;
+    padding: 2px 6px;
     border-radius: 6px;
     background: transparent;
     border: none;
@@ -38,55 +38,17 @@
         opacity 0.2s ease,
         background-color 0.2s ease;
 
-    // ── Account text block (label + balance stacked) ──────────
+    // ── Account text block (balance + controls) ──────────────
     &__text-block {
         display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0;
-        line-height: 1.15;
-    }
-
-    &__label-row {
-        display: flex;
         align-items: center;
-        gap: 3px;
-    }
-
-    &__account-label {
-        font-size: 11.5px;
-        font-weight: 700;
-        color: var(--brand-orange, var(--ph-primary, #f5c542));
-        white-space: nowrap;
         line-height: 1.2;
-        text-decoration: underline;
-        text-decoration-color: var(--ph-primary, #f5c542);
-        text-underline-offset: 2px;
-        display: flex;
-        align-items: center;
-        gap: 3px;
     }
 
-    &__type-badge {
-        font-size: 8.5px;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        padding: 0.5px 4px;
-        border-radius: 3px;
-        line-height: 1.1;
-
-        &--demo {
-            background: rgba(156, 163, 175, 0.2);
-            color: #e2e8f0;
-            border: 1px solid rgba(156, 163, 175, 0.35);
-        }
-
-        &--real {
-            background: rgba(16, 185, 129, 0.2);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.4);
-        }
+    &__balance-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
     &--interactive {
@@ -101,17 +63,11 @@
         }
     }
 
-    &--open {
-        .acc-chip__account-label {
-            text-decoration-color: #f5c542;
-        }
-    }
-
     // ── Currency / Avatar circle icon (Standard Deriv Coin) ──
     &__currency-icon {
         flex-shrink: 0;
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -141,20 +97,24 @@
 
     // ── Balance display ───────────────────────────────────────
     &__balance {
-        font-size: 12.5px;
-        font-weight: 700;
+        font-size: 15px;
+        font-weight: 800;
         color: var(--text-prominent, #ffffff);
-        letter-spacing: -0.01em;
-        line-height: 1.15;
+        letter-spacing: -0.015em;
+        line-height: 1.2;
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
+
+        @media (min-width: 769px) {
+            font-size: 16px;
+        }
 
         body:not(.theme--dark) & {
             color: var(--text-prominent, #0f172a);
         }
 
         &--no-currency {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 500;
             color: #94a3b8;
         }
@@ -624,7 +584,7 @@
     }
 
     &__account-balance {
-        font-size: 13.5px;
+        font-size: 15px;
         font-weight: 800;
         color: #f5c542;
         white-space: nowrap;

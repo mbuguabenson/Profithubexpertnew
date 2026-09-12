@@ -1,5 +1,26 @@
 [
   {
+    "name": "Speed Bot",
+    "file": "Speed Bot.xml",
+    "description": "ProfitHub Fast Lite Speed Bot powered by SV1 architecture with synchronized zero-latency execution.",
+    "difficulty": "Advanced",
+    "strategy": "Speed Run"
+  },
+  {
+    "name": "Auto Differ",
+    "file": "Auto Differ.xml",
+    "description": "High-probability Differs bot powered by the Poverty Hunter 3-tick confirmation strategy. Safe middle digit targeting with auto-recovery.",
+    "difficulty": "Intermediate",
+    "strategy": "Poverty Hunter Differs"
+  },
+  {
+    "name": "🤑UNSTOPPABLE DIFFER BOT🤑",
+    "file": "🤑UNSTOPPABLE DIFFER BOT🤑.xml",
+    "description": "Unstoppable Differs trading bot with aggressive digit matching and high-frequency execution.",
+    "difficulty": "Advanced",
+    "strategy": "Differs"
+  },
+  {
     "name": "Auto Under 7 over 3 Pro ",
     "file": "Auto Under 7 over 3 Pro .xml",
     "description": "Advanced trading strategy: Auto Under 7 over 3 Pro . Optimized for consistent returns and automated execution.",
@@ -96,12 +117,5 @@
     "description": "Advanced trading strategy: Under 7 Bulk. Optimized for consistent returns and automated execution.",
     "difficulty": "Intermediate",
     "strategy": "Multi-Strategy"
-  },
-  {
-    "name": "🤑UNSTOPPABLE DIFFER BOT🤑",
-    "file": "🤑UNSTOPPABLE DIFFER BOT🤑.xml",
-    "description": "Unstoppable Differs trading bot with aggressive digit matching and high-frequency execution.",
-    "difficulty": "Advanced",
-    "strategy": "Differs"
   }
 ]

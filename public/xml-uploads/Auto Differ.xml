@@ -1,0 +1,668 @@
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <variables>
+    <variable id="ad_var_initial_stake">Initial Stake</variable>
+    <variable id="ad_var_stake">Stake</variable>
+    <variable id="ad_var_expected_profit">Expected Profit</variable>
+    <variable id="ad_var_stop_loss">Stop Loss</variable>
+    <variable id="ad_var_martingale">Martingale Level</variable>
+    <variable id="ad_var_target_digit">Target Diff Digit</variable>
+    <variable id="ad_var_waiting">Waiting For Digit</variable>
+    <variable id="ad_var_confirmation_ticks">Confirmation Ticks Remaining</variable>
+    <variable id="ad_var_text_win">text</variable>
+    <variable id="ad_var_text_loss">text1</variable>
+    <variable id="ad_var_text_total">text2</variable>
+    <variable id="ad_var_text_stop">text3</variable>
+    <variable id="ad_var_text_target">text4</variable>
+  </variables>
+  <block type="trade_definition" id="ad_trade_def_root" deletable="false" x="0" y="0">
+    <statement name="TRADE_OPTIONS">
+      <block type="trade_definition_market" id="ad_market_opt" deletable="false" movable="false">
+        <field name="MARKET_LIST">synthetic_index</field>
+        <field name="SUBMARKET_LIST">random_index</field>
+        <field name="SYMBOL_LIST">1HZ100V</field>
+        <next>
+          <block type="trade_definition_tradetype" id="ad_tradetype_opt" deletable="false" movable="false">
+            <field name="TRADETYPECAT_LIST">digits</field>
+            <field name="TRADETYPE_LIST">matchesdiffers</field>
+            <next>
+              <block type="trade_definition_contracttype" id="ad_contracttype_opt" deletable="false" movable="false">
+                <field name="TYPE_LIST">DIGITDIFF</field>
+                <next>
+                  <block type="trade_definition_candleinterval" id="ad_candle_opt" deletable="false" movable="false">
+                    <field name="CANDLEINTERVAL_LIST">60</field>
+                    <next>
+                      <block type="trade_definition_restartbuysell" id="ad_restartbuysell_opt" deletable="false" movable="false">
+                        <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <next>
+                          <block type="trade_definition_restartonerror" id="ad_restartonerror_opt" deletable="false" movable="false">
+                            <field name="RESTARTONERROR">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="INITIALIZATION">
+      <block type="notify" id="ad_init_notify">
+        <field name="NOTIFICATION_TYPE">info</field>
+        <field name="NOTIFICATION_SOUND">silent</field>
+        <value name="MESSAGE">
+          <shadow type="text" id="ad_init_notify_msg">
+            <field name="TEXT">🎯 AUTO DIFFER Activated | Poverty Hunter Confirmation Architecture</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="variables_set" id="ad_set_init_stake">
+            <field name="VAR" id="ad_var_initial_stake">Initial Stake</field>
+            <value name="VALUE">
+              <block type="math_number" id="ad_num_init_stake">
+                <field name="NUM">1</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="ad_set_current_stake">
+                <field name="VAR" id="ad_var_stake">Stake</field>
+                <value name="VALUE">
+                  <block type="math_number" id="ad_num_current_stake">
+                    <field name="NUM">1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ad_set_expected_profit">
+                    <field name="VAR" id="ad_var_expected_profit">Expected Profit</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="ad_num_expected_profit">
+                        <field name="NUM">10</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="ad_set_stop_loss">
+                        <field name="VAR" id="ad_var_stop_loss">Stop Loss</field>
+                        <value name="VALUE">
+                          <block type="math_number" id="ad_num_stop_loss">
+                            <field name="NUM">50</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="ad_set_martingale">
+                            <field name="VAR" id="ad_var_martingale">Martingale Level</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="ad_num_martingale">
+                                <field name="NUM">2.6</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="ad_set_target_digit">
+                                <field name="VAR" id="ad_var_target_digit">Target Diff Digit</field>
+                                <value name="VALUE">
+                                  <block type="math_number" id="ad_num_target_digit">
+                                    <field name="NUM">4</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="variables_set" id="ad_set_waiting_init">
+                                    <field name="VAR" id="ad_var_waiting">Waiting For Digit</field>
+                                    <value name="VALUE">
+                                      <block type="logic_boolean" id="ad_bool_waiting_init">
+                                        <field name="BOOL">TRUE</field>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="variables_set" id="ad_set_ticks_init">
+                                        <field name="VAR" id="ad_var_confirmation_ticks">Confirmation Ticks Remaining</field>
+                                        <value name="VALUE">
+                                          <block type="math_number" id="ad_num_ticks_init">
+                                            <field name="NUM">3</field>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="SUBMARKET">
+      <block type="trade_definition_tradeoptions" id="ad_trade_options">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" has_first_barrier="false" has_second_barrier="false" has_prediction="true"></mutation>
+        <field name="DURATIONTYPE_LIST">t</field>
+        <value name="DURATION">
+          <shadow type="math_number" id="ad_dur_sh">
+            <field name="NUM">1</field>
+          </shadow>
+          <block type="math_number" id="ad_dur_num">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <value name="AMOUNT">
+          <shadow type="math_number" id="ad_amt_sh">
+            <field name="NUM">1</field>
+          </shadow>
+          <block type="variables_get" id="ad_amt_get">
+            <field name="VAR" id="ad_var_stake">Stake</field>
+          </block>
+        </value>
+        <value name="PREDICTION">
+          <shadow type="math_number_positive" id="ad_pred_sh" inline="true">
+            <field name="NUM">4</field>
+          </shadow>
+          <block type="variables_get" id="ad_pred_get">
+            <field name="VAR" id="ad_var_target_digit">Target Diff Digit</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="during_purchase" id="ad_during_purchase_root" collapsed="true" x="714" y="0">
+    <statement name="DURING_PURCHASE_STACK">
+      <block type="controls_if" id="ad_during_sell_if">
+        <value name="IF0">
+          <block type="check_sell" id="ad_check_sell"></block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="after_purchase" id="ad_after_purchase_root" collapsed="true" x="714" y="96">
+    <statement name="AFTERPURCHASE_STACK">
+      <block type="controls_if" id="ad_check_result_if">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="contract_check_result" id="ad_contract_win_chk">
+            <field name="CHECK_RESULT">win</field>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="text_join" id="ad_join_win_text">
+            <field name="VARIABLE" id="ad_var_text_win">text</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ad_win_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ad_win_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ad_win_label">
+                    <field name="TEXT">🎯 [AUTO DIFFER WIN] Profit $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ad_win_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ad_win_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="ad_read_win_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ad_win_notify">
+                <field name="NOTIFICATION_TYPE">success</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ad_win_notif_sh">
+                    <field name="TEXT">Win</field>
+                  </shadow>
+                  <block type="variables_get" id="ad_get_win_text">
+                    <field name="VAR" id="ad_var_text_win">text</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ad_reset_stake_win">
+                    <field name="VAR" id="ad_var_stake">Stake</field>
+                    <value name="VALUE">
+                      <block type="variables_get" id="ad_get_init_stake">
+                        <field name="VAR" id="ad_var_initial_stake">Initial Stake</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="text_join" id="ad_join_loss_text">
+            <field name="VARIABLE" id="ad_var_text_loss">text1</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ad_loss_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ad_loss_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ad_loss_label">
+                    <field name="TEXT">⚠️ [AUTO DIFFER LOSS] Applying Martingale Recovery: $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ad_loss_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ad_loss_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="ad_read_loss_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ad_loss_notify">
+                <field name="NOTIFICATION_TYPE">error</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ad_loss_notif_sh">
+                    <field name="TEXT">Loss</field>
+                  </shadow>
+                  <block type="variables_get" id="ad_get_loss_text">
+                    <field name="VAR" id="ad_var_text_loss">text1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="math_change" id="ad_apply_martingale_change">
+                    <field name="VAR" id="ad_var_stake">Stake</field>
+                    <value name="DELTA">
+                      <shadow type="math_number" id="ad_change_num_sh">
+                        <field name="NUM">1</field>
+                      </shadow>
+                      <block type="math_arithmetic" id="ad_calc_martingale">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <shadow type="math_number" id="ad_m1_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="ad_get_curr_stake_for_m">
+                            <field name="VAR" id="ad_var_stake">Stake</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <shadow type="math_number" id="ad_m2_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="ad_get_martingale_multiplier">
+                            <field name="VAR" id="ad_var_martingale">Martingale Level</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="text_join" id="ad_join_total_text">
+            <field name="VARIABLE" id="ad_var_text_total">text2</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ad_total_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ad_tot_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ad_tot_label">
+                    <field name="TEXT">📊 AUTO DIFFER Total Net Profit: $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ad_total_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ad_tot_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="total_profit" id="ad_read_total_profit"></block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ad_total_notify">
+                <field name="NOTIFICATION_TYPE">info</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ad_tot_notif_sh">
+                    <field name="TEXT">Total</field>
+                  </shadow>
+                  <block type="variables_get" id="ad_get_total_text">
+                    <field name="VAR" id="ad_var_text_total">text2</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="controls_if" id="ad_target_and_stop_if">
+                    <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1" else="1"></mutation>
+                    <value name="IF0">
+                      <block type="logic_compare" id="ad_cmp_stop_loss">
+                        <field name="OP">LTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="ad_tot_prof_for_sl"></block>
+                        </value>
+                        <value name="B">
+                          <block type="math_single" id="ad_neg_stop_loss">
+                            <field name="OP">NEG</field>
+                            <value name="NUM">
+                              <shadow type="math_number" id="ad_sl_neg_sh">
+                                <field name="NUM">9</field>
+                              </shadow>
+                              <block type="variables_get" id="ad_get_sl_val">
+                                <field name="VAR" id="ad_var_stop_loss">Stop Loss</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="text_join" id="ad_join_stop_text">
+                        <field name="VARIABLE" id="ad_var_text_stop">text3</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="ad_stop_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="ad_stop_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="ad_stop_label">
+                                <field name="TEXT">🔴 [STOP LOSS REACHED] Auto Differ Bot stopped! Total Loss: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="ad_stop_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="ad_stop_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="ad_read_sl_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="ad_notify_stop_loss">
+                            <field name="NOTIFICATION_TYPE">error</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="ad_sl_notif_sh">
+                                <field name="TEXT">Stop Loss</field>
+                              </shadow>
+                              <block type="variables_get" id="ad_get_stop_text">
+                                <field name="VAR" id="ad_var_text_stop">text3</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <value name="IF1">
+                      <block type="logic_compare" id="ad_cmp_target_profit">
+                        <field name="OP">GTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="ad_tot_prof_for_tp"></block>
+                        </value>
+                        <value name="B">
+                          <block type="variables_get" id="ad_get_tp_val">
+                            <field name="VAR" id="ad_var_expected_profit">Expected Profit</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO1">
+                      <block type="text_join" id="ad_join_target_text">
+                        <field name="VARIABLE" id="ad_var_text_target">text4</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="ad_target_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="ad_tp_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="ad_target_label">
+                                <field name="TEXT">🟢 [TARGET PROFIT ACHIEVED] 🎯 Auto Differ Poverty Hunter Success! Total Profit: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="ad_target_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="ad_tp_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="ad_read_tp_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="ad_notify_target_profit">
+                            <field name="NOTIFICATION_TYPE">success</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="ad_tp_notif_sh">
+                                <field name="TEXT">Target Profit</field>
+                              </shadow>
+                              <block type="variables_get" id="ad_get_target_text">
+                                <field name="VAR" id="ad_var_text_target">text4</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <statement name="ELSE">
+                      <block type="timeout" id="ad_restart_timeout">
+                        <statement name="TIMEOUTSTACK">
+                          <block type="trade_again" id="ad_trade_again_act"></block>
+                        </statement>
+                        <value name="SECONDS">
+                          <shadow type="math_number" id="ad_timeout_sec">
+                            <field name="NUM">0</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </statement>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="before_purchase" id="ad_before_purchase_root" deletable="false" x="0" y="916">
+    <statement name="BEFOREPURCHASE_STACK">
+      <block type="controls_if" id="ad_check_waiting_if">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="logic_compare" id="ad_cmp_waiting_true">
+            <field name="OP">EQ</field>
+            <value name="A">
+              <block type="variables_get" id="ad_get_waiting">
+                <field name="VAR" id="ad_var_waiting">Waiting For Digit</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="logic_boolean" id="ad_bool_true">
+                <field name="BOOL">TRUE</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="controls_if" id="ad_check_digit_appeared_if">
+            <value name="IF0">
+              <block type="logic_compare" id="ad_cmp_digit_match">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="last_digit" id="ad_curr_last_digit1"></block>
+                </value>
+                <value name="B">
+                  <block type="variables_get" id="ad_get_target_digit1">
+                    <field name="VAR" id="ad_var_target_digit">Target Diff Digit</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="ad_set_waiting_false">
+                <field name="VAR" id="ad_var_waiting">Waiting For Digit</field>
+                <value name="VALUE">
+                  <block type="logic_boolean" id="ad_bool_false1">
+                    <field name="BOOL">FALSE</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ad_reset_confirmation_ticks">
+                    <field name="VAR" id="ad_var_confirmation_ticks">Confirmation Ticks Remaining</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="ad_num_ticks_3">
+                        <field name="NUM">3</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="notify" id="ad_notify_stage1">
+                        <field name="NOTIFICATION_TYPE">info</field>
+                        <field name="NOTIFICATION_SOUND">silent</field>
+                        <value name="MESSAGE">
+                          <shadow type="text" id="ad_notif_stg1_msg">
+                            <field name="TEXT">🎯 Target digit appeared! Starting 3-tick confirmation...</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="controls_if" id="ad_check_reappear_if">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+            <value name="IF0">
+              <block type="logic_compare" id="ad_cmp_digit_reappear">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="last_digit" id="ad_curr_last_digit2"></block>
+                </value>
+                <value name="B">
+                  <block type="variables_get" id="ad_get_target_digit2">
+                    <field name="VAR" id="ad_var_target_digit">Target Diff Digit</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="ad_reset_waiting_true">
+                <field name="VAR" id="ad_var_waiting">Waiting For Digit</field>
+                <value name="VALUE">
+                  <block type="logic_boolean" id="ad_bool_true2">
+                    <field name="BOOL">TRUE</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ad_reset_ticks_to_3">
+                    <field name="VAR" id="ad_var_confirmation_ticks">Confirmation Ticks Remaining</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="ad_num_ticks_3_reset">
+                        <field name="NUM">3</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="notify" id="ad_notify_reappear">
+                        <field name="NOTIFICATION_TYPE">warn</field>
+                        <field name="NOTIFICATION_SOUND">silent</field>
+                        <value name="MESSAGE">
+                          <shadow type="text" id="ad_notif_reappear_msg">
+                            <field name="TEXT">⚠️ Target digit reappeared! Resetting confirmation countdown.</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <statement name="ELSE">
+              <block type="math_change" id="ad_decrement_ticks">
+                <field name="VAR" id="ad_var_confirmation_ticks">Confirmation Ticks Remaining</field>
+                <value name="DELTA">
+                  <shadow type="math_number" id="ad_minus_1_sh">
+                    <field name="NUM">-1</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="controls_if" id="ad_check_ready_to_buy_if">
+                    <value name="IF0">
+                      <block type="logic_compare" id="ad_cmp_ticks_zero">
+                        <field name="OP">LTE</field>
+                        <value name="A">
+                          <block type="variables_get" id="ad_get_ticks_val">
+                            <field name="VAR" id="ad_var_confirmation_ticks">Confirmation Ticks Remaining</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <block type="math_number" id="ad_num_zero">
+                            <field name="NUM">0</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="variables_set" id="ad_reset_for_next_cycle">
+                        <field name="VAR" id="ad_var_waiting">Waiting For Digit</field>
+                        <value name="VALUE">
+                          <block type="logic_boolean" id="ad_bool_true3">
+                            <field name="BOOL">TRUE</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="notify" id="ad_notify_entry">
+                            <field name="NOTIFICATION_TYPE">success</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="ad_notif_entry_msg">
+                                <field name="TEXT">🚀 3 Ticks Clear! Poverty Hunter Differs Entry Triggered!</field>
+                              </shadow>
+                            </value>
+                            <next>
+                              <block type="purchase" id="ad_exec_purchase_diff">
+                                <field name="PURCHASE_LIST">DIGITDIFF</field>
+                                <field name="FAST_EXECUTION">TRUE</field>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

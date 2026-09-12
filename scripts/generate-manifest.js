@@ -44,7 +44,15 @@ const list = xmlFiles.map(file => {
     let strategy = 'Multi-Strategy';
 
     const upperName = defaultName.toUpperCase();
-    if (upperName.includes('EVEN') || upperName.includes('ODD')) {
+    if (file === 'Auto Differ.xml') {
+        description = 'High-probability Differs bot powered by the Poverty Hunter 3-tick confirmation strategy. Safe middle digit targeting with auto-recovery.';
+        difficulty = 'Intermediate';
+        strategy = 'Poverty Hunter Differs';
+    } else if (file === 'Speed Bot.xml') {
+        description = 'ProfitHub Fast Lite Speed Bot powered by SV1 architecture with synchronized zero-latency execution.';
+        difficulty = 'Advanced';
+        strategy = 'Speed Run';
+    } else if (upperName.includes('EVEN') || upperName.includes('ODD')) {
         strategy = 'Even/Odd';
     } else if (upperName.includes('SCANNER')) {
         strategy = 'Scanner';
@@ -67,6 +75,15 @@ const list = xmlFiles.map(file => {
         difficulty: difficulty,
         strategy: strategy,
     };
+});
+
+// Sort to make Speed Bot #1 and Auto Differ #2 at the top of the list
+list.sort((a, b) => {
+    if (a.file === 'Speed Bot.xml') return -1;
+    if (b.file === 'Speed Bot.xml') return 1;
+    if (a.file === 'Auto Differ.xml') return -1;
+    if (b.file === 'Auto Differ.xml') return 1;
+    return a.name.localeCompare(b.name);
 });
 
 fs.writeFileSync(manifestPath, JSON.stringify(list, null, 2), 'utf8');
