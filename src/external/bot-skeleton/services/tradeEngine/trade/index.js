@@ -22,7 +22,7 @@ export { isFastModeActive } from '../utils/fastMode';
 
 const watchBefore = store => {
     const currentState = store.getState();
-    if (currentState.scope === constants.DURING_PURCHASE || currentState.scope === constants.STOP) {
+    if (currentState.scope === constants.DURING_PURCHASE) {
         return Promise.resolve(false);
     }
 

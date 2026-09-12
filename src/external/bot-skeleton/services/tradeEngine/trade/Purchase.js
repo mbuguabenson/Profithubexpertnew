@@ -59,7 +59,7 @@ export default Engine =>
             }
 
             // Prevent duplicate parallel purchases or purchases when stopped
-            if (this.is_contract_buying_in_progress || !api_base.is_running || this.$scope?.stopped) {
+            if (this.is_contract_buying_in_progress || this.$scope?.stopped) {
                 return Promise.resolve();
             }
 
@@ -76,7 +76,7 @@ export default Engine =>
                     globalObserver.register('bot.resume', onResume);
                     if (!window.is_bot_paused) onResume();
                 });
-                if (!api_base.is_running || this.$scope?.stopped) {
+                if (this.$scope?.stopped) {
                     return Promise.resolve();
                 }
             }
@@ -91,7 +91,7 @@ export default Engine =>
             const onSuccess = response => {
                 this.is_contract_buying_in_progress = false;
 
-                if (!api_base.is_running || this.$scope?.stopped) {
+                if (this.$scope?.stopped) {
                     return;
                 }
 

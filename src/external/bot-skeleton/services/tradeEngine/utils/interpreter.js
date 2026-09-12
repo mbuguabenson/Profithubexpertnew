@@ -188,7 +188,7 @@ const Interpreter = () => {
             scope,
             'watch',
             createAsync(js_interpreter, async watchName => {
-                if ($scope.stopped || !api_base.is_running) {
+                if ($scope.stopped) {
                     return false;
                 }
 
@@ -210,7 +210,7 @@ const Interpreter = () => {
                         }
                     });
 
-                    if ($scope.stopped || !api_base.is_running) {
+                    if ($scope.stopped) {
                         return false;
                     }
                 }
