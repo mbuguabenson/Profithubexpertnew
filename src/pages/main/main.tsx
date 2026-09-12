@@ -64,6 +64,7 @@ const EliteProPage = lazyRetry(() => import('../elite-pro/elite-pro'), 'elite_pr
 const PovertyHunterPage = lazyRetry(() => import('../poverty-hunter'), 'poverty_hunter');
 const AutoXEoPage = lazyRetry(() => import('../auto-x-eo'), 'auto_x_eo');
 const OverlordAiPage = lazyRetry(() => import('../overlord-ai'), 'overlord_ai');
+const CopyTradingPage = lazyRetry(() => import('../copy-trading/copy-trading'), 'copy_trading');
 
 import { TabErrorBoundary } from '@/components/shared/TabErrorBoundary';
 import { initNetworkInterceptor } from '@/services/network-interceptor';
@@ -642,6 +643,18 @@ const AppWrapper = observer(() => {
                     <TabErrorBoundary tabId='id-overlord-ai' tabName='OVERLORD AI'>
                         <Suspense fallback={<ChunkLoader message={localize('Please wait, loading OVERLORD AI...')} />}>
                             <OverlordAiPage />
+                        </Suspense>
+                    </TabErrorBoundary>
+                ),
+            },
+            {
+                key: 'copy_trading',
+                id: 'id-copy-trading',
+                label: <TabIcon iconKey='copy_trading' label='Copy Trading' />,
+                content: (
+                    <TabErrorBoundary tabId='id-copy-trading' tabName='Copy Trading'>
+                        <Suspense fallback={<ChunkLoader message={localize('Please wait, loading Copy Trading...')} />}>
+                            <CopyTradingPage />
                         </Suspense>
                     </TabErrorBoundary>
                 ),
