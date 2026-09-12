@@ -25,6 +25,7 @@ const BOT_ICONS: Record<string, string> = {
     ODD: '🔄',
     SPEED: '⚡',
     DIFFER: '🎯',
+    ELITE: '💎',
     DEFAULT: '🤖',
 };
 
@@ -36,6 +37,20 @@ const getBotIcon = (name: string): string => {
 };
 
 const BOT_META: Record<string, { tags: string[]; win: string; type: string; risk: string; speed: string }> = {
+    'Elite Pro': {
+        tags: ['Over/Under', 'Dual Momentum'],
+        win: '88%',
+        type: 'Pro',
+        risk: 'Low Risk',
+        speed: 'Dynamic Split',
+    },
+    'Auto X': {
+        tags: ['Even/Odd', 'Reversal Pattern'],
+        win: '86%',
+        type: 'Speed',
+        risk: 'Medium Risk',
+        speed: 'High-Velocity',
+    },
     'Auto Differ': {
         tags: ['Differs', 'Poverty Hunter'],
         win: '92%',

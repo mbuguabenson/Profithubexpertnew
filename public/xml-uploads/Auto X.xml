@@ -1,0 +1,729 @@
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <variables>
+    <variable id="ax_var_init_stake">Initial Stake</variable>
+    <variable id="ax_var_stake">Stake</variable>
+    <variable id="ax_var_expected_profit">Expected Profit</variable>
+    <variable id="ax_var_stop_loss">Stop Loss</variable>
+    <variable id="ax_var_martingale">Martingale Multiplier</variable>
+    <variable id="ax_var_prev_tick_2">Prev Tick 2</variable>
+    <variable id="ax_var_prev_tick_1">Prev Tick 1</variable>
+    <variable id="ax_var_ticks_counted">Ticks Counted</variable>
+    <variable id="ax_var_text_win">text</variable>
+    <variable id="ax_var_text_loss">text1</variable>
+    <variable id="ax_var_text_total">text2</variable>
+    <variable id="ax_var_text_stop">text3</variable>
+    <variable id="ax_var_text_target">text4</variable>
+  </variables>
+  <block type="trade_definition" id="ax_trade_def_root" deletable="false" x="0" y="0">
+    <statement name="TRADE_OPTIONS">
+      <block type="trade_definition_market" id="ax_market_opt" deletable="false" movable="false">
+        <field name="MARKET_LIST">synthetic_index</field>
+        <field name="SUBMARKET_LIST">random_index</field>
+        <field name="SYMBOL_LIST">1HZ100V</field>
+        <next>
+          <block type="trade_definition_tradetype" id="ax_tradetype_opt" deletable="false" movable="false">
+            <field name="TRADETYPECAT_LIST">digits</field>
+            <field name="TRADETYPE_LIST">evenodd</field>
+            <next>
+              <block type="trade_definition_contracttype" id="ax_contracttype_opt" deletable="false" movable="false">
+                <field name="TYPE_LIST">both</field>
+                <next>
+                  <block type="trade_definition_candleinterval" id="ax_candle_opt" deletable="false" movable="false">
+                    <field name="CANDLEINTERVAL_LIST">60</field>
+                    <next>
+                      <block type="trade_definition_restartbuysell" id="ax_restartbuysell_opt" deletable="false" movable="false">
+                        <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <next>
+                          <block type="trade_definition_restartonerror" id="ax_restartonerror_opt" deletable="false" movable="false">
+                            <field name="RESTARTONERROR">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="INITIALIZATION">
+      <block type="notify" id="ax_init_notify">
+        <field name="NOTIFICATION_TYPE">info</field>
+        <field name="NOTIFICATION_SOUND">silent</field>
+        <value name="MESSAGE">
+          <shadow type="text" id="ax_init_notify_msg">
+            <field name="TEXT">⚡ AUTO X E/O Activated | High-Velocity Reversal Pattern Engine</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="variables_set" id="ax_set_init_stake">
+            <field name="VAR" id="ax_var_init_stake">Initial Stake</field>
+            <value name="VALUE">
+              <block type="math_number" id="ax_num_init_stake">
+                <field name="NUM">0.50</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="ax_set_curr_stake">
+                <field name="VAR" id="ax_var_stake">Stake</field>
+                <value name="VALUE">
+                  <block type="math_number" id="ax_num_curr_stake">
+                    <field name="NUM">0.50</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ax_set_expected_profit">
+                    <field name="VAR" id="ax_var_expected_profit">Expected Profit</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="ax_num_expected_profit">
+                        <field name="NUM">10</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="ax_set_stop_loss">
+                        <field name="VAR" id="ax_var_stop_loss">Stop Loss</field>
+                        <value name="VALUE">
+                          <block type="math_number" id="ax_num_stop_loss">
+                            <field name="NUM">25</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="ax_set_martingale">
+                            <field name="VAR" id="ax_var_martingale">Martingale Multiplier</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="ax_num_martingale">
+                                <field name="NUM">2.6</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="ax_set_ticks_counted_init">
+                                <field name="VAR" id="ax_var_ticks_counted">Ticks Counted</field>
+                                <value name="VALUE">
+                                  <block type="math_number" id="ax_num_zero_counted">
+                                    <field name="NUM">0</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="SUBMARKET">
+      <block type="trade_definition_tradeoptions" id="ax_trade_options">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" has_first_barrier="false" has_second_barrier="false" has_prediction="false"></mutation>
+        <field name="DURATIONTYPE_LIST">t</field>
+        <value name="DURATION">
+          <shadow type="math_number" id="ax_dur_sh">
+            <field name="NUM">1</field>
+          </shadow>
+          <block type="math_number" id="ax_dur_num">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <value name="AMOUNT">
+          <shadow type="math_number" id="ax_amt_sh">
+            <field name="NUM">0.50</field>
+          </shadow>
+          <block type="variables_get" id="ax_amt_get">
+            <field name="VAR" id="ax_var_stake">Stake</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="during_purchase" id="ax_during_purchase_root" collapsed="true" x="714" y="0">
+    <statement name="DURING_PURCHASE_STACK">
+      <block type="controls_if" id="ax_during_sell_if">
+        <value name="IF0">
+          <block type="check_sell" id="ax_check_sell"></block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="after_purchase" id="ax_after_purchase_root" collapsed="true" x="714" y="96">
+    <statement name="AFTERPURCHASE_STACK">
+      <block type="controls_if" id="ax_check_result_if">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="contract_check_result" id="ax_contract_win_chk">
+            <field name="CHECK_RESULT">win</field>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="text_join" id="ax_join_win_text">
+            <field name="VARIABLE" id="ax_var_text_win">text</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ax_win_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ax_win_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ax_win_label">
+                    <field name="TEXT">⚡ [AUTO X WIN] Profit $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ax_win_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ax_win_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="ax_read_win_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ax_win_notify">
+                <field name="NOTIFICATION_TYPE">success</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ax_win_notif_sh">
+                    <field name="TEXT">Win</field>
+                  </shadow>
+                  <block type="variables_get" id="ax_get_win_text">
+                    <field name="VAR" id="ax_var_text_win">text</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ax_reset_stake_win">
+                    <field name="VAR" id="ax_var_stake">Stake</field>
+                    <value name="VALUE">
+                      <block type="variables_get" id="ax_get_init_stake">
+                        <field name="VAR" id="ax_var_init_stake">Initial Stake</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="text_join" id="ax_join_loss_text">
+            <field name="VARIABLE" id="ax_var_text_loss">text1</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ax_loss_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ax_loss_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ax_loss_label">
+                    <field name="TEXT">⚠️ [AUTO X LOSS] Recovery Martingale: $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ax_loss_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ax_loss_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="ax_read_loss_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ax_loss_notify">
+                <field name="NOTIFICATION_TYPE">error</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ax_loss_notif_sh">
+                    <field name="TEXT">Loss</field>
+                  </shadow>
+                  <block type="variables_get" id="ax_get_loss_text">
+                    <field name="VAR" id="ax_var_text_loss">text1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="math_change" id="ax_apply_martingale_change">
+                    <field name="VAR" id="ax_var_stake">Stake</field>
+                    <value name="DELTA">
+                      <shadow type="math_number" id="ax_change_num_sh">
+                        <field name="NUM">1</field>
+                      </shadow>
+                      <block type="math_arithmetic" id="ax_calc_martingale">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <shadow type="math_number" id="ax_m1_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="ax_get_curr_stake_for_m">
+                            <field name="VAR" id="ax_var_stake">Stake</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <shadow type="math_number" id="ax_m2_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="ax_get_martingale_mult">
+                            <field name="VAR" id="ax_var_martingale">Martingale Multiplier</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="text_join" id="ax_join_total_text">
+            <field name="VARIABLE" id="ax_var_text_total">text2</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ax_total_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ax_tot_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ax_tot_label">
+                    <field name="TEXT">📊 AUTO X E/O Total Net Profit: $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ax_total_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ax_tot_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="total_profit" id="ax_read_total_profit"></block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ax_total_notify">
+                <field name="NOTIFICATION_TYPE">info</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ax_tot_notif_sh">
+                    <field name="TEXT">Total</field>
+                  </shadow>
+                  <block type="variables_get" id="ax_get_total_text">
+                    <field name="VAR" id="ax_var_text_total">text2</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="controls_if" id="ax_target_and_stop_if">
+                    <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1" else="1"></mutation>
+                    <value name="IF0">
+                      <block type="logic_compare" id="ax_cmp_stop_loss">
+                        <field name="OP">LTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="ax_tot_prof_for_sl"></block>
+                        </value>
+                        <value name="B">
+                          <block type="math_single" id="ax_neg_stop_loss">
+                            <field name="OP">NEG</field>
+                            <value name="NUM">
+                              <shadow type="math_number" id="ax_sl_neg_sh">
+                                <field name="NUM">9</field>
+                              </shadow>
+                              <block type="variables_get" id="ax_get_sl_val">
+                                <field name="VAR" id="ax_var_stop_loss">Stop Loss</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="text_join" id="ax_join_stop_text">
+                        <field name="VARIABLE" id="ax_var_text_stop">text3</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="ax_stop_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="ax_stop_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="ax_stop_label">
+                                <field name="TEXT">🔴 [STOP LOSS REACHED] Auto X E/O stopped! Total Loss: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="ax_stop_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="ax_stop_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="ax_read_sl_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="ax_notify_stop_loss">
+                            <field name="NOTIFICATION_TYPE">error</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="ax_sl_notif_sh">
+                                <field name="TEXT">Stop Loss</field>
+                              </shadow>
+                              <block type="variables_get" id="ax_get_stop_text">
+                                <field name="VAR" id="ax_var_text_stop">text3</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <value name="IF1">
+                      <block type="logic_compare" id="ax_cmp_target_profit">
+                        <field name="OP">GTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="ax_tot_prof_for_tp"></block>
+                        </value>
+                        <value name="B">
+                          <block type="variables_get" id="ax_get_tp_val">
+                            <field name="VAR" id="ax_var_expected_profit">Expected Profit</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO1">
+                      <block type="text_join" id="ax_join_target_text">
+                        <field name="VARIABLE" id="ax_var_text_target">text4</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="ax_target_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="ax_tp_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="ax_target_label">
+                                <field name="TEXT">🟢 [TARGET PROFIT ACHIEVED] ⚡ Auto X E/O Success! Total Profit: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="ax_target_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="ax_tp_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="ax_read_tp_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="ax_notify_target_profit">
+                            <field name="NOTIFICATION_TYPE">success</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="ax_tp_notif_sh">
+                                <field name="TEXT">Target Profit</field>
+                              </shadow>
+                              <block type="variables_get" id="ax_get_target_text">
+                                <field name="VAR" id="ax_var_text_target">text4</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <statement name="ELSE">
+                      <block type="timeout" id="ax_restart_timeout">
+                        <statement name="TIMEOUTSTACK">
+                          <block type="trade_again" id="ax_trade_again_act"></block>
+                        </statement>
+                        <value name="SECONDS">
+                          <shadow type="math_number" id="ax_timeout_sec">
+                            <field name="NUM">0</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </statement>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="before_purchase" id="ax_before_purchase_root" deletable="false" x="0" y="916">
+    <statement name="BEFOREPURCHASE_STACK">
+      <block type="controls_if" id="ax_check_init_sync">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="logic_compare" id="ax_cmp_counted_lt2">
+            <field name="OP">LT</field>
+            <value name="A">
+              <block type="variables_get" id="ax_get_counted">
+                <field name="VAR" id="ax_var_ticks_counted">Ticks Counted</field>
+              </block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="ax_num_two">
+                <field name="NUM">2</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="controls_if" id="ax_check_first_tick">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+            <value name="IF0">
+              <block type="logic_compare" id="ax_cmp_counted_zero">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="variables_get" id="ax_get_counted_0">
+                    <field name="VAR" id="ax_var_ticks_counted">Ticks Counted</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="ax_num_zero_c">
+                    <field name="NUM">0</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="ax_set_prev_2_init">
+                <field name="VAR" id="ax_var_prev_tick_2">Prev Tick 2</field>
+                <value name="VALUE">
+                  <block type="last_digit" id="ax_last_d_0"></block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ax_set_counted_1">
+                    <field name="VAR" id="ax_var_ticks_counted">Ticks Counted</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="ax_num_one">
+                        <field name="NUM">1</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <statement name="ELSE">
+              <block type="variables_set" id="ax_set_prev_1_init">
+                <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                <value name="VALUE">
+                  <block type="last_digit" id="ax_last_d_1"></block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ax_set_counted_2">
+                    <field name="VAR" id="ax_var_ticks_counted">Ticks Counted</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="ax_num_two_c">
+                        <field name="NUM">2</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="notify" id="ax_notify_synced">
+                        <field name="NOTIFICATION_TYPE">info</field>
+                        <field name="NOTIFICATION_SOUND">silent</field>
+                        <value name="MESSAGE">
+                          <shadow type="text" id="ax_notif_sync_msg">
+                            <field name="TEXT">⚡ Auto X E/O: Stream synchronized! Scanning reversal patterns...</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="controls_if" id="ax_check_patterns">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1" else="1"></mutation>
+            <value name="IF0">
+              <block type="logic_operation" id="ax_op_and_p1_outer">
+                <field name="OP">AND</field>
+                <value name="A">
+                  <block type="logic_operation" id="ax_op_and_p1_inner">
+                    <field name="OP">AND</field>
+                    <value name="A">
+                      <block type="math_number_property" id="ax_chk_p2_odd">
+                        <mutation divisor_input="false"></mutation>
+                        <field name="PROPERTY">ODD</field>
+                        <value name="NUMBER_TO_CHECK">
+                          <block type="variables_get" id="ax_get_p2_p1">
+                            <field name="VAR" id="ax_var_prev_tick_2">Prev Tick 2</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="math_number_property" id="ax_chk_p1_odd">
+                        <mutation divisor_input="false"></mutation>
+                        <field name="PROPERTY">ODD</field>
+                        <value name="NUMBER_TO_CHECK">
+                          <block type="variables_get" id="ax_get_p1_p1">
+                            <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="math_number_property" id="ax_chk_curr_even">
+                    <mutation divisor_input="false"></mutation>
+                    <field name="PROPERTY">EVEN</field>
+                    <value name="NUMBER_TO_CHECK">
+                      <block type="last_digit" id="ax_last_d_p1"></block>
+                    </value>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="ax_shift_p2_on_p1">
+                <field name="VAR" id="ax_var_prev_tick_2">Prev Tick 2</field>
+                <value name="VALUE">
+                  <block type="variables_get" id="ax_get_shift_p1">
+                    <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ax_shift_p1_on_p1">
+                    <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                    <value name="VALUE">
+                      <block type="last_digit" id="ax_get_shift_curr1"></block>
+                    </value>
+                    <next>
+                      <block type="notify" id="ax_notify_even_entry">
+                        <field name="NOTIFICATION_TYPE">info</field>
+                        <field name="NOTIFICATION_SOUND">silent</field>
+                        <value name="MESSAGE">
+                          <shadow type="text" id="ax_notif_even_msg">
+                            <field name="TEXT">⚡ Auto X E/O: [Odd-Odd-Even] Reversal Signal! Buying DIGITEVEN</field>
+                          </shadow>
+                        </value>
+                        <next>
+                          <block type="purchase" id="ax_exec_purchase_even">
+                            <field name="PURCHASE_LIST">DIGITEVEN</field>
+                            <field name="FAST_EXECUTION">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <value name="IF1">
+              <block type="logic_operation" id="ax_op_and_p2_outer">
+                <field name="OP">AND</field>
+                <value name="A">
+                  <block type="logic_operation" id="ax_op_and_p2_inner">
+                    <field name="OP">AND</field>
+                    <value name="A">
+                      <block type="math_number_property" id="ax_chk_p2_even">
+                        <mutation divisor_input="false"></mutation>
+                        <field name="PROPERTY">EVEN</field>
+                        <value name="NUMBER_TO_CHECK">
+                          <block type="variables_get" id="ax_get_p2_p2">
+                            <field name="VAR" id="ax_var_prev_tick_2">Prev Tick 2</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="math_number_property" id="ax_chk_p1_even">
+                        <mutation divisor_input="false"></mutation>
+                        <field name="PROPERTY">EVEN</field>
+                        <value name="NUMBER_TO_CHECK">
+                          <block type="variables_get" id="ax_get_p1_p2">
+                            <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="math_number_property" id="ax_chk_curr_odd">
+                    <mutation divisor_input="false"></mutation>
+                    <field name="PROPERTY">ODD</field>
+                    <value name="NUMBER_TO_CHECK">
+                      <block type="last_digit" id="ax_last_d_p2"></block>
+                    </value>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO1">
+              <block type="variables_set" id="ax_shift_p2_on_p2">
+                <field name="VAR" id="ax_var_prev_tick_2">Prev Tick 2</field>
+                <value name="VALUE">
+                  <block type="variables_get" id="ax_get_shift_p2">
+                    <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ax_shift_p1_on_p2">
+                    <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                    <value name="VALUE">
+                      <block type="last_digit" id="ax_get_shift_curr2"></block>
+                    </value>
+                    <next>
+                      <block type="notify" id="ax_notify_odd_entry">
+                        <field name="NOTIFICATION_TYPE">info</field>
+                        <field name="NOTIFICATION_SOUND">silent</field>
+                        <value name="MESSAGE">
+                          <shadow type="text" id="ax_notif_odd_msg">
+                            <field name="TEXT">🔄 Auto X E/O: [Even-Even-Odd] Reversal Signal! Buying DIGITODD</field>
+                          </shadow>
+                        </value>
+                        <next>
+                          <block type="purchase" id="ax_exec_purchase_odd">
+                            <field name="PURCHASE_LIST">DIGITODD</field>
+                            <field name="FAST_EXECUTION">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <statement name="ELSE">
+              <block type="variables_set" id="ax_shift_p2_default">
+                <field name="VAR" id="ax_var_prev_tick_2">Prev Tick 2</field>
+                <value name="VALUE">
+                  <block type="variables_get" id="ax_get_shift_p2_def">
+                    <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ax_shift_p1_default">
+                    <field name="VAR" id="ax_var_prev_tick_1">Prev Tick 1</field>
+                    <value name="VALUE">
+                      <block type="last_digit" id="ax_get_shift_curr_def"></block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

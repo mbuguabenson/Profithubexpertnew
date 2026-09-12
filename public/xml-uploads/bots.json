@@ -14,6 +14,20 @@
     "strategy": "Poverty Hunter Differs"
   },
   {
+    "name": "Elite Pro",
+    "file": "Elite Pro.xml",
+    "description": "ProfitHub Elite Pro AI Engine with dynamic Over 3 / Under 6 momentum split and adaptive risk management.",
+    "difficulty": "Advanced",
+    "strategy": "Elite Pro"
+  },
+  {
+    "name": "Auto X",
+    "file": "Auto X.xml",
+    "description": "High-velocity Auto X Even/Odd algorithmic engine powered by consecutive reversal pattern recognition.",
+    "difficulty": "Intermediate",
+    "strategy": "Auto X E/O"
+  },
+  {
     "name": "🤑UNSTOPPABLE DIFFER BOT🤑",
     "file": "🤑UNSTOPPABLE DIFFER BOT🤑.xml",
     "description": "Unstoppable Differs trading bot with aggressive digit matching and high-frequency execution.",

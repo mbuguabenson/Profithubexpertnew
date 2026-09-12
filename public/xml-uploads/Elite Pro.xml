@@ -1,0 +1,545 @@
+<xml xmlns="https://developers.google.com/blockly/xml" is_dbot="true" collection="false">
+  <variables>
+    <variable id="ep_var_init_stake">Initial Stake</variable>
+    <variable id="ep_var_stake">Stake</variable>
+    <variable id="ep_var_expected_profit">Expected Profit</variable>
+    <variable id="ep_var_stop_loss">Stop Loss</variable>
+    <variable id="ep_var_martingale">Martingale Multiplier</variable>
+    <variable id="ep_var_prediction">Prediction</variable>
+    <variable id="ep_var_text_win">text</variable>
+    <variable id="ep_var_text_loss">text1</variable>
+    <variable id="ep_var_text_total">text2</variable>
+    <variable id="ep_var_text_stop">text3</variable>
+    <variable id="ep_var_text_target">text4</variable>
+  </variables>
+  <block type="trade_definition" id="ep_trade_def_root" deletable="false" x="0" y="0">
+    <statement name="TRADE_OPTIONS">
+      <block type="trade_definition_market" id="ep_market_opt" deletable="false" movable="false">
+        <field name="MARKET_LIST">synthetic_index</field>
+        <field name="SUBMARKET_LIST">random_index</field>
+        <field name="SYMBOL_LIST">1HZ100V</field>
+        <next>
+          <block type="trade_definition_tradetype" id="ep_tradetype_opt" deletable="false" movable="false">
+            <field name="TRADETYPECAT_LIST">digits</field>
+            <field name="TRADETYPE_LIST">overunder</field>
+            <next>
+              <block type="trade_definition_contracttype" id="ep_contracttype_opt" deletable="false" movable="false">
+                <field name="TYPE_LIST">both</field>
+                <next>
+                  <block type="trade_definition_candleinterval" id="ep_candle_opt" deletable="false" movable="false">
+                    <field name="CANDLEINTERVAL_LIST">60</field>
+                    <next>
+                      <block type="trade_definition_restartbuysell" id="ep_restartbuysell_opt" deletable="false" movable="false">
+                        <field name="TIME_MACHINE_ENABLED">FALSE</field>
+                        <next>
+                          <block type="trade_definition_restartonerror" id="ep_restartonerror_opt" deletable="false" movable="false">
+                            <field name="RESTARTONERROR">TRUE</field>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="INITIALIZATION">
+      <block type="notify" id="ep_init_notify">
+        <field name="NOTIFICATION_TYPE">info</field>
+        <field name="NOTIFICATION_SOUND">silent</field>
+        <value name="MESSAGE">
+          <shadow type="text" id="ep_init_notify_msg">
+            <field name="TEXT">⚡ ELITE PRO Bot Activated | Dual Momentum Over/Under Engine</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="variables_set" id="ep_set_init_stake">
+            <field name="VAR" id="ep_var_init_stake">Initial Stake</field>
+            <value name="VALUE">
+              <block type="math_number" id="ep_num_init_stake">
+                <field name="NUM">0.35</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="ep_set_curr_stake">
+                <field name="VAR" id="ep_var_stake">Stake</field>
+                <value name="VALUE">
+                  <block type="math_number" id="ep_num_curr_stake">
+                    <field name="NUM">0.35</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ep_set_expected_profit">
+                    <field name="VAR" id="ep_var_expected_profit">Expected Profit</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="ep_num_expected_profit">
+                        <field name="NUM">10</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="ep_set_stop_loss">
+                        <field name="VAR" id="ep_var_stop_loss">Stop Loss</field>
+                        <value name="VALUE">
+                          <block type="math_number" id="ep_num_stop_loss">
+                            <field name="NUM">25</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="ep_set_martingale">
+                            <field name="VAR" id="ep_var_martingale">Martingale Multiplier</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="ep_num_martingale">
+                                <field name="NUM">2.6</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="ep_set_pred_init">
+                                <field name="VAR" id="ep_var_prediction">Prediction</field>
+                                <value name="VALUE">
+                                  <block type="math_number" id="ep_num_pred_init">
+                                    <field name="NUM">6</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <statement name="SUBMARKET">
+      <block type="trade_definition_tradeoptions" id="ep_trade_options">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" has_first_barrier="false" has_second_barrier="false" has_prediction="true"></mutation>
+        <field name="DURATIONTYPE_LIST">t</field>
+        <value name="DURATION">
+          <shadow type="math_number" id="ep_dur_sh">
+            <field name="NUM">1</field>
+          </shadow>
+          <block type="math_number" id="ep_dur_num">
+            <field name="NUM">1</field>
+          </block>
+        </value>
+        <value name="AMOUNT">
+          <shadow type="math_number" id="ep_amt_sh">
+            <field name="NUM">0.35</field>
+          </shadow>
+          <block type="variables_get" id="ep_amt_get">
+            <field name="VAR" id="ep_var_stake">Stake</field>
+          </block>
+        </value>
+        <value name="PREDICTION">
+          <shadow type="math_number_positive" id="ep_pred_sh" inline="true">
+            <field name="NUM">6</field>
+          </shadow>
+          <block type="variables_get" id="ep_pred_get">
+            <field name="VAR" id="ep_var_prediction">Prediction</field>
+          </block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="during_purchase" id="ep_during_purchase_root" collapsed="true" x="714" y="0">
+    <statement name="DURING_PURCHASE_STACK">
+      <block type="controls_if" id="ep_during_sell_if">
+        <value name="IF0">
+          <block type="check_sell" id="ep_check_sell"></block>
+        </value>
+      </block>
+    </statement>
+  </block>
+  <block type="after_purchase" id="ep_after_purchase_root" collapsed="true" x="714" y="96">
+    <statement name="AFTERPURCHASE_STACK">
+      <block type="controls_if" id="ep_check_result_if">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="contract_check_result" id="ep_contract_win_chk">
+            <field name="CHECK_RESULT">win</field>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="text_join" id="ep_join_win_text">
+            <field name="VARIABLE" id="ep_var_text_win">text</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ep_win_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ep_win_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ep_win_label">
+                    <field name="TEXT">💎 [ELITE PRO WIN] Profit $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ep_win_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ep_win_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="ep_read_win_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ep_win_notify">
+                <field name="NOTIFICATION_TYPE">success</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ep_win_notif_sh">
+                    <field name="TEXT">Win</field>
+                  </shadow>
+                  <block type="variables_get" id="ep_get_win_text">
+                    <field name="VAR" id="ep_var_text_win">text</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="ep_reset_stake_win">
+                    <field name="VAR" id="ep_var_stake">Stake</field>
+                    <value name="VALUE">
+                      <block type="variables_get" id="ep_get_init_stake">
+                        <field name="VAR" id="ep_var_init_stake">Initial Stake</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="text_join" id="ep_join_loss_text">
+            <field name="VARIABLE" id="ep_var_text_loss">text1</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ep_loss_txt_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ep_loss_txt_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ep_loss_label">
+                    <field name="TEXT">⚠️ [ELITE PRO LOSS] Multiplier Recovery: $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ep_loss_txt_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ep_loss_txt_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="read_details" id="ep_read_loss_detail">
+                        <field name="DETAIL_INDEX">4</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ep_loss_notify">
+                <field name="NOTIFICATION_TYPE">error</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ep_loss_notif_sh">
+                    <field name="TEXT">Loss</field>
+                  </shadow>
+                  <block type="variables_get" id="ep_get_loss_text">
+                    <field name="VAR" id="ep_var_text_loss">text1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="math_change" id="ep_apply_martingale_change">
+                    <field name="VAR" id="ep_var_stake">Stake</field>
+                    <value name="DELTA">
+                      <shadow type="math_number" id="ep_change_num_sh">
+                        <field name="NUM">1</field>
+                      </shadow>
+                      <block type="math_arithmetic" id="ep_calc_martingale">
+                        <field name="OP">MULTIPLY</field>
+                        <value name="A">
+                          <shadow type="math_number" id="ep_m1_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="ep_get_curr_stake_for_m">
+                            <field name="VAR" id="ep_var_stake">Stake</field>
+                          </block>
+                        </value>
+                        <value name="B">
+                          <shadow type="math_number" id="ep_m2_sh">
+                            <field name="NUM">1</field>
+                          </shadow>
+                          <block type="variables_get" id="ep_get_martingale_mult">
+                            <field name="VAR" id="ep_var_martingale">Martingale Multiplier</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <next>
+          <block type="text_join" id="ep_join_total_text">
+            <field name="VARIABLE" id="ep_var_text_total">text2</field>
+            <statement name="STACK">
+              <block type="text_statement" id="ep_total_stmt1">
+                <value name="TEXT">
+                  <shadow type="text" id="ep_tot_sh1">
+                    <field name="TEXT"></field>
+                  </shadow>
+                  <block type="text" id="ep_tot_label">
+                    <field name="TEXT">📊 ELITE PRO Total Net Profit: $ </field>
+                  </block>
+                </value>
+                <next>
+                  <block type="text_statement" id="ep_total_stmt2">
+                    <value name="TEXT">
+                      <shadow type="text" id="ep_tot_sh2">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="total_profit" id="ep_read_total_profit"></block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="notify" id="ep_total_notify">
+                <field name="NOTIFICATION_TYPE">info</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ep_tot_notif_sh">
+                    <field name="TEXT">Total</field>
+                  </shadow>
+                  <block type="variables_get" id="ep_get_total_text">
+                    <field name="VAR" id="ep_var_text_total">text2</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="controls_if" id="ep_target_and_stop_if">
+                    <mutation xmlns="http://www.w3.org/1999/xhtml" elseif="1" else="1"></mutation>
+                    <value name="IF0">
+                      <block type="logic_compare" id="ep_cmp_stop_loss">
+                        <field name="OP">LTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="ep_tot_prof_for_sl"></block>
+                        </value>
+                        <value name="B">
+                          <block type="math_single" id="ep_neg_stop_loss">
+                            <field name="OP">NEG</field>
+                            <value name="NUM">
+                              <shadow type="math_number" id="ep_sl_neg_sh">
+                                <field name="NUM">9</field>
+                              </shadow>
+                              <block type="variables_get" id="ep_get_sl_val">
+                                <field name="VAR" id="ep_var_stop_loss">Stop Loss</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO0">
+                      <block type="text_join" id="ep_join_stop_text">
+                        <field name="VARIABLE" id="ep_var_text_stop">text3</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="ep_stop_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="ep_stop_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="ep_stop_label">
+                                <field name="TEXT">🔴 [STOP LOSS REACHED] Elite Pro Bot stopped! Total Loss: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="ep_stop_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="ep_stop_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="ep_read_sl_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="ep_notify_stop_loss">
+                            <field name="NOTIFICATION_TYPE">error</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="ep_sl_notif_sh">
+                                <field name="TEXT">Stop Loss</field>
+                              </shadow>
+                              <block type="variables_get" id="ep_get_stop_text">
+                                <field name="VAR" id="ep_var_text_stop">text3</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <value name="IF1">
+                      <block type="logic_compare" id="ep_cmp_target_profit">
+                        <field name="OP">GTE</field>
+                        <value name="A">
+                          <block type="total_profit" id="ep_tot_prof_for_tp"></block>
+                        </value>
+                        <value name="B">
+                          <block type="variables_get" id="ep_get_tp_val">
+                            <field name="VAR" id="ep_var_expected_profit">Expected Profit</field>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                    <statement name="DO1">
+                      <block type="text_join" id="ep_join_target_text">
+                        <field name="VARIABLE" id="ep_var_text_target">text4</field>
+                        <statement name="STACK">
+                          <block type="text_statement" id="ep_target_stmt1">
+                            <value name="TEXT">
+                              <shadow type="text" id="ep_tp_sh1">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="ep_target_label">
+                                <field name="TEXT">🟢 [TARGET PROFIT ACHIEVED] 💎 Elite Pro Engine Success! Total Profit: $ </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="ep_target_stmt2">
+                                <value name="TEXT">
+                                  <shadow type="text" id="ep_tp_sh2">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="total_profit" id="ep_read_tp_total"></block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="notify" id="ep_notify_target_profit">
+                            <field name="NOTIFICATION_TYPE">success</field>
+                            <field name="NOTIFICATION_SOUND">silent</field>
+                            <value name="MESSAGE">
+                              <shadow type="text" id="ep_tp_notif_sh">
+                                <field name="TEXT">Target Profit</field>
+                              </shadow>
+                              <block type="variables_get" id="ep_get_target_text">
+                                <field name="VAR" id="ep_var_text_target">text4</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </statement>
+                    <statement name="ELSE">
+                      <block type="timeout" id="ep_restart_timeout">
+                        <statement name="TIMEOUTSTACK">
+                          <block type="trade_again" id="ep_trade_again_act"></block>
+                        </statement>
+                        <value name="SECONDS">
+                          <shadow type="math_number" id="ep_timeout_sec">
+                            <field name="NUM">0</field>
+                          </shadow>
+                        </value>
+                      </block>
+                    </statement>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+  <block type="before_purchase" id="ep_before_purchase_root" deletable="false" x="0" y="916">
+    <statement name="BEFOREPURCHASE_STACK">
+      <block type="controls_if" id="ep_check_momentum_if">
+        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+        <value name="IF0">
+          <block type="logic_compare" id="ep_cmp_under_bias">
+            <field name="OP">LTE</field>
+            <value name="A">
+              <block type="last_digit" id="ep_last_digit_under"></block>
+            </value>
+            <value name="B">
+              <block type="math_number" id="ep_digit_under_barrier">
+                <field name="NUM">4</field>
+              </block>
+            </value>
+          </block>
+        </value>
+        <statement name="DO0">
+          <block type="variables_set" id="ep_set_under_pred">
+            <field name="VAR" id="ep_var_prediction">Prediction</field>
+            <value name="VALUE">
+              <block type="math_number" id="ep_pred_under_6">
+                <field name="NUM">6</field>
+              </block>
+            </value>
+            <next>
+              <block type="notify" id="ep_notify_under_signal">
+                <field name="NOTIFICATION_TYPE">info</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ep_notif_under_msg">
+                    <field name="TEXT">💎 Elite Pro: Under Bias Detected! Buying UNDER 6</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="purchase" id="ep_exec_purchase_under">
+                    <field name="PURCHASE_LIST">DIGITUNDER</field>
+                    <field name="FAST_EXECUTION">TRUE</field>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+        <statement name="ELSE">
+          <block type="variables_set" id="ep_set_over_pred">
+            <field name="VAR" id="ep_var_prediction">Prediction</field>
+            <value name="VALUE">
+              <block type="math_number" id="ep_pred_over_3">
+                <field name="NUM">3</field>
+              </block>
+            </value>
+            <next>
+              <block type="notify" id="ep_notify_over_signal">
+                <field name="NOTIFICATION_TYPE">info</field>
+                <field name="NOTIFICATION_SOUND">silent</field>
+                <value name="MESSAGE">
+                  <shadow type="text" id="ep_notif_over_msg">
+                    <field name="TEXT">⚡ Elite Pro: Over Bias Detected! Buying OVER 3</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="purchase" id="ep_exec_purchase_over">
+                    <field name="PURCHASE_LIST">DIGITOVER</field>
+                    <field name="FAST_EXECUTION">TRUE</field>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

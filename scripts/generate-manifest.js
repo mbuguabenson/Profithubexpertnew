@@ -44,14 +44,22 @@ const list = xmlFiles.map(file => {
     let strategy = 'Multi-Strategy';
 
     const upperName = defaultName.toUpperCase();
-    if (file === 'Auto Differ.xml') {
-        description = 'High-probability Differs bot powered by the Poverty Hunter 3-tick confirmation strategy. Safe middle digit targeting with auto-recovery.';
-        difficulty = 'Intermediate';
-        strategy = 'Poverty Hunter Differs';
-    } else if (file === 'Speed Bot.xml') {
+    if (file === 'Speed Bot.xml') {
         description = 'ProfitHub Fast Lite Speed Bot powered by SV1 architecture with synchronized zero-latency execution.';
         difficulty = 'Advanced';
         strategy = 'Speed Run';
+    } else if (file === 'Auto Differ.xml') {
+        description = 'High-probability Differs bot powered by the Poverty Hunter 3-tick confirmation strategy. Safe middle digit targeting with auto-recovery.';
+        difficulty = 'Intermediate';
+        strategy = 'Poverty Hunter Differs';
+    } else if (file === 'Elite Pro.xml') {
+        description = 'ProfitHub Elite Pro AI Engine with dynamic Over 3 / Under 6 momentum split and adaptive risk management.';
+        difficulty = 'Advanced';
+        strategy = 'Elite Pro';
+    } else if (file === 'Auto X.xml') {
+        description = 'High-velocity Auto X Even/Odd algorithmic engine powered by consecutive reversal pattern recognition.';
+        difficulty = 'Intermediate';
+        strategy = 'Auto X E/O';
     } else if (upperName.includes('EVEN') || upperName.includes('ODD')) {
         strategy = 'Even/Odd';
     } else if (upperName.includes('SCANNER')) {
@@ -77,12 +85,14 @@ const list = xmlFiles.map(file => {
     };
 });
 
-// Sort to make Speed Bot #1 and Auto Differ #2 at the top of the list
+// Top priority bots ordering
+const TOP_PRIORITY = ['Speed Bot.xml', 'Auto Differ.xml', 'Elite Pro.xml', 'Auto X.xml'];
 list.sort((a, b) => {
-    if (a.file === 'Speed Bot.xml') return -1;
-    if (b.file === 'Speed Bot.xml') return 1;
-    if (a.file === 'Auto Differ.xml') return -1;
-    if (b.file === 'Auto Differ.xml') return 1;
+    const idxA = TOP_PRIORITY.indexOf(a.file);
+    const idxB = TOP_PRIORITY.indexOf(b.file);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
     return a.name.localeCompare(b.name);
 });
 
