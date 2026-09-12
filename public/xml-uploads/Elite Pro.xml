@@ -6,6 +6,10 @@
     <variable id="ep_var_stop_loss">Stop Loss</variable>
     <variable id="ep_var_martingale">Martingale Multiplier</variable>
     <variable id="ep_var_prediction">Prediction</variable>
+    <variable id="ep_var_last_digit">Last Digit</variable>
+    <variable id="ep_var_market_trend">Market Trend</variable>
+    <variable id="ep_var_analysis_text">analysis_text</variable>
+    <variable id="ep_var_target_strat">target_strategy</variable>
     <variable id="ep_var_text_win">text</variable>
     <variable id="ep_var_text_loss">text1</variable>
     <variable id="ep_var_text_total">text2</variable>
@@ -52,7 +56,7 @@
         <field name="NOTIFICATION_SOUND">silent</field>
         <value name="MESSAGE">
           <shadow type="text" id="ep_init_notify_msg">
-            <field name="TEXT">⚡ ELITE PRO Bot Activated | Dual Momentum Over/Under Engine</field>
+            <field name="TEXT">⚡ ELITE PRO Bot Activated | Dual Analysis Engine (Trade OVER 3 &amp; UNDER 6)</field>
           </shadow>
         </value>
         <next>
@@ -103,6 +107,26 @@
                                     <field name="NUM">6</field>
                                   </block>
                                 </value>
+                                <next>
+                                  <block type="variables_set" id="ep_set_init_trend">
+                                    <field name="VAR" id="ep_var_market_trend">Market Trend</field>
+                                    <value name="VALUE">
+                                      <block type="text" id="ep_txt_init_trend">
+                                        <field name="TEXT">Initializing Analysis Radar...</field>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="variables_set" id="ep_set_init_target_strat">
+                                        <field name="VAR" id="ep_var_target_strat">target_strategy</field>
+                                        <value name="VALUE">
+                                          <block type="text" id="ep_txt_init_strat">
+                                            <field name="TEXT">UNDER 6</field>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
                               </block>
                             </next>
                           </block>
@@ -213,6 +237,86 @@
                         <field name="VAR" id="ep_var_init_stake">Initial Stake</field>
                       </block>
                     </value>
+                    <next>
+                      <block type="controls_if" id="ep_win_switch_setup">
+                        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+                        <value name="IF0">
+                          <block type="logic_compare" id="ep_cmp_win_high_digit">
+                            <field name="OP">GTE</field>
+                            <value name="A">
+                              <block type="last_digit" id="ep_win_ld_chk"></block>
+                            </value>
+                            <value name="B">
+                              <block type="math_number" id="ep_win_5_num">
+                                <field name="NUM">5</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <statement name="DO0">
+                          <block type="variables_set" id="ep_set_pred_to_3_win">
+                            <field name="VAR" id="ep_var_prediction">Prediction</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="ep_num_3_win">
+                                <field name="NUM">3</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="ep_set_strat_over_win">
+                                <field name="VAR" id="ep_var_target_strat">target_strategy</field>
+                                <value name="VALUE">
+                                  <block type="text" id="ep_txt_strat_over3">
+                                    <field name="TEXT">OVER 3</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="notify" id="ep_notify_next_over3">
+                                    <field name="NOTIFICATION_TYPE">info</field>
+                                    <field name="NOTIFICATION_SOUND">silent</field>
+                                    <value name="MESSAGE">
+                                      <shadow type="text" id="ep_next_over3_sh">
+                                        <field name="TEXT">⚡ [ELITE PRO NEXT] High Momentum -> Pre-loading OVER 3 for Next Round</field>
+                                      </shadow>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <statement name="ELSE">
+                          <block type="variables_set" id="ep_set_pred_to_6_win">
+                            <field name="VAR" id="ep_var_prediction">Prediction</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="ep_num_6_win">
+                                <field name="NUM">6</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="ep_set_strat_under_win">
+                                <field name="VAR" id="ep_var_target_strat">target_strategy</field>
+                                <value name="VALUE">
+                                  <block type="text" id="ep_txt_strat_under6">
+                                    <field name="TEXT">UNDER 6</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="notify" id="ep_notify_next_under6">
+                                    <field name="NOTIFICATION_TYPE">info</field>
+                                    <field name="NOTIFICATION_SOUND">silent</field>
+                                    <value name="MESSAGE">
+                                      <shadow type="text" id="ep_next_under6_sh">
+                                        <field name="TEXT">💎 [ELITE PRO NEXT] Low Momentum -> Pre-loading UNDER 6 for Next Round</field>
+                                      </shadow>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                      </block>
+                    </next>
                   </block>
                 </next>
               </block>
@@ -285,6 +389,88 @@
                         </value>
                       </block>
                     </value>
+                    <next>
+                      <block type="controls_if" id="ep_loss_switch_direction">
+                        <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+                        <value name="IF0">
+                          <block type="logic_compare" id="ep_cmp_curr_is_6">
+                            <field name="OP">EQ</field>
+                            <value name="A">
+                              <block type="variables_get" id="ep_get_pred_for_loss_sw">
+                                <field name="VAR" id="ep_var_prediction">Prediction</field>
+                              </block>
+                            </value>
+                            <value name="B">
+                              <block type="math_number" id="ep_num_6_loss_cmp">
+                                <field name="NUM">6</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <statement name="DO0">
+                          <block type="variables_set" id="ep_switch_to_over3_loss">
+                            <field name="VAR" id="ep_var_prediction">Prediction</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="ep_num_3_loss">
+                                <field name="NUM">3</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="ep_set_strat_over3_loss">
+                                <field name="VAR" id="ep_var_target_strat">target_strategy</field>
+                                <value name="VALUE">
+                                  <block type="text" id="ep_txt_strat_over3_loss">
+                                    <field name="TEXT">OVER 3</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="notify" id="ep_notify_rec_over3">
+                                    <field name="NOTIFICATION_TYPE">warn</field>
+                                    <field name="NOTIFICATION_SOUND">silent</field>
+                                    <value name="MESSAGE">
+                                      <shadow type="text" id="ep_rec_over3_sh">
+                                        <field name="TEXT">🔄 [ELITE PRO REVERSAL] Switching to OVER 3 for Martingale Recovery</field>
+                                      </shadow>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                        <statement name="ELSE">
+                          <block type="variables_set" id="ep_switch_to_under6_loss">
+                            <field name="VAR" id="ep_var_prediction">Prediction</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="ep_num_6_loss">
+                                <field name="NUM">6</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="ep_set_strat_under6_loss">
+                                <field name="VAR" id="ep_var_target_strat">target_strategy</field>
+                                <value name="VALUE">
+                                  <block type="text" id="ep_txt_strat_under6_loss">
+                                    <field name="TEXT">UNDER 6</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="notify" id="ep_notify_rec_under6">
+                                    <field name="NOTIFICATION_TYPE">warn</field>
+                                    <field name="NOTIFICATION_SOUND">silent</field>
+                                    <value name="MESSAGE">
+                                      <shadow type="text" id="ep_rec_under6_sh">
+                                        <field name="TEXT">🔄 [ELITE PRO REVERSAL] Switching to UNDER 6 for Martingale Recovery</field>
+                                      </shadow>
+                                    </value>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </statement>
+                      </block>
+                    </next>
                   </block>
                 </next>
               </block>
@@ -470,75 +656,232 @@
   </block>
   <block type="before_purchase" id="ep_before_purchase_root" deletable="false" x="0" y="916">
     <statement name="BEFOREPURCHASE_STACK">
-      <block type="controls_if" id="ep_check_momentum_if">
+      <block type="controls_if" id="ep_exec_check_if">
         <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
         <value name="IF0">
-          <block type="logic_compare" id="ep_cmp_under_bias">
-            <field name="OP">LTE</field>
+          <block type="logic_compare" id="ep_cmp_pred_is_6">
+            <field name="OP">EQ</field>
             <value name="A">
-              <block type="last_digit" id="ep_last_digit_under"></block>
+              <block type="variables_get" id="ep_get_pred_val_chk">
+                <field name="VAR" id="ep_var_prediction">Prediction</field>
+              </block>
             </value>
             <value name="B">
-              <block type="math_number" id="ep_digit_under_barrier">
-                <field name="NUM">4</field>
+              <block type="math_number" id="ep_num_6_val">
+                <field name="NUM">6</field>
               </block>
             </value>
           </block>
         </value>
         <statement name="DO0">
-          <block type="variables_set" id="ep_set_under_pred">
-            <field name="VAR" id="ep_var_prediction">Prediction</field>
-            <value name="VALUE">
-              <block type="math_number" id="ep_pred_under_6">
-                <field name="NUM">6</field>
+          <block type="controls_if" id="ep_chk_under_entry">
+            <value name="IF0">
+              <block type="logic_compare" id="ep_cmp_under_trigger">
+                <field name="OP">LTE</field>
+                <value name="A">
+                  <block type="last_digit" id="ep_ld_under_chk"></block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="ep_under_barrier_val">
+                    <field name="NUM">5</field>
+                  </block>
+                </value>
               </block>
             </value>
-            <next>
-              <block type="notify" id="ep_notify_under_signal">
+            <statement name="DO0">
+              <block type="notify" id="ep_notif_buy_under">
                 <field name="NOTIFICATION_TYPE">info</field>
                 <field name="NOTIFICATION_SOUND">silent</field>
                 <value name="MESSAGE">
-                  <shadow type="text" id="ep_notif_under_msg">
-                    <field name="TEXT">💎 Elite Pro: Under Bias Detected! Buying UNDER 6</field>
+                  <shadow type="text" id="ep_under_msg_sh">
+                    <field name="TEXT">💎 [ELITE PRO ENTRY] Under Trend Confirmed (Digit &lt;= 5) -> Purchasing UNDER 6</field>
                   </shadow>
                 </value>
                 <next>
-                  <block type="purchase" id="ep_exec_purchase_under">
+                  <block type="purchase" id="ep_buy_under_act">
                     <field name="PURCHASE_LIST">DIGITUNDER</field>
                     <field name="FAST_EXECUTION">TRUE</field>
                   </block>
                 </next>
               </block>
-            </next>
+            </statement>
           </block>
         </statement>
         <statement name="ELSE">
-          <block type="variables_set" id="ep_set_over_pred">
-            <field name="VAR" id="ep_var_prediction">Prediction</field>
-            <value name="VALUE">
-              <block type="math_number" id="ep_pred_over_3">
-                <field name="NUM">3</field>
+          <block type="controls_if" id="ep_chk_over_entry">
+            <value name="IF0">
+              <block type="logic_compare" id="ep_cmp_over_trigger">
+                <field name="OP">GTE</field>
+                <value name="A">
+                  <block type="last_digit" id="ep_ld_over_chk"></block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="ep_over_barrier_val">
+                    <field name="NUM">4</field>
+                  </block>
+                </value>
               </block>
             </value>
-            <next>
-              <block type="notify" id="ep_notify_over_signal">
+            <statement name="DO0">
+              <block type="notify" id="ep_notif_buy_over">
                 <field name="NOTIFICATION_TYPE">info</field>
                 <field name="NOTIFICATION_SOUND">silent</field>
                 <value name="MESSAGE">
-                  <shadow type="text" id="ep_notif_over_msg">
-                    <field name="TEXT">⚡ Elite Pro: Over Bias Detected! Buying OVER 3</field>
+                  <shadow type="text" id="ep_over_msg_sh">
+                    <field name="TEXT">⚡ [ELITE PRO ENTRY] Over Trend Confirmed (Digit &gt;= 4) -> Purchasing OVER 3</field>
                   </shadow>
                 </value>
                 <next>
-                  <block type="purchase" id="ep_exec_purchase_over">
+                  <block type="purchase" id="ep_buy_over_act">
                     <field name="PURCHASE_LIST">DIGITOVER</field>
                     <field name="FAST_EXECUTION">TRUE</field>
                   </block>
                 </next>
               </block>
-            </next>
+            </statement>
           </block>
         </statement>
+      </block>
+    </statement>
+  </block>
+  <block type="tick_analysis" id="ep_tick_analysis_root" x="0" y="1450">
+    <statement name="TICKANALYSIS_STACK">
+      <block type="variables_set" id="ep_track_last_digit">
+        <field name="VAR" id="ep_var_last_digit">Last Digit</field>
+        <value name="VALUE">
+          <block type="last_digit" id="ep_get_tick_ld"></block>
+        </value>
+        <next>
+          <block type="controls_if" id="ep_eval_trend_if">
+            <mutation xmlns="http://www.w3.org/1999/xhtml" else="1"></mutation>
+            <value name="IF0">
+              <block type="logic_compare" id="ep_cmp_digit_for_under">
+                <field name="OP">LTE</field>
+                <value name="A">
+                  <block type="variables_get" id="ep_get_ld_trend_val">
+                    <field name="VAR" id="ep_var_last_digit">Last Digit</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="math_number" id="ep_num_4_trend">
+                    <field name="NUM">4</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="variables_set" id="ep_set_trend_under_val">
+                <field name="VAR" id="ep_var_market_trend">Market Trend</field>
+                <value name="VALUE">
+                  <block type="text" id="ep_txt_low_bias">
+                    <field name="TEXT">Low Digits (Under 6 Advantage)</field>
+                  </block>
+                </value>
+              </block>
+            </statement>
+            <statement name="ELSE">
+              <block type="variables_set" id="ep_set_trend_over_val">
+                <field name="VAR" id="ep_var_market_trend">Market Trend</field>
+                <value name="VALUE">
+                  <block type="text" id="ep_txt_high_bias">
+                    <field name="TEXT">High Digits (Over 3 Advantage)</field>
+                  </block>
+                </value>
+              </block>
+            </statement>
+            <next>
+              <block type="text_join" id="ep_join_radar_log">
+                <field name="VARIABLE" id="ep_var_analysis_text">analysis_text</field>
+                <statement name="STACK">
+                  <block type="text_statement" id="ep_rdr_stmt1">
+                    <value name="TEXT">
+                      <shadow type="text" id="ep_rdr_sh1">
+                        <field name="TEXT"></field>
+                      </shadow>
+                      <block type="text" id="ep_txt_rdr_lbl1">
+                        <field name="TEXT">📊 [ELITE PRO RADAR] Last Digit: </field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="text_statement" id="ep_rdr_stmt2">
+                        <value name="TEXT">
+                          <shadow type="text" id="ep_rdr_sh2">
+                            <field name="TEXT"></field>
+                          </shadow>
+                          <block type="variables_get" id="ep_get_ld_for_rdr">
+                            <field name="VAR" id="ep_var_last_digit">Last Digit</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="text_statement" id="ep_rdr_stmt3">
+                            <value name="TEXT">
+                              <shadow type="text" id="ep_rdr_sh3">
+                                <field name="TEXT"></field>
+                              </shadow>
+                              <block type="text" id="ep_txt_rdr_lbl2">
+                                <field name="TEXT"> | Trend: </field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="text_statement" id="ep_rdr_stmt4">
+                                <value name="TEXT">
+                                  <shadow type="text" id="ep_rdr_sh4">
+                                    <field name="TEXT"></field>
+                                  </shadow>
+                                  <block type="variables_get" id="ep_get_trend_for_rdr">
+                                    <field name="VAR" id="ep_var_market_trend">Market Trend</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="text_statement" id="ep_rdr_stmt5">
+                                    <value name="TEXT">
+                                      <shadow type="text" id="ep_rdr_sh5">
+                                        <field name="TEXT"></field>
+                                      </shadow>
+                                      <block type="text" id="ep_txt_rdr_lbl3">
+                                        <field name="TEXT"> | Active Order: </field>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="text_statement" id="ep_rdr_stmt6">
+                                        <value name="TEXT">
+                                          <shadow type="text" id="ep_rdr_sh6">
+                                            <field name="TEXT"></field>
+                                          </shadow>
+                                          <block type="variables_get" id="ep_get_tgt_strat_rdr">
+                                            <field name="VAR" id="ep_var_target_strat">target_strategy</field>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+                <next>
+                  <block type="notify" id="ep_notify_radar_journal">
+                    <field name="NOTIFICATION_TYPE">info</field>
+                    <field name="NOTIFICATION_SOUND">silent</field>
+                    <value name="MESSAGE">
+                      <shadow type="text" id="ep_rdr_msg_sh">
+                        <field name="TEXT">Radar</field>
+                      </shadow>
+                      <block type="variables_get" id="ep_get_radar_msg">
+                        <field name="VAR" id="ep_var_analysis_text">analysis_text</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
       </block>
     </statement>
   </block>

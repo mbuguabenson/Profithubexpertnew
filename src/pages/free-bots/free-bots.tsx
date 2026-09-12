@@ -38,7 +38,7 @@ const getBotIcon = (name: string): string => {
 
 const BOT_META: Record<string, { tags: string[]; win: string; type: string; risk: string; speed: string }> = {
     'Elite Pro': {
-        tags: ['Over/Under', 'Dual Momentum'],
+        tags: ['Over 3 / Under 6', 'Radar Analysis'],
         win: '88%',
         type: 'Pro',
         risk: 'Low Risk',
