@@ -184,80 +184,59 @@ const TradeAnimation = observer(({ className, should_show_overlay }: TTradeAnima
                     </div>
                 </div>
             ) : (
-                <div className='animation__controls-column'>
-                    <div className='animation__header-row'>
+                <div className='animation__run-stop-group'>
+                    {/* Pause / Resume button — visible while running or when paused */}
+                    {(is_stop_button_visible || is_paused) && (
                         <button
-                            type='button'
-                            className={classNames('animation__speed-switch', {
-                                'animation__speed-switch--active': is_fast_mode,
+                            id='db-animation__pause-button'
+                            className={classNames('animation__pause-button', {
+                                'animation__pause-button--paused': is_paused,
                             })}
-                            title={
-                                is_fast_mode
-                                    ? localize('FAST MODE ON — Instant execution, skips proposal delay (max performance)')
-                                    : localize('NORMAL MODE — Proposal-based trading. Click to enable Fast Mode.')
-                            }
-                            onClick={() => run_panel.toggleEveryTickMode()}
-                        >
-                            <span className='speed-switch__label'>{is_fast_mode ? '⚡ FAST' : 'SPEED'}</span>
-                            <div className='speed-switch__track'>
-                                <div className='speed-switch__thumb' />
-                            </div>
-                        </button>
-                    </div>
-                    <div className='animation__run-stop-group'>
-                        {/* Pause / Resume button — visible while running or when paused */}
-                        {(is_stop_button_visible || is_paused) && (
-                            <button
-                                id='db-animation__pause-button'
-                                className={classNames('animation__pause-button', {
-                                    'animation__pause-button--paused': is_paused,
-                                })}
-                                disabled={false}
-                                title={is_paused ? localize('Resume bot') : localize('Pause bot after current contract')}
-                                onClick={() => {
-                                    if (is_paused) {
-                                        // Resume: continue trading from where we left off
-                                        run_panel.onResumeFromPause();
-                                    } else {
-                                        // Pause: finish current contract, don't open new ones
-                                        run_panel.onPauseButtonClick();
-                                    }
-                                }}
-                            >
-                                {is_paused ? (
-                                    <LabelPairedPlayLgFillIcon fill='#f5c542' width={16} height={16} />
-                                ) : (
-                                    <LabelPairedPauseLgFillIcon fill='var(--text-general)' width={16} height={16} />
-                                )}
-                                <span>
-                                    {is_paused ? (
-                                        <Localize i18n_default_text='Resume' />
-                                    ) : (
-                                        <Localize i18n_default_text='Pause' />
-                                    )}
-                                </span>
-                            </button>
-                        )}
-                        <Button
-                            is_disabled={is_stop_button_visible ? false : is_disabled}
-                            className={button_props.class}
-                            id={button_props.id}
-                            icon={button_props.icon}
+                            disabled={is_stop_button_visible && is_stop_button_disabled}
+                            title={is_paused ? localize('Resume bot') : localize('Pause bot after current contract')}
                             onClick={() => {
-                                if (is_stop_button_visible) {
-                                    onStopBotClick();
-                                    return;
+                                if (is_paused) {
+                                    // Resume: continue trading from where we left off
+                                    run_panel.onResumeFromPause();
+                                } else {
+                                    // Pause: finish current contract, don't open new ones
+                                    run_panel.onPauseButtonClick();
                                 }
-                                onRunButtonClick();
                             }}
-                            has_effect
-                            {...(is_stop_button_visible || !is_unavailable_for_payment_agent
-                                ? { primary: true }
-                                : { green: true })}
                         >
-                            {button_props.text}
-                        </Button>
-                    </div>
+                            {is_paused ? (
+                                <LabelPairedPlayLgFillIcon fill='#f5c542' width={16} height={16} />
+                            ) : (
+                                <LabelPairedPauseLgFillIcon fill='var(--text-general)' width={16} height={16} />
+                            )}
+                            <span>
+                                {is_paused ? (
+                                    <Localize i18n_default_text='Resume' />
+                                ) : (
+                                    <Localize i18n_default_text='Pause' />
+                                )}
+                            </span>
+                        </button>
+                    )}
+                    <Button
+                        is_disabled={(is_disabled && !is_unavailable_for_payment_agent) || contract_stage === 3}
+                        className={button_props.class}
+                        id={button_props.id}
+                        icon={button_props.icon}
+                        onClick={() => {
+                            if (is_stop_button_visible) {
+                                onStopBotClick();
+                                return;
+                            }
+                            onRunButtonClick();
+                        }}
+                        has_effect
+                        {...(is_stop_button_visible || !is_unavailable_for_payment_agent
+                            ? { primary: true }
+                            : { green: true })}
+                    >
+                        {button_props.text}
+                    </Button>
                 </div>
             )}
             <div

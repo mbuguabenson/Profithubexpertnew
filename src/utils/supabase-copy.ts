@@ -326,11 +326,10 @@ export const getDefaultTabConfig = (): TabConfigItem[] => [
     { key: 'poverty_hunter', label: 'Poverty Hunter 🎯', enabled: true, order: 16 },
     { key: 'auto_x_eo', label: 'AUTO X E/O ⚡', enabled: true, order: 17 },
     { key: 'overlord_ai', label: 'OVERLORD AI 👑', enabled: true, order: 18 },
-    { key: 'dtrader', label: 'DTrader 📈', enabled: true, order: 19 },
 ];
 
 // Bump this when new tabs are added or removed to force clients to pick up new defaults
-const TAB_CONFIG_VERSION = 21;
+const TAB_CONFIG_VERSION = 23;
 
 export const getSiteConfig = (): SiteConfig => {
     try {
@@ -340,6 +339,12 @@ export const getSiteConfig = (): SiteConfig => {
             const defaults = getDefaultTabConfig();
             const storedKeys = new Set((stored.tabConfig || []).map(t => t.key));
             let changed = false;
+
+            // Remove any legacy dtrader tab from stored config
+            if (stored.tabConfig && stored.tabConfig.some(t => t.key === 'dtrader')) {
+                stored.tabConfig = stored.tabConfig.filter(t => t.key !== 'dtrader');
+                changed = true;
+            }
 
             // Add any missing default tabs
             const missingTabs = defaults.filter(t => !storedKeys.has(t.key));
